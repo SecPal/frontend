@@ -48,6 +48,35 @@ function renderPage() {
   );
 }
 
+async function selectRadixOption(triggerName: RegExp, optionName: RegExp) {
+  const trigger = screen.getByRole("combobox", { name: triggerName });
+  fireEvent.pointerDown(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(trigger, { button: 0 });
+
+  const option = await screen.findByRole("option", { name: optionName });
+  expect(option).toHaveAttribute("data-value");
+  fireEvent.pointerDown(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(option, { button: 0 });
+}
+
 describe("AndroidProvisioningPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -94,6 +123,9 @@ describe("AndroidProvisioningPage", () => {
     expect(
       screen.getByRole("button", { name: /create enrollment session/i })
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: /update channel/i })
+    ).toHaveAttribute("data-slot", "ui-select-trigger");
     expect(apiFetch).toHaveBeenCalledWith(
       `${apiConfig.baseUrl}/v1/android-enrollment-sessions?per_page=15`,
       expect.objectContaining({ headers: expect.any(Headers) })
@@ -132,8 +164,8 @@ describe("AndroidProvisioningPage", () => {
     renderPage();
 
     expect(
-      await screen.findByText("Managed device rollout")
-    ).toBeInTheDocument();
+      await screen.findAllByText("Managed device rollout")
+    ).not.toHaveLength(0);
     expect(screen.getByText("Ready for setup")).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -247,9 +279,7 @@ describe("AndroidProvisioningPage", () => {
     fireEvent.change(screen.getByLabelText("Device label"), {
       target: { value: "Reception kiosk" },
     });
-    fireEvent.change(screen.getByLabelText("Update channel"), {
-      target: { value: "direct_apk" },
-    });
+    await selectRadixOption(/update channel/i, /direct apk sideload/i);
     fireEvent.click(
       screen.getByRole("button", { name: /create enrollment session/i })
     );

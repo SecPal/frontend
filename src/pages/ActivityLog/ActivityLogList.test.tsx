@@ -36,6 +36,35 @@ const renderWithProviders = () => {
   );
 };
 
+async function selectRadixOption(triggerName: RegExp, optionName: RegExp) {
+  const trigger = screen.getByRole("combobox", { name: triggerName });
+  fireEvent.pointerDown(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(trigger, { button: 0 });
+
+  const option = await screen.findByRole("option", { name: optionName });
+  expect(option).toHaveAttribute("data-value");
+  fireEvent.pointerDown(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(option, { button: 0 });
+}
+
 const mockActivity: Activity = {
   id: "log-1",
   tenant_id: "tenant-1",
@@ -396,13 +425,18 @@ describe("ActivityLogList", () => {
     renderWithProviders();
 
     await waitFor(() => {
-      expect(screen.getAllByRole("combobox").length).toBeGreaterThan(0);
+      expect(
+        screen.getByRole("combobox", { name: /log name/i })
+      ).toBeInTheDocument();
     });
 
-    // Verify log name select exists and is interactive
-    const comboboxes = screen.getAllByRole("combobox");
-    expect(comboboxes[0]).toBeInTheDocument();
-    expect(comboboxes[0]).not.toBeDisabled();
+    await selectRadixOption(/log name/i, /^authentication$/i);
+
+    await waitFor(() => {
+      expect(activityLogApi.fetchActivityLogs).toHaveBeenCalledWith(
+        expect.objectContaining({ log_name: "auth", page: 1 })
+      );
+    });
   });
 
   it("should handle organizational unit filter", async () => {

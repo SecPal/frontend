@@ -73,6 +73,34 @@ async function renderSettingsPage() {
   await screen.findByText(/not enabled/i);
 }
 
+async function selectLanguage(visibleName: string) {
+  const trigger = screen.getByRole("combobox", { name: /select language/i });
+  fireEvent.pointerDown(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(trigger, { button: 0 });
+
+  const option = await screen.findByRole("option", { name: visibleName });
+  fireEvent.pointerDown(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(option, { button: 0 });
+}
+
 function createDisabledMfaStatusResponse() {
   return {
     data: {
@@ -755,7 +783,8 @@ describe("SettingsPage", () => {
     await renderSettingsPage();
 
     const select = screen.getByRole("combobox", { name: /select language/i });
-    expect(select).toHaveValue("en");
+    expect(select).toHaveTextContent("English");
+    expect(select).toHaveAttribute("data-slot", "ui-select-trigger");
   });
 
   it("changes language when selection changes", async () => {
@@ -765,8 +794,7 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    const select = screen.getByRole("combobox", { name: /select language/i });
-    fireEvent.change(select, { target: { value: "de" } });
+    await selectLanguage("Deutsch");
 
     await waitFor(() => {
       expect(mockActivateLocale).toHaveBeenCalledWith("de");

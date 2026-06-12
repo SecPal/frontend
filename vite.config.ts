@@ -35,7 +35,21 @@ const linguiMacroBabelPreset = defineRolldownBabelPreset({
 
 const vendorChunkPackages: Record<string, string[]> = {
   "vendor-react": ["react", "react-dom", "react-router-dom"],
-  "vendor-ui": ["@headlessui/react", "@heroicons/react"],
+  "vendor-ui": [
+    "@radix-ui/react-checkbox",
+    "@radix-ui/react-dialog",
+    "@radix-ui/react-dropdown-menu",
+    "@radix-ui/react-label",
+    "@radix-ui/react-popover",
+    "@radix-ui/react-progress",
+    "@radix-ui/react-radio-group",
+    "@radix-ui/react-select",
+    "@radix-ui/react-switch",
+    "class-variance-authority",
+    "input-otp",
+    "lucide-react",
+    "tailwind-merge",
+  ],
   "vendor-lingui": ["@lingui/core", "@lingui/react"],
   "vendor-db": ["dexie", "dexie-react-hooks", "idb"],
   "vendor-animation": ["motion"],

@@ -12,13 +12,9 @@ import {
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
-import { Heading } from "../../components/heading";
-import { Text } from "../../components/text";
-import { Button } from "../../components/button";
-import { Badge } from "../../components/badge";
+import { X } from "lucide-react";
+import { Badge, Button, Card, CardContent, Spinner } from "@/ui";
 import { OrganizationalUnitTree } from "../../components/OrganizationalUnitTree";
-import { SpinnerContainer } from "../../components/spinner";
 import { OfflineDataBanner } from "../../components/OfflineDataBanner";
 
 // Lazy load dialog for better performance
@@ -34,6 +30,20 @@ import {
 import { formatDate } from "../../lib/dateUtils";
 import type { OrganizationalUnit } from "../../types/organizational";
 import { useOrganizationalUnitsWithOffline } from "../../hooks/useOrganizationalUnitsWithOffline";
+
+const typeBadgeClassNames = {
+  blue: "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
+  green: "bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-300",
+  purple:
+    "bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300",
+  orange:
+    "bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300",
+  zinc: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
+} as const;
+
+function getTypeBadgeClassName(type: OrganizationalUnit["type"]) {
+  return typeBadgeClassNames[getTypeBadgeColor(type)];
+}
 
 /**
  * Optimistic UI state for tree updates without reloading
@@ -259,15 +269,15 @@ export function OrganizationPage() {
   return (
     <div className="space-y-6">
       <div>
-        <Heading>
+        <h1 className="text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
           <Trans>Organization Structure</Trans>
-        </Heading>
-        <Text className="mt-2">
+        </h1>
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
           <Trans>
             Manage your internal organizational units including departments,
             branches, and teams.
           </Trans>
-        </Text>
+        </p>
       </div>
 
       {/* Offline/Stale data banner */}
@@ -305,89 +315,99 @@ export function OrganizationPage() {
         </div>
 
         {/* Detail Panel */}
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-          {selectedUnit ? (
-            <div className="space-y-4">
-              <div className="flex items-start justify-between gap-2">
-                <Heading level={3}>{selectedUnit.name}</Heading>
-                <div className="flex items-center gap-2">
-                  <Badge color={getTypeBadgeColor(selectedUnit.type)}>
-                    {getTypeLabel(selectedUnit.type)}
-                  </Badge>
-                  <button
-                    type="button"
-                    onClick={handleCloseDetail}
-                    className="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
-                    aria-label={t`Close detail panel`}
+        <Card>
+          <CardContent className="h-full p-4">
+            {selectedUnit ? (
+              <div className="space-y-4">
+                <div className="flex items-start justify-between gap-2">
+                  <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+                    {selectedUnit.name}
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <Badge className={getTypeBadgeClassName(selectedUnit.type)}>
+                      {getTypeLabel(selectedUnit.type)}
+                    </Badge>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={handleCloseDetail}
+                      className="min-h-8 px-2 py-1 text-zinc-500"
+                      aria-label={t`Close detail panel`}
+                    >
+                      <X className="h-5 w-5" aria-hidden="true" />
+                    </Button>
+                  </div>
+                </div>
+
+                <dl className="space-y-3 text-sm">
+                  <div>
+                    <dt className="font-medium text-zinc-500 dark:text-zinc-400">
+                      <Trans>Type</Trans>
+                    </dt>
+                    <dd className="text-zinc-900 dark:text-white">
+                      {getTypeLabel(selectedUnit.type)}
+                    </dd>
+                  </div>
+                  {selectedUnit.description && (
+                    <div>
+                      <dt className="font-medium text-zinc-500 dark:text-zinc-400">
+                        <Trans>Description</Trans>
+                      </dt>
+                      <dd className="text-zinc-900 dark:text-white">
+                        {selectedUnit.description}
+                      </dd>
+                    </div>
+                  )}
+                  {selectedUnit.parent && (
+                    <div>
+                      <dt className="font-medium text-zinc-500 dark:text-zinc-400">
+                        <Trans>Parent</Trans>
+                      </dt>
+                      <dd className="text-zinc-900 dark:text-white">
+                        {selectedUnit.parent.name}
+                      </dd>
+                    </div>
+                  )}
+                  <div>
+                    <dt className="font-medium text-zinc-500 dark:text-zinc-400">
+                      <Trans>Created</Trans>
+                    </dt>
+                    <dd className="text-zinc-900 dark:text-white">
+                      {formatDate(selectedUnit.created_at, i18n.locale)}
+                    </dd>
+                  </div>
+                </dl>
+
+                {/* Action buttons */}
+                <div className="flex flex-col gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-700">
+                  <Button onClick={() => handleEdit(selectedUnit)}>
+                    <Trans>Edit</Trans>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleCreateChild(selectedUnit)}
                   >
-                    <XMarkIcon className="h-5 w-5" />
-                  </button>
+                    <Trans>Add Child Unit</Trans>
+                  </Button>
                 </div>
               </div>
-
-              <dl className="space-y-3 text-sm">
-                <div>
-                  <dt className="font-medium text-zinc-500 dark:text-zinc-400">
-                    <Trans>Type</Trans>
-                  </dt>
-                  <dd className="text-zinc-900 dark:text-white">
-                    {getTypeLabel(selectedUnit.type)}
-                  </dd>
-                </div>
-                {selectedUnit.description && (
-                  <div>
-                    <dt className="font-medium text-zinc-500 dark:text-zinc-400">
-                      <Trans>Description</Trans>
-                    </dt>
-                    <dd className="text-zinc-900 dark:text-white">
-                      {selectedUnit.description}
-                    </dd>
-                  </div>
-                )}
-                {selectedUnit.parent && (
-                  <div>
-                    <dt className="font-medium text-zinc-500 dark:text-zinc-400">
-                      <Trans>Parent</Trans>
-                    </dt>
-                    <dd className="text-zinc-900 dark:text-white">
-                      {selectedUnit.parent.name}
-                    </dd>
-                  </div>
-                )}
-                <div>
-                  <dt className="font-medium text-zinc-500 dark:text-zinc-400">
-                    <Trans>Created</Trans>
-                  </dt>
-                  <dd className="text-zinc-900 dark:text-white">
-                    {formatDate(selectedUnit.created_at, i18n.locale)}
-                  </dd>
-                </div>
-              </dl>
-
-              {/* Action buttons */}
-              <div className="flex flex-col gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-700">
-                <Button onClick={() => handleEdit(selectedUnit)}>
-                  <Trans>Edit</Trans>
-                </Button>
-                <Button outline onClick={() => handleCreateChild(selectedUnit)}>
-                  <Trans>Add Child Unit</Trans>
-                </Button>
+            ) : (
+              <div className="flex h-full min-h-[200px] items-center justify-center text-center">
+                <p className="text-sm text-zinc-500">
+                  <Trans>Select an organizational unit to view details</Trans>
+                </p>
               </div>
-            </div>
-          ) : (
-            <div className="flex h-full min-h-[200px] items-center justify-center text-center">
-              <Text className="text-zinc-500">
-                <Trans>Select an organizational unit to view details</Trans>
-              </Text>
-            </div>
-          )}
-        </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Create/Edit Dialog - Lazy loaded for better performance */}
       <Suspense
         fallback={
-          <SpinnerContainer className="fixed inset-0 bg-zinc-950/25 dark:bg-zinc-950/50" />
+          <div className="fixed inset-0 flex items-center justify-center bg-zinc-950/25 dark:bg-zinc-950/50">
+            <Spinner aria-label={t`Loading`} className="size-6 text-white" />
+          </div>
         }
       >
         <OrganizationalUnitFormDialog

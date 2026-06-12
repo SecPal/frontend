@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Employee } from "@/types/api";
 import { messages as deMessages } from "../../locales/de/messages.mjs";
 import { messages as enMessages } from "../../locales/en/messages.mjs";
+import { ApiError } from "../../services/ApiError";
 import * as employeeApi from "../../services/employeeApi";
 import { EmployeeBwrPanel } from "./EmployeeBwrPanel";
 
@@ -57,16 +58,55 @@ const mockEmployee: Employee = {
   updated_at: "2025-01-01T00:00:00Z",
 };
 
-function renderPanel(onRefresh = vi.fn().mockResolvedValue(null)) {
+function renderPanel({
+  employee = mockEmployee,
+  onRefresh = vi.fn().mockResolvedValue(null),
+  canManage = true,
+}: {
+  employee?: Employee;
+  onRefresh?: () => Promise<Employee | null>;
+  canManage?: boolean;
+} = {}) {
   return render(
     <I18nProvider i18n={i18n}>
       <EmployeeBwrPanel
-        employee={mockEmployee}
-        canManage={true}
+        employee={employee}
+        canManage={canManage}
         onRefresh={onRefresh}
       />
     </I18nProvider>
   );
+}
+
+async function selectRadixOption(
+  triggerName: RegExp,
+  optionName: RegExp | string
+) {
+  const trigger = screen.getByRole("combobox", { name: triggerName });
+  fireEvent.pointerDown(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(trigger, { button: 0 });
+
+  const option = await screen.findByRole("option", { name: optionName });
+  fireEvent.pointerDown(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(option, { button: 0 });
 }
 
 describe("EmployeeBwrPanel", () => {
@@ -134,5 +174,107 @@ describe("EmployeeBwrPanel", () => {
     ).not.toBeInTheDocument();
     expect(document.querySelector('a[href^="javascript:"]')).toBeNull();
     expect(document.querySelector('a[href^="data:"]')).toBeNull();
+  });
+
+  it("saves managed BWR status with Radix fields and refreshes the panel", async () => {
+    const activeEmployee: Employee = {
+      ...mockEmployee,
+      bwr_status: "pending",
+      bwr_id: "1234567",
+      bwr_notes: "Initial export sent",
+    };
+    const refreshedEmployee: Employee = {
+      ...activeEmployee,
+      bwr_status: "active",
+      bwr_notes: "Approved",
+    };
+    const onRefresh = vi.fn().mockResolvedValue(refreshedEmployee);
+    vi.mocked(employeeApi.updateEmployeeBwrStatus).mockResolvedValue(
+      refreshedEmployee
+    );
+
+    renderPanel({ employee: activeEmployee, onRefresh });
+
+    await selectRadixOption(/^BWR Status$/i, /^Active$/i);
+    fireEvent.change(screen.getByLabelText(/^BWR ID$/i), {
+      target: { value: " 7654321 " },
+    });
+    fireEvent.change(screen.getByLabelText(/^BWR Notes$/i), {
+      target: { value: " Approved " },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save bwr status/i }));
+
+    await waitFor(() => {
+      expect(employeeApi.updateEmployeeBwrStatus).toHaveBeenCalledWith(
+        "emp-1",
+        {
+          status: "active",
+          bwr_id: "7654321",
+          notes: "Approved",
+        }
+      );
+    });
+    expect(onRefresh).toHaveBeenCalled();
+    expect(screen.getByRole("status")).toHaveTextContent("BWR status updated.");
+  });
+
+  it("shows API validation errors on BWR fields with accessible invalid state", async () => {
+    const activeEmployee: Employee = {
+      ...mockEmployee,
+      bwr_status: "pending",
+      bwr_id: "",
+      bwr_notes: "",
+    };
+    vi.mocked(employeeApi.updateEmployeeBwrStatus).mockRejectedValue(
+      new ApiError("Validation failed", 422, {
+        status: ["Status transition is not allowed."],
+        bwr_id: ["BWR ID must contain seven digits."],
+        notes: ["Notes may not exceed 500 characters."],
+      })
+    );
+
+    renderPanel({ employee: activeEmployee });
+
+    fireEvent.click(screen.getByRole("button", { name: /save bwr status/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent("Validation failed");
+    });
+
+    expect(
+      screen.getByRole("combobox", { name: /^BWR Status$/i })
+    ).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText(/^BWR ID$/i)).toHaveAttribute(
+      "aria-describedby",
+      "bwr-id-error"
+    );
+    expect(screen.getByLabelText(/^BWR Notes$/i)).toHaveAttribute(
+      "aria-invalid",
+      "true"
+    );
+    expect(
+      screen.getByText("BWR ID must contain seven digits.")
+    ).toBeInTheDocument();
+  });
+
+  it("renders localized read-only BWR guidance and migrated dark-mode surfaces", async () => {
+    i18n.activate("de");
+
+    renderPanel({ canManage: false });
+
+    expect(screen.getByText("Bewacherregister")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Sie können die BWR-Daten einsehen, aber zum Verwalten ist Schreibberechtigung erforderlich/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector('[data-slot="employee-status-badge"]')
+    ).toHaveClass("dark:text-zinc-400");
+    expect(document.querySelector('[data-slot="ui-card"]')).toHaveClass(
+      "dark:bg-zinc-950"
+    );
+
+    i18n.activate("en");
   });
 });

@@ -36,6 +36,52 @@ const renderWithProviders = () => {
   );
 };
 
+async function selectRadixOption(
+  triggerName: RegExp,
+  optionName: RegExp | string
+) {
+  const trigger = screen.getByRole("combobox", { name: triggerName });
+  fireEvent.pointerDown(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(trigger, { button: 0 });
+
+  const option = await screen.findByRole("option", { name: optionName });
+  fireEvent.pointerDown(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(option, { button: 0 });
+}
+
+async function openRadixSelect(triggerName: RegExp) {
+  const trigger = screen.getByRole("combobox", { name: triggerName });
+  fireEvent.pointerDown(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(trigger, { button: 0 });
+}
+
 const mockEmployees: Employee[] = [
   {
     id: "emp-1",
@@ -162,6 +208,25 @@ describe("EmployeeList", () => {
     expect(screen.getByText("Design")).toBeInTheDocument();
   });
 
+  it("renders the migrated shadcn/Radix list surface with light and dark classes", async () => {
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+    });
+
+    const filterCard = document.querySelector('[data-slot="ui-card"]');
+    expect(filterCard).toHaveClass("bg-white", "dark:bg-zinc-950");
+
+    const statusTrigger = screen.getByRole("combobox", { name: /^status$/i });
+    expect(statusTrigger).toHaveAttribute("data-slot", "ui-select-trigger");
+    expect(statusTrigger).toHaveClass("dark:bg-zinc-950");
+
+    expect(
+      document.querySelector('[data-slot="employee-table-shell"]')
+    ).toBeInTheDocument();
+  });
+
   it("should display status badges for employees", async () => {
     renderWithProviders();
 
@@ -188,8 +253,10 @@ describe("EmployeeList", () => {
       expect(screen.getAllByText("Applicant").length).toBeGreaterThan(0);
     });
 
+    await openRadixSelect(/^status$/i);
+
     expect(
-      screen.getByRole("option", { name: /applicant/i })
+      await screen.findByRole("option", { name: /applicant/i })
     ).toBeInTheDocument();
   });
 
@@ -288,12 +355,27 @@ describe("EmployeeList", () => {
       expect(screen.getByText("John Doe")).toBeInTheDocument();
     });
 
-    const statusSelect = screen.getByLabelText(/status/i);
-    fireEvent.change(statusSelect, { target: { value: "active" } });
+    await selectRadixOption(/^status$/i, /^active$/i);
 
     await waitFor(() => {
       expect(employeeApi.fetchEmployees).toHaveBeenCalledWith(
         expect.objectContaining({ status: "active", page: 1 })
+      );
+    });
+  });
+
+  it("should filter by organizational unit", async () => {
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+    });
+
+    await selectRadixOption(/^organizational unit$/i, /design/i);
+
+    await waitFor(() => {
+      expect(employeeApi.fetchEmployees).toHaveBeenCalledWith(
+        expect.objectContaining({ organizational_unit_id: "unit-2", page: 1 })
       );
     });
   });

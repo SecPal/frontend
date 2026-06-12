@@ -10,99 +10,6 @@ import { messages as enMessages } from "../locales/en/messages.mjs";
 import { MoveOrganizationalUnitDialog } from "./MoveOrganizationalUnitDialog";
 import type { OrganizationalUnit } from "../types/organizational";
 
-vi.mock("./dialog", () => ({
-  Dialog: vi.fn(({ open, children }) =>
-    open ? <div role="dialog">{children}</div> : null
-  ),
-  DialogTitle: vi.fn(({ children }) => <div>{children}</div>),
-  DialogDescription: vi.fn(({ children }) => <div>{children}</div>),
-  DialogBody: vi.fn(({ children }) => <div>{children}</div>),
-  DialogActions: vi.fn(({ children }) => <div>{children}</div>),
-}));
-
-vi.mock("./listbox", async () => {
-  const React = await vi.importActual<typeof import("react")>("react");
-
-  type MockOptionProps = {
-    value: string;
-    children: React.ReactNode;
-    onSelect?: (value: string) => void;
-    selectedValue?: string;
-  };
-
-  const MockListboxOption = ({
-    value,
-    children,
-    onSelect,
-    selectedValue,
-  }: MockOptionProps) => (
-    <div
-      role="option"
-      aria-selected={selectedValue === value}
-      onClick={() => onSelect?.(value)}
-    >
-      {children}
-    </div>
-  );
-
-  return {
-    Listbox: ({
-      value,
-      onChange,
-      disabled,
-      children,
-      "aria-label": ariaLabel,
-    }: {
-      value: string;
-      onChange: (value: string) => void;
-      disabled?: boolean;
-      children: React.ReactNode;
-      "aria-label"?: string;
-    }) => {
-      const [open, setOpen] = React.useState(false);
-      const options = React.Children.toArray(
-        children
-      ) as React.ReactElement<MockOptionProps>[];
-      const selectedOption =
-        options.find((option) => option.props.value === value) ?? null;
-
-      return (
-        <div>
-          <button
-            type="button"
-            aria-label={ariaLabel}
-            disabled={disabled}
-            onClick={() => {
-              if (!disabled) {
-                setOpen((current) => !current);
-              }
-            }}
-          >
-            {selectedOption?.props.children ?? ""}
-          </button>
-          {open && (
-            <div role="listbox">
-              {options.map((option) =>
-                React.cloneElement<MockOptionProps>(option, {
-                  onSelect: (selectedValue: string) => {
-                    onChange(selectedValue);
-                    setOpen(false);
-                  },
-                  selectedValue: value,
-                })
-              )}
-            </div>
-          )}
-        </div>
-      );
-    },
-    ListboxOption: MockListboxOption,
-    ListboxLabel: ({ children }: { children: React.ReactNode }) => (
-      <span>{children}</span>
-    ),
-  };
-});
-
 // Mock the offline hook
 vi.mock("../hooks/useOrganizationalUnitsWithOffline", () => ({
   useOrganizationalUnitsWithOffline: vi.fn(),
@@ -141,6 +48,26 @@ import { ApiError } from "../services/ApiError";
 
 function renderWithI18n(component: React.ReactElement) {
   return render(<I18nProvider i18n={i18n}>{component}</I18nProvider>);
+}
+
+function getParentSelectTrigger() {
+  return screen.getByRole("combobox", { name: /Select new parent/i });
+}
+
+function openParentSelect() {
+  const trigger = getParentSelectTrigger();
+
+  fireEvent.pointerDown(trigger);
+  fireEvent.pointerUp(trigger);
+  fireEvent.click(trigger);
+
+  return trigger;
+}
+
+function selectParentOption(option: HTMLElement) {
+  fireEvent.pointerDown(option);
+  fireEvent.pointerUp(option);
+  fireEvent.click(option);
 }
 
 describe("MoveOrganizationalUnitDialog", () => {
@@ -316,15 +243,11 @@ describe("MoveOrganizationalUnitDialog", () => {
 
       // Hook should provide units automatically
       await waitFor(() => {
-        expect(
-          screen.getByRole("button", { name: /Select new parent/i })
-        ).toBeInTheDocument();
+        expect(getParentSelectTrigger()).toBeInTheDocument();
       });
     });
 
     it("excludes current unit from available parents", async () => {
-      const user = userEvent.setup();
-
       // Include the unit itself in the hook response
       vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
         ...mockHookResponse,
@@ -342,16 +265,11 @@ describe("MoveOrganizationalUnitDialog", () => {
 
       // Wait for loading to complete and find the listbox button
       await waitFor(() => {
-        expect(
-          screen.getByRole("button", { name: /Select new parent/i })
-        ).toBeInTheDocument();
+        expect(getParentSelectTrigger()).toBeInTheDocument();
       });
 
-      // Open the listbox dropdown
-      const listboxButton = screen.getByRole("button", {
-        name: /Select new parent/i,
-      });
-      await user.click(listboxButton);
+      // Open the Radix Select dropdown.
+      openParentSelect();
 
       // Check that "Berlin Mitte" is not in the dropdown options
       await waitFor(() => {
@@ -376,18 +294,13 @@ describe("MoveOrganizationalUnitDialog", () => {
       // Wait for loading to complete
       await waitFor(
         () => {
-          expect(
-            screen.getByRole("button", { name: /Select new parent/i })
-          ).toBeInTheDocument();
+          expect(getParentSelectTrigger()).toBeInTheDocument();
         },
         { timeout: 5000 }
       );
 
-      // Open the listbox dropdown using fireEvent (more reliable than userEvent for HeadlessUI)
-      const listboxButton = screen.getByRole("button", {
-        name: /Select new parent/i,
-      });
-      fireEvent.click(listboxButton);
+      // Open the Radix Select dropdown.
+      openParentSelect();
 
       // Should have a "Make root unit" option
       await waitFor(
@@ -399,8 +312,6 @@ describe("MoveOrganizationalUnitDialog", () => {
     }, 15000);
 
     it("allows selecting a new parent from the list", async () => {
-      const user = userEvent.setup();
-
       renderWithI18n(
         <MoveOrganizationalUnitDialog
           open={true}
@@ -412,22 +323,19 @@ describe("MoveOrganizationalUnitDialog", () => {
 
       // Wait for loading to complete
       await waitFor(() => {
-        expect(
-          screen.getByRole("button", { name: /Select new parent/i })
-        ).toBeInTheDocument();
+        expect(getParentSelectTrigger()).toBeInTheDocument();
       });
 
-      // Open the listbox dropdown
-      const listboxButton = screen.getByRole("button", {
-        name: /Select new parent/i,
-      });
-      await user.click(listboxButton);
+      // Open the Radix Select dropdown.
+      const listboxButton = openParentSelect();
 
       // Select Region Hamburg
       await waitFor(() => {
         expect(screen.getByText("Region Hamburg")).toBeInTheDocument();
       });
-      await user.click(screen.getByText("Region Hamburg"));
+      selectParentOption(
+        screen.getByRole("option", { name: /Region Hamburg/i })
+      );
 
       // Verify the selection is shown in the button
       await waitFor(() => {
@@ -496,21 +404,18 @@ describe("MoveOrganizationalUnitDialog", () => {
 
       // Wait for loading to complete
       await waitFor(() => {
-        expect(
-          screen.getByRole("button", { name: /Select new parent/i })
-        ).toBeInTheDocument();
+        expect(getParentSelectTrigger()).toBeInTheDocument();
       });
 
-      // Open the listbox dropdown and select a new parent
-      const listboxButton = screen.getByRole("button", {
-        name: /Select new parent/i,
-      });
-      await user.click(listboxButton);
+      // Open the Radix Select dropdown and select a new parent.
+      openParentSelect();
 
       await waitFor(() => {
         expect(screen.getByText("Region Hamburg")).toBeInTheDocument();
       });
-      await user.click(screen.getByText("Region Hamburg"));
+      selectParentOption(
+        screen.getByRole("option", { name: /Region Hamburg/i })
+      );
 
       // Click Move
       await user.click(screen.getByRole("button", { name: /^Move$/i }));
@@ -541,21 +446,18 @@ describe("MoveOrganizationalUnitDialog", () => {
 
       // Wait for loading to complete
       await waitFor(() => {
-        expect(
-          screen.getByRole("button", { name: /Select new parent/i })
-        ).toBeInTheDocument();
+        expect(getParentSelectTrigger()).toBeInTheDocument();
       });
 
-      // Open the listbox dropdown and select "Make root unit" option
-      const listboxButton = screen.getByRole("button", {
-        name: /Select new parent/i,
-      });
-      await user.click(listboxButton);
+      // Open the Radix Select dropdown and select "Make root unit".
+      openParentSelect();
 
       await waitFor(() => {
         expect(screen.getByText(/Make root unit/i)).toBeInTheDocument();
       });
-      await user.click(screen.getByText(/Make root unit/i));
+      selectParentOption(
+        screen.getByRole("option", { name: /Make root unit/i })
+      );
 
       // Click Move
       await user.click(screen.getByRole("button", { name: /^Move$/i }));
@@ -583,9 +485,7 @@ describe("MoveOrganizationalUnitDialog", () => {
 
       // Wait for loading to complete
       await waitFor(() => {
-        expect(
-          screen.getByRole("button", { name: /Select new parent/i })
-        ).toBeInTheDocument();
+        expect(getParentSelectTrigger()).toBeInTheDocument();
       });
 
       // Move button should be disabled when selected parent is the same as current
@@ -611,21 +511,18 @@ describe("MoveOrganizationalUnitDialog", () => {
 
       // Wait for loading to complete
       await waitFor(() => {
-        expect(
-          screen.getByRole("button", { name: /Select new parent/i })
-        ).toBeInTheDocument();
+        expect(getParentSelectTrigger()).toBeInTheDocument();
       });
 
-      // Open the listbox dropdown and select a new parent
-      const listboxButton = screen.getByRole("button", {
-        name: /Select new parent/i,
-      });
-      await user.click(listboxButton);
+      // Open the Radix Select dropdown and select a new parent.
+      openParentSelect();
 
       await waitFor(() => {
         expect(screen.getByText("Region Hamburg")).toBeInTheDocument();
       });
-      await user.click(screen.getByText("Region Hamburg"));
+      selectParentOption(
+        screen.getByRole("option", { name: /Region Hamburg/i })
+      );
 
       // Click Move
       await user.click(screen.getByRole("button", { name: /^Move$/i }));
@@ -655,21 +552,18 @@ describe("MoveOrganizationalUnitDialog", () => {
 
       // Wait for loading to complete
       await waitFor(() => {
-        expect(
-          screen.getByRole("button", { name: /Select new parent/i })
-        ).toBeInTheDocument();
+        expect(getParentSelectTrigger()).toBeInTheDocument();
       });
 
-      // Open the listbox dropdown and select a new parent
-      const listboxButton = screen.getByRole("button", {
-        name: /Select new parent/i,
-      });
-      await user.click(listboxButton);
+      // Open the Radix Select dropdown and select a new parent.
+      openParentSelect();
 
       await waitFor(() => {
         expect(screen.getByText("Region Hamburg")).toBeInTheDocument();
       });
-      await user.click(screen.getByText("Region Hamburg"));
+      selectParentOption(
+        screen.getByRole("option", { name: /Region Hamburg/i })
+      );
 
       // Click Move
       await user.click(screen.getByRole("button", { name: /^Move$/i }));
@@ -719,21 +613,18 @@ describe("MoveOrganizationalUnitDialog", () => {
 
       // Wait for loading to complete
       await waitFor(() => {
-        expect(
-          screen.getByRole("button", { name: /Select new parent/i })
-        ).toBeInTheDocument();
+        expect(getParentSelectTrigger()).toBeInTheDocument();
       });
 
-      // Open the listbox dropdown and select a new parent
-      const listboxButton = screen.getByRole("button", {
-        name: /Select new parent/i,
-      });
-      await user.click(listboxButton);
+      // Open the Radix Select dropdown and select a new parent.
+      openParentSelect();
 
       await waitFor(() => {
         expect(screen.getByText("Region Hamburg")).toBeInTheDocument();
       });
-      await user.click(screen.getByText("Region Hamburg"));
+      selectParentOption(
+        screen.getByRole("option", { name: /Region Hamburg/i })
+      );
 
       // Click Move
       await user.click(screen.getByRole("button", { name: /^Move$/i }));
@@ -771,9 +662,7 @@ describe("MoveOrganizationalUnitDialog", () => {
       );
 
       await waitFor(() => {
-        expect(
-          screen.getByRole("button", { name: /Select new parent/i })
-        ).toBeInTheDocument();
+        expect(getParentSelectTrigger()).toBeInTheDocument();
       });
     });
   });

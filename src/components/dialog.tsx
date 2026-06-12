@@ -1,10 +1,8 @@
-// SPDX-FileCopyrightText: Tailwind Labs Inc.
-// SPDX-License-Identifier: LicenseRef-TailwindPlus
+// SPDX-FileCopyrightText: 2026 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
-import * as Headless from "@headlessui/react";
-import clsx from "clsx";
-import type React from "react";
-import { Text } from "./text";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { cn } from "@/lib/utils";
 
 const sizes = {
   xs: "sm:max-w-xs",
@@ -19,54 +17,57 @@ const sizes = {
 };
 
 export function Dialog({
+  open,
+  onClose,
   size = "lg",
   className,
   children,
-  ...props
 }: {
+  open: boolean;
+  onClose: (open: false) => void;
   size?: keyof typeof sizes;
   className?: string;
   children: React.ReactNode;
-} & Omit<Headless.DialogProps, "as" | "className">) {
+}) {
   return (
-    <Headless.Dialog {...props}>
-      <Headless.DialogBackdrop
-        transition
-        className="fixed inset-0 flex w-screen justify-center overflow-y-auto bg-zinc-950/25 px-2 py-2 transition duration-100 focus:outline-0 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in sm:px-6 sm:py-8 lg:px-8 lg:py-16 dark:bg-zinc-950/50"
-      />
-
-      <div className="fixed inset-0 w-screen overflow-y-auto pt-6 sm:pt-0">
-        <div className="grid min-h-full grid-rows-[1fr_auto] justify-items-center sm:grid-rows-[1fr_auto_3fr] sm:p-4">
-          <Headless.DialogPanel
-            transition
-            className={clsx(
-              className,
-              sizes[size],
-              "row-start-2 w-full min-w-0 rounded-t-3xl bg-white p-(--gutter) shadow-lg ring-1 ring-zinc-950/10 [--gutter:--spacing(8)] sm:mb-auto sm:rounded-2xl dark:bg-zinc-900 dark:ring-white/10 forced-colors:outline",
-              "transition duration-100 will-change-transform data-closed:translate-y-12 data-closed:opacity-0 data-enter:ease-out data-leave:ease-in sm:data-closed:translate-y-0 sm:data-closed:data-enter:scale-95"
-            )}
-          >
-            {children}
-          </Headless.DialogPanel>
-        </div>
-      </div>
-    </Headless.Dialog>
+    <DialogPrimitive.Root
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose(false);
+        }
+      }}
+    >
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay
+          data-slot="dialog-overlay"
+          className="fixed inset-0 z-40 bg-zinc-950/25 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0 dark:bg-zinc-950/50"
+        />
+        <DialogPrimitive.Content
+          data-slot="dialog-content"
+          className={cn(
+            "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 overflow-x-hidden overflow-y-auto rounded-lg border border-zinc-200 bg-white p-6 text-zinc-950 shadow-lg duration-200 overscroll-contain data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
+            sizes[size],
+            className
+          )}
+        >
+          {children}
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }
 
 export function DialogTitle({
   className,
   ...props
-}: { className?: string } & Omit<
-  Headless.DialogTitleProps,
-  "as" | "className"
->) {
+}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>) {
   return (
-    <Headless.DialogTitle
+    <DialogPrimitive.Title
       {...props}
-      className={clsx(
-        className,
-        "text-lg/6 font-semibold text-balance text-zinc-950 sm:text-base/6 dark:text-white"
+      className={cn(
+        "text-lg/6 font-semibold text-balance text-zinc-950 sm:text-base/6 dark:text-white",
+        className
       )}
     />
   );
@@ -75,15 +76,14 @@ export function DialogTitle({
 export function DialogDescription({
   className,
   ...props
-}: { className?: string } & Omit<
-  Headless.DescriptionProps<typeof Text>,
-  "as" | "className"
->) {
+}: React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>) {
   return (
-    <Headless.Description
-      as={Text}
+    <DialogPrimitive.Description
       {...props}
-      className={clsx(className, "mt-2 text-pretty")}
+      className={cn(
+        "mt-2 text-pretty text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400",
+        className
+      )}
     />
   );
 }
@@ -92,7 +92,7 @@ export function DialogBody({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  return <div {...props} className={clsx(className, "mt-6")} />;
+  return <div {...props} className={cn("mt-6", className)} />;
 }
 
 export function DialogActions({
@@ -102,9 +102,9 @@ export function DialogActions({
   return (
     <div
       {...props}
-      className={clsx(
-        className,
-        "mt-8 flex flex-col-reverse items-center justify-end gap-3 *:w-full sm:flex-row sm:*:w-auto"
+      className={cn(
+        "mt-8 flex flex-col-reverse items-center justify-end gap-3 *:w-full sm:flex-row sm:*:w-auto",
+        className
       )}
     />
   );

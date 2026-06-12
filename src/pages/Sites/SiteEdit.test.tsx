@@ -194,16 +194,14 @@ describe("SiteEdit", () => {
     renderWithRouter();
 
     await waitFor(() => {
-      const customerSelect = screen.getByLabelText(
-        /customer/i
-      ) as HTMLSelectElement;
-      expect(customerSelect.value).toBe("customer-1");
+      expect(
+        screen.getByRole("combobox", { name: /customer/i })
+      ).toHaveTextContent("C001 - Customer One");
     });
 
-    const orgUnitSelect = screen.getByLabelText(
-      /organizational unit/i
-    ) as HTMLSelectElement;
-    expect(orgUnitSelect.value).toBe("org-1");
+    expect(
+      screen.getByRole("combobox", { name: /organizational unit/i })
+    ).toHaveTextContent("IT Department");
   });
 
   it(

@@ -9,9 +9,9 @@ import {
   NotificationDeploymentUnavailableError,
   useNotifications,
 } from "@/hooks/useNotifications";
-import { Button } from "@/components/button";
 import { getNotificationInstallationsErrorMessage } from "@/components/notificationInstallationsErrorMessage";
-import { XMarkIcon, BellIcon } from "@heroicons/react/24/outline";
+import { Button } from "@/ui";
+import { Bell, X } from "lucide-react";
 
 function getPromptErrorMessage(
   error: unknown,
@@ -108,7 +108,7 @@ export function NotificationPermissionPrompt() {
     >
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0">
-          <BellIcon className="h-6 w-6 text-blue-500" aria-hidden="true" />
+          <Bell className="h-6 w-6 text-blue-500" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
@@ -142,7 +142,7 @@ export function NotificationPermissionPrompt() {
               onClick={handleDismiss}
               disabled={isLoading}
               className="text-sm"
-              color="zinc"
+              variant="secondary"
             >
               <Trans>Not Now</Trans>
             </Button>
@@ -151,9 +151,9 @@ export function NotificationPermissionPrompt() {
         <button
           onClick={handleDismiss}
           className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          aria-label="Dismiss notification prompt"
+          aria-label={_(msg`Dismiss notification prompt`)}
         >
-          <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+          <X className="h-5 w-5" aria-hidden="true" />
         </button>
       </div>
     </div>

@@ -13,16 +13,6 @@ import type {
   ActivityVerification,
 } from "../../services/activityLogApi";
 
-vi.mock("../../components/dialog", () => ({
-  Dialog: vi.fn(({ open, children }) =>
-    open ? <div role="dialog">{children}</div> : null
-  ),
-  DialogTitle: vi.fn(({ children }) => <div>{children}</div>),
-  DialogDescription: vi.fn(({ children }) => <div>{children}</div>),
-  DialogBody: vi.fn(({ children }) => <div>{children}</div>),
-  DialogActions: vi.fn(({ children }) => <div>{children}</div>),
-}));
-
 // Mock the activity log API
 vi.mock("../../services/activityLogApi");
 
@@ -114,7 +104,9 @@ describe("ActivityDetailDialog", () => {
     renderWithProviders({ activity: mockActivity, open: true, onClose });
 
     await waitFor(() => {
-      expect(screen.getByText(/activity log details/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("dialog", { name: /activity log details/i })
+      ).toBeInTheDocument();
     });
   });
 

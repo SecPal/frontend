@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `/login` no longer renders the legacy split brand-panel layout on large viewports; the `login-05` centered card is now the single layout across breakpoints. The `LoginBrandPanel` primitive remains available in `src/pages/Auth/ui/primitives.tsx` for future use but is no longer composed on the login route.
-- Swapped the three icons on the login surface from `@heroicons/react/24/outline` to `lucide-react`: passkey-action `KeyIcon` → `KeyRound`, AGPL-license `ScaleIcon` → `Scale`, source-code `CodeBracketIcon` → `Code2`. `@heroicons/react` remains a project dependency because other routes still use it; the login surface itself no longer references it.
+- Swapped the three icons on the login surface from the legacy outline icon package to `lucide-react`: passkey-action `KeyIcon` → `KeyRound`, AGPL-license `ScaleIcon` → `Scale`, source-code `CodeBracketIcon` → `Code2`.
 - Migrated every remaining non-shadcn surface on the login route to true Radix-backed shadcn primitives, fulfilling the "Login uses shadcn exclusively" requirement:
   - `LoginDialog` (MFA challenge) now wraps `@radix-ui/react-dialog` with Portal + Overlay + Content + auto-focus + focus-trap + Esc/outside-click dismissal handled by Radix (the previous custom div + hand-rolled focus-trap is removed; `LoginDialogTitle` / `LoginDialogDescription` are thin wrappers around `DialogPrimitive.Title` / `DialogPrimitive.Description`).
   - `LoginFieldLabel` wraps `@radix-ui/react-label` for proper `<button role="radio">` association.
@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Stopped tracking `.context/progress.md` so `.gitignore` matches reality (issue #1200): `.gitignore` line 79 already lists `.context` as ignored, but the workspace-local agent scratchpad was added to the index in PR #1197 and silently carried in every shadcn-migration commit (`cfc7da3` through `dd65991` on PR #1198) because `.gitignore` does not apply to paths that are already tracked. Ran `git rm --cached .context/progress.md` so the file stays on disk for local agent collaboration but is no longer part of the public repository, and added `tests/repo-hygiene-context-untracked.test.ts` — a Vitest guard that shells out to `git ls-files -- .context` and asserts the result is empty — so the regression cannot return silently on a future PR. Historical commits are intentionally left untouched (see "Out of scope" in the issue); only the working-tree tracking and the regression guard change.
+- Stopped the migrated app-shell wrappers `NavbarItem`, `SidebarItem`, `DropdownItem`, and `AvatarButton` from spreading the wrapper-level `href` prop into `react-router-dom`'s `<Link>`. `<Link>` consumes `to` (not `href`) and was already overriding the leaked attribute with its own `useHref(to)`-derived value, so the leak was silent at runtime today, but it coupled the wrapper API to undocumented router prop ordering and made future router upgrades fragile. The four wrappers now destructure `href` from rest props before forwarding the remaining props to `<Link to={href}>`. Added a focused regression suite (`src/components/router-link-wrappers.test.tsx`) that mocks `react-router-dom`'s `Link` and asserts the captured props expose `to` only, with no `href` leak.
 - Approved the install scripts for `esbuild` and the macOS-only `fsevents` (both the top-level `fsevents@2.3.3` and the nested `playwright/node_modules/fsevents@2.3.2`) via a project-level `allowScripts` entry in `package.json`, so `npm install` under npm 11 no longer prints the `allow-scripts` pending-approval warning on either Linux/Windows (esbuild) or macOS (fsevents). Both install scripts only set up the platform-specific native binding, so build and test behavior is unchanged. The entries are unpinned (`"esbuild": true`, `"fsevents": true`) so future Dependabot bumps do not re-introduce the warning under fresh versions.
 - Fixed `LoginLanguageSwitcher` error handling: locale-load failures now always display the localized fallback message instead of leaking raw internal `Error.message` strings (network errors, chunk URLs) into the UI.
 - Pinned the login legal footer to the bottom of the viewport on every breakpoint (`absolute bottom-4 left-1/2 -translate-x-1/2 px-6`) so it sits flush against the viewport edge instead of sharing the vertically centered flex stack with the credential card; the card now stays perfectly mid-viewport on mobile (previously it was pushed up by the footer + `gap-6`).
@@ -61,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `ProgressIndicator` using the new `Progress` primitive with `aria-label` for accessible progress announcement.
 - Added `OnboardingAuthShell`, `OnboardingAuthCard`, and `OnboardingAuthHeader` layout primitives to `src/pages/Onboarding/ui/primitives.tsx`; `OnboardingComplete` now uses these via a local `OnboardingCompleteFrame` wrapper instead of repeating the layout markup in every render branch.
 - Extracted shared `cn()` utility to `src/lib/utils.ts` (clsx + tailwind-merge); both `src/pages/Auth/ui/utils.ts` and `src/pages/Onboarding/ui/utils.ts` now re-export from this canonical location.
-- Added `auth/onboarding migration boundary` static-analysis test (`tests/auth-onboarding-migration-boundary.test.ts`) that asserts the auth and onboarding route scope is free of legacy Catalyst/Headless-UI imports and `LicenseRef-TailwindPlus` markers.
+- Added `auth/onboarding migration boundary` static-analysis test (`tests/auth-onboarding-migration-boundary.test.ts`) that asserts the auth and onboarding route scope is free of legacy UI imports and proprietary license markers.
 - Migrated `Select`, `Checkbox`, `RadioGroup`, `RadioGroupItem`, `Progress`, and `FieldLabel` in `src/pages/Onboarding/ui/primitives.tsx` from native HTML elements to Radix UI primitives (`@radix-ui/react-select`, `@radix-ui/react-checkbox`, `@radix-ui/react-radio-group`, `@radix-ui/react-progress`, `@radix-ui/react-label`, `@radix-ui/react-popover`).
 - Added `AutocompleteListbox` and `AutocompleteOption` components to `src/pages/Onboarding/ui/primitives.tsx` for accessible combobox autocomplete surfaces backed by `@radix-ui/react-popover`.
 
@@ -968,10 +969,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Graceful fallback when Storage API unavailable
   - 4 comprehensive tests for all scenarios
 
-- **Catalyst Setup Completion**: Production-ready configuration
+- **Legacy UI setup completion**: Production-ready configuration
   - React Router v7 for client-side navigation with SPA routing
   - Inter font family integration via @fontsource/inter (weights 400-700)
-  - Heroicons icon library (@heroicons/react) for UI consistency
+  - Legacy outline icon library for UI consistency
   - Updated Link component for React Router integration
   - Tailwind @theme configuration with Inter and font features
   - Demo routes (Home, About) showcasing routing capabilities
@@ -987,9 +988,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - PWA icons (192x192, 512x512) with SecPal branding
   - Comprehensive test coverage for online/offline detection
 
-- **Catalyst UI Kit integration**: All 27 Catalyst components
+- **Legacy UI kit integration**: All 27 components
   - Components: Alert, Avatar, Badge, Button, Checkbox, Combobox, Dialog, Dropdown, Input, Select, Table, etc.
-  - Dependencies: `@headlessui/react`, `motion`, `clsx`
+  - Dependencies: legacy menu primitives, `motion`, `clsx`
   - Documentation reference in README
   - SPDX license headers for REUSE compliance
 

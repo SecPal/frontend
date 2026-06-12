@@ -128,7 +128,7 @@ describe("UpdatePrompt", () => {
       const spinner = document.querySelector(".animate-spin");
       expect(spinner).toBeInTheDocument();
       expect(spinner).toHaveClass("h-4", "w-4"); // size="sm"
-      expect(spinner).toHaveClass("border-t-white"); // white color
+      expect(spinner).toHaveClass("text-white"); // white color
     });
   });
 
@@ -242,10 +242,10 @@ describe("UpdatePrompt", () => {
       expect(wrapper).toHaveClass("text-white");
     });
 
-    it("should use Catalyst Button with white color variant", () => {
+    it("should use the shared Button with white color variant", () => {
       renderWithI18n(<UpdatePrompt />);
 
-      // Button should be rendered with proper Catalyst styling
+      // Button should be rendered with proper shared UI styling.
       const button = screen.getByRole("button", { name: /update/i });
       expect(button).toBeInTheDocument();
     });

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { Trans } from "@lingui/react/macro";
-import { Text } from "./text";
 
 export interface EncryptionProgressProps {
   /**
@@ -43,21 +42,21 @@ export function EncryptionProgress({
       role="status"
       aria-live="polite"
     >
-      <Text className="text-blue-900 font-semibold mb-2">
+      <p className="mb-2 text-base/6 font-semibold text-blue-900 sm:text-sm/6">
         <Trans>Encrypting files...</Trans>
-      </Text>
+      </p>
 
       {files.length > 0 && (
         <div className="space-y-2">
           {files.map(([filename, percentage]) => (
             <div key={filename}>
               <div className="flex justify-between items-center mb-1">
-                <Text className="text-sm text-blue-800 truncate flex-1">
+                <p className="flex-1 truncate text-sm text-blue-800">
                   {filename}
-                </Text>
-                <Text className="text-sm text-blue-800 font-semibold ml-2">
+                </p>
+                <p className="ml-2 text-sm font-semibold text-blue-800">
                   {percentage}%
-                </Text>
+                </p>
               </div>
               <div className="w-full bg-blue-200 rounded-full h-2">
                 <div

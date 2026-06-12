@@ -9,6 +9,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -45,6 +46,12 @@ function renderWithRouter(initialRoute = "/sites/new") {
       </I18nProvider>
     </BrowserRouter>
   );
+}
+
+async function selectRadixOption(label: RegExp, optionName: RegExp) {
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("combobox", { name: label }));
+  await user.click(await screen.findByRole("option", { name: optionName }));
 }
 
 describe("SiteCreate", () => {
@@ -178,10 +185,9 @@ describe("SiteCreate", () => {
     renderWithRouter("/sites/new/customer/customer-1");
 
     await waitFor(() => {
-      const customerSelect = screen.getByLabelText(
-        /customer/i
-      ) as HTMLSelectElement;
-      expect(customerSelect.value).toBe("customer-1");
+      expect(
+        screen.getByRole("combobox", { name: /customer/i })
+      ).toHaveTextContent("C001 - Customer One");
     });
   });
 
@@ -195,12 +201,8 @@ describe("SiteCreate", () => {
       await screen.findByLabelText(/customer/i);
 
       // Fill form
-      fireEvent.change(screen.getByLabelText(/customer/i), {
-        target: { value: "customer-1" },
-      });
-      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-        target: { value: "org-1" },
-      });
+      await selectRadixOption(/customer/i, /C001 - Customer One/i);
+      await selectRadixOption(/organizational unit/i, /IT Department/i);
       fireEvent.change(screen.getByLabelText(/site name/i), {
         target: { value: "New Site" },
       });
@@ -257,12 +259,8 @@ describe("SiteCreate", () => {
       });
 
       // Fill all required fields to bypass HTML5 validation
-      fireEvent.change(screen.getByLabelText(/customer/i), {
-        target: { value: "customer-1" },
-      });
-      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-        target: { value: "org-1" },
-      });
+      await selectRadixOption(/customer/i, /C001 - Customer One/i);
+      await selectRadixOption(/organizational unit/i, /IT Department/i);
       fireEvent.change(screen.getByLabelText(/site name/i), {
         target: { value: "Test Site" },
       });
@@ -281,6 +279,14 @@ describe("SiteCreate", () => {
 
       await waitFor(() => {
         expect(customersApi.createSite).toHaveBeenCalled();
+        expect(screen.getByLabelText(/site name/i)).toHaveAttribute(
+          "aria-describedby",
+          "site-name-error"
+        );
+        expect(screen.getByLabelText(/street/i)).toHaveAttribute(
+          "aria-describedby",
+          "site-street-error"
+        );
         expect(
           screen.getByText(/the name must not exceed 255 characters/i)
         ).toBeInTheDocument();
@@ -311,12 +317,8 @@ describe("SiteCreate", () => {
         expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
       });
 
-      fireEvent.change(screen.getByLabelText(/customer/i), {
-        target: { value: "customer-1" },
-      });
-      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-        target: { value: "org-1" },
-      });
+      await selectRadixOption(/customer/i, /C001 - Customer One/i);
+      await selectRadixOption(/organizational unit/i, /IT Department/i);
 
       // Fill fields with data that will trigger validation error
       fireEvent.change(screen.getByLabelText(/site name/i), {
@@ -405,12 +407,8 @@ describe("SiteCreate", () => {
         expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
       });
 
-      fireEvent.change(screen.getByLabelText(/customer/i), {
-        target: { value: "customer-1" },
-      });
-      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-        target: { value: "org-1" },
-      });
+      await selectRadixOption(/customer/i, /C001 - Customer One/i);
+      await selectRadixOption(/organizational unit/i, /IT Department/i);
       fireEvent.change(screen.getByLabelText(/site name/i), {
         target: { value: "New Site" },
       });
@@ -463,12 +461,8 @@ describe("SiteCreate", () => {
         expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
       });
 
-      fireEvent.change(screen.getByLabelText(/customer/i), {
-        target: { value: "customer-1" },
-      });
-      fireEvent.change(screen.getByLabelText(/organizational unit/i), {
-        target: { value: "org-1" },
-      });
+      await selectRadixOption(/customer/i, /C001 - Customer One/i);
+      await selectRadixOption(/organizational unit/i, /IT Department/i);
       fireEvent.change(screen.getByLabelText(/site name/i), {
         target: { value: "Race Safe Site" },
       });

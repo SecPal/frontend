@@ -22,7 +22,7 @@ import {
   Input,
   CommandPopover,
   type CommandOption,
-} from "../Onboarding/ui";
+} from "./ui";
 import type { PostalAddressDraft } from "../../lib/employeeAddresses";
 import {
   getCountrySelectOptions,

@@ -724,7 +724,7 @@ test.describe("Organization Management", () => {
       await expect(
         page.getByText(new RegExp(`Move "${MOVED_UNIT_NAME}"`, "i"))
       ).toBeVisible();
-      await page.getByRole("button", { name: /select new parent/i }).click();
+      await page.getByRole("combobox", { name: /select new parent/i }).click();
       await page
         .getByRole("option", { name: new RegExp(TARGET_PARENT_NAME, "i") })
         .click();
@@ -1098,7 +1098,9 @@ test.describe("Organization Management", () => {
         await expect(
           page.getByText(new RegExp(`Move "${escapeRegExp(branchName)}"`, "i"))
         ).toBeVisible();
-        await page.getByRole("button", { name: /select new parent/i }).click();
+        await page
+          .getByRole("combobox", { name: /select new parent/i })
+          .click();
         await page
           .getByRole("option", {
             name: new RegExp(escapeRegExp(targetCompanyName), "i"),

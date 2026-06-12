@@ -19,25 +19,29 @@ import type {
   TotpEnrollmentPreparation,
   MfaVerificationMethod,
 } from "@/types/api";
-import { Heading } from "../../components/heading";
-import { Text } from "../../components/text";
 import { LanguageSwitcher } from "../../components/LanguageSwitcher";
-import { Divider } from "../../components/divider";
-import { Button } from "../../components/button";
-import { ErrorMessage, Field, Label } from "../../components/fieldset";
-import { Input } from "../../components/input";
 import {
+  Alert,
+  AlertDescription,
+  Button,
+  Card,
+  CardContent,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogBody,
+  DialogContent,
   DialogDescription,
+  DialogOverlay,
+  DialogPortal,
   DialogTitle,
-} from "../../components/dialog";
-import {
-  DescriptionDetails,
-  DescriptionList,
-  DescriptionTerm,
-} from "../../components/description-list";
+  Field,
+  FieldError,
+  FieldLabel,
+  Input,
+  RadioGroup,
+  RadioGroupItem,
+} from "@/ui";
 import {
   AuthApiError,
   confirmTotpEnrollment,
@@ -58,6 +62,17 @@ import {
 } from "../../services/passkeyBrowser";
 
 type SensitiveMfaAction = "disable" | "regenerate";
+
+type SettingsDialogSize =
+  | "xs"
+  | "sm"
+  | "md"
+  | "lg"
+  | "xl"
+  | "2xl"
+  | "3xl"
+  | "4xl"
+  | "5xl";
 
 function getStatusLabel(status: MfaStatus | null): ReactNode {
   if (!status?.enabled) {
@@ -99,6 +114,50 @@ function getSensitiveActionLabels(action: SensitiveMfaAction | null): {
     ),
     submit: <Trans>Regenerate codes</Trans>,
   };
+}
+
+function SettingsDialog({
+  open,
+  onClose,
+  size = "md",
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  size?: SettingsDialogSize;
+  children: ReactNode;
+}) {
+  return (
+    <Dialog open={open} onClose={onClose}>
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogContent size={size}>{children}</DialogContent>
+      </DialogPortal>
+    </Dialog>
+  );
+}
+
+function SettingsDivider() {
+  return <div className="border-t border-zinc-200 dark:border-zinc-800" />;
+}
+
+function DescriptionRow({
+  term,
+  children,
+}: {
+  term: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className="grid grid-cols-1 gap-1 border-t border-zinc-100 py-3 first:border-t-0 sm:grid-cols-3 sm:gap-4 dark:border-zinc-800">
+      <dt className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+        {term}
+      </dt>
+      <dd className="text-sm text-zinc-950 sm:col-span-2 dark:text-zinc-50">
+        {children}
+      </dd>
+    </div>
+  );
 }
 
 export function SettingsPage() {
@@ -170,7 +229,7 @@ export function SettingsPage() {
         } else if (error instanceof Error) {
           setMfaStatusError(error.message);
         } else {
-          setMfaStatusError("Failed to load MFA status.");
+          setMfaStatusError(_(msg`Failed to load MFA status.`));
         }
       })
       .finally(() => {
@@ -182,7 +241,7 @@ export function SettingsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [_]);
 
   useEffect(() => {
     let active = true;
@@ -206,7 +265,7 @@ export function SettingsPage() {
         } else if (error instanceof Error) {
           setPasskeyError(error.message);
         } else {
-          setPasskeyError("Failed to load passkeys.");
+          setPasskeyError(_(msg`Failed to load passkeys.`));
         }
       })
       .finally(() => {
@@ -218,7 +277,7 @@ export function SettingsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [_]);
 
   const handlePasskeyRemoval = async (credentialId: string) => {
     setPasskeyError(null);
@@ -234,7 +293,7 @@ export function SettingsPage() {
       } else if (error instanceof Error) {
         setPasskeyError(error.message);
       } else {
-        setPasskeyError("Failed to delete passkey.");
+        setPasskeyError(_(msg`Failed to delete passkey.`));
       }
     } finally {
       setRemovingPasskeyId(null);
@@ -247,7 +306,7 @@ export function SettingsPage() {
     const trimmedLabel = passkeyLabel.trim();
 
     if (!trimmedLabel) {
-      setPasskeyError("Enter a label for this passkey.");
+      setPasskeyError(_(msg`Enter a label for this passkey.`));
       return;
     }
 
@@ -302,7 +361,9 @@ export function SettingsPage() {
         );
       } catch {
         setPasskeyError(
-          "Passkey registered, but the enrolled passkey list could not be refreshed."
+          _(
+            msg`Passkey registered, but the enrolled passkey list could not be refreshed.`
+          )
         );
       } finally {
         setIsLoadingPasskeys(false);
@@ -316,21 +377,27 @@ export function SettingsPage() {
         error.name === "NotAllowedError"
       ) {
         setPasskeyError(
-          "Passkey registration was cancelled or not permitted by the browser."
+          _(
+            msg`Passkey registration was cancelled or not permitted by the browser.`
+          )
         );
       } else if (error instanceof DOMException && error.name === "AbortError") {
-        setPasskeyError("Passkey registration timed out. Please try again.");
+        setPasskeyError(
+          _(msg`Passkey registration timed out. Please try again.`)
+        );
       } else if (
         error instanceof Error &&
         /credential.manager/i.test(error.message)
       ) {
         setPasskeyError(
-          "No credential provider is available on this device. Check that a passkey-capable app (e.g. Bitwarden) is installed and enabled as a credential provider in your device settings."
+          _(
+            msg`No credential provider is available on this device. Check that a passkey-capable app (e.g. Bitwarden) is installed and enabled as a credential provider in your device settings.`
+          )
         );
       } else if (error instanceof Error) {
         setPasskeyError(error.message);
       } else {
-        setPasskeyError("Failed to register passkey.");
+        setPasskeyError(_(msg`Failed to register passkey.`));
       }
     } finally {
       setIsRegisteringPasskey(false);
@@ -354,12 +421,14 @@ export function SettingsPage() {
       } else if (error instanceof Error) {
         setEnrollmentPreparationError(error.message);
       } else {
-        setEnrollmentPreparationError("Failed to prepare MFA enrollment.");
+        setEnrollmentPreparationError(
+          _(msg`Failed to prepare MFA enrollment.`)
+        );
       }
     } finally {
       setIsPreparingEnrollment(false);
     }
-  }, []);
+  }, [_]);
 
   const handleOpenEnrollment = () => {
     setIsEnrollmentDialogOpen(true);
@@ -405,7 +474,7 @@ export function SettingsPage() {
       } else if (error instanceof Error) {
         setEnrollmentCodeError(error.message);
       } else {
-        setEnrollmentCodeError("Failed to confirm MFA enrollment.");
+        setEnrollmentCodeError(_(msg`Failed to confirm MFA enrollment.`));
       }
     } finally {
       setIsSubmittingEnrollment(false);
@@ -451,7 +520,7 @@ export function SettingsPage() {
       } else if (error instanceof Error) {
         setSensitiveError(error.message);
       } else {
-        setSensitiveError("Failed to complete MFA action.");
+        setSensitiveError(_(msg`Failed to complete MFA action.`));
       }
     } finally {
       setIsSubmittingSensitiveAction(false);
@@ -476,70 +545,62 @@ export function SettingsPage() {
   return (
     <div className="space-y-10">
       <div>
-        <Heading>
+        <h1 className="text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
           <Trans>Settings</Trans>
-        </Heading>
-        <Text className="mt-2">
+        </h1>
+        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
           <Trans>Manage your application preferences.</Trans>
-        </Text>
+        </p>
       </div>
 
-      <Divider />
+      <SettingsDivider />
 
       <section className="space-y-6">
         <div>
           <div>
-            <Heading level={2}>
+            <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
               <Trans>Multi-factor authentication</Trans>
-            </Heading>
+            </h2>
           </div>
         </div>
 
         {mfaStatusError ? (
           <div className="rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
-            <Text className="text-sm text-red-800 dark:text-red-200">
+            <p className="text-sm text-red-800 dark:text-red-200">
               {mfaStatusError}
-            </Text>
+            </p>
           </div>
         ) : null}
 
-        <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
+        <Card className="p-6">
           {isLoadingMfaStatus ? (
-            <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
               <Trans>Loading MFA status...</Trans>
-            </Text>
+            </p>
           ) : mfaStatusError ? (
-            <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
               <Trans>MFA status could not be loaded.</Trans>
-            </Text>
+            </p>
           ) : (
             <div className="space-y-6">
-              <DescriptionList>
-                <DescriptionTerm>
-                  <Trans>Status</Trans>
-                </DescriptionTerm>
-                <DescriptionDetails>
+              <dl>
+                <DescriptionRow term={<Trans>Status</Trans>}>
                   {getStatusLabel(mfaStatus)}
-                </DescriptionDetails>
-
-                <DescriptionTerm>
-                  <Trans>Recovery codes remaining</Trans>
-                </DescriptionTerm>
-                <DescriptionDetails>
+                </DescriptionRow>
+                <DescriptionRow term={<Trans>Recovery codes remaining</Trans>}>
                   {mfaStatus?.recovery_codes_remaining ?? 0}
-                </DescriptionDetails>
-              </DescriptionList>
+                </DescriptionRow>
+              </dl>
 
               {mfaStatus?.enabled ? (
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Button
-                    color="blue"
                     onClick={() => handleOpenSensitiveAction("regenerate")}
                   >
                     <Trans>Regenerate recovery codes</Trans>
                   </Button>
                   <Button
-                    color="red"
+                    variant="destructive"
                     onClick={() => handleOpenSensitiveAction("disable")}
                   >
                     <Trans>Disable MFA</Trans>
@@ -547,146 +608,144 @@ export function SettingsPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <Text className="text-sm text-zinc-600 dark:text-zinc-300">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
                     <Trans>
                       MFA is currently off for this account. Set up an
                       authenticator app now to require a second factor at sign
                       in.
                     </Trans>
-                  </Text>
-                  <Button color="blue" onClick={handleOpenEnrollment}>
+                  </p>
+                  <Button onClick={handleOpenEnrollment}>
                     <Trans>Set up MFA</Trans>
                   </Button>
                 </div>
               )}
             </div>
           )}
-        </div>
+        </Card>
       </section>
 
-      <Divider />
+      <SettingsDivider />
 
       <section className="space-y-6">
         <div>
-          <Heading level={2}>
+          <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
             <Trans>Passkeys</Trans>
-          </Heading>
-          <Text className="mt-1">
+          </h2>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
             <Trans>
               Review the passkeys currently enrolled for this account.
             </Trans>
-          </Text>
+          </p>
         </div>
 
-        <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
-          <div className="space-y-4">
-            {supportsPasskeys ? (
-              <form
-                className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
-                onSubmit={handlePasskeyRegistration}
-              >
-                <Field>
-                  <Label htmlFor="passkey-label">
-                    <Trans>Passkey label</Trans>
-                  </Label>
-                  <Input
-                    id="passkey-label"
-                    type="text"
-                    value={passkeyLabel}
-                    onChange={(event) => setPasskeyLabel(event.target.value)}
-                    disabled={isRegisteringPasskey}
-                    maxLength={100}
-                  />
-                </Field>
-                <Button
-                  type="submit"
-                  color="blue"
-                  disabled={isRegisteringPasskey}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              {supportsPasskeys ? (
+                <form
+                  className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+                  onSubmit={handlePasskeyRegistration}
                 >
-                  {isRegisteringPasskey ? (
-                    registrationStep === "device" ? (
-                      <Trans>Complete on your device…</Trans>
-                    ) : registrationStep === "saving" ? (
-                      <Trans>Saving passkey…</Trans>
+                  <Field>
+                    <FieldLabel htmlFor="passkey-label">
+                      <Trans>Passkey label</Trans>
+                    </FieldLabel>
+                    <Input
+                      id="passkey-label"
+                      type="text"
+                      value={passkeyLabel}
+                      onChange={(event) => setPasskeyLabel(event.target.value)}
+                      disabled={isRegisteringPasskey}
+                      maxLength={100}
+                    />
+                  </Field>
+                  <Button type="submit" disabled={isRegisteringPasskey}>
+                    {isRegisteringPasskey ? (
+                      registrationStep === "device" ? (
+                        <Trans>Complete on your device…</Trans>
+                      ) : registrationStep === "saving" ? (
+                        <Trans>Saving passkey…</Trans>
+                      ) : (
+                        <Trans>Adding passkey...</Trans>
+                      )
                     ) : (
-                      <Trans>Adding passkey...</Trans>
-                    )
-                  ) : (
-                    <Trans>Add passkey</Trans>
-                  )}
-                </Button>
-              </form>
-            ) : (
-              <Text className="text-sm text-zinc-600 dark:text-zinc-300">
-                <Trans>This browser does not support passkeys.</Trans>
-              </Text>
-            )}
-            {passkeyError ? (
-              <Text className="text-sm text-red-700 dark:text-red-300">
-                {passkeyError}
-              </Text>
-            ) : null}
-            {isLoadingPasskeys ? (
-              <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                <Trans>Loading passkeys...</Trans>
-              </Text>
-            ) : !passkeyError &&
-              passkeys.length === 0 &&
-              !isRegisteringPasskey ? (
-              <Text className="text-sm text-zinc-600 dark:text-zinc-300">
-                <Trans>No passkeys enrolled yet.</Trans>
-              </Text>
-            ) : (
-              <div className="space-y-3">
-                {passkeys.map((passkey) => (
-                  <div
-                    key={passkey.id}
-                    className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/60"
-                  >
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-zinc-950 dark:text-white">
-                          {passkey.label}
-                        </p>
-                        <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                          <Trans>
-                            Added{" "}
-                            {formatDateTime(passkey.created_at, i18n.locale)}
-                          </Trans>
-                        </Text>
+                      <Trans>Add passkey</Trans>
+                    )}
+                  </Button>
+                </form>
+              ) : (
+                <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                  <Trans>This browser does not support passkeys.</Trans>
+                </p>
+              )}
+              {passkeyError ? (
+                <p className="text-sm text-red-700 dark:text-red-300">
+                  {passkeyError}
+                </p>
+              ) : null}
+              {isLoadingPasskeys ? (
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  <Trans>Loading passkeys...</Trans>
+                </p>
+              ) : !passkeyError &&
+                passkeys.length === 0 &&
+                !isRegisteringPasskey ? (
+                <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                  <Trans>No passkeys enrolled yet.</Trans>
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {passkeys.map((passkey) => (
+                    <div
+                      key={passkey.id}
+                      className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/60"
+                    >
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-zinc-950 dark:text-white">
+                            {passkey.label}
+                          </p>
+                          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                            <Trans>
+                              Added{" "}
+                              {formatDateTime(passkey.created_at, i18n.locale)}
+                            </Trans>
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          disabled={removingPasskeyId !== null}
+                          onClick={() => void handlePasskeyRemoval(passkey.id)}
+                        >
+                          {removingPasskeyId === passkey.id ? (
+                            <Trans>Removing...</Trans>
+                          ) : (
+                            <Trans>Remove</Trans>
+                          )}
+                        </Button>
                       </div>
-                      <Button
-                        type="button"
-                        color="red"
-                        disabled={removingPasskeyId !== null}
-                        onClick={() => void handlePasskeyRemoval(passkey.id)}
-                      >
-                        {removingPasskeyId === passkey.id ? (
-                          <Trans>Removing...</Trans>
-                        ) : (
-                          <Trans>Remove</Trans>
-                        )}
-                      </Button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </section>
 
-      <Divider />
+      <SettingsDivider />
 
       {/* Language Settings Section */}
       <section className="space-y-4">
         <div>
-          <Heading level={2}>
+          <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
             <Trans>Language</Trans>
-          </Heading>
-          <Text className="mt-1">
+          </h2>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
             <Trans>Choose your preferred language for the application.</Trans>
-          </Text>
+          </p>
         </div>
 
         <div className="max-w-xs">
@@ -694,7 +753,7 @@ export function SettingsPage() {
         </div>
       </section>
 
-      <Dialog
+      <SettingsDialog
         open={revealedRecoveryCodes !== null}
         onClose={handleCloseRecoveryCodes}
         size="2xl"
@@ -712,15 +771,15 @@ export function SettingsPage() {
         <DialogBody>
           {revealedRecoveryCodes ? (
             <div className="space-y-6">
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
-                <Text className="text-sm text-amber-800 dark:text-amber-200">
+              <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
+                <AlertDescription className="mt-0 text-amber-800 dark:text-amber-200">
                   <Trans>
                     Anyone with one of these recovery codes can bypass your
                     authenticator app once. Do not store them in chat, email, or
                     screenshots.
                   </Trans>
-                </Text>
-              </div>
+                </AlertDescription>
+              </Alert>
 
               <div className="grid gap-3 sm:grid-cols-2">
                 {revealedRecoveryCodes.codes.map((code) => (
@@ -733,12 +792,15 @@ export function SettingsPage() {
                 ))}
               </div>
 
-              <label className="flex items-start gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-white">
-                <input
-                  type="checkbox"
+              <FieldLabel
+                htmlFor="recovery-codes-acknowledgement"
+                className="flex items-start gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-normal text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-white"
+              >
+                <Checkbox
+                  id="recovery-codes-acknowledgement"
                   checked={hasAcknowledgedRecoveryCodes}
-                  onChange={(event) =>
-                    setHasAcknowledgedRecoveryCodes(event.target.checked)
+                  onCheckedChange={(checked) =>
+                    setHasAcknowledgedRecoveryCodes(checked === true)
                   }
                   className="mt-1"
                 />
@@ -748,11 +810,10 @@ export function SettingsPage() {
                     will not be shown again.
                   </Trans>
                 </span>
-              </label>
+              </FieldLabel>
 
               <DialogActions>
                 <Button
-                  color="blue"
                   onClick={handleCloseRecoveryCodes}
                   disabled={!hasAcknowledgedRecoveryCodes}
                 >
@@ -762,9 +823,9 @@ export function SettingsPage() {
             </div>
           ) : null}
         </DialogBody>
-      </Dialog>
+      </SettingsDialog>
 
-      <Dialog
+      <SettingsDialog
         open={isEnrollmentDialogOpen}
         onClose={handleCloseEnrollment}
         size="2xl"
@@ -781,24 +842,27 @@ export function SettingsPage() {
 
         <DialogBody>
           {isPreparingEnrollment ? (
-            <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
               <Trans>Preparing MFA setup...</Trans>
-            </Text>
+            </p>
           ) : enrollmentPreparationError ? (
             <div className="space-y-6">
-              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
-                <Text className="text-sm text-red-800 dark:text-red-200">
+              <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
+                <AlertDescription className="mt-0 text-red-800 dark:text-red-200">
                   {enrollmentPreparationError}
-                </Text>
-              </div>
+                </AlertDescription>
+              </Alert>
 
               <DialogActions>
-                <Button type="button" outline onClick={handleCloseEnrollment}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCloseEnrollment}
+                >
                   <Trans>Cancel</Trans>
                 </Button>
                 <Button
                   type="button"
-                  color="blue"
                   onClick={() => void loadEnrollmentPreparation()}
                 >
                   <Trans>Try again</Trans>
@@ -813,16 +877,16 @@ export function SettingsPage() {
               />
 
               <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-                <Text className="text-sm text-zinc-700 dark:text-zinc-300">
+                <p className="text-sm text-zinc-700 dark:text-zinc-300">
                   <Trans>Manual setup key</Trans>
-                </Text>
+                </p>
                 <code className="mt-3 block break-all rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm tracking-[0.18em] text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white">
                   {enrollmentPreparation.manual_entry_key}
                 </code>
               </div>
 
               <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-                <Text className="text-sm text-zinc-700 dark:text-zinc-300">
+                <p className="text-sm text-zinc-700 dark:text-zinc-300">
                   <Trans>
                     This setup expires at{" "}
                     {formatDateTime(
@@ -831,13 +895,13 @@ export function SettingsPage() {
                     )}
                     .
                   </Trans>
-                </Text>
+                </p>
               </div>
 
               <Field>
-                <Label htmlFor="enrollment-code">
+                <FieldLabel htmlFor="enrollment-code">
                   <Trans>Authenticator code</Trans>
-                </Label>
+                </FieldLabel>
                 <Input
                   id="enrollment-code"
                   name="enrollment-code"
@@ -854,16 +918,16 @@ export function SettingsPage() {
                   }
                 />
                 {enrollmentCodeError ? (
-                  <ErrorMessage id="enrollment-code-error">
+                  <FieldError id="enrollment-code-error">
                     {enrollmentCodeError}
-                  </ErrorMessage>
+                  </FieldError>
                 ) : null}
               </Field>
 
               <DialogActions>
                 <Button
                   type="button"
-                  outline
+                  variant="outline"
                   onClick={handleCloseEnrollment}
                   disabled={isSubmittingEnrollment}
                 >
@@ -871,7 +935,6 @@ export function SettingsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  color="blue"
                   disabled={
                     isSubmittingEnrollment || enrollmentCode.trim().length === 0
                   }
@@ -887,9 +950,9 @@ export function SettingsPage() {
             </form>
           ) : null}
         </DialogBody>
-      </Dialog>
+      </SettingsDialog>
 
-      <Dialog
+      <SettingsDialog
         open={sensitiveAction !== null}
         onClose={() => {
           if (!isSubmittingSensitiveAction) {
@@ -912,39 +975,52 @@ export function SettingsPage() {
                   <Trans>Verification method</Trans>
                 </legend>
 
-                {(["totp", "recovery_code"] as const).map((method) => (
-                  <label
-                    key={method}
-                    className="flex cursor-default items-start gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-white"
-                  >
-                    <input
-                      type="radio"
-                      name="sensitive-mfa-method"
-                      value={method}
-                      checked={sensitiveMethod === method}
-                      onChange={() => setSensitiveMethod(method)}
-                      disabled={isSubmittingSensitiveAction}
-                      className="mt-1"
-                    />
-                    <span>
-                      {method === "totp" ? (
+                <RadioGroup
+                  value={sensitiveMethod}
+                  onValueChange={(value) =>
+                    setSensitiveMethod(value as MfaVerificationMethod)
+                  }
+                  disabled={isSubmittingSensitiveAction}
+                >
+                  {(["totp", "recovery_code"] as const).map((method) => {
+                    const label =
+                      method === "totp" ? (
                         <Trans>Authenticator code</Trans>
                       ) : (
                         <Trans>Recovery code</Trans>
-                      )}
-                    </span>
-                  </label>
-                ))}
+                      );
+
+                    return (
+                      <FieldLabel
+                        key={method}
+                        htmlFor={`sensitive-mfa-method-${method}`}
+                        className="flex cursor-default items-start gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-normal text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-white"
+                      >
+                        <RadioGroupItem
+                          id={`sensitive-mfa-method-${method}`}
+                          value={method}
+                          aria-label={
+                            method === "totp"
+                              ? _(msg`Authenticator code`)
+                              : _(msg`Recovery code`)
+                          }
+                          className="mt-1"
+                        />
+                        <span>{label}</span>
+                      </FieldLabel>
+                    );
+                  })}
+                </RadioGroup>
               </fieldset>
 
               <Field>
-                <Label htmlFor="sensitive-mfa-code">
+                <FieldLabel htmlFor="sensitive-mfa-code">
                   {sensitiveMethod === "totp" ? (
                     <Trans>Authenticator code</Trans>
                   ) : (
                     <Trans>Recovery code</Trans>
                   )}
-                </Label>
+                </FieldLabel>
                 <Input
                   id="sensitive-mfa-code"
                   name="sensitive-mfa-code"
@@ -959,14 +1035,14 @@ export function SettingsPage() {
                   disabled={isSubmittingSensitiveAction}
                 />
                 {sensitiveError ? (
-                  <ErrorMessage>{sensitiveError}</ErrorMessage>
+                  <FieldError>{sensitiveError}</FieldError>
                 ) : null}
               </Field>
 
               <DialogActions>
                 <Button
                   type="button"
-                  outline
+                  variant="outline"
                   onClick={() => {
                     setSensitiveAction(null);
                     setSensitiveCode("");
@@ -978,7 +1054,9 @@ export function SettingsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  color={sensitiveAction === "disable" ? "red" : "blue"}
+                  variant={
+                    sensitiveAction === "disable" ? "destructive" : "default"
+                  }
                   disabled={
                     isSubmittingSensitiveAction ||
                     sensitiveCode.trim().length === 0
@@ -995,7 +1073,7 @@ export function SettingsPage() {
             </form>
           ) : null}
         </DialogBody>
-      </Dialog>
+      </SettingsDialog>
     </div>
   );
 }

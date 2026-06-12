@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Navigate, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Link, Navigate, Routes, Route } from "react-router-dom";
 import { Trans } from "@lingui/react/macro";
 import { ApplicationLayout } from "./components/application-layout";
 import { NativeRuntimePwaGuard } from "./components/NativeRuntimePwaGuard";
@@ -24,9 +24,7 @@ import {
   RouteVaultLockedState,
 } from "./components/RouteGuardState";
 import { OnboardingLayout } from "./components/onboarding-layout";
-import { Heading } from "./components/heading";
-import { Text } from "./components/text";
-import { Button } from "./components/button";
+import { buttonVariants } from "./ui";
 
 // Lazy load route components for better performance
 // Login page is eagerly loaded as it's the first page users see
@@ -74,19 +72,19 @@ const AndroidProvisioningPage = lazy(
 function Home() {
   return (
     <>
-      <Heading>
+      <h1 className="text-2xl/8 font-semibold tracking-normal text-zinc-950 sm:text-xl/8 dark:text-white">
         <Trans>Welcome to SecPal</Trans>
-      </Heading>
-      <Text className="mt-2">
+      </h1>
+      <p className="mt-2 text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
         <Trans>SecPal – A guard’s best friend</Trans>
-      </Text>
+      </p>
       <div className="mt-8 flex gap-4">
-        <Button href="/profile">
+        <Link to="/profile" className={buttonVariants()}>
           <Trans>View Profile</Trans>
-        </Button>
-        <Button href="/about" outline>
+        </Link>
+        <Link to="/about" className={buttonVariants({ variant: "outline" })}>
           <Trans>About</Trans>
-        </Button>
+        </Link>
       </div>
     </>
   );
@@ -95,18 +93,18 @@ function Home() {
 function About() {
   return (
     <>
-      <Heading>
+      <h1 className="text-2xl/8 font-semibold tracking-normal text-zinc-950 sm:text-xl/8 dark:text-white">
         <Trans>About SecPal</Trans>
-      </Heading>
-      <Text className="mt-4">
+      </h1>
+      <p className="mt-4 text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
         <Trans>
           SecPal – operations software for German private security services.
         </Trans>
-      </Text>
+      </p>
       <div className="mt-8">
-        <Button href="/" outline>
+        <Link to="/" className={buttonVariants({ variant: "outline" })}>
           <Trans>Back to Home</Trans>
-        </Button>
+        </Link>
       </div>
     </>
   );

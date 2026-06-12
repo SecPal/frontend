@@ -5,12 +5,12 @@ import { msg } from "@lingui/core/macro";
 import { useState } from "react";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
+import { Link } from "react-router-dom";
 import {
   AuthApiError,
   sendVerificationNotification,
 } from "../services/authApi";
-import { Button } from "./button";
-import { Text } from "./text";
+import { Button, buttonVariants } from "@/ui";
 
 interface RouteBootstrapRecoveryStateProps {
   onRetry: () => void;
@@ -57,7 +57,7 @@ export function RouteBootstrapRecoveryState({
         <h1 className="mb-2 text-lg font-semibold">
           <Trans>Still loading your secure session</Trans>
         </h1>
-        <Text className="text-zinc-500 dark:text-zinc-400">
+        <p className="text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
           {reason === "timeout" ? (
             <Trans>
               SecPal could not confirm your session quickly enough. Retry the
@@ -69,12 +69,12 @@ export function RouteBootstrapRecoveryState({
               failed. Retry the session check or return to the login screen.
             </Trans>
           )}
-        </Text>
+        </p>
         <div className="mt-6 flex justify-center gap-3">
           <Button onClick={onRetry} type="button">
             <Trans>Retry</Trans>
           </Button>
-          <Button outline onClick={onSignInAgain} type="button">
+          <Button variant="outline" onClick={onSignInAgain} type="button">
             <Trans>Go to Login</Trans>
           </Button>
         </div>
@@ -119,13 +119,13 @@ export function RouteVaultLockedState({
         <h1 className="mb-2 text-lg font-semibold">
           <Trans>Unlock your secure offline data</Trans>
         </h1>
-        <Text className="text-zinc-500 dark:text-zinc-400">
+        <p className="text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
           <Trans>
             SecPal locked the local encrypted vault on this device. Unlock to
             restore previously cached offline-safe data, or sign out to clear
             the device state.
           </Trans>
-        </Text>
+        </p>
         <div role="status" aria-live="polite" aria-atomic="true">
           {errorMessage ? (
             <p className="mt-4 text-sm text-red-600 dark:text-red-400">
@@ -144,7 +144,7 @@ export function RouteVaultLockedState({
           >
             {isUnlocking ? <Trans>Unlocking...</Trans> : <Trans>Unlock</Trans>}
           </Button>
-          <Button outline onClick={onSignInAgain} type="button">
+          <Button variant="outline" onClick={onSignInAgain} type="button">
             <Trans>Sign out</Trans>
           </Button>
         </div>
@@ -189,18 +189,18 @@ export function RouteEmailVerificationState({
         <h1 className="mb-2 text-lg font-semibold">
           <Trans>Verify your email address</Trans>
         </h1>
-        <Text className="text-zinc-500 dark:text-zinc-400">
+        <p className="text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
           <Trans>
             SecPal signed you in as {email}, but this account cannot access the
             protected app until the email address is verified.
           </Trans>
-        </Text>
-        <Text className="mt-2 text-zinc-500 dark:text-zinc-400">
+        </p>
+        <p className="mt-2 text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
           <Trans>
             Open the verification email, then return here and check again. If
             the message is missing, request a new verification email below.
           </Trans>
-        </Text>
+        </p>
 
         <div role="status" aria-live="polite">
           {statusMessage ? (
@@ -221,7 +221,7 @@ export function RouteEmailVerificationState({
             <Trans>I have verified my email</Trans>
           </Button>
           <Button
-            outline
+            variant="outline"
             onClick={handleSendVerificationEmail}
             type="button"
             disabled={isSending}
@@ -233,7 +233,7 @@ export function RouteEmailVerificationState({
               <Trans>Send verification email again</Trans>
             )}
           </Button>
-          <Button outline onClick={onSignInAgain} type="button">
+          <Button variant="outline" onClick={onSignInAgain} type="button">
             <Trans>Go to Login</Trans>
           </Button>
         </div>
@@ -249,12 +249,12 @@ export function RouteAccessDeniedState() {
         <h1 className="mb-2 text-lg font-semibold">
           <Trans>Access Denied</Trans>
         </h1>
-        <Text className="text-zinc-500 dark:text-zinc-400">
+        <p className="text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
           <Trans>
             You do not have permission to access this feature. Contact your
             administrator if you believe this is an error.
           </Trans>
-        </Text>
+        </p>
       </div>
     </div>
   );
@@ -267,15 +267,15 @@ export function RouteNotFoundState() {
         <h1 className="mb-2 text-lg font-semibold">
           <Trans>Page Not Found</Trans>
         </h1>
-        <Text className="text-zinc-500 dark:text-zinc-400">
+        <p className="text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
           <Trans>
             The page you requested does not exist or is no longer available.
           </Trans>
-        </Text>
+        </p>
         <div className="mt-6 flex justify-center">
-          <Button href="/" outline>
+          <Link to="/" className={buttonVariants({ variant: "outline" })}>
             <Trans>Back to Home</Trans>
-          </Button>
+          </Link>
         </div>
       </div>
     </div>

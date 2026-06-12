@@ -217,6 +217,10 @@ msgstr "Bestätigen Sie mit Ihrer Authenticator-App oder einem Wiederherstellung
 msgid "Previous Residences"
 msgstr "Frühere Wohnorte"
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Employee not found"
+msgstr "Mitarbeiter nicht gefunden"
+
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
 #. placeholder {2}: pagination.total
@@ -262,6 +266,14 @@ msgstr "Datei konnte nicht gelöscht werden"
 #: src/pages/Sites/SiteEdit.tsx
 msgid "City"
 msgstr "Stadt"
+
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "Failed to update BWR status"
+msgstr "BWR-Status konnte nicht aktualisiert werden"
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Edit email"
+msgstr "E-Mail bearbeiten"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
@@ -389,6 +401,10 @@ msgstr "Mitarbeiter Nummer"
 msgid "By default (unchecked), users cannot see or edit their own employee record. This prevents self-manipulation of salary, rank, etc. Check this box only if you want this user to access their own HR data."
 msgstr "Standardmäßig (nicht aktiviert) können Benutzer ihre eigen Personalakte weder sehen noch bearbeiten. Dies verhindert die Selbstmanipulation von Gehalt, Rang usw. Aktivieren Sie dieses Kontrollkästchen nur, wenn Sie möchten, dass dieser Benutzer auf seine eigene Personalakte zugreifen kann."
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Failed to complete MFA action."
+msgstr "MFA-Aktion konnte nicht abgeschlossen werden."
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Invalid onboarding link. Please check your email and try again."
 msgstr "Ungültiger Onboarding-Link. Bitte prüfen Sie Ihre E-Mail und versuchen Sie es erneut."
@@ -431,6 +447,10 @@ msgstr "Name des Notfallkontakts ist erforderlich."
 #: src/components/RouteGuardState.tsx
 msgid "Retry"
 msgstr "Wiederholen"
+
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Failed to update site"
+msgstr "Standort konnte nicht aktualisiert werden"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
@@ -493,6 +513,10 @@ msgstr "Qualifikationen laden..."
 msgid "Failed"
 msgstr "Fehlgeschlagen"
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Failed to confirm onboarding"
+msgstr "Onboarding konnte nicht bestätigt werden"
+
 #: src/components/NotificationPermissionPrompt.tsx
 #: src/components/NotificationPreferences.tsx
 msgid "This deployment does not currently publish browser Web Push. Keep HTTPS, the selected deployment domain, and same-origin service-worker hosting aligned before rollout."
@@ -516,6 +540,10 @@ msgstr "GitHub-Versionen"
 msgid "Actions"
 msgstr "Aktionen"
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Terminate this employee?"
+msgstr "Diesen Mitarbeiter kündigen?"
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "OpenTimestamp Confirmed"
 msgstr "OpenTimestamp Bestätigt"
@@ -538,6 +566,10 @@ msgstr "Onboarding-Einladung senden"
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Name is required"
 msgstr "Name ist erforderlich"
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Enter a label for this passkey."
+msgstr "Geben Sie eine Bezeichnung für diesen Passkey ein."
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Maximum Assignable Rank"
@@ -751,6 +783,10 @@ msgstr "Neuen Mitarbeiter anlegen"
 msgid "Failed to load employee"
 msgstr "Mitarbeiter konnte nicht geladen werden"
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Failed to load MFA status."
+msgstr "MFA-Status konnte nicht geladen werden."
+
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Delete Site"
 msgstr "Standort löschen"
@@ -766,6 +802,11 @@ msgstr "Ihre aktuellen Antworten werden vor dem ersten Dateiupload als Entwurf g
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This field"
 msgstr "Dieses Feld"
+
+#: src/pages/Sites/SiteDetail.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Failed to load site"
+msgstr "Standort konnte nicht geladen werden"
 
 #: src/pages/Login.tsx
 msgid "Login form"
@@ -868,6 +909,11 @@ msgstr "Möchten Sie Ihr Ausweisdokument jetzt hochladen?"
 msgid "ML"
 msgstr "FE"
 
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Switzerland"
+msgstr "Schweiz"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "This session expired before setup completed. Create a new session to continue."
 msgstr "Diese Sitzung ist abgelaufen, bevor die Einrichtung abgeschlossen wurde. Erstellen Sie eine neue Sitzung, um fortzufahren."
@@ -926,6 +972,10 @@ msgstr "Neuer Kunde"
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Employment Details"
 msgstr "Details zur Beschäftigung"
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Failed to confirm MFA enrollment."
+msgstr "MFA-Einrichtung konnte nicht bestätigt werden."
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 #: src/components/OrganizationalUnitTree.tsx
@@ -1098,6 +1148,10 @@ msgstr "Erledigt"
 msgid "Optional: Upload the reverse side as a second file."
 msgstr "Optional: Laden Sie die Rückseite als zweite Datei hoch."
 
+#: src/pages/Sites/SitesPage.tsx
+msgid "Failed to load sites"
+msgstr "Standorte konnten nicht geladen werden"
+
 #: src/pages/Login.tsx
 msgid "Signing in with passkey..."
 msgstr "Anmeldung mit Passkey..."
@@ -1269,6 +1323,10 @@ msgstr "Laden von Aktivitätsprotokollen..."
 msgid "You can upload now or continue and add this document later before final submission."
 msgstr "Sie können jetzt hochladen oder fortfahren und dieses Dokument später vor der finalen Übermittlung hinzufügen."
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Edit phone"
+msgstr "Telefon bearbeiten"
+
 #. placeholder {0}: pagination.current_page
 #. placeholder {1}: pagination.last_page
 #: src/pages/ActivityLog/ActivityLogList.tsx
@@ -1296,6 +1354,10 @@ msgstr "Meine Organisation"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Suspended"
 msgstr "Ausgesetzt"
+
+#: src/pages/Sites/SiteDetail.tsx
+msgid "Failed to delete site"
+msgstr "Standort konnte nicht gelöscht werden"
 
 #: src/lib/organizationalUnitUtils.ts
 msgid "Holding"
@@ -1328,6 +1390,10 @@ msgstr "Öffnen Sie die Bestätigungs-E-Mail, kehren Sie dann hierher zurück un
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Confirm Onboarding"
 msgstr "Onboarding bestätigen"
+
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "Failed to generate BWR export"
+msgstr "BWR-Export konnte nicht erstellt werden"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Contract start date is required"
@@ -1464,6 +1530,10 @@ msgstr "Taste für manuelle Einstellungen"
 msgid "Which rank range can this user ASSIGN or REMOVE?"
 msgstr "Welchen Rangbereich kann dieser Benutzer ZUWEISEN oder ENTFERNEN?"
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Failed to prepare MFA enrollment."
+msgstr "MFA-Einrichtung konnte nicht vorbereitet werden."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Select an option"
 msgstr "Option auswählen"
@@ -1488,6 +1558,10 @@ msgstr "Erstellen"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Passkey label"
 msgstr "Passkey-Bezeichnung"
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Failed to create customer"
+msgstr "Kunde konnte nicht angelegt werden"
 
 #: src/components/application-layout.tsx
 msgid "Home"
@@ -1526,6 +1600,11 @@ msgstr "Datei erfolgreich hochgeladen."
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "No activity logs found."
 msgstr "Keine Aktivitätsprotokolle gefunden."
+
+#: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Failed to load customer"
+msgstr "Kunde konnte nicht geladen werden"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Back"
@@ -1665,6 +1744,14 @@ msgstr "Untergeordnete Einheit hinzufügen"
 msgid "Country"
 msgstr "Land"
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Edit postal address"
+msgstr "Postanschrift bearbeiten"
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Failed to register passkey."
+msgstr "Passkey konnte nicht registriert werden."
+
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeList.tsx
 #: src/pages/Sites/SitesPage.tsx
@@ -1745,8 +1832,13 @@ msgid "Generating BWR Export..."
 msgstr "BWR-Export wird erstellt..."
 
 #: src/pages/Login.tsx
+#: src/pages/Settings/SettingsPage.tsx
 msgid "No credential provider is available on this device. Check that a passkey-capable app (e.g. Bitwarden) is installed and enabled as a credential provider in your device settings."
 msgstr "Auf diesem Gerät ist kein Anmeldeinformationsanbieter verfügbar. Prüfen Sie, ob eine passkey-fähige App (z. B. Bitwarden) installiert und in den Geräteeinstellungen als Anmeldeinformationsanbieter aktiviert ist."
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Passkey registered, but the enrolled passkey list could not be refreshed."
+msgstr "Passkey wurde registriert, aber die Liste der eingerichteten Passkeys konnte nicht aktualisiert werden."
 
 #: src/pages/Sites/SitesPage.tsx
 msgid "Site Number"
@@ -1814,6 +1906,24 @@ msgstr "{label}: Gültig"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Failed to complete onboarding. Please try again or contact support."
 msgstr "Das Onboarding konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support."
+
+#. js-lingui-explicit-id
+#: src/components/sidebar-layout.tsx
+#: src/components/stacked-layout.tsx
+msgid "layout.mobileNavigation.close"
+msgstr "Navigation schließen"
+
+#. js-lingui-explicit-id
+#: src/components/sidebar-layout.tsx
+#: src/components/stacked-layout.tsx
+msgid "layout.mobileNavigation.description"
+msgstr "Hauptnavigation der Anwendung"
+
+#. js-lingui-explicit-id
+#: src/components/sidebar-layout.tsx
+#: src/components/stacked-layout.tsx
+msgid "layout.mobileNavigation.title"
+msgstr "Navigationsmenü"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Auto-refresh (30s)"
@@ -2335,6 +2445,10 @@ msgstr "Aktivieren"
 msgid "Nationality options could not be loaded right now. Please reload this page and try again."
 msgstr "Nationalitätsoptionen konnten derzeit nicht geladen werden. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
 
+#: src/pages/Sites/SiteCreate.tsx
+msgid "Failed to create site"
+msgstr "Standort konnte nicht angelegt werden"
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Regenerate recovery codes"
 msgstr "Wiederherstellungscodes neu generieren"
@@ -2349,6 +2463,14 @@ msgstr "Dauerhaft"
 #: src/components/OfflineIndicator.tsx
 msgid "You're offline. Click for details."
 msgstr "Sie sind offline. Klicken Sie für Details."
+
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Failed to delete customer"
+msgstr "Kunde konnte nicht gelöscht werden"
+
+#: src/components/NotificationPermissionPrompt.tsx
+msgid "Dismiss notification prompt"
+msgstr "Benachrichtigungshinweis schließen"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
@@ -2410,6 +2532,10 @@ msgstr "Der neue Mitarbeiter erhält unmittelbar nach der Erstellung eine Einfü
 msgid "You do not have permission to perform this action."
 msgstr "Sie haben keine Berechtigung, diese Aktion auszufuehren."
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Failed to delete passkey."
+msgstr "Passkey konnte nicht gelöscht werden."
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No qualifications assigned"
 msgstr "Keine Qualifikationen zugewiesen"
@@ -2427,6 +2553,10 @@ msgstr "BWR-Status wird gespeichert..."
 #: src/pages/Sites/SitesPage.tsx
 msgid "New Site"
 msgstr "Neuer Standort"
+
+#: src/components/ScopeAssignmentForm.tsx
+msgid "Leave empty for no minimum"
+msgstr "Für kein Minimum leer lassen"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Which document are you uploading?"
@@ -2599,6 +2729,10 @@ msgstr "MFA-Einrichtung vorbereiten..."
 msgid "The residence title expiry date cannot be in the past."
 msgstr "Das Ablaufdatum des Aufenthaltstitels darf nicht in der Vergangenheit liegen."
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Edit emergency contacts"
+msgstr "Notfallkontakte bearbeiten"
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "From Date"
 msgstr "Von"
@@ -2632,6 +2766,11 @@ msgstr "Fehler"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 msgstr "Bestätigen Sie mit Ihrer Authentifizierungs-App oder einem Wiederherstellungscode, um alle vorhandenen Wiederherstellungscodes zu ersetzen."
+
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Austria"
+msgstr "Österreich"
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -2677,6 +2816,10 @@ msgstr "\"{0}\" erfolgreich erstellt"
 msgid "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Bitte laden Sie Ihren Personalausweis oder Reisepass hoch (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
+#: src/pages/Customers/CustomersPage.tsx
+msgid "Failed to load customers"
+msgstr "Kunden konnten nicht geladen werden"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "We could not verify your identity with the details provided. For security reasons this onboarding link has been deactivated. Please contact HR for a new invitation."
 msgstr "Ihre Identität konnte mit den angegebenen Daten nicht bestätigt werden. Aus Sicherheitsgründen wurde dieser Onboarding-Link deaktiviert. Bitte wenden Sie sich an die Personalabteilung, um eine neue Einladung zu erhalten."
@@ -2685,6 +2828,10 @@ msgstr "Ihre Identität konnte mit den angegebenen Daten nicht bestätigt werden
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Remove"
 msgstr "Entfernen"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Failed to update customer"
+msgstr "Kunde konnte nicht aktualisiert werden"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Viewing cached data. Some units may be outdated."
@@ -2708,6 +2855,10 @@ msgstr "Noch keine Postanschrift hinterlegt."
 msgid "Failed to save draft"
 msgstr "Entwurf konnte nicht gespeichert werden"
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Confirm this onboarding dossier?"
+msgstr "Dieses Onboarding-Dossier bestätigen?"
+
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "Back to Customers"
 msgstr "Zurück zu den Kunden"
@@ -2721,6 +2872,10 @@ msgstr "Wir konnten das Formular noch nicht abschicken. Bitte überprüfen Sie d
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Settings"
 msgstr "Einstellungen"
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Failed to terminate employee"
+msgstr "Mitarbeiter konnte nicht gekündigt werden"
 
 #: src/components/OfflineDataBanner.tsx
 msgid "Showing cached data"
@@ -2748,6 +2903,10 @@ msgstr "Ausstehend"
 #: src/components/application-layout.tsx
 msgid "Organization"
 msgstr "Organisation"
+
+#: src/components/MfaQrCode.tsx
+msgid "Unable to generate QR code."
+msgstr "QR-Code konnte nicht generiert werden."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Optional description..."
@@ -2906,6 +3065,11 @@ msgstr "Onboarding-Fortschritt"
 msgid "Profile"
 msgstr "Profil"
 
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Please correct the errors below."
+msgstr "Bitte korrigieren Sie die untenstehenden Fehler."
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Orphaned Genesis"
 msgstr "Verwaiste Genesis"
@@ -2933,6 +3097,10 @@ msgstr "Grund"
 #: src/components/NotificationPreferences.tsx
 msgid "SecPal could not sync this browser's notification registration with the server. Refresh the app and try again."
 msgstr "SecPal konnte die Benachrichtigungsregistrierung dieses Browsers nicht mit dem Server synchronisieren. Laden Sie die App neu und versuchen Sie es erneut."
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Activate this employee?"
+msgstr "Diesen Mitarbeiter aktivieren?"
 
 #: src/components/RouteGuardState.tsx
 msgid "Unlocking..."
@@ -2969,9 +3137,21 @@ msgstr "Mitarbeiter laden..."
 msgid "Language"
 msgstr "Sprache"
 
+#: src/components/MfaQrCode.tsx
+msgid "Generating QR code..."
+msgstr "QR-Code wird generiert..."
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Creating enrollment session..."
 msgstr "Enrollment-Sitzung wird erstellt..."
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Failed to load passkeys."
+msgstr "Passkeys konnten nicht geladen werden."
+
+#: src/components/UpdatePrompt.tsx
+msgid "Updating application"
+msgstr "Anwendung wird aktualisiert"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Add passkey"
@@ -2981,6 +3161,10 @@ msgstr "Passkey hinzufügen"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency Contact Relationship"
 msgstr "Beziehung des Notfallkontakts"
+
+#: src/components/ScopeAssignmentForm.tsx
+msgid "0 or empty for non-leadership only"
+msgstr "0 oder leer nur für Nicht-Führungskräfte"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "File removed successfully."
@@ -3038,6 +3222,11 @@ msgstr "Die Passkey-Anmeldung wurde mit ungültigen Benutzerdaten abgeschlossen.
 msgid "Save Draft"
 msgstr "Entwurf speichern"
 
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "(Optional)"
+msgstr "(Optional)"
+
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Living There Since"
@@ -3054,6 +3243,14 @@ msgstr "Merkle-Wurzel"
 #: src/pages/Employees/EmployeeList.tsx
 msgid "Add Employee"
 msgstr "Mitarbeiter hinzufügen"
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Passkey registration was cancelled or not permitted by the browser."
+msgstr "Passkey-Registrierung wurde abgebrochen oder vom Browser nicht erlaubt."
+
+#: src/pages/Profile/ProfilePage.tsx
+msgid "Account information"
+msgstr "Kontoinformationen"
 
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Edit Site"
@@ -3082,6 +3279,7 @@ msgid "Employee Management"
 msgstr "Mitarbeiter-Management"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
+#: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Verification Status"
 msgstr "Status der Verifizierung"
 
@@ -3089,13 +3287,32 @@ msgstr "Status der Verifizierung"
 msgid "Please use the required format (YYYY-MM-DD)."
 msgstr "Bitte verwenden Sie das erforderliche Format (YYYY-MM-DD)."
 
+#: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Employees/EmployeeList.tsx
+#: src/pages/Sites/SitesPage.tsx
+msgid "Pagination"
+msgstr "Seitennavigation"
+
+#: src/components/ScopeAssignmentForm.tsx
+msgid "0 or empty to prevent any assignment"
+msgstr "0 oder leer, um jede Zuweisung zu verhindern"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Attachment (optional second file)"
 msgstr "Anhang (optionale zweite Datei)"
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Passkey registration timed out. Please try again."
+msgstr "Zeitüberschreitung bei der Passkey-Registrierung. Bitte versuchen Sie es erneut."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "The save failed on the server because your onboarding workflow is not currently editable. The wizard will refresh to the latest server state."
 msgstr "Das Speichern auf dem Server ist fehlgeschlagen, weil Ihr Onboarding-Workflow derzeit nicht bearbeitbar ist. Der Assistent wird auf den neuesten Serverstand aktualisiert."
+
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Germany"
+msgstr "Deutschland"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
@@ -3186,7 +3403,9 @@ msgstr "Legen Sie eine neue Stammorganisationseinheit an."
 msgid "Onboarding Invitation"
 msgstr "Onboarding-Einladung"
 
+#: src/components/OrganizationalUnitTree.tsx
 #: src/pages/Login.tsx
+#: src/pages/Organization/OrganizationPage.tsx
 msgid "Loading"
 msgstr "Lädt"
 
@@ -3197,6 +3416,10 @@ msgstr "Lädt"
 msgid "You're offline"
 msgstr "Sie sind offline"
 
+#: src/pages/Employees/EmployeeList.tsx
+msgid "Failed to load employees"
+msgstr "Mitarbeiter konnten nicht geladen werden"
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Activity Log Details"
 msgstr "Details zum Aktivitätsprotokoll"
@@ -3204,6 +3427,10 @@ msgstr "Details zum Aktivitätsprotokoll"
 #: src/App.tsx
 msgid "View Profile"
 msgstr "Profil ansehen"
+
+#: src/pages/Sites/SiteCreate.tsx
+msgid "Failed to load required data"
+msgstr "Erforderliche Daten konnten nicht geladen werden"
 
 #. placeholder {0}: err.statusCode
 #: src/pages/Onboarding/OnboardingWizard.tsx
@@ -3301,3 +3528,7 @@ msgstr "Diese Sitzung wurde bereits für den Geräte-Bootstrap verwendet."
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 msgid "Failed to update employee"
 msgstr "Fehler beim Aktualisieren des Mitarbeiters"
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Failed to activate employee"
+msgstr "Mitarbeiter konnte nicht aktiviert werden"

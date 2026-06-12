@@ -1,11 +1,10 @@
-// SPDX-FileCopyrightText: Tailwind Labs Inc.
-// SPDX-License-Identifier: LicenseRef-TailwindPlus
+// SPDX-FileCopyrightText: 2026 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 "use client";
 
-import clsx from "clsx";
-import type React from "react";
 import { createContext, useContext, useState } from "react";
+import { cn } from "@/lib/utils";
 import { Link } from "./link";
 
 const TableContext = createContext<{
@@ -35,23 +34,17 @@ export function Table({
   striped?: boolean;
 } & React.ComponentPropsWithoutRef<"div">) {
   return (
-    <TableContext.Provider
-      value={
-        { bleed, dense, grid, striped } as React.ContextType<
-          typeof TableContext
-        >
-      }
-    >
+    <TableContext.Provider value={{ bleed, dense, grid, striped }}>
       <div className="flow-root">
         <div
           {...props}
-          className={clsx(
-            className,
-            "-mx-(--gutter) overflow-x-auto whitespace-nowrap"
+          className={cn(
+            "-mx-(--gutter) overflow-x-auto whitespace-nowrap",
+            className
           )}
         >
           <div
-            className={clsx(
+            className={cn(
               "inline-block min-w-full align-middle",
               !bleed && "sm:px-(--gutter)"
             )}
@@ -73,7 +66,7 @@ export function TableHead({
   return (
     <thead
       {...props}
-      className={clsx(className, "text-zinc-500 dark:text-zinc-400")}
+      className={cn("text-zinc-500 dark:text-zinc-400", className)}
     />
   );
 }
@@ -106,20 +99,16 @@ export function TableRow({
   const { striped } = useContext(TableContext);
 
   return (
-    <TableRowContext.Provider
-      value={
-        { href, target, title } as React.ContextType<typeof TableRowContext>
-      }
-    >
+    <TableRowContext.Provider value={{ href, target, title }}>
       <tr
         {...props}
-        className={clsx(
-          className,
+        className={cn(
           href &&
-            "has-[[data-row-link][data-focus]]:outline-2 has-[[data-row-link][data-focus]]:-outline-offset-2 has-[[data-row-link][data-focus]]:outline-blue-500 dark:focus-within:bg-white/2.5",
+            "has-[[data-row-link]:focus-visible]:outline-2 has-[[data-row-link]:focus-visible]:-outline-offset-2 has-[[data-row-link]:focus-visible]:outline-blue-600 dark:focus-within:bg-white/2.5",
           striped && "even:bg-zinc-950/2.5 dark:even:bg-white/2.5",
           href && striped && "hover:bg-zinc-950/5 dark:hover:bg-white/5",
-          href && !striped && "hover:bg-zinc-950/2.5 dark:hover:bg-white/2.5"
+          href && !striped && "hover:bg-zinc-950/2.5 dark:hover:bg-white/2.5",
+          className
         )}
       />
     </TableRowContext.Provider>
@@ -135,12 +124,12 @@ export function TableHeader({
   return (
     <th
       {...props}
-      className={clsx(
-        className,
+      className={cn(
         "border-b border-b-zinc-950/10 px-4 py-2 font-medium first:pl-(--gutter,--spacing(2)) last:pr-(--gutter,--spacing(2)) dark:border-b-white/10",
         grid &&
           "border-l border-l-zinc-950/5 first:border-l-0 dark:border-l-white/5",
-        !bleed && "sm:first:pl-1 sm:last:pr-1"
+        !bleed && "sm:first:pl-1 sm:last:pr-1",
+        className
       )}
     />
   );
@@ -159,14 +148,14 @@ export function TableCell({
     <td
       ref={href ? setCellRef : undefined}
       {...props}
-      className={clsx(
-        className,
+      className={cn(
         "relative px-4 first:pl-(--gutter,--spacing(2)) last:pr-(--gutter,--spacing(2))",
         !striped && "border-b border-zinc-950/5 dark:border-white/5",
         grid &&
           "border-l border-l-zinc-950/5 first:border-l-0 dark:border-l-white/5",
         dense ? "py-2.5" : "py-4",
-        !bleed && "sm:first:pl-1 sm:last:pr-1"
+        !bleed && "sm:first:pl-1 sm:last:pr-1",
+        className
       )}
     >
       {href && (
@@ -176,7 +165,7 @@ export function TableCell({
           target={target}
           aria-label={title}
           tabIndex={cellRef?.previousElementSibling === null ? 0 : -1}
-          className="absolute inset-0 focus:outline-hidden"
+          className="absolute inset-0 focus-visible:outline-none"
         />
       )}
       {children}

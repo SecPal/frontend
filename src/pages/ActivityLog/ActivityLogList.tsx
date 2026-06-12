@@ -1,11 +1,17 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  type ComponentPropsWithoutRef,
+} from "react";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { useSearchParams } from "react-router-dom";
+import { RefreshCw, SlidersHorizontal } from "lucide-react";
 import {
   fetchActivityLogs,
   type Activity,
@@ -13,25 +19,27 @@ import {
 } from "../../services/activityLogApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type { OrganizationalUnit } from "../../types/organizational";
-import { Heading } from "../../components/heading";
-import { Text } from "../../components/text";
-import { Input } from "../../components/input";
-import { Select } from "../../components/select";
-import { Field, Label } from "../../components/fieldset";
 import { OrganizationalUnitPicker } from "../../components/OrganizationalUnitPicker";
 import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableHeader,
-  TableCell,
-} from "../../components/table";
-import { Button } from "../../components/button";
-import { Badge } from "../../components/badge";
+  Alert,
+  Badge,
+  Button,
+  Checkbox,
+  Field,
+  FieldLabel,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  cn,
+} from "@/ui";
 import { ActivityDetailDialog } from "./ActivityDetailDialog";
 import { VerificationDots } from "../../components/VerificationDots";
 import { formatApiDateTime } from "../../lib/dateUtils";
+
+const LOG_NAME_ALL_VALUE = "__all_logs__";
 
 /**
  * Format date for display
@@ -46,6 +54,18 @@ function formatDate(dateString: string): string {
       minute: "2-digit",
     },
   });
+}
+
+function LogBadge({ className, ...props }: ComponentPropsWithoutRef<"span">) {
+  return (
+    <Badge
+      className={cn(
+        "bg-zinc-600/10 text-zinc-700 dark:bg-white/5 dark:text-zinc-400",
+        className
+      )}
+      {...props}
+    />
+  );
 }
 
 /**
@@ -284,9 +304,9 @@ export function ActivityLogList() {
   if (loading && activities.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Text>
+        <p className="text-sm text-zinc-600 dark:text-zinc-300">
           <Trans>Loading activity logs...</Trans>
-        </Text>
+        </p>
       </div>
     );
   }
@@ -295,38 +315,37 @@ export function ActivityLogList() {
     <div>
       {/* Header with responsive controls */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
-        <Heading>
+        <h1 className="text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
           <Trans>Activity Logs</Trans>
-        </Heading>
+        </h1>
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           {pagination.total > 0 && (
-            <Text className="hidden md:block">
+            <p className="hidden text-sm text-zinc-600 md:block dark:text-zinc-300">
               <Trans>
                 Showing {pagination.from} to {pagination.to} of{" "}
                 {pagination.total} logs
               </Trans>
-            </Text>
+            </p>
           )}
           <div className="flex flex-wrap items-center gap-2">
             <Button
               onClick={refreshActivities}
               disabled={loading}
-              outline
+              variant="outline"
               title={_(msg`Refresh activity logs`)}
             >
+              <RefreshCw className="size-4" aria-hidden="true" />
               <Trans>Refresh</Trans>
             </Button>
             <label
               htmlFor="auto-refresh"
               className="flex items-center gap-2 text-sm cursor-pointer whitespace-nowrap"
             >
-              <input
+              <Checkbox
                 id="auto-refresh"
-                type="checkbox"
                 name="auto_refresh"
                 checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
-                className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                onCheckedChange={(checked) => setAutoRefresh(checked === true)}
               />
               <span className="text-zinc-700 dark:text-zinc-300">
                 <Trans>Auto-refresh (30s)</Trans>
@@ -340,9 +359,9 @@ export function ActivityLogList() {
       <div className="mb-6">
         {/* Search filter - always visible */}
         <Field>
-          <Label htmlFor="activity-search">
+          <FieldLabel htmlFor="activity-search">
             <Trans>Search</Trans>
-          </Label>
+          </FieldLabel>
           <Input
             id="activity-search"
             type="text"
@@ -357,9 +376,10 @@ export function ActivityLogList() {
         {/* Mobile filter toggle button */}
         <Button
           onClick={() => setShowMobileFilters(!showMobileFilters)}
-          outline
+          variant="outline"
           className="mt-3 sm:hidden w-full"
         >
+          <SlidersHorizontal className="size-4" aria-hidden="true" />
           {showMobileFilters ? (
             <Trans>Hide options</Trans>
           ) : (
@@ -373,9 +393,9 @@ export function ActivityLogList() {
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Field>
-              <Label htmlFor="from-date">
+              <FieldLabel htmlFor="from-date">
                 <Trans>From Date</Trans>
-              </Label>
+              </FieldLabel>
               <Input
                 id="from-date"
                 type="date"
@@ -387,9 +407,9 @@ export function ActivityLogList() {
             </Field>
 
             <Field>
-              <Label htmlFor="to-date">
+              <FieldLabel htmlFor="to-date">
                 <Trans>To Date</Trans>
-              </Label>
+              </FieldLabel>
               <Input
                 id="to-date"
                 type="date"
@@ -401,30 +421,48 @@ export function ActivityLogList() {
             </Field>
 
             <Field>
-              <Label htmlFor="log-name">
+              <FieldLabel htmlFor="log-name">
                 <Trans>Log Name</Trans>
-              </Label>
+              </FieldLabel>
               <Select
-                id="log-name"
                 name="log_name"
-                autoComplete="off"
-                value={filters.log_name || ""}
-                onChange={(e) =>
-                  handleLogNameFilter(e.target.value || undefined)
+                value={filters.log_name || LOG_NAME_ALL_VALUE}
+                onValueChange={(value) =>
+                  handleLogNameFilter(
+                    value === LOG_NAME_ALL_VALUE ? undefined : value
+                  )
                 }
               >
-                <option value="">{_(msg`All logs`)}</option>
-                <option value="default">{_(msg`Default`)}</option>
-                <option value="auth">{_(msg`Authentication`)}</option>
-                <option value="permission">{_(msg`Permissions`)}</option>
-                <option value="hr_access">{_(msg`HR Access`)}</option>
+                <SelectTrigger id="log-name" aria-label={_(msg`Log Name`)}>
+                  <SelectValue placeholder={_(msg`All logs`)} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    value={LOG_NAME_ALL_VALUE}
+                    data-value={LOG_NAME_ALL_VALUE}
+                  >
+                    {_(msg`All logs`)}
+                  </SelectItem>
+                  <SelectItem value="default" data-value="default">
+                    {_(msg`Default`)}
+                  </SelectItem>
+                  <SelectItem value="auth" data-value="auth">
+                    {_(msg`Authentication`)}
+                  </SelectItem>
+                  <SelectItem value="permission" data-value="permission">
+                    {_(msg`Permissions`)}
+                  </SelectItem>
+                  <SelectItem value="hr_access" data-value="hr_access">
+                    {_(msg`HR Access`)}
+                  </SelectItem>
+                </SelectContent>
               </Select>
             </Field>
 
             <Field>
-              <Label>
+              <FieldLabel>
                 <Trans>Organizational Unit</Trans>
-              </Label>
+              </FieldLabel>
               <OrganizationalUnitPicker
                 units={organizationalUnits}
                 value={filters.organizational_unit_id || ""}
@@ -440,102 +478,121 @@ export function ActivityLogList() {
 
       {/* Error State */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/10 rounded-md">
-          <Text className="text-red-800 dark:text-red-200">{error}</Text>
-        </div>
+        <Alert className="mb-6 border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+          {error}
+        </Alert>
       )}
 
       {/* Table */}
       {activities.length === 0 && !loading ? (
         <div className="text-center py-12">
-          <Text>
+          <p className="text-sm text-zinc-600 dark:text-zinc-300">
             <Trans>No activity logs found.</Trans>
-          </Text>
+          </p>
         </div>
       ) : (
         <>
-          <Table className="[--gutter:theme(spacing.6)] sm:[--gutter:theme(spacing.8)]">
-            <TableHead>
-              <TableRow>
-                <TableHeader>
-                  <Trans>Date/Time</Trans>
-                </TableHeader>
-                <TableHeader>
-                  <Trans>Description</Trans>
-                </TableHeader>
-                <TableHeader className="hidden md:table-cell">
-                  <Trans>Log Name</Trans>
-                </TableHeader>
-                <TableHeader className="hidden lg:table-cell">
-                  <Trans>Causer</Trans>
-                </TableHeader>
-                <TableHeader className="hidden xl:table-cell">
-                  <Trans>Organizational Unit</Trans>
-                </TableHeader>
-                <TableHeader className="w-20">
-                  {/* Verification dots - no header */}
-                </TableHeader>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {activities.map((activity) => (
-                <TableRow
-                  key={activity.id}
-                  className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
-                  onClick={() => handleRowClick(activity)}
-                >
-                  <TableCell className="font-medium text-sm">
-                    {formatDate(activity.created_at)}
-                  </TableCell>
-                  <TableCell className="max-w-[200px] truncate">
-                    {activity.description}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <Badge color="zinc">{activity.log_name}</Badge>
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    {activity.causer?.name || (
-                      <span className="text-zinc-500 dark:text-zinc-400">
-                        <Trans>System</Trans>
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="hidden xl:table-cell">
-                    {activity.organizational_unit?.name || (
-                      <span className="text-zinc-500 dark:text-zinc-400">
-                        <Trans>Global</Trans>
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="w-20">
-                    <VerificationDots
-                      activity={activity}
-                      size="sm"
-                      showLabels={false}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800">
+            <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
+              <thead className="bg-zinc-50 dark:bg-zinc-900/60">
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
+                  >
+                    <Trans>Date/Time</Trans>
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
+                  >
+                    <Trans>Description</Trans>
+                  </th>
+                  <th
+                    scope="col"
+                    className="hidden px-4 py-3 text-left font-medium text-zinc-600 md:table-cell dark:text-zinc-300"
+                  >
+                    <Trans>Log Name</Trans>
+                  </th>
+                  <th
+                    scope="col"
+                    className="hidden px-4 py-3 text-left font-medium text-zinc-600 lg:table-cell dark:text-zinc-300"
+                  >
+                    <Trans>Causer</Trans>
+                  </th>
+                  <th
+                    scope="col"
+                    className="hidden px-4 py-3 text-left font-medium text-zinc-600 xl:table-cell dark:text-zinc-300"
+                  >
+                    <Trans>Organizational Unit</Trans>
+                  </th>
+                  <th scope="col" className="w-20 px-4 py-3">
+                    <span className="sr-only">
+                      <Trans>Verification Status</Trans>
+                    </span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-200 bg-white dark:divide-zinc-800 dark:bg-zinc-950">
+                {activities.map((activity) => (
+                  <tr
+                    key={activity.id}
+                    className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
+                    onClick={() => handleRowClick(activity)}
+                  >
+                    <td className="whitespace-nowrap px-4 py-3 font-medium text-zinc-950 dark:text-zinc-50">
+                      {formatDate(activity.created_at)}
+                    </td>
+                    <td className="max-w-[200px] truncate px-4 py-3 text-zinc-950 dark:text-zinc-50">
+                      {activity.description}
+                    </td>
+                    <td className="hidden px-4 py-3 md:table-cell">
+                      <LogBadge>{activity.log_name}</LogBadge>
+                    </td>
+                    <td className="hidden px-4 py-3 text-zinc-950 lg:table-cell dark:text-zinc-50">
+                      {activity.causer?.name || (
+                        <span className="text-zinc-500 dark:text-zinc-400">
+                          <Trans>System</Trans>
+                        </span>
+                      )}
+                    </td>
+                    <td className="hidden px-4 py-3 text-zinc-950 xl:table-cell dark:text-zinc-50">
+                      {activity.organizational_unit?.name || (
+                        <span className="text-zinc-500 dark:text-zinc-400">
+                          <Trans>Global</Trans>
+                        </span>
+                      )}
+                    </td>
+                    <td className="w-20 px-4 py-3">
+                      <VerificationDots
+                        activity={activity}
+                        size="sm"
+                        showLabels={false}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {/* Pagination */}
           {pagination.last_page > 1 && (
             <div className="mt-6 flex items-center justify-between">
               <Button
-                outline
+                variant="outline"
                 disabled={pagination.current_page === 1}
                 onClick={() => handlePageChange(pagination.current_page - 1)}
               >
                 <Trans>Previous</Trans>
               </Button>
-              <Text>
+              <p className="text-sm text-zinc-600 dark:text-zinc-300">
                 <Trans>
                   Page {pagination.current_page} of {pagination.last_page}
                 </Trans>
-              </Text>
+              </p>
               <Button
-                outline
+                variant="outline"
                 disabled={pagination.current_page === pagination.last_page}
                 onClick={() => handlePageChange(pagination.current_page + 1)}
               >

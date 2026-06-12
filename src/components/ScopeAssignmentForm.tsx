@@ -5,15 +5,23 @@ import { useState, useCallback } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
+  Alert,
+  AlertDescription,
+  Button,
+  Checkbox,
   Dialog,
-  DialogTitle,
-  DialogDescription,
-  DialogBody,
   DialogActions,
-} from "./dialog";
-import { Button } from "./button";
-import { Field, Label, Description } from "./fieldset";
-import { Checkbox, CheckboxField } from "./checkbox";
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  Field,
+  FieldDescription,
+  FieldLabel,
+  Input,
+} from "@/ui";
 import type { OrganizationalScope } from "../types/organizationalScope";
 import type { User } from "../contexts/auth-context";
 import {
@@ -328,14 +336,14 @@ function ScopeAssignmentFormContent({
       <form onSubmit={handleSubmit}>
         <DialogBody className="space-y-6">
           {errors.general && (
-            <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+            <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
               <h4 className="text-sm font-semibold text-red-800 dark:text-red-200">
                 <Trans>Error</Trans>
               </h4>
-              <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+              <AlertDescription className="text-red-700 dark:text-red-300">
                 {errors.general}
-              </p>
-            </div>
+              </AlertDescription>
+            </Alert>
           )}
 
           {/* Step 1: Viewing Permissions */}
@@ -354,10 +362,11 @@ function ScopeAssignmentFormContent({
               </div>
 
               <Field>
-                <Label>
+                <FieldLabel htmlFor="min-viewable-rank">
                   <Trans>Minimum Viewable Rank</Trans>
-                </Label>
-                <input
+                </FieldLabel>
+                <Input
+                  id="min-viewable-rank"
                   type="number"
                   min="1"
                   max="255"
@@ -370,22 +379,22 @@ function ScopeAssignmentFormContent({
                         : null,
                     })
                   }
-                  placeholder="Leave empty for no minimum"
-                  className="mt-3 block w-full rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-zinc-950 dark:text-white focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25"
+                  placeholder={t`Leave empty for no minimum`}
                 />
-                <Description>
+                <FieldDescription>
                   <Trans>
                     Lowest rank number the user can view (1 = CEO, higher
                     numbers = lower positions). Range: 1-255
                   </Trans>
-                </Description>
+                </FieldDescription>
               </Field>
 
               <Field>
-                <Label>
+                <FieldLabel htmlFor="max-viewable-rank">
                   <Trans>Maximum Viewable Rank</Trans>
-                </Label>
-                <input
+                </FieldLabel>
+                <Input
+                  id="max-viewable-rank"
                   type="number"
                   min="0"
                   max="255"
@@ -398,42 +407,41 @@ function ScopeAssignmentFormContent({
                         : null,
                     })
                   }
-                  placeholder="0 or empty for non-leadership only"
-                  className="mt-3 block w-full rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-zinc-950 dark:text-white focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25"
+                  placeholder={t`0 or empty for non-leadership only`}
                 />
-                <Description>
+                <FieldDescription>
                   <Trans>
                     Highest rank number the user can view (set to 255 for all, 0
                     or empty for non-leadership only). Range: 0-255
                   </Trans>
-                </Description>
+                </FieldDescription>
               </Field>
 
               {errors.viewing && (
-                <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+                <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
                   <h4 className="text-sm font-semibold text-red-800 dark:text-red-200">
                     <Trans>Validation Error</Trans>
                   </h4>
-                  <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                  <AlertDescription className="text-red-700 dark:text-red-300">
                     {errors.viewing}
-                  </p>
-                </div>
+                  </AlertDescription>
+                </Alert>
               )}
 
               {getViewingWarnings().length > 0 && (
-                <div className="rounded-lg bg-amber-50 p-4 dark:bg-amber-900/20">
+                <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
                   <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-200">
                     <Trans>Warning</Trans>
                   </h4>
                   {getViewingWarnings().map((warning, i) => (
-                    <p
+                    <AlertDescription
                       key={i}
-                      className="mt-1 text-sm text-amber-700 dark:text-amber-300"
+                      className="text-amber-700 dark:text-amber-300"
                     >
                       {warning}
-                    </p>
+                    </AlertDescription>
                   ))}
-                </div>
+                </Alert>
               )}
             </div>
           )}
@@ -456,10 +464,11 @@ function ScopeAssignmentFormContent({
               </div>
 
               <Field>
-                <Label>
+                <FieldLabel htmlFor="min-assignable-rank">
                   <Trans>Minimum Assignable Rank</Trans>
-                </Label>
-                <input
+                </FieldLabel>
+                <Input
+                  id="min-assignable-rank"
                   type="number"
                   min="1"
                   max="255"
@@ -472,22 +481,22 @@ function ScopeAssignmentFormContent({
                         : null,
                     })
                   }
-                  placeholder="Leave empty for no minimum"
-                  className="mt-3 block w-full rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-zinc-950 dark:text-white focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25"
+                  placeholder={t`Leave empty for no minimum`}
                 />
-                <Description>
+                <FieldDescription>
                   <Trans>
                     Lowest rank number the user can assign (1 = CEO, higher
                     numbers = lower positions). Range: 1-255
                   </Trans>
-                </Description>
+                </FieldDescription>
               </Field>
 
               <Field>
-                <Label>
+                <FieldLabel htmlFor="max-assignable-rank">
                   <Trans>Maximum Assignable Rank</Trans>
-                </Label>
-                <input
+                </FieldLabel>
+                <Input
+                  id="max-assignable-rank"
                   type="number"
                   min="0"
                   max="255"
@@ -500,42 +509,41 @@ function ScopeAssignmentFormContent({
                         : null,
                     })
                   }
-                  placeholder="0 or empty to prevent any assignment"
-                  className="mt-3 block w-full rounded-lg border-none bg-white/5 py-1.5 px-3 text-sm/6 text-zinc-950 dark:text-white focus:outline-none data-[focus]:outline-2 data-[focus]:-outline-offset-2 data-[focus]:outline-white/25"
+                  placeholder={t`0 or empty to prevent any assignment`}
                 />
-                <Description>
+                <FieldDescription>
                   <Trans>
                     Highest rank number the user can assign (set to 255 for all,
                     0 or empty to prevent any assignment). Range: 0-255
                   </Trans>
-                </Description>
+                </FieldDescription>
               </Field>
 
               {errors.assignment && (
-                <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+                <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
                   <h4 className="text-sm font-semibold text-red-800 dark:text-red-200">
                     <Trans>Validation Error</Trans>
                   </h4>
-                  <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                  <AlertDescription className="text-red-700 dark:text-red-300">
                     {errors.assignment}
-                  </p>
-                </div>
+                  </AlertDescription>
+                </Alert>
               )}
 
               {getAssignmentWarnings().length > 0 && (
-                <div className="rounded-lg bg-amber-50 p-4 dark:bg-amber-900/20">
+                <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
                   <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-200">
                     <Trans>Warning</Trans>
                   </h4>
                   {getAssignmentWarnings().map((warning, i) => (
-                    <p
+                    <AlertDescription
                       key={i}
-                      className="mt-1 text-sm text-amber-700 dark:text-amber-300"
+                      className="text-amber-700 dark:text-amber-300"
                     >
                       {warning}
-                    </p>
+                    </AlertDescription>
                   ))}
-                </div>
+                </Alert>
               )}
             </div>
           )}
@@ -543,47 +551,59 @@ function ScopeAssignmentFormContent({
           {/* Step 3: Self-Access Control (Conditional) */}
           {step === 3 && showSelfAccessStep && (
             <div className="space-y-6">
-              <div className="rounded-lg bg-amber-50 p-4 dark:bg-amber-900/20">
+              <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
                 <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-200">
                   <Trans>Self-Access Control Required</Trans>
                 </h4>
-                <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                <AlertDescription className="text-amber-700 dark:text-amber-300">
                   <Trans>
                     User's own rank (FE{userRank}) is within viewable range.
                     Should this user be able to view/edit their own HR data?
                   </Trans>
-                </p>
-              </div>
+                </AlertDescription>
+              </Alert>
 
-              <CheckboxField>
-                <Checkbox
-                  checked={formData.allow_self_access ?? false}
-                  onChange={(checked) =>
-                    setFormData({ ...formData, allow_self_access: checked })
-                  }
-                />
-                <Label>
-                  <Trans>Allow user to view/edit their own HR data</Trans>
-                </Label>
-                <Description>
-                  <Trans>
-                    By default (unchecked), users cannot see or edit their own
-                    employee record. This prevents self-manipulation of salary,
-                    rank, etc. Check this box only if you want this user to
-                    access their own HR data.
-                  </Trans>
-                </Description>
-              </CheckboxField>
+              <Field className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="allow-self-access"
+                    checked={formData.allow_self_access ?? false}
+                    onCheckedChange={(checked) =>
+                      setFormData({
+                        ...formData,
+                        allow_self_access: checked === true,
+                      })
+                    }
+                  />
+                  <div className="space-y-2">
+                    <FieldLabel htmlFor="allow-self-access">
+                      <Trans>Allow user to view/edit their own HR data</Trans>
+                    </FieldLabel>
+                    <FieldDescription>
+                      <Trans>
+                        By default (unchecked), users cannot see or edit their
+                        own employee record. This prevents self-manipulation of
+                        salary, rank, etc. Check this box only if you want this
+                        user to access their own HR data.
+                      </Trans>
+                    </FieldDescription>
+                  </div>
+                </div>
+              </Field>
             </div>
           )}
         </DialogBody>
 
         <DialogActions>
-          <Button type="button" plain onClick={onClose}>
+          <Button type="button" variant="ghost" onClick={onClose}>
             <Trans>Cancel</Trans>
           </Button>
           {step > 1 && (
-            <Button type="button" outline onClick={() => setStep(step - 1)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setStep(step - 1)}
+            >
               <Trans>Back</Trans>
             </Button>
           )}
@@ -612,18 +632,23 @@ export function ScopeAssignmentForm({
   onSuccess,
 }: ScopeAssignmentFormProps) {
   return (
-    <Dialog open={open} onClose={onClose} size="2xl">
-      {open ? (
-        <ScopeAssignmentFormContent
-          key={`${mode}:${scope?.id ?? user?.id ?? "new"}`}
-          onClose={onClose}
-          mode={mode}
-          organizationalUnitId={organizationalUnitId}
-          user={user}
-          scope={scope}
-          onSuccess={onSuccess}
-        />
-      ) : null}
+    <Dialog open={open} onClose={onClose}>
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogContent size="2xl">
+          {open ? (
+            <ScopeAssignmentFormContent
+              key={`${mode}:${scope?.id ?? user?.id ?? "new"}`}
+              onClose={onClose}
+              mode={mode}
+              organizationalUnitId={organizationalUnitId}
+              user={user}
+              scope={scope}
+              onSuccess={onSuccess}
+            />
+          ) : null}
+        </DialogContent>
+      </DialogPortal>
     </Dialog>
   );
 }

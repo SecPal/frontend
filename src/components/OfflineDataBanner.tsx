@@ -4,11 +4,7 @@
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import {
-  SignalSlashIcon,
-  ClockIcon,
-  ArrowPathIcon,
-} from "@heroicons/react/24/outline";
+import { Clock, RefreshCw, WifiOff } from "lucide-react";
 
 export interface OfflineDataBannerProps {
   /** Whether the device is currently offline */
@@ -80,7 +76,7 @@ export function OfflineDataBanner({
     return null;
   }
 
-  const Icon = isOffline ? SignalSlashIcon : ClockIcon;
+  const Icon = isOffline ? WifiOff : Clock;
   const bgColor = isOffline
     ? "bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800"
     : "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800";
@@ -122,7 +118,7 @@ export function OfflineDataBanner({
             className={`flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/10 ${textColor}`}
             aria-label={_(msg`Refresh data`)}
           >
-            <ArrowPathIcon className="h-4 w-4" aria-hidden="true" />
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
             <Trans>Refresh</Trans>
           </button>
         )}

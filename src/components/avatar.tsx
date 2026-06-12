@@ -1,11 +1,12 @@
-// SPDX-FileCopyrightText: Tailwind Labs Inc.
-// SPDX-License-Identifier: LicenseRef-TailwindPlus
+// SPDX-FileCopyrightText: 2026 SecPal
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
-import * as Headless from "@headlessui/react";
-import clsx from "clsx";
 import React, { forwardRef } from "react";
-import { TouchTarget } from "./button";
-import { Link } from "./link";
+import {
+  Link as RouterLink,
+  type LinkProps as RouterLinkProps,
+} from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 type AvatarProps = {
   src?: string | null;
@@ -27,80 +28,75 @@ export function Avatar({
     <span
       data-slot="avatar"
       {...props}
-      className={clsx(
-        className,
-        // Basic layout
-        "inline-grid shrink-0 align-middle [--avatar-radius:20%] *:col-start-1 *:row-start-1",
-        "outline -outline-offset-1 outline-black/10 dark:outline-white/10",
-        // Border radius
-        square
-          ? "rounded-(--avatar-radius) *:rounded-(--avatar-radius)"
-          : "rounded-full *:rounded-full"
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center align-middle text-sm font-medium uppercase leading-none outline -outline-offset-1 outline-black/10 dark:outline-white/10",
+        square ? "rounded-[20%]" : "rounded-full",
+        className
       )}
     >
-      {initials && (
-        <svg
-          className="size-full fill-current p-[5%] text-[48px] font-medium uppercase select-none"
-          viewBox="0 0 100 100"
-          aria-hidden={alt ? undefined : "true"}
-        >
-          {alt && <title>{alt}</title>}
-          <text
-            x="50%"
-            y="50%"
-            alignmentBaseline="middle"
-            dominantBaseline="middle"
-            textAnchor="middle"
-            dy=".125em"
-          >
-            {initials}
-          </text>
-        </svg>
+      {src ? (
+        <img
+          className={cn(
+            "size-full object-cover",
+            square ? "rounded-[20%]" : "rounded-full"
+          )}
+          src={src}
+          alt={alt}
+        />
+      ) : (
+        <span aria-hidden={alt ? undefined : "true"} title={alt || undefined}>
+          {initials}
+        </span>
       )}
-      {src && <img className="size-full" src={src} alt={alt} />}
     </span>
   );
 }
 
-export const AvatarButton = forwardRef(function AvatarButton(
-  {
-    src,
-    square = false,
-    initials,
-    alt,
-    className,
-    ...props
-  }: AvatarProps &
-    (
-      | ({ href?: never } & Omit<Headless.ButtonProps, "as" | "className">)
-      | ({ href: string } & Omit<
-          React.ComponentPropsWithoutRef<typeof Link>,
-          "className"
-        >)
-    ),
-  ref: React.ForwardedRef<HTMLButtonElement>
-) {
-  const classes = clsx(
-    className,
-    square ? "rounded-[20%]" : "rounded-full",
-    "relative inline-grid focus:not-data-focus:outline-hidden data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-blue-500"
+type AvatarButtonProps = AvatarProps &
+  (
+    | ({ href?: never } & React.ButtonHTMLAttributes<HTMLButtonElement>)
+    | ({ href: string } & Omit<RouterLinkProps, "to" | "className">)
   );
 
-  return typeof props.href === "string" ? (
-    <Link
+export const AvatarButton = forwardRef<
+  HTMLAnchorElement | HTMLButtonElement,
+  AvatarButtonProps
+>(function AvatarButton(
+  { src, square = false, initials, alt, className, ...props },
+  ref
+) {
+  const classes = cn(
+    "relative inline-flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950",
+    square ? "rounded-[20%]" : "rounded-full",
+    className
+  );
+
+  const avatar = (
+    <Avatar src={src} square={square} initials={initials} alt={alt} />
+  );
+
+  if ("href" in props && typeof props.href === "string") {
+    const { href, ...linkProps } = props;
+    return (
+      <RouterLink
+        {...linkProps}
+        to={href}
+        className={classes}
+        ref={ref as React.ForwardedRef<HTMLAnchorElement>}
+      >
+        {avatar}
+      </RouterLink>
+    );
+  }
+
+  return (
+    <button
       {...props}
+      type={props.type ?? "button"}
       className={classes}
-      ref={ref as React.ForwardedRef<HTMLAnchorElement>}
+      ref={ref as React.ForwardedRef<HTMLButtonElement>}
     >
-      <TouchTarget>
-        <Avatar src={src} square={square} initials={initials} alt={alt} />
-      </TouchTarget>
-    </Link>
-  ) : (
-    <Headless.Button {...props} className={classes} ref={ref}>
-      <TouchTarget>
-        <Avatar src={src} square={square} initials={initials} alt={alt} />
-      </TouchTarget>
-    </Headless.Button>
+      {avatar}
+    </button>
   );
 });

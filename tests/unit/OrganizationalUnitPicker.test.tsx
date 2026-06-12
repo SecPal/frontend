@@ -2,92 +2,32 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, test, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { OrganizationalUnitPicker } from "../../src/components/OrganizationalUnitPicker";
 import type { OrganizationalUnit } from "../../src/types/organizational";
 
-vi.mock("../../src/components/listbox", async () => {
-  const React = await vi.importActual<typeof import("react")>("react");
-
-  type MockOptionProps = {
-    value: string;
-    children: React.ReactNode;
-    onSelect?: (value: string) => void;
-    selectedValue?: string;
-  };
-
-  const MockListboxOption = ({
-    value,
-    children,
-    onSelect,
-    selectedValue,
-  }: MockOptionProps) => (
-    <div
-      role="option"
-      aria-selected={selectedValue === value}
-      onClick={() => onSelect?.(value)}
-    >
-      {children}
-    </div>
-  );
-
-  return {
-    Listbox: ({
-      value,
-      onChange,
-      disabled,
-      children,
-    }: {
-      value: string;
-      onChange: (value: string) => void;
-      disabled?: boolean;
-      children: React.ReactNode;
-    }) => {
-      const [open, setOpen] = React.useState(false);
-      const options = React.Children.toArray(children) as React.ReactElement[];
-      const selectedOption =
-        options.find((option) => option.props.value === value) ?? options[0];
-
-      return (
-        <div>
-          <button
-            type="button"
-            data-disabled={disabled ? "" : undefined}
-            onClick={() => {
-              if (!disabled) {
-                setOpen((current) => !current);
-              }
-            }}
-          >
-            {selectedOption?.props.children}
-          </button>
-          {open && (
-            <div role="listbox">
-              {options.map((option) =>
-                React.cloneElement(option, {
-                  onSelect: onChange,
-                  selectedValue: value,
-                })
-              )}
-            </div>
-          )}
-        </div>
-      );
-    },
-    ListboxOption: MockListboxOption,
-    ListboxLabel: ({ children }: { children: React.ReactNode }) => (
-      <span>{children}</span>
-    ),
-  };
-});
-
 // Wrapper to provide i18n context
 function renderWithI18n(ui: React.ReactElement) {
   return render(<I18nProvider i18n={i18n}>{ui}</I18nProvider>);
+}
+
+function openOrganizationalUnitPicker() {
+  const trigger = screen.getByRole("combobox", {
+    name: /select organizational unit/i,
+  });
+
+  fireEvent.pointerDown(trigger);
+  fireEvent.pointerUp(trigger);
+  fireEvent.click(trigger);
+}
+
+function selectRadixOption(option: HTMLElement) {
+  fireEvent.pointerDown(option);
+  fireEvent.pointerUp(option);
+  fireEvent.click(option);
 }
 
 describe("OrganizationalUnitPicker", () => {
@@ -147,8 +87,6 @@ describe("OrganizationalUnitPicker", () => {
 
   test("renders all organizational units after opening listbox", async () => {
     const onChange = vi.fn();
-    const user = userEvent.setup();
-
     renderWithI18n(
       <OrganizationalUnitPicker
         units={mockUnits}
@@ -157,9 +95,7 @@ describe("OrganizationalUnitPicker", () => {
       />
     );
 
-    // Open the listbox by clicking the button
-    const button = screen.getByRole("button");
-    await user.click(button);
+    openOrganizationalUnitPicker();
 
     // Now the options should be visible
     expect(screen.getByText("Holding Company")).toBeInTheDocument();
@@ -169,8 +105,6 @@ describe("OrganizationalUnitPicker", () => {
 
   test("displays units in hierarchical order after opening", async () => {
     const onChange = vi.fn();
-    const user = userEvent.setup();
-
     renderWithI18n(
       <OrganizationalUnitPicker
         units={mockUnits}
@@ -179,18 +113,15 @@ describe("OrganizationalUnitPicker", () => {
       />
     );
 
-    // Open the listbox
-    const button = screen.getByRole("button");
-    await user.click(button);
+    openOrganizationalUnitPicker();
 
     // Options are rendered in a portal, check in document
     const unitElements = document.querySelectorAll('[role="option"]');
     expect(unitElements.length).toBe(4); // All Units + 3 units
   });
 
-  test("calls onChange when unit is selected", async () => {
+  test("calls onChange when unit is selected", () => {
     const onChange = vi.fn();
-    const user = userEvent.setup();
 
     renderWithI18n(
       <OrganizationalUnitPicker
@@ -200,13 +131,13 @@ describe("OrganizationalUnitPicker", () => {
       />
     );
 
-    // Open the listbox
-    const button = screen.getByRole("button");
-    await user.click(button);
+    openOrganizationalUnitPicker();
 
     // Click on an option
-    const germanyOption = screen.getByText("Germany Branch");
-    await user.click(germanyOption);
+    const germanyOption = screen.getByRole("option", {
+      name: /Germany Branch/i,
+    });
+    selectRadixOption(germanyOption);
 
     expect(onChange).toHaveBeenCalledWith("unit-2");
   });
@@ -236,14 +167,14 @@ describe("OrganizationalUnitPicker", () => {
       />
     );
 
-    const button = screen.getByRole("button");
-    expect(button.getAttribute("data-disabled")).toBe("");
+    const trigger = screen.getByRole("combobox", {
+      name: /select organizational unit/i,
+    });
+    expect(trigger).toBeDisabled();
   });
 
   test("shows type labels for units after opening", async () => {
     const onChange = vi.fn();
-    const user = userEvent.setup();
-
     renderWithI18n(
       <OrganizationalUnitPicker
         units={mockUnits}
@@ -252,9 +183,7 @@ describe("OrganizationalUnitPicker", () => {
       />
     );
 
-    // Open the listbox
-    const button = screen.getByRole("button");
-    await user.click(button);
+    openOrganizationalUnitPicker();
 
     // Check for type labels in parentheses - use getAllByText since unit names also contain these words
     expect(screen.getByText("(Holding)")).toBeInTheDocument();
@@ -314,8 +243,6 @@ describe("OrganizationalUnitPicker", () => {
     ];
 
     const onChange = vi.fn();
-    const user = userEvent.setup();
-
     renderWithI18n(
       <OrganizationalUnitPicker
         units={unitsWithMultipleSiblings}
@@ -324,9 +251,7 @@ describe("OrganizationalUnitPicker", () => {
       />
     );
 
-    // Open the listbox
-    const button = screen.getByRole("button");
-    await user.click(button);
+    openOrganizationalUnitPicker();
 
     // Options are in a portal
     const options = document.querySelectorAll('[role="option"]');

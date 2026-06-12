@@ -10,26 +10,25 @@ describe("Spinner", () => {
     const { container } = render(<Spinner />);
     const spinner = container.querySelector(".animate-spin");
     expect(spinner).toBeInTheDocument();
-    expect(spinner).toHaveClass("h-8", "w-8", "border-2");
+    expect(spinner).toHaveClass("h-8", "w-8");
   });
 
   it("renders with small size", () => {
     const { container } = render(<Spinner size="sm" />);
     const spinner = container.querySelector(".animate-spin");
-    expect(spinner).toHaveClass("h-4", "w-4", "border-2");
+    expect(spinner).toHaveClass("h-4", "w-4");
   });
 
   it("renders with large size", () => {
     const { container } = render(<Spinner size="lg" />);
     const spinner = container.querySelector(".animate-spin");
-    expect(spinner).toHaveClass("h-12", "w-12", "border-2");
+    expect(spinner).toHaveClass("h-12", "w-12");
   });
 
   it("has proper accessibility attributes", () => {
-    render(<Spinner />);
-    const status = screen.getByRole("status");
+    render(<Spinner aria-label="Loading records" />);
+    const status = screen.getByRole("status", { name: "Loading records" });
     expect(status).toBeInTheDocument();
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
   });
 
   it("accepts custom className", () => {

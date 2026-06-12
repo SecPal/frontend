@@ -9,7 +9,7 @@ import {
   type SetStateAction,
 } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { PencilSquareIcon } from "@heroicons/react/24/outline";
+import { SquarePen } from "lucide-react";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
@@ -18,21 +18,32 @@ import type {
   EmployeeEmergencyContact,
   EmployeeOnboardingInvitationStatus,
 } from "@/types/api";
-import { Badge } from "../../components/badge";
-import { Button } from "../../components/button";
 import {
+  Alert,
+  AlertDescription,
+  Button,
+  Card,
+  CardContent,
   Dialog,
   DialogActions,
   DialogBody,
+  DialogContent,
+  DialogOverlay,
+  DialogPortal,
   DialogTitle,
-} from "../../components/dialog";
-import {
   DescriptionDetails,
   DescriptionList,
   DescriptionTerm,
-} from "../../components/description-list";
-import { Heading } from "../../components/heading";
-import { Text } from "../../components/text";
+  Field,
+  FieldError,
+  FieldLabel,
+  Input,
+  LinkButton,
+  PageText,
+  PageTitle,
+  Spinner,
+  StatusBadge as EmployeeStatusBadge,
+} from "./ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { formatDate, formatDateTime } from "../../lib/dateUtils";
 import {
@@ -110,9 +121,11 @@ function StatusBadge({ status }: { status: string }) {
   };
 
   return (
-    <Badge color={colors[status as keyof typeof colors] ?? "zinc"}>
+    <EmployeeStatusBadge
+      color={colors[status as keyof typeof colors] ?? "zinc"}
+    >
       {labels[status as keyof typeof labels] ?? status}
-    </Badge>
+    </EmployeeStatusBadge>
   );
 }
 
@@ -217,9 +230,9 @@ function ProfileTab({ employee }: { employee: Employee }) {
             </div>
             {onboardingInvitation.available === false &&
               onboardingInvitation.rule_message && (
-                <Text className="text-sm text-zinc-500 dark:text-zinc-400">
+                <PageText className="text-sm text-zinc-500 dark:text-zinc-400">
                   {onboardingInvitation.rule_message}
-                </Text>
+                </PageText>
               )}
           </div>
         ) : (
@@ -266,15 +279,6 @@ type EmployeeDetailTab =
   | "qualifications"
   | "documents"
   | "bwr";
-
-const baseContactInputClass =
-  "w-full rounded-lg border px-3 py-2 text-sm dark:bg-zinc-800 dark:text-white";
-const defaultContactInputClass = `${baseContactInputClass} border-zinc-300 dark:border-zinc-700`;
-const errorContactInputClass = `${baseContactInputClass} border-red-500 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/30 dark:border-red-400`;
-
-function contactInputClass(hasError: boolean): string {
-  return hasError ? errorContactInputClass : defaultContactInputClass;
-}
 
 function formatPostalAddress(employee: Employee): string | null {
   const structured = employee.structured_address?.trim();
@@ -340,6 +344,7 @@ interface ContactsTabProps {
 }
 
 function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
+  const { _ } = useLingui();
   const postalAddress = formatPostalAddress(employee);
   const emergencyContacts = employee.emergency_contacts ?? [];
 
@@ -353,11 +358,11 @@ function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
         {canManage && (
           <button
             type="button"
-            aria-label="Edit email"
+            aria-label={_(msg`Edit email`)}
             onClick={() => onEditField("email")}
             className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
           >
-            <PencilSquareIcon className="size-4" />
+            <SquarePen className="size-4" />
           </button>
         )}
       </DescriptionDetails>
@@ -370,11 +375,11 @@ function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
         {canManage && (
           <button
             type="button"
-            aria-label="Edit phone"
+            aria-label={_(msg`Edit phone`)}
             onClick={() => onEditField("phone")}
             className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
           >
-            <PencilSquareIcon className="size-4" />
+            <SquarePen className="size-4" />
           </button>
         )}
       </DescriptionDetails>
@@ -386,18 +391,18 @@ function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
         {postalAddress ? (
           <span>{postalAddress}</span>
         ) : (
-          <Text className="text-zinc-500 dark:text-zinc-400">
+          <PageText className="text-zinc-500 dark:text-zinc-400">
             <Trans>No postal address stored yet.</Trans>
-          </Text>
+          </PageText>
         )}
         {canManage && (
           <button
             type="button"
-            aria-label="Edit postal address"
+            aria-label={_(msg`Edit postal address`)}
             onClick={() => onEditField("postal_address")}
             className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
           >
-            <PencilSquareIcon className="size-4" />
+            <SquarePen className="size-4" />
           </button>
         )}
       </DescriptionDetails>
@@ -415,18 +420,18 @@ function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
             ))}
           </ul>
         ) : (
-          <Text className="text-zinc-500 dark:text-zinc-400">
+          <PageText className="text-zinc-500 dark:text-zinc-400">
             <Trans>No emergency contacts stored yet.</Trans>
-          </Text>
+          </PageText>
         )}
         {canManage && (
           <button
             type="button"
-            aria-label="Edit emergency contacts"
+            aria-label={_(msg`Edit emergency contacts`)}
             onClick={() => onEditField("emergency_contacts")}
             className="mt-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
           >
-            <PencilSquareIcon className="size-4" />
+            <SquarePen className="size-4" />
           </button>
         )}
       </DescriptionDetails>
@@ -467,44 +472,45 @@ function QualificationsTab({ employeeId }: { employeeId: string }) {
 
   if (loading) {
     return (
-      <Text>
+      <PageText>
         <Trans>Loading qualifications...</Trans>
-      </Text>
+      </PageText>
     );
   }
 
   if (qualifications.length === 0) {
     return (
-      <Text className="text-gray-500">
+      <PageText className="text-zinc-500 dark:text-zinc-400">
         <Trans>No qualifications assigned</Trans>
-      </Text>
+      </PageText>
     );
   }
 
   return (
     <div className="space-y-4">
       {qualifications.map((eq) => (
-        <div
-          key={eq.id}
-          className="rounded-lg border border-zinc-950/10 p-4 dark:border-white/10"
-        >
-          <div className="flex items-start justify-between">
-            <div>
-              <Text className="font-medium">{eq.qualification.name}</Text>
-              {eq.certificate_number && (
-                <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                  <Trans>Certificate:</Trans> {eq.certificate_number}
-                </Text>
-              )}
+        <Card key={eq.id} className="shadow-none">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <PageText className="font-medium text-zinc-950 dark:text-zinc-50">
+                  {eq.qualification.name}
+                </PageText>
+                {eq.certificate_number && (
+                  <PageText className="text-sm text-zinc-500 dark:text-zinc-400">
+                    <Trans>Certificate:</Trans> {eq.certificate_number}
+                  </PageText>
+                )}
+              </div>
+              <StatusBadge status={eq.status} />
             </div>
-            <StatusBadge status={eq.status} />
-          </div>
-          {eq.expiry_date && (
-            <Text className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-              <Trans>Expires:</Trans> {eq.expiry_date}
-            </Text>
-          )}
-        </div>
+            {eq.expiry_date && (
+              <PageText className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                <Trans>Expires:</Trans> {eq.expiry_date}
+              </PageText>
+            )}
+          </CardContent>
+        </Card>
       ))}
     </div>
   );
@@ -541,42 +547,43 @@ function DocumentsTab({ employeeId }: { employeeId: string }) {
 
   if (loading) {
     return (
-      <Text>
+      <PageText>
         <Trans>Loading documents...</Trans>
-      </Text>
+      </PageText>
     );
   }
 
   if (documents.length === 0) {
     return (
-      <Text className="text-gray-500">
+      <PageText className="text-zinc-500 dark:text-zinc-400">
         <Trans>No documents uploaded</Trans>
-      </Text>
+      </PageText>
     );
   }
 
   return (
     <div className="space-y-4">
       {documents.map((doc) => (
-        <div
-          key={doc.id}
-          className="rounded-lg border border-zinc-950/10 p-4 dark:border-white/10"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <Text className="font-medium">{doc.filename}</Text>
-              <Text className="text-sm text-zinc-500 dark:text-zinc-400">
-                {doc.document_type}
-              </Text>
+        <Card key={doc.id} className="shadow-none">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <PageText className="font-medium text-zinc-950 dark:text-zinc-50">
+                  {doc.filename}
+                </PageText>
+                <PageText className="text-sm text-zinc-500 dark:text-zinc-400">
+                  {doc.document_type}
+                </PageText>
+              </div>
+              <LinkButton
+                to={`/employees/${employeeId}/documents/${doc.id}/download`}
+                variant="outline"
+              >
+                <Trans>Download</Trans>
+              </LinkButton>
             </div>
-            <Button
-              href={`/employees/${employeeId}/documents/${doc.id}/download`}
-              outline
-            >
-              <Trans>Download</Trans>
-            </Button>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       ))}
     </div>
   );
@@ -683,7 +690,7 @@ export function EmployeeDetail() {
   }, [id]);
 
   async function handleActivate() {
-    if (!id || !confirm("Activate this employee?")) {
+    if (!id || !confirm(i18n._(msg`Activate this employee?`))) {
       return;
     }
 
@@ -693,7 +700,7 @@ export function EmployeeDetail() {
       await refreshEmployee();
     } catch (err) {
       console.error("Failed to activate employee:", err);
-      let errorMessage = "Failed to activate employee";
+      let errorMessage = i18n._(msg`Failed to activate employee`);
 
       if (err instanceof Error) {
         errorMessage = err.message;
@@ -708,7 +715,7 @@ export function EmployeeDetail() {
   }
 
   async function handleTerminate() {
-    if (!id || !confirm("Terminate this employee?")) {
+    if (!id || !confirm(i18n._(msg`Terminate this employee?`))) {
       return;
     }
 
@@ -718,7 +725,7 @@ export function EmployeeDetail() {
       await refreshEmployee();
     } catch (err) {
       console.error("Failed to terminate employee:", err);
-      let errorMessage = "Failed to terminate employee";
+      let errorMessage = i18n._(msg`Failed to terminate employee`);
 
       if (err instanceof Error) {
         errorMessage = err.message;
@@ -733,7 +740,7 @@ export function EmployeeDetail() {
   }
 
   async function handleConfirmOnboarding() {
-    if (!id || !confirm("Confirm this onboarding dossier?")) {
+    if (!id || !confirm(i18n._(msg`Confirm this onboarding dossier?`))) {
       return;
     }
 
@@ -743,7 +750,7 @@ export function EmployeeDetail() {
       await refreshEmployee();
     } catch (err) {
       console.error("Failed to confirm onboarding:", err);
-      let errorMessage = "Failed to confirm onboarding";
+      let errorMessage = i18n._(msg`Failed to confirm onboarding`);
 
       if (err instanceof Error) {
         errorMessage = err.message;
@@ -945,10 +952,11 @@ export function EmployeeDetail() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Text>
+      <div className="flex h-64 items-center justify-center gap-3 text-sm text-zinc-600 dark:text-zinc-300">
+        <Spinner aria-label={i18n._(msg`Loading employee...`)} />
+        <span>
           <Trans>Loading employee...</Trans>
-        </Text>
+        </span>
       </div>
     );
   }
@@ -956,20 +964,19 @@ export function EmployeeDetail() {
   if (error || !employee) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-900 dark:bg-red-900/20">
-          <div className="mb-4 text-4xl">❌</div>
-          <Heading level={3} className="text-red-900 dark:text-red-400">
+        <Alert className="max-w-md border-red-200 bg-red-50 text-center text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
+          <PageTitle level={3} className="text-red-900 dark:text-red-200">
             <Trans>Error Loading Employee</Trans>
-          </Heading>
-          <Text className="mt-2 text-red-700 dark:text-red-500">
-            {error || "Employee not found"}
-          </Text>
+          </PageTitle>
+          <AlertDescription className="text-red-700 dark:text-red-300">
+            {error || i18n._(msg`Employee not found`)}
+          </AlertDescription>
           <div className="mt-4">
-            <Button href="/employees" color="red">
+            <LinkButton to="/employees" variant="destructive">
               <Trans>Back to Employees</Trans>
-            </Button>
+            </LinkButton>
           </div>
-        </div>
+        </Alert>
       </div>
     );
   }
@@ -986,23 +993,23 @@ export function EmployeeDetail() {
     capabilities.actions.employees.activate;
 
   return (
-    <div>
+    <div className="space-y-6">
       <div className="mb-6">
-        <Button href="/employees" plain>
+        <LinkButton to="/employees" variant="ghost">
           <Trans>← Back to Employees</Trans>
-        </Button>
+        </LinkButton>
       </div>
 
-      <div className="rounded-lg bg-white shadow-sm ring-1 ring-zinc-950/5 dark:bg-zinc-900 dark:ring-white/10">
-        <div className="border-b border-zinc-950/5 p-6 dark:border-white/5">
+      <Card>
+        <div className="border-b border-zinc-200 p-6 dark:border-zinc-800">
           <div className="flex items-start justify-between">
             <div>
-              <Heading>{employee.full_name}</Heading>
-              <Text className="text-zinc-500 dark:text-zinc-400">
+              <PageTitle>{employee.full_name}</PageTitle>
+              <PageText className="text-zinc-500 dark:text-zinc-400">
                 {employee.employee_number}
-              </Text>
+              </PageText>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
               {canConfirmOnboarding && (
                 <Button
                   onClick={handleConfirmOnboarding}
@@ -1019,27 +1026,31 @@ export function EmployeeDetail() {
               {(employee.status === "active" ||
                 employee.status === "on_leave") &&
                 capabilities.actions.employees.terminate && (
-                  <Button onClick={handleTerminate} disabled={actionLoading}>
+                  <Button
+                    onClick={handleTerminate}
+                    disabled={actionLoading}
+                    variant="destructive"
+                  >
                     <Trans>Terminate</Trans>
                   </Button>
                 )}
               {capabilities.actions.employees.update && (
-                <Button
-                  href={
+                <LinkButton
+                  to={
                     activeTab === "contacts"
                       ? `/employees/${id}/edit/contacts`
                       : `/employees/${id}/edit`
                   }
-                  outline
+                  variant="outline"
                 >
                   <Trans>Edit</Trans>
-                </Button>
+                </LinkButton>
               )}
             </div>
           </div>
         </div>
 
-        <div className="border-b border-zinc-950/5 dark:border-white/5">
+        <div className="border-b border-zinc-200 dark:border-zinc-800">
           <nav className="flex gap-6 px-6" aria-label="Tabs">
             <button
               type="button"
@@ -1122,7 +1133,7 @@ export function EmployeeDetail() {
             />
           )}
         </div>
-      </div>
+      </Card>
 
       <Dialog
         open={editingContactField !== null}
@@ -1134,314 +1145,303 @@ export function EmployeeDetail() {
             setContactEmergencyInvalidField(null);
           }
         }}
-        size="md"
       >
-        <DialogTitle>
-          {editingContactField === "email" && <Trans>Edit Email</Trans>}
-          {editingContactField === "phone" && <Trans>Edit Phone</Trans>}
-          {editingContactField === "postal_address" && (
-            <Trans>Edit Postal Address</Trans>
-          )}
-          {editingContactField === "emergency_contacts" && (
-            <Trans>Edit Emergency Contacts</Trans>
-          )}
-        </DialogTitle>
-        <form
-          ref={contactDialogFormRef}
-          className="contents"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleSaveContactField();
-          }}
-        >
-          <DialogBody className="space-y-3">
-            {(editingContactField === "email" ||
-              editingContactField === "phone") && (
-              <>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                  {editingContactField === "email" ? (
-                    <Trans>Email</Trans>
-                  ) : (
-                    <Trans>Phone</Trans>
-                  )}
-                </label>
-                <input
-                  type={editingContactField === "email" ? "email" : "tel"}
-                  value={contactDraftValue}
-                  required={editingContactField === "email"}
-                  data-contact-field={editingContactField}
-                  aria-invalid={
-                    contactInvalidField === editingContactField || undefined
-                  }
-                  onChange={(event) => {
-                    setContactDraftValue(event.target.value);
-                    setContactSaveError(null);
-                    setContactInvalidField(null);
-                  }}
-                  className={contactInputClass(
-                    contactInvalidField === editingContactField
-                  )}
-                />
-              </>
-            )}
-            {editingContactField === "postal_address" && (
-              <EmployeeAddressFields
-                draft={contactAddressDraft}
-                onChange={(field, value) =>
-                  setContactAddressDraft((prev) => ({
-                    ...prev,
-                    [field]: value,
-                  }))
-                }
-                fieldIdPrefix="detail-contact-address"
-              />
-            )}
-            {editingContactField === "emergency_contacts" && (
-              <div className="space-y-4">
-                {contactEmergencyDrafts.map((contact, index) => {
-                  const requiresCoreFields =
-                    hasEmergencyContactContent(contact);
-
-                  return (
-                    <div
-                      key={`row-emergency-${index}`}
-                      className="space-y-2 rounded-lg border border-zinc-950/10 p-3 dark:border-white/10"
+        <DialogPortal>
+          <DialogOverlay />
+          <DialogContent size="md">
+            <DialogTitle>
+              {editingContactField === "email" && <Trans>Edit Email</Trans>}
+              {editingContactField === "phone" && <Trans>Edit Phone</Trans>}
+              {editingContactField === "postal_address" && (
+                <Trans>Edit Postal Address</Trans>
+              )}
+              {editingContactField === "emergency_contacts" && (
+                <Trans>Edit Emergency Contacts</Trans>
+              )}
+            </DialogTitle>
+            <form
+              ref={contactDialogFormRef}
+              className="contents"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleSaveContactField();
+              }}
+            >
+              <DialogBody className="space-y-3">
+                {(editingContactField === "email" ||
+                  editingContactField === "phone") && (
+                  <Field>
+                    <FieldLabel
+                      htmlFor={`detail-contact-${editingContactField}`}
                     >
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        <div className="space-y-1">
-                          <label
-                            htmlFor={`detail-emergency-${index}-name`}
-                            className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                          >
-                            <Trans>Emergency Contact Name</Trans>
-                          </label>
-                          <input
-                            id={`detail-emergency-${index}-name`}
-                            type="text"
-                            value={contact.name}
-                            required={requiresCoreFields}
-                            data-emergency-index={index}
-                            data-emergency-field="name"
-                            aria-invalid={
-                              (contactEmergencyInvalidField?.index === index &&
-                                contactEmergencyInvalidField.field ===
-                                  "name") ||
-                              undefined
-                            }
-                            onChange={(event) => {
-                              updateEmergencyDraftEntry(
-                                setContactEmergencyDrafts,
-                                index,
-                                "name",
-                                event.target.value
-                              );
-                              setContactSaveError(null);
-                              if (
-                                contactEmergencyInvalidField?.index === index &&
-                                contactEmergencyInvalidField.field === "name"
-                              ) {
-                                setContactEmergencyInvalidField(null);
-                              }
-                            }}
-                            placeholder={i18n._(msg`Name`)}
-                            className={contactInputClass(
-                              contactEmergencyInvalidField?.index === index &&
-                                contactEmergencyInvalidField.field === "name"
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label
-                            htmlFor={`detail-emergency-${index}-relationship`}
-                            className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                          >
-                            <Trans>Emergency Contact Relationship</Trans>
-                          </label>
-                          <input
-                            id={`detail-emergency-${index}-relationship`}
-                            type="text"
-                            value={contact.relationship}
-                            onChange={(event) =>
-                              updateEmergencyDraftEntry(
-                                setContactEmergencyDrafts,
-                                index,
-                                "relationship",
-                                event.target.value
-                              )
-                            }
-                            placeholder={i18n._(msg`Relationship`)}
-                            className={defaultContactInputClass}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label
-                            htmlFor={`detail-emergency-${index}-phone`}
-                            className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                          >
-                            <Trans>Emergency Contact Phone</Trans>
-                          </label>
-                          <input
-                            id={`detail-emergency-${index}-phone`}
-                            type="tel"
-                            value={contact.phone}
-                            required={requiresCoreFields}
-                            data-emergency-index={index}
-                            data-emergency-field="phone"
-                            aria-invalid={
-                              (contactEmergencyInvalidField?.index === index &&
-                                contactEmergencyInvalidField.field ===
-                                  "phone") ||
-                              undefined
-                            }
-                            onChange={(event) => {
-                              updateEmergencyDraftEntry(
-                                setContactEmergencyDrafts,
-                                index,
-                                "phone",
-                                event.target.value
-                              );
-                              setContactSaveError(null);
-                              if (
-                                contactEmergencyInvalidField?.index === index &&
-                                contactEmergencyInvalidField.field === "phone"
-                              ) {
-                                setContactEmergencyInvalidField(null);
-                              }
-                            }}
-                            placeholder={i18n._(msg`Phone`)}
-                            className={contactInputClass(
-                              contactEmergencyInvalidField?.index === index &&
-                                contactEmergencyInvalidField.field === "phone"
-                            )}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label
-                            htmlFor={`detail-emergency-${index}-email`}
-                            className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-                          >
-                            <Trans>Emergency Contact Email</Trans>
-                          </label>
-                          <input
-                            id={`detail-emergency-${index}-email`}
-                            type="text"
-                            inputMode="email"
-                            autoComplete="email"
-                            value={contact.email}
-                            data-emergency-index={index}
-                            data-emergency-field="email"
-                            aria-invalid={
-                              (contactEmergencyInvalidField?.index === index &&
-                                contactEmergencyInvalidField.field ===
-                                  "email") ||
-                              undefined
-                            }
-                            onChange={(event) => {
-                              updateEmergencyDraftEntry(
-                                setContactEmergencyDrafts,
-                                index,
-                                "email",
-                                event.target.value
-                              );
-                              setContactSaveError(null);
-                              if (
-                                contactEmergencyInvalidField?.index === index &&
-                                contactEmergencyInvalidField.field === "email"
-                              ) {
-                                setContactEmergencyInvalidField(null);
-                              }
-                            }}
-                            placeholder={i18n._(msg`Email`)}
-                            className={contactInputClass(
-                              contactEmergencyInvalidField?.index === index &&
-                                contactEmergencyInvalidField.field === "email"
-                            )}
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <label
-                          htmlFor={`detail-emergency-${index}-notes`}
-                          className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                      {editingContactField === "email" ? (
+                        <Trans>Email</Trans>
+                      ) : (
+                        <Trans>Phone</Trans>
+                      )}
+                    </FieldLabel>
+                    <Input
+                      id={`detail-contact-${editingContactField}`}
+                      type={editingContactField === "email" ? "email" : "tel"}
+                      value={contactDraftValue}
+                      required={editingContactField === "email"}
+                      data-contact-field={editingContactField}
+                      aria-invalid={
+                        contactInvalidField === editingContactField || undefined
+                      }
+                      onChange={(event) => {
+                        setContactDraftValue(event.target.value);
+                        setContactSaveError(null);
+                        setContactInvalidField(null);
+                      }}
+                    />
+                  </Field>
+                )}
+                {editingContactField === "postal_address" && (
+                  <EmployeeAddressFields
+                    draft={contactAddressDraft}
+                    onChange={(field, value) =>
+                      setContactAddressDraft((prev) => ({
+                        ...prev,
+                        [field]: value,
+                      }))
+                    }
+                    fieldIdPrefix="detail-contact-address"
+                  />
+                )}
+                {editingContactField === "emergency_contacts" && (
+                  <div className="space-y-4">
+                    {contactEmergencyDrafts.map((contact, index) => {
+                      const requiresCoreFields =
+                        hasEmergencyContactContent(contact);
+
+                      return (
+                        <div
+                          key={`row-emergency-${index}`}
+                          className="space-y-2 rounded-md border border-zinc-200 p-3 dark:border-zinc-800"
                         >
-                          <Trans>Emergency Contact Notes</Trans>
-                        </label>
-                        <input
-                          id={`detail-emergency-${index}-notes`}
-                          type="text"
-                          value={contact.notes}
-                          onChange={(event) =>
-                            updateEmergencyDraftEntry(
-                              setContactEmergencyDrafts,
-                              index,
-                              "notes",
-                              event.target.value
-                            )
-                          }
-                          placeholder={i18n._(msg`Notes`)}
-                          className={defaultContactInputClass}
-                        />
-                      </div>
-                      <div className="flex justify-end">
-                        <Button
-                          type="button"
-                          outline
-                          onClick={() =>
-                            removeEmergencyDraftEntry(
-                              setContactEmergencyDrafts,
-                              index
-                            )
-                          }
-                        >
-                          <Trans>Remove Contact</Trans>
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
+                          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            <Field>
+                              <FieldLabel
+                                htmlFor={`detail-emergency-${index}-name`}
+                              >
+                                <Trans>Emergency Contact Name</Trans>
+                              </FieldLabel>
+                              <Input
+                                id={`detail-emergency-${index}-name`}
+                                type="text"
+                                value={contact.name}
+                                required={requiresCoreFields}
+                                data-emergency-index={index}
+                                data-emergency-field="name"
+                                aria-invalid={
+                                  (contactEmergencyInvalidField?.index ===
+                                    index &&
+                                    contactEmergencyInvalidField.field ===
+                                      "name") ||
+                                  undefined
+                                }
+                                onChange={(event) => {
+                                  updateEmergencyDraftEntry(
+                                    setContactEmergencyDrafts,
+                                    index,
+                                    "name",
+                                    event.target.value
+                                  );
+                                  setContactSaveError(null);
+                                  if (
+                                    contactEmergencyInvalidField?.index ===
+                                      index &&
+                                    contactEmergencyInvalidField.field ===
+                                      "name"
+                                  ) {
+                                    setContactEmergencyInvalidField(null);
+                                  }
+                                }}
+                                placeholder={i18n._(msg`Name`)}
+                              />
+                            </Field>
+                            <Field>
+                              <FieldLabel
+                                htmlFor={`detail-emergency-${index}-relationship`}
+                              >
+                                <Trans>Emergency Contact Relationship</Trans>
+                              </FieldLabel>
+                              <Input
+                                id={`detail-emergency-${index}-relationship`}
+                                type="text"
+                                value={contact.relationship}
+                                onChange={(event) =>
+                                  updateEmergencyDraftEntry(
+                                    setContactEmergencyDrafts,
+                                    index,
+                                    "relationship",
+                                    event.target.value
+                                  )
+                                }
+                                placeholder={i18n._(msg`Relationship`)}
+                              />
+                            </Field>
+                            <Field>
+                              <FieldLabel
+                                htmlFor={`detail-emergency-${index}-phone`}
+                              >
+                                <Trans>Emergency Contact Phone</Trans>
+                              </FieldLabel>
+                              <Input
+                                id={`detail-emergency-${index}-phone`}
+                                type="tel"
+                                value={contact.phone}
+                                required={requiresCoreFields}
+                                data-emergency-index={index}
+                                data-emergency-field="phone"
+                                aria-invalid={
+                                  (contactEmergencyInvalidField?.index ===
+                                    index &&
+                                    contactEmergencyInvalidField.field ===
+                                      "phone") ||
+                                  undefined
+                                }
+                                onChange={(event) => {
+                                  updateEmergencyDraftEntry(
+                                    setContactEmergencyDrafts,
+                                    index,
+                                    "phone",
+                                    event.target.value
+                                  );
+                                  setContactSaveError(null);
+                                  if (
+                                    contactEmergencyInvalidField?.index ===
+                                      index &&
+                                    contactEmergencyInvalidField.field ===
+                                      "phone"
+                                  ) {
+                                    setContactEmergencyInvalidField(null);
+                                  }
+                                }}
+                                placeholder={i18n._(msg`Phone`)}
+                              />
+                            </Field>
+                            <Field>
+                              <FieldLabel
+                                htmlFor={`detail-emergency-${index}-email`}
+                              >
+                                <Trans>Emergency Contact Email</Trans>
+                              </FieldLabel>
+                              <Input
+                                id={`detail-emergency-${index}-email`}
+                                type="text"
+                                inputMode="email"
+                                autoComplete="email"
+                                value={contact.email}
+                                data-emergency-index={index}
+                                data-emergency-field="email"
+                                aria-invalid={
+                                  (contactEmergencyInvalidField?.index ===
+                                    index &&
+                                    contactEmergencyInvalidField.field ===
+                                      "email") ||
+                                  undefined
+                                }
+                                onChange={(event) => {
+                                  updateEmergencyDraftEntry(
+                                    setContactEmergencyDrafts,
+                                    index,
+                                    "email",
+                                    event.target.value
+                                  );
+                                  setContactSaveError(null);
+                                  if (
+                                    contactEmergencyInvalidField?.index ===
+                                      index &&
+                                    contactEmergencyInvalidField.field ===
+                                      "email"
+                                  ) {
+                                    setContactEmergencyInvalidField(null);
+                                  }
+                                }}
+                                placeholder={i18n._(msg`Email`)}
+                              />
+                            </Field>
+                          </div>
+                          <Field>
+                            <FieldLabel
+                              htmlFor={`detail-emergency-${index}-notes`}
+                            >
+                              <Trans>Emergency Contact Notes</Trans>
+                            </FieldLabel>
+                            <Input
+                              id={`detail-emergency-${index}-notes`}
+                              type="text"
+                              value={contact.notes}
+                              onChange={(event) =>
+                                updateEmergencyDraftEntry(
+                                  setContactEmergencyDrafts,
+                                  index,
+                                  "notes",
+                                  event.target.value
+                                )
+                              }
+                              placeholder={i18n._(msg`Notes`)}
+                            />
+                          </Field>
+                          <div className="flex justify-end">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() =>
+                                removeEmergencyDraftEntry(
+                                  setContactEmergencyDrafts,
+                                  index
+                                )
+                              }
+                            >
+                              <Trans>Remove Contact</Trans>
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        addEmergencyDraftEntry(setContactEmergencyDrafts)
+                      }
+                    >
+                      <Trans>Add Contact</Trans>
+                    </Button>
+                  </div>
+                )}
+                {contactSaveError && (
+                  <FieldError role="alert">{contactSaveError}</FieldError>
+                )}
+              </DialogBody>
+              <DialogActions>
                 <Button
                   type="button"
-                  outline
-                  onClick={() =>
-                    addEmergencyDraftEntry(setContactEmergencyDrafts)
-                  }
+                  variant="outline"
+                  onClick={() => {
+                    setEditingContactField(null);
+                    setContactSaveError(null);
+                    setContactInvalidField(null);
+                    setContactEmergencyInvalidField(null);
+                  }}
+                  disabled={contactSaveLoading}
                 >
-                  <Trans>Add Contact</Trans>
+                  <Trans>Cancel</Trans>
                 </Button>
-              </div>
-            )}
-            {contactSaveError && (
-              <p
-                className="text-sm text-red-600 dark:text-red-400"
-                role="alert"
-              >
-                {contactSaveError}
-              </p>
-            )}
-          </DialogBody>
-          <DialogActions>
-            <Button
-              type="button"
-              outline
-              onClick={() => {
-                setEditingContactField(null);
-                setContactSaveError(null);
-                setContactInvalidField(null);
-                setContactEmergencyInvalidField(null);
-              }}
-              disabled={contactSaveLoading}
-            >
-              <Trans>Cancel</Trans>
-            </Button>
-            <Button type="submit" disabled={contactSaveLoading}>
-              {contactSaveLoading ? (
-                <Trans>Saving...</Trans>
-              ) : (
-                <Trans>Save</Trans>
-              )}
-            </Button>
-          </DialogActions>
-        </form>
+                <Button type="submit" disabled={contactSaveLoading}>
+                  {contactSaveLoading ? (
+                    <Trans>Saving...</Trans>
+                  ) : (
+                    <Trans>Save</Trans>
+                  )}
+                </Button>
+              </DialogActions>
+            </form>
+          </DialogContent>
+        </DialogPortal>
       </Dialog>
     </div>
   );

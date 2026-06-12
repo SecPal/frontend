@@ -26,18 +26,28 @@ import type {
   Customer,
 } from "../../types/customers";
 import type { OrganizationalUnit } from "../../types/organizational";
-import { Heading } from "../../components/heading";
-import { Button } from "../../components/button";
-import { Input } from "../../components/input";
 import {
+  Alert,
+  AlertDescription,
+  Button,
+  Checkbox,
   Field,
-  Label,
+  FieldError,
   FieldGroup,
-  Description,
-} from "../../components/fieldset";
-import { Textarea } from "../../components/textarea";
-import { Checkbox, CheckboxField } from "../../components/checkbox";
-import { Select } from "../../components/select";
+  FieldLabel,
+  FormCheckboxField,
+  Input,
+  LinkButton,
+  PageText,
+  PageTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Spinner,
+  Textarea,
+} from "../CustomerSites/ui";
 
 export default function SiteEdit() {
   const { id } = useParams<{ id: string }>();
@@ -81,13 +91,15 @@ export default function SiteEdit() {
           valid_until: siteData.valid_until,
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load site");
+        setError(
+          err instanceof Error ? err.message : _(msg`Failed to load site`)
+        );
       } finally {
         setLoading(false);
       }
     }
     loadData();
-  }, [id]);
+  }, [_, id]);
 
   function updateField(field: keyof UpdateSiteRequest, value: unknown) {
     setFormData((currentFormData) => ({
@@ -132,9 +144,9 @@ export default function SiteEdit() {
       const error = err as Error & { errors?: Record<string, string[]> };
       if (error.errors && typeof error.errors === "object") {
         setFieldErrors(error.errors);
-        setError("Please correct the errors below.");
+        setError(_(msg`Please correct the errors below.`));
       } else {
-        setError(error.message || "Failed to update site");
+        setError(error.message || _(msg`Failed to update site`));
       }
     } finally {
       setSaving(false);
@@ -143,17 +155,20 @@ export default function SiteEdit() {
 
   if (loading) {
     return (
-      <div className="text-center py-12">
-        <Trans>Loading...</Trans>
+      <div className="flex items-center justify-center gap-3 py-12 text-sm text-zinc-600 dark:text-zinc-300">
+        <Spinner aria-label={_(msg`Loading...`)} />
+        <span>
+          <Trans>Loading...</Trans>
+        </span>
       </div>
     );
   }
 
   if (error && !site) {
     return (
-      <div className="text-center py-12 text-red-600 dark:text-red-400">
+      <PageText className="py-12 text-center text-red-600 dark:text-red-400">
         {error}
-      </div>
+      </PageText>
     );
   }
 
@@ -168,115 +183,152 @@ export default function SiteEdit() {
   return (
     <div className="max-w-3xl">
       <div className="mb-6">
-        <Heading>
+        <PageTitle>
           <Trans>Edit Site</Trans>
-        </Heading>
+        </PageTitle>
       </div>
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-200">
-          {error}
-        </div>
+        <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
         <FieldGroup>
           <Field>
-            <Label>
+            <FieldLabel htmlFor="site-customer">
               <Trans>Customer</Trans> *
-            </Label>
+            </FieldLabel>
             <Select
               name="customer_id"
               required
               value={formData.customer_id || ""}
-              onChange={(e) => updateField("customer_id", e.target.value)}
+              onValueChange={(value) => updateField("customer_id", value)}
             >
-              <option value="">{_(msg`Select customer...`)}</option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.customer_number} - {customer.name}
-                </option>
-              ))}
+              <SelectTrigger
+                id="site-customer"
+                aria-invalid={fieldErrors.customer_id ? true : undefined}
+                aria-describedby={
+                  fieldErrors.customer_id ? "site-customer-error" : undefined
+                }
+              >
+                <SelectValue placeholder={_(msg`Select customer...`)} />
+              </SelectTrigger>
+              <SelectContent>
+                {customers.map((customer) => (
+                  <SelectItem key={customer.id} value={customer.id}>
+                    {customer.customer_number} - {customer.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
             {fieldErrors.customer_id && (
-              <Description className="text-red-600 dark:text-red-400">
+              <FieldError id="site-customer-error">
                 {fieldErrors.customer_id.join(", ")}
-              </Description>
+              </FieldError>
             )}
           </Field>
 
           <Field>
-            <Label>
+            <FieldLabel htmlFor="site-organizational-unit">
               <Trans>Organizational Unit</Trans> *
-            </Label>
+            </FieldLabel>
             <Select
               name="organizational_unit_id"
               required
               value={formData.organizational_unit_id || ""}
-              onChange={(e) =>
-                updateField("organizational_unit_id", e.target.value)
+              onValueChange={(value) =>
+                updateField("organizational_unit_id", value)
               }
             >
-              <option value="">{_(msg`Select organizational unit...`)}</option>
-              {orgUnits.map((unit) => (
-                <option key={unit.id} value={unit.id}>
-                  {unit.name}
-                </option>
-              ))}
+              <SelectTrigger
+                id="site-organizational-unit"
+                aria-invalid={
+                  fieldErrors.organizational_unit_id ? true : undefined
+                }
+                aria-describedby={
+                  fieldErrors.organizational_unit_id
+                    ? "site-organizational-unit-error"
+                    : undefined
+                }
+              >
+                <SelectValue
+                  placeholder={_(msg`Select organizational unit...`)}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {orgUnits.map((unit) => (
+                  <SelectItem key={unit.id} value={unit.id}>
+                    {unit.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
             {fieldErrors.organizational_unit_id && (
-              <Description className="text-red-600 dark:text-red-400">
+              <FieldError id="site-organizational-unit-error">
                 {fieldErrors.organizational_unit_id.join(", ")}
-              </Description>
+              </FieldError>
             )}
           </Field>
 
           <Field>
-            <Label>
+            <FieldLabel htmlFor="site-name">
               <Trans>Site Name</Trans> *
-            </Label>
+            </FieldLabel>
             <Input
+              id="site-name"
               name="name"
               type="text"
               required
               value={formData.name || ""}
+              aria-invalid={fieldErrors.name ? true : undefined}
+              aria-describedby={
+                fieldErrors.name ? "site-name-error" : undefined
+              }
               onChange={(e) => updateField("name", e.target.value)}
             />
             {fieldErrors.name && (
-              <Description className="text-red-600 dark:text-red-400">
+              <FieldError id="site-name-error">
                 {fieldErrors.name.join(", ")}
-              </Description>
+              </FieldError>
             )}
           </Field>
 
           <Field>
-            <Label>
+            <FieldLabel htmlFor="site-type">
               <Trans>Type</Trans> *
-            </Label>
+            </FieldLabel>
             <Select
               name="type"
               required
               value={formData.type || "permanent"}
-              onChange={(e) => updateField("type", e.target.value as SiteType)}
+              onValueChange={(value) => updateField("type", value as SiteType)}
             >
-              <option value="permanent">{_(msg`Permanent`)}</option>
-              <option value="temporary">{_(msg`Temporary`)}</option>
+              <SelectTrigger id="site-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="permanent">{_(msg`Permanent`)}</SelectItem>
+                <SelectItem value="temporary">{_(msg`Temporary`)}</SelectItem>
+              </SelectContent>
             </Select>
           </Field>
         </FieldGroup>
 
         {/* Address */}
         <div>
-          <Heading level={2} className="mb-4">
+          <PageTitle level={2} className="mb-4">
             <Trans>Address</Trans>
-          </Heading>
+          </PageTitle>
           <FieldGroup>
             <Field>
-              <Label>
+              <FieldLabel htmlFor="site-street">
                 <Trans>Street</Trans> *
-              </Label>
+              </FieldLabel>
               <Input
+                id="site-street"
                 name="street"
                 type="text"
                 required
@@ -287,10 +339,11 @@ export default function SiteEdit() {
             </Field>
 
             <Field>
-              <Label>
+              <FieldLabel htmlFor="site-city">
                 <Trans>City</Trans> *
-              </Label>
+              </FieldLabel>
               <Input
+                id="site-city"
                 name="city"
                 type="text"
                 required
@@ -301,10 +354,11 @@ export default function SiteEdit() {
             </Field>
 
             <Field>
-              <Label>
+              <FieldLabel htmlFor="site-postal-code">
                 <Trans>Postal Code</Trans> *
-              </Label>
+              </FieldLabel>
               <Input
+                id="site-postal-code"
                 name="postal_code"
                 type="text"
                 required
@@ -315,18 +369,23 @@ export default function SiteEdit() {
             </Field>
 
             <Field>
-              <Label>
+              <FieldLabel htmlFor="site-country">
                 <Trans>Country</Trans> *
-              </Label>
+              </FieldLabel>
               <Select
                 name="country"
                 required
                 value={formData.address?.country || "DE"}
-                onChange={(e) => updateAddress("country", e.target.value)}
+                onValueChange={(value) => updateAddress("country", value)}
               >
-                <option value="DE">Deutschland</option>
-                <option value="AT">Österreich</option>
-                <option value="CH">Schweiz</option>
+                <SelectTrigger id="site-country">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DE">{_(msg`Germany`)}</SelectItem>
+                  <SelectItem value="AT">{_(msg`Austria`)}</SelectItem>
+                  <SelectItem value="CH">{_(msg`Switzerland`)}</SelectItem>
+                </SelectContent>
               </Select>
             </Field>
           </FieldGroup>
@@ -334,16 +393,19 @@ export default function SiteEdit() {
 
         {/* Contact Person */}
         <div>
-          <Heading level={2} className="mb-4">
+          <PageTitle level={2} className="mb-4">
             <Trans>Contact Person</Trans>{" "}
-            <span className="text-zinc-500">(Optional)</span>
-          </Heading>
+            <span className="text-zinc-500">
+              <Trans>(Optional)</Trans>
+            </span>
+          </PageTitle>
           <FieldGroup>
             <Field>
-              <Label>
+              <FieldLabel htmlFor="site-contact-name">
                 <Trans>Name</Trans>
-              </Label>
+              </FieldLabel>
               <Input
+                id="site-contact-name"
                 name="contact_name"
                 type="text"
                 autoComplete="name"
@@ -353,10 +415,11 @@ export default function SiteEdit() {
             </Field>
 
             <Field>
-              <Label>
+              <FieldLabel htmlFor="site-contact-email">
                 <Trans>Email</Trans>
-              </Label>
+              </FieldLabel>
               <Input
+                id="site-contact-email"
                 name="contact_email"
                 type="email"
                 autoComplete="email"
@@ -366,10 +429,11 @@ export default function SiteEdit() {
             </Field>
 
             <Field>
-              <Label>
+              <FieldLabel htmlFor="site-contact-phone">
                 <Trans>Phone</Trans>
-              </Label>
+              </FieldLabel>
               <Input
+                id="site-contact-phone"
                 name="contact_phone"
                 type="tel"
                 autoComplete="tel"
@@ -382,16 +446,19 @@ export default function SiteEdit() {
 
         {/* Validity Period */}
         <div>
-          <Heading level={2} className="mb-4">
+          <PageTitle level={2} className="mb-4">
             <Trans>Validity Period</Trans>{" "}
-            <span className="text-zinc-500">(Optional)</span>
-          </Heading>
+            <span className="text-zinc-500">
+              <Trans>(Optional)</Trans>
+            </span>
+          </PageTitle>
           <FieldGroup>
             <Field>
-              <Label>
+              <FieldLabel htmlFor="site-valid-from">
                 <Trans>Valid From</Trans>
-              </Label>
+              </FieldLabel>
               <Input
+                id="site-valid-from"
                 name="valid_from"
                 type="date"
                 value={formData.valid_from || ""}
@@ -400,10 +467,11 @@ export default function SiteEdit() {
             </Field>
 
             <Field>
-              <Label>
+              <FieldLabel htmlFor="site-valid-until">
                 <Trans>Valid Until</Trans>
-              </Label>
+              </FieldLabel>
               <Input
+                id="site-valid-until"
                 name="valid_until"
                 type="date"
                 value={formData.valid_until || ""}
@@ -415,10 +483,11 @@ export default function SiteEdit() {
 
         {/* Access Instructions */}
         <Field>
-          <Label>
+          <FieldLabel htmlFor="site-access-instructions">
             <Trans>Access Instructions</Trans>
-          </Label>
+          </FieldLabel>
           <Textarea
+            id="site-access-instructions"
             name="access_instructions"
             rows={4}
             value={formData.access_instructions || ""}
@@ -428,10 +497,11 @@ export default function SiteEdit() {
 
         {/* Notes */}
         <Field>
-          <Label>
+          <FieldLabel htmlFor="site-notes">
             <Trans>Notes</Trans>
-          </Label>
+          </FieldLabel>
           <Textarea
+            id="site-notes"
             name="notes"
             rows={4}
             value={formData.notes || ""}
@@ -440,25 +510,28 @@ export default function SiteEdit() {
         </Field>
 
         {/* Active Status */}
-        <CheckboxField>
+        <FormCheckboxField>
           <Checkbox
+            id="site-is-active"
             name="is_active"
             checked={formData.is_active}
-            onChange={(checked) => updateField("is_active", checked)}
+            onCheckedChange={(checked) =>
+              updateField("is_active", checked === true)
+            }
           />
-          <Label>
+          <FieldLabel htmlFor="site-is-active">
             <Trans>Active</Trans>
-          </Label>
-        </CheckboxField>
+          </FieldLabel>
+        </FormCheckboxField>
 
         {/* Actions */}
         <div className="flex gap-4 pt-4 border-t">
           <Button type="submit" disabled={saving}>
             {saving ? <Trans>Saving...</Trans> : <Trans>Save Changes</Trans>}
           </Button>
-          <Button href={`/sites/${id}`} outline>
+          <LinkButton to={`/sites/${id}`} variant="outline">
             <Trans>Cancel</Trans>
-          </Button>
+          </LinkButton>
         </div>
       </form>
     </div>
