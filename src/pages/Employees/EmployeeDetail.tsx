@@ -13,6 +13,7 @@ import { SquarePen } from "lucide-react";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
+import { SectionSkeleton, Skeleton } from "@/ui";
 import type {
   Employee,
   EmployeeEmergencyContact,
@@ -41,7 +42,6 @@ import {
   LinkButton,
   PageText,
   PageTitle,
-  Spinner,
   StatusBadge as EmployeeStatusBadge,
 } from "./ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
@@ -440,6 +440,7 @@ function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
 }
 
 function QualificationsTab({ employeeId }: { employeeId: string }) {
+  const { _ } = useLingui();
   const [qualifications, setQualifications] = useState<EmployeeQualification[]>(
     []
   );
@@ -472,9 +473,11 @@ function QualificationsTab({ employeeId }: { employeeId: string }) {
 
   if (loading) {
     return (
-      <PageText>
-        <Trans>Loading qualifications...</Trans>
-      </PageText>
+      <SectionSkeleton
+        loadingLabel={_(msg`Loading employee qualifications`)}
+        rows={3}
+        showHeader={false}
+      />
     );
   }
 
@@ -517,6 +520,7 @@ function QualificationsTab({ employeeId }: { employeeId: string }) {
 }
 
 function DocumentsTab({ employeeId }: { employeeId: string }) {
+  const { _ } = useLingui();
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -547,9 +551,11 @@ function DocumentsTab({ employeeId }: { employeeId: string }) {
 
   if (loading) {
     return (
-      <PageText>
-        <Trans>Loading documents...</Trans>
-      </PageText>
+      <SectionSkeleton
+        loadingLabel={_(msg`Loading employee documents`)}
+        rows={3}
+        showHeader={false}
+      />
     );
   }
 
@@ -585,6 +591,75 @@ function DocumentsTab({ employeeId }: { employeeId: string }) {
           </CardContent>
         </Card>
       ))}
+    </div>
+  );
+}
+
+function EmployeeDetailLoadingState({
+  activeTab,
+  loadingLabel,
+}: {
+  activeTab: EmployeeDetailTab;
+  loadingLabel: string;
+}) {
+  function tabClass(tab: EmployeeDetailTab) {
+    return activeTab === tab
+      ? "border-b-2 border-zinc-950 py-4 text-sm font-medium text-zinc-950 dark:border-white dark:text-white"
+      : "border-b-2 border-transparent py-4 text-sm font-medium text-zinc-500 dark:text-zinc-400";
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="mb-6">
+        <LinkButton to="/employees" variant="ghost">
+          <Trans>← Back to Employees</Trans>
+        </LinkButton>
+      </div>
+
+      <Card>
+        <div className="border-b border-zinc-200 p-6 dark:border-zinc-800">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <PageTitle>
+                <Trans>Employee</Trans>
+              </PageTitle>
+              <Skeleton className="mt-3 h-4 w-32" />
+            </div>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Skeleton className="h-10 w-24" />
+              <Skeleton className="h-10 w-16" />
+            </div>
+          </div>
+        </div>
+
+        <div className="border-b border-zinc-200 dark:border-zinc-800">
+          <nav className="flex gap-6 px-6" aria-label="Tabs">
+            <button type="button" disabled className={tabClass("profile")}>
+              <Trans>Profile</Trans>
+            </button>
+            <button type="button" disabled className={tabClass("contacts")}>
+              <Trans>Contact</Trans>
+            </button>
+            <button
+              type="button"
+              disabled
+              className={tabClass("qualifications")}
+            >
+              <Trans>Qualifications</Trans>
+            </button>
+            <button type="button" disabled className={tabClass("documents")}>
+              <Trans>Documents</Trans>
+            </button>
+            <button type="button" disabled className={tabClass("bwr")}>
+              <Trans>Bewacherregister</Trans>
+            </button>
+          </nav>
+        </div>
+
+        <div className="p-6">
+          <SectionSkeleton loadingLabel={loadingLabel} rows={6} />
+        </div>
+      </Card>
     </div>
   );
 }
@@ -952,12 +1027,10 @@ export function EmployeeDetail() {
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center gap-3 text-sm text-zinc-600 dark:text-zinc-300">
-        <Spinner aria-label={i18n._(msg`Loading employee...`)} />
-        <span>
-          <Trans>Loading employee...</Trans>
-        </span>
-      </div>
+      <EmployeeDetailLoadingState
+        activeTab={activeTab}
+        loadingLabel={i18n._(msg`Loading employee details`)}
+      />
     );
   }
 

@@ -39,6 +39,10 @@ msgstr "Date of birth is required"
 msgid "Edit Employee"
 msgstr "Edit Employee"
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Loading employee qualifications"
+msgstr "Loading employee qualifications"
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Activity Information"
 msgstr "Activity Information"
@@ -372,6 +376,10 @@ msgstr "All Units"
 msgid "Add child"
 msgstr "Add child"
 
+#: src/pages/Employees/EmployeeEdit.tsx
+msgid "Loading employee form"
+msgstr "Loading employee form"
+
 #: src/components/NotificationPreferences.tsx
 msgid "Test Notification"
 msgstr "Test Notification"
@@ -508,10 +516,6 @@ msgstr "Notifications Enabled"
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Select new parent"
 msgstr "Select new parent"
-
-#: src/pages/Employees/EmployeeDetail.tsx
-msgid "Loading qualifications..."
-msgstr "Loading qualifications..."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed"
@@ -890,6 +894,10 @@ msgstr "BWR export generated. Download the file below."
 msgid "e.g., Berlin Branch"
 msgstr "e.g., Berlin Branch"
 
+#: src/pages/Employees/EmployeeList.tsx
+msgid "Loading employees table"
+msgstr "Loading employees table"
+
 #: src/components/NotificationPermissionPrompt.tsx
 #: src/components/NotificationPreferences.tsx
 msgid "You'll now receive important updates from SecPal"
@@ -1157,6 +1165,10 @@ msgstr "Done"
 msgid "Optional: Upload the reverse side as a second file."
 msgstr "Optional: Upload the reverse side as a second file."
 
+#: src/pages/Employees/EmployeeContactsEdit.tsx
+msgid "Loading employee contact form"
+msgstr "Loading employee contact form"
+
 #: src/pages/Sites/SitesPage.tsx
 msgid "Failed to load sites"
 msgstr "Failed to load sites"
@@ -1324,6 +1336,7 @@ msgstr "You're all set"
 msgid "Delete Customer"
 msgstr "Delete Customer"
 
+#: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
 msgid "Employee"
 msgstr "Employee"
@@ -2490,6 +2503,10 @@ msgstr "Regenerate recovery codes"
 msgid "Permanent"
 msgstr "Permanent"
 
+#: src/pages/Employees/EmployeeList.tsx
+msgid "No employees found"
+msgstr "No employees found"
+
 #: src/components/OfflineIndicator.tsx
 msgid "You're offline. Click for details."
 msgstr "You're offline. Click for details."
@@ -2696,10 +2713,6 @@ msgstr "No parent (root unit)"
 msgid "Actions for {0}"
 msgstr "Actions for {0}"
 
-#: src/pages/Employees/EmployeeList.tsx
-msgid "Loading employees..."
-msgstr "Loading employees..."
-
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Please correct the highlighted fields before submitting."
 msgstr "Please correct the highlighted fields before submitting."
@@ -2867,6 +2880,10 @@ msgstr "Failed to update customer"
 msgid "Viewing cached data. Some units may be outdated."
 msgstr "Viewing cached data. Some units may be outdated."
 
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Loading employee details"
+msgstr "Loading employee details"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Residence title valid until"
 msgstr "Residence title valid until"
@@ -2906,6 +2923,10 @@ msgstr "Settings"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to terminate employee"
 msgstr "Failed to terminate employee"
+
+#: src/pages/Employees/EmployeeDetail.tsx
+msgid "Loading employee documents"
+msgstr "Loading employee documents"
 
 #: src/components/OfflineDataBanner.tsx
 msgid "Showing cached data"
@@ -3161,12 +3182,6 @@ msgstr "Relationship"
 msgid "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
-#: src/pages/Employees/EmployeeContactsEdit.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
-#: src/pages/Employees/EmployeeEdit.tsx
-msgid "Loading employee..."
-msgstr "Loading employee..."
-
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Language"
 msgstr "Language"
@@ -3378,10 +3393,6 @@ msgstr "Optional description for this unit."
 msgid "Missing token and email. Please use the link from your email."
 msgstr "Missing token and email. Please use the link from your email."
 
-#: src/pages/Employees/EmployeeDetail.tsx
-msgid "Loading documents..."
-msgstr "Loading documents..."
-
 #: src/pages/Login.tsx
 msgid "The MFA challenge completed with an invalid user payload."
 msgstr "The MFA challenge completed with an invalid user payload."
@@ -3515,6 +3526,11 @@ msgstr "Draft saved. You can continue later."
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "OK"
 msgstr "OK"
+
+#: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Employees/EmployeeEdit.tsx
+msgid "Loading unit options"
+msgstr "Loading unit options"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "Deleting organizational units is not possible while offline. Please reconnect to make changes."

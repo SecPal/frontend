@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
+import { FormSkeleton, Skeleton } from "@/ui";
 import type { Employee, EmployeeAddress } from "@/types/api";
 import {
   buildAddressesPayloadForCurrentEdit,
@@ -27,7 +28,6 @@ import {
   FieldLabel,
   Legend,
   Input,
-  PageText,
   PageTitle,
 } from "./ui";
 import { EmployeeAddressFields } from "./EmployeeAddressFields";
@@ -216,10 +216,33 @@ export function EmployeeContactsEdit() {
 
   if (fetchLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <PageText>
-          <Trans>Loading employee...</Trans>
-        </PageText>
+      <div>
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() =>
+              navigate(id ? `/employees/${id}#contacts` : "/employees")
+            }
+          >
+            <Trans>← Back to Employee</Trans>
+          </Button>
+        </div>
+
+        <Card className="dark:bg-zinc-900">
+          <CardContent className="p-6">
+            <PageTitle className="mb-6">
+              <Trans>Edit Contact Details</Trans>
+            </PageTitle>
+            <div className="mb-6 space-y-2">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <FormSkeleton
+              loadingLabel={i18n._(msg`Loading employee contact form`)}
+              fields={8}
+            />
+          </CardContent>
+        </Card>
       </div>
     );
   }

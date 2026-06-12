@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
+import { LoadingRegion, Skeleton } from "@/ui";
 import type { Employee, EmployeeFilters, EmployeeStatus } from "@/types/api";
 import { fetchEmployees } from "../../services/employeeApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
@@ -28,7 +29,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Spinner,
   StatusBadge as EmployeeStatusBadge,
   Table,
   TableBody,
@@ -60,6 +60,34 @@ function StatusBadge({ status }: { status: EmployeeStatus }) {
     <EmployeeStatusBadge color={colors[status]}>
       {labels[status]}
     </EmployeeStatusBadge>
+  );
+}
+
+function EmployeeTableSkeletonRows({
+  columns,
+  rows,
+}: {
+  columns: number;
+  rows: number;
+}) {
+  return (
+    <>
+      {Array.from({ length: rows }, (_, rowIndex) => (
+        <TableRow key={rowIndex}>
+          {Array.from({ length: columns }, (_, columnIndex) => (
+            <TableCell key={columnIndex}>
+              <Skeleton
+                className={
+                  columnIndex === 0
+                    ? "h-4 w-44 max-w-full"
+                    : "h-4 w-24 max-w-full"
+                }
+              />
+            </TableCell>
+          ))}
+        </TableRow>
+      ))}
+    </>
   );
 }
 
@@ -175,17 +203,6 @@ export function EmployeeList() {
     setFilters({ ...filters, page });
   }
 
-  if (loading && employees.length === 0) {
-    return (
-      <div className="flex h-64 items-center justify-center gap-3 text-sm text-zinc-600 dark:text-zinc-300">
-        <Spinner aria-label={_(msg`Loading employees...`)} />
-        <span>
-          <Trans>Loading employees...</Trans>
-        </span>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="sm:flex sm:items-center sm:justify-between">
@@ -290,83 +307,102 @@ export function EmployeeList() {
       )}
 
       {/* Employee Table */}
-      <DataTable>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableHeader>
-                <Trans>Employee</Trans>
-              </TableHeader>
-              <TableHeader>
-                <Trans>Employee #</Trans>
-              </TableHeader>
-              <TableHeader>
-                <Trans>Position</Trans>
-              </TableHeader>
-              <TableHeader>
-                <Trans>Status</Trans>
-              </TableHeader>
-              <TableHeader>
-                <Trans>Unit</Trans>
-              </TableHeader>
-              <TableHeader>
-                <span className="sr-only">
-                  <Trans>Actions</Trans>
-                </span>
-              </TableHeader>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {employees.map((employee) => (
-              <TableRow
-                key={employee.id}
-                to={`/employees/${employee.id}`}
-                title={employee.full_name}
-              >
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{employee.full_name}</div>
-                    <div className="text-zinc-500 dark:text-zinc-400">
-                      {employee.email}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="text-zinc-500 dark:text-zinc-400">
-                  {employee.employee_number}
-                </TableCell>
-                <TableCell>
-                  {employee.management_level > 0 ? (
-                    <>
-                      <span className="font-medium">
-                        <Trans>ML</Trans> {employee.management_level}
-                      </span>
-                      {" - "}
-                      {employee.position}
-                    </>
-                  ) : (
-                    employee.position
-                  )}
-                </TableCell>
-                <TableCell>
-                  <StatusBadge status={employee.status} />
-                </TableCell>
-                <TableCell className="text-zinc-500 dark:text-zinc-400">
-                  {employee.organizational_unit?.name || "-"}
-                </TableCell>
-                <TableCell>
-                  <LinkButton
-                    variant="outline"
-                    to={`/employees/${employee.id}`}
-                    className="relative z-10"
-                  >
-                    <Trans>View</Trans>
-                  </LinkButton>
-                </TableCell>
+      <LoadingRegion
+        loading={loading}
+        loadingLabel={_(msg`Loading employees table`)}
+      >
+        <DataTable>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableHeader>
+                  <Trans>Employee</Trans>
+                </TableHeader>
+                <TableHeader>
+                  <Trans>Employee #</Trans>
+                </TableHeader>
+                <TableHeader>
+                  <Trans>Position</Trans>
+                </TableHeader>
+                <TableHeader>
+                  <Trans>Status</Trans>
+                </TableHeader>
+                <TableHeader>
+                  <Trans>Unit</Trans>
+                </TableHeader>
+                <TableHeader>
+                  <span className="sr-only">
+                    <Trans>Actions</Trans>
+                  </span>
+                </TableHeader>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </DataTable>
+            </TableHead>
+            <TableBody>
+              {loading && employees.length === 0 ? (
+                <EmployeeTableSkeletonRows columns={6} rows={5} />
+              ) : null}
+
+              {employees.map((employee) => (
+                <TableRow
+                  key={employee.id}
+                  to={`/employees/${employee.id}`}
+                  title={employee.full_name}
+                >
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{employee.full_name}</div>
+                      <div className="text-zinc-500 dark:text-zinc-400">
+                        {employee.email}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-zinc-500 dark:text-zinc-400">
+                    {employee.employee_number}
+                  </TableCell>
+                  <TableCell>
+                    {employee.management_level > 0 ? (
+                      <>
+                        <span className="font-medium">
+                          <Trans>ML</Trans> {employee.management_level}
+                        </span>
+                        {" - "}
+                        {employee.position}
+                      </>
+                    ) : (
+                      employee.position
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={employee.status} />
+                  </TableCell>
+                  <TableCell className="text-zinc-500 dark:text-zinc-400">
+                    {employee.organizational_unit?.name || "-"}
+                  </TableCell>
+                  <TableCell>
+                    <LinkButton
+                      variant="outline"
+                      to={`/employees/${employee.id}`}
+                      className="relative z-10"
+                    >
+                      <Trans>View</Trans>
+                    </LinkButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+
+              {!loading && !error && employees.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-12 text-center">
+                    <PageText className="text-zinc-500 dark:text-zinc-400">
+                      <Trans>No employees found</Trans>
+                    </PageText>
+                  </TableCell>
+                </TableRow>
+              ) : null}
+            </TableBody>
+          </Table>
+        </DataTable>
+      </LoadingRegion>
 
       {/* Pagination */}
       {pagination.last_page > 1 && (

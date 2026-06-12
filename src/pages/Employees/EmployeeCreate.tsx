@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
+import { LoadingRegion, Skeleton } from "@/ui";
 import type { EmployeeFormData, EmployeeStatus } from "@/types/api";
 import { createEmployee } from "../../services/employeeApi";
 import { ApiError } from "../../services/ApiError";
@@ -688,48 +689,60 @@ export function EmployeeCreate() {
                     <FieldLabel htmlFor="organizational_unit_id">
                       <Trans>Organizational Unit</Trans> *
                     </FieldLabel>
-                    <Select
-                      value={formData.organizational_unit_id}
-                      onValueChange={(value) =>
-                        handleChange("organizational_unit_id", value)
-                      }
-                      disabled={unitsLoading}
+                    <LoadingRegion
+                      loading={unitsLoading}
+                      loadingLabel={i18n._(msg`Loading unit options`)}
                     >
-                      <SelectTrigger
-                        id="organizational_unit_id"
-                        ref={(element) =>
-                          setFieldRef("organizational_unit_id", element)
+                      <Select
+                        value={formData.organizational_unit_id}
+                        onValueChange={(value) =>
+                          handleChange("organizational_unit_id", value)
                         }
-                        aria-invalid={
-                          fieldErrors.organizational_unit_id ? true : undefined
-                        }
-                        aria-describedby={getAriaDescribedBy(
-                          "organizational_unit_id"
-                        )}
-                        data-invalid={
-                          fieldErrors.organizational_unit_id ? true : undefined
-                        }
+                        disabled={unitsLoading}
                       >
-                        <SelectValue
-                          placeholder={
-                            unitsLoading
-                              ? i18n._(msg`Loading...`)
-                              : i18n._(msg`Select organizational unit`)
+                        <SelectTrigger
+                          id="organizational_unit_id"
+                          ref={(element) =>
+                            setFieldRef("organizational_unit_id", element)
                           }
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {organizationalUnits.map((unit) => (
-                          <SelectItem
-                            key={unit.id}
-                            value={unit.id}
-                            data-value={unit.id}
-                          >
-                            {unit.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                          aria-invalid={
+                            fieldErrors.organizational_unit_id
+                              ? true
+                              : undefined
+                          }
+                          aria-describedby={getAriaDescribedBy(
+                            "organizational_unit_id"
+                          )}
+                          data-invalid={
+                            fieldErrors.organizational_unit_id
+                              ? true
+                              : undefined
+                          }
+                        >
+                          <SelectValue
+                            placeholder={
+                              unitsLoading
+                                ? i18n._(msg`Loading...`)
+                                : i18n._(msg`Select organizational unit`)
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {organizationalUnits.map((unit) => (
+                            <SelectItem
+                              key={unit.id}
+                              value={unit.id}
+                              data-value={unit.id}
+                            >
+                              {unit.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {unitsLoading ? (
+                        <Skeleton className="mt-2 h-4 w-48 max-w-full" />
+                      ) : null}
+                    </LoadingRegion>
                     {fieldErrors.organizational_unit_id && (
                       <FieldError
                         id={getFieldErrorId("organizational_unit_id")}
