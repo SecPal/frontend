@@ -323,6 +323,68 @@ describe("SiteEdit", () => {
     });
   });
 
+  it("clears the previous site's form when navigating between /sites/:id/edit routes", async () => {
+    // `renderWithRouter` hard-codes `/sites/site-123/edit` as the initial
+    // URL, so treat `site-123` as Site A here and navigate to a fresh
+    // `site-B` to exercise the param-only route reuse path.
+    const siteA = {
+      ...mockSite,
+      id: "site-123",
+      name: "Site A",
+      site_number: "SITE-A",
+    };
+    const siteB = {
+      ...mockSite,
+      id: "site-B",
+      name: "Site B",
+      site_number: "SITE-B",
+    };
+
+    let resolveSiteB:
+      | ((site: Awaited<ReturnType<typeof customersApi.getSite>>) => void)
+      | undefined;
+    vi.mocked(customersApi.getSite).mockImplementation(async (id) => {
+      if (id === "site-123") {
+        return siteA;
+      }
+      return new Promise((resolve) => {
+        resolveSiteB = resolve;
+      });
+    });
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/site name/i)).toHaveValue("Site A");
+    });
+
+    // Param-only navigation: same route pattern, different `:id`. React
+    // Router reuses the same `SiteEdit` instance, so without the
+    // in-effect reset the previous site's form would stay visible and
+    // submittable under the new URL until the new fetch resolved.
+    await act(async () => {
+      window.history.pushState({}, "", "/sites/site-B/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("status", { name: /loading site form/i })
+      ).toBeInTheDocument();
+    });
+    expect(screen.queryByDisplayValue("Site A")).not.toBeInTheDocument();
+
+    await act(async () => {
+      resolveSiteB?.(siteB);
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/site name/i)).toHaveValue("Site B");
+    });
+  });
+
   it("preserves batched nested updates when saving", async () => {
     vi.mocked(customersApi.updateSite).mockResolvedValue(mockUpdatedSite);
 

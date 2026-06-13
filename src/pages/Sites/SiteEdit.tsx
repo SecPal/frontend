@@ -66,6 +66,14 @@ export default function SiteEdit() {
   useEffect(() => {
     async function loadData() {
       if (!id) return;
+      // Drop stale site / formData *synchronously* on every `id` change.
+      // The loading skeleton is gated on `site === null`, so without this
+      // reset a param-only navigation between `/sites/:id/edit` routes
+      // would keep the previous site's form visible — and submitting it
+      // before the new fetch resolves would write the old record's
+      // values to the new id.
+      setSite(null);
+      setFormData({});
       setLoading(true);
       setError(null);
       try {

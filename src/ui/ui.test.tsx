@@ -244,6 +244,40 @@ describe("shared shadcn/radix UI basis", () => {
     ).toHaveLength(3);
   });
 
+  it("omits the live region and announcement when SectionSkeleton is decorative", () => {
+    const { container } = render(
+      <div>
+        <SectionSkeleton loadingLabel="Loading shared region" rows={2} />
+        <SectionSkeleton
+          loadingLabel="Loading shared region"
+          rows={2}
+          decorative
+        />
+        <SectionSkeleton
+          loadingLabel="Loading shared region"
+          rows={2}
+          decorative
+        />
+      </div>
+    );
+
+    // Exactly one announcing live region survives so assistive tech does
+    // not stack three identical "Loading shared region" announcements.
+    expect(
+      screen.getAllByRole("status", { name: "Loading shared region" })
+    ).toHaveLength(1);
+
+    const sectionSkeletons = container.querySelectorAll(
+      '[data-slot="ui-section-skeleton"]'
+    );
+    expect(sectionSkeletons).toHaveLength(3);
+
+    const decorativeOnes = container.querySelectorAll(
+      '[data-slot="ui-section-skeleton"][aria-hidden="true"]'
+    );
+    expect(decorativeOnes).toHaveLength(2);
+  });
+
   it("keeps loaded content visible for non-blocking refreshes", () => {
     render(
       <LoadingRegion loading loadingLabel="Refreshing sites">

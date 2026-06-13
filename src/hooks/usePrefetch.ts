@@ -352,15 +352,10 @@ export function usePrefetch() {
     });
   }, []);
 
-  const clearPrefetchCache = useCallback(() => {
-    resetPrefetchCacheForTests();
-  }, []);
-
   return {
     prefetchPath,
     prefetchPathModuleOnly,
     prefetchPathOnIdle,
     prefetchPathsOnIdle,
-    clearPrefetchCache,
   };
 }

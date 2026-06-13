@@ -48,6 +48,14 @@ export default function CustomerEdit() {
   useEffect(() => {
     async function loadCustomer() {
       if (!id) return;
+      // Drop stale customer / formData *synchronously* on every `id` change.
+      // The loading skeleton is gated on `customer === null`, so without
+      // this reset a param-only navigation between `/customers/:id/edit`
+      // routes would keep the previous customer's form visible — and
+      // submitting it before the new fetch resolves would write the old
+      // record's values to the new id.
+      setCustomer(null);
+      setFormData({});
       setLoading(true);
       setError(null);
       try {

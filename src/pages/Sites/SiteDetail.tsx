@@ -135,10 +135,12 @@ export default function SiteDetail() {
           <SectionSkeleton
             loadingLabel={_(msg`Loading site details`)}
             rows={3}
+            decorative
           />
           <SectionSkeleton
             loadingLabel={_(msg`Loading site details`)}
             rows={4}
+            decorative
           />
           <div className="flex gap-4 border-t pt-4">
             <Skeleton className="h-10 w-20" />

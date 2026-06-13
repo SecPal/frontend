@@ -770,12 +770,41 @@ export function SectionSkeleton({
   loadingLabel,
   rows = 4,
   showHeader = true,
+  decorative = false,
   ...props
 }: ComponentPropsWithoutRef<"div"> & {
   loadingLabel: string;
   rows?: number;
   showHeader?: boolean;
+  /**
+   * When a page composes several section skeletons that share the same
+   * loading state, only the first one should announce. Mark the rest as
+   * decorative so they render the same visual placeholder without
+   * stacking additional `role="status"`/`aria-live` regions and the
+   * sr-only label text — which assistive tech may otherwise repeat once
+   * per region with the same `loadingLabel`.
+   */
+  decorative?: boolean;
 }) {
+  if (decorative) {
+    return (
+      <div
+        {...props}
+        aria-hidden="true"
+        data-slot="ui-section-skeleton"
+        className={cn(
+          "rounded-md border border-zinc-200 p-6 dark:border-zinc-800",
+          className
+        )}
+      >
+        <SectionSkeletonContent
+          rows={boundedCount(rows, 4)}
+          showHeader={showHeader}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       {...props}

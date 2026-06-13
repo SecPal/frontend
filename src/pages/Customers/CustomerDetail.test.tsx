@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
@@ -412,9 +412,12 @@ describe("CustomerDetail", () => {
 
     renderWithRouter();
 
+    // Only the first section skeleton announces; the other two are
+    // decorative so assistive tech does not stack identical "Loading
+    // customer details" live regions at the same time.
     expect(
       screen.getAllByRole("status", { name: "Loading customer details" })
-    ).toHaveLength(3);
+    ).toHaveLength(1);
     expect(
       screen.getByRole("heading", { name: "Customer" })
     ).toBeInTheDocument();
@@ -423,5 +426,69 @@ describe("CustomerDetail", () => {
       "/customers"
     );
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
+  });
+
+  it("hides the previous customer's details when navigating between /customers/:id routes", async () => {
+    const customerA = {
+      ...mockCustomer,
+      id: "customer-A",
+      name: "Customer A",
+      customer_number: "CUST-A",
+    };
+    const customerB = {
+      ...mockCustomer,
+      id: "customer-B",
+      name: "Customer B",
+      customer_number: "CUST-B",
+    };
+
+    let resolveCustomerB:
+      | ((
+          customer: Awaited<ReturnType<typeof customersApi.getCustomer>>
+        ) => void)
+      | undefined;
+    vi.mocked(customersApi.getCustomer).mockImplementation(async (id) => {
+      if (id === "customer-A") {
+        return customerA;
+      }
+      return new Promise((resolve) => {
+        resolveCustomerB = resolve;
+      });
+    });
+
+    window.history.pushState({}, "", "/customers/customer-A");
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByText("Customer A")).toBeInTheDocument();
+    });
+
+    // Param-only navigation between `/customers/:id` routes. React Router
+    // reuses the same `CustomerDetail` instance, so without the in-effect
+    // reset the previous customer's name, customer_number and Delete
+    // button would stay visible under the new URL until the new fetch
+    // resolved.
+    await act(async () => {
+      window.history.pushState({}, "", "/customers/customer-B");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("status", { name: "Loading customer details" })
+      ).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Customer A")).not.toBeInTheDocument();
+    expect(screen.queryByText("CUST-A")).not.toBeInTheDocument();
+
+    await act(async () => {
+      resolveCustomerB?.(customerB);
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Customer B")).toBeInTheDocument();
+    });
   });
 });

@@ -43,8 +43,8 @@ function CustomerDetailSkeleton({ loadingLabel }: { loadingLabel: string }) {
   return (
     <div className="space-y-8">
       <SectionSkeleton loadingLabel={loadingLabel} rows={3} />
-      <SectionSkeleton loadingLabel={loadingLabel} rows={3} />
-      <SectionSkeleton loadingLabel={loadingLabel} rows={2} />
+      <SectionSkeleton loadingLabel={loadingLabel} rows={3} decorative />
+      <SectionSkeleton loadingLabel={loadingLabel} rows={2} decorative />
     </div>
   );
 }
@@ -63,6 +63,14 @@ export default function CustomerDetail() {
 
   useEffect(() => {
     async function loadCustomer() {
+      // Drop the previous customer *synchronously* on every `id` change.
+      // The skeleton is gated on `customer === null`, so without this
+      // reset a param-only navigation between `/customers/:id` routes
+      // would keep the previous customer's details — including the
+      // destructive Delete action — visible under the new URL until the
+      // new fetch resolved, letting a user act on the wrong record
+      // during that window.
+      setCustomer(null);
       setLoading(true);
       setLoadError(null);
       if (!id) {

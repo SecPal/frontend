@@ -155,9 +155,12 @@ describe("SiteDetail", () => {
     renderWithRouter();
 
     expect(screen.getByRole("heading", { name: "Site" })).toBeInTheDocument();
+    // Only the first section skeleton announces; the other two are
+    // decorative so assistive tech does not stack identical "Loading
+    // site details" live regions at the same time.
     expect(
       screen.getAllByRole("status", { name: "Loading site details" })
-    ).toHaveLength(3);
+    ).toHaveLength(1);
     expect(screen.getByRole("link", { name: /back to list/i })).toHaveAttribute(
       "href",
       "/sites"
