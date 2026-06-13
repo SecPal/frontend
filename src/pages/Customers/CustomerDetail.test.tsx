@@ -428,6 +428,64 @@ describe("CustomerDetail", () => {
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 
+  it("ignores a late-resolving fetch for the previous customer after navigating to a new id", async () => {
+    const customerA = {
+      ...mockCustomer,
+      id: "customer-A",
+      name: "Customer A",
+      customer_number: "CUST-A",
+    };
+    const customerB = {
+      ...mockCustomer,
+      id: "customer-B",
+      name: "Customer B",
+      customer_number: "CUST-B",
+    };
+
+    let resolveCustomerA:
+      | ((
+          customer: Awaited<ReturnType<typeof customersApi.getCustomer>>
+        ) => void)
+      | undefined;
+    vi.mocked(customersApi.getCustomer).mockImplementation(async (id) => {
+      if (id === "customer-A") {
+        return new Promise((resolve) => {
+          resolveCustomerA = resolve;
+        });
+      }
+      return customerB;
+    });
+
+    window.history.pushState({}, "", "/customers/customer-A");
+    renderWithRouter();
+
+    // While A is still pending, navigate to B which resolves quickly.
+    await act(async () => {
+      window.history.pushState({}, "", "/customers/customer-B");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Customer B")).toBeInTheDocument();
+    });
+
+    // The lagging A fetch now resolves. Without a cancellation guard,
+    // its `setCustomer(customerA)` would clobber B and the URL would
+    // disagree with the rendered record — so destructive actions (Edit,
+    // Delete) would target Customer A even though the user is on
+    // `/customers/customer-B`.
+    await act(async () => {
+      resolveCustomerA?.(customerA);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText("Customer B")).toBeInTheDocument();
+    expect(screen.queryByText("Customer A")).not.toBeInTheDocument();
+    expect(screen.queryByText("CUST-A")).not.toBeInTheDocument();
+  });
+
   it("hides the previous customer's details when navigating between /customers/:id routes", async () => {
     const customerA = {
       ...mockCustomer,

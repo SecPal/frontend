@@ -323,6 +323,60 @@ describe("SiteEdit", () => {
     });
   });
 
+  it("ignores a late-resolving fetch for the previous site after navigating between /sites/:id/edit routes", async () => {
+    // `renderWithRouter` hard-codes `/sites/site-123/edit` as the initial
+    // URL, so treat `site-123` as Site A and navigate to a fresh
+    // `site-B`. The default `customersApi.getSite` mock from
+    // `beforeEach` would resolve `site-123` immediately, so override it
+    // here to keep that initial fetch pending.
+    const siteA = {
+      ...mockSite,
+      id: "site-123",
+      name: "Site A",
+      site_number: "SITE-A",
+    };
+    const siteB = {
+      ...mockSite,
+      id: "site-B",
+      name: "Site B",
+      site_number: "SITE-B",
+    };
+
+    let resolveSiteA:
+      | ((site: Awaited<ReturnType<typeof customersApi.getSite>>) => void)
+      | undefined;
+    vi.mocked(customersApi.getSite).mockImplementation(async (id) => {
+      if (id === "site-123") {
+        return new Promise((resolve) => {
+          resolveSiteA = resolve;
+        });
+      }
+      return siteB;
+    });
+
+    renderWithRouter();
+
+    await act(async () => {
+      window.history.pushState({}, "", "/sites/site-B/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/site name/i)).toHaveValue("Site B");
+    });
+
+    // Late A resolution must NOT refill the form with Site A's data.
+    await act(async () => {
+      resolveSiteA?.(siteA);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByLabelText(/site name/i)).toHaveValue("Site B");
+    expect(screen.queryByDisplayValue("Site A")).not.toBeInTheDocument();
+  });
+
   it("clears the previous site's form when navigating between /sites/:id/edit routes", async () => {
     // `renderWithRouter` hard-codes `/sites/site-123/edit` as the initial
     // URL, so treat `site-123` as Site A here and navigate to a fresh

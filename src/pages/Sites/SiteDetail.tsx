@@ -57,6 +57,12 @@ export default function SiteDetail() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
+    // Per-`id` cancellation flag: if a slow `getSite(prevId)` finishes
+    // after the user has navigated to a new `/sites/:id`, ignore its
+    // result instead of letting it overwrite `site`, `customer`, and
+    // `orgUnit` with the previous record's data under the new URL.
+    let cancelled = false;
+
     async function loadData() {
       if (!id) return;
       setLoading(true);
@@ -66,6 +72,7 @@ export default function SiteDetail() {
       setOrgUnit(null);
       try {
         const siteData = await getSite(id);
+        if (cancelled) return;
         setSite(siteData);
 
         // Load customer and org unit in parallel, but don't fail if they error
@@ -73,6 +80,7 @@ export default function SiteDetail() {
           getCustomer(siteData.customer_id),
           getOrganizationalUnit(siteData.organizational_unit_id),
         ]);
+        if (cancelled) return;
 
         if (customerResult.status === "fulfilled") {
           setCustomer(customerResult.value);
@@ -81,14 +89,18 @@ export default function SiteDetail() {
           setOrgUnit(orgUnitResult.value);
         }
       } catch (err) {
+        if (cancelled) return;
         setLoadError(
           err instanceof Error ? err.message : _(msg`Failed to load site`)
         );
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     loadData();
+    return () => {
+      cancelled = true;
+    };
   }, [_, id]);
 
   async function handleDelete() {

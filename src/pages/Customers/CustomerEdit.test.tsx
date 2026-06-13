@@ -344,6 +344,59 @@ describe("CustomerEdit", () => {
     });
   });
 
+  it("ignores a late-resolving fetch for the previous customer after navigating between /customers/:id/edit routes", async () => {
+    const customerA = {
+      ...mockCustomer,
+      id: "customer-A",
+      name: "Customer A",
+      customer_number: "CUST-A",
+    };
+    const customerB = {
+      ...mockCustomer,
+      id: "customer-B",
+      name: "Customer B",
+      customer_number: "CUST-B",
+    };
+
+    let resolveCustomerA:
+      | ((
+          customer: Awaited<ReturnType<typeof customersApi.getCustomer>>
+        ) => void)
+      | undefined;
+    vi.mocked(customersApi.getCustomer).mockImplementation(async (id) => {
+      if (id === "customer-A") {
+        return new Promise((resolve) => {
+          resolveCustomerA = resolve;
+        });
+      }
+      return customerB;
+    });
+
+    window.history.pushState({}, "", "/customers/customer-A/edit");
+    renderWithRouter();
+
+    // Navigate to B while A is still in flight. B resolves immediately.
+    await act(async () => {
+      window.history.pushState({}, "", "/customers/customer-B/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/customer name/i)).toHaveValue("Customer B");
+    });
+
+    // Late A resolution must NOT refill the form with Customer A's data.
+    await act(async () => {
+      resolveCustomerA?.(customerA);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByLabelText(/customer name/i)).toHaveValue("Customer B");
+    expect(screen.queryByDisplayValue("Customer A")).not.toBeInTheDocument();
+  });
+
   it("clears the previous customer's form when navigating between /customers/:id/edit routes", async () => {
     const customerA = {
       ...mockCustomer,

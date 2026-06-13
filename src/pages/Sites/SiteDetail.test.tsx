@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
@@ -409,5 +409,60 @@ describe("SiteDetail", () => {
     expect(
       screen.queryByRole("button", { name: /^delete$/i })
     ).not.toBeInTheDocument();
+  });
+
+  it("ignores a late-resolving fetch for the previous site after navigating between /sites/:id routes", async () => {
+    const siteA = {
+      ...mockSite,
+      id: "site-A",
+      name: "Site A",
+      site_number: "SITE-A",
+    };
+    const siteB = {
+      ...mockSite,
+      id: "site-B",
+      name: "Site B",
+      site_number: "SITE-B",
+    };
+
+    let resolveSiteA:
+      | ((site: Awaited<ReturnType<typeof customersApi.getSite>>) => void)
+      | undefined;
+    vi.mocked(customersApi.getSite).mockImplementation(async (id) => {
+      if (id === "site-A") {
+        return new Promise((resolve) => {
+          resolveSiteA = resolve;
+        });
+      }
+      return siteB;
+    });
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
+      mockOrgUnit
+    );
+
+    window.history.pushState({}, "", "/sites/site-A");
+    renderWithRouter();
+
+    await act(async () => {
+      window.history.pushState({}, "", "/sites/site-B");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Site B")).toBeInTheDocument();
+    });
+
+    // Late A resolution must not clobber the rendered B record.
+    await act(async () => {
+      resolveSiteA?.(siteA);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText("Site B")).toBeInTheDocument();
+    expect(screen.queryByText("Site A")).not.toBeInTheDocument();
+    expect(screen.queryByText("SITE-A")).not.toBeInTheDocument();
   });
 });

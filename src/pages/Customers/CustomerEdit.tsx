@@ -46,6 +46,14 @@ export default function CustomerEdit() {
   const [formData, setFormData] = useState<UpdateCustomerRequest>({});
 
   useEffect(() => {
+    // Capture a per-`id` cancellation flag so that a slow fetch for the
+    // *previous* id cannot overwrite formData after the user has already
+    // navigated to a new `/customers/:id/edit`. Without this guard, a
+    // late-resolving setFormData would refill the form with the previous
+    // customer's values under the new URL, and a Save click would write
+    // those stale values to the new id.
+    let cancelled = false;
+
     async function loadCustomer() {
       if (!id) return;
       // Drop stale customer / formData *synchronously* on every `id` change.
@@ -60,6 +68,7 @@ export default function CustomerEdit() {
       setError(null);
       try {
         const data = await getCustomer(id);
+        if (cancelled) return;
         setCustomer(data);
         setFormData({
           name: data.name,
@@ -69,14 +78,18 @@ export default function CustomerEdit() {
           is_active: data.is_active,
         });
       } catch (err) {
+        if (cancelled) return;
         setError(
           err instanceof Error ? err.message : _(msg`Failed to load customer`)
         );
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     loadCustomer();
+    return () => {
+      cancelled = true;
+    };
   }, [_, id]);
 
   function updateField(field: keyof UpdateCustomerRequest, value: unknown) {

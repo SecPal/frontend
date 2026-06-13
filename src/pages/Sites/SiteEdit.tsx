@@ -64,6 +64,15 @@ export default function SiteEdit() {
   const [formData, setFormData] = useState<UpdateSiteRequest>({});
 
   useEffect(() => {
+    // Per-`id` cancellation flag: if a slow `getSite(prevId)` finishes
+    // after the user has navigated to a new `/sites/:id/edit`, ignore
+    // its result instead of refilling the form with the previous site's
+    // values under the new URL. The same Bugbot HIGH severity finding
+    // that flagged CustomerDetail, CustomerEdit, and SiteDetail applies
+    // to this file: a Save click before the lagging fetch resolves
+    // would have written the prior site's data to the new id.
+    let cancelled = false;
+
     async function loadData() {
       if (!id) return;
       // Drop stale site / formData *synchronously* on every `id` change.
@@ -82,6 +91,7 @@ export default function SiteEdit() {
           listCustomers({ per_page: 100 }),
           listOrganizationalUnits({ per_page: 100 }),
         ]);
+        if (cancelled) return;
         setSite(siteData);
         setCustomers(customersData.data);
         setOrgUnits(orgUnitsData.data);
@@ -99,14 +109,18 @@ export default function SiteEdit() {
           valid_until: siteData.valid_until,
         });
       } catch (err) {
+        if (cancelled) return;
         setError(
           err instanceof Error ? err.message : _(msg`Failed to load site`)
         );
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     loadData();
+    return () => {
+      cancelled = true;
+    };
   }, [_, id]);
 
   function updateField(field: keyof UpdateSiteRequest, value: unknown) {

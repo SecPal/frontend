@@ -62,6 +62,14 @@ export default function CustomerDetail() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
+    // Capture a per-`id` cancellation flag so that a slow fetch for the
+    // *previous* id cannot overwrite state after the user has already
+    // navigated to a new `/customers/:id`. Without this guard, a
+    // late-resolving setCustomer would render the previous record's name
+    // and customer_number under the new URL — and its destructive
+    // actions (Edit, Delete) would operate on the wrong record.
+    let cancelled = false;
+
     async function loadCustomer() {
       // Drop the previous customer *synchronously* on every `id` change.
       // The skeleton is gated on `customer === null`, so without this
@@ -79,16 +87,21 @@ export default function CustomerDetail() {
       }
       try {
         const data = await getCustomer(id);
+        if (cancelled) return;
         setCustomer(data);
       } catch (err) {
+        if (cancelled) return;
         setLoadError(
           err instanceof Error ? err.message : _(msg`Failed to load customer`)
         );
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     loadCustomer();
+    return () => {
+      cancelled = true;
+    };
   }, [_, id]);
 
   async function handleDelete() {
