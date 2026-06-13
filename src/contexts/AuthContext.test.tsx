@@ -11,15 +11,41 @@ import {
   clearOfflineVaultSession,
 } from "../lib/offlineVault";
 import { authStorage } from "../services/storage";
+import { resetPrefetchCache } from "../hooks/usePrefetch";
 
 vi.mock("../services/authApi", () => ({
   getCurrentUser: vi.fn(),
 }));
 
+vi.mock("../hooks/usePrefetch", async () => {
+  const actual = await vi.importActual<typeof import("../hooks/usePrefetch")>(
+    "../hooks/usePrefetch"
+  );
+  return {
+    ...actual,
+    resetPrefetchCache: vi.fn(),
+  };
+});
+
+type SessionEventName = "session:expired" | "session:invalid";
+type SessionEventHandler = () => void;
+const sessionEventHandlers = new Map<SessionEventName, SessionEventHandler[]>();
+
 vi.mock("../services/sessionEvents", () => ({
   isOnline: vi.fn(() => false),
   sessionEvents: {
-    on: vi.fn(() => () => undefined),
+    on: vi.fn((event: SessionEventName, handler: SessionEventHandler) => {
+      const list = sessionEventHandlers.get(event) ?? [];
+      list.push(handler);
+      sessionEventHandlers.set(event, list);
+      return () => {
+        const current = sessionEventHandlers.get(event) ?? [];
+        sessionEventHandlers.set(
+          event,
+          current.filter((registered) => registered !== handler)
+        );
+      };
+    }),
   },
 }));
 
@@ -59,6 +85,8 @@ describe("AuthContext", () => {
     clearOfflineVaultSession();
     document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
     document.cookie = "XSRF-TOKEN=test-csrf-token;path=/";
+    sessionEventHandlers.clear();
+    vi.mocked(resetPrefetchCache).mockClear();
   });
 
   afterEach(() => {
@@ -336,6 +364,72 @@ describe("AuthContext", () => {
       await waitFor(() => {
         expect(screen.getByTestId("isVaultLocked")).toHaveTextContent("false");
       });
+    });
+  });
+
+  describe("prefetch cache isolation across session teardown", () => {
+    function LogoutButton() {
+      const { logout } = useAuth();
+      return (
+        <button type="button" onClick={() => void logout()}>
+          logout
+        </button>
+      );
+    }
+
+    it("clears the prefetch cache on explicit logout", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        permissions: ["employees.read"],
+      });
+
+      render(
+        <AuthProvider>
+          <LogoutButton />
+        </AuthProvider>
+      );
+
+      const logoutButton = await screen.findByRole("button", {
+        name: /logout/i,
+      });
+
+      await act(async () => {
+        logoutButton.click();
+        await new Promise((r) => setTimeout(r, 0));
+      });
+
+      expect(resetPrefetchCache).toHaveBeenCalled();
+    });
+
+    it("clears the prefetch cache when session:expired tears down the session", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        permissions: ["employees.read"],
+      });
+
+      render(
+        <AuthProvider>
+          <PermissionTestComponent permission="employees.read" />
+        </AuthProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
+      });
+
+      vi.mocked(resetPrefetchCache).mockClear();
+
+      await act(async () => {
+        const handlers = sessionEventHandlers.get("session:expired") ?? [];
+        handlers.forEach((handler) => handler());
+        await new Promise((r) => setTimeout(r, 0));
+      });
+
+      expect(resetPrefetchCache).toHaveBeenCalled();
     });
   });
 

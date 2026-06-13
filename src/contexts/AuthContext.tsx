@@ -290,6 +290,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       shouldSkipBarrierVaultTableCleanupRef.current = clearSensitiveState;
 
       if (clearSensitiveState) {
+        // Drop prefetch warm-up state on every full session teardown
+        // (explicit logout, `session:expired` 401, invalid-payload recovery,
+        // cross-tab logout, ...). Otherwise `completedPrefetches` keys from
+        // the previous user keep suppressing prefetches for the next user
+        // who signs in, weakening the cross-session isolation introduced
+        // alongside the prefetch epoch counter in usePrefetch.ts.
+        resetPrefetchCache();
         beginSensitiveLogoutBarrierCleanup();
       }
 
@@ -377,7 +384,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logout = useCallback(async () => {
-    resetPrefetchCache();
+    // `clearAuthenticatedState(true)` resets the prefetch cache for us as
+    // part of every full-teardown path; no separate `resetPrefetchCache()`
+    // call is needed here.
     clearAuthenticatedState(true);
     await clearAuthenticatedStatePromiseRef.current;
   }, [clearAuthenticatedState]);
