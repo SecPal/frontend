@@ -27,6 +27,7 @@ import {
 } from "../lib/offlineVault";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 import { analytics } from "../lib/analytics";
+import { resetPrefetchCache } from "../hooks/usePrefetch";
 
 export const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
 
@@ -376,6 +377,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logout = useCallback(async () => {
+    resetPrefetchCache();
     clearAuthenticatedState(true);
     await clearAuthenticatedStatePromiseRef.current;
   }, [clearAuthenticatedState]);

@@ -180,9 +180,11 @@ test.describe("Application Smoke Tests", () => {
         .poll(() =>
           page.evaluate(
             () =>
-              (window as typeof window & {
-                __fullRouteLoaderSeen?: boolean;
-              }).__fullRouteLoaderSeen ?? false
+              (
+                window as typeof window & {
+                  __fullRouteLoaderSeen?: boolean;
+                }
+              ).__fullRouteLoaderSeen ?? false
           )
         )
         .toBe(false);

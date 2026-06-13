@@ -25,7 +25,7 @@ export const PrefetchLink = forwardRef<HTMLAnchorElement, RouterLinkProps>(
     { onFocus, onMouseEnter, onTouchStart, to, ...props },
     ref
   ) {
-    const { prefetchPath } = usePrefetch();
+    const { prefetchPath, prefetchPathModuleOnly } = usePrefetch();
     const prefetchPathname = useMemo(() => pathFromTo(to), [to]);
 
     const prefetch = useCallback(() => {
@@ -33,6 +33,12 @@ export const PrefetchLink = forwardRef<HTMLAnchorElement, RouterLinkProps>(
         prefetchPath(prefetchPathname);
       }
     }, [prefetchPath, prefetchPathname]);
+
+    const prefetchModuleOnly = useCallback(() => {
+      if (prefetchPathname) {
+        prefetchPathModuleOnly(prefetchPathname);
+      }
+    }, [prefetchPathModuleOnly, prefetchPathname]);
 
     return (
       <RouterLink
@@ -54,7 +60,7 @@ export const PrefetchLink = forwardRef<HTMLAnchorElement, RouterLinkProps>(
         onTouchStart={(event) => {
           onTouchStart?.(event);
           if (!event.defaultPrevented) {
-            prefetch();
+            prefetchModuleOnly();
           }
         }}
       />

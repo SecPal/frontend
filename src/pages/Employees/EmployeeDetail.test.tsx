@@ -991,7 +991,9 @@ describe("EmployeeDetail", () => {
 
     renderWithProviders("emp-1");
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading employee details/i })
+    ).toBeInTheDocument();
   });
 
   it("should handle terminate employee action with confirm", async () => {

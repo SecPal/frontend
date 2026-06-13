@@ -9,9 +9,6 @@ export function RouteContentFallback() {
   const { i18n } = useLingui();
 
   return (
-    <PageSkeleton
-      loadingLabel={i18n._(msg`Loading page...`)}
-      sections={2}
-    />
+    <PageSkeleton loadingLabel={i18n._(msg`Loading page...`)} sections={2} />
   );
 }

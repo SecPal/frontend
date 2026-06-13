@@ -4,7 +4,6 @@
 import { useCallback } from "react";
 import { apiConfig } from "../config";
 import { routeModuleLoaders, type RouteModuleKey } from "../routeModules";
-import { apiFetch } from "../services/csrf";
 
 export interface RoutePrefetchPlan {
   routeModules: RouteModuleKey[];
@@ -34,7 +33,11 @@ function pathFromUrlLike(value: string): string | null {
 }
 
 function encodePathSegment(value: string): string {
-  return encodeURIComponent(decodeURIComponent(value));
+  try {
+    return encodeURIComponent(decodeURIComponent(value));
+  } catch {
+    return encodeURIComponent(value);
+  }
 }
 
 function listApiPath(resource: string, params: Record<string, string>): string {
@@ -67,41 +70,51 @@ export function getRoutePrefetchPlan(
     case "/settings":
       return routePlan(["settings"]);
     case "/organization":
-      return routePlan(["organization"], [
-        listApiPath("organizational-units", { per_page: "100" }),
-      ]);
+      return routePlan(
+        ["organization"],
+        [listApiPath("organizational-units", { per_page: "100" })]
+      );
     case "/customers":
-      return routePlan(["customers"], [
-        listApiPath("customers", { page: "1", per_page: "15" }),
-      ]);
+      return routePlan(
+        ["customers"],
+        [listApiPath("customers", { page: "1", per_page: "15" })]
+      );
     case "/customers/new":
       return routePlan(["customerCreate"]);
     case "/sites":
-      return routePlan(["sites"], [
-        listApiPath("sites", { page: "1", per_page: "15" }),
-      ]);
+      return routePlan(
+        ["sites"],
+        [listApiPath("sites", { page: "1", per_page: "15" })]
+      );
     case "/sites/new":
       return routePlan(["siteCreate"], ["/v1/organizational-units"]);
     case "/employees":
-      return routePlan(["employeeList"], [
-        listApiPath("employees", { page: "1", per_page: "15" }),
-        "/v1/organizational-units",
-      ]);
+      return routePlan(
+        ["employeeList"],
+        [
+          listApiPath("employees", { page: "1", per_page: "15" }),
+          "/v1/organizational-units",
+        ]
+      );
     case "/employees/create":
       return routePlan(["employeeCreate"], ["/v1/organizational-units"]);
     case "/activity-logs":
-      return routePlan(["activityLogs"], [
-        listApiPath("activity-logs", {
-          page: "1",
-          per_page: "50",
-          include_verification: "1",
-        }),
-        "/v1/organizational-units",
-      ]);
+      return routePlan(
+        ["activityLogs"],
+        [
+          listApiPath("activity-logs", {
+            page: "1",
+            per_page: "50",
+            include_verification: "1",
+          }),
+          "/v1/organizational-units",
+        ]
+      );
     case "/android-provisioning":
-      return routePlan(["androidProvisioning"], [
-        "/v1/android-enrollment-sessions?per_page=15",
-      ]);
+      return routePlan(
+        ["androidProvisioning"],
+        ["/v1/android-enrollment-sessions?per_page=15"]
+      );
     default:
       break;
   }
@@ -120,13 +133,16 @@ export function getRoutePrefetchPlan(
 
   const customerSitesMatch = pathname.match(/^\/sites\/customer\/([^/]+)$/);
   if (customerSitesMatch) {
-    return routePlan(["sites"], [
-      listApiPath("sites", {
-        customer_id: encodePathSegment(customerSitesMatch[1] ?? ""),
-        page: "1",
-        per_page: "15",
-      }),
-    ]);
+    return routePlan(
+      ["sites"],
+      [
+        listApiPath("sites", {
+          customer_id: encodePathSegment(customerSitesMatch[1] ?? ""),
+          page: "1",
+          per_page: "15",
+        }),
+      ]
+    );
   }
 
   const customerSiteCreateMatch = pathname.match(
@@ -134,10 +150,10 @@ export function getRoutePrefetchPlan(
   );
   if (customerSiteCreateMatch) {
     const customerId = encodePathSegment(customerSiteCreateMatch[1] ?? "");
-    return routePlan(["siteCreate"], [
-      `/v1/customers/${customerId}`,
-      "/v1/organizational-units",
-    ]);
+    return routePlan(
+      ["siteCreate"],
+      [`/v1/customers/${customerId}`, "/v1/organizational-units"]
+    );
   }
 
   const siteMatch = pathname.match(/^\/sites\/([^/]+)$/);
@@ -149,10 +165,10 @@ export function getRoutePrefetchPlan(
   const siteEditMatch = pathname.match(/^\/sites\/([^/]+)\/edit$/);
   if (siteEditMatch) {
     const id = encodePathSegment(siteEditMatch[1] ?? "");
-    return routePlan(["siteEdit"], [
-      `/v1/sites/${id}`,
-      "/v1/organizational-units",
-    ]);
+    return routePlan(
+      ["siteEdit"],
+      [`/v1/sites/${id}`, "/v1/organizational-units"]
+    );
   }
 
   const employeeContactsMatch = pathname.match(
@@ -166,10 +182,10 @@ export function getRoutePrefetchPlan(
   const employeeEditMatch = pathname.match(/^\/employees\/([^/]+)\/edit$/);
   if (employeeEditMatch) {
     const id = encodePathSegment(employeeEditMatch[1] ?? "");
-    return routePlan(["employeeEdit"], [
-      `/v1/employees/${id}`,
-      "/v1/organizational-units",
-    ]);
+    return routePlan(
+      ["employeeEdit"],
+      [`/v1/employees/${id}`, "/v1/organizational-units"]
+    );
   }
 
   const employeeMatch = pathname.match(/^\/employees\/([^/]+)$/);
@@ -181,7 +197,10 @@ export function getRoutePrefetchPlan(
   return null;
 }
 
-function runPrefetch(key: string, task: () => Promise<unknown>): Promise<void> {
+function runPrefetch(
+  key: string,
+  task: () => Promise<Response | unknown>
+): Promise<void> {
   if (completedPrefetches.has(key)) {
     return Promise.resolve();
   }
@@ -194,7 +213,15 @@ function runPrefetch(key: string, task: () => Promise<unknown>): Promise<void> {
   const promise = Promise.resolve()
     .then(task)
     .then(
-      () => {
+      (result: Response | unknown) => {
+        if (result instanceof Response && !result.ok) {
+          if (import.meta.env.DEV) {
+            console.warn(
+              `[Prefetch] Prefetch for ${key} returned HTTP ${result.status}; not caching.`
+            );
+          }
+          return;
+        }
         completedPrefetches.add(key);
       },
       (error: unknown) => {
@@ -220,6 +247,7 @@ function prefetchRouteModule(routeModule: RouteModuleKey): Promise<void> {
 function prefetchApiPath(path: string): Promise<void> {
   const requestInit: LowPriorityRequestInit = {
     method: "GET",
+    credentials: "include",
     headers: {
       Accept: "application/json",
     },
@@ -230,7 +258,7 @@ function prefetchApiPath(path: string): Promise<void> {
   }
 
   return runPrefetch(`api:${path}`, () =>
-    apiFetch(`${apiConfig.baseUrl}${path}`, requestInit)
+    fetch(`${apiConfig.baseUrl}${path}`, requestInit)
   );
 }
 
@@ -272,14 +300,23 @@ export function scheduleRoutePrefetch(
   window.setTimeout(prefetch, 100);
 }
 
-export function resetPrefetchCacheForTests(): void {
+export function resetPrefetchCache(): void {
   completedPrefetches.clear();
   pendingPrefetches.clear();
+}
+
+/** @internal Use only in tests. */
+export function resetPrefetchCacheForTests(): void {
+  resetPrefetchCache();
 }
 
 export function usePrefetch() {
   const prefetchPath = useCallback((destination: string) => {
     void prefetchRoutePath(destination);
+  }, []);
+
+  const prefetchPathModuleOnly = useCallback((destination: string) => {
+    void prefetchRoutePath(destination, { includeApi: false });
   }, []);
 
   const prefetchPathOnIdle = useCallback((destination: string) => {
@@ -298,6 +335,7 @@ export function usePrefetch() {
 
   return {
     prefetchPath,
+    prefetchPathModuleOnly,
     prefetchPathOnIdle,
     prefetchPathsOnIdle,
     clearPrefetchCache,

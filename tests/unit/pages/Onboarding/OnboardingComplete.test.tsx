@@ -442,9 +442,7 @@ describe("OnboardingComplete", () => {
     expect(
       screen.getByRole("status", { name: /validating onboarding link/i })
     ).toBeInTheDocument();
-    expect(
-      screen.queryByText(/validating your link/i)
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/validating your link/i)).not.toBeInTheDocument();
     expectOnboardingAuthFrame();
   });
 

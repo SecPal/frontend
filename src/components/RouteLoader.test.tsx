@@ -1,13 +1,19 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { i18n } from "@lingui/core";
+import { I18nProvider } from "@lingui/react";
 import { RouteLoader } from "./RouteLoader";
+
+function renderWithI18n(ui: React.ReactElement) {
+  return render(<I18nProvider i18n={i18n}>{ui}</I18nProvider>);
+}
 
 describe("RouteLoader", () => {
   it("renders a shell-equivalent loading placeholder", () => {
-    render(<RouteLoader />);
+    renderWithI18n(<RouteLoader />);
 
     expect(screen.getByRole("img", { name: "SecPal" })).toBeInTheDocument();
     expect(
@@ -16,7 +22,7 @@ describe("RouteLoader", () => {
   });
 
   it("has correct accessibility attributes on the content skeleton", () => {
-    render(<RouteLoader />);
+    renderWithI18n(<RouteLoader />);
 
     const statusElement = screen.getByRole("status", {
       name: /loading application/i,
@@ -26,13 +32,13 @@ describe("RouteLoader", () => {
   });
 
   it("does not render the old raw loading copy", () => {
-    render(<RouteLoader />);
+    renderWithI18n(<RouteLoader />);
 
     expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
   });
 
   it("renders with shell styling classes", () => {
-    const { container } = render(<RouteLoader />);
+    const { container } = renderWithI18n(<RouteLoader />);
 
     const outerDiv = container.firstChild as HTMLElement;
     expect(outerDiv).toHaveClass(
@@ -46,7 +52,7 @@ describe("RouteLoader", () => {
   });
 
   it("renders skeleton placeholders instead of a spinner", () => {
-    const { container } = render(<RouteLoader />);
+    const { container } = renderWithI18n(<RouteLoader />);
 
     expect(container.querySelector(".animate-spin")).not.toBeInTheDocument();
     expect(

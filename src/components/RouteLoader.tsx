@@ -1,10 +1,14 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { PageSkeleton, Skeleton } from "@/ui";
 import { Logo } from "./Logo";
 
 export function RouteLoader() {
+  const { i18n } = useLingui();
+
   return (
     <div
       className="relative isolate flex min-h-dvh w-full flex-col bg-white lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950"
@@ -26,7 +30,10 @@ export function RouteLoader() {
       <main className="flex flex-1 flex-col bg-white dark:bg-zinc-900">
         <div className="grow p-6 lg:p-10">
           <div className="mx-auto max-w-6xl">
-            <PageSkeleton loadingLabel="Loading application" sections={2} />
+            <PageSkeleton
+              loadingLabel={i18n._(msg`Loading application`)}
+              sections={2}
+            />
           </div>
         </div>
       </main>

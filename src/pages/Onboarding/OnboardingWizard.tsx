@@ -3485,10 +3485,7 @@ export function OnboardingWizard() {
 
   if (error && steps.length === 0) {
     return (
-      <OnboardingWizardFrame
-        steps={steps}
-        currentStepIndex={currentStepIndex}
-      >
+      <OnboardingWizardFrame steps={steps} currentStepIndex={currentStepIndex}>
         {entryFeedbackBanner}
         <Alert
           ref={onboardingErrorRef}
@@ -3586,728 +3583,343 @@ export function OnboardingWizard() {
             </Alert>
           ) : null}
 
-      {template && (
-        <div>
-          {currentStepIndex === 0 ? (
-            <OnboardingStepsOverview steps={steps} />
-          ) : null}
+          {template && (
+            <div>
+              {currentStepIndex === 0 ? (
+                <OnboardingStepsOverview steps={steps} />
+              ) : null}
 
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <h2 className="mb-0 text-xl font-semibold text-zinc-950 dark:text-zinc-50">
-              {template.title ?? template.name}
-            </h2>
-            {template.is_required === false ? (
-              <Badge>
-                <Trans>Optional</Trans>
-              </Badge>
-            ) : null}
-          </div>
+              <div className="mb-4 flex flex-wrap items-center gap-3">
+                <h2 className="mb-0 text-xl font-semibold text-zinc-950 dark:text-zinc-50">
+                  {template.title ?? template.name}
+                </h2>
+                {template.is_required === false ? (
+                  <Badge>
+                    <Trans>Optional</Trans>
+                  </Badge>
+                ) : null}
+              </div>
 
-          {template.description ? (
-            <p className="mb-6 text-zinc-600 dark:text-zinc-400">
-              {template.description}
-            </p>
-          ) : null}
+              {template.description ? (
+                <p className="mb-6 text-zinc-600 dark:text-zinc-400">
+                  {template.description}
+                </p>
+              ) : null}
 
-          {isResidentialAddressHistoryTemplate(template) ? (
-            <OnboardingResidentialAddressHistoryFields
-              value={getResidentialAddressHistoryValue(formData)}
-              errors={fieldErrors}
-              readOnly={!isCurrentStepEditable}
-              onChange={handleResidentialAddressHistoryChange}
-            />
-          ) : schema ? (
-            <UiFieldGroup>
-              {Object.entries(schema.properties)
-                .filter(
-                  ([fieldName]) =>
-                    isOnboardingFieldVisible(fieldName, formData, schema) &&
-                    !RESIDENCE_TITLE_CUSTOM_FIELDS.has(fieldName)
-                )
-                .map(([fieldName, property]) => (
-                  <div key={fieldName}>
-                    <SchemaFieldRenderer
-                      fieldName={fieldName}
-                      property={property}
-                      dynamicArrayOptions={
-                        fieldName === "nationalities" &&
-                        nationalityOptions.length > 0
-                          ? nationalityOptions.map((option) => ({
-                              value: option.code,
-                              label: `${option.name} (${option.code})`,
-                            }))
-                          : undefined
-                      }
-                      error={fieldErrors[fieldName]}
-                      readOnly={!isCurrentStepEditable}
-                      required={
-                        schema.required.includes(fieldName) ||
-                        isConditionallyRequiredOnboardingField(
-                          fieldName,
-                          formData
-                        )
-                      }
-                      formData={formData}
-                      onChange={handleFieldChange}
-                    />
-                    {fieldName === "nationalities" &&
-                    stepUploadDocumentType &&
-                    isCurrentStepEditable ? (
-                      <div className="mt-6 rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
-                        <UiFieldGroup>
-                          <UiField>
-                            <div className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
-                              <Trans>
-                                Would you like to upload your identity document
-                                now?
-                              </Trans>
-                            </div>
-                            <UiFieldDescription>
-                              <Trans>
-                                You can upload now or continue and add documents
-                                later before final submission.
-                              </Trans>
-                            </UiFieldDescription>
-                            <UiRadioGroup
-                              aria-label={_(
-                                msg`Would you like to upload your identity document now?`
-                              )}
-                              aria-invalid={
-                                fieldErrors[ID_DOCUMENT_UPLOAD_NOW_FIELD]
-                                  ? true
-                                  : undefined
-                              }
-                              aria-describedby={
-                                fieldErrors[ID_DOCUMENT_UPLOAD_NOW_FIELD]
-                                  ? "onboarding-field-id-document-upload-now-error"
-                                  : undefined
-                              }
-                              className="mt-3"
-                              name={ID_DOCUMENT_UPLOAD_NOW_FIELD}
-                              value={uploadNowSelection ?? ""}
-                              onValueChange={(nextValue) => {
-                                if (nextValue === "yes") {
-                                  setUploadNowSelection("yes");
-                                  clearUploadRequirementErrors();
-                                  setFormData((currentFormData) => ({
-                                    ...currentFormData,
-                                    [ID_DOCUMENT_UPLOAD_NOW_FIELD]: "yes",
-                                  }));
-                                  return;
-                                }
+              {isResidentialAddressHistoryTemplate(template) ? (
+                <OnboardingResidentialAddressHistoryFields
+                  value={getResidentialAddressHistoryValue(formData)}
+                  errors={fieldErrors}
+                  readOnly={!isCurrentStepEditable}
+                  onChange={handleResidentialAddressHistoryChange}
+                />
+              ) : schema ? (
+                <UiFieldGroup>
+                  {Object.entries(schema.properties)
+                    .filter(
+                      ([fieldName]) =>
+                        isOnboardingFieldVisible(fieldName, formData, schema) &&
+                        !RESIDENCE_TITLE_CUSTOM_FIELDS.has(fieldName)
+                    )
+                    .map(([fieldName, property]) => (
+                      <div key={fieldName}>
+                        <SchemaFieldRenderer
+                          fieldName={fieldName}
+                          property={property}
+                          dynamicArrayOptions={
+                            fieldName === "nationalities" &&
+                            nationalityOptions.length > 0
+                              ? nationalityOptions.map((option) => ({
+                                  value: option.code,
+                                  label: `${option.name} (${option.code})`,
+                                }))
+                              : undefined
+                          }
+                          error={fieldErrors[fieldName]}
+                          readOnly={!isCurrentStepEditable}
+                          required={
+                            schema.required.includes(fieldName) ||
+                            isConditionallyRequiredOnboardingField(
+                              fieldName,
+                              formData
+                            )
+                          }
+                          formData={formData}
+                          onChange={handleFieldChange}
+                        />
+                        {fieldName === "nationalities" &&
+                        stepUploadDocumentType &&
+                        isCurrentStepEditable ? (
+                          <div className="mt-6 rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
+                            <UiFieldGroup>
+                              <UiField>
+                                <div className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
+                                  <Trans>
+                                    Would you like to upload your identity
+                                    document now?
+                                  </Trans>
+                                </div>
+                                <UiFieldDescription>
+                                  <Trans>
+                                    You can upload now or continue and add
+                                    documents later before final submission.
+                                  </Trans>
+                                </UiFieldDescription>
+                                <UiRadioGroup
+                                  aria-label={_(
+                                    msg`Would you like to upload your identity document now?`
+                                  )}
+                                  aria-invalid={
+                                    fieldErrors[ID_DOCUMENT_UPLOAD_NOW_FIELD]
+                                      ? true
+                                      : undefined
+                                  }
+                                  aria-describedby={
+                                    fieldErrors[ID_DOCUMENT_UPLOAD_NOW_FIELD]
+                                      ? "onboarding-field-id-document-upload-now-error"
+                                      : undefined
+                                  }
+                                  className="mt-3"
+                                  name={ID_DOCUMENT_UPLOAD_NOW_FIELD}
+                                  value={uploadNowSelection ?? ""}
+                                  onValueChange={(nextValue) => {
+                                    if (nextValue === "yes") {
+                                      setUploadNowSelection("yes");
+                                      clearUploadRequirementErrors();
+                                      setFormData((currentFormData) => ({
+                                        ...currentFormData,
+                                        [ID_DOCUMENT_UPLOAD_NOW_FIELD]: "yes",
+                                      }));
+                                      return;
+                                    }
 
-                                if (nextValue === "no") {
-                                  setUploadNowSelection("no");
-                                  setIdentityDocumentKind(
-                                    shouldAskIdentityDocumentKind
-                                      ? null
-                                      : "passport"
-                                  );
-                                  clearUploadRequirementErrors();
-                                  setFormData((currentFormData) => ({
-                                    ...currentFormData,
-                                    [ID_DOCUMENT_UPLOAD_NOW_FIELD]: "no",
-                                    [ID_DOCUMENT_KIND_FIELD]: "",
-                                  }));
-                                }
-                              }}
-                            >
-                              <UiFieldLabel
-                                htmlFor="onboarding-field-id-document-upload-now-yes"
-                                className="flex items-center gap-2"
-                              >
-                                <UiRadioGroupItem
-                                  id="onboarding-field-id-document-upload-now-yes"
-                                  value="yes"
-                                />
-                                <span>{_(msg`Yes`)}</span>
-                              </UiFieldLabel>
-                              <UiFieldLabel
-                                htmlFor="onboarding-field-id-document-upload-now-no"
-                                className="flex items-center gap-2"
-                              >
-                                <UiRadioGroupItem
-                                  id="onboarding-field-id-document-upload-now-no"
-                                  value="no"
-                                />
-                                <span>{_(msg`No`)}</span>
-                              </UiFieldLabel>
-                            </UiRadioGroup>
-                            {fieldErrors[ID_DOCUMENT_UPLOAD_NOW_FIELD] ? (
-                              <UiFieldError id="onboarding-field-id-document-upload-now-error">
-                                {fieldErrors[ID_DOCUMENT_UPLOAD_NOW_FIELD]}
-                              </UiFieldError>
+                                    if (nextValue === "no") {
+                                      setUploadNowSelection("no");
+                                      setIdentityDocumentKind(
+                                        shouldAskIdentityDocumentKind
+                                          ? null
+                                          : "passport"
+                                      );
+                                      clearUploadRequirementErrors();
+                                      setFormData((currentFormData) => ({
+                                        ...currentFormData,
+                                        [ID_DOCUMENT_UPLOAD_NOW_FIELD]: "no",
+                                        [ID_DOCUMENT_KIND_FIELD]: "",
+                                      }));
+                                    }
+                                  }}
+                                >
+                                  <UiFieldLabel
+                                    htmlFor="onboarding-field-id-document-upload-now-yes"
+                                    className="flex items-center gap-2"
+                                  >
+                                    <UiRadioGroupItem
+                                      id="onboarding-field-id-document-upload-now-yes"
+                                      value="yes"
+                                    />
+                                    <span>{_(msg`Yes`)}</span>
+                                  </UiFieldLabel>
+                                  <UiFieldLabel
+                                    htmlFor="onboarding-field-id-document-upload-now-no"
+                                    className="flex items-center gap-2"
+                                  >
+                                    <UiRadioGroupItem
+                                      id="onboarding-field-id-document-upload-now-no"
+                                      value="no"
+                                    />
+                                    <span>{_(msg`No`)}</span>
+                                  </UiFieldLabel>
+                                </UiRadioGroup>
+                                {fieldErrors[ID_DOCUMENT_UPLOAD_NOW_FIELD] ? (
+                                  <UiFieldError id="onboarding-field-id-document-upload-now-error">
+                                    {fieldErrors[ID_DOCUMENT_UPLOAD_NOW_FIELD]}
+                                  </UiFieldError>
+                                ) : null}
+                              </UiField>
+                            </UiFieldGroup>
+
+                            {uploadNowSelection === "yes" &&
+                            shouldAskIdentityDocumentKind ? (
+                              <UiFieldGroup className="mt-6">
+                                <UiField>
+                                  <UiFieldLabel htmlFor="onboarding-field-id-document-kind">
+                                    <Trans>
+                                      Which document are you uploading?
+                                    </Trans>
+                                  </UiFieldLabel>
+                                  <UiFieldDescription id="onboarding-field-id-document-kind-description">
+                                    <Trans>
+                                      For German nationals, you can provide
+                                      either identity card or passport.
+                                    </Trans>
+                                  </UiFieldDescription>
+                                  <UiSelect
+                                    id="onboarding-field-id-document-kind"
+                                    aria-label={_(
+                                      msg`Which document are you uploading?`
+                                    )}
+                                    aria-describedby="onboarding-field-id-document-kind-description"
+                                    value={identityDocumentKind ?? ""}
+                                    onChange={(event) => {
+                                      const nextKind =
+                                        event.target.value === "id_card" ||
+                                        event.target.value === "passport"
+                                          ? event.target.value
+                                          : null;
+                                      setIdentityDocumentKind(nextKind);
+                                      setFormData((currentFormData) => ({
+                                        ...currentFormData,
+                                        [ID_DOCUMENT_KIND_FIELD]:
+                                          nextKind ?? "",
+                                      }));
+                                    }}
+                                  >
+                                    <option value="">
+                                      {_(msg`Select an option`)}
+                                    </option>
+                                    <option value="id_card">
+                                      {_(msg`Identity card`)}
+                                    </option>
+                                    <option value="passport">
+                                      {_(msg`Passport`)}
+                                    </option>
+                                  </UiSelect>
+                                </UiField>
+                              </UiFieldGroup>
                             ) : null}
-                          </UiField>
-                        </UiFieldGroup>
 
-                        {uploadNowSelection === "yes" &&
-                        shouldAskIdentityDocumentKind ? (
-                          <UiFieldGroup className="mt-6">
-                            <UiField>
-                              <UiFieldLabel htmlFor="onboarding-field-id-document-kind">
-                                <Trans>Which document are you uploading?</Trans>
-                              </UiFieldLabel>
-                              <UiFieldDescription id="onboarding-field-id-document-kind-description">
+                            {uploadNowSelection === "no" ? (
+                              <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
                                 <Trans>
-                                  For German nationals, you can provide either
-                                  identity card or passport.
+                                  You can continue now and upload your documents
+                                  later.
                                 </Trans>
-                              </UiFieldDescription>
-                              <UiSelect
-                                id="onboarding-field-id-document-kind"
-                                aria-label={_(
-                                  msg`Which document are you uploading?`
-                                )}
-                                aria-describedby="onboarding-field-id-document-kind-description"
-                                value={identityDocumentKind ?? ""}
-                                onChange={(event) => {
-                                  const nextKind =
-                                    event.target.value === "id_card" ||
-                                    event.target.value === "passport"
-                                      ? event.target.value
-                                      : null;
-                                  setIdentityDocumentKind(nextKind);
-                                  setFormData((currentFormData) => ({
-                                    ...currentFormData,
-                                    [ID_DOCUMENT_KIND_FIELD]: nextKind ?? "",
-                                  }));
-                                }}
-                              >
-                                <option value="">
-                                  {_(msg`Select an option`)}
-                                </option>
-                                <option value="id_card">
-                                  {_(msg`Identity card`)}
-                                </option>
-                                <option value="passport">
-                                  {_(msg`Passport`)}
-                                </option>
-                              </UiSelect>
-                            </UiField>
-                          </UiFieldGroup>
-                        ) : null}
-
-                        {uploadNowSelection === "no" ? (
-                          <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
-                            <Trans>
-                              You can continue now and upload your documents
-                              later.
-                            </Trans>
-                            <br />
-                            <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-                              <Trans>
-                                HR will still require these documents for the
-                                Bewacherregister registration.
-                              </Trans>
-                            </span>
-                          </p>
+                                <br />
+                                <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+                                  <Trans>
+                                    HR will still require these documents for
+                                    the Bewacherregister registration.
+                                  </Trans>
+                                </span>
+                              </p>
+                            ) : null}
+                          </div>
                         ) : null}
                       </div>
-                    ) : null}
-                  </div>
-                ))}
-              {stepUploadDocumentType &&
-              uploadNowSelection === "yes" &&
-              (!shouldAskIdentityDocumentKind ||
-                identityDocumentKind !== null) ? (
-                <div className="mt-6 rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
-                  <h3 className="mb-3 text-base font-semibold text-zinc-950 dark:text-zinc-50">
-                    <Trans>Identity Document Upload</Trans>
-                  </h3>
-                  <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-                    {identityDocumentKind === "id_card" ? (
-                      <Trans>
-                        Please upload your identity card (PDF, JPG, JPEG, PNG;
-                        max. 10 MB).
-                      </Trans>
-                    ) : identityDocumentKind === "passport" ||
-                      primaryNationalityCode !== "DE" ? (
-                      <Trans>
-                        Please upload your passport (PDF, JPG, JPEG, PNG; max.
-                        10 MB).
-                      </Trans>
-                    ) : (
-                      <Trans>
-                        Please upload your identity card or passport (PDF, JPG,
-                        JPEG, PNG; max. 10 MB).
-                      </Trans>
-                    )}
-                  </p>
-                  <div className="mb-4 rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900/50">
-                    <p className="mb-2 text-sm font-medium text-zinc-800 dark:text-zinc-200">
-                      <Trans>Required documents for this step</Trans>
-                    </p>
-                    <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-600 dark:text-zinc-400">
-                      <li>
-                        {identityDocumentKind === "id_card" ? (
-                          <Trans>Identity card</Trans>
-                        ) : identityDocumentKind === "passport" ||
-                          primaryNationalityCode !== "DE" ? (
-                          <Trans>Passport</Trans>
-                        ) : (
-                          <Trans>Identity card or passport</Trans>
-                        )}
-                      </li>
-                      <li>
-                        <Trans>
-                          For identity cards, upload front and back as separate
-                          files
-                        </Trans>
-                      </li>
-                      <li>
-                        <Trans>
-                          Proof of residence registration (Meldebestätigung),
-                          only if your ID does not show your current address
-                        </Trans>
-                      </li>
-                    </ul>
-                  </div>
-
-                  {!submission ? (
-                    <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-                      <Trans>
-                        Your current answers will be saved as a draft before the
-                        first file upload.
-                      </Trans>
-                    </p>
-                  ) : null}
-
-                  {uploadFeedback ? (
-                    <div
-                      role={
-                        uploadFeedback.tone === "error" ? "alert" : "status"
-                      }
-                      aria-live={
-                        uploadFeedback.tone === "error" ? "assertive" : "polite"
-                      }
-                      aria-atomic="true"
-                      className={
-                        uploadFeedback.tone === "error"
-                          ? "mb-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/60 dark:bg-red-950/30"
-                          : "mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/30"
-                      }
-                    >
-                      <p
-                        className={
-                          uploadFeedback.tone === "error"
-                            ? "text-red-800 dark:text-red-200"
-                            : "text-emerald-800 dark:text-emerald-200"
-                        }
-                      >
-                        {uploadFeedback.message}
-                      </p>
-                    </div>
-                  ) : null}
-
-                  {isCurrentStepEditable ? (
-                    <>
-                      <UiFieldGroup>
-                        <UiField>
-                          <UiFieldLabel htmlFor="onboarding-identity-upload-attachment">
-                            <Trans>Attachment</Trans>
-                          </UiFieldLabel>
-                          <UiFieldDescription id="onboarding-identity-upload-attachment-description">
-                            <Trans>
-                              Accepted formats: PDF, JPG, JPEG, PNG.
-                            </Trans>
-                          </UiFieldDescription>
-                          <UiInput
-                            id="onboarding-identity-upload-attachment"
-                            ref={fileInputRef}
-                            aria-label={_(msg`Attachment`)}
-                            aria-describedby="onboarding-identity-upload-attachment-description"
-                            accept={ONBOARDING_UPLOAD_ACCEPT}
-                            className="file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-white/10 dark:file:text-white"
-                            type="file"
-                            onChange={(event) => {
-                              const nextPrimaryFile =
-                                event.target.files?.[0] ?? null;
-                              setUploadContext(
-                                nextPrimaryFile ? "identity_document" : null
-                              );
-                              setUploadFiles((currentFiles) =>
-                                nextPrimaryFile
-                                  ? [
-                                      nextPrimaryFile,
-                                      ...(currentFiles[1]
-                                        ? [currentFiles[1]]
-                                        : []),
-                                    ]
-                                  : []
-                              );
-                            }}
-                          />
-                        </UiField>
-
-                        {uploadFiles[0] ? (
-                          <UiField>
-                            <UiFieldLabel htmlFor="onboarding-identity-upload-attachment-extra">
-                              <Trans>Attachment (optional second file)</Trans>
-                            </UiFieldLabel>
-                            <UiFieldDescription id="onboarding-identity-upload-attachment-extra-description">
-                              <Trans>
-                                Optional: Upload a second file, for example the
-                                reverse side.
-                              </Trans>
-                            </UiFieldDescription>
-                            <UiInput
-                              id="onboarding-identity-upload-attachment-extra"
-                              aria-label={_(
-                                msg`Attachment (optional second file)`
-                              )}
-                              aria-describedby="onboarding-identity-upload-attachment-extra-description"
-                              accept={ONBOARDING_UPLOAD_ACCEPT}
-                              className="file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-white/10 dark:file:text-white"
-                              type="file"
-                              onChange={(event) => {
-                                const nextSecondaryFile =
-                                  event.target.files?.[0] ?? null;
-                                setUploadFiles((currentFiles) =>
-                                  currentFiles[0]
-                                    ? [
-                                        currentFiles[0],
-                                        ...(nextSecondaryFile
-                                          ? [nextSecondaryFile]
-                                          : []),
-                                      ]
-                                    : []
-                                );
-                              }}
-                            />
-                          </UiField>
-                        ) : null}
-                      </UiFieldGroup>
-
-                      <div className="mt-4 flex items-center gap-4">
-                        <Button
-                          disabled={
-                            uploadFiles.length === 0 || saving || uploading
-                          }
-                          onClick={() => void handleUpload("identity_document")}
-                        >
-                          {uploading ? (
-                            <Trans>Uploading...</Trans>
-                          ) : (
-                            <Trans>Upload File</Trans>
-                          )}
-                        </Button>
-                        {uploadFiles.length > 0 ? (
-                          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                            {uploadFiles.map((file) => file.name).join(", ")}
-                          </p>
-                        ) : null}
-                      </div>
-                    </>
-                  ) : (
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                      <Trans>
-                        Files can only be uploaded while this onboarding step is
-                        still editable.
-                      </Trans>
-                    </p>
-                  )}
-                </div>
-              ) : null}
-
-              {isIdentityUploadSectionCompleted &&
-              isOnboardingFieldVisible(
-                RESIDENCE_TITLE_TYPE_FIELD,
-                formData,
-                schema
-              ) ? (
-                <UiField>
-                  <UiFieldLabel htmlFor="onboarding-field-residence-title-type">
-                    <Trans>Residence title type</Trans> *
-                  </UiFieldLabel>
-                  <UiFieldDescription id="onboarding-field-residence-title-type-description">
-                    <Trans>
-                      Based on the selected nationality, please specify which
-                      valid German residence title is available.
-                    </Trans>
-                  </UiFieldDescription>
-                  <UiSelect
-                    id="onboarding-field-residence-title-type"
-                    aria-label={_(msg`Residence title type`)}
-                    aria-describedby={
-                      fieldErrors[RESIDENCE_TITLE_TYPE_FIELD]
-                        ? "onboarding-field-residence-title-type-description onboarding-field-residence-title-type-error"
-                        : "onboarding-field-residence-title-type-description"
-                    }
-                    aria-invalid={
-                      fieldErrors[RESIDENCE_TITLE_TYPE_FIELD] ? true : undefined
-                    }
-                    disabled={!isCurrentStepEditable}
-                    name={RESIDENCE_TITLE_TYPE_FIELD}
-                    required={isCurrentStepEditable}
-                    value={getTextValue(formData[RESIDENCE_TITLE_TYPE_FIELD])}
-                    onChange={(event) =>
-                      handleFieldChange(
-                        RESIDENCE_TITLE_TYPE_FIELD,
-                        event.target.value
-                      )
-                    }
-                  >
-                    <option value="">{_(msg`Select residence title`)}</option>
-                    {RESIDENCE_TITLE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {getResidenceTitleOptionLabel(option, i18n.locale)}
-                      </option>
                     ))}
-                  </UiSelect>
-                  {fieldErrors[RESIDENCE_TITLE_TYPE_FIELD] ? (
-                    <UiFieldError id="onboarding-field-residence-title-type-error">
-                      {fieldErrors[RESIDENCE_TITLE_TYPE_FIELD]}
-                    </UiFieldError>
-                  ) : null}
-                </UiField>
-              ) : null}
-              {areResidenceTitleFollowupFieldsUnlocked &&
-              isOnboardingFieldVisible(
-                RESIDENCE_TITLE_EXPIRY_FIELD,
-                formData,
-                schema
-              ) ? (
-                <UiField>
-                  <UiFieldLabel htmlFor="onboarding-field-residence-title-expiry">
-                    <Trans>Residence title valid until</Trans> *
-                  </UiFieldLabel>
-                  <UiFieldDescription id="onboarding-field-residence-title-expiry-description">
-                    <Trans>
-                      Enter the expiry date if the residence title is limited.
-                    </Trans>
-                  </UiFieldDescription>
-                  <UiInput
-                    id="onboarding-field-residence-title-expiry"
-                    aria-label={_(msg`Residence title valid until`)}
-                    aria-describedby={
-                      fieldErrors[RESIDENCE_TITLE_EXPIRY_FIELD]
-                        ? "onboarding-field-residence-title-expiry-description onboarding-field-residence-title-expiry-error"
-                        : "onboarding-field-residence-title-expiry-description"
-                    }
-                    aria-invalid={
-                      fieldErrors[RESIDENCE_TITLE_EXPIRY_FIELD]
-                        ? true
-                        : undefined
-                    }
-                    disabled={!isCurrentStepEditable}
-                    type="date"
-                    name={RESIDENCE_TITLE_EXPIRY_FIELD}
-                    required={isCurrentStepEditable}
-                    value={getTextValue(formData[RESIDENCE_TITLE_EXPIRY_FIELD])}
-                    onChange={(event) =>
-                      handleFieldChange(
-                        RESIDENCE_TITLE_EXPIRY_FIELD,
-                        event.target.value
-                      )
-                    }
-                    onBlur={(event) =>
-                      handleFieldChange(
-                        RESIDENCE_TITLE_EXPIRY_FIELD,
-                        event.target.value,
-                        { forceExpiryBusinessRules: true }
-                      )
-                    }
-                  />
-                  {fieldErrors[RESIDENCE_TITLE_EXPIRY_FIELD] ? (
-                    <UiFieldError id="onboarding-field-residence-title-expiry-error">
-                      {fieldErrors[RESIDENCE_TITLE_EXPIRY_FIELD]}
-                    </UiFieldError>
-                  ) : null}
-                </UiField>
-              ) : null}
-              {shouldAskEmploymentQuestion &&
-              isOnboardingFieldVisible(
-                RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD,
-                formData,
-                schema
-              ) ? (
-                <UiField>
-                  <div className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
-                    <Trans>Employment permitted</Trans> *
-                  </div>
-                  <UiFieldDescription>
-                    <Trans>
-                      Is employment permitted for this residence title in
-                      Germany?
-                    </Trans>
-                  </UiFieldDescription>
-                  <UiRadioGroup
-                    aria-label={_(msg`Employment permitted`)}
-                    aria-invalid={
-                      fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]
-                        ? true
-                        : undefined
-                    }
-                    aria-describedby={
-                      fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]
-                        ? "onboarding-field-residence-title-employment-allowed-error"
-                        : undefined
-                    }
-                    className="mt-3"
-                    name={RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD}
-                    value={getTextValue(
-                      formData[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]
-                    )}
-                    onValueChange={(nextValue) => {
-                      if (nextValue === "yes" || nextValue === "no") {
-                        handleFieldChange(
-                          RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD,
-                          nextValue
-                        );
-                      }
-                    }}
-                  >
-                    <UiFieldLabel
-                      htmlFor="onboarding-field-residence-title-employment-allowed-yes"
-                      className="flex items-center gap-2"
-                    >
-                      <UiRadioGroupItem
-                        id="onboarding-field-residence-title-employment-allowed-yes"
-                        value="yes"
-                        disabled={!isCurrentStepEditable}
-                      />
-                      <span>{_(msg`Yes`)}</span>
-                    </UiFieldLabel>
-                    <UiFieldLabel
-                      htmlFor="onboarding-field-residence-title-employment-allowed-no"
-                      className="flex items-center gap-2"
-                    >
-                      <UiRadioGroupItem
-                        id="onboarding-field-residence-title-employment-allowed-no"
-                        value="no"
-                        disabled={!isCurrentStepEditable}
-                      />
-                      <span>{_(msg`No`)}</span>
-                    </UiFieldLabel>
-                  </UiRadioGroup>
-                  {fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD] ? (
-                    <UiFieldError id="onboarding-field-residence-title-employment-allowed-error">
-                      {fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]}
-                    </UiFieldError>
-                  ) : null}
-                </UiField>
-              ) : null}
-              {isIdentityUploadSectionCompleted &&
-              shouldAskResidenceTitleUploadNow ? (
-                <div className="mt-6 rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
-                  <UiFieldGroup>
-                    <UiField>
-                      <div className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
-                        <Trans>
-                          Would you like to upload your residence title now?
-                        </Trans>
-                      </div>
-                      <UiFieldDescription>
-                        <Trans>
-                          You can upload now or continue and add this document
-                          later before final submission.
-                        </Trans>
-                      </UiFieldDescription>
-                      <UiRadioGroup
-                        aria-label={_(
-                          msg`Would you like to upload your residence title now?`
-                        )}
-                        aria-invalid={
-                          fieldErrors[RESIDENCE_TITLE_UPLOAD_NOW_FIELD]
-                            ? true
-                            : undefined
-                        }
-                        aria-describedby={
-                          fieldErrors[RESIDENCE_TITLE_UPLOAD_NOW_FIELD]
-                            ? "onboarding-field-residence-title-upload-now-error"
-                            : undefined
-                        }
-                        className="mt-3"
-                        name={RESIDENCE_TITLE_UPLOAD_NOW_FIELD}
-                        value={residenceTitleUploadNowSelection ?? ""}
-                        onValueChange={(nextValue) => {
-                          if (nextValue === "yes") {
-                            setResidenceTitleUploadNowSelection("yes");
-                            clearUploadRequirementErrors();
-                            setFormData((currentFormData) => ({
-                              ...currentFormData,
-                              [RESIDENCE_TITLE_UPLOAD_NOW_FIELD]: "yes",
-                            }));
-                            return;
-                          }
-
-                          if (nextValue === "no") {
-                            setResidenceTitleUploadNowSelection("no");
-                            setUploadFiles([]);
-                            setUploadContext(null);
-                            clearUploadRequirementErrors();
-                            setFormData((currentFormData) => ({
-                              ...currentFormData,
-                              [RESIDENCE_TITLE_UPLOAD_NOW_FIELD]: "no",
-                            }));
-                          }
-                        }}
-                      >
-                        <UiFieldLabel
-                          htmlFor="onboarding-field-residence-title-upload-now-yes"
-                          className="flex items-center gap-2"
-                        >
-                          <UiRadioGroupItem
-                            id="onboarding-field-residence-title-upload-now-yes"
-                            value="yes"
-                            disabled={!isCurrentStepEditable}
-                          />
-                          <span>{_(msg`Yes`)}</span>
-                        </UiFieldLabel>
-                        <UiFieldLabel
-                          htmlFor="onboarding-field-residence-title-upload-now-no"
-                          className="flex items-center gap-2"
-                        >
-                          <UiRadioGroupItem
-                            id="onboarding-field-residence-title-upload-now-no"
-                            value="no"
-                            disabled={!isCurrentStepEditable}
-                          />
-                          <span>{_(msg`No`)}</span>
-                        </UiFieldLabel>
-                      </UiRadioGroup>
-                      {fieldErrors[RESIDENCE_TITLE_UPLOAD_NOW_FIELD] ? (
-                        <UiFieldError id="onboarding-field-residence-title-upload-now-error">
-                          {fieldErrors[RESIDENCE_TITLE_UPLOAD_NOW_FIELD]}
-                        </UiFieldError>
-                      ) : null}
-                    </UiField>
-                  </UiFieldGroup>
-
-                  {residenceTitleUploadNowSelection === "yes" ? (
-                    <div className="mt-6">
+                  {stepUploadDocumentType &&
+                  uploadNowSelection === "yes" &&
+                  (!shouldAskIdentityDocumentKind ||
+                    identityDocumentKind !== null) ? (
+                    <div className="mt-6 rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
                       <h3 className="mb-3 text-base font-semibold text-zinc-950 dark:text-zinc-50">
-                        <Trans>Residence Title Upload</Trans>
+                        <Trans>Identity Document Upload</Trans>
                       </h3>
                       <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-                        <Trans>
-                          Please upload your residence title (PDF, JPG, JPEG,
-                          PNG; max. 10 MB).
-                        </Trans>
+                        {identityDocumentKind === "id_card" ? (
+                          <Trans>
+                            Please upload your identity card (PDF, JPG, JPEG,
+                            PNG; max. 10 MB).
+                          </Trans>
+                        ) : identityDocumentKind === "passport" ||
+                          primaryNationalityCode !== "DE" ? (
+                          <Trans>
+                            Please upload your passport (PDF, JPG, JPEG, PNG;
+                            max. 10 MB).
+                          </Trans>
+                        ) : (
+                          <Trans>
+                            Please upload your identity card or passport (PDF,
+                            JPG, JPEG, PNG; max. 10 MB).
+                          </Trans>
+                        )}
                       </p>
-                      <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-                        <Trans>
-                          Upload front and back as separate files if available.
-                        </Trans>
-                      </p>
+                      <div className="mb-4 rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900/50">
+                        <p className="mb-2 text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                          <Trans>Required documents for this step</Trans>
+                        </p>
+                        <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-600 dark:text-zinc-400">
+                          <li>
+                            {identityDocumentKind === "id_card" ? (
+                              <Trans>Identity card</Trans>
+                            ) : identityDocumentKind === "passport" ||
+                              primaryNationalityCode !== "DE" ? (
+                              <Trans>Passport</Trans>
+                            ) : (
+                              <Trans>Identity card or passport</Trans>
+                            )}
+                          </li>
+                          <li>
+                            <Trans>
+                              For identity cards, upload front and back as
+                              separate files
+                            </Trans>
+                          </li>
+                          <li>
+                            <Trans>
+                              Proof of residence registration
+                              (Meldebestätigung), only if your ID does not show
+                              your current address
+                            </Trans>
+                          </li>
+                        </ul>
+                      </div>
+
+                      {!submission ? (
+                        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                          <Trans>
+                            Your current answers will be saved as a draft before
+                            the first file upload.
+                          </Trans>
+                        </p>
+                      ) : null}
+
+                      {uploadFeedback ? (
+                        <div
+                          role={
+                            uploadFeedback.tone === "error" ? "alert" : "status"
+                          }
+                          aria-live={
+                            uploadFeedback.tone === "error"
+                              ? "assertive"
+                              : "polite"
+                          }
+                          aria-atomic="true"
+                          className={
+                            uploadFeedback.tone === "error"
+                              ? "mb-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/60 dark:bg-red-950/30"
+                              : "mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+                          }
+                        >
+                          <p
+                            className={
+                              uploadFeedback.tone === "error"
+                                ? "text-red-800 dark:text-red-200"
+                                : "text-emerald-800 dark:text-emerald-200"
+                            }
+                          >
+                            {uploadFeedback.message}
+                          </p>
+                        </div>
+                      ) : null}
 
                       {isCurrentStepEditable ? (
                         <>
                           <UiFieldGroup>
                             <UiField>
-                              <UiFieldLabel htmlFor="onboarding-residence-title-upload-attachment">
+                              <UiFieldLabel htmlFor="onboarding-identity-upload-attachment">
                                 <Trans>Attachment</Trans>
                               </UiFieldLabel>
-                              <UiFieldDescription id="onboarding-residence-title-upload-attachment-description">
+                              <UiFieldDescription id="onboarding-identity-upload-attachment-description">
                                 <Trans>
                                   Accepted formats: PDF, JPG, JPEG, PNG.
                                 </Trans>
                               </UiFieldDescription>
                               <UiInput
-                                id="onboarding-residence-title-upload-attachment"
+                                id="onboarding-identity-upload-attachment"
+                                ref={fileInputRef}
                                 aria-label={_(msg`Attachment`)}
-                                aria-describedby="onboarding-residence-title-upload-attachment-description"
+                                aria-describedby="onboarding-identity-upload-attachment-description"
                                 accept={ONBOARDING_UPLOAD_ACCEPT}
                                 className="file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-white/10 dark:file:text-white"
                                 type="file"
@@ -4315,7 +3927,7 @@ export function OnboardingWizard() {
                                   const nextPrimaryFile =
                                     event.target.files?.[0] ?? null;
                                   setUploadContext(
-                                    nextPrimaryFile ? "residence_permit" : null
+                                    nextPrimaryFile ? "identity_document" : null
                                   );
                                   setUploadFiles((currentFiles) =>
                                     nextPrimaryFile
@@ -4333,23 +3945,23 @@ export function OnboardingWizard() {
 
                             {uploadFiles[0] ? (
                               <UiField>
-                                <UiFieldLabel htmlFor="onboarding-residence-title-upload-attachment-extra">
+                                <UiFieldLabel htmlFor="onboarding-identity-upload-attachment-extra">
                                   <Trans>
                                     Attachment (optional second file)
                                   </Trans>
                                 </UiFieldLabel>
-                                <UiFieldDescription id="onboarding-residence-title-upload-attachment-extra-description">
+                                <UiFieldDescription id="onboarding-identity-upload-attachment-extra-description">
                                   <Trans>
-                                    Optional: Upload the reverse side as a
-                                    second file.
+                                    Optional: Upload a second file, for example
+                                    the reverse side.
                                   </Trans>
                                 </UiFieldDescription>
                                 <UiInput
-                                  id="onboarding-residence-title-upload-attachment-extra"
+                                  id="onboarding-identity-upload-attachment-extra"
                                   aria-label={_(
                                     msg`Attachment (optional second file)`
                                   )}
-                                  aria-describedby="onboarding-residence-title-upload-attachment-extra-description"
+                                  aria-describedby="onboarding-identity-upload-attachment-extra-description"
                                   accept={ONBOARDING_UPLOAD_ACCEPT}
                                   className="file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-white/10 dark:file:text-white"
                                   type="file"
@@ -4371,13 +3983,14 @@ export function OnboardingWizard() {
                               </UiField>
                             ) : null}
                           </UiFieldGroup>
+
                           <div className="mt-4 flex items-center gap-4">
                             <Button
                               disabled={
                                 uploadFiles.length === 0 || saving || uploading
                               }
                               onClick={() =>
-                                void handleUpload("residence_permit")
+                                void handleUpload("identity_document")
                               }
                             >
                               {uploading ? (
@@ -4405,81 +4018,495 @@ export function OnboardingWizard() {
                       )}
                     </div>
                   ) : null}
+
+                  {isIdentityUploadSectionCompleted &&
+                  isOnboardingFieldVisible(
+                    RESIDENCE_TITLE_TYPE_FIELD,
+                    formData,
+                    schema
+                  ) ? (
+                    <UiField>
+                      <UiFieldLabel htmlFor="onboarding-field-residence-title-type">
+                        <Trans>Residence title type</Trans> *
+                      </UiFieldLabel>
+                      <UiFieldDescription id="onboarding-field-residence-title-type-description">
+                        <Trans>
+                          Based on the selected nationality, please specify
+                          which valid German residence title is available.
+                        </Trans>
+                      </UiFieldDescription>
+                      <UiSelect
+                        id="onboarding-field-residence-title-type"
+                        aria-label={_(msg`Residence title type`)}
+                        aria-describedby={
+                          fieldErrors[RESIDENCE_TITLE_TYPE_FIELD]
+                            ? "onboarding-field-residence-title-type-description onboarding-field-residence-title-type-error"
+                            : "onboarding-field-residence-title-type-description"
+                        }
+                        aria-invalid={
+                          fieldErrors[RESIDENCE_TITLE_TYPE_FIELD]
+                            ? true
+                            : undefined
+                        }
+                        disabled={!isCurrentStepEditable}
+                        name={RESIDENCE_TITLE_TYPE_FIELD}
+                        required={isCurrentStepEditable}
+                        value={getTextValue(
+                          formData[RESIDENCE_TITLE_TYPE_FIELD]
+                        )}
+                        onChange={(event) =>
+                          handleFieldChange(
+                            RESIDENCE_TITLE_TYPE_FIELD,
+                            event.target.value
+                          )
+                        }
+                      >
+                        <option value="">
+                          {_(msg`Select residence title`)}
+                        </option>
+                        {RESIDENCE_TITLE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {getResidenceTitleOptionLabel(option, i18n.locale)}
+                          </option>
+                        ))}
+                      </UiSelect>
+                      {fieldErrors[RESIDENCE_TITLE_TYPE_FIELD] ? (
+                        <UiFieldError id="onboarding-field-residence-title-type-error">
+                          {fieldErrors[RESIDENCE_TITLE_TYPE_FIELD]}
+                        </UiFieldError>
+                      ) : null}
+                    </UiField>
+                  ) : null}
+                  {areResidenceTitleFollowupFieldsUnlocked &&
+                  isOnboardingFieldVisible(
+                    RESIDENCE_TITLE_EXPIRY_FIELD,
+                    formData,
+                    schema
+                  ) ? (
+                    <UiField>
+                      <UiFieldLabel htmlFor="onboarding-field-residence-title-expiry">
+                        <Trans>Residence title valid until</Trans> *
+                      </UiFieldLabel>
+                      <UiFieldDescription id="onboarding-field-residence-title-expiry-description">
+                        <Trans>
+                          Enter the expiry date if the residence title is
+                          limited.
+                        </Trans>
+                      </UiFieldDescription>
+                      <UiInput
+                        id="onboarding-field-residence-title-expiry"
+                        aria-label={_(msg`Residence title valid until`)}
+                        aria-describedby={
+                          fieldErrors[RESIDENCE_TITLE_EXPIRY_FIELD]
+                            ? "onboarding-field-residence-title-expiry-description onboarding-field-residence-title-expiry-error"
+                            : "onboarding-field-residence-title-expiry-description"
+                        }
+                        aria-invalid={
+                          fieldErrors[RESIDENCE_TITLE_EXPIRY_FIELD]
+                            ? true
+                            : undefined
+                        }
+                        disabled={!isCurrentStepEditable}
+                        type="date"
+                        name={RESIDENCE_TITLE_EXPIRY_FIELD}
+                        required={isCurrentStepEditable}
+                        value={getTextValue(
+                          formData[RESIDENCE_TITLE_EXPIRY_FIELD]
+                        )}
+                        onChange={(event) =>
+                          handleFieldChange(
+                            RESIDENCE_TITLE_EXPIRY_FIELD,
+                            event.target.value
+                          )
+                        }
+                        onBlur={(event) =>
+                          handleFieldChange(
+                            RESIDENCE_TITLE_EXPIRY_FIELD,
+                            event.target.value,
+                            { forceExpiryBusinessRules: true }
+                          )
+                        }
+                      />
+                      {fieldErrors[RESIDENCE_TITLE_EXPIRY_FIELD] ? (
+                        <UiFieldError id="onboarding-field-residence-title-expiry-error">
+                          {fieldErrors[RESIDENCE_TITLE_EXPIRY_FIELD]}
+                        </UiFieldError>
+                      ) : null}
+                    </UiField>
+                  ) : null}
+                  {shouldAskEmploymentQuestion &&
+                  isOnboardingFieldVisible(
+                    RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD,
+                    formData,
+                    schema
+                  ) ? (
+                    <UiField>
+                      <div className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
+                        <Trans>Employment permitted</Trans> *
+                      </div>
+                      <UiFieldDescription>
+                        <Trans>
+                          Is employment permitted for this residence title in
+                          Germany?
+                        </Trans>
+                      </UiFieldDescription>
+                      <UiRadioGroup
+                        aria-label={_(msg`Employment permitted`)}
+                        aria-invalid={
+                          fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]
+                            ? true
+                            : undefined
+                        }
+                        aria-describedby={
+                          fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]
+                            ? "onboarding-field-residence-title-employment-allowed-error"
+                            : undefined
+                        }
+                        className="mt-3"
+                        name={RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD}
+                        value={getTextValue(
+                          formData[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD]
+                        )}
+                        onValueChange={(nextValue) => {
+                          if (nextValue === "yes" || nextValue === "no") {
+                            handleFieldChange(
+                              RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD,
+                              nextValue
+                            );
+                          }
+                        }}
+                      >
+                        <UiFieldLabel
+                          htmlFor="onboarding-field-residence-title-employment-allowed-yes"
+                          className="flex items-center gap-2"
+                        >
+                          <UiRadioGroupItem
+                            id="onboarding-field-residence-title-employment-allowed-yes"
+                            value="yes"
+                            disabled={!isCurrentStepEditable}
+                          />
+                          <span>{_(msg`Yes`)}</span>
+                        </UiFieldLabel>
+                        <UiFieldLabel
+                          htmlFor="onboarding-field-residence-title-employment-allowed-no"
+                          className="flex items-center gap-2"
+                        >
+                          <UiRadioGroupItem
+                            id="onboarding-field-residence-title-employment-allowed-no"
+                            value="no"
+                            disabled={!isCurrentStepEditable}
+                          />
+                          <span>{_(msg`No`)}</span>
+                        </UiFieldLabel>
+                      </UiRadioGroup>
+                      {fieldErrors[RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD] ? (
+                        <UiFieldError id="onboarding-field-residence-title-employment-allowed-error">
+                          {
+                            fieldErrors[
+                              RESIDENCE_TITLE_EMPLOYMENT_ALLOWED_FIELD
+                            ]
+                          }
+                        </UiFieldError>
+                      ) : null}
+                    </UiField>
+                  ) : null}
+                  {isIdentityUploadSectionCompleted &&
+                  shouldAskResidenceTitleUploadNow ? (
+                    <div className="mt-6 rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
+                      <UiFieldGroup>
+                        <UiField>
+                          <div className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
+                            <Trans>
+                              Would you like to upload your residence title now?
+                            </Trans>
+                          </div>
+                          <UiFieldDescription>
+                            <Trans>
+                              You can upload now or continue and add this
+                              document later before final submission.
+                            </Trans>
+                          </UiFieldDescription>
+                          <UiRadioGroup
+                            aria-label={_(
+                              msg`Would you like to upload your residence title now?`
+                            )}
+                            aria-invalid={
+                              fieldErrors[RESIDENCE_TITLE_UPLOAD_NOW_FIELD]
+                                ? true
+                                : undefined
+                            }
+                            aria-describedby={
+                              fieldErrors[RESIDENCE_TITLE_UPLOAD_NOW_FIELD]
+                                ? "onboarding-field-residence-title-upload-now-error"
+                                : undefined
+                            }
+                            className="mt-3"
+                            name={RESIDENCE_TITLE_UPLOAD_NOW_FIELD}
+                            value={residenceTitleUploadNowSelection ?? ""}
+                            onValueChange={(nextValue) => {
+                              if (nextValue === "yes") {
+                                setResidenceTitleUploadNowSelection("yes");
+                                clearUploadRequirementErrors();
+                                setFormData((currentFormData) => ({
+                                  ...currentFormData,
+                                  [RESIDENCE_TITLE_UPLOAD_NOW_FIELD]: "yes",
+                                }));
+                                return;
+                              }
+
+                              if (nextValue === "no") {
+                                setResidenceTitleUploadNowSelection("no");
+                                setUploadFiles([]);
+                                setUploadContext(null);
+                                clearUploadRequirementErrors();
+                                setFormData((currentFormData) => ({
+                                  ...currentFormData,
+                                  [RESIDENCE_TITLE_UPLOAD_NOW_FIELD]: "no",
+                                }));
+                              }
+                            }}
+                          >
+                            <UiFieldLabel
+                              htmlFor="onboarding-field-residence-title-upload-now-yes"
+                              className="flex items-center gap-2"
+                            >
+                              <UiRadioGroupItem
+                                id="onboarding-field-residence-title-upload-now-yes"
+                                value="yes"
+                                disabled={!isCurrentStepEditable}
+                              />
+                              <span>{_(msg`Yes`)}</span>
+                            </UiFieldLabel>
+                            <UiFieldLabel
+                              htmlFor="onboarding-field-residence-title-upload-now-no"
+                              className="flex items-center gap-2"
+                            >
+                              <UiRadioGroupItem
+                                id="onboarding-field-residence-title-upload-now-no"
+                                value="no"
+                                disabled={!isCurrentStepEditable}
+                              />
+                              <span>{_(msg`No`)}</span>
+                            </UiFieldLabel>
+                          </UiRadioGroup>
+                          {fieldErrors[RESIDENCE_TITLE_UPLOAD_NOW_FIELD] ? (
+                            <UiFieldError id="onboarding-field-residence-title-upload-now-error">
+                              {fieldErrors[RESIDENCE_TITLE_UPLOAD_NOW_FIELD]}
+                            </UiFieldError>
+                          ) : null}
+                        </UiField>
+                      </UiFieldGroup>
+
+                      {residenceTitleUploadNowSelection === "yes" ? (
+                        <div className="mt-6">
+                          <h3 className="mb-3 text-base font-semibold text-zinc-950 dark:text-zinc-50">
+                            <Trans>Residence Title Upload</Trans>
+                          </h3>
+                          <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                            <Trans>
+                              Please upload your residence title (PDF, JPG,
+                              JPEG, PNG; max. 10 MB).
+                            </Trans>
+                          </p>
+                          <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                            <Trans>
+                              Upload front and back as separate files if
+                              available.
+                            </Trans>
+                          </p>
+
+                          {isCurrentStepEditable ? (
+                            <>
+                              <UiFieldGroup>
+                                <UiField>
+                                  <UiFieldLabel htmlFor="onboarding-residence-title-upload-attachment">
+                                    <Trans>Attachment</Trans>
+                                  </UiFieldLabel>
+                                  <UiFieldDescription id="onboarding-residence-title-upload-attachment-description">
+                                    <Trans>
+                                      Accepted formats: PDF, JPG, JPEG, PNG.
+                                    </Trans>
+                                  </UiFieldDescription>
+                                  <UiInput
+                                    id="onboarding-residence-title-upload-attachment"
+                                    aria-label={_(msg`Attachment`)}
+                                    aria-describedby="onboarding-residence-title-upload-attachment-description"
+                                    accept={ONBOARDING_UPLOAD_ACCEPT}
+                                    className="file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-white/10 dark:file:text-white"
+                                    type="file"
+                                    onChange={(event) => {
+                                      const nextPrimaryFile =
+                                        event.target.files?.[0] ?? null;
+                                      setUploadContext(
+                                        nextPrimaryFile
+                                          ? "residence_permit"
+                                          : null
+                                      );
+                                      setUploadFiles((currentFiles) =>
+                                        nextPrimaryFile
+                                          ? [
+                                              nextPrimaryFile,
+                                              ...(currentFiles[1]
+                                                ? [currentFiles[1]]
+                                                : []),
+                                            ]
+                                          : []
+                                      );
+                                    }}
+                                  />
+                                </UiField>
+
+                                {uploadFiles[0] ? (
+                                  <UiField>
+                                    <UiFieldLabel htmlFor="onboarding-residence-title-upload-attachment-extra">
+                                      <Trans>
+                                        Attachment (optional second file)
+                                      </Trans>
+                                    </UiFieldLabel>
+                                    <UiFieldDescription id="onboarding-residence-title-upload-attachment-extra-description">
+                                      <Trans>
+                                        Optional: Upload the reverse side as a
+                                        second file.
+                                      </Trans>
+                                    </UiFieldDescription>
+                                    <UiInput
+                                      id="onboarding-residence-title-upload-attachment-extra"
+                                      aria-label={_(
+                                        msg`Attachment (optional second file)`
+                                      )}
+                                      aria-describedby="onboarding-residence-title-upload-attachment-extra-description"
+                                      accept={ONBOARDING_UPLOAD_ACCEPT}
+                                      className="file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-white/10 dark:file:text-white"
+                                      type="file"
+                                      onChange={(event) => {
+                                        const nextSecondaryFile =
+                                          event.target.files?.[0] ?? null;
+                                        setUploadFiles((currentFiles) =>
+                                          currentFiles[0]
+                                            ? [
+                                                currentFiles[0],
+                                                ...(nextSecondaryFile
+                                                  ? [nextSecondaryFile]
+                                                  : []),
+                                              ]
+                                            : []
+                                        );
+                                      }}
+                                    />
+                                  </UiField>
+                                ) : null}
+                              </UiFieldGroup>
+                              <div className="mt-4 flex items-center gap-4">
+                                <Button
+                                  disabled={
+                                    uploadFiles.length === 0 ||
+                                    saving ||
+                                    uploading
+                                  }
+                                  onClick={() =>
+                                    void handleUpload("residence_permit")
+                                  }
+                                >
+                                  {uploading ? (
+                                    <Trans>Uploading...</Trans>
+                                  ) : (
+                                    <Trans>Upload File</Trans>
+                                  )}
+                                </Button>
+                                {uploadFiles.length > 0 ? (
+                                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                                    {uploadFiles
+                                      .map((file) => file.name)
+                                      .join(", ")}
+                                  </p>
+                                ) : null}
+                              </div>
+                            </>
+                          ) : (
+                            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                              <Trans>
+                                Files can only be uploaded while this onboarding
+                                step is still editable.
+                              </Trans>
+                            </p>
+                          )}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </UiFieldGroup>
+              ) : (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/60 dark:bg-amber-950/30">
+                  <p className="text-amber-800 dark:text-amber-200">
+                    <Trans>
+                      This onboarding step uses a schema we cannot render yet.
+                    </Trans>
+                  </p>
+                </div>
+              )}
+
+              {stepUploadDocumentType && uploadedFiles.length > 0 ? (
+                <div className="mt-4 rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
+                  <p className="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    <Trans>Uploaded in this session</Trans>
+                  </p>
+                  <ul className="space-y-2">
+                    {uploadedFiles.map((uploadedFile) => (
+                      <li
+                        key={uploadedFile.id}
+                        className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
+                      >
+                        <span className="font-medium">
+                          {uploadedFile.documentType === "contract"
+                            ? _(msg`Contract`)
+                            : uploadedFile.documentType === "id_document"
+                              ? uploadedFile.documentSubtype
+                                ? getIdDocumentSubtypeLabel(
+                                    uploadedFile.documentSubtype,
+                                    i18n.locale,
+                                    primaryNationalityCode,
+                                    identityDocumentKind
+                                  )
+                                : _(msg`Identity Document`)
+                              : _(msg`Banking Details`)}
+                        </span>
+                        <span className="ml-2 text-zinc-500 dark:text-zinc-400">
+                          {uploadedFile.filename}
+                        </span>
+                        <div className="mt-2">
+                          <Button
+                            variant="outline"
+                            onClick={() =>
+                              void handleRemoveUploadedFile(uploadedFile.id)
+                            }
+                            disabled={saving || uploading}
+                          >
+                            <Trans>Remove</Trans>
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               ) : null}
-            </UiFieldGroup>
-          ) : (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/60 dark:bg-amber-950/30">
-              <p className="text-amber-800 dark:text-amber-200">
-                <Trans>
-                  This onboarding step uses a schema we cannot render yet.
-                </Trans>
-              </p>
-            </div>
-          )}
 
-          {stepUploadDocumentType && uploadedFiles.length > 0 ? (
-            <div className="mt-4 rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
-              <p className="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                <Trans>Uploaded in this session</Trans>
-              </p>
-              <ul className="space-y-2">
-                {uploadedFiles.map((uploadedFile) => (
-                  <li
-                    key={uploadedFile.id}
-                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
-                  >
-                    <span className="font-medium">
-                      {uploadedFile.documentType === "contract"
-                        ? _(msg`Contract`)
-                        : uploadedFile.documentType === "id_document"
-                          ? uploadedFile.documentSubtype
-                            ? getIdDocumentSubtypeLabel(
-                                uploadedFile.documentSubtype,
-                                i18n.locale,
-                                primaryNationalityCode,
-                                identityDocumentKind
-                              )
-                            : _(msg`Identity Document`)
-                          : _(msg`Banking Details`)}
-                    </span>
-                    <span className="ml-2 text-zinc-500 dark:text-zinc-400">
-                      {uploadedFile.filename}
-                    </span>
-                    <div className="mt-2">
-                      <Button
-                        variant="outline"
-                        onClick={() =>
-                          void handleRemoveUploadedFile(uploadedFile.id)
-                        }
-                        disabled={saving || uploading}
-                      >
-                        <Trans>Remove</Trans>
-                      </Button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          <StepNavigation
-            currentStep={currentStepIndex + 1}
-            totalSteps={steps.length}
-            onPrevious={handlePrevious}
-            onNext={handleNext}
-            onSaveDraft={handleSaveDraft}
-            onSubmit={handleSubmit}
-            onSkipStep={handleSkipStep}
-            showSkipStep={template.is_required === false}
-            isStepEditable={isCurrentStepEditable}
-            canGoNext={
-              !saving &&
-              !uploading &&
-              uploadFiles.length === 0 &&
-              !isEmploymentHardBlocked
-            }
-            isBusy={saving || uploading}
+              <StepNavigation
+                currentStep={currentStepIndex + 1}
+                totalSteps={steps.length}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
+                onSaveDraft={handleSaveDraft}
+                onSubmit={handleSubmit}
+                onSkipStep={handleSkipStep}
+                showSkipStep={template.is_required === false}
+                isStepEditable={isCurrentStepEditable}
+                canGoNext={
+                  !saving &&
+                  !uploading &&
+                  uploadFiles.length === 0 &&
+                  !isEmploymentHardBlocked
+                }
+                isBusy={saving || uploading}
               />
             </div>
           )}

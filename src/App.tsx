@@ -168,12 +168,7 @@ function NotificationLifecycleCoordinator() {
 
 function LoginRoute() {
   const auth = useAuth();
-  const {
-    isAuthenticated,
-    isVaultLocked = false,
-    logout,
-    unlock,
-  } = auth;
+  const { isAuthenticated, isVaultLocked = false, logout, unlock } = auth;
 
   if (isRouteAuthBootstrapPending(auth)) {
     return <RouteLoadingState />;

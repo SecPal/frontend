@@ -140,6 +140,10 @@ msgstr "Ihre sichere Sitzung wird noch geladen"
 msgid "Valid Until"
 msgstr "Gültig bis"
 
+#: src/components/RouteLoader.tsx
+msgid "Loading application"
+msgstr ""
+
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency Contacts"

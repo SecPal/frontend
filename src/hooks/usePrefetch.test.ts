@@ -4,14 +4,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
-const { mockApiFetch, mockRouteModuleLoaders } = vi.hoisted(() => {
+const { mockRouteModuleLoaders } = vi.hoisted(() => {
   const createLoader = () =>
     vi.fn().mockResolvedValue({
       default: () => null,
     });
 
   return {
-    mockApiFetch: vi.fn(),
     mockRouteModuleLoaders: {
       settings: createLoader(),
       profile: createLoader(),
@@ -48,10 +47,6 @@ vi.mock("../config", () => ({
   },
 }));
 
-vi.mock("../services/csrf", () => ({
-  apiFetch: mockApiFetch,
-}));
-
 import {
   getRoutePrefetchPlan,
   prefetchRoutePath,
@@ -60,14 +55,18 @@ import {
 } from "./usePrefetch";
 
 describe("usePrefetch route strategy", () => {
+  let mockFetch: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     resetPrefetchCacheForTests();
     vi.clearAllMocks();
-    mockApiFetch.mockResolvedValue(new Response("{}"));
+    mockFetch = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
+    vi.stubGlobal("fetch", mockFetch);
   });
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   it("plans primary list navigation with route chunk and API data prefetches", () => {
@@ -107,14 +106,35 @@ describe("usePrefetch route strategy", () => {
     await prefetchRoutePath("/customers");
 
     expect(mockRouteModuleLoaders.customers).toHaveBeenCalledTimes(1);
-    expect(mockApiFetch).toHaveBeenCalledTimes(1);
-    expect(mockApiFetch).toHaveBeenCalledWith(
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(mockFetch).toHaveBeenCalledWith(
       "/v1/customers?page=1&per_page=15",
       expect.objectContaining({
         method: "GET",
+        credentials: "include",
         headers: { Accept: "application/json" },
       })
     );
+  });
+
+  it("does not mark an API path as completed when the response is not ok", async () => {
+    mockFetch.mockResolvedValueOnce(new Response("", { status: 500 }));
+
+    await prefetchRoutePath("/customers");
+    resetPrefetchCacheForTests();
+
+    await prefetchRoutePath("/customers");
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not trigger session logout on a 401 API prefetch response", async () => {
+    mockFetch.mockResolvedValueOnce(new Response("", { status: 401 }));
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await expect(prefetchRoutePath("/customers")).resolves.toBeUndefined();
+
+    warn.mockRestore();
   });
 
   it("does not fail navigation when prefetch work rejects", async () => {
@@ -122,13 +142,17 @@ describe("usePrefetch route strategy", () => {
     mockRouteModuleLoaders.customerDetail.mockRejectedValueOnce(
       new Error("chunk unavailable")
     );
-    mockApiFetch.mockRejectedValueOnce(new Error("network unavailable"));
+    mockFetch.mockRejectedValueOnce(new Error("network unavailable"));
 
     await expect(
       prefetchRoutePath("/customers/customer-123")
     ).resolves.toBeUndefined();
 
     warn.mockRestore();
+  });
+
+  it("handles malformed percent-encoded path segments without throwing", async () => {
+    await expect(prefetchRoutePath("/customers/100%")).resolves.toBeUndefined();
   });
 
   it("schedules route chunk warmups on idle through the hook", async () => {
@@ -161,6 +185,6 @@ describe("usePrefetch route strategy", () => {
 
     expect(requestIdleCallback).toHaveBeenCalled();
     expect(mockRouteModuleLoaders.customers).toHaveBeenCalledTimes(1);
-    expect(mockApiFetch).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 });

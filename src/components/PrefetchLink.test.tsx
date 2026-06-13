@@ -6,13 +6,15 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { PrefetchLink } from "./PrefetchLink";
 
-const { mockPrefetchPath } = vi.hoisted(() => ({
+const { mockPrefetchPath, mockPrefetchPathModuleOnly } = vi.hoisted(() => ({
   mockPrefetchPath: vi.fn(),
+  mockPrefetchPathModuleOnly: vi.fn(),
 }));
 
 vi.mock("../hooks/usePrefetch", () => ({
   usePrefetch: () => ({
     prefetchPath: mockPrefetchPath,
+    prefetchPathModuleOnly: mockPrefetchPathModuleOnly,
   }),
 }));
 
@@ -35,6 +37,23 @@ describe("PrefetchLink", () => {
 
     expect(mockPrefetchPath).toHaveBeenCalledWith("/customers/customer-123");
     expect(mockPrefetchPath).toHaveBeenCalledTimes(2);
+  });
+
+  it("prefetches only the route module (no API) on touch to avoid spurious requests during scroll", () => {
+    render(
+      <MemoryRouter>
+        <PrefetchLink to="/customers/customer-123">View customer</PrefetchLink>
+      </MemoryRouter>
+    );
+
+    const link = screen.getByRole("link", { name: /view customer/i });
+
+    fireEvent.touchStart(link);
+
+    expect(mockPrefetchPathModuleOnly).toHaveBeenCalledWith(
+      "/customers/customer-123"
+    );
+    expect(mockPrefetchPath).not.toHaveBeenCalled();
   });
 
   it("ignores non-route links", () => {
