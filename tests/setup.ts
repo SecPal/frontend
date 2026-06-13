@@ -6,8 +6,19 @@ import { i18n } from "@lingui/core";
 import { messages as enMessages } from "../src/locales/en/messages";
 import "fake-indexeddb/auto";
 import { mockAnimationsApi } from "jsdom-testing-mocks";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
+
+// React Testing Library's `findBy*` and `waitFor` helpers default to a 1s
+// async timeout. That is generous in isolation but routinely too tight in CI
+// when the suite runs with v8 coverage instrumentation: env setup alone can
+// burn ~100s, and a single async state transition (e.g. the passkey-error
+// rejection path in `Login.test.tsx > shows native passkey AuthApiError
+// messages inline`) sometimes does not surface inside the 1s budget. Bumping
+// the global async-util timeout to 5s keeps real failures fast (still well
+// under the 20s per-test `testTimeout` from `vite.config.ts`) and removes a
+// known source of CI-only flakiness without needing per-call timeouts.
+configure({ asyncUtilTimeout: 5000 });
 
 // Mock the Web Animations API for HeadlessUI components
 // This prevents "Element.prototype.getAnimations" polyfill warnings
