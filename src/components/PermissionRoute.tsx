@@ -4,7 +4,10 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { EmailVerificationGate } from "./EmailVerificationGate";
-import { isRouteAuthBootstrapPending } from "./routeGuardAuth";
+import {
+  isRouteAuthBootstrapPending,
+  isRouteAuthSnapshotRevalidating,
+} from "./routeGuardAuth";
 import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
@@ -16,6 +19,13 @@ interface PermissionRouteProps {
   children: React.ReactNode;
   permission: string;
   fallbackPath?: string;
+  /**
+   * Optional placeholder rendered in the content slot while a stored session
+   * snapshot is being revalidated (`isLoading && user !== null`). Rendered
+   * inside `EmailVerificationGate`, so unverified persisted users still see
+   * the verification screen instead of the placeholder.
+   */
+  revalidatingFallback?: React.ReactNode;
 }
 
 /**
@@ -34,6 +44,7 @@ export function PermissionRoute({
   children,
   permission,
   fallbackPath,
+  revalidatingFallback,
 }: PermissionRouteProps) {
   const auth = useAuth();
   const {
@@ -74,6 +85,8 @@ export function PermissionRoute({
     return <Navigate to="/login" replace />;
   }
 
+  const isRevalidating = isRouteAuthSnapshotRevalidating(auth);
+
   return (
     <EmailVerificationGate
       user={user}
@@ -81,6 +94,10 @@ export function PermissionRoute({
       onSignInAgain={logout}
     >
       {() => {
+        if (isRevalidating && revalidatingFallback !== undefined) {
+          return <>{revalidatingFallback}</>;
+        }
+
         if (!hasPermission(permission)) {
           if (fallbackPath) {
             return <Navigate to={fallbackPath} replace />;

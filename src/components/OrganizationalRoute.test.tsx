@@ -18,6 +18,91 @@ describe("OrganizationalRoute", () => {
     i18n.activate("en");
   });
 
+  it("renders revalidatingFallback during snapshot revalidation for a verified persisted user", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      hasPermission: vi.fn(),
+      isLoading: true,
+      isAuthenticated: true,
+      bootstrapRecoveryReason: null,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hasOrganizationalAccess: vi.fn(() => true),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/organization"]}>
+          <Routes>
+            <Route
+              path="/organization"
+              element={
+                <OrganizationalRoute
+                  revalidatingFallback={<div>Revalidating fallback</div>}
+                >
+                  <div>Organization Content</div>
+                </OrganizationalRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(screen.getByText("Revalidating fallback")).toBeInTheDocument();
+    expect(screen.queryByText("Organization Content")).not.toBeInTheDocument();
+  });
+
+  it("still runs the email verification gate during revalidation for an unverified persisted user", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      hasPermission: vi.fn(),
+      isLoading: true,
+      isAuthenticated: true,
+      bootstrapRecoveryReason: null,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: false,
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hasOrganizationalAccess: vi.fn(() => true),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/organization"]}>
+          <Routes>
+            <Route
+              path="/organization"
+              element={
+                <OrganizationalRoute
+                  revalidatingFallback={<div>Revalidating fallback</div>}
+                >
+                  <div>Organization Content</div>
+                </OrganizationalRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /verify your email address/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Revalidating fallback")).not.toBeInTheDocument();
+    expect(screen.queryByText("Organization Content")).not.toBeInTheDocument();
+  });
+
   it("renders children when the user has organizational access", () => {
     vi.mocked(authHook.useAuth).mockReturnValue({
       hasPermission: vi.fn(),

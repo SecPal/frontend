@@ -4,7 +4,10 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { EmailVerificationGate } from "./EmailVerificationGate";
-import { isRouteAuthBootstrapPending } from "./routeGuardAuth";
+import {
+  isRouteAuthBootstrapPending,
+  isRouteAuthSnapshotRevalidating,
+} from "./routeGuardAuth";
 import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
@@ -14,13 +17,23 @@ import {
 
 interface OrganizationalRouteProps {
   children: React.ReactNode;
+  /**
+   * Optional placeholder rendered in the content slot while a stored session
+   * snapshot is being revalidated (`isLoading && user !== null`). Rendered
+   * inside `EmailVerificationGate`, so unverified persisted users still see
+   * the verification screen instead of the placeholder.
+   */
+  revalidatingFallback?: React.ReactNode;
 }
 
 /**
  * OrganizationalRoute protects routes that require organizational access.
  * It checks both authentication and organizational permissions.
  */
-export function OrganizationalRoute({ children }: OrganizationalRouteProps) {
+export function OrganizationalRoute({
+  children,
+  revalidatingFallback,
+}: OrganizationalRouteProps) {
   const auth = useAuth();
   const {
     bootstrapRecoveryReason,
@@ -60,6 +73,8 @@ export function OrganizationalRoute({ children }: OrganizationalRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
+  const isRevalidating = isRouteAuthSnapshotRevalidating(auth);
+
   return (
     <EmailVerificationGate
       user={user}
@@ -67,6 +82,10 @@ export function OrganizationalRoute({ children }: OrganizationalRouteProps) {
       onSignInAgain={logout}
     >
       {() => {
+        if (isRevalidating && revalidatingFallback !== undefined) {
+          return <>{revalidatingFallback}</>;
+        }
+
         if (!hasOrganizationalAccess()) {
           return <RouteAccessDeniedState />;
         }
