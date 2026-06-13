@@ -92,12 +92,27 @@ describe("usePrefetch route strategy", () => {
 
     expect(getRoutePrefetchPlan("/sites/site-123/edit")).toEqual({
       routeModules: ["siteEdit"],
-      apiPaths: ["/v1/sites/site-123", "/v1/organizational-units"],
+      apiPaths: ["/v1/sites/site-123", "/v1/organizational-units?per_page=100"],
     });
 
     expect(getRoutePrefetchPlan("/employees/employee-123")).toEqual({
       routeModules: ["employeeDetail"],
       apiPaths: ["/v1/employees/employee-123"],
+    });
+  });
+
+  it("aligns site-create org-units prefetch with the page's listOrganizationalUnits({ per_page: 100 }) call", () => {
+    expect(getRoutePrefetchPlan("/sites/new")).toEqual({
+      routeModules: ["siteCreate"],
+      apiPaths: ["/v1/organizational-units?per_page=100"],
+    });
+
+    expect(getRoutePrefetchPlan("/sites/new/customer/customer-123")).toEqual({
+      routeModules: ["siteCreate"],
+      apiPaths: [
+        "/v1/customers/customer-123",
+        "/v1/organizational-units?per_page=100",
+      ],
     });
   });
 
@@ -126,6 +141,34 @@ describe("usePrefetch route strategy", () => {
     await prefetchRoutePath("/customers");
 
     expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not repopulate the completed cache from prefetches that were in flight when the cache was reset", async () => {
+    let resolveFetch!: (response: Response) => void;
+    mockFetch.mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveFetch = resolve;
+        })
+    );
+
+    const inFlight = prefetchRoutePath("/customers");
+
+    // Let the internal Promise.resolve().then(task) actually invoke fetch so
+    // `resolveFetch` is wired before we test the reset race.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    resetPrefetchCacheForTests();
+
+    resolveFetch(new Response("{}", { status: 200 }));
+    await inFlight;
+
+    // A new prefetch must re-fetch because the prior in-flight result must
+    // not survive the cache reset (cross-session isolation after logout).
+    await prefetchRoutePath("/customers");
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockRouteModuleLoaders.customers).toHaveBeenCalledTimes(2);
   });
 
   it("does not trigger session logout on a 401 API prefetch response", async () => {

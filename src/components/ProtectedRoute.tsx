@@ -4,7 +4,10 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { EmailVerificationGate } from "./EmailVerificationGate";
-import { isRouteAuthBootstrapPending } from "./routeGuardAuth";
+import {
+  isRouteAuthBootstrapPending,
+  isRouteAuthSnapshotRevalidating,
+} from "./routeGuardAuth";
 import {
   RouteBootstrapRecoveryState,
   RouteLoadingState,
@@ -13,9 +16,19 @@ import {
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  /**
+   * Optional placeholder rendered in the content slot while a stored session
+   * snapshot is being revalidated (`isLoading && user !== null`). Rendered
+   * inside `EmailVerificationGate`, so unverified persisted users still see
+   * the verification screen instead of the placeholder.
+   */
+  revalidatingFallback?: React.ReactNode;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
+export function ProtectedRoute({
+  children,
+  revalidatingFallback,
+}: ProtectedRouteProps) {
   const auth = useAuth();
   const {
     bootstrapRecoveryReason,
@@ -54,13 +67,17 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
+  const isRevalidating = isRouteAuthSnapshotRevalidating(auth);
+
   return (
     <EmailVerificationGate
       user={user}
       onRetry={retryBootstrap}
       onSignInAgain={logout}
     >
-      {children}
+      {isRevalidating && revalidatingFallback !== undefined
+        ? revalidatingFallback
+        : children}
     </EmailVerificationGate>
   );
 }

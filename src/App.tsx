@@ -18,10 +18,7 @@ import {
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { FeatureRoute } from "./components/FeatureRoute";
 import { RouteLoader } from "./components/RouteLoader";
-import {
-  isRouteAuthBootstrapPending,
-  isRouteAuthSnapshotRevalidating,
-} from "./components/routeGuardAuth";
+import { isRouteAuthBootstrapPending } from "./components/routeGuardAuth";
 import {
   RouteNotFoundState,
   RouteLoadingState,
@@ -109,20 +106,16 @@ function HiddenAppRouteState() {
 }
 
 function AppLayoutRoute({ children }: { children: React.ReactNode }) {
-  const auth = useAuth();
-
-  if (isRouteAuthSnapshotRevalidating(auth)) {
-    return (
-      <AppAccessRoute>
-        <ApplicationLayout>
-          <RouteContentFallback />
-        </ApplicationLayout>
-      </AppAccessRoute>
-    );
-  }
-
   return (
-    <ProtectedRoute>
+    <ProtectedRoute
+      revalidatingFallback={
+        <AppAccessRoute>
+          <ApplicationLayout>
+            <RouteContentFallback />
+          </ApplicationLayout>
+        </AppAccessRoute>
+      }
+    >
       <AppAccessRoute>
         <ApplicationLayout>{children}</ApplicationLayout>
       </AppAccessRoute>
@@ -138,23 +131,16 @@ function AppLayoutRoute({ children }: { children: React.ReactNode }) {
  * - Legacy aliases redirect to the canonical route once the feature is available.
  */
 function AppFeatureRoute(props: React.ComponentProps<typeof FeatureRoute>) {
-  const auth = useAuth();
-
-  if (isRouteAuthSnapshotRevalidating(auth)) {
-    return (
-      <AppAccessRoute>
-        <ApplicationLayout>
-          <RouteContentFallback />
-        </ApplicationLayout>
-      </AppAccessRoute>
-    );
-  }
-
   return (
     <AppAccessRoute>
       <FeatureRoute
         {...props}
         missingFeatureElement={<HiddenAppRouteState />}
+        revalidatingFallback={
+          <ApplicationLayout>
+            <RouteContentFallback />
+          </ApplicationLayout>
+        }
       />
     </AppAccessRoute>
   );
@@ -445,7 +431,15 @@ function App() {
             <Route
               path="/onboarding"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute
+                  revalidatingFallback={
+                    <OnboardingOnlyRoute>
+                      <OnboardingLayout>
+                        <RouteContentFallback />
+                      </OnboardingLayout>
+                    </OnboardingOnlyRoute>
+                  }
+                >
                   <OnboardingOnlyRoute>
                     <OnboardingLayout>
                       <OnboardingWizard />
@@ -457,7 +451,15 @@ function App() {
             <Route
               path="/onboarding/submitted"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute
+                  revalidatingFallback={
+                    <OnboardingOnlyRoute>
+                      <OnboardingLayout>
+                        <RouteContentFallback />
+                      </OnboardingLayout>
+                    </OnboardingOnlyRoute>
+                  }
+                >
                   <OnboardingOnlyRoute>
                     <OnboardingLayout>
                       <OnboardingSubmitted />

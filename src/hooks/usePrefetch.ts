@@ -18,6 +18,10 @@ type LowPriorityRequestInit = RequestInit & { priority?: "low" };
 
 const completedPrefetches = new Set<string>();
 const pendingPrefetches = new Map<string, Promise<void>>();
+// Cross-session isolation: `resetPrefetchCache` bumps this counter so callbacks
+// from prefetches that were in flight before the reset cannot leak keys back
+// into `completedPrefetches` after a logout/login boundary.
+let prefetchEpoch = 0;
 
 function pathFromUrlLike(value: string): string | null {
   if (!value.startsWith("/")) {
@@ -87,7 +91,10 @@ export function getRoutePrefetchPlan(
         [listApiPath("sites", { page: "1", per_page: "15" })]
       );
     case "/sites/new":
-      return routePlan(["siteCreate"], ["/v1/organizational-units"]);
+      return routePlan(
+        ["siteCreate"],
+        [listApiPath("organizational-units", { per_page: "100" })]
+      );
     case "/employees":
       return routePlan(
         ["employeeList"],
@@ -152,7 +159,10 @@ export function getRoutePrefetchPlan(
     const customerId = encodePathSegment(customerSiteCreateMatch[1] ?? "");
     return routePlan(
       ["siteCreate"],
-      [`/v1/customers/${customerId}`, "/v1/organizational-units"]
+      [
+        `/v1/customers/${customerId}`,
+        listApiPath("organizational-units", { per_page: "100" }),
+      ]
     );
   }
 
@@ -167,7 +177,10 @@ export function getRoutePrefetchPlan(
     const id = encodePathSegment(siteEditMatch[1] ?? "");
     return routePlan(
       ["siteEdit"],
-      [`/v1/sites/${id}`, "/v1/organizational-units"]
+      [
+        `/v1/sites/${id}`,
+        listApiPath("organizational-units", { per_page: "100" }),
+      ]
     );
   }
 
@@ -210,6 +223,7 @@ function runPrefetch(
     return pending;
   }
 
+  const startEpoch = prefetchEpoch;
   const promise = Promise.resolve()
     .then(task)
     .then(
@@ -222,6 +236,12 @@ function runPrefetch(
           }
           return;
         }
+        // Drop the result if the cache was reset (e.g. logout) while this
+        // prefetch was in flight; otherwise the previous session's warm-up
+        // leaks into the next user's dedupe state.
+        if (prefetchEpoch !== startEpoch) {
+          return;
+        }
         completedPrefetches.add(key);
       },
       (error: unknown) => {
@@ -231,7 +251,9 @@ function runPrefetch(
       }
     )
     .finally(() => {
-      pendingPrefetches.delete(key);
+      if (prefetchEpoch === startEpoch) {
+        pendingPrefetches.delete(key);
+      }
     });
 
   pendingPrefetches.set(key, promise);
@@ -301,6 +323,7 @@ export function scheduleRoutePrefetch(
 }
 
 export function resetPrefetchCache(): void {
+  prefetchEpoch += 1;
   completedPrefetches.clear();
   pendingPrefetches.clear();
 }

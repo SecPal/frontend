@@ -6,7 +6,10 @@ import type { RestrictedFeature, UserCapabilities } from "../lib/capabilities";
 import { useAuth } from "../hooks/useAuth";
 import { useUserCapabilities } from "../hooks/useUserCapabilities";
 import { EmailVerificationGate } from "./EmailVerificationGate";
-import { isRouteAuthBootstrapPending } from "./routeGuardAuth";
+import {
+  isRouteAuthBootstrapPending,
+  isRouteAuthSnapshotRevalidating,
+} from "./routeGuardAuth";
 import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
@@ -21,6 +24,13 @@ interface FeatureRouteProps {
   missingFeatureElement?: React.ReactNode;
   requiredAction?: (capabilities: UserCapabilities) => boolean;
   deniedActionElement?: React.ReactNode;
+  /**
+   * Optional placeholder rendered in the content slot while a stored session
+   * snapshot is being revalidated (`isLoading && user !== null`). Rendered
+   * inside `EmailVerificationGate`, so unverified persisted users still see
+   * the verification screen instead of the placeholder.
+   */
+  revalidatingFallback?: React.ReactNode;
 }
 
 export function FeatureRoute({
@@ -30,6 +40,7 @@ export function FeatureRoute({
   missingFeatureElement = <RouteAccessDeniedState />,
   requiredAction,
   deniedActionElement = <RouteAccessDeniedState />,
+  revalidatingFallback,
 }: FeatureRouteProps) {
   const auth = useAuth();
   const {
@@ -70,6 +81,8 @@ export function FeatureRoute({
     return <Navigate to="/login" replace />;
   }
 
+  const isRevalidating = isRouteAuthSnapshotRevalidating(auth);
+
   return (
     <EmailVerificationGate
       user={user}
@@ -77,6 +90,10 @@ export function FeatureRoute({
       onSignInAgain={logout}
     >
       {() => {
+        if (isRevalidating && revalidatingFallback !== undefined) {
+          return <>{revalidatingFallback}</>;
+        }
+
         if (!capabilities[feature]) {
           if (fallbackPath) {
             return <Navigate to={fallbackPath} replace />;
