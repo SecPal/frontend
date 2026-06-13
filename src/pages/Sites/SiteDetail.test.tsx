@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
@@ -144,6 +144,55 @@ describe("SiteDetail", () => {
     // Check address
     expect(screen.getByText("Teststrasse 42")).toBeInTheDocument();
     expect(screen.getByText(/80331 München/)).toBeInTheDocument();
+  });
+
+  it("keeps the detail frame visible while site data loads", () => {
+    vi.mocked(customersApi.getSite).mockImplementation(
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.getSite>>>(() => {})
+    );
+
+    renderWithRouter();
+
+    expect(screen.getByRole("heading", { name: "Site" })).toBeInTheDocument();
+    // Only the first section skeleton announces; the other two are
+    // decorative so assistive tech does not stack identical "Loading
+    // site details" live regions at the same time.
+    expect(
+      screen.getAllByRole("status", { name: "Loading site details" })
+    ).toHaveLength(1);
+    expect(screen.getByRole("link", { name: /back to list/i })).toHaveAttribute(
+      "href",
+      "/sites"
+    );
+    expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
+  });
+
+  it("renders site details while customer and org unit lookup data loads", async () => {
+    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getCustomer).mockImplementation(
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.getCustomer>>>(
+          () => {}
+        )
+    );
+    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockImplementation(
+      () =>
+        new Promise<
+          Awaited<
+            ReturnType<typeof organizationalUnitApi.getOrganizationalUnit>
+          >
+        >(() => {})
+    );
+
+    renderWithRouter();
+
+    expect(await screen.findByText("Munich Office")).toBeInTheDocument();
+    expect(screen.getByText("SITE-2025-001")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "Loading site lookup data" })
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 
   it("displays badges for site type and status", async () => {
@@ -360,5 +409,60 @@ describe("SiteDetail", () => {
     expect(
       screen.queryByRole("button", { name: /^delete$/i })
     ).not.toBeInTheDocument();
+  });
+
+  it("ignores a late-resolving fetch for the previous site after navigating between /sites/:id routes", async () => {
+    const siteA = {
+      ...mockSite,
+      id: "site-A",
+      name: "Site A",
+      site_number: "SITE-A",
+    };
+    const siteB = {
+      ...mockSite,
+      id: "site-B",
+      name: "Site B",
+      site_number: "SITE-B",
+    };
+
+    let resolveSiteA:
+      | ((site: Awaited<ReturnType<typeof customersApi.getSite>>) => void)
+      | undefined;
+    vi.mocked(customersApi.getSite).mockImplementation(async (id) => {
+      if (id === "site-A") {
+        return new Promise((resolve) => {
+          resolveSiteA = resolve;
+        });
+      }
+      return siteB;
+    });
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
+      mockOrgUnit
+    );
+
+    window.history.pushState({}, "", "/sites/site-A");
+    renderWithRouter();
+
+    await act(async () => {
+      window.history.pushState({}, "", "/sites/site-B");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Site B")).toBeInTheDocument();
+    });
+
+    // Late A resolution must not clobber the rendered B record.
+    await act(async () => {
+      resolveSiteA?.(siteA);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByText("Site B")).toBeInTheDocument();
+    expect(screen.queryByText("Site A")).not.toBeInTheDocument();
+    expect(screen.queryByText("SITE-A")).not.toBeInTheDocument();
   });
 });

@@ -565,7 +565,9 @@ describe("EmployeeEdit", () => {
 
     renderWithProviders("emp-1");
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading employee form/i })
+    ).toBeInTheDocument();
 
     // Cleanup to avoid memory leaks
     await waitFor(() => {}, { timeout: 100 }).catch(() => {});

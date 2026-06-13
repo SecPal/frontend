@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { test, expect } from "@playwright/test";
+import { loginViaUI, test, expect } from "./auth.setup";
 import { isRemoteE2ETarget } from "./auth-helpers";
 import { installMockAuthRoutes } from "./offline-live-helpers";
 import {
@@ -134,6 +134,62 @@ test.describe("Application Smoke Tests", () => {
   });
 
   test.describe("Performance Basics", () => {
+    test("should keep the full route loader hidden on warmed customer navigation", async ({
+      context,
+      page,
+    }) => {
+      await installMockAuthRoutes(context);
+      await loginViaUI(page, "warm-navigation@secpal.dev", "password");
+
+      await page.goto("/");
+      await page.waitForLoadState("networkidle");
+
+      await page.evaluate(() => {
+        const win = window as typeof window & {
+          __fullRouteLoaderSeen?: boolean;
+        };
+
+        win.__fullRouteLoaderSeen = false;
+        const markLoaderIfPresent = () => {
+          if (document.querySelector('[data-slot="app-shell-loader"]')) {
+            win.__fullRouteLoaderSeen = true;
+          }
+        };
+
+        markLoaderIfPresent();
+        new MutationObserver(markLoaderIfPresent).observe(
+          document.documentElement,
+          {
+            childList: true,
+            subtree: true,
+          }
+        );
+      });
+
+      const customerLinks = page.getByRole("link", { name: /customers/i });
+      await expect(customerLinks.first()).toBeVisible();
+      await customerLinks.first().hover();
+      await page.waitForLoadState("networkidle");
+      await customerLinks.first().click();
+
+      await expect(
+        page.getByRole("heading", { name: /^customers$/i })
+      ).toBeVisible();
+
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () =>
+              (
+                window as typeof window & {
+                  __fullRouteLoaderSeen?: boolean;
+                }
+              ).__fullRouteLoaderSeen ?? false
+          )
+        )
+        .toBe(false);
+    });
+
     test("should load within acceptable time", async ({ page }) => {
       const startTime = Date.now();
 

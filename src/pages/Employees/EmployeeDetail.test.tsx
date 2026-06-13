@@ -240,6 +240,31 @@ describe("EmployeeDetail", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders a subsection skeleton while qualifications load", async () => {
+    vi.mocked(qualificationApi.fetchEmployeeQualifications).mockImplementation(
+      () => new Promise(() => {})
+    );
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /^qualifications$/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /^qualifications$/i }));
+
+    expect(
+      screen.getByRole("status", {
+        name: /loading employee qualifications/i,
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "John Doe" })
+    ).toBeInTheDocument();
+  });
+
   it("should open contacts tab when URL hash is #contacts", async () => {
     render(
       <I18nProvider i18n={i18n}>
@@ -966,7 +991,9 @@ describe("EmployeeDetail", () => {
 
     renderWithProviders("emp-1");
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading employee details/i })
+    ).toBeInTheDocument();
   });
 
   it("should handle terminate employee action with confirm", async () => {

@@ -16,7 +16,14 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import { Badge, Button, Card, CardContent, Spinner, cn } from "@/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  LoadingRegion,
+  SectionSkeleton,
+} from "@/ui";
 import {
   Dropdown,
   DropdownButton,
@@ -707,52 +714,66 @@ export function OrganizationalUnitTree({
     // The unit will be overwritten when a new move is triggered.
   }, []);
 
-  if (isLoading) {
+  const loadingLabel = t`Loading organizational structure`;
+  const showInitialSkeleton = isLoading && units.length === 0 && !error;
+  const showTree = units.length > 0;
+
+  if (error && !showTree) {
     return (
-      <div className={cn(className, "flex justify-center py-12")}>
-        <Spinner aria-label={t`Loading`} className="size-6 text-zinc-500" />
+      <div className={className}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+            {title || <Trans>My Organization</Trans>}
+          </h2>
+          {onCreate && (
+            <Button onClick={onCreate}>
+              <Trans>Add Root Unit</Trans>
+            </Button>
+          )}
+        </div>
+
+        <Card className="border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+          <CardContent className="p-4">
+            <p className="text-sm">{error}</p>
+            <Button variant="ghost" onClick={refresh} className="mt-2">
+              <Trans>Retry</Trans>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  if (error) {
+  if (!showInitialSkeleton && !showTree) {
     return (
-      <Card
-        className={cn(
-          className,
-          "border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
-        )}
-      >
-        <CardContent className="p-4">
-          <p className="text-sm">{error}</p>
-          <Button variant="ghost" onClick={refresh} className="mt-2">
-            <Trans>Retry</Trans>
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
+      <div className={className}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+            {title || <Trans>My Organization</Trans>}
+          </h2>
+          {onCreate && (
+            <Button onClick={onCreate}>
+              <Trans>Add Root Unit</Trans>
+            </Button>
+          )}
+        </div>
 
-  if (units.length === 0) {
-    return (
-      <div
-        className={cn(
-          className,
-          "py-8 text-center text-gray-500 dark:text-gray-400"
-        )}
-      >
-        <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-        <h2 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">
-          <Trans>No Organizational Units</Trans>
-        </h2>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
-          <Trans>Get started by creating your first organizational unit.</Trans>
-        </p>
-        {onCreate && (
-          <Button onClick={onCreate} className="mt-4">
-            <Trans>Create Organizational Unit</Trans>
-          </Button>
-        )}
+        <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+          <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+          <h2 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">
+            <Trans>No Organizational Units</Trans>
+          </h2>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+            <Trans>
+              Get started by creating your first organizational unit.
+            </Trans>
+          </p>
+          {onCreate && (
+            <Button onClick={onCreate} className="mt-4">
+              <Trans>Create Organizational Unit</Trans>
+            </Button>
+          )}
+        </div>
       </div>
     );
   }
@@ -770,25 +791,50 @@ export function OrganizationalUnitTree({
         )}
       </div>
 
-      <div
-        role="tree"
-        aria-label={t`Organizational structure`}
-        className="border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-100 dark:divide-gray-800"
+      {error ? (
+        <Card className="mb-4 border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+          <CardContent className="p-4">
+            <p className="text-sm">{error}</p>
+            <Button variant="ghost" onClick={refresh} className="mt-2">
+              <Trans>Retry</Trans>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <LoadingRegion
+        loading={isLoading && showTree}
+        loadingLabel={loadingLabel}
       >
-        {units.map((unit) => (
-          <TreeNode
-            key={unit.id}
-            unit={unit}
-            level={0}
-            onSelect={onSelect}
-            onEdit={onEdit}
-            onDelete={handleDeleteClick}
-            onMove={onMove ? handleMoveClick : undefined}
-            onCreateChild={onCreateChild}
-            selectedId={selectedId}
+        {showInitialSkeleton ? (
+          <SectionSkeleton
+            loadingLabel={loadingLabel}
+            rows={5}
+            showHeader={false}
+            className="border-gray-200 dark:border-gray-700"
           />
-        ))}
-      </div>
+        ) : (
+          <div
+            role="tree"
+            aria-label={t`Organizational structure`}
+            className="border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-100 dark:divide-gray-800"
+          >
+            {units.map((unit) => (
+              <TreeNode
+                key={unit.id}
+                unit={unit}
+                level={0}
+                onSelect={onSelect}
+                onEdit={onEdit}
+                onDelete={handleDeleteClick}
+                onMove={onMove ? handleMoveClick : undefined}
+                onCreateChild={onCreateChild}
+                selectedId={selectedId}
+              />
+            ))}
+          </div>
+        )}
+      </LoadingRegion>
 
       {/* Delete Confirmation Dialog - Lazy loaded */}
       <Suspense fallback={<div />}>

@@ -1495,12 +1495,8 @@ describe("Login", () => {
     expect(screen.getByText(/completing sign-in/i)).toBeInTheDocument();
     expect(screen.getByText(/please wait/i)).toBeInTheDocument();
 
-    expect(
-      screen.queryByRole("button", { name: /log in/i })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("textbox", { name: /email/i })
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /log in/i })).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: /email/i })).toBeDisabled();
 
     await waitFor(() => {
       expect(
@@ -1514,15 +1510,11 @@ describe("Login", () => {
     // on success (the original implementation did this via
     // `if (shouldSurfaceLoginError) setIsCompletingLogin(false)`), the
     // credential card would briefly flash back into view between the dialog
-    // close and the unmount commit. Pin the corrected behavior: spinner
-    // still here, credentials still NOT here.
+    // close and the unmount commit. Pin the corrected behavior: the progress
+    // overlay is still here and credentials are mounted but disabled.
     expect(screen.getByTestId("login-completing")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /log in/i })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("textbox", { name: /email/i })
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /log in/i })).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: /email/i })).toBeDisabled();
   });
 
   it("keeps TOTP verification digits-only in the MFA challenge dialog", async () => {

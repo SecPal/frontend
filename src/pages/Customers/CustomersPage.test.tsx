@@ -103,7 +103,7 @@ describe("CustomersPage", () => {
     expect(screen.getByText("C001")).toBeInTheDocument();
   });
 
-  it("should display loading state initially", () => {
+  it("renders page chrome and table skeleton rows while initially loading", () => {
     vi.mocked(customersApi.listCustomers).mockImplementation(
       () =>
         new Promise<Awaited<ReturnType<typeof customersApi.listCustomers>>>(
@@ -111,9 +111,41 @@ describe("CustomersPage", () => {
         )
     );
 
+    const { container } = renderWithProviders();
+
+    expect(
+      screen.getByRole("heading", { name: /customers/i })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/search/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /customer number/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading customers table/i })
+    ).toBeInTheDocument();
+    expect(
+      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+    ).toBeGreaterThan(0);
+    expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
+  });
+
+  it("should display empty state inside the table", async () => {
+    vi.mocked(customersApi.listCustomers).mockResolvedValue({
+      data: [],
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 15,
+        total: 0,
+      },
+    });
+
     renderWithProviders();
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(await screen.findByText(/no customers found/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /customer number/i })
+    ).toBeInTheDocument();
   });
 
   it("should handle API errors gracefully", async () => {
@@ -126,6 +158,9 @@ describe("CustomersPage", () => {
     await waitFor(() => {
       expect(screen.getByText(/API Error/i)).toBeInTheDocument();
     });
+    expect(
+      screen.getByRole("columnheader", { name: /customer number/i })
+    ).toBeInTheDocument();
   });
 
   it("should filter customers by search term", async () => {
@@ -143,6 +178,32 @@ describe("CustomersPage", () => {
         expect.objectContaining({ search: "Acme" })
       );
     });
+  });
+
+  it("keeps the existing table visible while refiltering", async () => {
+    vi.mocked(customersApi.listCustomers)
+      .mockResolvedValueOnce(mockResponse)
+      .mockImplementationOnce(
+        () =>
+          new Promise<Awaited<ReturnType<typeof customersApi.listCustomers>>>(
+            () => {}
+          )
+      );
+
+    renderWithProviders();
+
+    expect(await screen.findByText("Acme Corp")).toBeInTheDocument();
+
+    const searchInput = screen.getByPlaceholderText(/search customers/i);
+    fireEvent.change(searchInput, { target: { value: "Tech" } });
+
+    expect(screen.getByText("Acme Corp")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading customers table/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /customer number/i })
+    ).toBeInTheDocument();
   });
 
   it("should filter customers by status", async () => {
@@ -277,7 +338,14 @@ describe("CustomersPage", () => {
         total: 45,
       },
     };
-    vi.mocked(customersApi.listCustomers).mockResolvedValue(paginatedResponse);
+    vi.mocked(customersApi.listCustomers)
+      .mockResolvedValueOnce(paginatedResponse)
+      .mockImplementationOnce(
+        () =>
+          new Promise<Awaited<ReturnType<typeof customersApi.listCustomers>>>(
+            () => {}
+          )
+      );
 
     renderWithProviders();
 
@@ -290,6 +358,11 @@ describe("CustomersPage", () => {
       btn.textContent?.match(/next/i)
     )!;
     fireEvent.click(nextButton);
+
+    expect(screen.getByText("Acme Corp")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading customers table/i })
+    ).toBeInTheDocument();
 
     await waitFor(() => {
       expect(customersApi.listCustomers).toHaveBeenCalledWith(

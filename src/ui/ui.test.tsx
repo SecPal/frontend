@@ -26,7 +26,10 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
+  FormSkeleton,
   Input,
+  LoadingRegion,
+  PageSkeleton,
   RadioGroup,
   RadioGroupItem,
   Select,
@@ -34,6 +37,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SectionSkeleton,
+  Skeleton,
+  TableSkeleton,
   Textarea,
 } from ".";
 
@@ -190,5 +196,109 @@ describe("shared shadcn/radix UI basis", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Missing fieldsComplete every required field."
     );
+  });
+
+  it("exports decorative skeleton primitives and labeled placeholders", () => {
+    const { container } = render(
+      <div>
+        <Skeleton className="h-5 w-20" />
+        <PageSkeleton loadingLabel="Loading dashboard" sections={2} />
+        <SectionSkeleton loadingLabel="Loading profile section" rows={3} />
+        <TableSkeleton
+          loadingLabel="Loading sites table"
+          columns={3}
+          rows={2}
+        />
+        <FormSkeleton loadingLabel="Loading employee form" fields={2} />
+      </div>
+    );
+
+    const decorativeSkeleton = container.querySelector(
+      '[data-slot="ui-skeleton"]'
+    );
+    expect(decorativeSkeleton).toHaveAttribute("aria-hidden", "true");
+    expect(decorativeSkeleton).toHaveClass(
+      "animate-pulse",
+      "rounded-md",
+      "bg-zinc-200",
+      "dark:bg-zinc-800"
+    );
+
+    expect(
+      screen.getByRole("status", { name: "Loading dashboard" })
+    ).toHaveAttribute("data-slot", "ui-page-skeleton");
+    expect(
+      screen.getByRole("status", { name: "Loading profile section" })
+    ).toHaveAttribute("data-slot", "ui-section-skeleton");
+    expect(
+      screen.getByRole("status", { name: "Loading sites table" })
+    ).toHaveAttribute("data-slot", "ui-table-skeleton");
+    expect(
+      screen.getByRole("status", { name: "Loading employee form" })
+    ).toHaveAttribute("data-slot", "ui-form-skeleton");
+    expect(
+      container.querySelectorAll('[data-slot="ui-table-skeleton"] tbody tr')
+    ).toHaveLength(2);
+    expect(
+      container.querySelectorAll('[data-slot="ui-table-skeleton"] thead th')
+    ).toHaveLength(3);
+  });
+
+  it("omits the live region and announcement when SectionSkeleton is decorative", () => {
+    const { container } = render(
+      <div>
+        <SectionSkeleton loadingLabel="Loading shared region" rows={2} />
+        <SectionSkeleton
+          loadingLabel="Loading shared region"
+          rows={2}
+          decorative
+        />
+        <SectionSkeleton
+          loadingLabel="Loading shared region"
+          rows={2}
+          decorative
+        />
+      </div>
+    );
+
+    // Exactly one announcing live region survives so assistive tech does
+    // not stack three identical "Loading shared region" announcements.
+    expect(
+      screen.getAllByRole("status", { name: "Loading shared region" })
+    ).toHaveLength(1);
+
+    const sectionSkeletons = container.querySelectorAll(
+      '[data-slot="ui-section-skeleton"]'
+    );
+    expect(sectionSkeletons).toHaveLength(3);
+
+    const decorativeOnes = container.querySelectorAll(
+      '[data-slot="ui-section-skeleton"][aria-hidden="true"]'
+    );
+    expect(decorativeOnes).toHaveLength(2);
+  });
+
+  it("keeps loaded content visible for non-blocking refreshes", () => {
+    render(
+      <LoadingRegion loading loadingLabel="Refreshing sites">
+        <ul aria-label="Sites">
+          <li>North gate</li>
+          <li>West patrol</li>
+        </ul>
+      </LoadingRegion>
+    );
+
+    const region = screen.getByText("North gate").closest("div");
+    expect(region).toHaveAttribute("data-slot", "ui-loading-region");
+    expect(region).toHaveAttribute("aria-busy", "true");
+    expect(screen.getByRole("list", { name: "Sites" })).toHaveTextContent(
+      "North gate"
+    );
+    expect(screen.getByRole("list", { name: "Sites" })).toHaveTextContent(
+      "West patrol"
+    );
+    expect(
+      screen.getByRole("status", { name: "Refreshing sites" })
+    ).toHaveClass("sr-only");
   });
 });

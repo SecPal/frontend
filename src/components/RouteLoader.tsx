@@ -1,21 +1,42 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-/**
- * RouteLoader - Loading indicator for lazy-loaded routes
- *
- * Provides visual feedback while code chunks are being loaded.
- * Uses Tailwind classes for consistent styling.
- */
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
+import { PageSkeleton, Skeleton } from "@/ui";
+import { Logo } from "./Logo";
+
 export function RouteLoader() {
+  const { i18n } = useLingui();
+
   return (
     <div
-      className="flex items-center justify-center min-h-screen"
-      role="status"
-      aria-live="polite"
+      className="relative isolate flex min-h-dvh w-full flex-col bg-white lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950"
+      data-slot="app-shell-loader"
     >
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-      <span className="sr-only">Loading...</span>
+      <header className="flex items-center px-4">
+        <div className="flex min-h-14 min-w-0 flex-1 items-center gap-4 border-b border-zinc-950/10 dark:border-white/10">
+          <Logo size="32" />
+          <div className="hidden gap-3 lg:flex" aria-hidden="true">
+            <Skeleton className="h-5 w-16" />
+            <Skeleton className="h-5 w-24" />
+            <Skeleton className="h-5 w-20" />
+          </div>
+          <div className="ml-auto">
+            <Skeleton className="size-8 rounded-full" />
+          </div>
+        </div>
+      </header>
+      <main className="flex flex-1 flex-col bg-white dark:bg-zinc-900">
+        <div className="grow p-6 lg:p-10">
+          <div className="mx-auto max-w-6xl">
+            <PageSkeleton
+              loadingLabel={i18n._(msg`Loading application`)}
+              sections={2}
+            />
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

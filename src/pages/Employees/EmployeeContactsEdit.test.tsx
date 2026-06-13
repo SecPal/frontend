@@ -44,7 +44,7 @@ function renderWithProviders(employeeId: string) {
 
 async function waitForLoadedForm() {
   await waitFor(() => {
-    expect(screen.getByText("Edit Contact Details")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^save$/i })).toBeInTheDocument();
   });
 }
 
@@ -89,6 +89,25 @@ describe("EmployeeContactsEdit", () => {
     i18n.load("de", deMessages);
     i18n.activate("en");
     vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(mockEmployee);
+  });
+
+  it("keeps the contact edit frame visible while employee data loads", () => {
+    vi.mocked(employeeApi.fetchEmployee).mockImplementation(
+      () => new Promise(() => {})
+    );
+
+    renderWithProviders("emp-1");
+
+    expect(screen.getByText("Edit Contact Details")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /back to employee/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading employee contact form/i })
+    ).toBeInTheDocument();
+    expect(
+      document.querySelectorAll('[data-slot="ui-skeleton"]').length
+    ).toBeGreaterThan(0);
   });
 
   it("should navigate to employee profile when clicking employee name", async () => {

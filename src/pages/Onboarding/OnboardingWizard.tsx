@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
@@ -39,6 +40,7 @@ import {
   getOnboardingStepState,
   isOnboardingAwaitingHrReview,
 } from "./onboardingWizardState";
+import { FormSkeleton, Skeleton } from "@/ui";
 import {
   OnboardingResidentialAddressHistoryFields,
   type ResidentialAddressHistoryChange,
@@ -1212,6 +1214,62 @@ function ProgressIndicator({
         value={roundedPercentage}
         aria-label={_(msg`Onboarding progress`)}
       />
+    </div>
+  );
+}
+
+function OnboardingWizardFrame({
+  steps,
+  currentStepIndex,
+  children,
+}: {
+  steps: OnboardingStep[];
+  currentStepIndex: number;
+  children: ReactNode;
+}) {
+  return (
+    <div className="mx-auto max-w-4xl">
+      <section className="rounded-md border border-zinc-200 bg-white text-zinc-950 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50">
+        <CardHeader>
+          <CardTitle>
+            <Trans>Welcome to SecPal Onboarding</Trans>
+          </CardTitle>
+          {steps.length > 0 ? (
+            <ProgressIndicator
+              currentStep={currentStepIndex + 1}
+              totalSteps={steps.length}
+            />
+          ) : (
+            <div className="space-y-2" aria-hidden="true">
+              <div className="flex items-center justify-between gap-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-10" />
+              </div>
+              <Skeleton className="h-2 w-full rounded-full" />
+            </div>
+          )}
+        </CardHeader>
+        <CardContent>{children}</CardContent>
+      </section>
+    </div>
+  );
+}
+
+function OnboardingWizardLoadingContent({
+  loadingLabel,
+}: {
+  loadingLabel: string;
+}) {
+  return (
+    <div className="space-y-6">
+      <div
+        aria-hidden="true"
+        className="mb-4 flex flex-wrap items-center gap-3"
+      >
+        <Skeleton className="h-6 w-56 max-w-full" />
+        <Skeleton className="h-6 w-20" />
+      </div>
+      <FormSkeleton loadingLabel={loadingLabel} fields={5} />
     </div>
   );
 }
@@ -3414,24 +3472,20 @@ export function OnboardingWizard() {
         </AlertDescription>
       </Alert>
     ) : null;
+  const onboardingLoadingLabel = _(msg`Loading onboarding`);
 
   if (loading && (steps.length === 0 || template === null)) {
     return (
-      <Card className="mx-auto max-w-4xl">
-        <CardContent
-          role="status"
-          aria-live="polite"
-          className="p-6 text-sm text-zinc-600 dark:text-zinc-300"
-        >
-          <Trans>Loading onboarding...</Trans>
-        </CardContent>
-      </Card>
+      <OnboardingWizardFrame steps={steps} currentStepIndex={currentStepIndex}>
+        {entryFeedbackBanner}
+        <OnboardingWizardLoadingContent loadingLabel={onboardingLoadingLabel} />
+      </OnboardingWizardFrame>
     );
   }
 
   if (error && steps.length === 0) {
     return (
-      <div>
+      <OnboardingWizardFrame steps={steps} currentStepIndex={currentStepIndex}>
         {entryFeedbackBanner}
         <Alert
           ref={onboardingErrorRef}
@@ -3444,7 +3498,7 @@ export function OnboardingWizard() {
             {error}
           </AlertDescription>
         </Alert>
-      </div>
+      </OnboardingWizardFrame>
     );
   }
 

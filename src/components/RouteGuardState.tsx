@@ -11,6 +11,7 @@ import {
   sendVerificationNotification,
 } from "../services/authApi";
 import { Button, buttonVariants } from "@/ui";
+import { RouteLoader } from "./RouteLoader";
 
 interface RouteBootstrapRecoveryStateProps {
   onRetry: () => void;
@@ -30,17 +31,7 @@ interface RouteEmailVerificationStateProps {
 }
 
 export function RouteLoadingState() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      role="status"
-      aria-live="polite"
-    >
-      <div className="text-lg">
-        <Trans>Loading...</Trans>
-      </div>
-    </div>
-  );
+  return <RouteLoader />;
 }
 
 export function RouteBootstrapRecoveryState({

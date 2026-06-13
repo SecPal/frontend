@@ -5,11 +5,9 @@
 
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import type React from "react";
-import {
-  Link as RouterLink,
-  type LinkProps as RouterLinkProps,
-} from "react-router-dom";
+import type { LinkProps as RouterLinkProps } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { PrefetchLink } from "./PrefetchLink";
 
 type DropdownAnchor =
   | "top"
@@ -129,9 +127,9 @@ export function DropdownItem({
     const { href, ...linkProps } = props;
     return (
       <DropdownMenuPrimitive.Item asChild>
-        <RouterLink {...linkProps} to={href} className={classes}>
+        <PrefetchLink {...linkProps} to={href} className={classes}>
           {children}
-        </RouterLink>
+        </PrefetchLink>
       </DropdownMenuPrimitive.Item>
     );
   }

@@ -65,6 +65,93 @@ describe("FeatureRoute", () => {
     );
   });
 
+  it("renders revalidatingFallback during snapshot revalidation for a verified persisted user", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      isLoading: true,
+      isAuthenticated: true,
+      bootstrapRecoveryReason: null,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hasPermission: vi.fn(),
+      hasOrganizationalAccess: vi.fn(),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/customers"]}>
+          <Routes>
+            <Route
+              path="/customers"
+              element={
+                <FeatureRoute
+                  feature="customers"
+                  revalidatingFallback={<div>Revalidating fallback</div>}
+                >
+                  <div>Customers Content</div>
+                </FeatureRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(screen.getByText("Revalidating fallback")).toBeInTheDocument();
+    expect(screen.queryByText("Customers Content")).not.toBeInTheDocument();
+  });
+
+  it("still runs the email verification gate during revalidation for an unverified persisted user", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      isLoading: true,
+      isAuthenticated: true,
+      bootstrapRecoveryReason: null,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: false,
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hasPermission: vi.fn(),
+      hasOrganizationalAccess: vi.fn(),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/customers"]}>
+          <Routes>
+            <Route
+              path="/customers"
+              element={
+                <FeatureRoute
+                  feature="customers"
+                  revalidatingFallback={<div>Revalidating fallback</div>}
+                >
+                  <div>Customers Content</div>
+                </FeatureRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /verify your email address/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Revalidating fallback")).not.toBeInTheDocument();
+    expect(screen.queryByText("Customers Content")).not.toBeInTheDocument();
+  });
+
   it("shows the email verification gate before rendering the feature", () => {
     render(
       <I18nProvider i18n={i18n}>
@@ -139,6 +226,83 @@ describe("FeatureRoute", () => {
     ).toBeInTheDocument();
     expect(
       screen.queryByText("Android Provisioning Content")
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows the shared bootstrap loading state until any session snapshot exists", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      isLoading: true,
+      isAuthenticated: false,
+      bootstrapRecoveryReason: null,
+      user: null,
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hasPermission: vi.fn(),
+      hasOrganizationalAccess: vi.fn(),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/customers"]}>
+          <Routes>
+            <Route
+              path="/customers"
+              element={
+                <FeatureRoute feature="customers">
+                  <div>Customers Content</div>
+                </FeatureRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(
+      screen.getByRole("status", { name: /loading application/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Customers Content")).not.toBeInTheDocument();
+  });
+
+  it("does not replace feature content with the bootstrap loader when a user snapshot exists", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      isLoading: true,
+      isAuthenticated: true,
+      bootstrapRecoveryReason: null,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hasPermission: vi.fn(),
+      hasOrganizationalAccess: vi.fn(),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/customers"]}>
+          <Routes>
+            <Route
+              path="/customers"
+              element={
+                <FeatureRoute feature="customers">
+                  <div>Customers Content</div>
+                </FeatureRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(screen.getByText("Customers Content")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("status", { name: /loading application/i })
     ).not.toBeInTheDocument();
   });
 

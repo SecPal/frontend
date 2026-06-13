@@ -113,7 +113,7 @@ describe("SitesPage", () => {
     expect(screen.getByText("S001")).toBeInTheDocument();
   });
 
-  it("should display loading state initially", () => {
+  it("renders page chrome and table skeleton rows while initially loading", () => {
     vi.mocked(customersApi.listSites).mockImplementation(
       () =>
         new Promise<Awaited<ReturnType<typeof customersApi.listSites>>>(
@@ -121,9 +121,39 @@ describe("SitesPage", () => {
         )
     );
 
+    const { container } = renderWithProviders();
+
+    expect(screen.getByRole("heading", { name: /sites/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/search/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /site number/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading sites table/i })
+    ).toBeInTheDocument();
+    expect(
+      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+    ).toBeGreaterThan(0);
+    expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
+  });
+
+  it("should display empty state inside the table", async () => {
+    vi.mocked(customersApi.listSites).mockResolvedValue({
+      data: [],
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 15,
+        total: 0,
+      },
+    });
+
     renderWithProviders();
 
-    expect(screen.getByText(/loading/i)).toBeInTheDocument();
+    expect(await screen.findByText(/no sites found/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /site number/i })
+    ).toBeInTheDocument();
   });
 
   it("should handle API errors gracefully", async () => {
@@ -134,6 +164,9 @@ describe("SitesPage", () => {
     await waitFor(() => {
       expect(screen.getByText(/API Error/i)).toBeInTheDocument();
     });
+    expect(
+      screen.getByRole("columnheader", { name: /site number/i })
+    ).toBeInTheDocument();
   });
 
   it("should filter sites by search term", async () => {
@@ -151,6 +184,32 @@ describe("SitesPage", () => {
         expect.objectContaining({ search: "Main" })
       );
     });
+  });
+
+  it("keeps the existing table visible while refiltering", async () => {
+    vi.mocked(customersApi.listSites)
+      .mockResolvedValueOnce(mockResponse)
+      .mockImplementationOnce(
+        () =>
+          new Promise<Awaited<ReturnType<typeof customersApi.listSites>>>(
+            () => {}
+          )
+      );
+
+    renderWithProviders();
+
+    expect(await screen.findByText("Main Office")).toBeInTheDocument();
+
+    const searchInput = screen.getByPlaceholderText(/search sites/i);
+    fireEvent.change(searchInput, { target: { value: "Project" } });
+
+    expect(screen.getByText("Main Office")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading sites table/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /site number/i })
+    ).toBeInTheDocument();
   });
 
   it("should filter sites by type", async () => {
@@ -317,7 +376,14 @@ describe("SitesPage", () => {
         total: 45,
       },
     };
-    vi.mocked(customersApi.listSites).mockResolvedValue(paginatedResponse);
+    vi.mocked(customersApi.listSites)
+      .mockResolvedValueOnce(paginatedResponse)
+      .mockImplementationOnce(
+        () =>
+          new Promise<Awaited<ReturnType<typeof customersApi.listSites>>>(
+            () => {}
+          )
+      );
 
     renderWithProviders();
 
@@ -330,6 +396,11 @@ describe("SitesPage", () => {
       btn.textContent?.match(/next/i)
     )!;
     fireEvent.click(nextButton);
+
+    expect(screen.getByText("Main Office")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading sites table/i })
+    ).toBeInTheDocument();
 
     await waitFor(() => {
       expect(customersApi.listSites).toHaveBeenCalledWith(

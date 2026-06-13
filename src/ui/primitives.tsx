@@ -661,6 +661,305 @@ export function Progress({
   );
 }
 
+export const Skeleton = forwardRef(function Skeleton(
+  {
+    className,
+    "aria-hidden": ariaHidden = true,
+    ...props
+  }: ComponentPropsWithoutRef<"div">,
+  ref: ForwardedRef<HTMLDivElement>
+) {
+  return (
+    <div
+      ref={ref}
+      aria-hidden={ariaHidden}
+      data-slot="ui-skeleton"
+      className={cn(
+        "animate-pulse rounded-md bg-zinc-200 dark:bg-zinc-800",
+        className
+      )}
+      {...props}
+    />
+  );
+});
+
+function boundedCount(value: number | undefined, fallback: number) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return fallback;
+  }
+
+  return Math.max(1, Math.floor(value));
+}
+
+function SkeletonStatus({ loadingLabel }: { loadingLabel: string }) {
+  return <span className="sr-only">{loadingLabel}</span>;
+}
+
+function SectionSkeletonContent({
+  rows,
+  showHeader,
+}: {
+  rows: number;
+  showHeader: boolean;
+}) {
+  return (
+    <div data-slot="ui-section-skeleton-content" aria-hidden="true">
+      {showHeader ? (
+        <div className="mb-5 space-y-2">
+          <Skeleton className="h-5 w-48 max-w-full" />
+          <Skeleton className="h-4 w-72 max-w-full" />
+        </div>
+      ) : null}
+      <div className="space-y-3">
+        {Array.from({ length: rows }, (_, index) => (
+          <Skeleton
+            key={index}
+            className={cn(
+              "h-4",
+              index === rows - 1 ? "w-2/3 max-w-full" : "w-full"
+            )}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function PageSkeleton({
+  className,
+  loadingLabel,
+  sections = 3,
+  ...props
+}: ComponentPropsWithoutRef<"div"> & {
+  loadingLabel: string;
+  sections?: number;
+}) {
+  const sectionCount = boundedCount(sections, 3);
+
+  return (
+    <div
+      {...props}
+      role="status"
+      aria-busy="true"
+      aria-label={loadingLabel}
+      aria-live="polite"
+      data-slot="ui-page-skeleton"
+      className={cn("space-y-8", className)}
+    >
+      <SkeletonStatus loadingLabel={loadingLabel} />
+      <div aria-hidden="true" className="space-y-3">
+        <Skeleton className="h-8 w-64 max-w-full" />
+        <Skeleton className="h-4 w-96 max-w-full" />
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        {Array.from({ length: sectionCount }, (_, index) => (
+          <div
+            key={index}
+            className="rounded-md border border-zinc-200 p-6 dark:border-zinc-800"
+          >
+            <SectionSkeletonContent rows={4} showHeader />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function SectionSkeleton({
+  className,
+  loadingLabel,
+  rows = 4,
+  showHeader = true,
+  decorative = false,
+  ...props
+}: ComponentPropsWithoutRef<"div"> & {
+  loadingLabel: string;
+  rows?: number;
+  showHeader?: boolean;
+  /**
+   * When a page composes several section skeletons that share the same
+   * loading state, only the first one should announce. Mark the rest as
+   * decorative so they render the same visual placeholder without
+   * stacking additional `role="status"`/`aria-live` regions and the
+   * sr-only label text — which assistive tech may otherwise repeat once
+   * per region with the same `loadingLabel`.
+   */
+  decorative?: boolean;
+}) {
+  if (decorative) {
+    return (
+      <div
+        {...props}
+        aria-hidden="true"
+        data-slot="ui-section-skeleton"
+        className={cn(
+          "rounded-md border border-zinc-200 p-6 dark:border-zinc-800",
+          className
+        )}
+      >
+        <SectionSkeletonContent
+          rows={boundedCount(rows, 4)}
+          showHeader={showHeader}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      {...props}
+      role="status"
+      aria-busy="true"
+      aria-label={loadingLabel}
+      aria-live="polite"
+      data-slot="ui-section-skeleton"
+      className={cn(
+        "rounded-md border border-zinc-200 p-6 dark:border-zinc-800",
+        className
+      )}
+    >
+      <SkeletonStatus loadingLabel={loadingLabel} />
+      <SectionSkeletonContent
+        rows={boundedCount(rows, 4)}
+        showHeader={showHeader}
+      />
+    </div>
+  );
+}
+
+export function TableSkeleton({
+  className,
+  loadingLabel,
+  columns = 4,
+  rows = 5,
+  ...props
+}: ComponentPropsWithoutRef<"div"> & {
+  loadingLabel: string;
+  columns?: number;
+  rows?: number;
+}) {
+  const columnCount = boundedCount(columns, 4);
+  const rowCount = boundedCount(rows, 5);
+
+  return (
+    <div
+      {...props}
+      role="status"
+      aria-busy="true"
+      aria-label={loadingLabel}
+      aria-live="polite"
+      data-slot="ui-table-skeleton"
+      className={cn("overflow-x-auto", className)}
+    >
+      <SkeletonStatus loadingLabel={loadingLabel} />
+      <table
+        aria-hidden="true"
+        className="min-w-full text-left text-sm/6 text-zinc-950 dark:text-white"
+      >
+        <thead className="text-zinc-500 dark:text-zinc-400">
+          <tr>
+            {Array.from({ length: columnCount }, (_, index) => (
+              <th
+                key={index}
+                scope="col"
+                className="border-b border-b-zinc-950/10 px-4 py-2 dark:border-b-white/10"
+              >
+                <Skeleton className="h-4 w-24" />
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: rowCount }, (_, rowIndex) => (
+            <tr key={rowIndex}>
+              {Array.from({ length: columnCount }, (_, columnIndex) => (
+                <td
+                  key={columnIndex}
+                  className="border-b border-zinc-950/5 px-4 py-4 dark:border-white/5"
+                >
+                  <Skeleton
+                    className={cn("h-4", columnIndex === 0 ? "w-32" : "w-24")}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export function FormSkeleton({
+  className,
+  loadingLabel,
+  fields = 4,
+  ...props
+}: ComponentPropsWithoutRef<"div"> & {
+  loadingLabel: string;
+  fields?: number;
+}) {
+  const fieldCount = boundedCount(fields, 4);
+
+  return (
+    <div
+      {...props}
+      role="status"
+      aria-busy="true"
+      aria-label={loadingLabel}
+      aria-live="polite"
+      data-slot="ui-form-skeleton"
+      className={cn("space-y-6", className)}
+    >
+      <SkeletonStatus loadingLabel={loadingLabel} />
+      <div aria-hidden="true" className="space-y-5">
+        {Array.from({ length: fieldCount }, (_, index) => (
+          <div key={index} className="space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        ))}
+        <div className="flex justify-end gap-3">
+          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-10 w-28" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function LoadingRegion({
+  className,
+  loading,
+  loadingLabel,
+  children,
+  ...props
+}: ComponentPropsWithoutRef<"div"> & {
+  loading: boolean;
+  loadingLabel: string;
+}) {
+  return (
+    <div
+      {...props}
+      aria-busy={loading || undefined}
+      data-slot="ui-loading-region"
+      className={cn("relative", className)}
+    >
+      {children}
+      {loading ? (
+        <span
+          role="status"
+          aria-label={loadingLabel}
+          aria-live="polite"
+          className="sr-only"
+        >
+          {loadingLabel}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
 export function Spinner({
   className,
   "aria-label": ariaLabel,

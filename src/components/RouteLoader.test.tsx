@@ -1,60 +1,62 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { i18n } from "@lingui/core";
+import { I18nProvider } from "@lingui/react";
 import { RouteLoader } from "./RouteLoader";
 
+function renderWithI18n(ui: React.ReactElement) {
+  return render(<I18nProvider i18n={i18n}>{ui}</I18nProvider>);
+}
+
 describe("RouteLoader", () => {
-  it("renders loading spinner", () => {
-    render(<RouteLoader />);
+  it("renders a shell-equivalent loading placeholder", () => {
+    renderWithI18n(<RouteLoader />);
 
-    // Check for the spinner container
-    const spinnerContainer = screen.getByRole("status");
-    expect(spinnerContainer).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "SecPal" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading application/i })
+    ).toBeInTheDocument();
   });
 
-  it("has correct accessibility attributes", () => {
-    render(<RouteLoader />);
+  it("has correct accessibility attributes on the content skeleton", () => {
+    renderWithI18n(<RouteLoader />);
 
-    const statusElement = screen.getByRole("status");
+    const statusElement = screen.getByRole("status", {
+      name: /loading application/i,
+    });
     expect(statusElement).toHaveAttribute("aria-live", "polite");
+    expect(statusElement).toHaveAttribute("aria-busy", "true");
   });
 
-  it("includes screen reader text", () => {
-    render(<RouteLoader />);
+  it("does not render the old raw loading copy", () => {
+    renderWithI18n(<RouteLoader />);
 
-    // Check for sr-only text
-    const srText = screen.getByText("Loading...");
-    expect(srText).toBeInTheDocument();
-    expect(srText).toHaveClass("sr-only");
+    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
   });
 
-  it("renders with correct styling classes", () => {
-    const { container } = render(<RouteLoader />);
+  it("renders with shell styling classes", () => {
+    const { container } = renderWithI18n(<RouteLoader />);
 
-    // Check container has flexbox centering
     const outerDiv = container.firstChild as HTMLElement;
     expect(outerDiv).toHaveClass(
+      "relative",
+      "isolate",
       "flex",
-      "items-center",
-      "justify-center",
-      "min-h-screen"
+      "min-h-dvh",
+      "w-full",
+      "flex-col"
     );
   });
 
-  it("renders spinner with animation", () => {
-    const { container } = render(<RouteLoader />);
+  it("renders skeleton placeholders instead of a spinner", () => {
+    const { container } = renderWithI18n(<RouteLoader />);
 
-    // Find the spinner div
-    const spinner = container.querySelector(".animate-spin");
-    expect(spinner).toBeInTheDocument();
-    expect(spinner).toHaveClass(
-      "rounded-full",
-      "h-12",
-      "w-12",
-      "border-b-2",
-      "border-blue-600"
-    );
+    expect(container.querySelector(".animate-spin")).not.toBeInTheDocument();
+    expect(
+      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+    ).toBeGreaterThan(0);
   });
 });

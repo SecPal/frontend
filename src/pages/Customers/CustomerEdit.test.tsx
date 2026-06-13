@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
@@ -81,6 +87,25 @@ describe("CustomerEdit", () => {
     expect(screen.getByLabelText(/postal code/i)).toHaveValue("54321");
     expect(screen.getByLabelText(/country/i)).toHaveValue("DE");
     expect(screen.getByLabelText(/notes/i)).toHaveValue("Existing notes");
+  });
+
+  it("keeps the edit frame visible while customer data loads", () => {
+    vi.mocked(customersApi.getCustomer).mockImplementation(
+      () =>
+        new Promise<Awaited<ReturnType<typeof customersApi.getCustomer>>>(
+          () => {}
+        )
+    );
+
+    renderWithRouter();
+
+    expect(
+      screen.getByRole("heading", { name: /edit customer/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: "Loading customer form" })
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 
   it(
@@ -316,6 +341,121 @@ describe("CustomerEdit", () => {
 
     await waitFor(() => {
       expect(screen.getByLabelText(/notes/i)).toHaveValue("");
+    });
+  });
+
+  it("ignores a late-resolving fetch for the previous customer after navigating between /customers/:id/edit routes", async () => {
+    const customerA = {
+      ...mockCustomer,
+      id: "customer-A",
+      name: "Customer A",
+      customer_number: "CUST-A",
+    };
+    const customerB = {
+      ...mockCustomer,
+      id: "customer-B",
+      name: "Customer B",
+      customer_number: "CUST-B",
+    };
+
+    let resolveCustomerA:
+      | ((
+          customer: Awaited<ReturnType<typeof customersApi.getCustomer>>
+        ) => void)
+      | undefined;
+    vi.mocked(customersApi.getCustomer).mockImplementation(async (id) => {
+      if (id === "customer-A") {
+        return new Promise((resolve) => {
+          resolveCustomerA = resolve;
+        });
+      }
+      return customerB;
+    });
+
+    window.history.pushState({}, "", "/customers/customer-A/edit");
+    renderWithRouter();
+
+    // Navigate to B while A is still in flight. B resolves immediately.
+    await act(async () => {
+      window.history.pushState({}, "", "/customers/customer-B/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/customer name/i)).toHaveValue("Customer B");
+    });
+
+    // Late A resolution must NOT refill the form with Customer A's data.
+    await act(async () => {
+      resolveCustomerA?.(customerA);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.getByLabelText(/customer name/i)).toHaveValue("Customer B");
+    expect(screen.queryByDisplayValue("Customer A")).not.toBeInTheDocument();
+  });
+
+  it("clears the previous customer's form when navigating between /customers/:id/edit routes", async () => {
+    const customerA = {
+      ...mockCustomer,
+      id: "customer-A",
+      name: "Customer A",
+      customer_number: "CUST-A",
+    };
+    const customerB = {
+      ...mockCustomer,
+      id: "customer-B",
+      name: "Customer B",
+      customer_number: "CUST-B",
+    };
+
+    let resolveCustomerB:
+      | ((
+          customer: Awaited<ReturnType<typeof customersApi.getCustomer>>
+        ) => void)
+      | undefined;
+    vi.mocked(customersApi.getCustomer).mockImplementation(async (id) => {
+      if (id === "customer-A") {
+        return customerA;
+      }
+      return new Promise((resolve) => {
+        resolveCustomerB = resolve;
+      });
+    });
+
+    window.history.pushState({}, "", "/customers/customer-A/edit");
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/customer name/i)).toHaveValue("Customer A");
+    });
+
+    // Param-only navigation: same route pattern, different `:id`. React
+    // Router keeps the same `CustomerEdit` instance and only updates the
+    // params, so the load effect re-runs but the stored `customer` /
+    // `formData` would otherwise still belong to Customer A.
+    await act(async () => {
+      window.history.pushState({}, "", "/customers/customer-B/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("status", { name: /loading customer form/i })
+      ).toBeInTheDocument();
+    });
+    expect(screen.queryByDisplayValue("Customer A")).not.toBeInTheDocument();
+
+    await act(async () => {
+      resolveCustomerB?.(customerB);
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/customer name/i)).toHaveValue("Customer B");
     });
   });
 

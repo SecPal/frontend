@@ -319,7 +319,7 @@ describe("EmployeeList", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("should display loading state", () => {
+  it("renders filters and table skeleton rows while initially loading", () => {
     vi.mocked(employeeApi.fetchEmployees).mockImplementation(
       () => new Promise(() => {})
     );
@@ -327,9 +327,24 @@ describe("EmployeeList", () => {
       () => new Promise(() => {})
     );
 
-    renderWithProviders();
+    const { container } = renderWithProviders();
 
-    expect(screen.getByText(/loading employees/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /employee management/i })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/search/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /employee #/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading employees table/i })
+    ).toBeInTheDocument();
+    expect(
+      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+    ).toBeGreaterThan(0);
+    expect(
+      screen.queryByText(/^Loading employees\.\.\.$/i)
+    ).not.toBeInTheDocument();
   });
 
   it("should display error message on fetch failure", async () => {
@@ -395,6 +410,34 @@ describe("EmployeeList", () => {
         expect.objectContaining({ search: "john", page: 1 })
       );
     });
+  });
+
+  it("keeps existing rows visible while refreshing search results", async () => {
+    vi.mocked(employeeApi.fetchEmployees)
+      .mockResolvedValueOnce(mockResponse)
+      .mockImplementationOnce(
+        () =>
+          new Promise<Awaited<ReturnType<typeof employeeApi.fetchEmployees>>>(
+            () => {}
+          )
+      );
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+    });
+
+    const searchInput = screen.getByPlaceholderText(/search by name or email/i);
+    fireEvent.change(searchInput, { target: { value: "jane" } });
+
+    expect(screen.getByText("John Doe")).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading employees table/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /employee #/i })
+    ).toBeInTheDocument();
   });
 
   it("should navigate to employee detail on row click", async () => {

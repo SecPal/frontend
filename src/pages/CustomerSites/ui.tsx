@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { forwardRef, type ComponentPropsWithoutRef } from "react";
-import { Link } from "react-router-dom";
+import { PrefetchLink } from "../../components/PrefetchLink";
 import {
   Alert,
   AlertDescription,
@@ -115,10 +115,10 @@ export function PageText({
 
 export const PageLink = forwardRef<
   HTMLAnchorElement,
-  ComponentPropsWithoutRef<typeof Link>
+  ComponentPropsWithoutRef<typeof PrefetchLink>
 >(function PageLink({ className, ...props }, ref) {
   return (
-    <Link
+    <PrefetchLink
       ref={ref}
       data-slot="customer-site-link"
       className={cn(
@@ -133,10 +133,10 @@ export const PageLink = forwardRef<
 
 export const LinkButton = forwardRef<
   HTMLAnchorElement,
-  ComponentPropsWithoutRef<typeof Link> & { variant?: ButtonVariant }
+  ComponentPropsWithoutRef<typeof PrefetchLink> & { variant?: ButtonVariant }
 >(function LinkButton({ className, variant, ...props }, ref) {
   return (
-    <Link
+    <PrefetchLink
       ref={ref}
       data-slot="customer-site-link-button"
       className={cn(buttonVariants({ variant }), className)}

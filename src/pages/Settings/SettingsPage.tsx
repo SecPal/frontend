@@ -39,8 +39,11 @@ import {
   FieldError,
   FieldLabel,
   Input,
+  LoadingRegion,
   RadioGroup,
   RadioGroupItem,
+  SectionSkeleton,
+  Skeleton,
 } from "@/ui";
 import {
   AuthApiError,
@@ -160,6 +163,35 @@ function DescriptionRow({
   );
 }
 
+function PasskeyListSkeleton({ loadingLabel }: { loadingLabel: string }) {
+  return (
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label={loadingLabel}
+      aria-live="polite"
+      className="space-y-3"
+    >
+      <span className="sr-only">{loadingLabel}</span>
+      {Array.from({ length: 2 }, (_, index) => (
+        <div
+          key={index}
+          aria-hidden="true"
+          className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/60"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-44 max-w-full" />
+              <Skeleton className="h-4 w-36 max-w-full" />
+            </div>
+            <Skeleton className="h-10 w-24" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function SettingsPage() {
   const { _, i18n } = useLingui();
   const supportsPasskeys = useMemo(() => isPasskeyRegistrationSupported(), []);
@@ -206,6 +238,8 @@ export function SettingsPage() {
     () => getSensitiveActionLabels(sensitiveAction),
     [sensitiveAction]
   );
+  const mfaStatusLoadingLabel = _(msg`Loading MFA status...`);
+  const passkeysLoadingLabel = _(msg`Loading passkeys...`);
 
   useEffect(() => {
     let active = true;
@@ -574,9 +608,12 @@ export function SettingsPage() {
 
         <Card className="p-6">
           {isLoadingMfaStatus ? (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              <Trans>Loading MFA status...</Trans>
-            </p>
+            <SectionSkeleton
+              loadingLabel={mfaStatusLoadingLabel}
+              rows={3}
+              showHeader={false}
+              className="border-0 p-0"
+            />
           ) : mfaStatusError ? (
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
               <Trans>MFA status could not be loaded.</Trans>
@@ -684,10 +721,8 @@ export function SettingsPage() {
                   {passkeyError}
                 </p>
               ) : null}
-              {isLoadingPasskeys ? (
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  <Trans>Loading passkeys...</Trans>
-                </p>
+              {isLoadingPasskeys && passkeys.length === 0 ? (
+                <PasskeyListSkeleton loadingLabel={passkeysLoadingLabel} />
               ) : !passkeyError &&
                 passkeys.length === 0 &&
                 !isRegisteringPasskey ? (
@@ -695,40 +730,50 @@ export function SettingsPage() {
                   <Trans>No passkeys enrolled yet.</Trans>
                 </p>
               ) : (
-                <div className="space-y-3">
-                  {passkeys.map((passkey) => (
-                    <div
-                      key={passkey.id}
-                      className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/60"
-                    >
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-zinc-950 dark:text-white">
-                            {passkey.label}
-                          </p>
-                          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                            <Trans>
-                              Added{" "}
-                              {formatDateTime(passkey.created_at, i18n.locale)}
-                            </Trans>
-                          </p>
+                <LoadingRegion
+                  loading={isLoadingPasskeys}
+                  loadingLabel={passkeysLoadingLabel}
+                >
+                  <div className="space-y-3">
+                    {passkeys.map((passkey) => (
+                      <div
+                        key={passkey.id}
+                        className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/60"
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-zinc-950 dark:text-white">
+                              {passkey.label}
+                            </p>
+                            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                              <Trans>
+                                Added{" "}
+                                {formatDateTime(
+                                  passkey.created_at,
+                                  i18n.locale
+                                )}
+                              </Trans>
+                            </p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            disabled={removingPasskeyId !== null}
+                            onClick={() =>
+                              void handlePasskeyRemoval(passkey.id)
+                            }
+                          >
+                            {removingPasskeyId === passkey.id ? (
+                              <Trans>Removing...</Trans>
+                            ) : (
+                              <Trans>Remove</Trans>
+                            )}
+                          </Button>
                         </div>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          disabled={removingPasskeyId !== null}
-                          onClick={() => void handlePasskeyRemoval(passkey.id)}
-                        >
-                          {removingPasskeyId === passkey.id ? (
-                            <Trans>Removing...</Trans>
-                          ) : (
-                            <Trans>Remove</Trans>
-                          )}
-                        </Button>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </LoadingRegion>
               )}
             </div>
           </CardContent>
@@ -842,9 +887,12 @@ export function SettingsPage() {
 
         <DialogBody>
           {isPreparingEnrollment ? (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              <Trans>Preparing MFA setup...</Trans>
-            </p>
+            <SectionSkeleton
+              loadingLabel={_(msg`Preparing MFA setup...`)}
+              rows={4}
+              showHeader={false}
+              className="border-0 p-0"
+            />
           ) : enrollmentPreparationError ? (
             <div className="space-y-6">
               <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">

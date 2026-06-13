@@ -28,6 +28,7 @@ import {
 } from "../../lib/errorUtils";
 import { Logo } from "../../components/Logo";
 import { LanguageSwitcher } from "../../components/LanguageSwitcher";
+import { FormSkeleton, Skeleton } from "@/ui";
 import { useAuth } from "../../hooks/useAuth";
 import {
   completeOnboarding,
@@ -541,14 +542,18 @@ export function OnboardingComplete() {
     );
   }
 
-  // Show loading spinner while validating token
   if (tokenValidationState.kind === "validating") {
     return (
       <OnboardingCompleteFrame>
-        <div className="mt-8 text-center">
-          <p className="text-sm text-zinc-600 dark:text-zinc-300">
-            <Trans>Validating your link...</Trans>
-          </p>
+        <div className="mt-8 space-y-8">
+          <div aria-hidden="true" className="space-y-2">
+            <Skeleton className="h-8 w-64 max-w-full" />
+            <Skeleton className="h-4 w-80 max-w-full" />
+          </div>
+          <FormSkeleton
+            loadingLabel={_(msg`Validating onboarding link`)}
+            fields={5}
+          />
         </div>
       </OnboardingCompleteFrame>
     );

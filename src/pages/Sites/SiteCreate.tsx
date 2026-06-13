@@ -11,6 +11,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
+import { FormSkeleton } from "@/ui";
 import { createSite, listCustomers } from "../../services/customersApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type {
@@ -39,7 +40,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Spinner,
   Textarea,
 } from "../CustomerSites/ui";
 
@@ -179,11 +179,16 @@ export default function SiteCreate() {
 
   if (loadingData) {
     return (
-      <div className="flex items-center justify-center gap-3 py-12 text-sm text-zinc-600 dark:text-zinc-300">
-        <Spinner aria-label={_(msg`Loading...`)} />
-        <span>
-          <Trans>Loading...</Trans>
-        </span>
+      <div className="max-w-3xl">
+        <div className="mb-6">
+          <PageTitle>
+            <Trans>New Site</Trans>
+          </PageTitle>
+        </div>
+        <FormSkeleton
+          loadingLabel={_(msg`Loading site lookup data`)}
+          fields={10}
+        />
       </div>
     );
   }

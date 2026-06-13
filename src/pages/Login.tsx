@@ -37,11 +37,6 @@ import {
   LoginDialogBody,
   LoginDialogDescription,
   LoginDialogTitle,
-  LoginEmpty,
-  LoginEmptyDescription,
-  LoginEmptyHeader,
-  LoginEmptyMedia,
-  LoginEmptyTitle,
   LoginField,
   LoginFieldDescription,
   LoginFieldError,
@@ -297,7 +292,11 @@ export function Login() {
   const isSystemNotReady = isOnline && healthStatus?.status === "not_ready";
   const isMfaChallengeActive = pendingMfaChallenge !== null;
   const areCredentialsDisabled =
-    !isOnline || isSystemNotReady || isLocked || isMfaChallengeActive;
+    !isOnline ||
+    isSystemNotReady ||
+    isLocked ||
+    isMfaChallengeActive ||
+    isCompletingLogin;
   const isLoginSubmitDisabled =
     !isOnline ||
     isSubmitting ||
@@ -305,7 +304,8 @@ export function Login() {
     isSystemNotReady ||
     isHealthCheckLoading ||
     isLocked ||
-    isMfaChallengeActive;
+    isMfaChallengeActive ||
+    isCompletingLogin;
   const isPasskeySubmitDisabled =
     !isOnline ||
     isSubmitting ||
@@ -313,7 +313,8 @@ export function Login() {
     isSystemNotReady ||
     isHealthCheckLoading ||
     isLocked ||
-    isMfaChallengeActive;
+    isMfaChallengeActive ||
+    isCompletingLogin;
 
   // Compute aria-describedby for inputs (combines error, lockout, and offline alerts)
   const ariaDescribedBy =
@@ -602,34 +603,16 @@ export function Login() {
         footer never overlap on short landscape viewports.
       */}
       <div className="flex w-full flex-1 items-center justify-center">
-        {isCompletingLogin && (
-          <LoginEmpty
-            data-testid="login-completing"
-            className="w-full max-w-sm"
-          >
-            <LoginEmptyHeader>
-              <LoginEmptyMedia variant="icon">
-                {/* role="status" on LoginSpinner is the scoped live region for AT
-                  announcements. aria-live must not be placed on the wider
-                  LoginEmpty container, which also holds static heading text. */}
-                <LoginSpinner aria-label={_(msg`Loading`)} />
-              </LoginEmptyMedia>
-              <LoginEmptyTitle className="text-sm/relaxed font-bold">
-                <Trans id="login.completing.title">Completing sign-in</Trans>
-              </LoginEmptyTitle>
-              <LoginEmptyDescription>
-                <Trans id="login.completing.description">Please wait…</Trans>
-              </LoginEmptyDescription>
-            </LoginEmptyHeader>
-          </LoginEmpty>
-        )}
-
         <LoginCard
           aria-labelledby="login-title"
-          className={isCompletingLogin ? "hidden" : undefined}
-          aria-hidden={isCompletingLogin || undefined}
+          aria-busy={isCompletingLogin || undefined}
+          className="relative"
         >
-          <LoginForm onSubmit={handleSubmit} aria-label={_(msg`Login form`)}>
+          <LoginForm
+            onSubmit={handleSubmit}
+            aria-label={_(msg`Login form`)}
+            className={isCompletingLogin ? "opacity-40" : undefined}
+          >
             <LoginFieldGroup>
               <LoginCardHeader>
                 <div className="flex size-12 items-center justify-center rounded-md">
@@ -843,6 +826,25 @@ export function Login() {
               ) : null}
             </LoginFieldGroup>
           </LoginForm>
+          {isCompletingLogin ? (
+            <div
+              data-testid="login-completing"
+              className="absolute inset-0 flex items-center justify-center rounded-md bg-white/80 p-6 text-center backdrop-blur-sm dark:bg-zinc-950/80"
+            >
+              <div className="flex max-w-xs flex-col items-center gap-3">
+                {/* role="status" on LoginSpinner is the scoped live region for AT
+                  announcements. aria-live must not be placed on the wider
+                  container, which also holds static heading text. */}
+                <LoginSpinner aria-label={_(msg`Loading`)} />
+                <p className="text-sm font-bold text-zinc-950 dark:text-zinc-50">
+                  <Trans id="login.completing.title">Completing sign-in</Trans>
+                </p>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                  <Trans id="login.completing.description">Please wait…</Trans>
+                </p>
+              </div>
+            </div>
+          ) : null}
         </LoginCard>
       </div>
 

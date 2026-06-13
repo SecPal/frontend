@@ -18,7 +18,7 @@ import {
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import * as SwitchPrimitive from "@radix-ui/react-switch";
 import { Check, ChevronDown, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { PrefetchLink } from "../../components/PrefetchLink";
 import {
   Alert,
   AlertDescription,
@@ -589,10 +589,10 @@ export function PageText({
 
 export const PageLink = forwardRef<
   HTMLAnchorElement,
-  ComponentPropsWithoutRef<typeof Link>
+  ComponentPropsWithoutRef<typeof PrefetchLink>
 >(function PageLink({ className, ...props }, ref) {
   return (
-    <Link
+    <PrefetchLink
       ref={ref}
       data-slot="employee-link"
       className={cn(
@@ -607,10 +607,10 @@ export const PageLink = forwardRef<
 
 export const LinkButton = forwardRef<
   HTMLAnchorElement,
-  ComponentPropsWithoutRef<typeof Link> & { variant?: ButtonVariant }
+  ComponentPropsWithoutRef<typeof PrefetchLink> & { variant?: ButtonVariant }
 >(function LinkButton({ className, variant, ...props }, ref) {
   return (
-    <Link
+    <PrefetchLink
       ref={ref}
       data-slot="employee-link-button"
       className={cn(buttonVariants({ variant }), className)}
@@ -738,7 +738,7 @@ export function TableCell({
       {...props}
     >
       {to ? (
-        <Link
+        <PrefetchLink
           data-row-link
           to={to}
           aria-label={title}

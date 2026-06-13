@@ -374,12 +374,17 @@ describe("EmployeeCreate", () => {
       () => new Promise(() => {}) // Never resolves
     );
 
-    renderWithProviders(<EmployeeCreate />);
+    const { container } = renderWithProviders(<EmployeeCreate />);
 
     const select = screen.getByLabelText(/organizational unit/i);
     expect(select).toBeDisabled();
-    const loadingText = screen.getByText(/loading/i);
-    expect(loadingText).toBeInTheDocument();
+    expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading unit options/i })
+    ).toBeInTheDocument();
+    expect(
+      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+    ).toBeGreaterThan(0);
   });
 
   it("should show a visible submit summary, inline errors, and focus the first invalid field", async () => {
