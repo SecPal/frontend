@@ -145,7 +145,7 @@ This project uses a SecPal-owned **shadcn/Radix UI layer** for application UI co
 
 ## 📋 Prerequisites
 
-- Node.js >= 20.0.0
+- Node.js `^22.19.0 || >=24.0.0` (Node 22.19+ or 24+; `.nvmrc` pins major `22`; CI uses Node 22)
 - npm >= 10.0.0
 - Git with GPG signing configured
 

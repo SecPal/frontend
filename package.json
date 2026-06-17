@@ -158,7 +158,7 @@
     "@lingui/core": "$@lingui/core"
   },
   "engines": {
-    "node": ">=20.6.0",
+    "node": "^22.19.0 || >=24.0.0",
     "npm": ">=10.0.0"
   },
   "allowScripts": {

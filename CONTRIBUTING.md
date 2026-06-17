@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2025 SecPal
+SPDX-FileCopyrightText: 2025-2026 SecPal
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
@@ -14,7 +14,7 @@ We welcome contributions to SecPal! Please read our [Code of Conduct](CODE_OF_CO
 Ensure you have the following tools installed:
 
 - **Git** with GPG signing configured
-- **Node.js** (v22.x) and npm/pnpm/yarn
+- **Node.js** `^22.19.0 || >=24.0.0` (Node 22.19+ or 24+; `.nvmrc` pins major `22`; CI uses Node 22) and npm/pnpm/yarn
 - **PHP** 8.4 and Composer (for backend projects)
 - **Pre-commit** hooks tool (optional but recommended)
 
