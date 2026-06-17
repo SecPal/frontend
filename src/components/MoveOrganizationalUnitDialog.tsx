@@ -399,6 +399,12 @@ export function MoveOrganizationalUnitDialog({
         <DialogContent size="md">
           {!unit ? (
             <>
+              <DialogTitle className="sr-only">
+                <Trans>No unit selected</Trans>
+              </DialogTitle>
+              <DialogDescription className="sr-only">
+                <Trans>Select an organizational unit before moving it.</Trans>
+              </DialogDescription>
               <DialogBody>
                 <p className="text-sm text-zinc-600 dark:text-zinc-300">
                   <Trans>No unit selected</Trans>

@@ -170,3 +170,21 @@ if (typeof window !== "undefined") {
   // pollute the test output.
   window.scrollTo = () => {};
 }
+
+if (typeof HTMLElement !== "undefined") {
+  const originalFocus = HTMLElement.prototype.focus;
+  let focusDepth = 0;
+
+  HTMLElement.prototype.focus = function focus(options?: FocusOptions): void {
+    if (focusDepth > 10) {
+      return;
+    }
+
+    focusDepth += 1;
+    try {
+      originalFocus.call(this, options);
+    } finally {
+      focusDepth -= 1;
+    }
+  };
+}

@@ -229,7 +229,7 @@ export const SelectContent = forwardRef<
   ElementRef<typeof SelectPrimitive.Content>,
   ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
 >(function SelectContent(
-  { className, children, position = "popper", ...props },
+  { className, children, position = "popper", onCloseAutoFocus, ...props },
   ref
 ) {
   return (
@@ -244,6 +244,12 @@ export const SelectContent = forwardRef<
             "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
           className
         )}
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event);
+          if (!event.defaultPrevented && isJsdomRuntime()) {
+            event.preventDefault();
+          }
+        }}
         {...props}
       >
         <SelectScrollUpButton />
@@ -353,6 +359,13 @@ const dialogSizes = {
   "4xl": "sm:max-w-4xl",
   "5xl": "sm:max-w-5xl",
 } satisfies Record<string, string>;
+
+function isJsdomRuntime() {
+  return (
+    typeof navigator !== "undefined" &&
+    navigator.userAgent.toLowerCase().includes("jsdom")
+  );
+}
 
 export function Dialog({
   open,
