@@ -213,9 +213,7 @@ async function clickPasskeySignInButton(
   buttonName: RegExp = /sign in with passkey/i
 ) {
   const user = userEvent.setup();
-  await user.click(
-    await screen.findByRole("button", { name: buttonName })
-  );
+  await user.click(await screen.findByRole("button", { name: buttonName }));
 }
 
 async function expectLoginPasskeyError(message: RegExp | string) {
@@ -548,9 +546,7 @@ describe("Login", () => {
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 
       await act(async () => {
-        rejectPasskeyLogin(
-          new authApi.AuthApiError("Native passkey failed.")
-        );
+        rejectPasskeyLogin(new authApi.AuthApiError("Native passkey failed."));
         await passkeyLoginDeferred.catch(() => {});
       });
 
