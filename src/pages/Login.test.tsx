@@ -728,7 +728,9 @@ describe("Login", () => {
 
       await clickPasskeySignInButton();
 
-      await expectLoginPasskeyErrorAlert(/no credential provider is available/i);
+      await expectLoginPasskeyErrorAlert(
+        /no credential provider is available/i
+      );
     } finally {
       if (originalNativeBridge === undefined) {
         delete authGlobal.SecPalNativeAuthBridge;
