@@ -57,6 +57,7 @@ jobs:
     concurrency:
       group: vitest-${{ github.repository }}
       cancel-in-progress: false
+      queue: max
     timeout-minutes: 25
     if: ${{ !startsWith(github.head_ref, 'spike/') && !startsWith(github.ref, 'refs/heads/spike/') }}
 
