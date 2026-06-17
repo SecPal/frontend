@@ -15,6 +15,7 @@ const ROUTE_NAVIGATION_TIMEOUT_MS = 20_000;
 const { mockGetCurrentUser, mockFetchCsrfToken, mockAuthStorage } = vi.hoisted(
   () => {
     let storedUser: unknown = null;
+    let vaultPresent = false;
     let vaultLocked = false;
     let logoutBarrier = false;
     let skipVaultTableCleanup = false;
@@ -24,13 +25,31 @@ const { mockGetCurrentUser, mockFetchCsrfToken, mockAuthStorage } = vi.hoisted(
       mockFetchCsrfToken: vi.fn(),
       mockAuthStorage: {
         hasStoredUser: vi.fn(
-          () => !logoutBarrier && !vaultLocked && storedUser !== null
+          () =>
+            !logoutBarrier &&
+            !vaultLocked &&
+            (vaultPresent || storedUser !== null)
         ),
         hasVaultLock: vi.fn(() => vaultLocked),
-        getUserSnapshot: vi.fn(() => (vaultLocked ? null : storedUser)),
-        getUser: vi.fn(async () => (vaultLocked ? null : storedUser)),
+        // Mirror production: persisted users live in the offline vault, so the
+        // synchronous snapshot is always null once a vault record exists.
+        getUserSnapshot: vi.fn(() => {
+          if (logoutBarrier || vaultLocked || vaultPresent) {
+            return null;
+          }
+
+          return storedUser;
+        }),
+        getUser: vi.fn(async () => {
+          if (logoutBarrier || vaultLocked) {
+            return null;
+          }
+
+          return storedUser;
+        }),
         setUser: vi.fn(async (user: unknown) => {
           storedUser = user;
+          vaultPresent = true;
           vaultLocked = false;
           logoutBarrier = false;
         }),
@@ -44,11 +63,13 @@ const { mockGetCurrentUser, mockFetchCsrfToken, mockAuthStorage } = vi.hoisted(
         }),
         removeUser: vi.fn(async () => {
           storedUser = null;
+          vaultPresent = false;
           vaultLocked = false;
           logoutBarrier = false;
         }),
         clear: vi.fn(async () => {
           storedUser = null;
+          vaultPresent = false;
           vaultLocked = false;
           logoutBarrier = false;
           skipVaultTableCleanup = false;
