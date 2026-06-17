@@ -2492,6 +2492,10 @@ msgstr "Enable"
 msgid "Nationality options could not be loaded right now. Please reload this page and try again."
 msgstr "Nationality options could not be loaded right now. Please reload this page and try again."
 
+#: src/components/MoveOrganizationalUnitDialog.tsx
+msgid "Select an organizational unit before moving it."
+msgstr "Select an organizational unit before moving it."
+
 #: src/pages/Sites/SiteCreate.tsx
 msgid "Failed to create site"
 msgstr "Failed to create site"

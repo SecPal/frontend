@@ -94,20 +94,21 @@ jobs:
           echo "::error::npm ci failed after ${attempts} attempts"
           exit 1
 
+      - name: Run tests
+        if: ${{ github.event_name == 'pull_request' }}
+        run: npm run test:ci
+
       - name: Run tests with coverage
-        run: npm run test:coverage
+        if: ${{ github.event_name != 'pull_request' }}
+        run: npm run test:coverage:ci
 
       - name: Upload coverage to Codecov
+        if: ${{ github.event_name != 'pull_request' }}
         # v5
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f
         with:
-          # Token is optional for public repos (tokenless uploads supported)
-          # Dependabot PRs cannot access secrets, so token may be empty
           token: ${{ secrets.CODECOV_TOKEN || '' }}
           files: ./coverage/lcov.info,./coverage/clover.xml
           flags: frontend
           name: frontend-coverage
-          fail_ci_if_error: ${{ !contains(fromJSON('["dependabot[bot]", "renovate[bot]"]'), github.actor) }}
-        # Allow step to succeed even if upload fails for dependabot
-        # This prevents blocking the PR when CODECOV_TOKEN is unavailable
-        continue-on-error: ${{ contains(fromJSON('["dependabot[bot]", "renovate[bot]"]'), github.actor) }}
+          fail_ci_if_error: true

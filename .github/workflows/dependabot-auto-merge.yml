@@ -1,35 +1,84 @@
-# SPDX-FileCopyrightText: 2025 SecPal
+# SPDX-FileCopyrightText: 2025-2026 SecPal
 # SPDX-License-Identifier: CC0-1.0
 
-# Dependabot Auto-Merge Workflow (Frontend Repository)
-# Uses the centralized reusable workflow from .github repository
-#
-# For implementation details, see:
-# SecPal/.github/.github/workflows/reusable-dependabot-auto-merge.yml
-
+---
 name: Dependabot Auto-Merge
 
 on:
-  pull_request:
+  pull_request_target:
     types:
       - opened
       - synchronize
       - reopened
       - ready_for_review
 
-# Ensure only one auto-merge runs at a time per PR
 concurrency:
   group: ${{ github.repository }}-dependabot-auto-merge-${{ github.event.pull_request.number }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
-# Required permissions for dependabot auto-merge
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
   auto-merge:
-    uses: SecPal/.github/.github/workflows/reusable-dependabot-auto-merge.yml@v1
-    with:
-      phase: "1" # Phase 1: Only PATCH updates auto-merge
-      merge-method: "squash" # Use squash merge for cleaner history
+    name: Enable Auto-Merge
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    timeout-minutes: 10
+    steps:
+      - name: Check auto-merge eligibility
+        id: eligibility
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          echo "PR Title: ${PR_TITLE}"
+          echo "PR Labels: ${PR_LABELS}"
+
+          if ! echo "${PR_LABELS}" | grep -q "dependencies"; then
+            echo "eligible=false" >> "${GITHUB_OUTPUT}"
+            echo "reason=missing dependencies label" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          if [[ "${PR_TITLE}" =~ from[[:space:]]+([0-9]+)(\.([0-9]+))?(\.([0-9]+))?[[:space:]]+to[[:space:]]+([0-9]+)(\.([0-9]+))?(\.([0-9]+))? ]]; then
+            old_major="${BASH_REMATCH[1]}"
+            old_minor="${BASH_REMATCH[3]:-0}"
+            old_patch="${BASH_REMATCH[5]:-0}"
+            new_major="${BASH_REMATCH[6]}"
+            new_minor="${BASH_REMATCH[8]:-0}"
+            new_patch="${BASH_REMATCH[10]:-0}"
+
+            echo "Old version: ${old_major}.${old_minor}.${old_patch}"
+            echo "New version: ${new_major}.${new_minor}.${new_patch}"
+
+            if [[ "${new_major}" != "${old_major}" ]]; then
+              echo "eligible=false" >> "${GITHUB_OUTPUT}"
+              echo "reason=major update" >> "${GITHUB_OUTPUT}"
+            elif [[ "${new_minor}" != "${old_minor}" ]]; then
+              echo "eligible=false" >> "${GITHUB_OUTPUT}"
+              echo "reason=minor update" >> "${GITHUB_OUTPUT}"
+            elif [[ "${new_patch}" != "${old_patch}" ]]; then
+              echo "eligible=true" >> "${GITHUB_OUTPUT}"
+              echo "reason=patch update" >> "${GITHUB_OUTPUT}"
+            else
+              echo "eligible=false" >> "${GITHUB_OUTPUT}"
+              echo "reason=version unchanged" >> "${GITHUB_OUTPUT}"
+            fi
+          else
+            echo "eligible=false" >> "${GITHUB_OUTPUT}"
+            echo "reason=unparseable version update" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Enable auto-merge
+        if: steps.eligibility.outputs.eligible == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "${PR_URL}"
+
+      - name: Log skipped auto-merge
+        if: steps.eligibility.outputs.eligible != 'true'
+        run: |
+          echo "Auto-merge skipped: ${{ steps.eligibility.outputs.reason }}"
