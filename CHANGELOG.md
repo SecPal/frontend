@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Stabilized native passkey inline-error coverage in `src/pages/Login.test.tsx`: the CI-only flake in `shows native passkey AuthApiError messages inline` (#1222) came from `fireEvent.click` not flushing microtasks before `findByText` polled for the rejection message. Native passkey error tests now click via `userEvent`, assert through the `LoginStatusMessage` `role="alert"` region with a 5s budget, and add a deferred-rejection regression test that proves the alert mounts only after the bridge promise settles and the passkey button is re-enabled for retry.
+- Stabilized `useAuth > updates auth state when another tab logs in` in `src/hooks/useAuth.test.ts`: wait for bootstrap `isLoading` to settle, clear `syncOfflineSessionAccess` mock history before dispatching the cross-tab `storage` event, and flush microtasks inside `act` so the assertion does not race AuthContext's async cross-tab handler under CI load.
 
 - Closed four reviewer-reported gaps in the loading-skeleton audit:
   - `src/hooks/usePrefetch.ts` now tracks a `prefetchEpoch` counter so a stale in-flight prefetch that resolves after `resetPrefetchCache()` cannot leak its key back into `completedPrefetches`. Without the counter the AuthContext logout reset only emptied the dedupe sets while pending `runPrefetch` callbacks were still queued to add to them, breaking the cross-session isolation the previous fix-up advertised.

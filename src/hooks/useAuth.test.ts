@@ -2196,6 +2196,10 @@ describe("useAuth", () => {
     });
 
     expect(result.current.isAuthenticated).toBe(false);
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    vi.mocked(syncOfflineSessionAccess).mockClear();
 
     const newUser = {
       id: "2",
@@ -2214,6 +2218,7 @@ describe("useAuth", () => {
         storageArea: { value: localStorage },
       } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
       window.dispatchEvent(crossTabLoginEvent);
+      await Promise.resolve();
     });
 
     await waitFor(() => {
