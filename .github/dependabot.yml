@@ -37,6 +37,12 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      lingui:
+        patterns:
+          - "@lingui/*"
+        update-types:
+          - "minor"
+          - "patch"
 
   # GitHub Actions - Workflow dependencies
   - package-ecosystem: "github-actions"
