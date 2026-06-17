@@ -12,10 +12,65 @@ import { authStorage } from "./services/storage";
 
 const ROUTE_NAVIGATION_TIMEOUT_MS = 20_000;
 
-const { mockGetCurrentUser, mockFetchCsrfToken } = vi.hoisted(() => ({
-  mockGetCurrentUser: vi.fn(),
-  mockFetchCsrfToken: vi.fn(),
-}));
+const { mockGetCurrentUser, mockFetchCsrfToken, mockAuthStorage } = vi.hoisted(
+  () => {
+    let storedUser: unknown = null;
+    let vaultLocked = false;
+    let logoutBarrier = false;
+    let skipVaultTableCleanup = false;
+
+    return {
+      mockGetCurrentUser: vi.fn(),
+      mockFetchCsrfToken: vi.fn(),
+      mockAuthStorage: {
+        hasStoredUser: vi.fn(
+          () => !logoutBarrier && !vaultLocked && storedUser !== null
+        ),
+        hasVaultLock: vi.fn(() => vaultLocked),
+        getUserSnapshot: vi.fn(() => (vaultLocked ? null : storedUser)),
+        getUser: vi.fn(async () => (vaultLocked ? null : storedUser)),
+        setUser: vi.fn(async (user: unknown) => {
+          storedUser = user;
+          vaultLocked = false;
+          logoutBarrier = false;
+        }),
+        lockVault: vi.fn(() => {
+          vaultLocked = true;
+          logoutBarrier = false;
+        }),
+        unlockVault: vi.fn(async () => {
+          vaultLocked = false;
+          return storedUser;
+        }),
+        removeUser: vi.fn(async () => {
+          storedUser = null;
+          vaultLocked = false;
+          logoutBarrier = false;
+        }),
+        clear: vi.fn(async () => {
+          storedUser = null;
+          vaultLocked = false;
+          logoutBarrier = false;
+          skipVaultTableCleanup = false;
+        }),
+        hasLogoutBarrier: vi.fn(() => logoutBarrier),
+        shouldSkipBarrierVaultTableCleanup: vi.fn(() => skipVaultTableCleanup),
+        setSkipBarrierVaultTableCleanup: vi.fn((shouldSkip: boolean) => {
+          skipVaultTableCleanup = shouldSkip;
+        }),
+        beginSensitiveLogoutBarrierCleanup: vi.fn(() => {
+          logoutBarrier = true;
+          skipVaultTableCleanup = true;
+          return "test-logout-barrier-owner";
+        }),
+        endSensitiveLogoutBarrierCleanup: vi.fn(() => {
+          skipVaultTableCleanup = false;
+        }),
+        waitForInFlightVaultTableCleanup: vi.fn(async () => undefined),
+      },
+    };
+  }
+);
 
 vi.mock("./services/authApi", async () => {
   const actual = await vi.importActual("./services/authApi");
@@ -32,6 +87,10 @@ vi.mock("./services/csrf", async () => {
     fetchCsrfToken: mockFetchCsrfToken,
   };
 });
+
+vi.mock("./services/storage", () => ({
+  authStorage: mockAuthStorage,
+}));
 
 // Block all real network requests: lazy-loaded page components call their
 // data APIs on mount, and those pending fetch Promises accumulate in the
@@ -111,8 +170,9 @@ describe("App", () => {
     ]);
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    await authStorage.clear();
     localStorage.clear();
     clearXsrfCookie();
     setXsrfCookie();

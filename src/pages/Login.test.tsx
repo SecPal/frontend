@@ -89,8 +89,14 @@ async function clickPasskeySignInButton(
 }
 
 async function expectLoginPasskeyErrorAlert(matcher: RegExp | string) {
-  const alert = await screen.findByRole("alert");
-  expect(alert).toHaveTextContent(matcher);
+  // Scope to #login-error to avoid ambiguity if other role="alert" regions
+  // (offline-warning, health-warning, lockout-warning) are simultaneously rendered.
+  const el = await waitFor(() => {
+    const node = document.getElementById("login-error");
+    expect(node).not.toBeNull();
+    return node!;
+  });
+  expect(el).toHaveTextContent(matcher);
 }
 
 // Helper to create a healthy response
