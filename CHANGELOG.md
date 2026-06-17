@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Serialized the **Quality Checks → Vitest Tests** job with a repository-wide concurrency group, raised the job timeout from 15 to 25 minutes, capped CI Vitest workers at two, and trimmed CI coverage reporters to `text`/`lcov`/`clover` only. Dependabot mass-rebases were launching many full-suite coverage runs at once; contested runs completed 150/152 test files and then stalled until GitHub cancelled the job at the 15-minute ceiling with no failing assertion (frontend#1233).
 - Aligned all runtime and toolchain `@lingui/*` packages to `6.4.0`, grouped future Dependabot `@lingui/*` minor/patch updates, and added an npm override so transitive `@lingui/core` resolves to the root dependency version. Dependabot PRs that bumped only `@lingui/react` or `@lingui/cli` while `@lingui/core` stayed on `6.3.0` were failing **Quality Checks → TypeScript Check** and **Lighthouse CI** with mixed-version `I18n` type errors across test files that wrap components in `I18nProvider`.
 - Closed four reviewer-reported gaps in the loading-skeleton audit:
   - `src/hooks/usePrefetch.ts` now tracks a `prefetchEpoch` counter so a stale in-flight prefetch that resolves after `resetPrefetchCache()` cannot leak its key back into `completedPrefetches`. Without the counter the AuthContext logout reset only emptied the dedupe sets while pending `runPrefetch` callbacks were still queued to add to them, breaking the cross-session isolation the previous fix-up advertised.

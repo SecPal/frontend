@@ -51,7 +51,13 @@ jobs:
   vitest:
     name: Vitest Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Mass Dependabot rebases can launch many full-suite coverage jobs at once;
+    # serializing Vitest avoids runner/cache thrash and worker-pool stalls that
+    # previously cancelled jobs at the 15-minute ceiling (frontend#1233).
+    concurrency:
+      group: vitest-${{ github.repository }}
+      cancel-in-progress: false
+    timeout-minutes: 25
     if: ${{ !startsWith(github.head_ref, 'spike/') && !startsWith(github.ref, 'refs/heads/spike/') }}
 
     steps:
@@ -71,7 +77,7 @@ jobs:
         # ETXTBSY surfaces in seconds, so retries are cheap and a
         # per-attempt timeout would only risk killing legitimate
         # cold-cache installs without bounding actual failure modes.
-        # The job's 15-minute timeout-minutes is the overall safety net.
+        # The job's 25-minute timeout-minutes is the overall safety net.
         run: |
           set -uo pipefail
           attempts=3
