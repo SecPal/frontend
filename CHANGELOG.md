@@ -47,6 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Stabilized native passkey inline-error coverage in `src/pages/Login.test.tsx`: the CI-only flake in `shows native passkey AuthApiError messages inline` (#1222) came from `fireEvent.click` not flushing microtasks before `findByText` polled for the rejection message. Native passkey error tests now click via `userEvent`, assert through the `LoginStatusMessage` `role="alert"` region with a 5s budget, and add a deferred-rejection regression test that proves the alert mounts only after the bridge promise settles and the passkey button is re-enabled for retry.
+
 - Closed four reviewer-reported gaps in the loading-skeleton audit:
   - `src/hooks/usePrefetch.ts` now tracks a `prefetchEpoch` counter so a stale in-flight prefetch that resolves after `resetPrefetchCache()` cannot leak its key back into `completedPrefetches`. Without the counter the AuthContext logout reset only emptied the dedupe sets while pending `runPrefetch` callbacks were still queued to add to them, breaking the cross-session isolation the previous fix-up advertised.
   - `src/hooks/usePrefetch.ts` now warms `/v1/organizational-units?per_page=100` for the `/sites/new`, `/sites/:id/edit`, and `/sites/new/customer/:id` prefetch plans so the dedupe key and HTTP request match the page's actual `listOrganizationalUnits({ per_page: 100 })` call. Previously these routes prefetched the no-query form, which was a wasted request on warm-up and a different dedupe key from the real lookup.

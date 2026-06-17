@@ -9,6 +9,7 @@ import {
   fireEvent,
   waitFor,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { MemoryRouter } from "react-router-dom";
@@ -201,6 +202,29 @@ async function selectLanguage(visibleName: string) {
     pointerType: "mouse",
   });
   fireEvent.click(option, { button: 0 });
+}
+
+// Native passkey sign-in chains several async hops (bridge call, setError,
+// re-render). fireEvent.click does not flush microtasks, so assertions that
+// immediately follow the click can flake under CI load.
+const LOGIN_PASSKEY_ERROR_ASSERT_TIMEOUT_MS = 5000;
+
+async function clickPasskeySignInButton(
+  buttonName: RegExp = /sign in with passkey/i
+) {
+  const user = userEvent.setup();
+  await user.click(
+    await screen.findByRole("button", { name: buttonName })
+  );
+}
+
+async function expectLoginPasskeyError(message: RegExp | string) {
+  const alert = await screen.findByRole(
+    "alert",
+    {},
+    { timeout: LOGIN_PASSKEY_ERROR_ASSERT_TIMEOUT_MS }
+  );
+  expect(alert).toHaveTextContent(message);
 }
 
 describe("Login", () => {
@@ -481,13 +505,62 @@ describe("Login", () => {
     try {
       renderLogin();
 
-      fireEvent.click(
-        await screen.findByRole("button", { name: /sign in with passkey/i })
-      );
+      await clickPasskeySignInButton();
+      await expectLoginPasskeyError(/native passkey failed/i);
+    } finally {
+      if (originalNativeBridge === undefined) {
+        delete authGlobal.SecPalNativeAuthBridge;
+      } else {
+        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
+      }
+    }
+  });
 
+  it("surfaces deferred native passkey rejections in the login alert region", async () => {
+    const authGlobal = globalThis as {
+      SecPalNativeAuthBridge?: {
+        login: ReturnType<typeof vi.fn>;
+        loginWithPasskey?: ReturnType<typeof vi.fn>;
+        logout: ReturnType<typeof vi.fn>;
+        getCurrentUser: ReturnType<typeof vi.fn>;
+      };
+    };
+    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+    let rejectPasskeyLogin!: (reason: unknown) => void;
+    const passkeyLoginDeferred = new Promise<never>((_, reject) => {
+      rejectPasskeyLogin = reject;
+    });
+    const nativeBridge = {
+      login: vi.fn(),
+      loginWithPasskey: vi.fn().mockReturnValue(passkeyLoginDeferred),
+      logout: vi.fn(),
+      getCurrentUser: vi.fn(),
+    };
+
+    authGlobal.SecPalNativeAuthBridge = nativeBridge;
+    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(false);
+
+    try {
+      renderLogin();
+
+      await clickPasskeySignInButton();
+
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+      await act(async () => {
+        rejectPasskeyLogin(
+          new authApi.AuthApiError("Native passkey failed.")
+        );
+        await passkeyLoginDeferred.catch(() => {});
+      });
+
+      await expectLoginPasskeyError(/native passkey failed/i);
+
+      // After the deferred rejection the button must be re-enabled so the user
+      // can retry without reloading the page.
       expect(
-        await screen.findByText(/native passkey failed/i)
-      ).toBeInTheDocument();
+        screen.getByRole("button", { name: /sign in with passkey/i })
+      ).not.toBeDisabled();
     } finally {
       if (originalNativeBridge === undefined) {
         delete authGlobal.SecPalNativeAuthBridge;
@@ -522,13 +595,8 @@ describe("Login", () => {
     try {
       renderLogin();
 
-      fireEvent.click(
-        await screen.findByRole("button", { name: /sign in with passkey/i })
-      );
-
-      expect(
-        await screen.findByText(/native passkey crashed/i)
-      ).toBeInTheDocument();
+      await clickPasskeySignInButton();
+      await expectLoginPasskeyError(/native passkey crashed/i);
     } finally {
       if (originalNativeBridge === undefined) {
         delete authGlobal.SecPalNativeAuthBridge;
@@ -567,13 +635,8 @@ describe("Login", () => {
 
       renderLogin();
 
-      fireEvent.click(
-        await screen.findByRole("button", { name: /mit passkey anmelden/i })
-      );
-
-      expect(
-        await screen.findByText(/die passkey-anmeldung wurde abgebrochen/i)
-      ).toBeInTheDocument();
+      await clickPasskeySignInButton(/mit passkey anmelden/i);
+      await expectLoginPasskeyError(/die passkey-anmeldung wurde abgebrochen/i);
     } finally {
       act(() => {
         i18n.activate("en");
@@ -641,13 +704,8 @@ describe("Login", () => {
     try {
       renderLogin();
 
-      fireEvent.click(
-        await screen.findByRole("button", { name: /sign in with passkey/i })
-      );
-
-      expect(
-        await screen.findByText(/passkey sign-in was interrupted/i)
-      ).toBeInTheDocument();
+      await clickPasskeySignInButton();
+      await expectLoginPasskeyError(/passkey sign-in was interrupted/i);
     } finally {
       if (originalNativeBridge === undefined) {
         delete authGlobal.SecPalNativeAuthBridge;
@@ -684,13 +742,8 @@ describe("Login", () => {
     try {
       renderLogin();
 
-      fireEvent.click(
-        await screen.findByRole("button", { name: /sign in with passkey/i })
-      );
-
-      expect(
-        await screen.findByText(/no credential provider is available/i)
-      ).toBeInTheDocument();
+      await clickPasskeySignInButton();
+      await expectLoginPasskeyError(/no credential provider is available/i);
     } finally {
       if (originalNativeBridge === undefined) {
         delete authGlobal.SecPalNativeAuthBridge;
@@ -723,13 +776,10 @@ describe("Login", () => {
     try {
       renderLogin();
 
-      fireEvent.click(
-        await screen.findByRole("button", { name: /sign in with passkey/i })
+      await clickPasskeySignInButton();
+      await expectLoginPasskeyError(
+        /an unexpected passkey sign-in error occurred/i
       );
-
-      expect(
-        await screen.findByText(/an unexpected passkey sign-in error occurred/i)
-      ).toBeInTheDocument();
     } finally {
       if (originalNativeBridge === undefined) {
         delete authGlobal.SecPalNativeAuthBridge;
