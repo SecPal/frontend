@@ -309,7 +309,7 @@ export async function getCurrentUser(): Promise<SessionLoginResponse["user"]> {
       error instanceof Error
         ? `Current user fetch failed: ${error.message}`
         : "Current user fetch failed";
-    throw new AuthApiError(message);
+    throw new AuthApiError(message, undefined, undefined, "NETWORK_ERROR");
   }
 
   if (!response.ok) {

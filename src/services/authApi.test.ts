@@ -544,10 +544,15 @@ describe("authApi", () => {
     it("wraps network failures in AuthApiError", async () => {
       mockFetch.mockRejectedValue(new Error("Network down"));
 
-      await expect(getCurrentUser()).rejects.toThrow(
+      const currentUserPromise = getCurrentUser();
+
+      await expect(currentUserPromise).rejects.toThrow(
         "Current user fetch failed: Network down"
       );
-      await expect(getCurrentUser()).rejects.toBeInstanceOf(AuthApiError);
+      await expect(currentUserPromise).rejects.toMatchObject({
+        code: "NETWORK_ERROR",
+      });
+      await expect(currentUserPromise).rejects.toBeInstanceOf(AuthApiError);
     });
 
     it("fails fast when the current-user endpoint returns HTML instead of JSON", async () => {

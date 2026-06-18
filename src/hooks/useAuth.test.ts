@@ -597,7 +597,14 @@ describe("useAuth", () => {
     };
 
     await authStorage.setUser(mockUser);
-    mockGetCurrentUser.mockRejectedValue(new Error("Network down"));
+    mockGetCurrentUser.mockRejectedValue(
+      new AuthApiError(
+        "Current user fetch failed: Network down",
+        undefined,
+        undefined,
+        "NETWORK_ERROR"
+      )
+    );
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,

@@ -128,6 +128,10 @@ function isRetriableBootstrapError(error: unknown): boolean {
 
   const code = getBootstrapErrorCode(error)?.toUpperCase();
 
+  if (code === "NETWORK_ERROR") {
+    return true;
+  }
+
   if (code?.startsWith("HTTP_")) {
     const statusFromCode = Number.parseInt(code.slice("HTTP_".length), 10);
 
