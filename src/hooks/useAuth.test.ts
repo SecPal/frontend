@@ -604,6 +604,39 @@ describe("useAuth", () => {
     });
   });
 
+  it("clears stale stored auth data when localized API revalidation returns 401", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+    };
+
+    await authStorage.setUser(mockUser);
+    mockGetCurrentUser.mockRejectedValue(
+      new AuthApiError("Nicht authentifiziert.", undefined, 401)
+    );
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isLoading).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.bootstrapRecoveryReason).toBeNull();
+    expectNoStoredAuthState();
+    await waitForSensitiveClientCleanup();
+    expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false, {
+      redirectOpenClients: false,
+    });
+    await authStorage.waitForInFlightVaultTableCleanup();
+  });
+
   it("keeps cached auth state when bootstrap revalidation fails for a transient error after an automatic retry", async () => {
     const mockUser = {
       id: "1",

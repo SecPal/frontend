@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Treated HTTP `401` status from auth bootstrap revalidation as an invalid session regardless of the localized API error message, so stale browser-session snapshots now clear and return to login when Laravel responds with messages such as German `"Nicht authentifiziert."` instead of leaving protected routes stuck behind the bootstrap recovery screen.
 - Bumped the transitive `undici` dependency from `7.25.0` to `7.28.0` in `package-lock.json` (via `jsdom`), clearing the high-severity `GHSA-vmh5-mc38-953g` and `GHSA-pr7r-676h-xcf6` npm audit findings so `npm audit` again reports zero vulnerabilities.
 - Prevented auth bootstrap recovery from forcing a full page navigation through the service worker when the browser has no valid session or when a stored session fails startup revalidation. The offline session state is still persisted for PWA navigation gating, but open clients are now redirected by the service worker only for explicit logout/barrier teardown paths, keeping the first protected-route-to-login transition inside the React router while preserving offline logout privacy.
 - Auth bootstrap now skips the automatic silent retry for deterministic API client failures such as a non-JSON `404` from a misrouted preview API host, while preserving the retry for transient network, timeout, rate-limit, and server-error cases. This prevents protected routes from issuing a duplicate session check when the response cannot succeed without a configuration fix.

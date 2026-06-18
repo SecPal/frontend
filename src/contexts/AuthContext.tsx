@@ -87,6 +87,12 @@ function getBootstrapErrorStatus(error: unknown): number | null {
 }
 
 function isInvalidBootstrapSessionError(error: unknown): boolean {
+  const status = getBootstrapErrorStatus(error);
+
+  if (status === 401) {
+    return true;
+  }
+
   const code = getBootstrapErrorCode(error)?.toUpperCase();
 
   if (code === "HTTP_401" || code === "NO_STORED_TOKEN") {
@@ -879,6 +885,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      // Stop any startup restore/revalidation that may have observed this
+      // storage write before the cross-tab storage handler adopts it.
+      invalidateBootstrapRevalidation();
+
       void (async () => {
         try {
           const nextUser = await authStorage.getUser();
@@ -900,7 +910,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           hasLogoutBarrierRef.current = false;
           shouldSkipBarrierVaultTableCleanupRef.current = false;
           setBootstrapRecoveryReason(null);
-          invalidateBootstrapRevalidation();
           setUser(nextUser);
           setIsVaultLocked(false);
           setIsLoading(false);
