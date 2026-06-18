@@ -3,13 +3,90 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  isAuthSessionChangedMessage,
   OFFLINE_SESSION_CACHE_NAME,
   OFFLINE_SESSION_STATE_PATH,
   readOfflineSessionState,
+  shouldRedirectOpenClientsForAuthSessionChangedMessage,
   writeOfflineSessionState,
 } from "./offlineSessionState";
 
 describe("offlineSessionState", () => {
+  describe("isAuthSessionChangedMessage", () => {
+    it("accepts an omitted redirectOpenClients flag for legacy clients", () => {
+      expect(
+        isAuthSessionChangedMessage({
+          type: "AUTH_SESSION_CHANGED",
+          isAuthenticated: false,
+        })
+      ).toBe(true);
+    });
+
+    it("accepts an explicitly undefined optional redirectOpenClients flag", () => {
+      expect(
+        isAuthSessionChangedMessage({
+          type: "AUTH_SESSION_CHANGED",
+          isAuthenticated: false,
+          redirectOpenClients: undefined,
+        })
+      ).toBe(true);
+    });
+
+    it("rejects a non-boolean redirectOpenClients flag", () => {
+      expect(
+        isAuthSessionChangedMessage({
+          type: "AUTH_SESSION_CHANGED",
+          isAuthenticated: false,
+          redirectOpenClients: "true",
+        })
+      ).toBe(false);
+    });
+  });
+
+  describe("shouldRedirectOpenClientsForAuthSessionChangedMessage", () => {
+    it("redirects logged-out legacy messages without an explicit redirect flag", () => {
+      expect(
+        shouldRedirectOpenClientsForAuthSessionChangedMessage({
+          type: "AUTH_SESSION_CHANGED",
+          isAuthenticated: false,
+        })
+      ).toBe(true);
+    });
+
+    it("redirects logged-out messages only when the explicit redirect flag is true", () => {
+      expect(
+        shouldRedirectOpenClientsForAuthSessionChangedMessage({
+          type: "AUTH_SESSION_CHANGED",
+          isAuthenticated: false,
+          redirectOpenClients: true,
+        })
+      ).toBe(true);
+      expect(
+        shouldRedirectOpenClientsForAuthSessionChangedMessage({
+          type: "AUTH_SESSION_CHANGED",
+          isAuthenticated: false,
+          redirectOpenClients: false,
+        })
+      ).toBe(false);
+      expect(
+        shouldRedirectOpenClientsForAuthSessionChangedMessage({
+          type: "AUTH_SESSION_CHANGED",
+          isAuthenticated: false,
+          redirectOpenClients: undefined,
+        })
+      ).toBe(false);
+    });
+
+    it("does not redirect authenticated messages", () => {
+      expect(
+        shouldRedirectOpenClientsForAuthSessionChangedMessage({
+          type: "AUTH_SESSION_CHANGED",
+          isAuthenticated: true,
+        })
+      ).toBe(false);
+    });
+  });
+
   describe("when Cache API is unavailable", () => {
     // jsdom does not expose `caches` by default; these tests verify the
     // graceful-degradation paths that skip all cache I/O.

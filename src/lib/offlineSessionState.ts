@@ -11,6 +11,44 @@ export interface OfflineSessionState {
 export interface AuthSessionChangedMessage {
   type: "AUTH_SESSION_CHANGED";
   isAuthenticated: boolean;
+  redirectOpenClients?: boolean;
+}
+
+export function isAuthSessionChangedMessage(
+  value: unknown
+): value is AuthSessionChangedMessage {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  const message = value as Record<string, unknown>;
+  const hasRedirectOpenClients = Object.prototype.hasOwnProperty.call(
+    message,
+    "redirectOpenClients"
+  );
+
+  return (
+    message.type === "AUTH_SESSION_CHANGED" &&
+    typeof message.isAuthenticated === "boolean" &&
+    (!hasRedirectOpenClients ||
+      message.redirectOpenClients === undefined ||
+      typeof message.redirectOpenClients === "boolean")
+  );
+}
+
+export function shouldRedirectOpenClientsForAuthSessionChangedMessage(
+  message: AuthSessionChangedMessage
+): boolean {
+  if (message.isAuthenticated) {
+    return false;
+  }
+
+  const hasRedirectOpenClients = Object.prototype.hasOwnProperty.call(
+    message,
+    "redirectOpenClients"
+  );
+
+  return !hasRedirectOpenClients || message.redirectOpenClients === true;
 }
 
 function canUseSessionCache(): boolean {

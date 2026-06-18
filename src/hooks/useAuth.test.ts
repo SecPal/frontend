@@ -225,6 +225,15 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false);
+    expect(
+      vi
+        .mocked(syncOfflineSessionAccess)
+        .mock.calls.some(
+          ([isAuthenticated, options]) =>
+            isAuthenticated === false && options?.redirectOpenClients === true
+        )
+    ).toBe(false);
   });
 
   it("bootstraps browser-session auth on the login route with a trailing slash when no local auth snapshot exists", async () => {
@@ -383,6 +392,9 @@ describe("useAuth", () => {
 
     expect(result.current.user).toBeNull();
     expectNoStoredAuthState();
+    expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false, {
+      redirectOpenClients: true,
+    });
 
     await act(async () => {
       deferred.resolve(revalidatedUser);
@@ -587,6 +599,9 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
     expectNoStoredAuthState();
     await waitForSensitiveClientCleanup();
+    expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false, {
+      redirectOpenClients: false,
+    });
   });
 
   it("keeps cached auth state when bootstrap revalidation fails for a transient error after an automatic retry", async () => {
@@ -1130,6 +1145,9 @@ describe("useAuth", () => {
         "Failed to restore persisted auth state:",
         restoreError
       );
+      expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false, {
+        redirectOpenClients: false,
+      });
     } finally {
       clearSpy.mockRestore();
       getUserSpy.mockRestore();
@@ -1291,6 +1309,9 @@ describe("useAuth", () => {
           clearOfflineVaultTables: true,
         });
       });
+      expect(syncOfflineSessionAccess).toHaveBeenNthCalledWith(1, false, {
+        redirectOpenClients: false,
+      });
 
       expect(clearSensitiveClientState).not.toHaveBeenCalled();
 
@@ -1301,6 +1322,9 @@ describe("useAuth", () => {
       storageClear.resolve();
 
       await waitForSensitiveClientCleanup();
+      expect(syncOfflineSessionAccess).toHaveBeenNthCalledWith(2, false, {
+        redirectOpenClients: true,
+      });
     } finally {
       clearSpy.mockRestore();
       getUserSpy.mockRestore();
@@ -1963,6 +1987,9 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expectNoStoredAuthState();
     await waitForSensitiveClientCleanup();
+    expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false, {
+      redirectOpenClients: false,
+    });
   });
 
   it("does not logout when session:expired is emitted but not logged in", () => {
@@ -2011,6 +2038,9 @@ describe("useAuth", () => {
 
     expect(result.current.user).toBeNull();
     await waitForSensitiveClientCleanup();
+    expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false, {
+      redirectOpenClients: false,
+    });
   });
 
   it("drops restored in-memory auth state when pageshow finds no stored user", async () => {

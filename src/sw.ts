@@ -12,7 +12,9 @@ import {
 import { registerRoute, NavigationRoute } from "workbox-routing";
 import { CacheFirst } from "workbox-strategies";
 import {
+  isAuthSessionChangedMessage,
   readOfflineSessionState,
+  shouldRedirectOpenClientsForAuthSessionChangedMessage,
   writeOfflineSessionState,
   type AuthSessionChangedMessage,
 } from "./lib/offlineSessionState";
@@ -20,21 +22,6 @@ import {
 declare const self: ServiceWorkerGlobalScope;
 
 const PUBLIC_LOGGED_OUT_PATHS = new Set(["/login", "/onboarding/complete"]);
-
-function isAuthSessionChangedMessage(
-  value: unknown
-): value is AuthSessionChangedMessage {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-
-  return (
-    "type" in value &&
-    value.type === "AUTH_SESSION_CHANGED" &&
-    "isAuthenticated" in value &&
-    typeof value.isAuthenticated === "boolean"
-  );
-}
 
 function shouldRedirectLoggedOutNavigation(
   pathname: string,
@@ -80,7 +67,7 @@ async function handleAuthSessionChanged(
     console.error("[SW] Failed to persist offline auth session state:", error);
   }
 
-  if (!message.isAuthenticated) {
+  if (shouldRedirectOpenClientsForAuthSessionChangedMessage(message)) {
     try {
       await redirectProtectedClientsToLogin();
     } catch (error) {
