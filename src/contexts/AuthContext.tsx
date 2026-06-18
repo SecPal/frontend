@@ -212,6 +212,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     Promise.resolve()
   );
   const shouldClearSensitiveStateRef = useRef(false);
+  const shouldRedirectOpenClientsRef = useRef(false);
   const shouldSkipBarrierVaultTableCleanupRef = useRef(false);
   const sensitiveLogoutBarrierCleanupOwnerTokenRef = useRef<string | null>(
     null
@@ -339,14 +340,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (isClearingSessionRef.current) {
         const shouldUpgradeSensitiveState =
           clearSensitiveState && !shouldClearSensitiveStateRef.current;
+        const shouldUpgradeRedirectOpenClients =
+          options?.redirectOpenClients === true &&
+          !shouldRedirectOpenClientsRef.current;
 
         shouldClearSensitiveStateRef.current =
           shouldClearSensitiveStateRef.current || clearSensitiveState;
+        shouldRedirectOpenClientsRef.current =
+          shouldRedirectOpenClientsRef.current ||
+          options?.redirectOpenClients === true;
         shouldSkipBarrierVaultTableCleanupRef.current =
           shouldSkipBarrierVaultTableCleanupRef.current || clearSensitiveState;
 
         if (shouldUpgradeSensitiveState) {
           beginSensitiveLogoutBarrierCleanup();
+        }
+
+        if (shouldUpgradeRedirectOpenClients) {
+          syncOfflineAuthState(false, { redirectOpenClients: true });
         }
 
         return;
@@ -355,6 +366,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       invalidateBootstrapRevalidation();
       isClearingSessionRef.current = true;
       shouldClearSensitiveStateRef.current = clearSensitiveState;
+      shouldRedirectOpenClientsRef.current =
+        options?.redirectOpenClients === true;
       shouldSkipBarrierVaultTableCleanupRef.current = clearSensitiveState;
 
       if (clearSensitiveState) {
@@ -378,7 +391,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsVaultLocked(false);
       setIsLoading(false);
       syncOfflineAuthState(false, {
-        redirectOpenClients: options?.redirectOpenClients ?? false,
+        redirectOpenClients: shouldRedirectOpenClientsRef.current,
       });
 
       clearAuthenticatedStatePromiseRef.current = Promise.allSettled([
@@ -413,6 +426,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .finally(() => {
           shouldSkipBarrierVaultTableCleanupRef.current = false;
           shouldClearSensitiveStateRef.current = false;
+          shouldRedirectOpenClientsRef.current = false;
           isClearingSessionRef.current = false;
           clearAuthenticatedStatePromiseRef.current = Promise.resolve();
         });

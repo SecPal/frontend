@@ -226,10 +226,14 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
     expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false);
-    expect(syncOfflineSessionAccess).not.toHaveBeenCalledWith(
-      false,
-      expect.anything()
-    );
+    expect(
+      vi
+        .mocked(syncOfflineSessionAccess)
+        .mock.calls.some(
+          ([isAuthenticated, options]) =>
+            isAuthenticated === false && options?.redirectOpenClients === true
+        )
+    ).toBe(false);
   });
 
   it("bootstraps browser-session auth on the login route with a trailing slash when no local auth snapshot exists", async () => {
@@ -1305,6 +1309,9 @@ describe("useAuth", () => {
           clearOfflineVaultTables: true,
         });
       });
+      expect(syncOfflineSessionAccess).toHaveBeenNthCalledWith(1, false, {
+        redirectOpenClients: false,
+      });
 
       expect(clearSensitiveClientState).not.toHaveBeenCalled();
 
@@ -1315,6 +1322,9 @@ describe("useAuth", () => {
       storageClear.resolve();
 
       await waitForSensitiveClientCleanup();
+      expect(syncOfflineSessionAccess).toHaveBeenNthCalledWith(2, false, {
+        redirectOpenClients: true,
+      });
     } finally {
       clearSpy.mockRestore();
       getUserSpy.mockRestore();
