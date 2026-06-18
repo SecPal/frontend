@@ -921,6 +921,34 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
+  it("does not silently retry an AuthApiError without a numeric status field", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await persistAuthUser(mockUser);
+    // AuthApiError with no status and no HTTP_ code — deterministic API-layer
+    // error that should not trigger the silent retry path.
+    mockGetCurrentUser.mockRejectedValueOnce(
+      new AuthApiError("Current user fetch failed: non-retriable client error")
+    );
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.bootstrapRecoveryReason).toBe("network");
+    });
+
+    expect(result.current.user).toEqual(mockUser);
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+  });
+
   it("stops the loading spinner when the browser goes offline during the automatic bootstrap retry", async () => {
     const mockUser = {
       id: "1",

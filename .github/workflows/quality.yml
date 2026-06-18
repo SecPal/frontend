@@ -55,7 +55,7 @@ jobs:
     # serializing Vitest avoids runner/cache thrash and worker-pool stalls that
     # previously cancelled jobs at the 15-minute ceiling (frontend#1233).
     concurrency:
-      group: vitest-${{ github.repository }}
+      group: vitest-${{ github.repository }}-${{ github.ref }}
       cancel-in-progress: false
       queue: max
     timeout-minutes: 25

@@ -156,6 +156,12 @@ function isRetriableBootstrapError(error: unknown): boolean {
     return true;
   }
 
+  // At this point every known retriable signal (HTTP status, HTTP_ code,
+  // network-error message) has been checked and not matched. A non-AuthApiError
+  // Error (e.g. a generic "Network down" from a transport library) is treated
+  // as potentially transient and allowed to retry once. AuthApiError instances
+  // that reach this branch carry a deterministic API-layer classification and
+  // should not retry.
   return !(error instanceof Error && error.name === "AuthApiError");
 }
 

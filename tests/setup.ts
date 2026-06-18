@@ -174,9 +174,20 @@ if (typeof window !== "undefined") {
 if (typeof HTMLElement !== "undefined") {
   const originalFocus = HTMLElement.prototype.focus;
   let focusDepth = 0;
+  const FOCUS_DEPTH_LIMIT = 10;
 
   HTMLElement.prototype.focus = function focus(options?: FocusOptions): void {
-    if (focusDepth > 10) {
+    if (focusDepth >= FOCUS_DEPTH_LIMIT) {
+      // Emit a single warning per guard activation so focus-loop regressions
+      // are visible in test output rather than silently swallowed.
+      if (focusDepth === FOCUS_DEPTH_LIMIT) {
+        console.warn(
+          `[test setup] focus() recursion depth reached ${FOCUS_DEPTH_LIMIT}; ` +
+            "suppressing further focus calls to prevent JSDOM stack overflow. " +
+            "This may indicate a focus-loop regression in the component under test.",
+          this
+        );
+      }
       return;
     }
 
