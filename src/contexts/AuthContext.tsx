@@ -76,6 +76,16 @@ function getBootstrapErrorMessage(error: unknown): string {
   return "";
 }
 
+function getBootstrapErrorStatus(error: unknown): number | null {
+  if (typeof error !== "object" || error === null || !("status" in error)) {
+    return null;
+  }
+
+  const status = (error as { status?: unknown }).status;
+
+  return typeof status === "number" && Number.isFinite(status) ? status : null;
+}
+
 function isInvalidBootstrapSessionError(error: unknown): boolean {
   const code = getBootstrapErrorCode(error)?.toUpperCase();
 
@@ -106,6 +116,55 @@ function isOfflineBootstrapError(error: unknown): boolean {
   return (
     message.includes("active internet connection") ||
     message.includes("network offline")
+  );
+}
+
+function isRetriableBootstrapError(error: unknown): boolean {
+  const status = getBootstrapErrorStatus(error);
+
+  if (status !== null) {
+    return status === 408 || status === 429 || status >= 500;
+  }
+
+  const code = getBootstrapErrorCode(error)?.toUpperCase();
+
+  if (code === "NETWORK_ERROR") {
+    return true;
+  }
+
+  if (code?.startsWith("HTTP_")) {
+    const statusFromCode = Number.parseInt(code.slice("HTTP_".length), 10);
+
+    return (
+      Number.isFinite(statusFromCode) &&
+      (statusFromCode === 408 ||
+        statusFromCode === 429 ||
+        statusFromCode >= 500)
+    );
+  }
+
+  const message = getBootstrapErrorMessage(error).toLowerCase();
+
+  if (
+    message.includes("failed to fetch") ||
+    message.includes("load failed") ||
+    message.includes("networkerror") ||
+    message.includes("network error") ||
+    message.includes("timeout") ||
+    message.includes("timed out")
+  ) {
+    return true;
+  }
+
+  // At this point every known retriable signal (HTTP status, HTTP_ code,
+  // network-error message) has been checked and not matched. A generic Error
+  // (e.g. "Network down" from a transport library) is treated as potentially
+  // transient and allowed to retry once. Deterministic client/configuration
+  // failures should not retry.
+  return !(
+    error instanceof Error &&
+    (error.name === "AuthApiError" ||
+      error.name === "ApiBaseUrlConfigurationError")
   );
 }
 
@@ -578,6 +637,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (isOfflineBootstrapError(error)) {
             setIsLoading(false);
             setBootstrapRecoveryReason(null);
+            return;
+          }
+
+          if (!isRetriableBootstrapError(error)) {
+            console.warn(
+              "Auth bootstrap revalidation failed with a non-retriable response; holding protected routes behind recovery UI.",
+              error
+            );
+            setIsLoading(false);
+            setBootstrapRecoveryReason("network");
             return;
           }
 

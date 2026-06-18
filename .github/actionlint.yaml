@@ -1,0 +1,9 @@
+# actionlint does not yet model concurrency.queue (GitHub Actions supports
+# queue: single|max). Ignore the false positive until actionlint catches up.
+paths:
+  .github/workflows/**/*.yml:
+    ignore:
+      - 'unexpected key "queue" for "concurrency" section'
+  .github/workflows/**/*.yaml:
+    ignore:
+      - 'unexpected key "queue" for "concurrency" section'

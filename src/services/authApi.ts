@@ -19,7 +19,7 @@ import type {
   TotpCodeRequest,
   VerificationNotificationResponse,
 } from "@/types/api";
-import { buildApiUrl } from "../config";
+import { ApiBaseUrlConfigurationError, buildApiUrl } from "../config";
 import { fetchCsrfToken, apiFetch } from "./csrf";
 
 interface LoginCredentials {
@@ -305,11 +305,15 @@ export async function getCurrentUser(): Promise<SessionLoginResponse["user"]> {
       },
     });
   } catch (error) {
+    if (error instanceof ApiBaseUrlConfigurationError) {
+      throw error;
+    }
+
     const message =
       error instanceof Error
         ? `Current user fetch failed: ${error.message}`
         : "Current user fetch failed";
-    throw new AuthApiError(message);
+    throw new AuthApiError(message, undefined, undefined, "NETWORK_ERROR");
   }
 
   if (!response.ok) {

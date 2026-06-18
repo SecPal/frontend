@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach, assert } from "vitest";
+import * as config from "../config";
 import {
   startPasskeyAuthenticationChallenge,
   verifyPasskeyAuthenticationChallenge,
@@ -544,10 +545,29 @@ describe("authApi", () => {
     it("wraps network failures in AuthApiError", async () => {
       mockFetch.mockRejectedValue(new Error("Network down"));
 
-      await expect(getCurrentUser()).rejects.toThrow(
+      const currentUserPromise = getCurrentUser();
+
+      await expect(currentUserPromise).rejects.toThrow(
         "Current user fetch failed: Network down"
       );
-      await expect(getCurrentUser()).rejects.toBeInstanceOf(AuthApiError);
+      await expect(currentUserPromise).rejects.toMatchObject({
+        code: "NETWORK_ERROR",
+      });
+      await expect(currentUserPromise).rejects.toBeInstanceOf(AuthApiError);
+    });
+
+    it("rethrows API base URL configuration failures without NETWORK_ERROR", async () => {
+      const configError = new config.ApiBaseUrlConfigurationError(
+        "VITE_API_URL is required in production builds."
+      );
+      vi.spyOn(config, "buildApiUrl").mockImplementation(() => {
+        throw configError;
+      });
+
+      await expect(getCurrentUser()).rejects.toBe(configError);
+      expect(mockFetch).not.toHaveBeenCalled();
+
+      vi.restoreAllMocks();
     });
 
     it("fails fast when the current-user endpoint returns HTML instead of JSON", async () => {
