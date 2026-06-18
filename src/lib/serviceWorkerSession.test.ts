@@ -72,10 +72,11 @@ describe("syncOfflineSessionAccess", () => {
       expect(mockPostMessage).toHaveBeenCalledWith({
         type: "AUTH_SESSION_CHANGED",
         isAuthenticated: true,
+        redirectOpenClients: false,
       });
     });
 
-    it("posts AUTH_SESSION_CHANGED with isAuthenticated=false on logout", async () => {
+    it("posts AUTH_SESSION_CHANGED with isAuthenticated=false without redirecting open clients by default", async () => {
       const mockController = { postMessage: mockPostMessage };
       defineServiceWorker({
         controller: mockController,
@@ -91,6 +92,27 @@ describe("syncOfflineSessionAccess", () => {
       expect(mockPostMessage).toHaveBeenCalledWith({
         type: "AUTH_SESSION_CHANGED",
         isAuthenticated: false,
+        redirectOpenClients: false,
+      });
+    });
+
+    it("can request open-client redirects for explicit logout", async () => {
+      const mockController = { postMessage: mockPostMessage };
+      defineServiceWorker({
+        controller: mockController,
+        ready: Promise.resolve({
+          active: null,
+          waiting: null,
+          installing: null,
+        }),
+      });
+
+      await syncOfflineSessionAccess(false, { redirectOpenClients: true });
+
+      expect(mockPostMessage).toHaveBeenCalledWith({
+        type: "AUTH_SESSION_CHANGED",
+        isAuthenticated: false,
+        redirectOpenClients: true,
       });
     });
 
@@ -110,6 +132,7 @@ describe("syncOfflineSessionAccess", () => {
       expect(mockPostMessage).toHaveBeenCalledWith({
         type: "AUTH_SESSION_CHANGED",
         isAuthenticated: true,
+        redirectOpenClients: false,
       });
     });
 
@@ -129,6 +152,7 @@ describe("syncOfflineSessionAccess", () => {
       expect(mockPostMessage).toHaveBeenCalledWith({
         type: "AUTH_SESSION_CHANGED",
         isAuthenticated: true,
+        redirectOpenClients: false,
       });
     });
 
@@ -148,6 +172,7 @@ describe("syncOfflineSessionAccess", () => {
       expect(mockPostMessage).toHaveBeenCalledWith({
         type: "AUTH_SESSION_CHANGED",
         isAuthenticated: true,
+        redirectOpenClients: false,
       });
     });
 

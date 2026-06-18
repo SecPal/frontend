@@ -11,6 +11,7 @@ export interface OfflineSessionState {
 export interface AuthSessionChangedMessage {
   type: "AUTH_SESSION_CHANGED";
   isAuthenticated: boolean;
+  redirectOpenClients?: boolean;
 }
 
 function canUseSessionCache(): boolean {

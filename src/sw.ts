@@ -32,7 +32,9 @@ function isAuthSessionChangedMessage(
     "type" in value &&
     value.type === "AUTH_SESSION_CHANGED" &&
     "isAuthenticated" in value &&
-    typeof value.isAuthenticated === "boolean"
+    typeof value.isAuthenticated === "boolean" &&
+    (!("redirectOpenClients" in value) ||
+      typeof value.redirectOpenClients === "boolean")
   );
 }
 
@@ -80,7 +82,7 @@ async function handleAuthSessionChanged(
     console.error("[SW] Failed to persist offline auth session state:", error);
   }
 
-  if (!message.isAuthenticated) {
+  if (!message.isAuthenticated && message.redirectOpenClients === true) {
     try {
       await redirectProtectedClientsToLogin();
     } catch (error) {

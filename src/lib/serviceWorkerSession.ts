@@ -6,6 +6,10 @@ import {
   type AuthSessionChangedMessage,
 } from "./offlineSessionState";
 
+export interface SyncOfflineSessionAccessOptions {
+  redirectOpenClients?: boolean;
+}
+
 async function postAuthSessionChangedMessage(
   message: AuthSessionChangedMessage
 ): Promise<void> {
@@ -31,12 +35,14 @@ async function postAuthSessionChangedMessage(
 }
 
 export async function syncOfflineSessionAccess(
-  isAuthenticated: boolean
+  isAuthenticated: boolean,
+  options: SyncOfflineSessionAccessOptions = {}
 ): Promise<void> {
   await writeOfflineSessionState(isAuthenticated);
 
   await postAuthSessionChangedMessage({
     type: "AUTH_SESSION_CHANGED",
     isAuthenticated,
+    redirectOpenClients: options.redirectOpenClients ?? false,
   });
 }

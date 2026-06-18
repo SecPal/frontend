@@ -225,12 +225,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const syncOfflineAuthState = useCallback(
-    (shouldAllowOfflineSessionAccess: boolean) => {
-      void syncOfflineSessionAccess(shouldAllowOfflineSessionAccess).catch(
-        (error: unknown) => {
-          console.warn("Failed to synchronize offline auth state:", error);
-        }
-      );
+    (
+      shouldAllowOfflineSessionAccess: boolean,
+      options?: { redirectOpenClients?: boolean }
+    ) => {
+      const syncPromise =
+        options === undefined
+          ? syncOfflineSessionAccess(shouldAllowOfflineSessionAccess)
+          : syncOfflineSessionAccess(shouldAllowOfflineSessionAccess, options);
+
+      void syncPromise.catch((error: unknown) => {
+        console.warn("Failed to synchronize offline auth state:", error);
+      });
     },
     []
   );
@@ -316,7 +322,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setIsVaultLocked(false);
     setIsLoading(false);
-    syncOfflineAuthState(false);
+    syncOfflineAuthState(false, { redirectOpenClients: true });
     removeUserForActiveBarrier();
   }, [
     invalidateBootstrapRevalidation,
@@ -326,7 +332,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ]);
 
   const clearAuthenticatedState = useCallback(
-    (clearSensitiveState: boolean) => {
+    (
+      clearSensitiveState: boolean,
+      options?: { redirectOpenClients?: boolean }
+    ) => {
       if (isClearingSessionRef.current) {
         const shouldUpgradeSensitiveState =
           clearSensitiveState && !shouldClearSensitiveStateRef.current;
@@ -368,7 +377,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setIsVaultLocked(false);
       setIsLoading(false);
-      syncOfflineAuthState(false);
+      syncOfflineAuthState(false, {
+        redirectOpenClients: options?.redirectOpenClients ?? false,
+      });
 
       clearAuthenticatedStatePromiseRef.current = Promise.allSettled([
         clearAuthStoragePromise,
@@ -446,7 +457,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // `clearAuthenticatedState(true)` resets the prefetch cache for us as
     // part of every full-teardown path; no separate `resetPrefetchCache()`
     // call is needed here.
-    clearAuthenticatedState(true);
+    clearAuthenticatedState(true, { redirectOpenClients: true });
     await clearAuthenticatedStatePromiseRef.current;
   }, [clearAuthenticatedState]);
 
@@ -630,7 +641,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               return;
             }
 
-            clearAuthenticatedState(clearSensitiveStateOnInvalidSession);
+            clearAuthenticatedState(clearSensitiveStateOnInvalidSession, {
+              redirectOpenClients: false,
+            });
             return;
           }
 
