@@ -87,6 +87,12 @@ function getBootstrapErrorStatus(error: unknown): number | null {
 }
 
 function isInvalidBootstrapSessionError(error: unknown): boolean {
+  const status = getBootstrapErrorStatus(error);
+
+  if (status === 401) {
+    return true;
+  }
+
   const code = getBootstrapErrorCode(error)?.toUpperCase();
 
   if (code === "HTTP_401" || code === "NO_STORED_TOKEN") {
