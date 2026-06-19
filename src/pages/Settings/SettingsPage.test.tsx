@@ -16,7 +16,7 @@ import { SettingsPage } from "./SettingsPage";
 import { messages as deMessages } from "../../locales/de/messages.mjs";
 import { messages as enMessages } from "../../locales/en/messages.mjs";
 import * as i18nModule from "../../i18n";
-import * as authApi from "../../services/authApi";
+import * as authApi from "../../services/authAccountApi";
 import * as passkeyBrowser from "../../services/passkeyBrowser";
 
 vi.mock("../../components/MfaQrCode", () => ({
@@ -38,8 +38,8 @@ vi.mock("../../i18n", async () => {
   };
 });
 
-vi.mock("../../services/authApi", async () => {
-  const actual = await vi.importActual("../../services/authApi");
+vi.mock("../../services/authAccountApi", async () => {
+  const actual = await vi.importActual("../../services/authAccountApi");
   return {
     ...actual,
     deletePasskey: vi.fn(),

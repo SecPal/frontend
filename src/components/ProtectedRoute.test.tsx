@@ -17,7 +17,7 @@ import {
   AuthProvider,
   BOOTSTRAP_REVALIDATION_TIMEOUT_MS,
 } from "../contexts/AuthContext";
-import { AuthApiError } from "../services/authApi";
+import { AuthApiError } from "../services/AuthApiError";
 import { sanitizePersistedAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
 import { db } from "../lib/db";
@@ -37,6 +37,13 @@ vi.mock("../services/authApi", async () => {
   return {
     ...actual,
     getCurrentUser: mockGetCurrentUser,
+  };
+});
+
+vi.mock("../services/authAccountApi", async () => {
+  const actual = await vi.importActual("../services/authAccountApi");
+  return {
+    ...actual,
     sendVerificationNotification: mockSendVerificationNotification,
   };
 });

@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import {
   AuthApiError,
   sendVerificationNotification,
-} from "../services/authApi";
+} from "../services/authAccountApi";
 import { Button, buttonVariants } from "@/ui";
 import { RouteLoader } from "./RouteLoader";
 

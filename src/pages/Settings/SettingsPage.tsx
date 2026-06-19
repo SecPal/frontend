@@ -56,7 +56,7 @@ import {
   startPasskeyRegistrationChallenge,
   startTotpEnrollment,
   verifyPasskeyRegistrationChallenge,
-} from "../../services/authApi";
+} from "../../services/authAccountApi";
 import { MfaQrCode } from "../../components/MfaQrCode";
 import { formatDateTime } from "../../lib/dateUtils";
 import {
