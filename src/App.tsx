@@ -13,7 +13,6 @@ import {
 } from "./components/LoginRouteState";
 import { PublicRouteLoader } from "./components/PublicRouteLoader";
 import { RouteBootstrapRecoveryState } from "./components/RouteGuardState";
-import { authStorage } from "./services/storage";
 
 const LOGIN_ROUTE_BOOTSTRAP_INTERACTIVE_DELAY_MS = 1000;
 
@@ -89,10 +88,6 @@ function AuthenticatedAppRoute() {
   const { isAuthenticated, isVaultLocked = false } = auth;
 
   if (isRouteAuthBootstrapPending(auth)) {
-    if (!authStorage.hasStoredUser()) {
-      return <Navigate to="/login" replace />;
-    }
-
     return <PublicRouteLoader />;
   }
 

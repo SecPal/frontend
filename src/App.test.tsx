@@ -235,6 +235,7 @@ describe("App", () => {
     expect(
       screen.queryByRole("status", { name: /loading application/i })
     ).not.toBeInTheDocument();
+    expect(screen.queryByText(/^english$/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeDisabled();
     expect(screen.getByLabelText(/password/i)).toBeDisabled();
     expect(screen.getByRole("button", { name: /^log in$/i })).toBeDisabled();
@@ -388,6 +389,21 @@ describe("App", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("keeps protected deep links while browser-session bootstrap is still pending", async () => {
+    window.history.replaceState({}, "", "/customers/123/edit");
+    mockGetCurrentUser.mockImplementationOnce(
+      () =>
+        new Promise(() => undefined) as ReturnType<typeof mockGetCurrentUser>
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      screen.getByRole("status", { name: /loading page/i })
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/customers/123/edit");
+  });
+
   it("does not probe /v1/me on the public login route when no csrf cookie or redirect hint exists", async () => {
     clearXsrfCookie();
 
@@ -432,7 +448,7 @@ describe("App", () => {
     expect(window.location.pathname).toBe("/");
   });
 
-  it("redirects protected routes without a local snapshot to the login bootstrap flow", async () => {
+  it("keeps protected routes on a neutral loader while browser-session recovery is pending", async () => {
     window.history.replaceState({}, "", "/");
 
     mockGetCurrentUser.mockImplementationOnce(
@@ -442,20 +458,15 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await waitFor(
-      () => {
-        expect(window.location.pathname).toBe("/login");
-      },
-      { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-    );
+    expect(window.location.pathname).toBe("/");
 
     expect(
-      screen.getByRole("status", { name: /loading login/i })
+      screen.getByRole("status", { name: /loading page/i })
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("status", { name: /loading application/i })
+      screen.queryByRole("status", { name: /loading login/i })
     ).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/email/i)).toBeDisabled();
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
   });
 
   it("shows bootstrap recovery on login after protected-route session restore fails and allows retry", async () => {

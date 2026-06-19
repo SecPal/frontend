@@ -33,10 +33,10 @@ export function LoginRouteLoadingState() {
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
         <div
           aria-hidden="true"
-          className="flex h-10 min-w-[7rem] items-center justify-between gap-2 rounded-md border border-zinc-300 bg-zinc-100 px-3 text-sm text-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400"
+          className="flex h-10 min-w-[7rem] items-center gap-2 rounded-md border border-zinc-300 bg-zinc-100 px-3 dark:border-zinc-700 dark:bg-zinc-900"
         >
-          <span>English</span>
-          <span aria-hidden="true">▾</span>
+          <span className="h-3 flex-1 rounded-full bg-zinc-200 dark:bg-zinc-800" />
+          <span className="h-3 w-3 rounded-full bg-zinc-200 dark:bg-zinc-800" />
         </div>
       </div>
 

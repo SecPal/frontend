@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { clearBrowserPushInstallationId } from "./browserPushState";
-import { AUTH_VAULT_STORAGE_KEY } from "./offlineVault";
+import { AUTH_VAULT_STORAGE_KEY } from "./offlineVaultKeys";
 
 async function loadDbModule() {
   return await import("./db");

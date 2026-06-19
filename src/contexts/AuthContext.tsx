@@ -25,7 +25,7 @@ import { resetPrefetchCache } from "../hooks/usePrefetch";
 import {
   AUTH_VAULT_STORAGE_KEY,
   AUTH_VAULT_LOCK_KEY,
-} from "../lib/offlineVault";
+} from "../lib/offlineVaultKeys";
 
 export const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
 
@@ -66,7 +66,11 @@ function shouldBootstrapBrowserSessionWithoutStoredUser(
     return getCsrfTokenFromCookie() !== null;
   }
 
-  return !isPublicUnauthenticatedRoute(window.location.pathname);
+  if (isPublicUnauthenticatedRoute(window.location.pathname)) {
+    return false;
+  }
+
+  return getCsrfTokenFromCookie() !== null;
 }
 
 function getBootstrapErrorCode(error: unknown): string | null {

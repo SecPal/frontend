@@ -9,10 +9,7 @@ import type {
   LabelHTMLAttributes,
   ReactNode,
 } from "react";
-
-function cn(...classNames: Array<string | false | null | undefined>) {
-  return classNames.filter(Boolean).join(" ");
-}
+import { cn } from "../../lib/utils";
 
 export function LoginShell({
   className,

@@ -68,6 +68,10 @@ function setCsrfTokenCookie(value: string): void {
   document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
 }
 
+function clearCsrfTokenCookie(): void {
+  document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
+}
+
 function createDeferredPromise<T>() {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
@@ -203,6 +207,19 @@ describe("useAuth", () => {
       emailVerified: false,
     });
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not bootstrap a protected browser-session route without a session hint", () => {
+    window.history.replaceState({}, "", "/");
+    clearCsrfTokenCookie();
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
   });
 
   it("does not run sensitive logout cleanup when bootstrap revalidation finds no browser-session user", async () => {

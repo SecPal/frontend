@@ -5,7 +5,8 @@ import type { User } from "../contexts/auth-context";
 import {
   AUTH_VAULT_STORAGE_KEY,
   AUTH_VAULT_LOCK_KEY,
-} from "../lib/offlineVault";
+} from "../lib/offlineVaultKeys";
+import { clearActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
 import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
 import { sanitizePersistedAuthUser, type PersistedAuthUser } from "./authState";
 import { getCsrfTokenFromCookie } from "./csrf";
@@ -585,9 +586,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       localStorage.setItem(this.VAULT_LOCK_KEY, "1");
     }
     localStorage.removeItem(this.USER_KEY);
-    void loadOfflineVaultModule().then(({ clearOfflineVaultSession }) => {
-      clearOfflineVaultSession();
-    });
+    clearActiveOfflineVaultSession();
   }
 
   async unlockVault(): Promise<User | null> {

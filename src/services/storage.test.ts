@@ -9,6 +9,7 @@ import {
   clearOfflineVaultSession,
 } from "../lib/offlineVault";
 import { db } from "../lib/db";
+import { getActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
 
 const AUTH_STORAGE_SCHEME = "pbkdf2-aes-cbc-hmac-sha256";
 const LEGACY_AUTH_STORAGE_VERSION = 1;
@@ -199,12 +200,15 @@ describe("authStorage", () => {
     };
 
     await authStorage.setUser(user);
+    await expect(authStorage.getUser()).resolves.toEqual(user);
+    expect(getActiveOfflineVaultSession()).not.toBeNull();
 
     authStorage.lockVault();
 
     await expect(authStorage.getUser()).resolves.toBeNull();
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
     expect(authStorage.hasVaultLock()).toBe(true);
+    expect(getActiveOfflineVaultSession()).toBeNull();
 
     await expect(authStorage.unlockVault()).resolves.toEqual(user);
     expect(authStorage.hasVaultLock()).toBe(false);
