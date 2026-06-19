@@ -597,6 +597,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    resetPrefetchCache();
     hasLogoutBarrierRef.current = false;
     shouldSkipBarrierVaultTableCleanupRef.current = false;
     setBootstrapRecoveryReason(null);
@@ -741,6 +742,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (isInvalidBootstrapSessionError(error)) {
             if (!clearSensitiveStateOnInvalidSession) {
+              resetPrefetchCache();
               hasLogoutBarrierRef.current = false;
               shouldSkipBarrierVaultTableCleanupRef.current = false;
               setBootstrapRecoveryReason(null);
