@@ -19,6 +19,7 @@ import { authStorage } from "../services/storage";
 import { sessionEvents } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import { createRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
+import * as prefetch from "./usePrefetch";
 import {
   AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
@@ -2627,6 +2628,53 @@ describe("useAuth", () => {
       email: "bootstrap@secpal.dev",
       emailVerified: false,
     });
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+  });
+
+  it("resets the prefetch cache when cross-tab auth storage removal revalidates to a logged-out browser session", async () => {
+    window.history.replaceState({}, "", "/");
+    await persistAuthUser({
+      id: 1,
+      name: "Bootstrap User",
+      email: "bootstrap@secpal.dev",
+    });
+    const resetPrefetchCacheSpy = vi.spyOn(prefetch, "resetPrefetchCache");
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    mockGetCurrentUser.mockRejectedValueOnce(
+      Object.assign(new Error("Unauthenticated."), {
+        code: "HTTP_401",
+      })
+    );
+
+    act(() => {
+      localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
+
+      const clearedStorageEvent = new Event("storage");
+      Object.defineProperties(clearedStorageEvent, {
+        key: { value: AUTH_VAULT_STORAGE_KEY },
+        oldValue: { value: "previous-vault-state" },
+        newValue: { value: null },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
+      window.dispatchEvent(clearedStorageEvent);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(resetPrefetchCacheSpy).toHaveBeenCalledTimes(1);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
     expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
   });

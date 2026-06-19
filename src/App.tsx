@@ -151,7 +151,7 @@ function AuthenticatedAppRoute() {
     );
   }
 
-  if (!isVaultLocked && !isAuthenticated) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 

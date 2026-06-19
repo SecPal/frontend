@@ -238,6 +238,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     Promise.resolve()
   );
   const shouldClearSensitiveStateRef = useRef(false);
+  const shouldResetPrefetchCacheAfterStorageMismatchRef = useRef(false);
   const shouldRedirectOpenClientsRef = useRef(false);
   const shouldSkipBarrierVaultTableCleanupRef = useRef(false);
   const sensitiveLogoutBarrierCleanupOwnerTokenRef = useRef<string | null>(
@@ -396,6 +397,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       invalidateBootstrapRevalidation();
       isClearingSessionRef.current = true;
       shouldClearSensitiveStateRef.current = clearSensitiveState;
+      shouldResetPrefetchCacheAfterStorageMismatchRef.current = false;
       shouldRedirectOpenClientsRef.current =
         options?.redirectOpenClients === true;
       shouldSkipBarrierVaultTableCleanupRef.current = clearSensitiveState;
@@ -586,6 +588,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         hasLogoutBarrier
       )
     ) {
+      shouldResetPrefetchCacheAfterStorageMismatchRef.current = true;
       hasLogoutBarrierRef.current = false;
       shouldSkipBarrierVaultTableCleanupRef.current = false;
       hasAutomaticallyRetriedBootstrapRef.current = false;
@@ -597,6 +600,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    shouldResetPrefetchCacheAfterStorageMismatchRef.current = false;
     resetPrefetchCache();
     hasLogoutBarrierRef.current = false;
     shouldSkipBarrierVaultTableCleanupRef.current = false;
@@ -723,6 +727,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           hasLogoutBarrierRef.current = false;
           shouldSkipBarrierVaultTableCleanupRef.current = false;
+          shouldResetPrefetchCacheAfterStorageMismatchRef.current = false;
           setBootstrapRecoveryReason(null);
           setUser(currentUser);
           setIsLoading(false);
@@ -742,7 +747,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (isInvalidBootstrapSessionError(error)) {
             if (!clearSensitiveStateOnInvalidSession) {
-              resetPrefetchCache();
+              if (
+                shouldResetPrefetchCacheAfterStorageMismatchRef.current
+              ) {
+                shouldResetPrefetchCacheAfterStorageMismatchRef.current = false;
+                resetPrefetchCache();
+              }
               hasLogoutBarrierRef.current = false;
               shouldSkipBarrierVaultTableCleanupRef.current = false;
               setBootstrapRecoveryReason(null);
