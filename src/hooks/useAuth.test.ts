@@ -2120,7 +2120,7 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
   });
 
-  it("clears auth state when another tab removes auth storage", async () => {
+  it("revalidates browser-session auth when another tab removes local auth storage without a logout barrier", async () => {
     const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
 
     const storedUser = await persistAuthUser(mockUser);
@@ -2146,14 +2146,17 @@ describe("useAuth", () => {
     });
 
     await waitFor(() => {
-      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.isAuthenticated).toBe(true);
     });
 
-    expect(result.current.user).toBeNull();
-    await waitForSensitiveClientCleanup();
-    expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false, {
-      redirectOpenClients: false,
+    expect(result.current.user).toEqual({
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
     });
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
   });
 
   it("drops restored in-memory auth state when pageshow finds no stored user", async () => {
@@ -2490,11 +2493,61 @@ describe("useAuth", () => {
     });
 
     await waitFor(() => {
-      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.isAuthenticated).toBe(true);
     });
 
-    expect(result.current.user).toBeNull();
-    await waitForSensitiveClientCleanup();
+    expect(result.current.user).toEqual({
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    });
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+  });
+
+  it("does not log out an authenticated browser session when another /login tab temporarily clears local auth storage", async () => {
+    window.history.replaceState({}, "", "/login");
+    await persistAuthUser({
+      id: 1,
+      name: "Bootstrap User",
+      email: "bootstrap@secpal.dev",
+    });
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    act(() => {
+      localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
+
+      const clearedStorageEvent = new Event("storage");
+      Object.defineProperties(clearedStorageEvent, {
+        key: { value: AUTH_VAULT_STORAGE_KEY },
+        oldValue: { value: "previous-vault-state" },
+        newValue: { value: null },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
+      window.dispatchEvent(clearedStorageEvent);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.user).toEqual({
+      id: "1",
+      name: "Bootstrap User",
+      email: "bootstrap@secpal.dev",
+      emailVerified: false,
+    });
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
   });
 
   it("reconciles stored user state when pageshow fires and user is still in storage", async () => {

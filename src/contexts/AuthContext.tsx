@@ -564,6 +564,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setBootstrapRetryKey((currentValue) => currentValue + 1);
   }, [authTransport.kind, user]);
 
+  const revalidateBrowserSessionAfterStorageMismatch = useCallback(() => {
+    if (
+      authTransport.kind === "browser-session" &&
+      isOnline() &&
+      shouldBootstrapBrowserSessionWithoutStoredUser(authTransport.kind, false)
+    ) {
+      hasLogoutBarrierRef.current = false;
+      shouldSkipBarrierVaultTableCleanupRef.current = false;
+      hasAutomaticallyRetriedBootstrapRef.current = false;
+      invalidateBootstrapRevalidation();
+      setBootstrapRecoveryReason(null);
+      setIsVaultLocked(false);
+      setIsLoading(true);
+      setBootstrapRetryKey((currentValue) => currentValue + 1);
+      return;
+    }
+
+    hasLogoutBarrierRef.current = false;
+    shouldSkipBarrierVaultTableCleanupRef.current = false;
+    setBootstrapRecoveryReason(null);
+    setUser(null);
+    setIsVaultLocked(false);
+    setIsLoading(false);
+    syncOfflineAuthState(false);
+  }, [
+    authTransport.kind,
+    invalidateBootstrapRevalidation,
+    syncOfflineAuthState,
+  ]);
+
   /**
    * Check if user has a specific permission.
    * Supports wildcard matching (e.g., "employees.*" matches "employees.read").
@@ -911,7 +941,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.getItem("auth_user") === null &&
         localStorage.getItem(AUTH_VAULT_STORAGE_KEY) === null
       ) {
-        clearAuthenticatedState(true);
+        revalidateBrowserSessionAfterStorageMismatch();
         return;
       }
 
@@ -952,7 +982,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           if (!nextUser) {
-            clearAuthenticatedState(true);
+            revalidateBrowserSessionAfterStorageMismatch();
             return;
           }
 
@@ -965,7 +995,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           syncOfflineAuthState(true);
         } catch (error) {
           console.error("Failed to parse cross-tab auth state:", error);
-          clearAuthenticatedState(true);
+          revalidateBrowserSessionAfterStorageMismatch();
         }
       })();
     };
@@ -978,6 +1008,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [
     clearAuthenticatedState,
     invalidateBootstrapRevalidation,
+    revalidateBrowserSessionAfterStorageMismatch,
     reconcileActiveBarrierState,
     syncBarrierStateFromStorage,
     syncOfflineAuthState,
