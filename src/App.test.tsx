@@ -7,6 +7,7 @@ import { screen } from "@testing-library/dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import App from "./App";
+import { AuthApiError } from "./services/authApi";
 import { sanitizePersistedAuthUser } from "./services/authState";
 import { authStorage } from "./services/storage";
 
@@ -455,6 +456,67 @@ describe("App", () => {
       screen.queryByRole("status", { name: /loading application/i })
     ).not.toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeDisabled();
+  });
+
+  it("shows bootstrap recovery on login after protected-route session restore fails and allows retry", async () => {
+    const recoveredUser = {
+      id: "1",
+      name: "Recovered Session User",
+      email: "recovered-session@secpal.dev",
+      emailVerified: true,
+      roles: [],
+      permissions: [],
+      hasOrganizationalScopes: false,
+      hasCustomerAccess: false,
+      hasSiteAccess: false,
+    };
+
+    window.history.replaceState({}, "", "/");
+    mockGetCurrentUser
+      .mockRejectedValueOnce(
+        new AuthApiError(
+          "Current user fetch failed: expected application/json response from API",
+          undefined,
+          404
+        )
+      )
+      .mockResolvedValueOnce(recoveredUser);
+
+    await renderWithI18n(<App />);
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/login");
+    });
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /still loading your secure session/i,
+      })
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      screen.getByRole("button", { name: /retry/i }).click();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+    });
+
+    await waitFor(
+      () => {
+        expect(window.location.pathname).toBe("/");
+      },
+      { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+    );
+
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /welcome to secpal/i },
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
   });
 
   it("shows not found for activity-logs when the user cannot discover that feature", async () => {

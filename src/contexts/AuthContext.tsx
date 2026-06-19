@@ -538,7 +538,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [clearAuthenticatedState, syncOfflineAuthState]);
 
   const retryBootstrap = useCallback(() => {
-    if (!user || (authTransport.kind === "browser-session" && !isOnline())) {
+    const canRetryWithoutStoredUser =
+      user === null &&
+      shouldBootstrapBrowserSessionWithoutStoredUser(
+        authTransport.kind,
+        hasLogoutBarrierRef.current
+      );
+
+    if (
+      (user === null && !canRetryWithoutStoredUser) ||
+      (user !== null &&
+        authTransport.kind === "browser-session" &&
+        !isOnline())
+    ) {
       setBootstrapRecoveryReason(null);
       setIsLoading(false);
       return;

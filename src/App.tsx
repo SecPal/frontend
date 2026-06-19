@@ -12,6 +12,7 @@ import {
   LoginRouteVaultLockedState,
 } from "./components/LoginRouteState";
 import { PublicRouteLoader } from "./components/PublicRouteLoader";
+import { RouteBootstrapRecoveryState } from "./components/RouteGuardState";
 import { authStorage } from "./services/storage";
 
 const LOGIN_ROUTE_BOOTSTRAP_INTERACTIVE_DELAY_MS = 1000;
@@ -27,7 +28,14 @@ const OnboardingComplete = lazy(() =>
 
 function LoginRoute() {
   const auth = useAuth();
-  const { isAuthenticated, isVaultLocked = false, logout, unlock } = auth;
+  const {
+    bootstrapRecoveryReason,
+    isAuthenticated,
+    isVaultLocked = false,
+    logout,
+    retryBootstrap,
+    unlock,
+  } = auth;
   const [
     showInteractiveLoginDuringBootstrap,
     setShowInteractiveLoginDuringBootstrap,
@@ -55,6 +63,16 @@ function LoginRoute() {
 
     return (
       <LoginRouteVaultLockedState onUnlock={unlock} onSignInAgain={logout} />
+    );
+  }
+
+  if (bootstrapRecoveryReason) {
+    return (
+      <RouteBootstrapRecoveryState
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+        reason={bootstrapRecoveryReason}
+      />
     );
   }
 
