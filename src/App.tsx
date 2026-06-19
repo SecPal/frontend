@@ -87,7 +87,6 @@ function LoginRouteBootstrapGate() {
 function AuthenticatedAppRoute() {
   const auth = useAuth();
   const {
-    bootstrapRecoveryReason,
     isAuthenticated,
     isVaultLocked = false,
   } = auth;
@@ -100,7 +99,7 @@ function AuthenticatedAppRoute() {
     return <PublicRouteLoader />;
   }
 
-  if (!bootstrapRecoveryReason && !isVaultLocked && !isAuthenticated) {
+  if (!isVaultLocked && !isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 

@@ -519,6 +519,34 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it("redirects stale protected-route bootstrap recovery to login instead of loading the app shell", async () => {
+    window.history.replaceState({}, "", "/");
+    mockAuthStorage.hasStoredUser
+      .mockImplementationOnce(() => true)
+      .mockImplementationOnce(() => true)
+      .mockImplementationOnce(() => true);
+    mockAuthStorage.getUser.mockResolvedValueOnce(null);
+    mockGetCurrentUser.mockRejectedValueOnce(
+      new AuthApiError(
+        "Current user fetch failed: expected application/json response from API",
+        undefined,
+        404
+      )
+    );
+
+    await renderWithI18n(<App />);
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/login");
+    });
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /still loading your secure session/i,
+      })
+    ).toBeInTheDocument();
+  });
+
   it("shows not found for activity-logs when the user cannot discover that feature", async () => {
     window.history.replaceState({}, "", "/activity-logs");
 
