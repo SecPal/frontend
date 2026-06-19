@@ -747,9 +747,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (isInvalidBootstrapSessionError(error)) {
             if (!clearSensitiveStateOnInvalidSession) {
-              if (
-                shouldResetPrefetchCacheAfterStorageMismatchRef.current
-              ) {
+              if (shouldResetPrefetchCacheAfterStorageMismatchRef.current) {
                 shouldResetPrefetchCacheAfterStorageMismatchRef.current = false;
                 resetPrefetchCache();
               }

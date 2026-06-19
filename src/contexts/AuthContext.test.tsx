@@ -477,7 +477,7 @@ describe("AuthContext", () => {
       expect(resetPrefetchCache).toHaveBeenCalled();
     });
 
-    it("clears the prefetch cache when browser-session bootstrap revalidation finds no session", async () => {
+    it("does not clear the prefetch cache when browser-session bootstrap revalidation finds no session without a storage mismatch", async () => {
       vi.mocked(isOnline).mockReturnValue(true);
       vi.mocked(getCurrentUser).mockRejectedValueOnce({ status: 401 });
 
@@ -491,9 +491,7 @@ describe("AuthContext", () => {
         expect(getCurrentUser).toHaveBeenCalled();
       });
 
-      await waitFor(() => {
-        expect(resetPrefetchCache).toHaveBeenCalled();
-      });
+      expect(resetPrefetchCache).not.toHaveBeenCalled();
     });
   });
 
