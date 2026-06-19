@@ -70,6 +70,18 @@ function installNativeVaultBridge(overrides: Record<string, unknown> = {}) {
   return bridge;
 }
 
+function createDeferredPromise<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return { promise, resolve, reject };
+}
+
 describe("offlineVault", () => {
   const persistedUser: PersistedAuthUser = {
     id: "user-1",
@@ -120,6 +132,29 @@ describe("offlineVault", () => {
         iv: expect.any(String),
         authTag: expect.any(String),
       })
+    );
+  });
+
+  it("does not expose auth_vault_state before the encrypted profile record is persisted", async () => {
+    const deferredProfileWrite = createDeferredPromise<void>();
+    const originalPut = db.vaultProfile.put.bind(db.vaultProfile);
+
+    vi.spyOn(db.vaultProfile, "put").mockImplementationOnce(async (...args) => {
+      await deferredProfileWrite.promise;
+      return await originalPut(...args);
+    });
+
+    const initializePromise = initializeOfflineVault(persistedUser);
+
+    await Promise.resolve();
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+
+    deferredProfileWrite.resolve();
+    await initializePromise;
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
     );
   });
 

@@ -1218,17 +1218,29 @@ async function maybeRewriteStoredVaultState(
 
 async function ensureVaultSessionForUser(
   user: PersistedAuthUser
-): Promise<VaultSession> {
+): Promise<{
+  session: VaultSession;
+  pendingStoredState: AuthVaultStateEnvelope | null;
+}> {
   const subjectHash = await computeSubjectHash(user.id);
   const currentSession = await ensureOfflineVaultSession();
   const existingStoredState = getStoredVaultState();
 
   if (currentSession && currentSession.subjectHash === subjectHash) {
     if (existingStoredState) {
-      return maybeRewriteStoredVaultState(currentSession, existingStoredState);
+      return {
+        session: await maybeRewriteStoredVaultState(
+          currentSession,
+          existingStoredState
+        ),
+        pendingStoredState: null,
+      };
     }
 
-    return currentSession;
+    return {
+      session: currentSession,
+      pendingStoredState: null,
+    };
   }
 
   if (currentSession && currentSession.subjectHash !== subjectHash) {
@@ -1245,14 +1257,16 @@ async function ensureVaultSessionForUser(
     );
   }
 
-  setStoredVaultState(storedState);
   activeVaultSession = {
     rootKeyBytes,
     subjectHash,
     wrapperCacheKey: getSessionWrapperCacheKey(storedState),
   };
 
-  return activeVaultSession;
+  return {
+    session: activeVaultSession,
+    pendingStoredState: storedState,
+  };
 }
 
 async function persistProfileRecord(
@@ -1352,13 +1366,17 @@ async function migrateLegacyOrganizationalUnitRecords(
 export async function initializeOfflineVault(
   user: PersistedAuthUser
 ): Promise<void> {
-  const session = await ensureVaultSessionForUser(user);
+  const { session, pendingStoredState } = await ensureVaultSessionForUser(user);
 
   await persistProfileRecord(user, session);
   await Promise.all([
     migrateLegacyAnalyticsRecords(session),
     migrateLegacyOrganizationalUnitRecords(session),
   ]);
+
+  if (pendingStoredState) {
+    setStoredVaultState(pendingStoredState);
+  }
 
   localStorage.removeItem("auth_user");
 }
