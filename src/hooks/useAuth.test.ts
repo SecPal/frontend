@@ -1221,7 +1221,7 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toBeNull();
-    expect(localStorage.getItem("auth_user")).toBe("invalid-json");
+    expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
   it("skips broader client cleanup when persisted auth restore fails before login state exists", async () => {

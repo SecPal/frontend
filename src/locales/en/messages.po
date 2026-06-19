@@ -1305,7 +1305,6 @@ msgid "Bootstrap completed"
 msgstr "Bootstrap completed"
 
 #: src/components/LoginRouteState.tsx
-#: src/components/RouteGuardState.tsx
 msgid "Loading login"
 msgstr "Loading login"
 
@@ -2017,7 +2016,6 @@ msgid "Optional"
 msgstr "Optional"
 
 #: src/components/LoginRouteState.tsx
-#: src/components/RouteGuardState.tsx
 #: src/pages/Login.tsx
 msgid "Sign in with passkey"
 msgstr "Sign in with passkey"
@@ -2025,11 +2023,6 @@ msgstr "Sign in with passkey"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "No onboarding steps are available right now."
 msgstr "No onboarding steps are available right now."
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
-#~ msgid "login.checkingSystem"
-#~ msgstr "Checking system..."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
@@ -2043,7 +2036,6 @@ msgstr "Completing sign-in"
 
 #. js-lingui-explicit-id
 #: src/components/LoginRouteState.tsx
-#: src/components/RouteGuardState.tsx
 #: src/pages/Login.tsx
 msgid "login.email"
 msgstr "Email address"
@@ -2130,7 +2122,6 @@ msgstr "No internet connection"
 
 #. js-lingui-explicit-id
 #: src/components/LoginRouteState.tsx
-#: src/components/RouteGuardState.tsx
 #: src/pages/Login.tsx
 msgid "login.password"
 msgstr "Password"
@@ -2152,14 +2143,12 @@ msgstr "{remainingAttempts} attempt(s) remaining before temporary lockout."
 
 #. js-lingui-explicit-id
 #: src/components/LoginRouteState.tsx
-#: src/components/RouteGuardState.tsx
 #: src/pages/Login.tsx
 msgid "login.separator"
 msgstr "or"
 
 #. js-lingui-explicit-id
 #: src/components/LoginRouteState.tsx
-#: src/components/RouteGuardState.tsx
 #: src/pages/Login.tsx
 msgid "login.submit"
 msgstr "Log in"
@@ -2171,7 +2160,6 @@ msgstr "Logging in..."
 
 #. js-lingui-explicit-id
 #: src/components/LoginRouteState.tsx
-#: src/components/RouteGuardState.tsx
 #: src/pages/Login.tsx
 msgid "login.title"
 msgstr "Welcome to SecPal"
@@ -2454,7 +2442,6 @@ msgstr "Default"
 
 #: src/components/Footer.tsx
 #: src/components/LoginRouteState.tsx
-#: src/components/RouteGuardState.tsx
 #: src/pages/Login.tsx
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
@@ -2569,7 +2556,6 @@ msgstr "Password must include at least one symbol"
 
 #: src/components/Footer.tsx
 #: src/components/LoginRouteState.tsx
-#: src/components/RouteGuardState.tsx
 #: src/pages/Login.tsx
 msgid "Source Code"
 msgstr "Source Code"
@@ -3452,7 +3438,6 @@ msgstr "← Back to Employees"
 
 #: src/components/Footer.tsx
 #: src/components/LoginRouteState.tsx
-#: src/components/RouteGuardState.tsx
 #: src/pages/Login.tsx
 msgid "Powered by SecPal – A guard's best friend"
 msgstr "Powered by SecPal – A guard's best friend"

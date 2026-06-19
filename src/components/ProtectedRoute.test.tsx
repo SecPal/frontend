@@ -540,7 +540,7 @@ describe("ProtectedRoute", () => {
       renderProtectedRoute();
 
       expect(
-        screen.getByRole("status", { name: /loading application/i })
+        screen.getByRole("status", { name: /loading login/i })
       ).toBeInTheDocument();
     });
 
@@ -549,7 +549,7 @@ describe("ProtectedRoute", () => {
       renderProtectedRoute();
 
       expect(
-        screen.getByRole("status", { name: /loading application/i })
+        screen.getByRole("status", { name: /loading login/i })
       ).toHaveAttribute("aria-live", "polite");
     });
 
@@ -558,8 +558,8 @@ describe("ProtectedRoute", () => {
       renderProtectedRoute();
 
       expect(
-        screen.getByRole("status", { name: /loading application/i })
-      ).toHaveAccessibleName("Loading application");
+        screen.getByRole("status", { name: /loading login/i })
+      ).toHaveAccessibleName("Loading login");
     });
   });
 
