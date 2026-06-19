@@ -2,11 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { clearBrowserPushInstallationId } from "./browserPushState";
+import { db } from "./db";
 import { AUTH_VAULT_STORAGE_KEY } from "./offlineVaultKeys";
-
-async function loadDbModule() {
-  return await import("./db");
-}
 
 async function loadOfflineVaultModule() {
   return await import("./offlineVault");
@@ -43,8 +40,6 @@ async function clearSensitiveCaches(): Promise<void> {
 }
 
 async function clearSensitiveIndexedDbState(): Promise<void> {
-  const { db } = await loadDbModule();
-
   try {
     // Logout policy: remove the entire local session database because all
     // stores in SecPalDB are session- or user-adjacent and unnecessary once

@@ -19,7 +19,6 @@ import { RouteContentFallback } from "./components/RouteContentFallback";
 import { routeModuleLoaders } from "./routeModules";
 import { useNotifications } from "./hooks/useNotifications";
 import { OfflineIndicator } from "./components/OfflineIndicator";
-import { UpdatePrompt } from "./components/UpdatePrompt";
 
 const SettingsPage = lazy(routeModuleLoaders.settings);
 const ProfilePage = lazy(routeModuleLoaders.profile);
@@ -133,7 +132,6 @@ function NotificationLifecycleCoordinator() {
 export default function AuthenticatedApp() {
   return (
     <>
-      <UpdatePrompt />
       <NotificationLifecycleCoordinator />
       <Suspense fallback={<RouteLoader />}>
         <Routes>

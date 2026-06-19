@@ -4,6 +4,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { NativeRuntimePwaGuard } from "./components/NativeRuntimePwaGuard";
+import { UpdatePrompt } from "./components/UpdatePrompt";
 import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./hooks/useAuth";
 import { useRecoverableLazyComponent } from "./hooks/useRecoverableLazyComponent";
@@ -123,10 +124,21 @@ function AuthenticatedAppRoute() {
     isVaultLocked = false,
     logout,
     retryBootstrap,
+    unlock,
   } = auth;
 
   if (isRouteAuthBootstrapPending(auth)) {
     return <PublicRouteLoader />;
+  }
+
+  if (isVaultLocked) {
+    if (!unlock) {
+      return <Navigate to="/login" replace />;
+    }
+
+    return (
+      <LoginRouteVaultLockedState onUnlock={unlock} onSignInAgain={logout} />
+    );
   }
 
   if (bootstrapRecoveryReason) {
@@ -151,6 +163,7 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <NativeRuntimePwaGuard />
+        <UpdatePrompt />
         <Suspense fallback={<PublicRouteLoader />}>
           <Routes>
             <Route path="/login" element={<LoginRoute />} />

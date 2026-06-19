@@ -19,6 +19,7 @@ const {
   mockFetchCsrfToken,
   mockAuthStorage,
   mockLoadAuthenticatedAppModule,
+  mockUpdatePrompt,
 } = vi.hoisted(() => {
   let storedUser: unknown = null;
   let vaultPresent = false;
@@ -30,6 +31,7 @@ const {
     mockGetCurrentUser: vi.fn(),
     mockFetchCsrfToken: vi.fn(),
     mockLoadAuthenticatedAppModule: vi.fn(() => import("./AuthenticatedApp")),
+    mockUpdatePrompt: vi.fn(() => <div data-testid="update-prompt" />),
     mockAuthStorage: {
       hasStoredUser: vi.fn(
         () =>
@@ -126,6 +128,10 @@ vi.mock("./lib/lazyAppModules", async () => {
     loadAuthenticatedAppModule: mockLoadAuthenticatedAppModule,
   };
 });
+
+vi.mock("./components/UpdatePrompt", () => ({
+  UpdatePrompt: mockUpdatePrompt,
+}));
 
 // Block all real network requests: lazy-loaded page components call their
 // data APIs on mount, and those pending fetch Promises accumulate in the
@@ -235,6 +241,12 @@ describe("App", () => {
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
   });
 
+  it("keeps the update prompt mounted on public login routes", async () => {
+    await renderWithI18n(<App />);
+
+    expect(screen.getByTestId("update-prompt")).toBeInTheDocument();
+  });
+
   it("uses a login-shaped bootstrap placeholder on the login route", async () => {
     mockGetCurrentUser.mockImplementationOnce(
       () =>
@@ -324,6 +336,35 @@ describe("App", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("renders the vault lock state on protected routes before loading the app shell", async () => {
+    await seedPersistedAuthUser({
+      id: 1,
+      name: "Locked User",
+      email: "locked@secpal.dev",
+      emailVerified: true,
+    });
+    authStorage.lockVault?.();
+    window.history.replaceState({}, "", "/customers");
+    mockLoadAuthenticatedAppModule.mockRejectedValueOnce(
+      createRecoverableLazyModuleError(
+        "The protected app shell is temporarily unavailable on this device.",
+        new TypeError("Failed to fetch dynamically imported module")
+      )
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: /unlock your secure offline data/i,
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/we couldn't restore your secure session/i)
+    ).not.toBeInTheDocument();
+    expect(mockLoadAuthenticatedAppModule).not.toHaveBeenCalled();
   });
 
   it("renders login form", async () => {
