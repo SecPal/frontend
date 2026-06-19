@@ -13,7 +13,10 @@ import {
   type VaultAnalyticsRecord,
   type VaultOrganizationalUnitCacheRecord,
 } from "./db";
-import { AUTH_VAULT_LOCK_KEY, AUTH_VAULT_STORAGE_KEY } from "./offlineVaultKeys";
+import {
+  AUTH_VAULT_LOCK_KEY,
+  AUTH_VAULT_STORAGE_KEY,
+} from "./offlineVaultKeys";
 import {
   clearActiveOfflineVaultSession,
   getActiveOfflineVaultSession,
@@ -22,7 +25,10 @@ import {
   setActiveOfflineVaultSession,
 } from "./offlineVaultRuntime";
 import { isCapacitorNativeRuntime } from "./nativeRuntime";
-export { AUTH_VAULT_LOCK_KEY, AUTH_VAULT_STORAGE_KEY } from "./offlineVaultKeys";
+export {
+  AUTH_VAULT_LOCK_KEY,
+  AUTH_VAULT_STORAGE_KEY,
+} from "./offlineVaultKeys";
 
 const AUTH_VAULT_LEGACY_SCHEME = "pbkdf2-aes-cbc-hmac-sha256-vault";
 const AUTH_VAULT_SCHEME = "secpal-auth-vault";
@@ -1219,9 +1225,7 @@ async function maybeRewriteStoredVaultState(
   };
 }
 
-async function ensureVaultSessionForUser(
-  user: PersistedAuthUser
-): Promise<{
+async function ensureVaultSessionForUser(user: PersistedAuthUser): Promise<{
   session: VaultSession;
   pendingStoredState: AuthVaultStateEnvelope | null;
 }> {

@@ -139,9 +139,10 @@ describe("offlineVault", () => {
     const deferredProfileWrite = createDeferredPromise<void>();
     const originalPut = db.vaultProfile.put.bind(db.vaultProfile);
 
-    vi.spyOn(db.vaultProfile, "put").mockImplementationOnce(async (...args) => {
-      await deferredProfileWrite.promise;
-      return await originalPut(...args);
+    vi.spyOn(db.vaultProfile, "put").mockImplementationOnce((...args) => {
+      return deferredProfileWrite.promise.then(() =>
+        originalPut(...args)
+      ) as ReturnType<typeof originalPut>;
     });
 
     const initializePromise = initializeOfflineVault(persistedUser);
