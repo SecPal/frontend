@@ -570,10 +570,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [authTransport.kind, user]);
 
   const revalidateBrowserSessionAfterStorageMismatch = useCallback(() => {
+    const hasLogoutBarrier =
+      hasLogoutBarrierRef.current || syncBarrierStateFromStorage();
+
+    if (hasLogoutBarrier) {
+      reconcileActiveBarrierState();
+      return;
+    }
+
     if (
       authTransport.kind === "browser-session" &&
       isOnline() &&
-      shouldBootstrapBrowserSessionWithoutStoredUser(authTransport.kind, false)
+      shouldBootstrapBrowserSessionWithoutStoredUser(
+        authTransport.kind,
+        hasLogoutBarrier
+      )
     ) {
       hasLogoutBarrierRef.current = false;
       shouldSkipBarrierVaultTableCleanupRef.current = false;
@@ -596,6 +607,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [
     authTransport.kind,
     invalidateBootstrapRevalidation,
+    reconcileActiveBarrierState,
+    syncBarrierStateFromStorage,
     syncOfflineAuthState,
   ]);
 
