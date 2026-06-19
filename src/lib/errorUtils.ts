@@ -4,7 +4,7 @@
 import { msg, type MacroMessageDescriptor } from "@lingui/core/macro";
 import type { ApiValidationErrors } from "../services/ApiError";
 import { ApiError } from "../services/ApiError";
-import { AuthApiError } from "../services/authApi";
+import { AuthApiError } from "../services/AuthApiError";
 
 type TranslatableDescriptor = { id: string; message?: string };
 type Translate = (descriptor: TranslatableDescriptor) => string;

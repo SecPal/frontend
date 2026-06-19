@@ -16,7 +16,7 @@ import { SettingsPage } from "./SettingsPage";
 import { messages as deMessages } from "../../locales/de/messages.mjs";
 import { messages as enMessages } from "../../locales/en/messages.mjs";
 import * as i18nModule from "../../i18n";
-import * as authApi from "../../services/authApi";
+import * as authAccountApi from "../../services/authAccountApi";
 import * as passkeyBrowser from "../../services/passkeyBrowser";
 
 vi.mock("../../components/MfaQrCode", () => ({
@@ -38,8 +38,8 @@ vi.mock("../../i18n", async () => {
   };
 });
 
-vi.mock("../../services/authApi", async () => {
-  const actual = await vi.importActual("../../services/authApi");
+vi.mock("../../services/authAccountApi", async () => {
+  const actual = await vi.importActual("../../services/authAccountApi");
   return {
     ...actual,
     deletePasskey: vi.fn(),
@@ -220,10 +220,10 @@ describe("SettingsPage", () => {
     vi.mocked(passkeyBrowser.isPasskeyRegistrationSupported).mockReturnValue(
       true
     );
-    vi.mocked(authApi.getMfaStatus).mockResolvedValue(
+    vi.mocked(authAccountApi.getMfaStatus).mockResolvedValue(
       createDisabledMfaStatusResponse()
     );
-    vi.mocked(authApi.getPasskeys).mockResolvedValue(
+    vi.mocked(authAccountApi.getPasskeys).mockResolvedValue(
       createPasskeyListResponse()
     );
   });
@@ -237,10 +237,10 @@ describe("SettingsPage", () => {
   });
 
   it("keeps settings sections and controls visible during initial MFA and passkey loads", () => {
-    vi.mocked(authApi.getMfaStatus).mockImplementation(
+    vi.mocked(authAccountApi.getMfaStatus).mockImplementation(
       () => new Promise(() => {})
     );
-    vi.mocked(authApi.getPasskeys).mockImplementation(
+    vi.mocked(authAccountApi.getPasskeys).mockImplementation(
       () => new Promise(() => {})
     );
 
@@ -281,7 +281,7 @@ describe("SettingsPage", () => {
   });
 
   it("shows an empty passkey state when no credentials are enrolled", async () => {
-    vi.mocked(authApi.getPasskeys).mockResolvedValueOnce({ data: [] });
+    vi.mocked(authAccountApi.getPasskeys).mockResolvedValueOnce({ data: [] });
 
     await renderSettingsPage();
 
@@ -291,8 +291,8 @@ describe("SettingsPage", () => {
   });
 
   it("shows passkey loading errors returned by the API", async () => {
-    vi.mocked(authApi.getPasskeys).mockRejectedValueOnce(
-      new authApi.AuthApiError("Failed to load passkeys.")
+    vi.mocked(authAccountApi.getPasskeys).mockRejectedValueOnce(
+      new authAccountApi.AuthApiError("Failed to load passkeys.")
     );
 
     await renderSettingsPage();
@@ -303,7 +303,7 @@ describe("SettingsPage", () => {
   });
 
   it("shows a fallback passkey loading error for unexpected failures", async () => {
-    vi.mocked(authApi.getPasskeys).mockRejectedValueOnce("unexpected");
+    vi.mocked(authAccountApi.getPasskeys).mockRejectedValueOnce("unexpected");
 
     await renderSettingsPage();
 
@@ -328,7 +328,7 @@ describe("SettingsPage", () => {
   });
 
   it("registers a passkey and appends it to the enrolled list", async () => {
-    vi.mocked(authApi.getPasskeys)
+    vi.mocked(authAccountApi.getPasskeys)
       .mockResolvedValueOnce(createPasskeyListResponse())
       .mockResolvedValueOnce({
         data: [
@@ -336,9 +336,9 @@ describe("SettingsPage", () => {
           createPasskeyRegistrationVerificationResponse().data.credential,
         ],
       });
-    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockResolvedValueOnce({
       id: "new-credential-id",
       raw_id: "bmV3LWNyZWRlbnRpYWwtaWQ",
@@ -350,9 +350,9 @@ describe("SettingsPage", () => {
       },
       client_extension_results: {},
     });
-    vi.mocked(authApi.verifyPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationVerificationResponse()
-    );
+    vi.mocked(
+      authAccountApi.verifyPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationVerificationResponse());
 
     await renderSettingsPage();
 
@@ -362,30 +362,32 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
 
     await waitFor(() => {
-      expect(authApi.startPasskeyRegistrationChallenge).toHaveBeenCalledTimes(
-        1
-      );
+      expect(
+        authAccountApi.startPasskeyRegistrationChallenge
+      ).toHaveBeenCalledTimes(1);
       expect(passkeyBrowser.getPasskeyAttestation).toHaveBeenCalledTimes(1);
-      expect(authApi.verifyPasskeyRegistrationChallenge).toHaveBeenCalledWith(
+      expect(
+        authAccountApi.verifyPasskeyRegistrationChallenge
+      ).toHaveBeenCalledWith(
         "550e8400-e29b-41d4-a716-446655440099",
         expect.objectContaining({
           label: "Security Key",
           credential: expect.objectContaining({ id: "new-credential-id" }),
         })
       );
-      expect(authApi.getPasskeys).toHaveBeenCalledTimes(2);
+      expect(authAccountApi.getPasskeys).toHaveBeenCalledTimes(2);
     });
 
     expect(await screen.findByText(/security key/i)).toBeInTheDocument();
   });
 
   it("keeps passkey rows visible while refreshing after registration", async () => {
-    vi.mocked(authApi.getPasskeys)
+    vi.mocked(authAccountApi.getPasskeys)
       .mockResolvedValueOnce(createPasskeyListResponse())
       .mockImplementationOnce(() => new Promise(() => {}));
-    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockResolvedValueOnce({
       id: "new-credential-id",
       raw_id: "bmV3LWNyZWRlbnRpYWwtaWQ",
@@ -396,9 +398,9 @@ describe("SettingsPage", () => {
         transports: ["usb"],
       },
     });
-    vi.mocked(authApi.verifyPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationVerificationResponse()
-    );
+    vi.mocked(
+      authAccountApi.verifyPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationVerificationResponse());
 
     await renderSettingsPage();
 
@@ -415,9 +417,9 @@ describe("SettingsPage", () => {
   });
 
   it("shows a browser-check prompt while waiting for the credential provider", async () => {
-    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
 
     let resolveAttestation!: (value: unknown) => void;
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockReturnValue(
@@ -455,9 +457,9 @@ describe("SettingsPage", () => {
   });
 
   it("shows a saving prompt while the passkey registration is being verified", async () => {
-    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockResolvedValueOnce({
       id: "new-credential-id",
       raw_id: "bmV3LWNyZWRlbnRpYWwtaWQ",
@@ -473,7 +475,9 @@ describe("SettingsPage", () => {
     let resolveVerification!: (
       value: ReturnType<typeof createPasskeyRegistrationVerificationResponse>
     ) => void;
-    vi.mocked(authApi.verifyPasskeyRegistrationChallenge).mockReturnValueOnce(
+    vi.mocked(
+      authAccountApi.verifyPasskeyRegistrationChallenge
+    ).mockReturnValueOnce(
       new Promise((resolve) => {
         resolveVerification = resolve;
       })
@@ -502,8 +506,10 @@ describe("SettingsPage", () => {
   });
 
   it("shows passkey enrollment errors inline", async () => {
-    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockRejectedValueOnce(
-      new authApi.AuthApiError("Passkey registration failed.")
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockRejectedValueOnce(
+      new authAccountApi.AuthApiError("Passkey registration failed.")
     );
 
     await renderSettingsPage();
@@ -519,9 +525,9 @@ describe("SettingsPage", () => {
   });
 
   it("shows cancellation message when user dismisses the browser passkey dialog", async () => {
-    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockRejectedValueOnce(
       new DOMException(
         "The operation either timed out or was not allowed.",
@@ -545,9 +551,9 @@ describe("SettingsPage", () => {
   });
 
   it("shows timeout message when passkey registration is aborted", async () => {
-    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockRejectedValueOnce(
       new DOMException("The operation was aborted.", "AbortError")
     );
@@ -568,9 +574,9 @@ describe("SettingsPage", () => {
   });
 
   it("shows generic error when browser attestation fails unexpectedly", async () => {
-    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockRejectedValueOnce(
       new Error("Unexpected credential error")
     );
@@ -591,9 +597,9 @@ describe("SettingsPage", () => {
   });
 
   it("shows credential provider guidance when the platform reports a credential manager error", async () => {
-    vi.mocked(authApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockRejectedValueOnce(
       new Error(
         "An unknown error occurred while talking to the credential manager."
@@ -657,11 +663,11 @@ describe("SettingsPage", () => {
   });
 
   it("removes an enrolled passkey and refreshes the list", async () => {
-    vi.mocked(authApi.deletePasskey).mockResolvedValueOnce({
+    vi.mocked(authAccountApi.deletePasskey).mockResolvedValueOnce({
       message: "Passkey deleted successfully.",
       data: { remaining_passkeys: 0 },
     });
-    vi.mocked(authApi.getPasskeys)
+    vi.mocked(authAccountApi.getPasskeys)
       .mockResolvedValueOnce(createPasskeyListResponse())
       .mockResolvedValueOnce({ data: [] });
 
@@ -669,8 +675,10 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /remove/i }));
 
     await waitFor(() => {
-      expect(authApi.deletePasskey).toHaveBeenCalledWith("credential-id");
-      expect(authApi.getPasskeys).toHaveBeenCalledTimes(2);
+      expect(authAccountApi.deletePasskey).toHaveBeenCalledWith(
+        "credential-id"
+      );
+      expect(authAccountApi.getPasskeys).toHaveBeenCalledTimes(2);
       expect(
         screen.queryByText(/work macbook touch id/i)
       ).not.toBeInTheDocument();
@@ -689,13 +697,13 @@ describe("SettingsPage", () => {
         }) => void)
       | undefined;
 
-    vi.mocked(authApi.deletePasskey).mockImplementationOnce(
+    vi.mocked(authAccountApi.deletePasskey).mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           resolveDeletion = resolve;
         })
     );
-    vi.mocked(authApi.getPasskeys).mockResolvedValueOnce({
+    vi.mocked(authAccountApi.getPasskeys).mockResolvedValueOnce({
       data: [
         {
           id: "credential-id",
@@ -736,7 +744,7 @@ describe("SettingsPage", () => {
       });
 
       await waitFor(() => {
-        expect(authApi.getPasskeys).toHaveBeenCalledTimes(2);
+        expect(authAccountApi.getPasskeys).toHaveBeenCalledTimes(2);
         expect(screen.getAllByRole("button", { name: /remove/i })).toHaveLength(
           1
         );
@@ -765,13 +773,13 @@ describe("SettingsPage", () => {
         }) => void)
       | undefined;
 
-    vi.mocked(authApi.deletePasskey).mockImplementationOnce(
+    vi.mocked(authAccountApi.deletePasskey).mockImplementationOnce(
       () =>
         new Promise((resolve) => {
           resolveDeletion = resolve;
         })
     );
-    vi.mocked(authApi.getPasskeys)
+    vi.mocked(authAccountApi.getPasskeys)
       .mockResolvedValueOnce(createPasskeyListResponse())
       .mockResolvedValueOnce({ data: [] });
 
@@ -792,7 +800,7 @@ describe("SettingsPage", () => {
   });
 
   it("shows generic Error removal failures inline", async () => {
-    vi.mocked(authApi.deletePasskey).mockRejectedValueOnce(
+    vi.mocked(authAccountApi.deletePasskey).mockRejectedValueOnce(
       new Error("Deletion exploded.")
     );
 
@@ -804,7 +812,7 @@ describe("SettingsPage", () => {
   });
 
   it("shows fallback removal errors for unexpected failures", async () => {
-    vi.mocked(authApi.deletePasskey).mockRejectedValueOnce("unexpected");
+    vi.mocked(authAccountApi.deletePasskey).mockRejectedValueOnce("unexpected");
 
     await renderSettingsPage();
 
@@ -816,8 +824,8 @@ describe("SettingsPage", () => {
   });
 
   it("shows passkey removal errors inline", async () => {
-    vi.mocked(authApi.deletePasskey).mockRejectedValueOnce(
-      new authApi.AuthApiError("Passkey deletion failed.")
+    vi.mocked(authAccountApi.deletePasskey).mockRejectedValueOnce(
+      new authAccountApi.AuthApiError("Passkey deletion failed.")
     );
 
     await renderSettingsPage();
@@ -886,10 +894,10 @@ describe("SettingsPage", () => {
   });
 
   it("regenerates recovery codes for an enabled MFA account", async () => {
-    vi.mocked(authApi.getMfaStatus).mockResolvedValueOnce(
+    vi.mocked(authAccountApi.getMfaStatus).mockResolvedValueOnce(
       createEnabledMfaStatusResponse()
     );
-    vi.mocked(authApi.regenerateRecoveryCodes).mockResolvedValueOnce(
+    vi.mocked(authAccountApi.regenerateRecoveryCodes).mockResolvedValueOnce(
       createRecoveryRevealResponse()
     );
 
@@ -915,7 +923,7 @@ describe("SettingsPage", () => {
     );
 
     await waitFor(() => {
-      expect(authApi.regenerateRecoveryCodes).toHaveBeenCalledWith({
+      expect(authAccountApi.regenerateRecoveryCodes).toHaveBeenCalledWith({
         method: "totp",
         code: "123456",
       });
@@ -928,7 +936,7 @@ describe("SettingsPage", () => {
   });
 
   it("starts MFA enrollment for a disabled account and shows QR plus manual setup details", async () => {
-    vi.mocked(authApi.startTotpEnrollment).mockResolvedValueOnce(
+    vi.mocked(authAccountApi.startTotpEnrollment).mockResolvedValueOnce(
       createTotpEnrollmentPreparationResponse()
     );
 
@@ -938,7 +946,7 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /set up mfa/i }));
 
     await waitFor(() => {
-      expect(authApi.startTotpEnrollment).toHaveBeenCalledTimes(1);
+      expect(authAccountApi.startTotpEnrollment).toHaveBeenCalledTimes(1);
     });
 
     expect(
@@ -952,10 +960,10 @@ describe("SettingsPage", () => {
   });
 
   it("confirms MFA enrollment and reveals recovery codes", async () => {
-    vi.mocked(authApi.startTotpEnrollment).mockResolvedValueOnce(
+    vi.mocked(authAccountApi.startTotpEnrollment).mockResolvedValueOnce(
       createTotpEnrollmentPreparationResponse()
     );
-    vi.mocked(authApi.confirmTotpEnrollment).mockResolvedValueOnce(
+    vi.mocked(authAccountApi.confirmTotpEnrollment).mockResolvedValueOnce(
       createRecoveryRevealResponse()
     );
 
@@ -977,7 +985,7 @@ describe("SettingsPage", () => {
     );
 
     await waitFor(() => {
-      expect(authApi.confirmTotpEnrollment).toHaveBeenCalledWith({
+      expect(authAccountApi.confirmTotpEnrollment).toHaveBeenCalledWith({
         code: "123456",
       });
     });
@@ -990,10 +998,10 @@ describe("SettingsPage", () => {
   });
 
   it("shows inline error when MFA enrollment confirmation fails", async () => {
-    vi.mocked(authApi.startTotpEnrollment).mockResolvedValueOnce(
+    vi.mocked(authAccountApi.startTotpEnrollment).mockResolvedValueOnce(
       createTotpEnrollmentPreparationResponse()
     );
-    vi.mocked(authApi.confirmTotpEnrollment).mockRejectedValueOnce(
+    vi.mocked(authAccountApi.confirmTotpEnrollment).mockRejectedValueOnce(
       new Error("Invalid authenticator code")
     );
 
@@ -1020,7 +1028,7 @@ describe("SettingsPage", () => {
   });
 
   it("shows enrollment preparation error and retries on demand", async () => {
-    vi.mocked(authApi.startTotpEnrollment)
+    vi.mocked(authAccountApi.startTotpEnrollment)
       .mockRejectedValueOnce(new Error("Service unavailable"))
       .mockResolvedValueOnce(createTotpEnrollmentPreparationResponse());
 
@@ -1040,7 +1048,7 @@ describe("SettingsPage", () => {
   });
 
   it("cancels the enrollment dialog without submitting", async () => {
-    vi.mocked(authApi.startTotpEnrollment).mockResolvedValueOnce(
+    vi.mocked(authAccountApi.startTotpEnrollment).mockResolvedValueOnce(
       createTotpEnrollmentPreparationResponse()
     );
 
@@ -1058,14 +1066,14 @@ describe("SettingsPage", () => {
         screen.queryByRole("heading", { name: /set up mfa/i })
       ).not.toBeInTheDocument();
     });
-    expect(authApi.confirmTotpEnrollment).not.toHaveBeenCalled();
+    expect(authAccountApi.confirmTotpEnrollment).not.toHaveBeenCalled();
   });
 
   it("disables MFA after code confirmation", async () => {
-    vi.mocked(authApi.getMfaStatus).mockResolvedValueOnce(
+    vi.mocked(authAccountApi.getMfaStatus).mockResolvedValueOnce(
       createEnabledMfaStatusResponse()
     );
-    vi.mocked(authApi.disableMfa).mockResolvedValueOnce(
+    vi.mocked(authAccountApi.disableMfa).mockResolvedValueOnce(
       createDisabledMfaStatusResponse()
     );
 
@@ -1089,7 +1097,7 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /^disable mfa$/i }));
 
     await waitFor(() => {
-      expect(authApi.disableMfa).toHaveBeenCalledWith({
+      expect(authAccountApi.disableMfa).toHaveBeenCalledWith({
         method: "totp",
         code: "123456",
       });
@@ -1098,7 +1106,7 @@ describe("SettingsPage", () => {
   });
 
   it("shows error message when MFA status fails to load", async () => {
-    vi.mocked(authApi.getMfaStatus).mockRejectedValueOnce(
+    vi.mocked(authAccountApi.getMfaStatus).mockRejectedValueOnce(
       new Error("Network error")
     );
 
@@ -1108,10 +1116,10 @@ describe("SettingsPage", () => {
   });
 
   it("shows API error in dialog when disabling MFA fails", async () => {
-    vi.mocked(authApi.getMfaStatus).mockResolvedValueOnce(
+    vi.mocked(authAccountApi.getMfaStatus).mockResolvedValueOnce(
       createEnabledMfaStatusResponse()
     );
-    vi.mocked(authApi.disableMfa).mockRejectedValueOnce(
+    vi.mocked(authAccountApi.disableMfa).mockRejectedValueOnce(
       new Error("Invalid authenticator code")
     );
 
@@ -1134,7 +1142,7 @@ describe("SettingsPage", () => {
   });
 
   it("shows the canonical raw recovery-code placeholder for sensitive MFA actions", async () => {
-    vi.mocked(authApi.getMfaStatus).mockResolvedValueOnce(
+    vi.mocked(authAccountApi.getMfaStatus).mockResolvedValueOnce(
       createEnabledMfaStatusResponse()
     );
 
@@ -1154,10 +1162,10 @@ describe("SettingsPage", () => {
   });
 
   it("requires acknowledgment before closing recovery codes dialog", async () => {
-    vi.mocked(authApi.getMfaStatus).mockResolvedValueOnce(
+    vi.mocked(authAccountApi.getMfaStatus).mockResolvedValueOnce(
       createEnabledMfaStatusResponse()
     );
-    vi.mocked(authApi.regenerateRecoveryCodes).mockResolvedValueOnce(
+    vi.mocked(authAccountApi.regenerateRecoveryCodes).mockResolvedValueOnce(
       createRecoveryRevealResponse()
     );
 
@@ -1204,7 +1212,7 @@ describe("SettingsPage", () => {
   });
 
   it("cancels the sensitive action dialog without submitting", async () => {
-    vi.mocked(authApi.getMfaStatus).mockResolvedValueOnce(
+    vi.mocked(authAccountApi.getMfaStatus).mockResolvedValueOnce(
       createEnabledMfaStatusResponse()
     );
 
@@ -1222,17 +1230,17 @@ describe("SettingsPage", () => {
         screen.queryByRole("heading", { name: /disable mfa/i })
       ).not.toBeInTheDocument();
     });
-    expect(authApi.disableMfa).not.toHaveBeenCalled();
+    expect(authAccountApi.disableMfa).not.toHaveBeenCalled();
   });
 
   it("shows processing state while a sensitive action is submitting", async () => {
-    vi.mocked(authApi.getMfaStatus).mockResolvedValueOnce(
+    vi.mocked(authAccountApi.getMfaStatus).mockResolvedValueOnce(
       createEnabledMfaStatusResponse()
     );
     let resolveDisable!: (
       value: ReturnType<typeof createDisabledMfaStatusResponse>
     ) => void;
-    vi.mocked(authApi.disableMfa).mockReturnValueOnce(
+    vi.mocked(authAccountApi.disableMfa).mockReturnValueOnce(
       new Promise<ReturnType<typeof createDisabledMfaStatusResponse>>((res) => {
         resolveDisable = res;
       })

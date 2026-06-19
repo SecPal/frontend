@@ -5,7 +5,7 @@ import type { MacroMessageDescriptor } from "@lingui/core/macro";
 import { describe, expect, it } from "vitest";
 
 import { ApiError, type ApiValidationErrors } from "../services/ApiError";
-import { AuthApiError } from "../services/authApi";
+import { AuthApiError } from "../services/AuthApiError";
 import {
   getErrorRetryAfterSeconds,
   getErrorValidationErrors,
