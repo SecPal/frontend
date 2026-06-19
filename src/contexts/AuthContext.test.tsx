@@ -5,7 +5,9 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, act, waitFor } from "@testing-library/react";
 import { AuthProvider } from "./AuthContext";
 import { useAuth } from "../hooks/useAuth";
+import { getCurrentUser } from "../services/authApi";
 import { sanitizePersistedAuthUser } from "../services/authState";
+import { isOnline } from "../services/sessionEvents";
 import {
   AUTH_VAULT_STORAGE_KEY,
   clearOfflineVaultSession,
@@ -86,6 +88,8 @@ describe("AuthContext", () => {
     document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
     document.cookie = "XSRF-TOKEN=test-csrf-token;path=/";
     sessionEventHandlers.clear();
+    vi.mocked(getCurrentUser).mockReset();
+    vi.mocked(isOnline).mockReturnValue(false);
     vi.mocked(resetPrefetchCache).mockClear();
   });
 
@@ -430,6 +434,64 @@ describe("AuthContext", () => {
       });
 
       expect(resetPrefetchCache).toHaveBeenCalled();
+    });
+
+    it("clears the prefetch cache when cross-tab storage removal falls back to logout", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        permissions: ["employees.read"],
+      });
+
+      render(
+        <AuthProvider>
+          <PermissionTestComponent permission="employees.read" />
+        </AuthProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
+      });
+
+      vi.mocked(resetPrefetchCache).mockClear();
+
+      await act(async () => {
+        localStorage.removeItem("auth_user");
+        localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
+
+        const storageEvent = new Event("storage");
+        Object.defineProperties(storageEvent, {
+          key: { value: AUTH_VAULT_STORAGE_KEY },
+          newValue: { value: null },
+          storageArea: { value: localStorage },
+        });
+        window.dispatchEvent(storageEvent);
+        await new Promise((r) => setTimeout(r, 0));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+      });
+
+      expect(resetPrefetchCache).toHaveBeenCalled();
+    });
+
+    it("does not clear the prefetch cache when browser-session bootstrap revalidation finds no session without a storage mismatch", async () => {
+      vi.mocked(isOnline).mockReturnValue(true);
+      vi.mocked(getCurrentUser).mockRejectedValueOnce({ status: 401 });
+
+      render(
+        <AuthProvider>
+          <PermissionTestComponent permission="employees.read" />
+        </AuthProvider>
+      );
+
+      await waitFor(() => {
+        expect(getCurrentUser).toHaveBeenCalled();
+      });
+
+      expect(resetPrefetchCache).not.toHaveBeenCalled();
     });
   });
 

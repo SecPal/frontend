@@ -24,6 +24,11 @@ import * as passkeyBrowser from "../services/passkeyBrowser";
 import { authStorage } from "../services/storage";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import * as i18nModule from "../i18n";
+import { createRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
+
+const { mockLoadLoginMfaDialogModule } = vi.hoisted(() => ({
+  mockLoadLoginMfaDialogModule: vi.fn(() => import("./LoginMfaDialog")),
+}));
 
 // Mock only the API functions, not AuthApiError class
 vi.mock("../services/authApi", async () => {
@@ -68,6 +73,14 @@ vi.mock("../i18n", async () => {
   };
 });
 
+vi.mock("../lib/lazyAppModules", async () => {
+  const actual = await vi.importActual("../lib/lazyAppModules");
+  return {
+    ...actual,
+    loadLoginMfaDialogModule: mockLoadLoginMfaDialogModule,
+  };
+});
+
 const renderLogin = () => {
   return render(
     <MemoryRouter initialEntries={["/login"]}>
@@ -97,6 +110,22 @@ async function expectLoginPasskeyErrorAlert(matcher: RegExp | string) {
     return node!;
   });
   expect(el).toHaveTextContent(matcher);
+}
+
+function mockBrowserPasskeySupport(supported: boolean) {
+  vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(supported);
+  Object.defineProperty(window, "isSecureContext", {
+    configurable: true,
+    value: supported,
+  });
+  vi.stubGlobal(
+    "PublicKeyCredential",
+    supported ? class PublicKeyCredentialMock {} : undefined
+  );
+  Object.defineProperty(navigator, "credentials", {
+    configurable: true,
+    value: supported ? { get: vi.fn() } : undefined,
+  });
 }
 
 // Helper to create a healthy response
@@ -196,36 +225,27 @@ function switchToRecoveryCodeMode() {
 }
 
 async function selectLanguage(visibleName: string) {
-  const trigger = screen.getByRole("combobox", { name: /select language/i });
-  fireEvent.pointerDown(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.click(trigger, { button: 0 });
+  const trigger = screen.getByRole("combobox", {
+    name: /select language/i,
+  }) as HTMLSelectElement;
+  const selectedOption = Array.from(trigger.options).find(
+    (option) => option.text === visibleName
+  );
 
-  const option = await screen.findByRole("option", { name: visibleName });
-  fireEvent.pointerDown(option, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(option, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.click(option, { button: 0 });
+  if (!selectedOption) {
+    throw new Error(`Language option "${visibleName}" not found`);
+  }
+
+  fireEvent.change(trigger, { target: { value: selectedOption.value } });
 }
 
 describe("Login", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLoadLoginMfaDialogModule.mockReset();
+    mockLoadLoginMfaDialogModule.mockImplementation(
+      () => import("./LoginMfaDialog")
+    );
     localStorage.clear();
     window.history.replaceState({}, "", "/login");
     i18n.load("en", enMessages);
@@ -233,9 +253,12 @@ describe("Login", () => {
     i18n.activate("en");
     // Default: health check passes
     vi.mocked(healthApi.checkHealth).mockResolvedValue(createHealthyResponse());
+    vi.mocked(authApi.getCurrentUser).mockRejectedValue(
+      new authApi.AuthApiError("Unauthenticated.", undefined, 401, "HTTP_401")
+    );
     // Default: user is online
     vi.mocked(useOnlineStatus).mockReturnValue(true);
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(false);
+    mockBrowserPasskeySupport(false);
   });
 
   afterEach(() => {
@@ -350,7 +373,7 @@ describe("Login", () => {
   });
 
   it("shows a passkey sign-in action when the browser supports passkeys", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
 
     renderLogin();
 
@@ -842,7 +865,7 @@ describe("Login", () => {
   });
 
   it("completes passkey sign-in with the browser WebAuthn flow", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -903,7 +926,7 @@ describe("Login", () => {
   });
 
   it("always uses optional mediation for an explicit button click even when the API returns conditional", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -956,7 +979,7 @@ describe("Login", () => {
   });
 
   it("starts passkey sign-in with a discoverable challenge even when the email field is filled", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1017,7 +1040,7 @@ describe("Login", () => {
   });
 
   it("shows passkey sign-in errors inline when the passkey flow fails", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockRejectedValueOnce(
@@ -1036,7 +1059,7 @@ describe("Login", () => {
   });
 
   it("shows a cancelled message when passkey sign-in is rejected with NotAllowedError", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1074,7 +1097,7 @@ describe("Login", () => {
   });
 
   it("shows a timeout message when passkey sign-in is aborted", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1110,7 +1133,7 @@ describe("Login", () => {
   });
 
   it("shows credential provider guidance when the platform reports a credential manager error", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1144,7 +1167,7 @@ describe("Login", () => {
   });
 
   it("surfaces resident-credential errors instead of retrying with an email-scoped challenge", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1186,7 +1209,7 @@ describe("Login", () => {
   });
 
   it("shows a browser-check prompt while waiting for the WebAuthn credential", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1238,7 +1261,7 @@ describe("Login", () => {
   });
 
   it("shows a verifying prompt while the passkey verify request is in progress", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1304,7 +1327,7 @@ describe("Login", () => {
   });
 
   it("completes browser passkey login without a separate session confirmation fetch", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1366,7 +1389,7 @@ describe("Login", () => {
   });
 
   it("clears the browser passkey loading state after verify succeeds", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -2081,6 +2104,89 @@ describe("Login", () => {
     consoleErrorSpy.mockRestore();
   });
 
+  it("treats transient auth chunk load failures as temporary login unavailability", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    mockLogin.mockRejectedValueOnce(
+      new TypeError("Failed to fetch dynamically imported module")
+    );
+
+    renderLogin();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /log in/i })
+      ).toBeInTheDocument();
+    });
+
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+    const submitButton = screen.getByRole("button", { name: /log in/i });
+
+    fireEvent.change(emailInput, { target: { value: "test@secpal.dev" } });
+    fireEvent.change(passwordInput, { target: { value: "password" } });
+    fireEvent.click(submitButton);
+
+    expect(
+      await screen.findByText(/login is temporarily unavailable/i)
+    ).toBeInTheDocument();
+    expect(emailInput).not.toHaveAttribute("aria-invalid");
+    expect(passwordInput).not.toHaveAttribute("aria-invalid");
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Login error:",
+      expect.any(TypeError)
+    );
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("shows a recoverable fallback when the MFA dialog chunk cannot be loaded", async () => {
+    vi.mocked(authApi.login).mockResolvedValueOnce({
+      challenge: mfaChallengeFixture,
+    });
+    mockLoadLoginMfaDialogModule.mockRejectedValueOnce(
+      createRecoverableLazyModuleError(
+        "The secure MFA prompt is temporarily unavailable on this device.",
+        new TypeError("Failed to fetch dynamically imported module")
+      )
+    );
+
+    renderLogin();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /log in/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "test@secpal.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "password123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+    expect(
+      await screen.findByText(/could not load the secure verification prompt/i)
+    ).toBeInTheDocument();
+
+    mockLoadLoginMfaDialogModule.mockImplementationOnce(
+      () => import("./LoginMfaDialog")
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /retry/i }));
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /second factor required/i,
+      })
+    ).toBeInTheDocument();
+  });
+
   it("displays fallback error message for unknown error types", async () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi
@@ -2424,7 +2530,7 @@ describe("Login", () => {
       }
     });
 
-    it("shows 'Checking system...' while health check is in progress", async () => {
+    it("keeps the login form interactive while the health check is in progress", async () => {
       // Create a promise that we can control
       let resolveHealthCheck: (value: healthApi.HealthStatus) => void;
       const healthCheckPromise = new Promise<healthApi.HealthStatus>(
@@ -2436,8 +2542,9 @@ describe("Login", () => {
 
       renderLogin();
 
-      // Should show "Checking system..." while loading
-      expect(screen.getByText(/checking system/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /log in/i })).toBeEnabled();
+      expect(screen.getByLabelText(/email/i)).toBeEnabled();
+      expect(screen.getByLabelText(/password/i)).toBeEnabled();
 
       // Resolve the health check
       resolveHealthCheck!(createHealthyResponse());

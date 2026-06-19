@@ -573,7 +573,10 @@ describe("ApplicationLayout", () => {
       vi.useFakeTimers();
 
       try {
-        fireEvent.click(signOutButton);
+        await act(async () => {
+          fireEvent.click(signOutButton);
+          await Promise.resolve();
+        });
 
         expect(mockLogout).toHaveBeenCalledTimes(1);
         expect(getStoredAuthState()).not.toBeNull();

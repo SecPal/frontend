@@ -2,7 +2,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { onCLS, onINP, onLCP, onFCP, onTTFB, type Metric } from "web-vitals";
-import { analytics } from "./analytics";
+import { authStorage } from "../services/storage";
+
+async function loadAnalyticsModule() {
+  return await import("./analytics");
+}
+
+let analyticsModulePromise: ReturnType<typeof loadAnalyticsModule> | undefined;
+
+function getAnalyticsModule() {
+  analyticsModulePromise ??= loadAnalyticsModule();
+  return analyticsModulePromise;
+}
+
+function shouldReportWebVitalsToAnalytics(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return authStorage.hasStoredUser();
+}
 
 /**
  * Web Vitals metrics for performance monitoring
@@ -91,17 +110,29 @@ function reportWebVital(metric: Metric): void {
   // Check thresholds and log warnings (development only)
   checkThreshold(metric);
 
-  if (!analytics) {
-    console.warn("Analytics not available, skipping Web Vitals reporting");
-    return;
-  }
+  void (async () => {
+    try {
+      if (!shouldReportWebVitalsToAnalytics()) {
+        return;
+      }
 
-  analytics.trackPerformance(metric.name, metric.value, {
-    id: metric.id,
-    delta: metric.delta,
-    navigationType: metric.navigationType,
-    rating: metric.rating,
-  });
+      const { analytics } = await getAnalyticsModule();
+
+      if (!analytics) {
+        console.warn("Analytics not available, skipping Web Vitals reporting");
+        return;
+      }
+
+      void analytics.trackPerformance(metric.name, metric.value, {
+        id: metric.id,
+        delta: metric.delta,
+        navigationType: metric.navigationType,
+        rating: metric.rating,
+      });
+    } catch (error: unknown) {
+      console.warn("Failed to load analytics for Web Vitals reporting:", error);
+    }
+  })();
 }
 
 /**

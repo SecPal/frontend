@@ -8,18 +8,20 @@ import {
   peekBrowserPushInstallationId,
   setBrowserPushLogoutInProgress,
 } from "../lib/browserPushState";
-import {
-  AuthApiError,
-  getCurrentUser as getBrowserSessionCurrentUser,
-  login as loginWithBrowserSession,
-  logout as logoutBrowserSession,
-  logoutAll as logoutAllBrowserSessions,
-} from "./authApi";
-import { revokeBrowserNotificationInstallation } from "./notificationInstallationsApi";
+import { isTransientModuleLoadError } from "../lib/lazyModuleErrors";
+import { AuthApiError } from "./AuthApiError";
 import { sanitizeAuthUser } from "./authState";
 import { isOnline } from "./sessionEvents";
 
-export { AuthApiError } from "./authApi";
+export { AuthApiError } from "./AuthApiError";
+
+async function loadAuthApiModule() {
+  return await import("./authApi");
+}
+
+async function loadNotificationInstallationsModule() {
+  return await import("./notificationInstallationsApi");
+}
 
 export interface AuthCredentials {
   email: string;
@@ -61,6 +63,8 @@ export interface AuthTransport {
 }
 
 const BROWSER_PUSH_LOGOUT_REVOCATION_TIMEOUT_MS = 1000;
+const TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE =
+  "Login is temporarily unavailable. Please try again later.";
 
 async function finalizeAuthenticatedLogin(
   payload: unknown,
@@ -147,7 +151,10 @@ function revokeBrowserPushInstallationForLogout(): Promise<void> | null {
     return null;
   }
 
-  return revokeBrowserNotificationInstallation(installationId)
+  return loadNotificationInstallationsModule()
+    .then(({ revokeBrowserNotificationInstallation }) =>
+      revokeBrowserNotificationInstallation(installationId)
+    )
     .then(
       () => undefined,
       (error: unknown) => {
@@ -167,6 +174,25 @@ function revokeBrowserPushInstallationForLogout(): Promise<void> | null {
 const browserSessionAuthTransport: AuthTransport = {
   kind: "browser-session",
   async login(credentials): Promise<AuthLoginResult> {
+    let loginWithBrowserSession: typeof import("./authApi").login;
+    let getCurrentUser: typeof import("./authApi").getCurrentUser;
+
+    try {
+      ({ login: loginWithBrowserSession, getCurrentUser } =
+        await loadAuthApiModule());
+    } catch (error) {
+      if (isTransientModuleLoadError(error)) {
+        throw new AuthApiError(
+          TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE,
+          undefined,
+          503,
+          "AUTH_CHUNK_LOAD_FAILED"
+        );
+      }
+
+      throw error;
+    }
+
     const result = await loginWithBrowserSession(credentials);
 
     if (isMfaChallengeResponse(result)) {
@@ -179,7 +205,7 @@ const browserSessionAuthTransport: AuthTransport = {
     return finalizeAuthenticatedLogin(
       result,
       "Browser-session login",
-      () => getBrowserSessionCurrentUser(),
+      () => getCurrentUser(),
       "Browser-session current-user fetch"
     );
   },
@@ -201,6 +227,7 @@ const browserSessionAuthTransport: AuthTransport = {
       }
     } finally {
       try {
+        const { logout: logoutBrowserSession } = await loadAuthApiModule();
         await logoutBrowserSession();
       } finally {
         setBrowserPushLogoutInProgress(false);
@@ -217,6 +244,8 @@ const browserSessionAuthTransport: AuthTransport = {
       }
     } finally {
       try {
+        const { logoutAll: logoutAllBrowserSessions } =
+          await loadAuthApiModule();
         await logoutAllBrowserSessions();
       } finally {
         setBrowserPushLogoutInProgress(false);
@@ -224,7 +253,8 @@ const browserSessionAuthTransport: AuthTransport = {
     }
   },
   async getCurrentUser(): Promise<User> {
-    const user = await getBrowserSessionCurrentUser();
+    const { getCurrentUser } = await loadAuthApiModule();
+    const user = await getCurrentUser();
 
     return sanitizeAuthPayload(user, "Browser-session current-user fetch");
   },

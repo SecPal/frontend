@@ -26,6 +26,10 @@ msgstr "Full Name"
 msgid "Enabling..."
 msgstr "Enabling..."
 
+#: src/pages/Login.tsx
+msgid "Second factor required"
+msgstr "Second factor required"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Welcome to SecPal Onboarding"
 msgstr "Welcome to SecPal Onboarding"
@@ -82,6 +86,7 @@ msgstr "Merkle Tree"
 msgid "SecPal only exposes backend-backed browser delivery state here. It does not offer category-by-category notification controls yet."
 msgstr "SecPal only exposes backend-backed browser delivery state here. It does not offer category-by-category notification controls yet."
 
+#: src/components/LoginRouteState.tsx
 #: src/components/RouteGuardState.tsx
 msgid "Unlock your secure offline data"
 msgstr "Unlock your secure offline data"
@@ -437,7 +442,7 @@ msgstr "You can continue now and upload your documents later."
 msgid "Please select whether you currently have a Bewacher ID."
 msgstr "Please select whether you currently have a Bewacher ID."
 
-#: src/App.tsx
+#: src/AuthenticatedApp.tsx
 msgid "SecPal – A guard’s best friend"
 msgstr "SecPal – A guard’s best friend"
 
@@ -461,6 +466,7 @@ msgstr "Emergency contact name is required."
 
 #: src/components/OrganizationalUnitTree.tsx
 #: src/components/RouteGuardState.tsx
+#: src/pages/Login.tsx
 msgid "Retry"
 msgstr "Retry"
 
@@ -935,6 +941,10 @@ msgstr "ML"
 msgid "Switzerland"
 msgstr "Switzerland"
 
+#: src/components/PublicRouteLoader.tsx
+msgid "Loading page"
+msgstr "Loading page"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "This session expired before setup completed. Create a new session to continue."
 msgstr "This session expired before setup completed. Create a new session to continue."
@@ -1135,6 +1145,7 @@ msgstr "Please use the required format."
 msgid "Postal Code"
 msgstr "Postal Code"
 
+#: src/components/LoginRouteState.tsx
 #: src/components/RouteGuardState.tsx
 msgid "SecPal locked the local encrypted vault on this device. Unlock to restore previously cached offline-safe data, or sign out to clear the device state."
 msgstr "SecPal locked the local encrypted vault on this device. Unlock to restore previously cached offline-safe data, or sign out to clear the device state."
@@ -1298,6 +1309,10 @@ msgstr "Failed to submit"
 msgid "Bootstrap completed"
 msgstr "Bootstrap completed"
 
+#: src/components/LoginRouteState.tsx
+msgid "Loading login"
+msgstr "Loading login"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Enter the expiry date if the residence title is limited."
 msgstr "Enter the expiry date if the residence title is limited."
@@ -1327,6 +1342,7 @@ msgid "Failed to change language. Please try again."
 msgstr "Failed to change language. Please try again."
 
 #: src/components/application-layout.tsx
+#: src/components/LoginRouteState.tsx
 #: src/components/onboarding-layout.tsx
 #: src/components/RouteGuardState.tsx
 msgid "Sign out"
@@ -1438,7 +1454,7 @@ msgstr "Contract start date is required"
 msgid "Date of birth must be in the past"
 msgstr "Date of birth must be in the past"
 
-#: src/App.tsx
+#: src/AuthenticatedApp.tsx
 msgid "SecPal – operations software for German private security services."
 msgstr "SecPal – operations software for German private security services."
 
@@ -1451,6 +1467,10 @@ msgstr "Select an organizational unit to view details"
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Previous residence {0}"
 msgstr "Previous residence {0}"
+
+#: src/pages/Login.tsx
+msgid "Loading second factor prompt…"
+msgstr "Loading second factor prompt…"
 
 #: src/components/application-layout.tsx
 msgid "Employees"
@@ -1814,7 +1834,7 @@ msgstr "Get started by creating your first organizational unit."
 msgid "Select language"
 msgstr "Select language"
 
-#: src/pages/Login.tsx
+#: src/pages/LoginMfaDialog.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Recovery code"
 msgstr "Recovery code"
@@ -1843,7 +1863,7 @@ msgstr "Category-specific notification preferences are not available yet. SecPal
 msgid "Try again"
 msgstr "Try again"
 
-#: src/App.tsx
+#: src/AuthenticatedApp.tsx
 msgid "Welcome to SecPal"
 msgstr "Welcome to SecPal"
 
@@ -1910,6 +1930,10 @@ msgstr "Lock app"
 #: src/components/RouteGuardState.tsx
 msgid "Verify your email address"
 msgstr "Verify your email address"
+
+#: src/pages/Login.tsx
+msgid "SecPal could not load the secure verification prompt. Retry to continue your sign-in, or return to the login form."
+msgstr "SecPal could not load the secure verification prompt. Retry to continue your sign-in, or return to the login form."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Please enter a valid date of birth"
@@ -2004,6 +2028,7 @@ msgstr "Notifications are tied to this signed-in browser profile and the selecte
 msgid "Optional"
 msgstr "Optional"
 
+#: src/components/LoginRouteState.tsx
 #: src/pages/Login.tsx
 msgid "Sign in with passkey"
 msgstr "Sign in with passkey"
@@ -2011,11 +2036,6 @@ msgstr "Sign in with passkey"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "No onboarding steps are available right now."
 msgstr "No onboarding steps are available right now."
-
-#. js-lingui-explicit-id
-#: src/pages/Login.tsx
-msgid "login.checkingSystem"
-msgstr "Checking system..."
 
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
@@ -2028,6 +2048,7 @@ msgid "login.completing.title"
 msgstr "Completing sign-in"
 
 #. js-lingui-explicit-id
+#: src/components/LoginRouteState.tsx
 #: src/pages/Login.tsx
 msgid "login.email"
 msgstr "Email address"
@@ -2048,57 +2069,57 @@ msgid "login.lockedButton"
 msgstr "Locked ({remainingLockoutSeconds}s)"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx
+#: src/pages/LoginMfaDialog.tsx
 msgid "login.mfa.authenticatorCode"
 msgstr "Authenticator code"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx
+#: src/pages/LoginMfaDialog.tsx
 msgid "login.mfa.cancel"
 msgstr "Cancel"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx
+#: src/pages/LoginMfaDialog.tsx
 msgid "login.mfa.description"
 msgstr "Your password was accepted. Complete MFA to finish signing in."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx
+#: src/pages/LoginMfaDialog.tsx
 msgid "login.mfa.recoveryCode"
 msgstr "Recovery code"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx
+#: src/pages/LoginMfaDialog.tsx
 msgid "login.mfa.recoveryHelp"
 msgstr "Enter one unused recovery code exactly as stored."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx
+#: src/pages/LoginMfaDialog.tsx
 msgid "login.mfa.submit"
 msgstr "Verify and continue"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx
+#: src/pages/LoginMfaDialog.tsx
 msgid "login.mfa.switchToRecovery"
 msgstr "I don’t have access to my authenticator app"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx
+#: src/pages/LoginMfaDialog.tsx
 msgid "login.mfa.switchToTotp"
 msgstr "Use authenticator code instead"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx
+#: src/pages/LoginMfaDialog.tsx
 msgid "login.mfa.title"
 msgstr "Second factor required"
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx
+#: src/pages/LoginMfaDialog.tsx
 msgid "login.mfa.totpHelp"
 msgstr "Enter the current 6-digit code from your authenticator app."
 
 #. js-lingui-explicit-id
-#: src/pages/Login.tsx
+#: src/pages/LoginMfaDialog.tsx
 msgid "login.mfa.verifying"
 msgstr "Verifying..."
 
@@ -2113,6 +2134,7 @@ msgid "login.offlineWarning.title"
 msgstr "No internet connection"
 
 #. js-lingui-explicit-id
+#: src/components/LoginRouteState.tsx
 #: src/pages/Login.tsx
 msgid "login.password"
 msgstr "Password"
@@ -2133,11 +2155,13 @@ msgid "login.remainingAttempts"
 msgstr "{remainingAttempts} attempt(s) remaining before temporary lockout."
 
 #. js-lingui-explicit-id
+#: src/components/LoginRouteState.tsx
 #: src/pages/Login.tsx
 msgid "login.separator"
 msgstr "or"
 
 #. js-lingui-explicit-id
+#: src/components/LoginRouteState.tsx
 #: src/pages/Login.tsx
 msgid "login.submit"
 msgstr "Log in"
@@ -2148,6 +2172,7 @@ msgid "login.submitting"
 msgstr "Logging in..."
 
 #. js-lingui-explicit-id
+#: src/components/LoginRouteState.tsx
 #: src/pages/Login.tsx
 msgid "login.title"
 msgstr "Welcome to SecPal"
@@ -2428,7 +2453,12 @@ msgstr "Please enter a valid email address"
 msgid "Default"
 msgstr "Default"
 
+#: src/pages/Login.tsx
+msgid "Back to Login"
+msgstr "Back to Login"
+
 #: src/components/Footer.tsx
+#: src/components/LoginRouteState.tsx
 #: src/pages/Login.tsx
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
@@ -2542,6 +2572,7 @@ msgid "Password must include at least one symbol"
 msgstr "Password must include at least one symbol"
 
 #: src/components/Footer.tsx
+#: src/components/LoginRouteState.tsx
 #: src/pages/Login.tsx
 msgid "Source Code"
 msgstr "Source Code"
@@ -2737,7 +2768,7 @@ msgstr "Submit for Review"
 msgid "Optional sections"
 msgstr "Optional sections"
 
-#: src/App.tsx
+#: src/AuthenticatedApp.tsx
 #: src/components/RouteGuardState.tsx
 msgid "Back to Home"
 msgstr "Back to Home"
@@ -3044,7 +3075,7 @@ msgstr "Edit Organizational Unit"
 msgid "Details"
 msgstr "Details"
 
-#: src/App.tsx
+#: src/AuthenticatedApp.tsx
 msgid "About SecPal"
 msgstr "About SecPal"
 
@@ -3091,7 +3122,7 @@ msgstr "BWR Notes"
 msgid "Customer not found"
 msgstr "Customer not found"
 
-#: src/App.tsx
+#: src/AuthenticatedApp.tsx
 msgid "About"
 msgstr "About"
 
@@ -3107,10 +3138,12 @@ msgstr "Send Test"
 msgid "Who can this user VIEW?"
 msgstr "Who can this user VIEW?"
 
+#: src/components/LoginRouteState.tsx
 #: src/components/RouteGuardState.tsx
 msgid "Unlock"
 msgstr "Unlock"
 
+#: src/components/LoginRouteState.tsx
 #: src/components/RouteGuardState.tsx
 msgid "SecPal could not unlock the encrypted offline data on this device. Sign in again to rebuild the local vault."
 msgstr "SecPal could not unlock the encrypted offline data on this device. Sign in again to rebuild the local vault."
@@ -3165,6 +3198,7 @@ msgstr "SecPal could not sync this browser's notification registration with the 
 msgid "Activate this employee?"
 msgstr "Activate this employee?"
 
+#: src/components/LoginRouteState.tsx
 #: src/components/RouteGuardState.tsx
 msgid "Unlocking..."
 msgstr "Unlocking..."
@@ -3420,6 +3454,7 @@ msgid "← Back to Employees"
 msgstr "← Back to Employees"
 
 #: src/components/Footer.tsx
+#: src/components/LoginRouteState.tsx
 #: src/pages/Login.tsx
 msgid "Powered by SecPal – A guard's best friend"
 msgstr "Powered by SecPal – A guard's best friend"
@@ -3484,7 +3519,7 @@ msgstr "Failed to load employees"
 msgid "Activity Log Details"
 msgstr "Activity Log Details"
 
-#: src/App.tsx
+#: src/AuthenticatedApp.tsx
 msgid "View Profile"
 msgstr "View Profile"
 
@@ -3521,7 +3556,7 @@ msgstr "Loading..."
 msgid "Invitations are only available for employees in pre-contract status."
 msgstr "Invitations are only available for employees in pre-contract status."
 
-#: src/pages/Login.tsx
+#: src/pages/LoginMfaDialog.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Authenticator code"
 msgstr "Authenticator code"

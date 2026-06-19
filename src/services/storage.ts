@@ -3,17 +3,15 @@
 
 import type { User } from "../contexts/auth-context";
 import {
-  AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
-  clearOfflineVaultLockState,
-  clearOfflineVaultSession,
-  clearOfflineVaultTables,
-  clearRecentAuthVaultKeyMaterials,
-  isOfflineVaultLocked,
-  initializeOfflineVault,
-  lockOfflineVault,
-  readPersistedAuthUserFromVault,
-} from "../lib/offlineVault";
+  AUTH_VAULT_LOCK_KEY,
+} from "../lib/offlineVaultKeys";
+import {
+  createRecoverableLazyModuleError,
+  isRecoverableLazyModuleError,
+  isTransientModuleLoadError,
+} from "../lib/lazyModuleErrors";
+import { clearActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
 import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
 import { sanitizePersistedAuthUser, type PersistedAuthUser } from "./authState";
 import { getCsrfTokenFromCookie } from "./csrf";
@@ -36,6 +34,10 @@ interface AuthStorageEnvelope {
   iv: string;
   ciphertext: string;
   mac: string;
+}
+
+async function loadOfflineVaultModule() {
+  return await import("../lib/offlineVault");
 }
 
 function isAuthStorageVersion(value: unknown): value is AuthStorageVersion {
@@ -406,12 +408,14 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   private async clearVaultTables(): Promise<void> {
+    const offlineVaultModulePromise = loadOfflineVaultModule();
     const queuedCleanupPromise = this.vaultTableCleanupQueuePromise
       .catch(() => {
         // The cleanup initiator handles the vault-table failure; later
         // cleanups still need to run in order.
       })
       .then(async () => {
+        const { clearOfflineVaultTables } = await offlineVaultModulePromise;
         await clearOfflineVaultTables();
       });
 
@@ -424,7 +428,14 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   hasVaultLock(): boolean {
-    return isOfflineVaultLocked();
+    const locked = localStorage.getItem(this.VAULT_LOCK_KEY) !== null;
+
+    if (locked && localStorage.getItem(this.VAULT_KEY) === null) {
+      localStorage.removeItem(this.VAULT_LOCK_KEY);
+      return false;
+    }
+
+    return locked;
   }
 
   hasStoredUser(): boolean {
@@ -436,12 +447,20 @@ class LocalStorageAuthStorage implements AuthStorage {
     );
   }
 
+  private clearStoredUserMarkers(): void {
+    localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(this.VAULT_KEY);
+    localStorage.removeItem(this.VAULT_LOCK_KEY);
+  }
+
   private clearInvalidStoredUser(): null {
+    this.clearStoredUserMarkers();
     void this.removeUser({ allowBarrierSkipUpgrade: true });
     return null;
   }
 
   private async clearInvalidStoredUserAsync(): Promise<null> {
+    this.clearStoredUserMarkers();
     await this.removeUser({ allowBarrierSkipUpgrade: true });
     return null;
   }
@@ -512,6 +531,21 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
 
     if (localStorage.getItem(this.VAULT_KEY) !== null) {
+      let readPersistedAuthUserFromVault: typeof import("../lib/offlineVault").readPersistedAuthUserFromVault;
+
+      try {
+        ({ readPersistedAuthUserFromVault } = await loadOfflineVaultModule());
+      } catch (error) {
+        if (isTransientModuleLoadError(error)) {
+          throw createRecoverableLazyModuleError(
+            "Stored offline auth data is temporarily unavailable on this device.",
+            error
+          );
+        }
+
+        throw error;
+      }
+
       const storedVaultUser = await readPersistedAuthUserFromVault();
 
       if (!storedVaultUser) {
@@ -531,10 +565,29 @@ class LocalStorageAuthStorage implements AuthStorage {
         return this.clearInvalidStoredUserAsync();
       }
 
+      let initializeOfflineVault: typeof import("../lib/offlineVault").initializeOfflineVault;
+
+      try {
+        ({ initializeOfflineVault } = await loadOfflineVaultModule());
+      } catch (error) {
+        if (isTransientModuleLoadError(error)) {
+          throw createRecoverableLazyModuleError(
+            "Stored offline auth data is temporarily unavailable on this device.",
+            error
+          );
+        }
+
+        throw error;
+      }
+
       await initializeOfflineVault(sanitizedUser);
 
       return sanitizedUser;
     } catch (error) {
+      if (isRecoverableLazyModuleError(error)) {
+        throw error;
+      }
+
       return this.handleStoredUserErrorAsync(
         "Failed to parse stored user data:",
         error
@@ -551,6 +604,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
 
     try {
+      const { initializeOfflineVault } = await loadOfflineVaultModule();
       await initializeOfflineVault(sanitizedUser);
     } catch (error) {
       console.error("Failed to persist stored user data:", error);
@@ -559,18 +613,21 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
 
     this.clearLogoutBarrier();
-    clearOfflineVaultLockState();
+    localStorage.removeItem(this.VAULT_LOCK_KEY);
     localStorage.removeItem(this.USER_KEY);
   }
 
   lockVault(): void {
     this.clearLogoutBarrier();
-    lockOfflineVault();
+    if (localStorage.getItem(this.VAULT_KEY) !== null) {
+      localStorage.setItem(this.VAULT_LOCK_KEY, "1");
+    }
     localStorage.removeItem(this.USER_KEY);
+    clearActiveOfflineVaultSession();
   }
 
   async unlockVault(): Promise<User | null> {
-    clearOfflineVaultLockState();
+    localStorage.removeItem(this.VAULT_LOCK_KEY);
 
     const unlockedUser = await this.getUser();
 
@@ -591,12 +648,18 @@ class LocalStorageAuthStorage implements AuthStorage {
     const hasLogoutBarrier = this.hasLogoutBarrier();
     const shouldHonorBarrierSkipUpgrade =
       options.allowBarrierSkipUpgrade === true;
+    const cleanupPromise =
+      shouldClearOfflineVaultTables &&
+      !hasLogoutBarrier &&
+      !shouldHonorBarrierSkipUpgrade
+        ? this.clearVaultTables()
+        : null;
 
+    this.clearStoredUserMarkers();
+    const { clearOfflineVaultSession, clearRecentAuthVaultKeyMaterials } =
+      await loadOfflineVaultModule();
     clearOfflineVaultSession();
     clearRecentAuthVaultKeyMaterials();
-    localStorage.removeItem(this.USER_KEY);
-    localStorage.removeItem(this.VAULT_KEY);
-    localStorage.removeItem(this.VAULT_LOCK_KEY);
 
     if (!shouldClearOfflineVaultTables) {
       return;
@@ -615,7 +678,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
 
     try {
-      await this.clearVaultTables();
+      await (cleanupPromise ?? this.clearVaultTables());
     } catch (error: unknown) {
       console.warn("Failed to clear offline vault tables on logout:", error);
     }

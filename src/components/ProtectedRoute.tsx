@@ -3,11 +3,13 @@
 
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { authStorage } from "../services/storage";
 import { EmailVerificationGate } from "./EmailVerificationGate";
 import {
   isRouteAuthBootstrapPending,
   isRouteAuthSnapshotRevalidating,
 } from "./routeGuardAuth";
+import { LoginRouteLoadingState } from "./LoginRouteState";
 import {
   RouteBootstrapRecoveryState,
   RouteLoadingState,
@@ -41,6 +43,10 @@ export function ProtectedRoute({
   } = auth;
 
   if (isRouteAuthBootstrapPending(auth)) {
+    if (!authStorage.hasStoredUser()) {
+      return <LoginRouteLoadingState />;
+    }
+
     return <RouteLoadingState />;
   }
 

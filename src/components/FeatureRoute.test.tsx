@@ -260,7 +260,7 @@ describe("FeatureRoute", () => {
     );
 
     expect(
-      screen.getByRole("status", { name: /loading application/i })
+      screen.getByRole("status", { name: /loading login/i })
     ).toBeInTheDocument();
     expect(screen.queryByText("Customers Content")).not.toBeInTheDocument();
   });

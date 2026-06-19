@@ -11,6 +11,7 @@ import {
   clearSensitiveClientState,
   SENSITIVE_CACHE_NAMES,
 } from "./clientStateCleanup";
+import * as offlineVault from "./offlineVault";
 import { AUTH_VAULT_STORAGE_KEY } from "./offlineVault";
 
 const mockCaches = {
@@ -36,6 +37,12 @@ function createDeferredPromise<T>() {
   });
 
   return { promise, resolve, reject };
+}
+
+async function flushAsyncWork(iterations = 5): Promise<void> {
+  for (let index = 0; index < iterations; index += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
 }
 
 describe("clearSensitiveClientState", () => {
@@ -227,7 +234,7 @@ describe("clearSensitiveClientState", () => {
         settled = true;
       });
 
-    await Promise.resolve();
+    await flushAsyncWork();
 
     expect(deleteSpy).toHaveBeenCalledTimes(1);
 
@@ -242,5 +249,42 @@ describe("clearSensitiveClientState", () => {
     deleteDeferred.resolve();
 
     await expect(clearPromise).rejects.toBe(cacheError);
+  });
+
+  it("continues the remaining logout cleanup when offline vault runtime cleanup fails", async () => {
+    const chunkError = new TypeError(
+      "Failed to fetch dynamically imported module"
+    );
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(offlineVault, "clearOfflineVaultSession").mockImplementationOnce(
+      () => {
+        throw chunkError;
+      }
+    );
+
+    localStorage.setItem("auth_user", "opaque-auth-storage-envelope");
+    localStorage.setItem("auth_vault_state", '{"scheme":"secpal-auth-vault"}');
+    sessionStorage.setItem("share-draft", "pending");
+
+    await db.analytics.add({
+      type: "page_view",
+      category: "navigation",
+      action: "open",
+      timestamp: Date.now(),
+      synced: false,
+      sessionId: "session-1",
+    });
+
+    await expect(clearSensitiveClientState()).resolves.not.toThrow();
+
+    expect(localStorage.getItem("auth_user")).toBeNull();
+    expect(localStorage.getItem("auth_vault_state")).toBeNull();
+    expect(sessionStorage.getItem("share-draft")).toBeNull();
+    await db.open();
+    expect(await db.analytics.count()).toBe(0);
+    expect(consoleWarn).toHaveBeenCalledWith(
+      "Failed to clear the offline vault runtime during logout cleanup; continuing with the remaining sensitive cleanup tasks:",
+      chunkError
+    );
   });
 });

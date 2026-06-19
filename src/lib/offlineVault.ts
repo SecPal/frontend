@@ -13,7 +13,22 @@ import {
   type VaultAnalyticsRecord,
   type VaultOrganizationalUnitCacheRecord,
 } from "./db";
+import {
+  AUTH_VAULT_LOCK_KEY,
+  AUTH_VAULT_STORAGE_KEY,
+} from "./offlineVaultKeys";
+import {
+  clearActiveOfflineVaultSession,
+  getActiveOfflineVaultSession,
+  isVaultOrgUnitIndexEnsured,
+  markVaultOrgUnitIndexEnsured,
+  setActiveOfflineVaultSession,
+} from "./offlineVaultRuntime";
 import { isCapacitorNativeRuntime } from "./nativeRuntime";
+export {
+  AUTH_VAULT_LOCK_KEY,
+  AUTH_VAULT_STORAGE_KEY,
+} from "./offlineVaultKeys";
 
 const AUTH_VAULT_LEGACY_SCHEME = "pbkdf2-aes-cbc-hmac-sha256-vault";
 const AUTH_VAULT_SCHEME = "secpal-auth-vault";
@@ -33,9 +48,6 @@ const ROOT_ORGANIZATIONAL_UNIT_PARENT_LOOKUP_KEY = "__root__";
 
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
-
-export const AUTH_VAULT_STORAGE_KEY = "auth_vault_state";
-export const AUTH_VAULT_LOCK_KEY = "auth_vault_lock";
 
 interface BrowserSessionVaultWrapper {
   kind: "browser-session";
@@ -108,8 +120,6 @@ type VaultOrganizationalUnitIndexFields = Pick<
   "type" | "parent_id" | "parentLookupKey"
 >;
 
-let activeVaultSession: VaultSession | null = null;
-let vaultOrgUnitIndexEnsured = false;
 let recentAuthVaultKeyMaterials: string[] = [];
 
 function isAuthVaultStateEnvelopeV1(
@@ -348,12 +358,7 @@ export function isOfflineVaultLocked(): boolean {
 }
 
 export function clearOfflineVaultSession(): void {
-  if (activeVaultSession) {
-    activeVaultSession.rootKeyBytes.fill(0);
-  }
-
-  activeVaultSession = null;
-  vaultOrgUnitIndexEnsured = false;
+  clearActiveOfflineVaultSession();
 }
 
 export function clearRecentAuthVaultKeyMaterials(): void {
@@ -1041,7 +1046,7 @@ async function decryptVaultOrganizationalUnitRecords(
 async function ensureVaultOrganizationalUnitIndexes(
   session: VaultSession
 ): Promise<void> {
-  if (vaultOrgUnitIndexEnsured) {
+  if (isVaultOrgUnitIndexEnsured()) {
     return;
   }
 
@@ -1050,7 +1055,7 @@ async function ensureVaultOrganizationalUnitIndexes(
     .toArray();
 
   if (legacyRecords.length === 0) {
-    vaultOrgUnitIndexEnsured = true;
+    markVaultOrgUnitIndexEnsured();
     return;
   }
 
@@ -1087,10 +1092,11 @@ async function ensureVaultOrganizationalUnitIndexes(
     await db.vaultOrganizationalUnitCache.bulkDelete(invalidIds);
   }
 
-  vaultOrgUnitIndexEnsured = true;
+  markVaultOrgUnitIndexEnsured();
 }
 
 async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
+  let activeVaultSession = getActiveOfflineVaultSession<VaultSession>();
   const currentKeyMaterial = getAuthVaultKeyMaterial();
   const storedState = getStoredVaultState();
   const storedWrapperCacheKey = storedState
@@ -1113,6 +1119,7 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
         activeVaultSession,
         storedState
       );
+      setActiveOfflineVaultSession(activeVaultSession);
 
       return activeVaultSession;
     }
@@ -1162,6 +1169,8 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
       storedState
     );
   }
+
+  setActiveOfflineVaultSession(activeVaultSession);
 
   return activeVaultSession;
 }
@@ -1216,19 +1225,29 @@ async function maybeRewriteStoredVaultState(
   };
 }
 
-async function ensureVaultSessionForUser(
-  user: PersistedAuthUser
-): Promise<VaultSession> {
+async function ensureVaultSessionForUser(user: PersistedAuthUser): Promise<{
+  session: VaultSession;
+  pendingStoredState: AuthVaultStateEnvelope | null;
+}> {
   const subjectHash = await computeSubjectHash(user.id);
   const currentSession = await ensureOfflineVaultSession();
   const existingStoredState = getStoredVaultState();
 
   if (currentSession && currentSession.subjectHash === subjectHash) {
     if (existingStoredState) {
-      return maybeRewriteStoredVaultState(currentSession, existingStoredState);
+      return {
+        session: await maybeRewriteStoredVaultState(
+          currentSession,
+          existingStoredState
+        ),
+        pendingStoredState: null,
+      };
     }
 
-    return currentSession;
+    return {
+      session: currentSession,
+      pendingStoredState: null,
+    };
   }
 
   if (currentSession && currentSession.subjectHash !== subjectHash) {
@@ -1245,14 +1264,17 @@ async function ensureVaultSessionForUser(
     );
   }
 
-  setStoredVaultState(storedState);
-  activeVaultSession = {
+  const activeVaultSession = {
     rootKeyBytes,
     subjectHash,
     wrapperCacheKey: getSessionWrapperCacheKey(storedState),
   };
+  setActiveOfflineVaultSession(activeVaultSession);
 
-  return activeVaultSession;
+  return {
+    session: activeVaultSession,
+    pendingStoredState: storedState,
+  };
 }
 
 async function persistProfileRecord(
@@ -1352,13 +1374,17 @@ async function migrateLegacyOrganizationalUnitRecords(
 export async function initializeOfflineVault(
   user: PersistedAuthUser
 ): Promise<void> {
-  const session = await ensureVaultSessionForUser(user);
+  const { session, pendingStoredState } = await ensureVaultSessionForUser(user);
 
   await persistProfileRecord(user, session);
   await Promise.all([
     migrateLegacyAnalyticsRecords(session),
     migrateLegacyOrganizationalUnitRecords(session),
   ]);
+
+  if (pendingStoredState) {
+    setStoredVaultState(pendingStoredState);
+  }
 
   localStorage.removeItem("auth_user");
 }

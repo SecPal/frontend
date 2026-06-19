@@ -47,6 +47,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Reworked the public browser-session bootstrap path so `/login` no longer issues an unauthenticated `/v1/me` probe when there is no local auth snapshot and no `XSRF-TOKEN` cookie, eliminating the spurious 401 console error on logged-out refreshes while keeping protected-route recovery and authenticated session restoration intact.
+- Split the public login flow from the authenticated shell so logged-out loads no longer flash post-login navigation skeletons, heavy private route chunks, or browser passkey capability rows after first paint. The login route now uses dedicated public loading states, lazy-loads MFA/passkey/auth modules where safe, and keeps the visible card stable during session completion to remove mobile reload jitter.
+- Restored the visible login logo while preserving the Lighthouse image fixes by rendering higher-resolution raster assets with their real intrinsic aspect ratios instead of stretching the small square PNG placeholders.
+
 - Treated HTTP `401` status from auth bootstrap revalidation as an invalid session regardless of the localized API error message, so stale browser-session snapshots now clear and return to login when Laravel responds with messages such as German `"Nicht authentifiziert."` instead of leaving protected routes stuck behind the bootstrap recovery screen.
 - Bumped the transitive `undici` dependency from `7.25.0` to `7.28.0` in `package-lock.json` (via `jsdom`), clearing the high-severity `GHSA-vmh5-mc38-953g` and `GHSA-pr7r-676h-xcf6` npm audit findings so `npm audit` again reports zero vulnerabilities.
 - Prevented auth bootstrap recovery from forcing a full page navigation through the service worker when the browser has no valid session or when a stored session fails startup revalidation. The offline session state is still persisted for PWA navigation gating, but open clients are now redirected by the service worker only for explicit logout/barrier teardown paths, keeping the first protected-route-to-login transition inside the React router while preserving offline logout privacy.

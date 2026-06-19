@@ -7,91 +7,99 @@ import { screen } from "@testing-library/dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import App from "./App";
+import { AuthApiError } from "./services/authApi";
 import { sanitizePersistedAuthUser } from "./services/authState";
 import { authStorage } from "./services/storage";
+import { createRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
 
 const ROUTE_NAVIGATION_TIMEOUT_MS = 20_000;
 
-const { mockGetCurrentUser, mockFetchCsrfToken, mockAuthStorage } = vi.hoisted(
-  () => {
-    let storedUser: unknown = null;
-    let vaultPresent = false;
-    let vaultLocked = false;
-    let logoutBarrier = false;
-    let skipVaultTableCleanup = false;
+const {
+  mockGetCurrentUser,
+  mockFetchCsrfToken,
+  mockAuthStorage,
+  mockLoadAuthenticatedAppModule,
+  mockUpdatePrompt,
+} = vi.hoisted(() => {
+  let storedUser: unknown = null;
+  let vaultPresent = false;
+  let vaultLocked = false;
+  let logoutBarrier = false;
+  let skipVaultTableCleanup = false;
 
-    return {
-      mockGetCurrentUser: vi.fn(),
-      mockFetchCsrfToken: vi.fn(),
-      mockAuthStorage: {
-        hasStoredUser: vi.fn(
-          () =>
-            !logoutBarrier &&
-            !vaultLocked &&
-            (vaultPresent || storedUser !== null)
-        ),
-        hasVaultLock: vi.fn(() => vaultLocked),
-        // Mirror production: persisted users live in the offline vault, so the
-        // synchronous snapshot is always null once a vault record exists.
-        getUserSnapshot: vi.fn(() => {
-          if (logoutBarrier || vaultLocked || vaultPresent) {
-            return null;
-          }
+  return {
+    mockGetCurrentUser: vi.fn(),
+    mockFetchCsrfToken: vi.fn(),
+    mockLoadAuthenticatedAppModule: vi.fn(() => import("./AuthenticatedApp")),
+    mockUpdatePrompt: vi.fn(() => <div data-testid="update-prompt" />),
+    mockAuthStorage: {
+      hasStoredUser: vi.fn(
+        () =>
+          !logoutBarrier &&
+          !vaultLocked &&
+          (vaultPresent || storedUser !== null)
+      ),
+      hasVaultLock: vi.fn(() => vaultLocked),
+      // Mirror production: persisted users live in the offline vault, so the
+      // synchronous snapshot is always null once a vault record exists.
+      getUserSnapshot: vi.fn(() => {
+        if (logoutBarrier || vaultLocked || vaultPresent) {
+          return null;
+        }
 
-          return storedUser;
-        }),
-        getUser: vi.fn(async () => {
-          if (logoutBarrier || vaultLocked) {
-            return null;
-          }
+        return storedUser;
+      }),
+      getUser: vi.fn(async () => {
+        if (logoutBarrier || vaultLocked) {
+          return null;
+        }
 
-          return storedUser;
-        }),
-        setUser: vi.fn(async (user: unknown) => {
-          storedUser = user;
-          vaultPresent = true;
-          vaultLocked = false;
-          logoutBarrier = false;
-        }),
-        lockVault: vi.fn(() => {
-          vaultLocked = true;
-          logoutBarrier = false;
-        }),
-        unlockVault: vi.fn(async () => {
-          vaultLocked = false;
-          return storedUser;
-        }),
-        removeUser: vi.fn(async () => {
-          storedUser = null;
-          vaultPresent = false;
-          vaultLocked = false;
-          logoutBarrier = false;
-        }),
-        clear: vi.fn(async () => {
-          storedUser = null;
-          vaultPresent = false;
-          vaultLocked = false;
-          logoutBarrier = false;
-          skipVaultTableCleanup = false;
-        }),
-        hasLogoutBarrier: vi.fn(() => logoutBarrier),
-        shouldSkipBarrierVaultTableCleanup: vi.fn(() => skipVaultTableCleanup),
-        setSkipBarrierVaultTableCleanup: vi.fn((shouldSkip: boolean) => {
-          skipVaultTableCleanup = shouldSkip;
-        }),
-        beginSensitiveLogoutBarrierCleanup: vi.fn(() => {
-          logoutBarrier = true;
-          skipVaultTableCleanup = true;
-          return "test-logout-barrier-owner";
-        }),
-        endSensitiveLogoutBarrierCleanup: vi.fn(() => {
-          skipVaultTableCleanup = false;
-        }),
-        waitForInFlightVaultTableCleanup: vi.fn(async () => undefined),
-      },
-    };
-  }
-);
+        return storedUser;
+      }),
+      setUser: vi.fn(async (user: unknown) => {
+        storedUser = user;
+        vaultPresent = true;
+        vaultLocked = false;
+        logoutBarrier = false;
+      }),
+      lockVault: vi.fn(() => {
+        vaultLocked = true;
+        logoutBarrier = false;
+      }),
+      unlockVault: vi.fn(async () => {
+        vaultLocked = false;
+        return storedUser;
+      }),
+      removeUser: vi.fn(async () => {
+        storedUser = null;
+        vaultPresent = false;
+        vaultLocked = false;
+        logoutBarrier = false;
+      }),
+      clear: vi.fn(async () => {
+        storedUser = null;
+        vaultPresent = false;
+        vaultLocked = false;
+        logoutBarrier = false;
+        skipVaultTableCleanup = false;
+      }),
+      hasLogoutBarrier: vi.fn(() => logoutBarrier),
+      shouldSkipBarrierVaultTableCleanup: vi.fn(() => skipVaultTableCleanup),
+      setSkipBarrierVaultTableCleanup: vi.fn((shouldSkip: boolean) => {
+        skipVaultTableCleanup = shouldSkip;
+      }),
+      beginSensitiveLogoutBarrierCleanup: vi.fn(() => {
+        logoutBarrier = true;
+        skipVaultTableCleanup = true;
+        return "test-logout-barrier-owner";
+      }),
+      endSensitiveLogoutBarrierCleanup: vi.fn(() => {
+        skipVaultTableCleanup = false;
+      }),
+      waitForInFlightVaultTableCleanup: vi.fn(async () => undefined),
+    },
+  };
+});
 
 vi.mock("./services/authApi", async () => {
   const actual = await vi.importActual("./services/authApi");
@@ -111,6 +119,18 @@ vi.mock("./services/csrf", async () => {
 
 vi.mock("./services/storage", () => ({
   authStorage: mockAuthStorage,
+}));
+
+vi.mock("./lib/lazyAppModules", async () => {
+  const actual = await vi.importActual("./lib/lazyAppModules");
+  return {
+    ...actual,
+    loadAuthenticatedAppModule: mockLoadAuthenticatedAppModule,
+  };
+});
+
+vi.mock("./components/UpdatePrompt", () => ({
+  UpdatePrompt: mockUpdatePrompt,
 }));
 
 // Block all real network requests: lazy-loaded page components call their
@@ -195,12 +215,17 @@ describe("App", () => {
     vi.clearAllMocks();
     await authStorage.clear();
     localStorage.clear();
+    sessionStorage.clear();
     clearXsrfCookie();
     setXsrfCookie();
     window.history.replaceState({}, "", "/login");
     i18n.load("en", {});
     i18n.activate("en");
     mockFetchCsrfToken.mockResolvedValue(undefined);
+    mockLoadAuthenticatedAppModule.mockReset();
+    mockLoadAuthenticatedAppModule.mockImplementation(
+      () => import("./AuthenticatedApp")
+    );
     mockGetCurrentUser.mockRejectedValue(
       Object.assign(new Error("No mock auth user available for bootstrap"), {
         code: "HTTP_401",
@@ -214,6 +239,132 @@ describe("App", () => {
       screen.getByRole("heading", { name: /SecPal/i })
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+  });
+
+  it("keeps the update prompt mounted on public login routes", async () => {
+    await renderWithI18n(<App />);
+
+    expect(screen.getByTestId("update-prompt")).toBeInTheDocument();
+  });
+
+  it("uses a login-shaped bootstrap placeholder on the login route", async () => {
+    mockGetCurrentUser.mockImplementationOnce(
+      () =>
+        new Promise(() => undefined) as ReturnType<typeof mockGetCurrentUser>
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      screen.getByRole("status", { name: /loading login/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/welcome to secpal/i, { selector: "h1" })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("status", { name: /loading application/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/^english$/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeDisabled();
+    expect(screen.getByLabelText(/password/i)).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^log in$/i })).toBeDisabled();
+  });
+
+  it("switches to the interactive login form after a short bootstrap delay", async () => {
+    vi.useFakeTimers();
+    mockGetCurrentUser.mockImplementationOnce(
+      () =>
+        new Promise(() => undefined) as ReturnType<typeof mockGetCurrentUser>
+    );
+
+    try {
+      await renderWithI18n(<App />);
+
+      expect(screen.getByLabelText(/email/i)).toBeDisabled();
+
+      await act(async () => {
+        vi.advanceTimersByTime(1_000);
+        await Promise.resolve();
+      });
+
+      expect(screen.getByLabelText(/email/i)).toBeEnabled();
+      expect(screen.getByLabelText(/password/i)).toBeEnabled();
+      expect(screen.getByRole("button", { name: /^log in$/i })).toBeEnabled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps the vault unlock action disabled while unlock is still pending", async () => {
+    vi.useFakeTimers();
+    await seedPersistedAuthUser({
+      id: 1,
+      name: "Locked User",
+      email: "locked@secpal.dev",
+      emailVerified: true,
+    });
+    authStorage.lockVault?.();
+    mockAuthStorage.unlockVault.mockImplementationOnce(
+      () => new Promise(() => undefined)
+    );
+
+    try {
+      await renderWithI18n(<App />);
+
+      const unlockButton = screen.getByRole("button", { name: /^unlock$/i });
+
+      await act(async () => {
+        unlockButton.click();
+        await Promise.resolve();
+      });
+
+      expect(mockAuthStorage.unlockVault).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("button", { name: /unlocking/i })).toBeDisabled();
+
+      await act(async () => {
+        vi.advanceTimersByTime(1_000);
+        await Promise.resolve();
+      });
+
+      expect(
+        screen.getByRole("heading", {
+          name: /unlock your secure offline data/i,
+        })
+      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /unlocking/i })).toBeDisabled();
+      expect(mockAuthStorage.unlockVault).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("renders the vault lock state on protected routes before loading the app shell", async () => {
+    await seedPersistedAuthUser({
+      id: 1,
+      name: "Locked User",
+      email: "locked@secpal.dev",
+      emailVerified: true,
+    });
+    authStorage.lockVault?.();
+    window.history.replaceState({}, "", "/customers");
+    mockLoadAuthenticatedAppModule.mockRejectedValueOnce(
+      createRecoverableLazyModuleError(
+        "The protected app shell is temporarily unavailable on this device.",
+        new TypeError("Failed to fetch dynamically imported module")
+      )
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: /unlock your secure offline data/i,
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/we couldn't restore your secure session/i)
+    ).not.toBeInTheDocument();
+    expect(mockLoadAuthenticatedAppModule).not.toHaveBeenCalled();
   });
 
   it("renders login form", async () => {
@@ -262,6 +413,46 @@ describe("App", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("shows recovery UI when the protected app shell chunk cannot be loaded and recovers on retry", async () => {
+    await seedPersistedAuthUser({
+      id: 1,
+      name: "Active User",
+      email: "guard@secpal.dev",
+      emailVerified: true,
+    });
+    mockLoadAuthenticatedAppModule.mockRejectedValueOnce(
+      createRecoverableLazyModuleError(
+        "The protected app shell is temporarily unavailable on this device.",
+        new TypeError("Failed to fetch dynamically imported module")
+      )
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /still loading your secure session/i,
+      })
+    ).toBeInTheDocument();
+
+    mockLoadAuthenticatedAppModule.mockImplementationOnce(
+      () => import("./AuthenticatedApp")
+    );
+
+    await act(async () => {
+      screen.getByRole("button", { name: /retry/i }).click();
+      await Promise.resolve();
+    });
+
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /welcome to secpal/i },
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
+  });
+
   it("redirects browser-session users away from the login route even without a local auth snapshot", async () => {
     mockGetCurrentUser.mockResolvedValueOnce({
       id: "1",
@@ -296,41 +487,36 @@ describe("App", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("refreshes the csrf cookie before restoring a browser session on the login route when the cookie is missing", async () => {
+  it("keeps protected deep links while browser-session bootstrap is still pending", async () => {
+    window.history.replaceState({}, "", "/customers/123/edit");
+    mockGetCurrentUser.mockImplementationOnce(
+      () =>
+        new Promise(() => undefined) as ReturnType<typeof mockGetCurrentUser>
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      screen.getByRole("status", { name: /loading page/i })
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/customers/123/edit");
+  });
+
+  it("does not probe /v1/me on the public login route when no csrf cookie or redirect hint exists", async () => {
     clearXsrfCookie();
-    mockFetchCsrfToken.mockImplementation(async () => {
-      setXsrfCookie("bootstrap-restored-xsrf-token");
-    });
-    mockGetCurrentUser.mockResolvedValueOnce({
-      id: "1",
-      name: "Recovered Session User",
-      email: "recovered-session@secpal.dev",
-      emailVerified: true,
-      roles: [],
-      permissions: [],
-      hasOrganizationalScopes: false,
-      hasCustomerAccess: false,
-      hasSiteAccess: false,
-    });
 
     await renderWithI18n(<App />);
 
     await waitFor(
       () => {
-        expect(mockFetchCsrfToken).toHaveBeenCalledTimes(1);
-        expect(authStorage.hasStoredUser()).toBe(true);
-        expect(window.location.pathname).toBe("/");
+        expect(screen.getByLabelText(/email/i)).toBeEnabled();
       },
       { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
     );
 
-    expect(
-      await screen.findByRole(
-        "heading",
-        { name: /welcome to secpal/i },
-        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-      )
-    ).toBeInTheDocument();
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+    expect(mockFetchCsrfToken).not.toHaveBeenCalled();
+    expect(window.location.pathname).toBe("/login");
   });
 
   it("restores a valid browser session on a protected route even when no local auth snapshot is available", async () => {
@@ -358,6 +544,162 @@ describe("App", () => {
       )
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/");
+  });
+
+  it("keeps protected routes on a neutral loader while browser-session recovery is pending", async () => {
+    window.history.replaceState({}, "", "/");
+
+    mockGetCurrentUser.mockImplementationOnce(
+      () =>
+        new Promise(() => undefined) as ReturnType<typeof mockGetCurrentUser>
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(window.location.pathname).toBe("/");
+
+    expect(
+      screen.getByRole("status", { name: /loading page/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("status", { name: /loading login/i })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+  });
+
+  it("shows bootstrap recovery in place after protected-route session restore fails and allows retry", async () => {
+    const recoveredUser = {
+      id: "1",
+      name: "Recovered Session User",
+      email: "recovered-session@secpal.dev",
+      emailVerified: true,
+      roles: [],
+      permissions: [],
+      hasOrganizationalScopes: false,
+      hasCustomerAccess: false,
+      hasSiteAccess: false,
+    };
+
+    window.history.replaceState({}, "", "/");
+    mockGetCurrentUser
+      .mockRejectedValueOnce(
+        new AuthApiError(
+          "Current user fetch failed: expected application/json response from API",
+          undefined,
+          404
+        )
+      )
+      .mockResolvedValueOnce(recoveredUser);
+
+    await renderWithI18n(<App />);
+
+    expect(window.location.pathname).toBe("/");
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /still loading your secure session/i,
+      })
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      screen.getByRole("button", { name: /retry/i }).click();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+    });
+
+    await waitFor(
+      () => {
+        expect(window.location.pathname).toBe("/");
+      },
+      { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+    );
+
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /welcome to secpal/i },
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("keeps protected deep links during bootstrap recovery and retry", async () => {
+    window.history.replaceState({}, "", "/customers/new");
+    mockGetCurrentUser.mockRejectedValue(
+      new AuthApiError(
+        "Current user fetch failed: Network down",
+        undefined,
+        undefined,
+        "NETWORK_ERROR"
+      )
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /still loading your secure session/i,
+      })
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/customers/new");
+
+    await act(async () => {
+      mockGetCurrentUser.mockResolvedValueOnce({
+        id: "1",
+        name: "Recovered Session User",
+        email: "recovered-session@secpal.dev",
+        emailVerified: true,
+        permissions: ["customers.read"],
+        roles: [],
+        hasOrganizationalScopes: false,
+        hasCustomerAccess: false,
+        hasSiteAccess: false,
+      });
+      screen.getByRole("button", { name: /retry/i }).click();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(3);
+    });
+
+    expect(
+      await screen.findByText(
+        /Access Denied/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/customers/new");
+  });
+
+  it("keeps stale protected-route bootstrap recovery on the protected route instead of redirecting", async () => {
+    window.history.replaceState({}, "", "/");
+    mockAuthStorage.hasStoredUser
+      .mockImplementationOnce(() => true)
+      .mockImplementationOnce(() => true)
+      .mockImplementationOnce(() => true);
+    mockAuthStorage.getUser.mockResolvedValueOnce(null);
+    mockGetCurrentUser.mockRejectedValueOnce(
+      new AuthApiError(
+        "Current user fetch failed: expected application/json response from API",
+        undefined,
+        404
+      )
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(window.location.pathname).toBe("/");
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /still loading your secure session/i,
+      })
+    ).toBeInTheDocument();
   });
 
   it("shows not found for activity-logs when the user cannot discover that feature", async () => {
