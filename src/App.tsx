@@ -48,13 +48,6 @@ function LoginRoute() {
     };
   }, [auth]);
 
-  if (
-    isRouteAuthBootstrapPending(auth) &&
-    !showInteractiveLoginDuringBootstrap
-  ) {
-    return <LoginRouteLoadingState />;
-  }
-
   if (isVaultLocked) {
     if (!unlock) {
       return <Navigate to="/" replace />;
@@ -63,6 +56,13 @@ function LoginRoute() {
     return (
       <LoginRouteVaultLockedState onUnlock={unlock} onSignInAgain={logout} />
     );
+  }
+
+  if (
+    isRouteAuthBootstrapPending(auth) &&
+    !showInteractiveLoginDuringBootstrap
+  ) {
+    return <LoginRouteLoadingState />;
   }
 
   if (isAuthenticated) {
@@ -74,8 +74,11 @@ function LoginRoute() {
 
 function AuthenticatedAppRoute() {
   const auth = useAuth();
-  const { bootstrapRecoveryReason, isAuthenticated, isVaultLocked = false } =
-    auth;
+  const {
+    bootstrapRecoveryReason,
+    isAuthenticated,
+    isVaultLocked = false,
+  } = auth;
 
   if (isRouteAuthBootstrapPending(auth)) {
     if (!authStorage.hasStoredUser()) {

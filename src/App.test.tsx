@@ -264,6 +264,49 @@ describe("App", () => {
     }
   });
 
+  it("keeps the vault unlock action disabled while unlock is still pending", async () => {
+    vi.useFakeTimers();
+    await seedPersistedAuthUser({
+      id: 1,
+      name: "Locked User",
+      email: "locked@secpal.dev",
+      emailVerified: true,
+    });
+    authStorage.lockVault?.();
+    mockAuthStorage.unlockVault.mockImplementationOnce(
+      () => new Promise(() => undefined)
+    );
+
+    try {
+      await renderWithI18n(<App />);
+
+      const unlockButton = screen.getByRole("button", { name: /^unlock$/i });
+
+      await act(async () => {
+        unlockButton.click();
+        await Promise.resolve();
+      });
+
+      expect(mockAuthStorage.unlockVault).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("button", { name: /unlocking/i })).toBeDisabled();
+
+      await act(async () => {
+        vi.advanceTimersByTime(1_000);
+        await Promise.resolve();
+      });
+
+      expect(
+        screen.getByRole("heading", {
+          name: /unlock your secure offline data/i,
+        })
+      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /unlocking/i })).toBeDisabled();
+      expect(mockAuthStorage.unlockVault).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("renders login form", async () => {
     await renderWithI18n(<App />);
     expect(
