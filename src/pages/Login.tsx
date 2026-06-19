@@ -1,14 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-  lazy,
-  Suspense,
-  useState,
-  useEffect,
-  useMemo,
-  type FormEvent,
-} from "react";
+import { useState, useEffect, useMemo, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -17,13 +10,18 @@ import { Code2, KeyRound, Scale } from "lucide-react";
 
 import type { MfaChallenge, MfaVerificationMethod } from "@/types/api";
 import { useAuth } from "../hooks/useAuth";
+import { useRecoverableLazyComponent } from "../hooks/useRecoverableLazyComponent";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { getAuthTransport, AuthApiError } from "../services/authTransport";
 import { sanitizeAuthUser } from "../services/authState";
 import { Logo } from "../components/Logo";
 import { activateLocale, locales, setLocalePreference } from "../i18n";
-import { isTransientModuleLoadError } from "../lib/lazyModuleErrors";
+import { loadLoginMfaDialogModule } from "../lib/lazyAppModules";
+import {
+  isRecoverableLazyModuleError,
+  isTransientModuleLoadError,
+} from "../lib/lazyModuleErrors";
 import {
   LoginButton,
   LoginCard,
@@ -40,8 +38,6 @@ import {
   LoginSpinner,
   LoginStatusMessage,
 } from "./Auth/ui-lite";
-
-const LoginMfaDialog = lazy(() => import("./LoginMfaDialog"));
 
 const HEALTH_CHECK_RETRY_DELAYS_MS = [0, 1500, 5000];
 const TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE =
@@ -139,6 +135,110 @@ function getPasskeySignInErrorMessage(
 
   return translate(
     msg`An unexpected passkey sign-in error occurred. Please try again.`
+  );
+}
+
+function LoginMfaDialogLoader({
+  challenge,
+  mfaCode,
+  mfaError,
+  mfaMethod,
+  isMfaSubmitDisabled,
+  isOtherMethodAvailable,
+  isVerifyingMfa,
+  canSwitchMfaMethod,
+  otherMfaMethod,
+  onChangeCode,
+  onClose,
+  onMethodChange,
+  onSubmit,
+}: {
+  challenge: MfaChallenge;
+  mfaCode: string;
+  mfaError: string | null;
+  mfaMethod: MfaVerificationMethod;
+  isMfaSubmitDisabled: boolean;
+  isOtherMethodAvailable: boolean;
+  isVerifyingMfa: boolean;
+  canSwitchMfaMethod: boolean;
+  otherMfaMethod: MfaVerificationMethod | null;
+  onChangeCode: (value: string) => void;
+  onClose: () => void;
+  onMethodChange: (method: MfaVerificationMethod) => void;
+  onSubmit: (event: FormEvent) => Promise<void>;
+}) {
+  const { Component, error, isLoading, retry } = useRecoverableLazyComponent(
+    loadLoginMfaDialogModule
+  );
+
+  if (error) {
+    if (!isRecoverableLazyModuleError(error)) {
+      throw error;
+    }
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 p-4 backdrop-blur-sm">
+        <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-950">
+          <div className="space-y-4 text-center">
+            <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
+              <Trans>Second factor required</Trans>
+            </h2>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              <Trans>
+                SecPal could not load the secure verification prompt. Retry to
+                continue your sign-in, or return to the login form.
+              </Trans>
+            </p>
+            <div className="flex justify-center gap-3">
+              <LoginButton
+                type="button"
+                onClick={() => {
+                  retry();
+                }}
+              >
+                <Trans>Retry</Trans>
+              </LoginButton>
+              <LoginButton variant="outline" type="button" onClick={onClose}>
+                <Trans>Back to Login</Trans>
+              </LoginButton>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading || !Component) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 p-4 backdrop-blur-sm">
+        <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-950">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <LoginSpinner aria-label="Loading" />
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              <Trans>Loading second factor prompt…</Trans>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Component
+      challenge={challenge}
+      mfaCode={mfaCode}
+      mfaError={mfaError}
+      mfaMethod={mfaMethod}
+      isMfaSubmitDisabled={isMfaSubmitDisabled}
+      isOtherMethodAvailable={isOtherMethodAvailable}
+      isVerifyingMfa={isVerifyingMfa}
+      canSwitchMfaMethod={canSwitchMfaMethod}
+      otherMfaMethod={otherMfaMethod ?? mfaMethod}
+      onChangeCode={onChangeCode}
+      onClose={onClose}
+      onMethodChange={onMethodChange}
+      onSubmit={onSubmit}
+    />
   );
 }
 
@@ -861,23 +961,21 @@ export function Login() {
       <LoginLegalFooter />
 
       {pendingMfaChallenge ? (
-        <Suspense fallback={null}>
-          <LoginMfaDialog
-            challenge={pendingMfaChallenge}
-            mfaCode={mfaCode}
-            mfaError={mfaError}
-            mfaMethod={mfaMethod}
-            isMfaSubmitDisabled={isMfaSubmitDisabled}
-            isOtherMethodAvailable={isOtherMethodAvailable}
-            isVerifyingMfa={isVerifyingMfa}
-            canSwitchMfaMethod={canSwitchMfaMethod}
-            otherMfaMethod={otherMfaMethod}
-            onChangeCode={setMfaCode}
-            onClose={handleCloseMfaDialog}
-            onMethodChange={handleMfaMethodChange}
-            onSubmit={handleVerifyMfa}
-          />
-        </Suspense>
+        <LoginMfaDialogLoader
+          challenge={pendingMfaChallenge}
+          mfaCode={mfaCode}
+          mfaError={mfaError}
+          mfaMethod={mfaMethod}
+          isMfaSubmitDisabled={isMfaSubmitDisabled}
+          isOtherMethodAvailable={isOtherMethodAvailable}
+          isVerifyingMfa={isVerifyingMfa}
+          canSwitchMfaMethod={canSwitchMfaMethod}
+          otherMfaMethod={otherMfaMethod}
+          onChangeCode={setMfaCode}
+          onClose={handleCloseMfaDialog}
+          onMethodChange={handleMfaMethodChange}
+          onSubmit={handleVerifyMfa}
+        />
       ) : null}
     </LoginShell>
   );

@@ -6,6 +6,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { NativeRuntimePwaGuard } from "./components/NativeRuntimePwaGuard";
 import { AuthProvider } from "./contexts/AuthContext";
 import { useAuth } from "./hooks/useAuth";
+import { useRecoverableLazyComponent } from "./hooks/useRecoverableLazyComponent";
 import { isRouteAuthBootstrapPending } from "./components/routeGuardAuth";
 import {
   LoginRouteLoadingState,
@@ -13,17 +14,48 @@ import {
 } from "./components/LoginRouteState";
 import { PublicRouteLoader } from "./components/PublicRouteLoader";
 import { RouteBootstrapRecoveryState } from "./components/RouteGuardState";
+import { loadAuthenticatedAppModule } from "./lib/lazyAppModules";
+import { isRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
 
 const LOGIN_ROUTE_BOOTSTRAP_INTERACTIVE_DELAY_MS = 1000;
 
 import { Login } from "./pages/Login";
 
-const AuthenticatedApp = lazy(() => import("./AuthenticatedApp"));
 const OnboardingComplete = lazy(() =>
   import("./pages/Onboarding/OnboardingComplete").then((module) => ({
     default: module.OnboardingComplete,
   }))
 );
+
+function AuthenticatedAppSlot({
+  onSignInAgain,
+}: {
+  onSignInAgain: () => void;
+}) {
+  const { Component, error, isLoading, retry } = useRecoverableLazyComponent(
+    loadAuthenticatedAppModule
+  );
+
+  if (error) {
+    if (isRecoverableLazyModuleError(error)) {
+      return (
+        <RouteBootstrapRecoveryState
+          onRetry={retry}
+          onSignInAgain={onSignInAgain}
+          reason="network"
+        />
+      );
+    }
+
+    throw error;
+  }
+
+  if (isLoading || !Component) {
+    return <PublicRouteLoader />;
+  }
+
+  return <Component />;
+}
 
 function LoginRoute() {
   const auth = useAuth();
@@ -111,7 +143,7 @@ function AuthenticatedAppRoute() {
     return <Navigate to="/login" replace />;
   }
 
-  return <AuthenticatedApp />;
+  return <AuthenticatedAppSlot onSignInAgain={logout} />;
 }
 
 function App() {

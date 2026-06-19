@@ -71,7 +71,7 @@ function shouldBootstrapBrowserSessionWithoutStoredUser(
     return false;
   }
 
-  return getCsrfTokenFromCookie() !== null;
+  return true;
 }
 
 function getBootstrapErrorCode(error: unknown): string | null {

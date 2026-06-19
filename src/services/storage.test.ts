@@ -4,10 +4,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
 import { authStorage } from "./storage";
+import { createRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
 import {
   AUTH_VAULT_STORAGE_KEY,
   clearOfflineVaultSession,
 } from "../lib/offlineVault";
+import * as offlineVault from "../lib/offlineVault";
 import { db } from "../lib/db";
 import { getActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
 
@@ -271,6 +273,41 @@ describe("authStorage", () => {
     await expect(authStorage.getUser()).resolves.toEqual(legacyUser);
     expect(localStorage.getItem("auth_user")).toBeNull();
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+  });
+
+  it("preserves legacy auth_user when vault initialization fails with a recoverable lazy chunk error", async () => {
+    const legacyUser = {
+      id: "1",
+      name: "Legacy User",
+      email: "legacy@secpal.dev",
+      emailVerified: false,
+    };
+    const initializeOfflineVaultSpy = vi
+      .spyOn(offlineVault, "initializeOfflineVault")
+      .mockRejectedValueOnce(
+        createRecoverableLazyModuleError(
+          "Stored offline auth data is temporarily unavailable on this device.",
+          new TypeError("Failed to fetch dynamically imported module")
+        )
+      );
+
+    try {
+      localStorage.setItem(
+        "auth_user",
+        await createEncryptedEnvelope(legacyUser, "test-csrf-token", {
+          version: CURRENT_AUTH_STORAGE_VERSION,
+          iterations: CURRENT_AUTH_STORAGE_PBKDF2_ITERATIONS,
+        })
+      );
+
+      await expect(authStorage.getUser()).rejects.toMatchObject({
+        code: "RECOVERABLE_LAZY_MODULE_ERROR",
+      });
+      expect(localStorage.getItem("auth_user")).not.toBeNull();
+      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    } finally {
+      initializeOfflineVaultSpy.mockRestore();
+    }
   });
 
   it("clears invalid JSON snapshots and logs the parse failure", () => {

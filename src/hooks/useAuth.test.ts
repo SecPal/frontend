@@ -210,7 +210,7 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
-  it("does not bootstrap a protected browser-session route without a session hint", () => {
+  it("still bootstraps a protected browser-session route when the readable csrf cookie is missing", async () => {
     window.history.replaceState({}, "", "/");
     clearCsrfTokenCookie();
 
@@ -218,9 +218,13 @@ describe("useAuth", () => {
       wrapper: AuthProvider,
     });
 
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.isAuthenticated).toBe(false);
-    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+    expect(result.current.isLoading).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
   it("does not run sensitive logout cleanup when bootstrap revalidation finds no browser-session user", async () => {

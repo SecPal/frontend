@@ -3,6 +3,7 @@
 
 const TRANSIENT_MODULE_LOAD_PATTERNS = [
   "failed to fetch dynamically imported module",
+  "error loading dynamically imported module",
   "failed to fetch chunk",
   "loading chunk",
   "importing a module script failed",

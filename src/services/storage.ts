@@ -8,6 +8,7 @@ import {
 } from "../lib/offlineVaultKeys";
 import {
   createRecoverableLazyModuleError,
+  isRecoverableLazyModuleError,
   isTransientModuleLoadError,
 } from "../lib/lazyModuleErrors";
 import { clearActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
@@ -564,11 +565,29 @@ class LocalStorageAuthStorage implements AuthStorage {
         return this.clearInvalidStoredUserAsync();
       }
 
-      const { initializeOfflineVault } = await loadOfflineVaultModule();
+      let initializeOfflineVault: typeof import("../lib/offlineVault").initializeOfflineVault;
+
+      try {
+        ({ initializeOfflineVault } = await loadOfflineVaultModule());
+      } catch (error) {
+        if (isTransientModuleLoadError(error)) {
+          throw createRecoverableLazyModuleError(
+            "Stored offline auth data is temporarily unavailable on this device.",
+            error
+          );
+        }
+
+        throw error;
+      }
+
       await initializeOfflineVault(sanitizedUser);
 
       return sanitizedUser;
     } catch (error) {
+      if (isRecoverableLazyModuleError(error)) {
+        throw error;
+      }
+
       return this.handleStoredUserErrorAsync(
         "Failed to parse stored user data:",
         error

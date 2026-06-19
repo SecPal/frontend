@@ -24,6 +24,11 @@ import * as passkeyBrowser from "../services/passkeyBrowser";
 import { authStorage } from "../services/storage";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import * as i18nModule from "../i18n";
+import { createRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
+
+const { mockLoadLoginMfaDialogModule } = vi.hoisted(() => ({
+  mockLoadLoginMfaDialogModule: vi.fn(() => import("./LoginMfaDialog")),
+}));
 
 // Mock only the API functions, not AuthApiError class
 vi.mock("../services/authApi", async () => {
@@ -65,6 +70,14 @@ vi.mock("../i18n", async () => {
     ...actual,
     activateLocale: vi.fn(),
     setLocalePreference: vi.fn(),
+  };
+});
+
+vi.mock("../lib/lazyAppModules", async () => {
+  const actual = await vi.importActual("../lib/lazyAppModules");
+  return {
+    ...actual,
+    loadLoginMfaDialogModule: mockLoadLoginMfaDialogModule,
   };
 });
 
@@ -229,6 +242,10 @@ async function selectLanguage(visibleName: string) {
 describe("Login", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLoadLoginMfaDialogModule.mockReset();
+    mockLoadLoginMfaDialogModule.mockImplementation(
+      () => import("./LoginMfaDialog")
+    );
     localStorage.clear();
     window.history.replaceState({}, "", "/login");
     i18n.load("en", enMessages);
@@ -236,6 +253,9 @@ describe("Login", () => {
     i18n.activate("en");
     // Default: health check passes
     vi.mocked(healthApi.checkHealth).mockResolvedValue(createHealthyResponse());
+    vi.mocked(authApi.getCurrentUser).mockRejectedValue(
+      new authApi.AuthApiError("Unauthenticated.", undefined, 401, "HTTP_401")
+    );
     // Default: user is online
     vi.mocked(useOnlineStatus).mockReturnValue(true);
     mockBrowserPasskeySupport(false);
@@ -2121,6 +2141,50 @@ describe("Login", () => {
     );
 
     consoleErrorSpy.mockRestore();
+  });
+
+  it("shows a recoverable fallback when the MFA dialog chunk cannot be loaded", async () => {
+    vi.mocked(authApi.login).mockResolvedValueOnce({
+      challenge: mfaChallengeFixture,
+    });
+    mockLoadLoginMfaDialogModule.mockRejectedValueOnce(
+      createRecoverableLazyModuleError(
+        "The secure MFA prompt is temporarily unavailable on this device.",
+        new TypeError("Failed to fetch dynamically imported module")
+      )
+    );
+
+    renderLogin();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /log in/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "test@secpal.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/password/i), {
+      target: { value: "password123" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+    expect(
+      await screen.findByText(/could not load the secure verification prompt/i)
+    ).toBeInTheDocument();
+
+    mockLoadLoginMfaDialogModule.mockImplementationOnce(
+      () => import("./LoginMfaDialog")
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /retry/i }));
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /second factor required/i,
+      })
+    ).toBeInTheDocument();
   });
 
   it("displays fallback error message for unknown error types", async () => {

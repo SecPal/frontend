@@ -10,89 +10,94 @@ import App from "./App";
 import { AuthApiError } from "./services/authApi";
 import { sanitizePersistedAuthUser } from "./services/authState";
 import { authStorage } from "./services/storage";
+import { createRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
 
 const ROUTE_NAVIGATION_TIMEOUT_MS = 20_000;
 
-const { mockGetCurrentUser, mockFetchCsrfToken, mockAuthStorage } = vi.hoisted(
-  () => {
-    let storedUser: unknown = null;
-    let vaultPresent = false;
-    let vaultLocked = false;
-    let logoutBarrier = false;
-    let skipVaultTableCleanup = false;
+const {
+  mockGetCurrentUser,
+  mockFetchCsrfToken,
+  mockAuthStorage,
+  mockLoadAuthenticatedAppModule,
+} = vi.hoisted(() => {
+  let storedUser: unknown = null;
+  let vaultPresent = false;
+  let vaultLocked = false;
+  let logoutBarrier = false;
+  let skipVaultTableCleanup = false;
 
-    return {
-      mockGetCurrentUser: vi.fn(),
-      mockFetchCsrfToken: vi.fn(),
-      mockAuthStorage: {
-        hasStoredUser: vi.fn(
-          () =>
-            !logoutBarrier &&
-            !vaultLocked &&
-            (vaultPresent || storedUser !== null)
-        ),
-        hasVaultLock: vi.fn(() => vaultLocked),
-        // Mirror production: persisted users live in the offline vault, so the
-        // synchronous snapshot is always null once a vault record exists.
-        getUserSnapshot: vi.fn(() => {
-          if (logoutBarrier || vaultLocked || vaultPresent) {
-            return null;
-          }
+  return {
+    mockGetCurrentUser: vi.fn(),
+    mockFetchCsrfToken: vi.fn(),
+    mockLoadAuthenticatedAppModule: vi.fn(() => import("./AuthenticatedApp")),
+    mockAuthStorage: {
+      hasStoredUser: vi.fn(
+        () =>
+          !logoutBarrier &&
+          !vaultLocked &&
+          (vaultPresent || storedUser !== null)
+      ),
+      hasVaultLock: vi.fn(() => vaultLocked),
+      // Mirror production: persisted users live in the offline vault, so the
+      // synchronous snapshot is always null once a vault record exists.
+      getUserSnapshot: vi.fn(() => {
+        if (logoutBarrier || vaultLocked || vaultPresent) {
+          return null;
+        }
 
-          return storedUser;
-        }),
-        getUser: vi.fn(async () => {
-          if (logoutBarrier || vaultLocked) {
-            return null;
-          }
+        return storedUser;
+      }),
+      getUser: vi.fn(async () => {
+        if (logoutBarrier || vaultLocked) {
+          return null;
+        }
 
-          return storedUser;
-        }),
-        setUser: vi.fn(async (user: unknown) => {
-          storedUser = user;
-          vaultPresent = true;
-          vaultLocked = false;
-          logoutBarrier = false;
-        }),
-        lockVault: vi.fn(() => {
-          vaultLocked = true;
-          logoutBarrier = false;
-        }),
-        unlockVault: vi.fn(async () => {
-          vaultLocked = false;
-          return storedUser;
-        }),
-        removeUser: vi.fn(async () => {
-          storedUser = null;
-          vaultPresent = false;
-          vaultLocked = false;
-          logoutBarrier = false;
-        }),
-        clear: vi.fn(async () => {
-          storedUser = null;
-          vaultPresent = false;
-          vaultLocked = false;
-          logoutBarrier = false;
-          skipVaultTableCleanup = false;
-        }),
-        hasLogoutBarrier: vi.fn(() => logoutBarrier),
-        shouldSkipBarrierVaultTableCleanup: vi.fn(() => skipVaultTableCleanup),
-        setSkipBarrierVaultTableCleanup: vi.fn((shouldSkip: boolean) => {
-          skipVaultTableCleanup = shouldSkip;
-        }),
-        beginSensitiveLogoutBarrierCleanup: vi.fn(() => {
-          logoutBarrier = true;
-          skipVaultTableCleanup = true;
-          return "test-logout-barrier-owner";
-        }),
-        endSensitiveLogoutBarrierCleanup: vi.fn(() => {
-          skipVaultTableCleanup = false;
-        }),
-        waitForInFlightVaultTableCleanup: vi.fn(async () => undefined),
-      },
-    };
-  }
-);
+        return storedUser;
+      }),
+      setUser: vi.fn(async (user: unknown) => {
+        storedUser = user;
+        vaultPresent = true;
+        vaultLocked = false;
+        logoutBarrier = false;
+      }),
+      lockVault: vi.fn(() => {
+        vaultLocked = true;
+        logoutBarrier = false;
+      }),
+      unlockVault: vi.fn(async () => {
+        vaultLocked = false;
+        return storedUser;
+      }),
+      removeUser: vi.fn(async () => {
+        storedUser = null;
+        vaultPresent = false;
+        vaultLocked = false;
+        logoutBarrier = false;
+      }),
+      clear: vi.fn(async () => {
+        storedUser = null;
+        vaultPresent = false;
+        vaultLocked = false;
+        logoutBarrier = false;
+        skipVaultTableCleanup = false;
+      }),
+      hasLogoutBarrier: vi.fn(() => logoutBarrier),
+      shouldSkipBarrierVaultTableCleanup: vi.fn(() => skipVaultTableCleanup),
+      setSkipBarrierVaultTableCleanup: vi.fn((shouldSkip: boolean) => {
+        skipVaultTableCleanup = shouldSkip;
+      }),
+      beginSensitiveLogoutBarrierCleanup: vi.fn(() => {
+        logoutBarrier = true;
+        skipVaultTableCleanup = true;
+        return "test-logout-barrier-owner";
+      }),
+      endSensitiveLogoutBarrierCleanup: vi.fn(() => {
+        skipVaultTableCleanup = false;
+      }),
+      waitForInFlightVaultTableCleanup: vi.fn(async () => undefined),
+    },
+  };
+});
 
 vi.mock("./services/authApi", async () => {
   const actual = await vi.importActual("./services/authApi");
@@ -113,6 +118,14 @@ vi.mock("./services/csrf", async () => {
 vi.mock("./services/storage", () => ({
   authStorage: mockAuthStorage,
 }));
+
+vi.mock("./lib/lazyAppModules", async () => {
+  const actual = await vi.importActual("./lib/lazyAppModules");
+  return {
+    ...actual,
+    loadAuthenticatedAppModule: mockLoadAuthenticatedAppModule,
+  };
+});
 
 // Block all real network requests: lazy-loaded page components call their
 // data APIs on mount, and those pending fetch Promises accumulate in the
@@ -203,6 +216,10 @@ describe("App", () => {
     i18n.load("en", {});
     i18n.activate("en");
     mockFetchCsrfToken.mockResolvedValue(undefined);
+    mockLoadAuthenticatedAppModule.mockReset();
+    mockLoadAuthenticatedAppModule.mockImplementation(
+      () => import("./AuthenticatedApp")
+    );
     mockGetCurrentUser.mockRejectedValue(
       Object.assign(new Error("No mock auth user available for bootstrap"), {
         code: "HTTP_401",
@@ -353,6 +370,46 @@ describe("App", () => {
     expect(
       screen.queryByRole("heading", { name: /log in/i })
     ).not.toBeInTheDocument();
+  });
+
+  it("shows recovery UI when the protected app shell chunk cannot be loaded and recovers on retry", async () => {
+    await seedPersistedAuthUser({
+      id: 1,
+      name: "Active User",
+      email: "guard@secpal.dev",
+      emailVerified: true,
+    });
+    mockLoadAuthenticatedAppModule.mockRejectedValueOnce(
+      createRecoverableLazyModuleError(
+        "The protected app shell is temporarily unavailable on this device.",
+        new TypeError("Failed to fetch dynamically imported module")
+      )
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /still loading your secure session/i,
+      })
+    ).toBeInTheDocument();
+
+    mockLoadAuthenticatedAppModule.mockImplementationOnce(
+      () => import("./AuthenticatedApp")
+    );
+
+    await act(async () => {
+      screen.getByRole("button", { name: /retry/i }).click();
+      await Promise.resolve();
+    });
+
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /welcome to secpal/i },
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
   });
 
   it("redirects browser-session users away from the login route even without a local auth snapshot", async () => {
