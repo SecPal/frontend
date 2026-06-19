@@ -25,18 +25,6 @@ export type BrowserLoginResponse =
   | LoginMfaChallengeResponse;
 
 export { AuthApiError } from "./AuthApiError";
-export {
-  confirmTotpEnrollment,
-  deletePasskey,
-  disableMfa,
-  getMfaStatus,
-  getPasskeys,
-  regenerateRecoveryCodes,
-  sendVerificationNotification,
-  startPasskeyRegistrationChallenge,
-  startTotpEnrollment,
-  verifyPasskeyRegistrationChallenge,
-} from "./authAccountApi";
 
 /**
  * Login with email and password

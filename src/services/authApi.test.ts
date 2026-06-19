@@ -4,25 +4,27 @@
 import { describe, it, expect, vi, beforeEach, assert } from "vitest";
 import * as config from "../config";
 import {
-  startPasskeyAuthenticationChallenge,
-  verifyPasskeyAuthenticationChallenge,
-  deletePasskey,
-  startPasskeyRegistrationChallenge,
-  verifyPasskeyRegistrationChallenge,
-  getPasskeys,
+  AuthApiError,
+  getCurrentUser,
   login,
   logout,
   logoutAll,
-  getCurrentUser,
-  sendVerificationNotification,
-  getMfaStatus,
-  startTotpEnrollment,
-  confirmTotpEnrollment,
-  regenerateRecoveryCodes,
-  disableMfa,
-  AuthApiError,
   verifyMfaChallenge,
+  startPasskeyAuthenticationChallenge,
+  verifyPasskeyAuthenticationChallenge,
 } from "./authApi";
+import {
+  confirmTotpEnrollment,
+  deletePasskey,
+  disableMfa,
+  getMfaStatus,
+  getPasskeys,
+  regenerateRecoveryCodes,
+  sendVerificationNotification,
+  startPasskeyRegistrationChallenge,
+  startTotpEnrollment,
+  verifyPasskeyRegistrationChallenge,
+} from "./authAccountApi";
 
 const mockFetch = vi.fn();
 
