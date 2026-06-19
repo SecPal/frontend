@@ -130,7 +130,9 @@ export default function LoginMfaDialog({
                 />
               )}
               {mfaError ? (
-                <LoginFieldError id="mfa-code-error">{mfaError}</LoginFieldError>
+                <LoginFieldError id="mfa-code-error">
+                  {mfaError}
+                </LoginFieldError>
               ) : null}
               {canSwitchMfaMethod && isOtherMethodAvailable ? (
                 <button

@@ -36,25 +36,6 @@ function LoginRoute() {
     retryBootstrap,
     unlock,
   } = auth;
-  const [
-    showInteractiveLoginDuringBootstrap,
-    setShowInteractiveLoginDuringBootstrap,
-  ] = useState(false);
-
-  useEffect(() => {
-    if (!isRouteAuthBootstrapPending(auth)) {
-      setShowInteractiveLoginDuringBootstrap(false);
-      return;
-    }
-
-    const timeoutId = globalThis.setTimeout(() => {
-      setShowInteractiveLoginDuringBootstrap(true);
-    }, LOGIN_ROUTE_BOOTSTRAP_INTERACTIVE_DELAY_MS);
-
-    return () => {
-      globalThis.clearTimeout(timeoutId);
-    };
-  }, [auth]);
 
   if (isVaultLocked) {
     if (!unlock) {
@@ -76,11 +57,8 @@ function LoginRoute() {
     );
   }
 
-  if (
-    isRouteAuthBootstrapPending(auth) &&
-    !showInteractiveLoginDuringBootstrap
-  ) {
-    return <LoginRouteLoadingState />;
+  if (isRouteAuthBootstrapPending(auth)) {
+    return <LoginRouteBootstrapGate />;
   }
 
   if (isAuthenticated) {
@@ -88,6 +66,22 @@ function LoginRoute() {
   }
 
   return <Login />;
+}
+
+function LoginRouteBootstrapGate() {
+  const [showInteractiveLogin, setShowInteractiveLogin] = useState(false);
+
+  useEffect(() => {
+    const timeoutId = globalThis.setTimeout(() => {
+      setShowInteractiveLogin(true);
+    }, LOGIN_ROUTE_BOOTSTRAP_INTERACTIVE_DELAY_MS);
+
+    return () => {
+      globalThis.clearTimeout(timeoutId);
+    };
+  }, []);
+
+  return showInteractiveLogin ? <Login /> : <LoginRouteLoadingState />;
 }
 
 function AuthenticatedAppRoute() {

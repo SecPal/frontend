@@ -35,7 +35,10 @@ export function LoginCard({
 }: ComponentPropsWithoutRef<"section">) {
   return (
     <section
-      className={cn("w-full max-w-sm text-zinc-950 dark:text-zinc-50", className)}
+      className={cn(
+        "w-full max-w-sm text-zinc-950 dark:text-zinc-50",
+        className
+      )}
       {...props}
     />
   );

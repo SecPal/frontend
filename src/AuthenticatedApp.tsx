@@ -5,7 +5,10 @@ import { lazy, Suspense } from "react";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { Trans } from "@lingui/react/macro";
 import { ApplicationLayout } from "./components/application-layout";
-import { AppAccessRoute, OnboardingOnlyRoute } from "./components/OnboardingAccessRoute";
+import {
+  AppAccessRoute,
+  OnboardingOnlyRoute,
+} from "./components/OnboardingAccessRoute";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { FeatureRoute } from "./components/FeatureRoute";
 import { RouteLoader } from "./components/RouteLoader";
