@@ -6,10 +6,7 @@ import { useState } from "react";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { Link } from "react-router-dom";
-import {
-  AuthApiError,
-  sendVerificationNotification,
-} from "../services/authAccountApi";
+import { AuthApiError } from "../services/AuthApiError";
 import { Button, buttonVariants } from "@/ui";
 import { RouteLoader } from "./RouteLoader";
 
@@ -28,6 +25,10 @@ interface RouteEmailVerificationStateProps {
   email: string;
   onRetry: () => void;
   onSignInAgain: () => void;
+}
+
+async function loadAuthAccountApiModule() {
+  return await import("../services/authAccountApi");
 }
 
 export function RouteLoadingState() {
@@ -159,6 +160,7 @@ export function RouteEmailVerificationState({
     setIsSending(true);
 
     try {
+      const { sendVerificationNotification } = await loadAuthAccountApiModule();
       const response = await sendVerificationNotification();
       setStatusMessage(response.message);
     } catch (error) {
