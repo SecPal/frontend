@@ -299,28 +299,36 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).not.toHaveBeenCalled();
   });
 
-  it("skips the login-route browser-session probe when only a stale local snapshot exists and no csrf cookie is present", async () => {
-    document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
+  it("revalidates stale login-route browser-session auth even without a csrf cookie", async () => {
     window.history.replaceState({}, "", "/login");
-    localStorage.setItem("auth_user", "invalid-json");
+    clearCsrfTokenCookie();
+    const hasStoredUserSpy = vi
+      .spyOn(authStorage, "hasStoredUser")
+      .mockReturnValue(true);
+    const getUserSpy = vi.spyOn(authStorage, "getUser").mockResolvedValue(null);
     mockGetCurrentUser.mockRejectedValueOnce(
       Object.assign(new Error("Unauthenticated."), {
         code: "HTTP_401",
       })
     );
 
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: AuthProvider,
-    });
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
 
-    expect(result.current.user).toBeNull();
-    expect(result.current.isAuthenticated).toBe(false);
-    expect(localStorage.getItem("auth_user")).toBeNull();
-    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+      await waitForSensitiveClientCleanup();
+    } finally {
+      hasStoredUserSpy.mockRestore();
+      getUserSpy.mockRestore();
+    }
   });
 
   it("adopts a cross-tab login after an unauthenticated login-route bootstrap probe with no local auth snapshot", async () => {

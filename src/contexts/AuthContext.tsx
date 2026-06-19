@@ -825,10 +825,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           }
 
-          if (shouldBootstrapWithoutStoredUser) {
-            startBootstrapRevalidation(true);
-            return;
-          }
+          startBootstrapRevalidation(true);
+          return;
         }
 
         if (shouldBootstrapWithoutStoredUser) {
