@@ -44,10 +44,8 @@ function BrowserUpdatePrompt() {
   }
 
   const handleUpdate = async () => {
-    console.log("[UpdatePrompt] Update button clicked");
     setIsUpdating(true);
     await updateServiceWorker();
-    console.log("[UpdatePrompt] Update triggered, page will reload");
     // No need to reset isUpdating - page will reload
   };
 

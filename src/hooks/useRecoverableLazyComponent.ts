@@ -10,19 +10,20 @@ interface LazyComponentModule<TProps> {
 export function useRecoverableLazyComponent<TProps>(
   loader: () => Promise<LazyComponentModule<TProps>>
 ) {
-  const [Component, setComponent] = useState<ComponentType<TProps> | null>(
-    null
-  );
-  const [error, setError] = useState<unknown>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [retryKey, setRetryKey] = useState(0);
+  const [state, setState] = useState<{
+    Component: ComponentType<TProps> | null;
+    error: unknown;
+    retryKey: number;
+  }>(() => ({
+    Component: null,
+    error: null,
+    retryKey: 0,
+  }));
+  const { Component, error, retryKey } = state;
+  const isLoading = Component === null && error === null;
 
   useEffect(() => {
     let cancelled = false;
-
-    setComponent(null);
-    setError(null);
-    setIsLoading(true);
 
     void loader()
       .then((module) => {
@@ -30,16 +31,34 @@ export function useRecoverableLazyComponent<TProps>(
           return;
         }
 
-        setComponent(() => module.default);
-        setIsLoading(false);
+        setState((currentState) => {
+          if (currentState.retryKey !== retryKey) {
+            return currentState;
+          }
+
+          return {
+            Component: module.default,
+            error: null,
+            retryKey,
+          };
+        });
       })
       .catch((loadError: unknown) => {
         if (cancelled) {
           return;
         }
 
-        setError(loadError);
-        setIsLoading(false);
+        setState((currentState) => {
+          if (currentState.retryKey !== retryKey) {
+            return currentState;
+          }
+
+          return {
+            Component: null,
+            error: loadError,
+            retryKey,
+          };
+        });
       });
 
     return () => {
@@ -52,7 +71,11 @@ export function useRecoverableLazyComponent<TProps>(
     error,
     isLoading,
     retry: () => {
-      setRetryKey((currentKey) => currentKey + 1);
+      setState((currentState) => ({
+        Component: null,
+        error: null,
+        retryKey: currentState.retryKey + 1,
+      }));
     },
   };
 }

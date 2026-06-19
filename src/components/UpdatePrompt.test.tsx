@@ -19,6 +19,16 @@ vi.mock("../lib/nativeRuntime", () => ({
 describe("UpdatePrompt", () => {
   const mockUpdateServiceWorker = vi.fn();
 
+  function createDeferredPromise() {
+    let resolve!: () => void;
+
+    const promise = new Promise<void>((promiseResolve) => {
+      resolve = promiseResolve;
+    });
+
+    return { promise, resolve };
+  }
+
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -116,9 +126,8 @@ describe("UpdatePrompt", () => {
 
     it("should display spinner with correct size and styling", async () => {
       const user = userEvent.setup();
-      mockUpdateServiceWorker.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
-      );
+      const deferredUpdate = createDeferredPromise();
+      mockUpdateServiceWorker.mockImplementation(() => deferredUpdate.promise);
 
       renderWithI18n(<UpdatePrompt />);
 
@@ -129,6 +138,8 @@ describe("UpdatePrompt", () => {
       expect(spinner).toBeInTheDocument();
       expect(spinner).toHaveClass("h-4", "w-4"); // size="sm"
       expect(spinner).toHaveClass("text-white"); // white color
+
+      deferredUpdate.resolve();
     });
   });
 
@@ -153,9 +164,8 @@ describe("UpdatePrompt", () => {
 
     it("should show loading state when update is triggered", async () => {
       const user = userEvent.setup();
-      mockUpdateServiceWorker.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
-      );
+      const deferredUpdate = createDeferredPromise();
+      mockUpdateServiceWorker.mockImplementation(() => deferredUpdate.promise);
 
       renderWithI18n(<UpdatePrompt />);
 
@@ -171,13 +181,14 @@ describe("UpdatePrompt", () => {
 
       // Update button should no longer be visible
       expect(screen.queryByText("Update now")).not.toBeInTheDocument();
+
+      deferredUpdate.resolve();
     });
 
     it("should not show update button during loading state", async () => {
       const user = userEvent.setup();
-      mockUpdateServiceWorker.mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
-      );
+      const deferredUpdate = createDeferredPromise();
+      mockUpdateServiceWorker.mockImplementation(() => deferredUpdate.promise);
 
       renderWithI18n(<UpdatePrompt />);
 
@@ -186,6 +197,8 @@ describe("UpdatePrompt", () => {
 
       // Button should disappear
       expect(screen.queryByText("Update now")).not.toBeInTheDocument();
+
+      deferredUpdate.resolve();
     });
   });
 

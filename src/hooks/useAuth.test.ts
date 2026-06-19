@@ -33,10 +33,12 @@ const {
   mockGetCurrentUser,
   mockAnalyticsResetForLogout,
   mockAnalyticsResumeAuthenticatedSession,
+  mockFetchCsrfToken,
 } = vi.hoisted(() => ({
   mockGetCurrentUser: vi.fn(),
   mockAnalyticsResetForLogout: vi.fn(),
   mockAnalyticsResumeAuthenticatedSession: vi.fn(),
+  mockFetchCsrfToken: vi.fn(),
 }));
 
 const AUTH_BOOTSTRAP_TIMEOUT_MS = 20_000;
@@ -46,6 +48,14 @@ vi.mock("../services/authApi", async () => {
   return {
     ...actual,
     getCurrentUser: mockGetCurrentUser,
+  };
+});
+
+vi.mock("../services/csrf", async () => {
+  const actual = await vi.importActual("../services/csrf");
+  return {
+    ...actual,
+    fetchCsrfToken: mockFetchCsrfToken,
   };
 });
 
@@ -156,6 +166,10 @@ describe("useAuth", () => {
       id: 1,
       name: "Bootstrap User",
       email: "bootstrap@secpal.dev",
+    });
+    mockFetchCsrfToken.mockReset();
+    mockFetchCsrfToken.mockImplementation(async () => {
+      setCsrfTokenCookie("refreshed-csrf-token");
     });
     mockAnalyticsResetForLogout.mockReset();
     mockAnalyticsResetForLogout.mockResolvedValue(undefined);

@@ -26,6 +26,10 @@ msgstr "Vollständiger Name"
 msgid "Enabling..."
 msgstr "Aktiviere ..."
 
+#: src/pages/Login.tsx
+msgid "Second factor required"
+msgstr ""
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Welcome to SecPal Onboarding"
 msgstr "Willkommen zum SecPal Onboarding"
@@ -462,6 +466,7 @@ msgstr "Name des Notfallkontakts ist erforderlich."
 
 #: src/components/OrganizationalUnitTree.tsx
 #: src/components/RouteGuardState.tsx
+#: src/pages/Login.tsx
 msgid "Retry"
 msgstr "Wiederholen"
 
@@ -1463,6 +1468,10 @@ msgstr "Wählen Sie eine Organisationseinheit, um Details anzuzeigen"
 msgid "Previous residence {0}"
 msgstr "Früherer Wohnort {0}"
 
+#: src/pages/Login.tsx
+msgid "Loading second factor prompt…"
+msgstr ""
+
 #: src/components/application-layout.tsx
 msgid "Employees"
 msgstr "Mitarbeiter"
@@ -1921,6 +1930,10 @@ msgstr "App sperren"
 #: src/components/RouteGuardState.tsx
 msgid "Verify your email address"
 msgstr "Überprüfen Sie Ihre E-Mail-Adresse"
+
+#: src/pages/Login.tsx
+msgid "SecPal could not load the secure verification prompt. Retry to continue your sign-in, or return to the login form."
+msgstr ""
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Please enter a valid date of birth"
@@ -2439,6 +2452,10 @@ msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein"
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Default"
 msgstr "Standard"
+
+#: src/pages/Login.tsx
+msgid "Back to Login"
+msgstr ""
 
 #: src/components/Footer.tsx
 #: src/components/LoginRouteState.tsx
