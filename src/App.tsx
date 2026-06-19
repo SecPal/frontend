@@ -86,10 +86,7 @@ function LoginRouteBootstrapGate() {
 
 function AuthenticatedAppRoute() {
   const auth = useAuth();
-  const {
-    isAuthenticated,
-    isVaultLocked = false,
-  } = auth;
+  const { isAuthenticated, isVaultLocked = false } = auth;
 
   if (isRouteAuthBootstrapPending(auth)) {
     if (!authStorage.hasStoredUser()) {

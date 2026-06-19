@@ -402,13 +402,14 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   private async clearVaultTables(): Promise<void> {
+    const offlineVaultModulePromise = loadOfflineVaultModule();
     const queuedCleanupPromise = this.vaultTableCleanupQueuePromise
       .catch(() => {
         // The cleanup initiator handles the vault-table failure; later
         // cleanups still need to run in order.
       })
       .then(async () => {
-        const { clearOfflineVaultTables } = await loadOfflineVaultModule();
+        const { clearOfflineVaultTables } = await offlineVaultModulePromise;
         await clearOfflineVaultTables();
       });
 
@@ -440,12 +441,20 @@ class LocalStorageAuthStorage implements AuthStorage {
     );
   }
 
+  private clearStoredUserMarkers(): void {
+    localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(this.VAULT_KEY);
+    localStorage.removeItem(this.VAULT_LOCK_KEY);
+  }
+
   private clearInvalidStoredUser(): null {
+    this.clearStoredUserMarkers();
     void this.removeUser({ allowBarrierSkipUpgrade: true });
     return null;
   }
 
   private async clearInvalidStoredUserAsync(): Promise<null> {
+    this.clearStoredUserMarkers();
     await this.removeUser({ allowBarrierSkipUpgrade: true });
     return null;
   }
@@ -603,14 +612,18 @@ class LocalStorageAuthStorage implements AuthStorage {
     const hasLogoutBarrier = this.hasLogoutBarrier();
     const shouldHonorBarrierSkipUpgrade =
       options.allowBarrierSkipUpgrade === true;
+    const cleanupPromise =
+      shouldClearOfflineVaultTables &&
+      !hasLogoutBarrier &&
+      !shouldHonorBarrierSkipUpgrade
+        ? this.clearVaultTables()
+        : null;
 
+    this.clearStoredUserMarkers();
     const { clearOfflineVaultSession, clearRecentAuthVaultKeyMaterials } =
       await loadOfflineVaultModule();
     clearOfflineVaultSession();
     clearRecentAuthVaultKeyMaterials();
-    localStorage.removeItem(this.USER_KEY);
-    localStorage.removeItem(this.VAULT_KEY);
-    localStorage.removeItem(this.VAULT_LOCK_KEY);
 
     if (!shouldClearOfflineVaultTables) {
       return;
@@ -629,7 +642,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
 
     try {
-      await this.clearVaultTables();
+      await (cleanupPromise ?? this.clearVaultTables());
     } catch (error: unknown) {
       console.warn("Failed to clear offline vault tables on logout:", error);
     }
