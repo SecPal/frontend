@@ -336,9 +336,9 @@ describe("SettingsPage", () => {
           createPasskeyRegistrationVerificationResponse().data.credential,
         ],
       });
-    vi.mocked(authAccountApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockResolvedValueOnce({
       id: "new-credential-id",
       raw_id: "bmV3LWNyZWRlbnRpYWwtaWQ",
@@ -350,9 +350,9 @@ describe("SettingsPage", () => {
       },
       client_extension_results: {},
     });
-    vi.mocked(authAccountApi.verifyPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationVerificationResponse()
-    );
+    vi.mocked(
+      authAccountApi.verifyPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationVerificationResponse());
 
     await renderSettingsPage();
 
@@ -362,11 +362,13 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
 
     await waitFor(() => {
-      expect(authAccountApi.startPasskeyRegistrationChallenge).toHaveBeenCalledTimes(
-        1
-      );
+      expect(
+        authAccountApi.startPasskeyRegistrationChallenge
+      ).toHaveBeenCalledTimes(1);
       expect(passkeyBrowser.getPasskeyAttestation).toHaveBeenCalledTimes(1);
-      expect(authAccountApi.verifyPasskeyRegistrationChallenge).toHaveBeenCalledWith(
+      expect(
+        authAccountApi.verifyPasskeyRegistrationChallenge
+      ).toHaveBeenCalledWith(
         "550e8400-e29b-41d4-a716-446655440099",
         expect.objectContaining({
           label: "Security Key",
@@ -383,9 +385,9 @@ describe("SettingsPage", () => {
     vi.mocked(authAccountApi.getPasskeys)
       .mockResolvedValueOnce(createPasskeyListResponse())
       .mockImplementationOnce(() => new Promise(() => {}));
-    vi.mocked(authAccountApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockResolvedValueOnce({
       id: "new-credential-id",
       raw_id: "bmV3LWNyZWRlbnRpYWwtaWQ",
@@ -396,9 +398,9 @@ describe("SettingsPage", () => {
         transports: ["usb"],
       },
     });
-    vi.mocked(authAccountApi.verifyPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationVerificationResponse()
-    );
+    vi.mocked(
+      authAccountApi.verifyPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationVerificationResponse());
 
     await renderSettingsPage();
 
@@ -415,9 +417,9 @@ describe("SettingsPage", () => {
   });
 
   it("shows a browser-check prompt while waiting for the credential provider", async () => {
-    vi.mocked(authAccountApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
 
     let resolveAttestation!: (value: unknown) => void;
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockReturnValue(
@@ -455,9 +457,9 @@ describe("SettingsPage", () => {
   });
 
   it("shows a saving prompt while the passkey registration is being verified", async () => {
-    vi.mocked(authAccountApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockResolvedValueOnce({
       id: "new-credential-id",
       raw_id: "bmV3LWNyZWRlbnRpYWwtaWQ",
@@ -473,7 +475,9 @@ describe("SettingsPage", () => {
     let resolveVerification!: (
       value: ReturnType<typeof createPasskeyRegistrationVerificationResponse>
     ) => void;
-    vi.mocked(authAccountApi.verifyPasskeyRegistrationChallenge).mockReturnValueOnce(
+    vi.mocked(
+      authAccountApi.verifyPasskeyRegistrationChallenge
+    ).mockReturnValueOnce(
       new Promise((resolve) => {
         resolveVerification = resolve;
       })
@@ -502,7 +506,9 @@ describe("SettingsPage", () => {
   });
 
   it("shows passkey enrollment errors inline", async () => {
-    vi.mocked(authAccountApi.startPasskeyRegistrationChallenge).mockRejectedValueOnce(
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockRejectedValueOnce(
       new authAccountApi.AuthApiError("Passkey registration failed.")
     );
 
@@ -519,9 +525,9 @@ describe("SettingsPage", () => {
   });
 
   it("shows cancellation message when user dismisses the browser passkey dialog", async () => {
-    vi.mocked(authAccountApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockRejectedValueOnce(
       new DOMException(
         "The operation either timed out or was not allowed.",
@@ -545,9 +551,9 @@ describe("SettingsPage", () => {
   });
 
   it("shows timeout message when passkey registration is aborted", async () => {
-    vi.mocked(authAccountApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockRejectedValueOnce(
       new DOMException("The operation was aborted.", "AbortError")
     );
@@ -568,9 +574,9 @@ describe("SettingsPage", () => {
   });
 
   it("shows generic error when browser attestation fails unexpectedly", async () => {
-    vi.mocked(authAccountApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockRejectedValueOnce(
       new Error("Unexpected credential error")
     );
@@ -591,9 +597,9 @@ describe("SettingsPage", () => {
   });
 
   it("shows credential provider guidance when the platform reports a credential manager error", async () => {
-    vi.mocked(authAccountApi.startPasskeyRegistrationChallenge).mockResolvedValueOnce(
-      createPasskeyRegistrationChallengeResponse()
-    );
+    vi.mocked(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).mockResolvedValueOnce(createPasskeyRegistrationChallengeResponse());
     vi.mocked(passkeyBrowser.getPasskeyAttestation).mockRejectedValueOnce(
       new Error(
         "An unknown error occurred while talking to the credential manager."
@@ -669,7 +675,9 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /remove/i }));
 
     await waitFor(() => {
-      expect(authAccountApi.deletePasskey).toHaveBeenCalledWith("credential-id");
+      expect(authAccountApi.deletePasskey).toHaveBeenCalledWith(
+        "credential-id"
+      );
       expect(authAccountApi.getPasskeys).toHaveBeenCalledTimes(2);
       expect(
         screen.queryByText(/work macbook touch id/i)
