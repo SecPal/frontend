@@ -281,6 +281,30 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).not.toHaveBeenCalled();
   });
 
+  it("skips the login-route browser-session probe when only a stale local snapshot exists and no csrf cookie is present", async () => {
+    document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
+    window.history.replaceState({}, "", "/login");
+    localStorage.setItem("auth_user", "invalid-json");
+    mockGetCurrentUser.mockRejectedValueOnce(
+      Object.assign(new Error("Unauthenticated."), {
+        code: "HTTP_401",
+      })
+    );
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(localStorage.getItem("auth_user")).toBeNull();
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+  });
+
   it("adopts a cross-tab login after an unauthenticated login-route bootstrap probe with no local auth snapshot", async () => {
     window.history.replaceState({}, "", "/login");
     mockGetCurrentUser.mockRejectedValueOnce(

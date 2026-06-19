@@ -748,6 +748,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (!storedUser) {
+        const shouldBootstrapWithoutStoredUser =
+          shouldBootstrapBrowserSessionWithoutStoredUser(
+            authTransport.kind,
+            hasLogoutBarrierRef.current
+          );
+
         if (authTransport.kind === "browser-session" && hadStoredUser) {
           if (!isOnline()) {
             setBootstrapRecoveryReason(null);
@@ -757,16 +763,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           }
 
-          startBootstrapRevalidation(true);
-          return;
+          if (shouldBootstrapWithoutStoredUser) {
+            startBootstrapRevalidation(true);
+            return;
+          }
         }
 
-        if (
-          shouldBootstrapBrowserSessionWithoutStoredUser(
-            authTransport.kind,
-            hasLogoutBarrierRef.current
-          )
-        ) {
+        if (shouldBootstrapWithoutStoredUser) {
           startBootstrapRevalidation(false);
           return;
         }
