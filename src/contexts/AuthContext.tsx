@@ -538,19 +538,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [clearAuthenticatedState, syncOfflineAuthState]);
 
   const retryBootstrap = useCallback(() => {
-    const canRetryWithoutStoredUser =
-      user === null &&
-      shouldBootstrapBrowserSessionWithoutStoredUser(
-        authTransport.kind,
-        hasLogoutBarrierRef.current
-      );
+    if (authTransport.kind === "browser-session") {
+      if (!isOnline()) {
+        setBootstrapRecoveryReason(null);
+        setIsLoading(false);
+        return;
+      }
 
-    if (
-      (user === null && !canRetryWithoutStoredUser) ||
-      (user !== null &&
-        authTransport.kind === "browser-session" &&
-        !isOnline())
-    ) {
+      hasAutomaticallyRetriedBootstrapRef.current = false;
+      setBootstrapRecoveryReason(null);
+      setIsLoading(true);
+      setBootstrapRetryKey((currentValue) => currentValue + 1);
+      return;
+    }
+
+    if (!user) {
       setBootstrapRecoveryReason(null);
       setIsLoading(false);
       return;

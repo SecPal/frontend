@@ -1011,6 +1011,44 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
+  it("retries browser-session bootstrap from recovery on /login without a restored user snapshot", async () => {
+    window.history.replaceState({}, "", "/login");
+    const firstFailure = new AuthApiError(
+      "Current user fetch failed: expected application/json response from API",
+      undefined,
+      404
+    );
+    const recoveredUser = {
+      id: "1",
+      name: "Recovered User",
+      email: "recovered@secpal.dev",
+      emailVerified: true,
+    };
+    mockGetCurrentUser
+      .mockRejectedValueOnce(firstFailure)
+      .mockResolvedValueOnce(recoveredUser);
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.bootstrapRecoveryReason).toBe("network");
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+
+    act(() => {
+      result.current.retryBootstrap();
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+  });
+
   it("does not silently retry an AuthApiError without a numeric status field", async () => {
     const mockUser = {
       id: "1",
