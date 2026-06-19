@@ -5,11 +5,13 @@ import { Navigate } from "react-router-dom";
 import type { RestrictedFeature, UserCapabilities } from "../lib/capabilities";
 import { useAuth } from "../hooks/useAuth";
 import { useUserCapabilities } from "../hooks/useUserCapabilities";
+import { authStorage } from "../services/storage";
 import { EmailVerificationGate } from "./EmailVerificationGate";
 import {
   isRouteAuthBootstrapPending,
   isRouteAuthSnapshotRevalidating,
 } from "./routeGuardAuth";
+import { LoginRouteLoadingState } from "./LoginRouteState";
 import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
@@ -55,6 +57,10 @@ export function FeatureRoute({
   const capabilities = useUserCapabilities();
 
   if (isRouteAuthBootstrapPending(auth)) {
+    if (!authStorage.hasStoredUser()) {
+      return <LoginRouteLoadingState />;
+    }
+
     return <RouteLoadingState />;
   }
 

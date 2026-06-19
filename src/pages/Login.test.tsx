@@ -99,6 +99,22 @@ async function expectLoginPasskeyErrorAlert(matcher: RegExp | string) {
   expect(el).toHaveTextContent(matcher);
 }
 
+function mockBrowserPasskeySupport(supported: boolean) {
+  vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(supported);
+  Object.defineProperty(window, "isSecureContext", {
+    configurable: true,
+    value: supported,
+  });
+  vi.stubGlobal(
+    "PublicKeyCredential",
+    supported ? class PublicKeyCredentialMock {} : undefined
+  );
+  Object.defineProperty(navigator, "credentials", {
+    configurable: true,
+    value: supported ? { get: vi.fn() } : undefined,
+  });
+}
+
 // Helper to create a healthy response
 const createHealthyResponse = (): healthApi.HealthStatus => ({
   status: "ready",
@@ -196,31 +212,18 @@ function switchToRecoveryCodeMode() {
 }
 
 async function selectLanguage(visibleName: string) {
-  const trigger = screen.getByRole("combobox", { name: /select language/i });
-  fireEvent.pointerDown(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.click(trigger, { button: 0 });
+  const trigger = screen.getByRole("combobox", {
+    name: /select language/i,
+  }) as HTMLSelectElement;
+  const selectedOption = Array.from(trigger.options).find(
+    (option) => option.text === visibleName
+  );
 
-  const option = await screen.findByRole("option", { name: visibleName });
-  fireEvent.pointerDown(option, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(option, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.click(option, { button: 0 });
+  if (!selectedOption) {
+    throw new Error(`Language option "${visibleName}" not found`);
+  }
+
+  fireEvent.change(trigger, { target: { value: selectedOption.value } });
 }
 
 describe("Login", () => {
@@ -235,7 +238,7 @@ describe("Login", () => {
     vi.mocked(healthApi.checkHealth).mockResolvedValue(createHealthyResponse());
     // Default: user is online
     vi.mocked(useOnlineStatus).mockReturnValue(true);
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(false);
+    mockBrowserPasskeySupport(false);
   });
 
   afterEach(() => {
@@ -350,7 +353,7 @@ describe("Login", () => {
   });
 
   it("shows a passkey sign-in action when the browser supports passkeys", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
 
     renderLogin();
 
@@ -842,7 +845,7 @@ describe("Login", () => {
   });
 
   it("completes passkey sign-in with the browser WebAuthn flow", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -903,7 +906,7 @@ describe("Login", () => {
   });
 
   it("always uses optional mediation for an explicit button click even when the API returns conditional", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -956,7 +959,7 @@ describe("Login", () => {
   });
 
   it("starts passkey sign-in with a discoverable challenge even when the email field is filled", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1017,7 +1020,7 @@ describe("Login", () => {
   });
 
   it("shows passkey sign-in errors inline when the passkey flow fails", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockRejectedValueOnce(
@@ -1036,7 +1039,7 @@ describe("Login", () => {
   });
 
   it("shows a cancelled message when passkey sign-in is rejected with NotAllowedError", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1074,7 +1077,7 @@ describe("Login", () => {
   });
 
   it("shows a timeout message when passkey sign-in is aborted", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1110,7 +1113,7 @@ describe("Login", () => {
   });
 
   it("shows credential provider guidance when the platform reports a credential manager error", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1144,7 +1147,7 @@ describe("Login", () => {
   });
 
   it("surfaces resident-credential errors instead of retrying with an email-scoped challenge", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1186,7 +1189,7 @@ describe("Login", () => {
   });
 
   it("shows a browser-check prompt while waiting for the WebAuthn credential", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1238,7 +1241,7 @@ describe("Login", () => {
   });
 
   it("shows a verifying prompt while the passkey verify request is in progress", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1304,7 +1307,7 @@ describe("Login", () => {
   });
 
   it("completes browser passkey login without a separate session confirmation fetch", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -1366,7 +1369,7 @@ describe("Login", () => {
   });
 
   it("clears the browser passkey loading state after verify succeeds", async () => {
-    vi.mocked(passkeyBrowser.isPasskeySupported).mockReturnValue(true);
+    mockBrowserPasskeySupport(true);
     vi.mocked(
       authApi.startPasskeyAuthenticationChallenge
     ).mockResolvedValueOnce({
@@ -2424,7 +2427,7 @@ describe("Login", () => {
       }
     });
 
-    it("shows 'Checking system...' while health check is in progress", async () => {
+    it("keeps the login form interactive while the health check is in progress", async () => {
       // Create a promise that we can control
       let resolveHealthCheck: (value: healthApi.HealthStatus) => void;
       const healthCheckPromise = new Promise<healthApi.HealthStatus>(
@@ -2436,8 +2439,9 @@ describe("Login", () => {
 
       renderLogin();
 
-      // Should show "Checking system..." while loading
-      expect(screen.getByText(/checking system/i)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /log in/i })).toBeEnabled();
+      expect(screen.getByLabelText(/email/i)).toBeEnabled();
+      expect(screen.getByLabelText(/password/i)).toBeEnabled();
 
       // Resolve the health check
       resolveHealthCheck!(createHealthyResponse());

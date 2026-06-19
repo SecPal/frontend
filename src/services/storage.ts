@@ -3,16 +3,8 @@
 
 import type { User } from "../contexts/auth-context";
 import {
-  AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
-  clearOfflineVaultLockState,
-  clearOfflineVaultSession,
-  clearOfflineVaultTables,
-  clearRecentAuthVaultKeyMaterials,
-  isOfflineVaultLocked,
-  initializeOfflineVault,
-  lockOfflineVault,
-  readPersistedAuthUserFromVault,
+  AUTH_VAULT_LOCK_KEY,
 } from "../lib/offlineVault";
 import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
 import { sanitizePersistedAuthUser, type PersistedAuthUser } from "./authState";
@@ -36,6 +28,10 @@ interface AuthStorageEnvelope {
   iv: string;
   ciphertext: string;
   mac: string;
+}
+
+async function loadOfflineVaultModule() {
+  return await import("../lib/offlineVault");
 }
 
 function isAuthStorageVersion(value: unknown): value is AuthStorageVersion {
@@ -412,6 +408,7 @@ class LocalStorageAuthStorage implements AuthStorage {
         // cleanups still need to run in order.
       })
       .then(async () => {
+        const { clearOfflineVaultTables } = await loadOfflineVaultModule();
         await clearOfflineVaultTables();
       });
 
@@ -424,7 +421,14 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   hasVaultLock(): boolean {
-    return isOfflineVaultLocked();
+    const locked = localStorage.getItem(this.VAULT_LOCK_KEY) !== null;
+
+    if (locked && localStorage.getItem(this.VAULT_KEY) === null) {
+      localStorage.removeItem(this.VAULT_LOCK_KEY);
+      return false;
+    }
+
+    return locked;
   }
 
   hasStoredUser(): boolean {
@@ -512,6 +516,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
 
     if (localStorage.getItem(this.VAULT_KEY) !== null) {
+      const { readPersistedAuthUserFromVault } = await loadOfflineVaultModule();
       const storedVaultUser = await readPersistedAuthUserFromVault();
 
       if (!storedVaultUser) {
@@ -531,6 +536,7 @@ class LocalStorageAuthStorage implements AuthStorage {
         return this.clearInvalidStoredUserAsync();
       }
 
+      const { initializeOfflineVault } = await loadOfflineVaultModule();
       await initializeOfflineVault(sanitizedUser);
 
       return sanitizedUser;
@@ -551,6 +557,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
 
     try {
+      const { initializeOfflineVault } = await loadOfflineVaultModule();
       await initializeOfflineVault(sanitizedUser);
     } catch (error) {
       console.error("Failed to persist stored user data:", error);
@@ -559,18 +566,23 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
 
     this.clearLogoutBarrier();
-    clearOfflineVaultLockState();
+    localStorage.removeItem(this.VAULT_LOCK_KEY);
     localStorage.removeItem(this.USER_KEY);
   }
 
   lockVault(): void {
     this.clearLogoutBarrier();
-    lockOfflineVault();
+    if (localStorage.getItem(this.VAULT_KEY) !== null) {
+      localStorage.setItem(this.VAULT_LOCK_KEY, "1");
+    }
     localStorage.removeItem(this.USER_KEY);
+    void loadOfflineVaultModule().then(({ clearOfflineVaultSession }) => {
+      clearOfflineVaultSession();
+    });
   }
 
   async unlockVault(): Promise<User | null> {
-    clearOfflineVaultLockState();
+    localStorage.removeItem(this.VAULT_LOCK_KEY);
 
     const unlockedUser = await this.getUser();
 
@@ -592,6 +604,8 @@ class LocalStorageAuthStorage implements AuthStorage {
     const shouldHonorBarrierSkipUpgrade =
       options.allowBarrierSkipUpgrade === true;
 
+    const { clearOfflineVaultSession, clearRecentAuthVaultKeyMaterials } =
+      await loadOfflineVaultModule();
     clearOfflineVaultSession();
     clearRecentAuthVaultKeyMaterials();
     localStorage.removeItem(this.USER_KEY);

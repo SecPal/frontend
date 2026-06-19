@@ -1,13 +1,19 @@
 // SPDX-FileCopyrightText: 2025 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+} from "vitest";
 import {
   initWebVitals,
   getPerformanceMetrics,
   clearPerformanceMetrics,
 } from "./webVitals";
-import { analytics } from "./analytics";
 
 // Mock web-vitals
 vi.mock("web-vitals", () => {
@@ -79,30 +85,49 @@ vi.mock("web-vitals", () => {
   };
 });
 
-// Mock analytics
-vi.mock("./analytics", () => ({
-  analytics: {
-    trackPerformance: vi.fn(),
+const { trackPerformanceMock, hasStoredUserMock } = vi.hoisted(() => ({
+  trackPerformanceMock: vi.fn(),
+  hasStoredUserMock: vi.fn(() => true),
+}));
+
+vi.mock("../services/storage", () => ({
+  authStorage: {
+    hasStoredUser: hasStoredUserMock,
   },
 }));
+
+vi.mock("./analytics", () => ({
+  analytics: {
+    trackPerformance: trackPerformanceMock,
+  },
+}));
+
+async function flushAsyncWork(iterations = 5): Promise<void> {
+  for (let index = 0; index < iterations; index += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
 
 describe("Web Vitals Integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    hasStoredUserMock.mockReturnValue(true);
   });
 
   describe("initWebVitals", () => {
-    it("should initialize all Web Vitals metrics", () => {
+    it("should initialize all Web Vitals metrics", async () => {
       initWebVitals();
+      await flushAsyncWork();
 
       // Should have called trackPerformance for each metric
-      expect(analytics!.trackPerformance).toHaveBeenCalledTimes(5);
+      expect(trackPerformanceMock).toHaveBeenCalledTimes(5);
     });
 
-    it("should track CLS metric", () => {
+    it("should track CLS metric", async () => {
       initWebVitals();
+      await flushAsyncWork();
 
-      expect(analytics!.trackPerformance).toHaveBeenCalledWith(
+      expect(trackPerformanceMock).toHaveBeenCalledWith(
         "CLS",
         0.05,
         expect.objectContaining({
@@ -114,10 +139,11 @@ describe("Web Vitals Integration", () => {
       );
     });
 
-    it("should track INP metric", () => {
+    it("should track INP metric", async () => {
       initWebVitals();
+      await flushAsyncWork();
 
-      expect(analytics!.trackPerformance).toHaveBeenCalledWith(
+      expect(trackPerformanceMock).toHaveBeenCalledWith(
         "INP",
         150,
         expect.objectContaining({
@@ -129,10 +155,11 @@ describe("Web Vitals Integration", () => {
       );
     });
 
-    it("should track LCP metric", () => {
+    it("should track LCP metric", async () => {
       initWebVitals();
+      await flushAsyncWork();
 
-      expect(analytics!.trackPerformance).toHaveBeenCalledWith(
+      expect(trackPerformanceMock).toHaveBeenCalledWith(
         "LCP",
         2000,
         expect.objectContaining({
@@ -144,10 +171,11 @@ describe("Web Vitals Integration", () => {
       );
     });
 
-    it("should track FCP metric", () => {
+    it("should track FCP metric", async () => {
       initWebVitals();
+      await flushAsyncWork();
 
-      expect(analytics!.trackPerformance).toHaveBeenCalledWith(
+      expect(trackPerformanceMock).toHaveBeenCalledWith(
         "FCP",
         1500,
         expect.objectContaining({
@@ -159,10 +187,11 @@ describe("Web Vitals Integration", () => {
       );
     });
 
-    it("should track TTFB metric", () => {
+    it("should track TTFB metric", async () => {
       initWebVitals();
+      await flushAsyncWork();
 
-      expect(analytics!.trackPerformance).toHaveBeenCalledWith(
+      expect(trackPerformanceMock).toHaveBeenCalledWith(
         "TTFB",
         500,
         expect.objectContaining({
@@ -179,6 +208,15 @@ describe("Web Vitals Integration", () => {
       // The mock ensures analytics.trackPerformance exists, so no warning is shown
       // This is a defensive test to ensure no runtime errors occur
       expect(() => initWebVitals()).not.toThrow();
+    });
+
+    it("should skip analytics loading when no stored user exists", async () => {
+      hasStoredUserMock.mockReturnValue(false);
+
+      initWebVitals();
+      await flushAsyncWork();
+
+      expect(trackPerformanceMock).not.toHaveBeenCalled();
     });
 
     it("should handle initialization errors gracefully", async () => {

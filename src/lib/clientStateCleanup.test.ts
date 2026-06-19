@@ -1,7 +1,14 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { db } from "./db";
 import {
   getOrCreateBrowserPushInstallationId,
@@ -36,6 +43,12 @@ function createDeferredPromise<T>() {
   });
 
   return { promise, resolve, reject };
+}
+
+async function flushAsyncWork(iterations = 5): Promise<void> {
+  for (let index = 0; index < iterations; index += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
 }
 
 describe("clearSensitiveClientState", () => {
@@ -227,7 +240,7 @@ describe("clearSensitiveClientState", () => {
         settled = true;
       });
 
-    await Promise.resolve();
+    await flushAsyncWork();
 
     expect(deleteSpy).toHaveBeenCalledTimes(1);
 

@@ -1,12 +1,16 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { db } from "./db";
 import { clearBrowserPushInstallationId } from "./browserPushState";
-import {
-  AUTH_VAULT_STORAGE_KEY,
-  clearOfflineVaultSession,
-} from "./offlineVault";
+import { AUTH_VAULT_STORAGE_KEY } from "./offlineVault";
+
+async function loadDbModule() {
+  return await import("./db");
+}
+
+async function loadOfflineVaultModule() {
+  return await import("./offlineVault");
+}
 
 export const SENSITIVE_CACHE_NAMES = [
   "api-cache",
@@ -39,6 +43,8 @@ async function clearSensitiveCaches(): Promise<void> {
 }
 
 async function clearSensitiveIndexedDbState(): Promise<void> {
+  const { db } = await loadDbModule();
+
   try {
     // Logout policy: remove the entire local session database because all
     // stores in SecPalDB are session- or user-adjacent and unnecessary once
@@ -120,7 +126,10 @@ async function waitForSensitiveCleanupTasks(
 }
 
 export async function clearSensitiveClientState(): Promise<void> {
+  const { clearOfflineVaultSession, clearRecentAuthVaultKeyMaterials } =
+    await loadOfflineVaultModule();
   clearOfflineVaultSession();
+  clearRecentAuthVaultKeyMaterials();
 
   for (const key of USER_SCOPED_LOCAL_STORAGE_KEYS) {
     localStorage.removeItem(key);

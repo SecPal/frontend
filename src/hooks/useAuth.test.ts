@@ -136,6 +136,7 @@ async function expectEncryptedStoredUser(
 describe("useAuth", () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     clearOfflineVaultSession();
     window.history.replaceState({}, "", "/login");
     setCsrfTokenCookie("test-csrf-token");
@@ -264,6 +265,22 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
+  it("skips the login-route browser-session probe when no local snapshot, csrf cookie, or redirect hint exists", async () => {
+    document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
+    window.history.replaceState({}, "", "/login");
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+  });
+
   it("adopts a cross-tab login after an unauthenticated login-route bootstrap probe with no local auth snapshot", async () => {
     window.history.replaceState({}, "", "/login");
     mockGetCurrentUser.mockRejectedValueOnce(
@@ -386,15 +403,15 @@ describe("useAuth", () => {
     });
     expect(result.current.isLoading).toBe(true);
 
-    act(() => {
-      result.current.logout();
+    await act(async () => {
+      await result.current.logout();
     });
 
     expect(result.current.user).toBeNull();
-    expectNoStoredAuthState();
     expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false, {
       redirectOpenClients: true,
     });
+    expectNoStoredAuthState();
 
     await act(async () => {
       deferred.resolve(revalidatedUser);
@@ -1134,7 +1151,7 @@ describe("useAuth", () => {
     }
   });
 
-  it("handles corrupted user data in localStorage", () => {
+  it("ignores corrupted legacy auth_user data in localStorage", () => {
     localStorage.setItem("auth_user", "invalid-json");
 
     const { result } = renderHook(() => useAuth(), {
@@ -1142,7 +1159,7 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toBeNull();
-    expect(localStorage.getItem("auth_user")).toBeNull();
+    expect(localStorage.getItem("auth_user")).toBe("invalid-json");
   });
 
   it("skips broader client cleanup when persisted auth restore fails before login state exists", async () => {
@@ -1222,14 +1239,13 @@ describe("useAuth", () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    act(() => {
-      result.current.logout();
+    await act(async () => {
+      await result.current.logout();
     });
 
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
     expectNoStoredAuthState();
-    await waitForSensitiveClientCleanup();
   });
 
   it("waits for storage and analytics logout cleanup before clearing broader client state", async () => {
@@ -1256,14 +1272,14 @@ describe("useAuth", () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      act(() => {
-        result.current.logout();
-      });
+      void result.current.logout();
 
-      expect(clearSpy).toHaveBeenCalledWith({
-        clearOfflineVaultTables: false,
+      await waitFor(() => {
+        expect(clearSpy).toHaveBeenCalledWith({
+          clearOfflineVaultTables: false,
+        });
+        expect(mockAnalyticsResetForLogout).toHaveBeenCalled();
       });
-      expect(mockAnalyticsResetForLogout).toHaveBeenCalled();
       expect(clearSensitiveClientState).not.toHaveBeenCalled();
 
       storageClear.resolve();
@@ -2016,10 +2032,12 @@ describe("useAuth", () => {
       sessionEvents.emit("session:expired");
     });
 
-    expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.user).toBeNull();
-    expectNoStoredAuthState();
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.user).toBeNull();
+    });
     await waitForSensitiveClientCleanup();
+    expectNoStoredAuthState();
     expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false, {
       redirectOpenClients: false,
     });
@@ -2284,7 +2302,9 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.isLoading).toBe(false);
-    expectNoStoredAuthState();
+    await waitFor(() => {
+      expectNoStoredAuthState();
+    });
     expect(mockGetCurrentUser).not.toHaveBeenCalled();
   });
 

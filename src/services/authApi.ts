@@ -20,6 +20,7 @@ import type {
   VerificationNotificationResponse,
 } from "@/types/api";
 import { ApiBaseUrlConfigurationError, buildApiUrl } from "../config";
+import { AuthApiError } from "./AuthApiError";
 import { fetchCsrfToken, apiFetch } from "./csrf";
 
 interface LoginCredentials {
@@ -100,18 +101,7 @@ function parseRetryAfterSeconds(response: Response): number | undefined {
     : undefined;
 }
 
-export class AuthApiError extends Error {
-  constructor(
-    message: string,
-    public errors?: Record<string, string[]>,
-    public status?: number,
-    public code?: string,
-    public retryAfterSeconds?: number
-  ) {
-    super(message);
-    this.name = "AuthApiError";
-  }
-}
+export { AuthApiError } from "./AuthApiError";
 
 async function createAuthApiError(
   response: Response,

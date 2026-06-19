@@ -20,16 +20,22 @@ import { fetchCsrfToken, getCsrfTokenFromCookie } from "../services/csrf";
 import { sessionEvents, isOnline } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import { hasUserPermission } from "../lib/capabilities";
-import {
-  AUTH_VAULT_LOCK_KEY,
-  AUTH_VAULT_STORAGE_KEY,
-  rememberCurrentAuthVaultKeyMaterial,
-} from "../lib/offlineVault";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
-import { analytics } from "../lib/analytics";
 import { resetPrefetchCache } from "../hooks/usePrefetch";
+import {
+  AUTH_VAULT_STORAGE_KEY,
+  AUTH_VAULT_LOCK_KEY,
+} from "../lib/offlineVault";
 
 export const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
+
+async function loadOfflineVaultModule() {
+  return await import("../lib/offlineVault");
+}
+
+async function loadAnalyticsModule() {
+  return await import("../lib/analytics");
+}
 
 function isPublicUnauthenticatedRoute(pathname: string): boolean {
   const normalized =
@@ -49,6 +55,15 @@ function shouldBootstrapBrowserSessionWithoutStoredUser(
 
   if (!isOnline() || typeof window === "undefined") {
     return false;
+  }
+
+  const normalizedPathname =
+    window.location.pathname !== "/" && window.location.pathname.endsWith("/")
+      ? window.location.pathname.slice(0, -1)
+      : window.location.pathname;
+
+  if (normalizedPathname === "/login") {
+    return getCsrfTokenFromCookie() !== null;
   }
 
   return !isPublicUnauthenticatedRoute(window.location.pathname);
@@ -249,11 +264,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const resetAnalyticsState = useCallback(async () => {
-    if (!analytics) {
-      return;
-    }
-
     try {
+      const { analytics } = await loadAnalyticsModule();
+
+      if (!analytics) {
+        return;
+      }
+
       await analytics.resetForLogout();
     } catch (error: unknown) {
       console.warn("Failed to reset analytics state during logout:", error);
@@ -267,6 +284,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         getCsrfTokenFromCookie() === null
       ) {
         await fetchCsrfToken();
+        const { rememberCurrentAuthVaultKeyMaterial } =
+          await loadOfflineVaultModule();
         rememberCurrentAuthVaultKeyMaterial();
       }
 
@@ -551,11 +570,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   useEffect(() => {
-    if (!analytics || !user) {
+    if (!user) {
       return;
     }
 
-    analytics.resumeAuthenticatedSession(String(user.id));
+    void loadAnalyticsModule()
+      .then(({ analytics }) => {
+        analytics?.resumeAuthenticatedSession(String(user.id));
+      })
+      .catch((error: unknown) => {
+        console.warn(
+          "Failed to resume analytics for authenticated session:",
+          error
+        );
+      });
   }, [user]);
 
   // Bootstrap: revalidate any stored session on app load/refresh when online.
@@ -875,7 +903,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         event.newValue !== null &&
         authStorage.hasVaultLock?.()
       ) {
-        rememberCurrentAuthVaultKeyMaterial();
+        void loadOfflineVaultModule().then(
+          ({ rememberCurrentAuthVaultKeyMaterial }) => {
+            rememberCurrentAuthVaultKeyMaterial();
+          }
+        );
         invalidateBootstrapRevalidation();
         setBootstrapRecoveryReason(null);
         setUser(null);

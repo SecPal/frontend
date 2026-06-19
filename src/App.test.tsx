@@ -195,6 +195,7 @@ describe("App", () => {
     vi.clearAllMocks();
     await authStorage.clear();
     localStorage.clear();
+    sessionStorage.clear();
     clearXsrfCookie();
     setXsrfCookie();
     window.history.replaceState({}, "", "/login");
@@ -214,6 +215,53 @@ describe("App", () => {
       screen.getByRole("heading", { name: /SecPal/i })
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+  });
+
+  it("uses a login-shaped bootstrap placeholder on the login route", async () => {
+    mockGetCurrentUser.mockImplementationOnce(
+      () =>
+        new Promise(() => undefined) as ReturnType<typeof mockGetCurrentUser>
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      screen.getByRole("status", { name: /loading login/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/welcome to secpal/i, { selector: "h1" })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("status", { name: /loading application/i })
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeDisabled();
+    expect(screen.getByLabelText(/password/i)).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^log in$/i })).toBeDisabled();
+  });
+
+  it("switches to the interactive login form after a short bootstrap delay", async () => {
+    vi.useFakeTimers();
+    mockGetCurrentUser.mockImplementationOnce(
+      () =>
+        new Promise(() => undefined) as ReturnType<typeof mockGetCurrentUser>
+    );
+
+    try {
+      await renderWithI18n(<App />);
+
+      expect(screen.getByLabelText(/email/i)).toBeDisabled();
+
+      await act(async () => {
+        vi.advanceTimersByTime(1_000);
+        await Promise.resolve();
+      });
+
+      expect(screen.getByLabelText(/email/i)).toBeEnabled();
+      expect(screen.getByLabelText(/password/i)).toBeEnabled();
+      expect(screen.getByRole("button", { name: /^log in$/i })).toBeEnabled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("renders login form", async () => {
@@ -296,41 +344,21 @@ describe("App", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("refreshes the csrf cookie before restoring a browser session on the login route when the cookie is missing", async () => {
+  it("does not probe /v1/me on the public login route when no csrf cookie or redirect hint exists", async () => {
     clearXsrfCookie();
-    mockFetchCsrfToken.mockImplementation(async () => {
-      setXsrfCookie("bootstrap-restored-xsrf-token");
-    });
-    mockGetCurrentUser.mockResolvedValueOnce({
-      id: "1",
-      name: "Recovered Session User",
-      email: "recovered-session@secpal.dev",
-      emailVerified: true,
-      roles: [],
-      permissions: [],
-      hasOrganizationalScopes: false,
-      hasCustomerAccess: false,
-      hasSiteAccess: false,
-    });
 
     await renderWithI18n(<App />);
 
     await waitFor(
       () => {
-        expect(mockFetchCsrfToken).toHaveBeenCalledTimes(1);
-        expect(authStorage.hasStoredUser()).toBe(true);
-        expect(window.location.pathname).toBe("/");
+        expect(screen.getByLabelText(/email/i)).toBeEnabled();
       },
       { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
     );
 
-    expect(
-      await screen.findByRole(
-        "heading",
-        { name: /welcome to secpal/i },
-        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-      )
-    ).toBeInTheDocument();
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+    expect(mockFetchCsrfToken).not.toHaveBeenCalled();
+    expect(window.location.pathname).toBe("/login");
   });
 
   it("restores a valid browser session on a protected route even when no local auth snapshot is available", async () => {
@@ -358,6 +386,32 @@ describe("App", () => {
       )
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/");
+  });
+
+  it("redirects protected routes without a local snapshot to the login bootstrap flow", async () => {
+    window.history.replaceState({}, "", "/");
+
+    mockGetCurrentUser.mockImplementationOnce(
+      () =>
+        new Promise(() => undefined) as ReturnType<typeof mockGetCurrentUser>
+    );
+
+    await renderWithI18n(<App />);
+
+    await waitFor(
+      () => {
+        expect(window.location.pathname).toBe("/login");
+      },
+      { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+    );
+
+    expect(
+      screen.getByRole("status", { name: /loading login/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("status", { name: /loading application/i })
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeDisabled();
   });
 
   it("shows not found for activity-logs when the user cannot discover that feature", async () => {
