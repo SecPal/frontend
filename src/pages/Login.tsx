@@ -23,6 +23,7 @@ import { getAuthTransport, AuthApiError } from "../services/authTransport";
 import { sanitizeAuthUser } from "../services/authState";
 import { Logo } from "../components/Logo";
 import { activateLocale, locales, setLocalePreference } from "../i18n";
+import { isTransientModuleLoadError } from "../lib/lazyModuleErrors";
 import {
   LoginButton,
   LoginCard,
@@ -375,6 +376,11 @@ export function Login() {
         setError(getLocalizedLoginErrorMessage(err.message, _));
         setHasCredentialError(true);
       } else if (err instanceof Error) {
+        if (isTransientModuleLoadError(err)) {
+          setError(TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE);
+          return;
+        }
+
         recordFailedAttempt();
         setError(getLocalizedLoginErrorMessage(err.message, _));
         setHasCredentialError(true);

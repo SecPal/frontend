@@ -101,7 +101,7 @@ async function clearBrowserPushClientState(): Promise<void> {
 }
 
 async function waitForSensitiveCleanupTasks(
-  cleanupTasks: [Promise<void>, Promise<void>, Promise<void>]
+  cleanupTasks: Promise<void>[]
 ): Promise<void> {
   const cleanupResults = await Promise.allSettled(cleanupTasks);
   const cleanupErrors = cleanupResults
@@ -126,18 +126,26 @@ async function waitForSensitiveCleanupTasks(
 }
 
 export async function clearSensitiveClientState(): Promise<void> {
-  const { clearOfflineVaultSession, clearRecentAuthVaultKeyMaterials } =
-    await loadOfflineVaultModule();
-  clearOfflineVaultSession();
-  clearRecentAuthVaultKeyMaterials();
-
   for (const key of USER_SCOPED_LOCAL_STORAGE_KEYS) {
     localStorage.removeItem(key);
   }
 
   sessionStorage.clear();
 
+  const vaultCleanupTask = loadOfflineVaultModule()
+    .then(({ clearOfflineVaultSession, clearRecentAuthVaultKeyMaterials }) => {
+      clearOfflineVaultSession();
+      clearRecentAuthVaultKeyMaterials();
+    })
+    .catch((error: unknown) => {
+      console.warn(
+        "Failed to clear the offline vault runtime during logout cleanup; continuing with the remaining sensitive cleanup tasks:",
+        error
+      );
+    });
+
   await waitForSensitiveCleanupTasks([
+    vaultCleanupTask,
     clearBrowserPushClientState(),
     clearSensitiveCaches(),
     clearSensitiveIndexedDbState(),

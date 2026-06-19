@@ -20,6 +20,7 @@ import { fetchCsrfToken, getCsrfTokenFromCookie } from "../services/csrf";
 import { sessionEvents, isOnline } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import { hasUserPermission } from "../lib/capabilities";
+import { isRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 import { resetPrefetchCache } from "../hooks/usePrefetch";
 import {
@@ -866,6 +867,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     void restoreAndRevalidate().catch((error: unknown) => {
       if (!isActive || bootstrapRequestVersionRef.current !== requestVersion) {
+        return;
+      }
+
+      if (isRecoverableLazyModuleError(error)) {
+        console.warn(
+          "Failed to restore persisted auth state because a lazy auth chunk could not be loaded; keeping the route behind recovery UI.",
+          error
+        );
+        setUser(null);
+        setIsVaultLocked(false);
+        setIsLoading(false);
+        setBootstrapRecoveryReason("network");
         return;
       }
 

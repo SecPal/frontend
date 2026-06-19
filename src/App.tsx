@@ -85,10 +85,26 @@ function LoginRouteBootstrapGate() {
 
 function AuthenticatedAppRoute() {
   const auth = useAuth();
-  const { isAuthenticated, isVaultLocked = false } = auth;
+  const {
+    bootstrapRecoveryReason,
+    isAuthenticated,
+    isVaultLocked = false,
+    logout,
+    retryBootstrap,
+  } = auth;
 
   if (isRouteAuthBootstrapPending(auth)) {
     return <PublicRouteLoader />;
+  }
+
+  if (bootstrapRecoveryReason) {
+    return (
+      <RouteBootstrapRecoveryState
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+        reason={bootstrapRecoveryReason}
+      />
+    );
   }
 
   if (!isVaultLocked && !isAuthenticated) {

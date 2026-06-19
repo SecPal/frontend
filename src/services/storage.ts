@@ -6,6 +6,10 @@ import {
   AUTH_VAULT_STORAGE_KEY,
   AUTH_VAULT_LOCK_KEY,
 } from "../lib/offlineVaultKeys";
+import {
+  createRecoverableLazyModuleError,
+  isTransientModuleLoadError,
+} from "../lib/lazyModuleErrors";
 import { clearActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
 import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
 import { sanitizePersistedAuthUser, type PersistedAuthUser } from "./authState";
@@ -526,7 +530,21 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
 
     if (localStorage.getItem(this.VAULT_KEY) !== null) {
-      const { readPersistedAuthUserFromVault } = await loadOfflineVaultModule();
+      let readPersistedAuthUserFromVault: typeof import("../lib/offlineVault").readPersistedAuthUserFromVault;
+
+      try {
+        ({ readPersistedAuthUserFromVault } = await loadOfflineVaultModule());
+      } catch (error) {
+        if (isTransientModuleLoadError(error)) {
+          throw createRecoverableLazyModuleError(
+            "Stored offline auth data is temporarily unavailable on this device.",
+            error
+          );
+        }
+
+        throw error;
+      }
+
       const storedVaultUser = await readPersistedAuthUserFromVault();
 
       if (!storedVaultUser) {

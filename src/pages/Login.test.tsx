@@ -2084,6 +2084,45 @@ describe("Login", () => {
     consoleErrorSpy.mockRestore();
   });
 
+  it("treats transient auth chunk load failures as temporary login unavailability", async () => {
+    const mockLogin = vi.mocked(authApi.login);
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    mockLogin.mockRejectedValueOnce(
+      new TypeError("Failed to fetch dynamically imported module")
+    );
+
+    renderLogin();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /log in/i })
+      ).toBeInTheDocument();
+    });
+
+    const emailInput = screen.getByLabelText(/email/i);
+    const passwordInput = screen.getByLabelText(/password/i);
+    const submitButton = screen.getByRole("button", { name: /log in/i });
+
+    fireEvent.change(emailInput, { target: { value: "test@secpal.dev" } });
+    fireEvent.change(passwordInput, { target: { value: "password" } });
+    fireEvent.click(submitButton);
+
+    expect(
+      await screen.findByText(/login is temporarily unavailable/i)
+    ).toBeInTheDocument();
+    expect(emailInput).not.toHaveAttribute("aria-invalid");
+    expect(passwordInput).not.toHaveAttribute("aria-invalid");
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Login error:",
+      expect.any(TypeError)
+    );
+
+    consoleErrorSpy.mockRestore();
+  });
+
   it("displays fallback error message for unknown error types", async () => {
     const mockLogin = vi.mocked(authApi.login);
     const consoleErrorSpy = vi

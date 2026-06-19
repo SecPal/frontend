@@ -469,7 +469,7 @@ describe("App", () => {
     expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
   });
 
-  it("shows bootstrap recovery on login after protected-route session restore fails and allows retry", async () => {
+  it("shows bootstrap recovery in place after protected-route session restore fails and allows retry", async () => {
     const recoveredUser = {
       id: "1",
       name: "Recovered Session User",
@@ -495,9 +495,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await waitFor(() => {
-      expect(window.location.pathname).toBe("/login");
-    });
+    expect(window.location.pathname).toBe("/");
 
     expect(
       await screen.findByRole("heading", {
@@ -530,7 +528,57 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
-  it("redirects stale protected-route bootstrap recovery to login instead of loading the app shell", async () => {
+  it("keeps protected deep links during bootstrap recovery and retry", async () => {
+    window.history.replaceState({}, "", "/customers/new");
+    mockGetCurrentUser.mockRejectedValue(
+      new AuthApiError(
+        "Current user fetch failed: Network down",
+        undefined,
+        undefined,
+        "NETWORK_ERROR"
+      )
+    );
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /still loading your secure session/i,
+      })
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/customers/new");
+
+    await act(async () => {
+      mockGetCurrentUser.mockResolvedValueOnce({
+        id: "1",
+        name: "Recovered Session User",
+        email: "recovered-session@secpal.dev",
+        emailVerified: true,
+        permissions: ["customers.read"],
+        roles: [],
+        hasOrganizationalScopes: false,
+        hasCustomerAccess: false,
+        hasSiteAccess: false,
+      });
+      screen.getByRole("button", { name: /retry/i }).click();
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(3);
+    });
+
+    expect(
+      await screen.findByText(
+        /Access Denied/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/customers/new");
+  });
+
+  it("keeps stale protected-route bootstrap recovery on the protected route instead of redirecting", async () => {
     window.history.replaceState({}, "", "/");
     mockAuthStorage.hasStoredUser
       .mockImplementationOnce(() => true)
@@ -547,9 +595,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await waitFor(() => {
-      expect(window.location.pathname).toBe("/login");
-    });
+    expect(window.location.pathname).toBe("/");
 
     expect(
       await screen.findByRole("heading", {

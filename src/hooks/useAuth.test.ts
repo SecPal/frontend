@@ -18,6 +18,7 @@ import { sanitizePersistedAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
 import { sessionEvents } from "../services/sessionEvents";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
+import { createRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
 import {
   AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
@@ -729,6 +730,43 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
     await expect(authStorage.getUser()).resolves.toEqual(mockUser);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
+  });
+
+  it("holds routes behind recovery UI when the offline vault chunk is temporarily unavailable", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(mockUser);
+    const getUserSpy = vi
+      .spyOn(authStorage, "getUser")
+      .mockRejectedValueOnce(
+        createRecoverableLazyModuleError(
+          "Stored offline auth data is temporarily unavailable on this device.",
+          new TypeError("Failed to fetch dynamically imported module")
+        )
+      );
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.bootstrapRecoveryReason).toBe("network");
+      expect(authStorage.hasStoredUser()).toBe(true);
+      expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    } finally {
+      getUserSpy.mockRestore();
+    }
   });
 
   it("keeps cached auth state when Android bootstrap reports missing connectivity", async () => {
