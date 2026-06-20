@@ -30,7 +30,7 @@ export function LoginRouteLoadingState() {
 
   return (
     <LoginShell data-route-guard-state="login-bootstrap-loading">
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+      <div className="absolute top-[calc(1rem+var(--app-safe-area-inset-top))] right-4 sm:top-[calc(1.5rem+var(--app-safe-area-inset-top))] sm:right-6">
         <div
           aria-hidden="true"
           className="flex h-10 min-w-[7rem] items-center gap-2 rounded-md border border-zinc-300 bg-zinc-100 px-3 dark:border-zinc-700 dark:bg-zinc-900"

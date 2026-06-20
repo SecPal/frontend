@@ -18,8 +18,11 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  --app-safe-area-inset-top: env(safe-area-inset-top, 0px);
   --app-shell-min-height: 100svh;
-  --app-auth-card-min-height: calc(100svh - 3rem);
+  --app-auth-card-min-height: calc(
+    100svh - 3rem - var(--app-safe-area-inset-top)
+  );
   --app-footer-padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 
   font-synthesis: none;
@@ -31,14 +34,18 @@
 @supports (min-height: 100dvh) {
   :root {
     --app-shell-min-height: 100dvh;
-    --app-auth-card-min-height: calc(100dvh - 3rem);
+    --app-auth-card-min-height: calc(
+      100dvh - 3rem - var(--app-safe-area-inset-top)
+    );
   }
 }
 
 @media (display-mode: standalone) {
   :root {
     --app-shell-min-height: 100svh;
-    --app-auth-card-min-height: calc(100svh - 3rem);
+    --app-auth-card-min-height: calc(
+      100svh - 3rem - var(--app-safe-area-inset-top)
+    );
   }
 }
 

@@ -49,6 +49,10 @@ describe("mobile sidebar layouts", () => {
         </I18nProvider>
       );
 
+      expect(document.querySelector("header")).toHaveClass(
+        "pt-[var(--app-safe-area-inset-top)]"
+      );
+
       await user.click(screen.getByRole("button", { name: "Open navigation" }));
 
       expect(

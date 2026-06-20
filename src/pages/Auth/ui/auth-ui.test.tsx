@@ -438,7 +438,10 @@ describe("auth login shadcn primitives", () => {
       </LoginShell>
     );
 
-    expect(screen.getByTestId("shell")).toHaveClass("overflow-x-clip");
+    expect(screen.getByTestId("shell")).toHaveClass(
+      "overflow-x-clip",
+      "pt-[calc(1.5rem+var(--app-safe-area-inset-top))]"
+    );
     expect(screen.getByTestId("desc")).toHaveClass("break-words");
     expect(screen.getByTestId("error")).toHaveClass("break-words");
     expect(screen.getByTestId("status")).toHaveClass("break-words");

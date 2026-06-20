@@ -3269,9 +3269,16 @@ describe("Login", () => {
       expect(shell).toHaveClass(
         "min-h-[var(--app-shell-min-height)]",
         "flex",
-        "flex-col"
+        "flex-col",
+        "pt-[calc(1.5rem+var(--app-safe-area-inset-top))]"
       );
       expect(shell).not.toHaveClass("justify-center");
+
+      expect(
+        screen
+          .getByRole("combobox", { name: /select language/i })
+          .parentElement?.parentElement
+      ).toHaveClass("top-[calc(1rem+var(--app-safe-area-inset-top))]");
 
       const footer = screen.getByRole("contentinfo");
       expect(footer).not.toHaveClass("absolute");

@@ -417,7 +417,7 @@ export function OnboardingAuthShell({
     <main
       data-slot="onboarding-auth-shell"
       className={cn(
-        "min-h-[var(--app-shell-min-height)] bg-white px-4 py-6 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 sm:px-6 lg:px-8",
+        "min-h-[var(--app-shell-min-height)] bg-white px-4 pt-[calc(1.5rem+var(--app-safe-area-inset-top))] pb-6 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 sm:px-6 lg:px-8",
         className
       )}
       {...props}

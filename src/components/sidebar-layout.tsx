@@ -95,7 +95,7 @@ export function SidebarLayout({
         {sidebar}
       </MobileSidebar>
 
-      <header className="flex items-center px-4 lg:hidden">
+      <header className="flex items-center px-4 pt-[var(--app-safe-area-inset-top)] lg:hidden">
         <div className="py-2.5">
           <NavbarItem
             onClick={() => setShowSidebar(true)}

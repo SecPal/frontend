@@ -703,7 +703,7 @@ export function Login() {
   return (
     <LoginShell>
       {!isCompletingLogin && (
-        <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+        <div className="absolute top-[calc(1rem+var(--app-safe-area-inset-top))] right-4 sm:top-[calc(1.5rem+var(--app-safe-area-inset-top))] sm:right-6">
           <LoginLanguageSwitcher />
         </div>
       )}
