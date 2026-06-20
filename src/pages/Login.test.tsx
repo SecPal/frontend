@@ -3275,9 +3275,8 @@ describe("Login", () => {
       expect(shell).not.toHaveClass("justify-center");
 
       expect(
-        screen
-          .getByRole("combobox", { name: /select language/i })
-          .parentElement?.parentElement
+        screen.getByRole("combobox", { name: /select language/i }).parentElement
+          ?.parentElement
       ).toHaveClass("top-[calc(1rem+var(--app-safe-area-inset-top))]");
 
       const footer = screen.getByRole("contentinfo");
