@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { afterEach, describe, it, expect, vi, beforeEach } from "vitest";
+import type { ReactNode } from "react";
 import {
   act,
   fireEvent,
@@ -17,6 +18,10 @@ import {
   AuthProvider,
   BOOTSTRAP_REVALIDATION_TIMEOUT_MS,
 } from "../contexts/AuthContext";
+import {
+  AuthContext,
+  type AuthContextType,
+} from "../contexts/auth-context";
 import { AuthApiError } from "../services/AuthApiError";
 import { sanitizePersistedAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
@@ -122,6 +127,36 @@ const renderLockingProtectedRoute = () => {
             />
           </Routes>
         </AuthProvider>
+      </I18nProvider>
+    </BrowserRouter>
+  );
+};
+
+const renderProtectedRouteWithAuth = (
+  auth: Partial<AuthContextType>,
+  route: ReactNode
+) => {
+  const contextValue: AuthContextType = {
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+    bootstrapRecoveryReason: null,
+    login: vi.fn(),
+    logout: vi.fn(),
+    retryBootstrap: vi.fn(),
+    hasPermission: vi.fn(),
+    hasOrganizationalAccess: vi.fn(),
+    ...auth,
+  };
+
+  return render(
+    <BrowserRouter>
+      <I18nProvider i18n={i18n}>
+        <AuthContext.Provider value={contextValue}>
+          <Routes>
+            <Route path="/" element={route} />
+          </Routes>
+        </AuthContext.Provider>
       </I18nProvider>
     </BrowserRouter>
   );
@@ -238,76 +273,47 @@ describe("ProtectedRoute", () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it("renders revalidatingFallback during snapshot revalidation when a verified user is persisted", async () => {
-    mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
-
-    await persistAuthUser({
-      id: 1,
-      name: "Test",
-      email: "test@secpal.dev",
-      emailVerified: true,
-    });
-
-    render(
-      <BrowserRouter>
-        <I18nProvider i18n={i18n}>
-          <AuthProvider>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute
-                    revalidatingFallback={<div>Revalidating fallback</div>}
-                  >
-                    <TestComponent />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </AuthProvider>
-        </I18nProvider>
-      </BrowserRouter>
+  it("renders revalidatingFallback during snapshot revalidation when a verified user is persisted", () => {
+    renderProtectedRouteWithAuth(
+      {
+        isAuthenticated: true,
+        isLoading: true,
+        user: {
+          id: "1",
+          name: "Test",
+          email: "test@secpal.dev",
+          emailVerified: true,
+        },
+      },
+      <ProtectedRoute revalidatingFallback={<div>Revalidating fallback</div>}>
+        <TestComponent />
+      </ProtectedRoute>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText("Revalidating fallback")).toBeInTheDocument();
-    });
+    expect(screen.getByText("Revalidating fallback")).toBeInTheDocument();
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it("still gates the email verification screen during revalidation when the persisted snapshot is unverified", async () => {
-    mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
-
-    await persistAuthUser(unverifiedUser);
-
-    render(
-      <BrowserRouter>
-        <I18nProvider i18n={i18n}>
-          <AuthProvider>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute
-                    revalidatingFallback={<div>Revalidating fallback</div>}
-                  >
-                    <TestComponent />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </AuthProvider>
-        </I18nProvider>
-      </BrowserRouter>
+  it("still gates the email verification screen during revalidation when the persisted snapshot is unverified", () => {
+    renderProtectedRouteWithAuth(
+      {
+        isAuthenticated: true,
+        isLoading: true,
+        user: {
+          id: "1",
+          name: "Test",
+          email: "test@secpal.dev",
+          emailVerified: false,
+        },
+      },
+      <ProtectedRoute revalidatingFallback={<div>Revalidating fallback</div>}>
+        <TestComponent />
+      </ProtectedRoute>
     );
 
     expect(
-      await screen.findByRole(
-        "heading",
-        { name: /verify your email address/i },
-        { timeout: AUTH_ROUTE_TIMEOUT_MS }
-      )
+      screen.getByRole("heading", { name: /verify your email address/i })
     ).toBeInTheDocument();
     expect(screen.queryByText("Revalidating fallback")).not.toBeInTheDocument();
     expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
