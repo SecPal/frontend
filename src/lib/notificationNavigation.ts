@@ -37,31 +37,24 @@ export function getNotificationNavigationTarget(
   );
 }
 
-export async function focusOrNavigateClient(
-  windowClients: readonly NotificationWindowClient[],
-  targetUrl: URL
+async function focusAndNavigateMatchingClient(
+  client: NotificationWindowClient,
+  targetHref: string
 ): Promise<NotificationWindowClient | null> {
-  const targetHref = targetUrl.toString();
-
-  for (const client of windowClients) {
-    if (new URL(client.url).pathname === targetUrl.pathname) {
-      try {
-        const focused = await client.focus();
-        return await focused.navigate(targetHref);
-      } catch {
-        return null;
-      }
-    }
-  }
-
-  const firstClient = windowClients[0];
-
-  if (!firstClient) {
+  try {
+    const focusedClient = await client.focus();
+    return await focusedClient.navigate(targetHref);
+  } catch {
     return null;
   }
+}
 
+async function navigateAndFocusClient(
+  client: NotificationWindowClient,
+  targetHref: string
+): Promise<NotificationWindowClient | null> {
   try {
-    const navigatedClient = await firstClient.navigate(targetHref);
+    const navigatedClient = await client.navigate(targetHref);
 
     if (!navigatedClient) {
       return null;
@@ -71,4 +64,42 @@ export async function focusOrNavigateClient(
   } catch {
     return null;
   }
+}
+
+export async function focusOrNavigateClient(
+  windowClients: readonly NotificationWindowClient[],
+  targetUrl: URL
+): Promise<NotificationWindowClient | null> {
+  const targetHref = targetUrl.toString();
+  const matchingClients = windowClients.filter(
+    (client) => new URL(client.url).pathname === targetUrl.pathname
+  );
+  const attemptedClients = new Set<NotificationWindowClient>();
+
+  for (const client of matchingClients) {
+    attemptedClients.add(client);
+
+    const navigatedClient = await focusAndNavigateMatchingClient(
+      client,
+      targetHref
+    );
+
+    if (navigatedClient) {
+      return navigatedClient;
+    }
+  }
+
+  for (const client of windowClients) {
+    if (attemptedClients.has(client)) {
+      continue;
+    }
+
+    const navigatedClient = await navigateAndFocusClient(client, targetHref);
+
+    if (navigatedClient) {
+      return navigatedClient;
+    }
+  }
+
+  return null;
 }
