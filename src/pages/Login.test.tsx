@@ -3266,11 +3266,16 @@ describe("Login", () => {
       // credential card on short landscape viewports (≈320px tall), where
       // an `absolute`-positioned footer with `pb-32` could collide.
       const shell = screen.getByRole("main");
-      expect(shell).toHaveClass("min-h-dvh", "flex", "flex-col");
+      expect(shell).toHaveClass(
+        "min-h-[var(--app-shell-min-height)]",
+        "flex",
+        "flex-col"
+      );
       expect(shell).not.toHaveClass("justify-center");
 
       const footer = screen.getByRole("contentinfo");
       expect(footer).not.toHaveClass("absolute");
+      expect(footer).toHaveClass("pb-[env(safe-area-inset-bottom,0px)]");
 
       const card = screen
         .getByRole("button", { name: /log in/i })

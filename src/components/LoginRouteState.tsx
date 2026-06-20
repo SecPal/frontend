@@ -115,7 +115,7 @@ export function LoginRouteLoadingState() {
         </LoginCard>
       </div>
 
-      <footer className="mt-4 w-full max-w-sm text-center text-[11px]">
+      <footer className="mt-4 w-full max-w-sm pb-[env(safe-area-inset-bottom,0px)] text-center text-[11px]">
         <div className="flex flex-col items-center gap-2 text-zinc-500 dark:text-zinc-400">
           <span className="font-semibold text-zinc-700 dark:text-zinc-300">
             <Trans>Powered by SecPal – A guard's best friend</Trans>

@@ -301,7 +301,7 @@ describe("onboarding shadcn primitives", () => {
     );
 
     expect(shell).toHaveClass(
-      "min-h-dvh",
+      "min-h-[var(--app-shell-min-height)]",
       "bg-white",
       "text-zinc-950",
       "dark:bg-zinc-950",
@@ -309,6 +309,7 @@ describe("onboarding shadcn primitives", () => {
     );
     expect(card).toHaveAttribute("data-slot", "onboarding-auth-card");
     expect(card).toHaveClass(
+      "min-h-[var(--app-auth-card-min-height)]",
       "rounded-md",
       "border-zinc-200",
       "bg-white",

@@ -263,6 +263,7 @@ describe("Build Configuration and Source Verification", () => {
     const indexHtml = readRepoFile("index.html");
 
     expect(indexHtml).toContain('<script src="/theme-color.js"></script>');
+    expect(indexHtml).toContain("viewport-fit=cover");
     expect(indexHtml).not.toContain("(function () {");
     expect(existsSync(path.join(repoRoot, "public/theme-color.js"))).toBe(true);
 

@@ -18,11 +18,28 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  --app-shell-min-height: 100svh;
+  --app-auth-card-min-height: calc(100svh - 3rem);
+  --app-footer-padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+@supports (min-height: 100dvh) {
+  :root {
+    --app-shell-min-height: 100dvh;
+    --app-auth-card-min-height: calc(100dvh - 3rem);
+  }
+}
+
+@media (display-mode: standalone) {
+  :root {
+    --app-shell-min-height: 100svh;
+    --app-auth-card-min-height: calc(100svh - 3rem);
+  }
 }
 
 @media (prefers-color-scheme: light) {
@@ -37,14 +54,20 @@
   }
 }
 
+html {
+  min-height: 100%;
+  background-color: #ffffff;
+}
+
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100%;
   background-color: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
+  html,
   body {
     background-color: #09090b;
   }
@@ -52,7 +75,8 @@ body {
 
 #root {
   width: 100%;
-  min-height: 100vh;
+  min-height: 100%;
+  background-color: inherit;
 }
 
 .app {

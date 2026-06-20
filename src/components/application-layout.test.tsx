@@ -247,7 +247,11 @@ describe("ApplicationLayout", () => {
       const shell = container.querySelector('[data-slot="app-stacked-layout"]');
       const contentSurface = screen.getByRole("main").firstElementChild;
 
-      expect(shell).toHaveClass("min-h-dvh", "bg-white", "dark:bg-zinc-900");
+      expect(shell).toHaveClass(
+        "min-h-[var(--app-shell-min-height)]",
+        "bg-white",
+        "dark:bg-zinc-900"
+      );
       expect(shell).toHaveClass("lg:bg-zinc-100", "dark:lg:bg-zinc-950");
       expect(contentSurface).toHaveClass("bg-white", "dark:bg-zinc-900");
     });
@@ -850,6 +854,10 @@ describe("ApplicationLayout", () => {
 
       const footer = container.querySelector('[data-slot="app-footer"]');
       expect(footer).toBeInTheDocument();
+      expect(footer).toHaveClass(
+        "pb-[var(--app-footer-padding-bottom)]",
+        "dark:bg-zinc-900"
+      );
       expect(footer).toHaveTextContent(
         "Powered by SecPal – A guard's best friend"
       );

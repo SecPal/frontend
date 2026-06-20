@@ -1031,7 +1031,7 @@ function LoginLegalFooter() {
     // pushed there by the centered-card wrapper above (`flex-1`). No absolute
     // positioning so it cannot overlap the credential card on short landscape
     // viewports (≈320px tall) where the card itself fills most of the height.
-    <footer className="mt-4 w-full max-w-sm text-center text-[11px]">
+    <footer className="mt-4 w-full max-w-sm pb-[env(safe-area-inset-bottom,0px)] text-center text-[11px]">
       <div className="flex flex-col items-center gap-2 text-zinc-500 dark:text-zinc-400">
         <a
           href="https://secpal.app"

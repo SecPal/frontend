@@ -45,7 +45,7 @@ describe("RouteLoader", () => {
       "relative",
       "isolate",
       "flex",
-      "min-h-dvh",
+      "min-h-[var(--app-shell-min-height)]",
       "w-full",
       "flex-col"
     );

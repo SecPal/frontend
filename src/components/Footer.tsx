@@ -6,7 +6,10 @@ import { Code2, Scale } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer data-slot="app-footer" className="py-4 text-[11px]">
+    <footer
+      data-slot="app-footer"
+      className="bg-white pt-4 pb-[var(--app-footer-padding-bottom)] text-[11px] dark:bg-zinc-900"
+    >
       <div className="mx-auto max-w-6xl px-6 text-center">
         <div className="mb-2">
           <a
