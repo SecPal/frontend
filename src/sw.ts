@@ -18,6 +18,11 @@ import {
   writeOfflineSessionState,
   type AuthSessionChangedMessage,
 } from "./lib/offlineSessionState";
+import {
+  createNotificationData,
+  focusOrNavigateClient,
+  getNotificationNavigationTarget,
+} from "./lib/notificationNavigation";
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -183,10 +188,7 @@ self.addEventListener("push", (event: PushEvent) => {
     badge: payload.badge || "/pwa-192x192.png",
     tag: payload.tag || "default",
     requireInteraction: payload.requireInteraction || false,
-    data: {
-      url: payload.url || "/",
-      ...payload.data,
-    },
+    data: createNotificationData(payload),
     actions: payload.actions || [
       { action: "open", title: "Open" },
       { action: "dismiss", title: "Dismiss" },
@@ -211,7 +213,7 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
   }
 
   // Get target URL from notification data
-  const urlToOpen = event.notification.data?.url || "/";
+  const urlToOpen = getNotificationNavigationTarget(event.notification.data);
 
   // Validate URL is safe to navigate to (security: prevent phishing)
   let targetUrl: URL;
@@ -223,8 +225,8 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
       console.warn("[SW] Blocked external URL in notification:", urlToOpen);
       return;
     }
-  } catch (err) {
-    console.error("[SW] Invalid URL in notification data:", urlToOpen, err);
+  } catch (error) {
+    console.error("[SW] Invalid URL in notification data:", urlToOpen, error);
     return;
   }
 
@@ -236,23 +238,10 @@ self.addEventListener("notificationclick", (event: NotificationEvent) => {
         includeUncontrolled: true,
       });
 
-      // Focus existing window if found
-      for (const client of clients) {
-        const clientUrl = new URL(client.url);
+      const client = await focusOrNavigateClient(clients, targetUrl);
 
-        // If window is already on target URL, focus it
-        if (clientUrl.pathname === targetUrl.pathname) {
-          return client.focus();
-        }
-      }
-
-      // If there's any window open, navigate it to target URL
-      if (clients.length > 0) {
-        const client = clients[0];
-        if (client) {
-          await client.navigate(targetUrl.toString());
-          return client.focus();
-        }
+      if (client) {
+        return client;
       }
 
       // Otherwise, open new window
