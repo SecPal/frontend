@@ -51,6 +51,14 @@ describe("RouteLoader", () => {
     );
   });
 
+  it("keeps the loading header below the iOS top safe area", () => {
+    const { container } = renderWithI18n(<RouteLoader />);
+
+    expect(container.querySelector("header")).toHaveClass(
+      "pt-[var(--app-safe-area-inset-top)]"
+    );
+  });
+
   it("renders skeleton placeholders instead of a spinner", () => {
     const { container } = renderWithI18n(<RouteLoader />);
 

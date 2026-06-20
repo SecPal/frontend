@@ -14,7 +14,7 @@ export function RouteLoader() {
       className="relative isolate flex min-h-[var(--app-shell-min-height)] w-full flex-col bg-white lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950"
       data-slot="app-shell-loader"
     >
-      <header className="flex items-center px-4">
+      <header className="flex items-center px-4 pt-[var(--app-safe-area-inset-top)]">
         <div className="flex min-h-14 min-w-0 flex-1 items-center gap-4 border-b border-zinc-950/10 dark:border-white/10">
           <Logo size="32" />
           <div className="hidden gap-3 lg:flex" aria-hidden="true">

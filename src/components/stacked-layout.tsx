@@ -34,7 +34,7 @@ function MobileSidebar({
         <DialogPrimitive.Content
           data-slot="app-mobile-sidebar-content"
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-full max-w-80 p-2 lg:hidden",
+            "fixed inset-y-0 left-0 z-50 w-full max-w-80 p-2 pt-[calc(0.5rem+var(--app-safe-area-inset-top))] lg:hidden",
             "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:animate-in data-[state=open]:slide-in-from-left",
             "focus:outline-none"
           )}
