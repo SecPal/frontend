@@ -73,6 +73,8 @@ describe("notificationNavigation", () => {
         "https://app.example/sites/123?tab=overview"
       );
 
+      vi.mocked(samePath.navigate).mockResolvedValue(samePath);
+
       const result = await focusOrNavigateClient(
         [differentPath, samePath],
         new URL("https://app.example/sites/123?tab=alerts#latest")
@@ -111,6 +113,9 @@ describe("notificationNavigation", () => {
     });
 
     it("returns null when navigate returns null or throws", async () => {
+      const samePathNullClient = createClient(
+        "https://app.example/alerts?tab=overview"
+      );
       const nullClient = createClient("https://app.example/", {
         navigate: vi.fn().mockResolvedValue(null),
       });
@@ -119,7 +124,16 @@ describe("notificationNavigation", () => {
       });
 
       await expect(
-        focusOrNavigateClient([nullClient], new URL("https://app.example/alerts"))
+        focusOrNavigateClient(
+          [samePathNullClient],
+          new URL("https://app.example/alerts?tab=latest")
+        )
+      ).resolves.toBeNull();
+      await expect(
+        focusOrNavigateClient(
+          [nullClient],
+          new URL("https://app.example/alerts")
+        )
       ).resolves.toBeNull();
       await expect(
         focusOrNavigateClient(

@@ -47,8 +47,7 @@ export async function focusOrNavigateClient(
     if (new URL(client.url).pathname === targetUrl.pathname) {
       try {
         const focused = await client.focus();
-        await focused.navigate(targetHref);
-        return focused;
+        return await focused.navigate(targetHref);
       } catch {
         return null;
       }
