@@ -34,7 +34,7 @@ function MobileSidebar({
         <DialogPrimitive.Content
           data-slot="app-mobile-sidebar-content"
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-full max-w-80 p-2 lg:hidden",
+            "fixed inset-y-0 left-0 z-50 w-full max-w-80 p-2 pt-[calc(0.5rem+var(--app-safe-area-inset-top))] lg:hidden",
             "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:animate-in data-[state=open]:slide-in-from-left",
             "focus:outline-none"
           )}
@@ -87,13 +87,13 @@ export function StackedLayout({
   return (
     <div
       data-slot="app-stacked-layout"
-      className="relative isolate flex min-h-dvh w-full flex-col bg-white lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950"
+      className="relative isolate flex min-h-[var(--app-shell-min-height)] w-full flex-col bg-white lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950"
     >
       <MobileSidebar open={showSidebar} close={() => setShowSidebar(false)}>
         {sidebar}
       </MobileSidebar>
 
-      <header className="flex items-center px-4">
+      <header className="flex items-center px-4 pt-[var(--app-safe-area-inset-top)]">
         <div className="py-2.5 lg:hidden">
           <NavbarItem
             onClick={() => setShowSidebar(true)}

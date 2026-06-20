@@ -34,7 +34,7 @@ function MobileSidebar({
         <DialogPrimitive.Content
           data-slot="app-mobile-sidebar-content"
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-full max-w-80 p-2 lg:hidden",
+            "fixed inset-y-0 left-0 z-50 w-full max-w-80 p-2 pt-[calc(0.5rem+var(--app-safe-area-inset-top))] lg:hidden",
             "data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:animate-in data-[state=open]:slide-in-from-left",
             "focus:outline-none"
           )}
@@ -87,7 +87,7 @@ export function SidebarLayout({
   return (
     <div
       data-slot="app-sidebar-layout"
-      className="relative isolate flex min-h-dvh w-full bg-white max-lg:flex-col lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950"
+      className="relative isolate flex min-h-[var(--app-shell-min-height)] w-full bg-white max-lg:flex-col lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950"
     >
       <div className="fixed inset-y-0 left-0 w-64 max-lg:hidden">{sidebar}</div>
 
@@ -95,7 +95,7 @@ export function SidebarLayout({
         {sidebar}
       </MobileSidebar>
 
-      <header className="flex items-center px-4 lg:hidden">
+      <header className="flex items-center px-4 pt-[var(--app-safe-area-inset-top)] lg:hidden">
         <div className="py-2.5">
           <NavbarItem
             onClick={() => setShowSidebar(true)}

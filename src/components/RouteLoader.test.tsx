@@ -45,9 +45,17 @@ describe("RouteLoader", () => {
       "relative",
       "isolate",
       "flex",
-      "min-h-dvh",
+      "min-h-[var(--app-shell-min-height)]",
       "w-full",
       "flex-col"
+    );
+  });
+
+  it("keeps the loading header below the iOS top safe area", () => {
+    const { container } = renderWithI18n(<RouteLoader />);
+
+    expect(container.querySelector("header")).toHaveClass(
+      "pt-[var(--app-safe-area-inset-top)]"
     );
   });
 

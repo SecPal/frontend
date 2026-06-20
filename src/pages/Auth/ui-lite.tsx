@@ -18,7 +18,7 @@ export function LoginShell({
   return (
     <main
       className={cn(
-        "relative flex min-h-dvh flex-col items-center overflow-x-clip bg-white p-6 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 md:p-10",
+        "relative flex min-h-[var(--app-shell-min-height)] flex-col items-center overflow-x-clip bg-white px-6 pt-[calc(1.5rem+var(--app-safe-area-inset-top))] pb-6 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 md:px-10 md:pt-[calc(2.5rem+var(--app-safe-area-inset-top))] md:pb-10",
         className
       )}
       {...props}

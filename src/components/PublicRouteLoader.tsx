@@ -9,7 +9,7 @@ export function PublicRouteLoader() {
 
   return (
     <div
-      className="flex min-h-dvh items-center justify-center bg-white dark:bg-zinc-950"
+      className="flex min-h-[var(--app-shell-min-height)] items-center justify-center bg-white dark:bg-zinc-950"
       role="status"
       aria-live="polite"
       aria-label={i18n._(msg`Loading page`)}

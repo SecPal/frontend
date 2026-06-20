@@ -49,11 +49,18 @@ describe("mobile sidebar layouts", () => {
         </I18nProvider>
       );
 
+      expect(document.querySelector("header")).toHaveClass(
+        "pt-[var(--app-safe-area-inset-top)]"
+      );
+
       await user.click(screen.getByRole("button", { name: "Open navigation" }));
 
       expect(
         await screen.findByRole("dialog", { name: "Navigationsmenü" })
       ).toBeInTheDocument();
+      expect(
+        document.querySelector('[data-slot="app-mobile-sidebar-content"]')
+      ).toHaveClass("pt-[calc(0.5rem+var(--app-safe-area-inset-top))]");
       expect(
         screen.getByText("Hauptnavigation der Anwendung")
       ).toBeInTheDocument();
