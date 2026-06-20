@@ -4,7 +4,12 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { Dropdown, DropdownButton, DropdownItem, DropdownMenu } from "./dropdown";
+import {
+  Dropdown,
+  DropdownButton,
+  DropdownItem,
+  DropdownMenu,
+} from "./dropdown";
 
 beforeAll(() => {
   global.ResizeObserver = class ResizeObserver {
@@ -37,9 +42,7 @@ describe("DropdownItem", () => {
   it("renders button items with a full-width hit target and click handler", () => {
     const onClick = vi.fn();
 
-    renderOpenDropdown(
-      <DropdownItem onClick={onClick}>Lock app</DropdownItem>
-    );
+    renderOpenDropdown(<DropdownItem onClick={onClick}>Lock app</DropdownItem>);
 
     const menuItem = screen.getByRole("menuitem", { name: "Lock app" });
 
