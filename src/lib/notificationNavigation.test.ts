@@ -192,7 +192,10 @@ describe("notificationNavigation", () => {
         )
       ).resolves.toBeNull();
       await expect(
-        focusOrNavigateClient([nullClient], new URL("https://app.secpal.dev/alerts"))
+        focusOrNavigateClient(
+          [nullClient],
+          new URL("https://app.secpal.dev/alerts")
+        )
       ).resolves.toBeNull();
       await expect(
         focusOrNavigateClient(
