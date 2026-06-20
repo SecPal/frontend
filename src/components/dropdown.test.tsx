@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import {
@@ -10,14 +10,6 @@ import {
   DropdownItem,
   DropdownMenu,
 } from "./dropdown";
-
-beforeAll(() => {
-  global.ResizeObserver = class ResizeObserver {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  };
-});
 
 function renderOpenDropdown(children: React.ReactNode) {
   return render(
