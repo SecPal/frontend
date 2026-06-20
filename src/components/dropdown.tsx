@@ -115,7 +115,7 @@ export function DropdownItem({
   ...props
 }: DropdownItemProps) {
   const classes = cn(
-    "group relative flex cursor-default select-none items-center rounded-sm px-3 py-2 text-left text-base/6 text-zinc-950 outline-none transition-colors sm:text-sm/6",
+    "group relative flex w-full cursor-default select-none items-center rounded-sm px-3 py-2 text-left text-base/6 text-zinc-950 outline-none transition-colors sm:text-sm/6",
     "focus:bg-blue-600 focus:text-white data-[highlighted]:bg-blue-600 data-[highlighted]:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
     "*:data-[slot=icon]:mr-2.5 *:data-[slot=icon]:size-5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-zinc-500 group-focus:*:data-[slot=icon]:text-white group-data-[highlighted]:*:data-[slot=icon]:text-white sm:*:data-[slot=icon]:mr-2 sm:*:data-[slot=icon]:size-4",
     "*:data-[slot=avatar]:mr-2.5 *:data-[slot=avatar]:-ml-1 *:data-[slot=avatar]:size-6 sm:*:data-[slot=avatar]:mr-2 sm:*:data-[slot=avatar]:size-5",
