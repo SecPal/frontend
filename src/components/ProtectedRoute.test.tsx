@@ -18,10 +18,7 @@ import {
   AuthProvider,
   BOOTSTRAP_REVALIDATION_TIMEOUT_MS,
 } from "../contexts/AuthContext";
-import {
-  AuthContext,
-  type AuthContextType,
-} from "../contexts/auth-context";
+import { AuthContext, type AuthContextType } from "../contexts/auth-context";
 import { AuthApiError } from "../services/AuthApiError";
 import { sanitizePersistedAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
