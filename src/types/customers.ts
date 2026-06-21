@@ -81,7 +81,7 @@ export interface CustomerFilters {
 }
 
 // ============================================================================
-// Site
+// Object (backend resource: Site)
 // ============================================================================
 
 export type SiteType = "permanent" | "temporary";
@@ -149,6 +149,13 @@ export interface SiteFilters {
   page?: number;
   per_page?: number;
 }
+
+export type ObjektType = SiteType;
+export type ObjektCustomer = SiteCustomer;
+export type Objekt = Site;
+export type CreateObjektRequest = CreateSiteRequest;
+export type UpdateObjektRequest = UpdateSiteRequest;
+export type ObjektFilters = SiteFilters;
 
 // ============================================================================
 // Customer Assignment

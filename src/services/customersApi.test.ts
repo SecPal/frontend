@@ -10,10 +10,15 @@ import {
   createCustomer,
   updateCustomer,
   listSites,
+  listObjects,
   getSite,
+  getObject,
   getCustomerSites,
+  getCustomerObjects,
   createSite,
+  createObject,
   updateSite,
+  updateObject,
   deleteCustomer,
 } from "./customersApi";
 import * as csrf from "./csrf";
@@ -458,6 +463,49 @@ describe("customersApi", () => {
       expect(result.name).toBe("Objekt Alpha");
     });
 
+    it("creates an object through the public object service alias", async () => {
+      const objectData = {
+        customer_id: "customer-123",
+        name: "Objekt Gamma",
+        address: minimalAddress,
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: {
+            id: "site-789",
+            site_number: "OBJ-2026-0003",
+            organizational_unit_id: "internal-default-unit",
+            type: "permanent",
+            is_active: true,
+            is_expired: false,
+            full_address: "Objektstrasse 1, 10115 Berlin, DE",
+            created_at: "2026-06-21T00:00:00Z",
+            updated_at: "2026-06-21T00:00:00Z",
+            ...objectData,
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await createObject(objectData);
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/sites`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(objectData),
+        }
+      );
+      expect(result.id).toBe("site-789");
+      expect(result.name).toBe("Objekt Gamma");
+    });
+
     it("updates a site with the Objekt MVP payload", async () => {
       const siteData = {
         customer_id: "customer-456",
@@ -504,6 +552,52 @@ describe("customersApi", () => {
       );
       expect(result.name).toBe("Objekt Beta");
       expect(result.customer_id).toBe("customer-456");
+    });
+
+    it("updates an object through the public object service alias", async () => {
+      const objectData = {
+        name: "Objekt Delta",
+        address: {
+          ...minimalAddress,
+          city: "Koeln",
+          postal_code: "50667",
+        },
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: {
+            id: "site-789",
+            customer_id: "customer-123",
+            site_number: "OBJ-2026-0003",
+            organizational_unit_id: "internal-default-unit",
+            type: "permanent",
+            is_active: true,
+            is_expired: false,
+            full_address: "Objektstrasse 1, 50667 Koeln, DE",
+            created_at: "2026-06-21T00:00:00Z",
+            updated_at: "2026-06-21T00:00:00Z",
+            ...objectData,
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await updateObject("site-789", objectData);
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/sites/site-789`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(objectData),
+        }
+      );
+      expect(result.name).toBe("Objekt Delta");
     });
 
     it("surfaces create validation errors for missing customer, missing name, and incomplete address", async () => {
@@ -662,6 +756,33 @@ describe("customersApi", () => {
       expect(result.meta.total).toBe(1);
     });
 
+    it("lists objects through the public object service alias", async () => {
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: [objekt],
+          meta: {
+            current_page: 1,
+            last_page: 1,
+            per_page: 15,
+            total: 1,
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await listObjects({
+        search: "Alpha",
+        customer_id: "customer-123",
+      });
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/sites?search=Alpha&customer_id=customer-123`
+      );
+      expect(result.data[0]?.site_number).toBe("OBJ-2026-0001");
+    });
+
     it("fetches object detail with the same read fields as the list response", async () => {
       const mockResponse = {
         ok: true,
@@ -686,6 +807,22 @@ describe("customersApi", () => {
         address: objektAddress,
         contact: objekt.contact,
       });
+    });
+
+    it("fetches object detail through the public object service alias", async () => {
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({ data: objekt }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await getObject("site-123");
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/sites/site-123`
+      );
+      expect(result.customer?.name).toBe("Musterkunde GmbH");
     });
 
     it("filters the object list by customer id", async () => {
@@ -744,6 +881,33 @@ describe("customersApi", () => {
         `${apiConfig.baseUrl}/v1/customers/customer-123/sites?search=Alpha&is_active=1`
       );
       expect(result.data).toHaveLength(1);
+      expect(result.data[0]?.customer_id).toBe("customer-123");
+    });
+
+    it("lists customer objects through the public object service alias", async () => {
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: [objekt],
+          meta: {
+            current_page: 1,
+            last_page: 1,
+            per_page: 15,
+            total: 1,
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await getCustomerObjects("customer-123", {
+        is_active: true,
+        page: 1,
+      });
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/customers/customer-123/sites?is_active=1&page=1`
+      );
       expect(result.data[0]?.customer_id).toBe("customer-123");
     });
 

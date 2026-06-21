@@ -163,13 +163,13 @@ describe("CustomerDetail", () => {
     });
   });
 
-  it("displays sites count", async () => {
+  it("displays objects count", async () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
     renderWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByText(/This customer has 5 site/)).toBeInTheDocument();
+      expect(screen.getByText(/This customer has 5 object/)).toBeInTheDocument();
     });
   });
 
@@ -349,7 +349,7 @@ describe("CustomerDetail", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("links to sites filtered by customer", async () => {
+  it("links to objects filtered by customer", async () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
     renderWithRouter();
@@ -358,11 +358,12 @@ describe("CustomerDetail", () => {
       expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
     });
 
-    // Should have link to sites page with customer filter
-    const sitesLink = screen.getByRole("link", { name: /view sites|sites/i });
+    const sitesLink = screen.getByRole("link", {
+      name: /view objects|objects/i,
+    });
     expect(sitesLink).toHaveAttribute(
       "href",
-      expect.stringContaining("/sites")
+      expect.stringContaining("/objects")
     );
     expect(sitesLink).toHaveAttribute(
       "href",

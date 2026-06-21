@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
- * Sites Page - List view for Site Management
+ * Objects Page - List view for object management
  * Epic #210 - Phase 6: Customer & Site Management Frontend
  */
 
@@ -13,8 +13,8 @@ import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { Eye, Plus } from "lucide-react";
 import { LoadingRegion, Skeleton } from "@/ui";
-import { listSites } from "../../services/customersApi";
-import type { Site, SiteFilters } from "../../types/customers";
+import { listObjects } from "../../services/customersApi";
+import type { Objekt, ObjektFilters } from "../../types/customers";
 import {
   Alert,
   AlertDescription,
@@ -42,7 +42,7 @@ import {
 } from "../CustomerSites/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
-function SiteTableSkeletonRows({
+function ObjectTableSkeletonRows({
   columns,
   rows,
 }: {
@@ -70,12 +70,12 @@ export default function SitesPage() {
   const { _ } = useLingui();
   const { customerId } = useParams<{ customerId?: string }>();
   const capabilities = useUserCapabilities();
-  const [filters, setFilters] = useState<SiteFilters>({
+  const [filters, setFilters] = useState<ObjektFilters>({
     page: 1,
     per_page: 15,
     customer_id: customerId,
   });
-  const [sites, setSites] = useState<Site[]>([]);
+  const [sites, setSites] = useState<Objekt[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
@@ -88,7 +88,7 @@ export default function SitesPage() {
   useEffect(() => {
     let active = true;
 
-    void listSites(filters)
+    void listObjects(filters)
       .then((response) => {
         if (!active) {
           return;
@@ -104,7 +104,7 @@ export default function SitesPage() {
         }
 
         setError(
-          err instanceof Error ? err.message : _(msg`Failed to load sites`)
+          err instanceof Error ? err.message : _(msg`Failed to load objects`)
         );
       })
       .finally(() => {
@@ -154,14 +154,18 @@ export default function SitesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <PageTitle>
-          <Trans>Sites</Trans>
+          <Trans>Objects</Trans>
         </PageTitle>
-        {capabilities.actions.sites.create && (
+        {capabilities.actions.objects.create && (
           <LinkButton
-            to={customerId ? `/sites/new/customer/${customerId}` : "/sites/new"}
+            to={
+              customerId
+                ? `/objects/new/customer/${customerId}`
+                : "/objects/new"
+            }
           >
             <Plus className="size-4" aria-hidden="true" />
-            <Trans>New Site</Trans>
+            <Trans>New Object</Trans>
           </LinkButton>
         )}
       </div>
@@ -176,7 +180,7 @@ export default function SitesPage() {
             id="site-search"
             name="search"
             type="text"
-            placeholder={_(msg`Search sites...`)}
+            placeholder={_(msg`Search objects...`)}
             value={filters.search || ""}
             onChange={(e) => handleSearch(e.target.value)}
           />
@@ -235,14 +239,14 @@ export default function SitesPage() {
       {/* Site Table */}
       <LoadingRegion
         loading={loading}
-        loadingLabel={_(msg`Loading sites table`)}
+        loadingLabel={_(msg`Loading objects table`)}
       >
         <DataTable>
           <Table>
             <TableHead>
               <TableRow>
                 <TableHeader>
-                  <Trans>Site Number</Trans>
+                  <Trans>Object Number</Trans>
                 </TableHeader>
                 <TableHeader>
                   <Trans>Name</Trans>
@@ -263,7 +267,7 @@ export default function SitesPage() {
             </TableHead>
             <TableBody>
               {loading && sites.length === 0 ? (
-                <SiteTableSkeletonRows columns={6} rows={5} />
+                <ObjectTableSkeletonRows columns={6} rows={5} />
               ) : null}
 
               {sites.map((site) => (
@@ -296,7 +300,7 @@ export default function SitesPage() {
                     </StatusBadge>
                   </TableCell>
                   <TableCell>
-                    <PageLink to={`/sites/${site.id}`}>
+                    <PageLink to={`/objects/${site.id}`}>
                       <Eye className="inline size-4" aria-hidden="true" />{" "}
                       <Trans>View</Trans>
                     </PageLink>
@@ -308,7 +312,7 @@ export default function SitesPage() {
                 <TableRow>
                   <TableCell colSpan={6} className="py-12 text-center">
                     <PageText className="text-zinc-500 dark:text-zinc-400">
-                      <Trans>No sites found</Trans>
+                      <Trans>No objects found</Trans>
                     </PageText>
                   </TableCell>
                 </TableRow>
@@ -353,7 +357,7 @@ export default function SitesPage() {
                     )}
                   </span>{" "}
                   of <span className="font-medium">{pagination.total}</span>{" "}
-                  sites
+                  objects
                 </Trans>
               </PageText>
             </div>

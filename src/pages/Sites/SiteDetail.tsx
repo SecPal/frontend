@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
- * Site Detail Page
+ * Object Detail Page
  * Epic #210 - Customer & Site Management
  */
 
@@ -13,7 +13,11 @@ import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { ArrowLeft, Edit, List, Trash2 } from "lucide-react";
 import { LoadingRegion, SectionSkeleton, Skeleton } from "@/ui";
-import { getSite, deleteSite, getCustomer } from "../../services/customersApi";
+import {
+  getObject,
+  deleteObject,
+  getCustomer,
+} from "../../services/customersApi";
 import { getOrganizationalUnit } from "../../services/organizationalUnitApi";
 import type { Site, Customer } from "../../types/customers";
 import type { OrganizationalUnit } from "../../types/organizational";
@@ -71,7 +75,7 @@ export default function SiteDetail() {
       setCustomer(null);
       setOrgUnit(null);
       try {
-        const siteData = await getSite(id);
+        const siteData = await getObject(id);
         if (cancelled) return;
         setSite(siteData);
 
@@ -91,7 +95,7 @@ export default function SiteDetail() {
       } catch (err) {
         if (cancelled) return;
         setLoadError(
-          err instanceof Error ? err.message : _(msg`Failed to load site`)
+          err instanceof Error ? err.message : _(msg`Failed to load object`)
         );
       } finally {
         if (!cancelled) setLoading(false);
@@ -110,11 +114,11 @@ export default function SiteDetail() {
     setDeleteError(null);
 
     try {
-      await deleteSite(site.id);
-      navigate("/sites");
+      await deleteObject(site.id);
+      navigate("/objects");
     } catch (err) {
       setDeleteError(
-        err instanceof Error ? err.message : _(msg`Failed to delete site`)
+        err instanceof Error ? err.message : _(msg`Failed to delete object`)
       );
       setDeleting(false);
       // Keep dialog open to show error message
@@ -130,7 +134,7 @@ export default function SiteDetail() {
         <div className="mb-6 flex items-start justify-between">
           <div>
             <PageTitle>
-              <Trans>Site</Trans>
+              <Trans>Object</Trans>
             </PageTitle>
             <Skeleton className="mt-3 h-4 w-40" />
           </div>
@@ -141,23 +145,23 @@ export default function SiteDetail() {
         </div>
         <div className="space-y-8">
           <SectionSkeleton
-            loadingLabel={_(msg`Loading site details`)}
+            loadingLabel={_(msg`Loading object details`)}
             rows={4}
           />
           <SectionSkeleton
-            loadingLabel={_(msg`Loading site details`)}
+            loadingLabel={_(msg`Loading object details`)}
             rows={3}
             decorative
           />
           <SectionSkeleton
-            loadingLabel={_(msg`Loading site details`)}
+            loadingLabel={_(msg`Loading object details`)}
             rows={4}
             decorative
           />
           <div className="flex gap-4 border-t pt-4">
             <Skeleton className="h-10 w-20" />
             <Skeleton className="h-10 w-24" />
-            <LinkButton to="/sites" variant="outline">
+            <LinkButton to="/objects" variant="outline">
               <List className="size-4" aria-hidden="true" />
               <Trans>Back to List</Trans>
             </LinkButton>
@@ -171,11 +175,11 @@ export default function SiteDetail() {
     return (
       <div className="text-center py-12">
         <PageText className="text-red-600 dark:text-red-400">
-          {loadError || <Trans>Site not found</Trans>}
+          {loadError || <Trans>Object not found</Trans>}
         </PageText>
-        <LinkButton to="/sites" variant="outline" className="mt-4">
+        <LinkButton to="/objects" variant="outline" className="mt-4">
           <ArrowLeft className="size-4" aria-hidden="true" />
-          <Trans>Back to Sites</Trans>
+          <Trans>Back to Objects</Trans>
         </LinkButton>
       </div>
     );
@@ -367,7 +371,7 @@ export default function SiteDetail() {
           </PageTitle>
           <LoadingRegion
             loading={isAssociationLoading}
-            loadingLabel={_(msg`Loading site lookup data`)}
+            loadingLabel={_(msg`Loading object lookup data`)}
           >
             <DescriptionList>
               <DescriptionTerm>
@@ -417,13 +421,13 @@ export default function SiteDetail() {
 
         {/* Actions */}
         <div className="flex gap-4 pt-4 border-t">
-          {capabilities.actions.sites.update && (
-            <LinkButton to={`/sites/${site.id}/edit`}>
+          {capabilities.actions.objects.update && (
+            <LinkButton to={`/objects/${site.id}/edit`}>
               <Edit className="size-4" aria-hidden="true" />
               <Trans>Edit</Trans>
             </LinkButton>
           )}
-          {capabilities.actions.sites.delete && (
+          {capabilities.actions.objects.delete && (
             <Button
               variant="outline"
               onClick={() => {
@@ -436,7 +440,7 @@ export default function SiteDetail() {
               <Trans>Delete</Trans>
             </Button>
           )}
-          <LinkButton to="/sites" variant="outline">
+          <LinkButton to="/objects" variant="outline">
             <List className="size-4" aria-hidden="true" />
             <Trans>Back to List</Trans>
           </LinkButton>
@@ -444,7 +448,7 @@ export default function SiteDetail() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      {capabilities.actions.sites.delete && (
+      {capabilities.actions.objects.delete && (
         <Dialog
           open={showDeleteDialog}
           onClose={() => setShowDeleteDialog(false)}
@@ -453,11 +457,11 @@ export default function SiteDetail() {
             <DialogOverlay />
             <DialogContent>
               <DialogTitle>
-                <Trans>Delete Site</Trans>
+                <Trans>Delete Object</Trans>
               </DialogTitle>
               <DialogDescription>
                 <Trans>
-                  Are you sure you want to delete this site? This action cannot
+                  Are you sure you want to delete this object? This action cannot
                   be undone.
                 </Trans>
               </DialogDescription>
@@ -468,10 +472,10 @@ export default function SiteDetail() {
                   </Alert>
                 )}
                 <PageText>
-                  <Trans>Site:</Trans> <strong>{site.name}</strong>
+                  <Trans>Object:</Trans> <strong>{site.name}</strong>
                 </PageText>
                 <PageText>
-                  <Trans>Site Number:</Trans>{" "}
+                  <Trans>Object Number:</Trans>{" "}
                   <strong>{site.site_number}</strong>
                 </PageText>
               </DialogBody>

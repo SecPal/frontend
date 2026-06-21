@@ -31,15 +31,15 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-function renderWithRouter(initialRoute = "/sites/new") {
+function renderWithRouter(initialRoute = "/objects/new") {
   window.history.pushState({}, "", initialRoute);
   return render(
     <BrowserRouter>
       <I18nProvider i18n={i18n}>
         <Routes>
-          <Route path="/sites/new" element={<SiteCreate />} />
+          <Route path="/objects/new" element={<SiteCreate />} />
           <Route
-            path="/sites/new/customer/:customerId"
+            path="/objects/new/customer/:customerId"
             element={<SiteCreate />}
           />
         </Routes>
@@ -108,7 +108,7 @@ describe("SiteCreate", () => {
   const mockCreatedSite = {
     id: "site-new",
     site_number: "SITE-2025-001",
-    name: "New Site",
+    name: "new object",
     type: "permanent" as const,
     customer_id: "customer-1",
     organizational_unit_id: "org-1",
@@ -173,7 +173,7 @@ describe("SiteCreate", () => {
     ).toBeInTheDocument();
 
     expect(screen.getByLabelText(/organizational unit/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/object name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/type/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/street/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/city/i)).toBeInTheDocument();
@@ -182,7 +182,7 @@ describe("SiteCreate", () => {
   });
 
   it("pre-selects customer when customerId is in URL", async () => {
-    renderWithRouter("/sites/new/customer/customer-1");
+    renderWithRouter("/objects/new/customer/customer-1");
 
     await waitFor(() => {
       expect(
@@ -194,7 +194,7 @@ describe("SiteCreate", () => {
   it(
     "submits form with valid data",
     async () => {
-      vi.mocked(customersApi.createSite).mockResolvedValue(mockCreatedSite);
+      vi.mocked(customersApi.createObject).mockResolvedValue(mockCreatedSite);
 
       renderWithRouter();
 
@@ -203,8 +203,8 @@ describe("SiteCreate", () => {
       // Fill form
       await selectRadixOption(/customer/i, /C001 - Customer One/i);
       await selectRadixOption(/organizational unit/i, /IT Department/i);
-      fireEvent.change(screen.getByLabelText(/site name/i), {
-        target: { value: "New Site" },
+      fireEvent.change(screen.getByLabelText(/object name/i), {
+        target: { value: "new object" },
       });
       fireEvent.change(screen.getByLabelText(/street/i), {
         target: { value: "Test Street 1" },
@@ -217,14 +217,14 @@ describe("SiteCreate", () => {
       });
 
       // Submit
-      fireEvent.click(screen.getByRole("button", { name: /create site/i }));
+      fireEvent.click(screen.getByRole("button", { name: /create object/i }));
 
       await waitFor(() => {
-        expect(customersApi.createSite).toHaveBeenCalledWith(
+        expect(customersApi.createObject).toHaveBeenCalledWith(
           expect.objectContaining({
             customer_id: "customer-1",
             organizational_unit_id: "org-1",
-            name: "New Site",
+            name: "new object",
             type: "permanent",
             address: expect.objectContaining({
               street: "Test Street 1",
@@ -234,7 +234,7 @@ describe("SiteCreate", () => {
             }),
           })
         );
-        expect(mockNavigate).toHaveBeenCalledWith("/sites/site-new");
+        expect(mockNavigate).toHaveBeenCalledWith("/objects/site-new");
       });
     },
     SLOW_TEST_TIMEOUT
@@ -250,7 +250,7 @@ describe("SiteCreate", () => {
         name: ["The name must not exceed 255 characters."],
         "address.street": ["The street field must be a valid address."],
       };
-      vi.mocked(customersApi.createSite).mockRejectedValue(validationError);
+      vi.mocked(customersApi.createObject).mockRejectedValue(validationError);
 
       renderWithRouter();
 
@@ -261,7 +261,7 @@ describe("SiteCreate", () => {
       // Fill all required fields to bypass HTML5 validation
       await selectRadixOption(/customer/i, /C001 - Customer One/i);
       await selectRadixOption(/organizational unit/i, /IT Department/i);
-      fireEvent.change(screen.getByLabelText(/site name/i), {
+      fireEvent.change(screen.getByLabelText(/object name/i), {
         target: { value: "Test Site" },
       });
       fireEvent.change(screen.getByLabelText(/street/i), {
@@ -275,11 +275,11 @@ describe("SiteCreate", () => {
       });
 
       // Submit - API will reject with validation errors
-      fireEvent.click(screen.getByRole("button", { name: /create site/i }));
+      fireEvent.click(screen.getByRole("button", { name: /create object/i }));
 
       await waitFor(() => {
-        expect(customersApi.createSite).toHaveBeenCalled();
-        expect(screen.getByLabelText(/site name/i)).toHaveAttribute(
+        expect(customersApi.createObject).toHaveBeenCalled();
+        expect(screen.getByLabelText(/object name/i)).toHaveAttribute(
           "aria-describedby",
           "site-name-error"
         );
@@ -307,7 +307,7 @@ describe("SiteCreate", () => {
       validationError.errors = {
         name: ["The name must be at least 3 characters."],
       };
-      vi.mocked(customersApi.createSite)
+      vi.mocked(customersApi.createObject)
         .mockRejectedValueOnce(validationError)
         .mockResolvedValueOnce(mockCreatedSite);
 
@@ -321,7 +321,7 @@ describe("SiteCreate", () => {
       await selectRadixOption(/organizational unit/i, /IT Department/i);
 
       // Fill fields with data that will trigger validation error
-      fireEvent.change(screen.getByLabelText(/site name/i), {
+      fireEvent.change(screen.getByLabelText(/object name/i), {
         target: { value: "AB" },
       });
       fireEvent.change(screen.getByLabelText(/street/i), {
@@ -335,29 +335,29 @@ describe("SiteCreate", () => {
       });
 
       // Submit - API will reject
-      fireEvent.click(screen.getByRole("button", { name: /create site/i }));
+      fireEvent.click(screen.getByRole("button", { name: /create object/i }));
 
       await waitFor(() => {
-        expect(customersApi.createSite).toHaveBeenCalledTimes(1);
+        expect(customersApi.createObject).toHaveBeenCalledTimes(1);
         expect(
           screen.getByText(/the name must be at least 3 characters/i)
         ).toBeInTheDocument();
       });
 
       // Fix the validation error
-      const nameInput = screen.getByLabelText(/site name/i);
+      const nameInput = screen.getByLabelText(/object name/i);
       fireEvent.change(nameInput, {
-        target: { value: "Valid Site Name" },
+        target: { value: "Valid object name" },
       });
-      fireEvent.click(screen.getByRole("button", { name: /create site/i }));
+      fireEvent.click(screen.getByRole("button", { name: /create object/i }));
 
       // Error should be cleared and navigate should be called
       await waitFor(() => {
-        expect(customersApi.createSite).toHaveBeenCalledTimes(2);
+        expect(customersApi.createObject).toHaveBeenCalledTimes(2);
         expect(
           screen.queryByText(/the name must be at least 3 characters/i)
         ).not.toBeInTheDocument();
-        expect(mockNavigate).toHaveBeenCalledWith("/sites/site-new");
+        expect(mockNavigate).toHaveBeenCalledWith("/objects/site-new");
       });
     },
     SLOW_TEST_TIMEOUT
@@ -382,10 +382,10 @@ describe("SiteCreate", () => {
     renderWithRouter();
 
     expect(
-      screen.getByRole("heading", { name: /new site/i })
+      screen.getByRole("heading", { name: /new object/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("status", { name: "Loading site lookup data" })
+      screen.getByRole("status", { name: "Loading object lookup data" })
     ).toBeInTheDocument();
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
@@ -405,7 +405,7 @@ describe("SiteCreate", () => {
   it(
     "includes optional contact information when provided",
     async () => {
-      vi.mocked(customersApi.createSite).mockResolvedValue(mockCreatedSite);
+      vi.mocked(customersApi.createObject).mockResolvedValue(mockCreatedSite);
 
       renderWithRouter();
 
@@ -415,8 +415,8 @@ describe("SiteCreate", () => {
 
       await selectRadixOption(/customer/i, /C001 - Customer One/i);
       await selectRadixOption(/organizational unit/i, /IT Department/i);
-      fireEvent.change(screen.getByLabelText(/site name/i), {
-        target: { value: "New Site" },
+      fireEvent.change(screen.getByLabelText(/object name/i), {
+        target: { value: "new object" },
       });
       fireEvent.change(screen.getByLabelText(/street/i), {
         target: { value: "Test Street" },
@@ -439,10 +439,10 @@ describe("SiteCreate", () => {
         target: { value: "+49 123 456789" },
       });
 
-      fireEvent.click(screen.getByRole("button", { name: /create site/i }));
+      fireEvent.click(screen.getByRole("button", { name: /create object/i }));
 
       await waitFor(() => {
-        expect(customersApi.createSite).toHaveBeenCalledWith(
+        expect(customersApi.createObject).toHaveBeenCalledWith(
           expect.objectContaining({
             contact: {
               name: "John Doe",
@@ -459,7 +459,7 @@ describe("SiteCreate", () => {
   it(
     "preserves batched field updates in the submitted payload",
     async () => {
-      vi.mocked(customersApi.createSite).mockResolvedValue(mockCreatedSite);
+      vi.mocked(customersApi.createObject).mockResolvedValue(mockCreatedSite);
 
       renderWithRouter();
 
@@ -469,7 +469,7 @@ describe("SiteCreate", () => {
 
       await selectRadixOption(/customer/i, /C001 - Customer One/i);
       await selectRadixOption(/organizational unit/i, /IT Department/i);
-      fireEvent.change(screen.getByLabelText(/site name/i), {
+      fireEvent.change(screen.getByLabelText(/object name/i), {
         target: { value: "Race Safe Site" },
       });
       fireEvent.change(screen.getByLabelText(/postal code/i), {
@@ -485,10 +485,10 @@ describe("SiteCreate", () => {
         });
       });
 
-      fireEvent.click(screen.getByRole("button", { name: /create site/i }));
+      fireEvent.click(screen.getByRole("button", { name: /create object/i }));
 
       await waitFor(() => {
-        expect(customersApi.createSite).toHaveBeenCalledWith(
+        expect(customersApi.createObject).toHaveBeenCalledWith(
           expect.objectContaining({
             address: expect.objectContaining({
               street: "Concurrent Street 1",

@@ -132,6 +132,7 @@ export interface AndroidProvisioningActionCapabilities {
 export interface UserActionCapabilities {
   androidProvisioning: AndroidProvisioningActionCapabilities;
   customers: ResourceActionCapabilities;
+  objects: ResourceActionCapabilities;
   sites: ResourceActionCapabilities;
   employees: EmployeeActionCapabilities;
 }
@@ -142,6 +143,7 @@ export interface UserCapabilities {
   settings: boolean;
   organization: boolean;
   customers: boolean;
+  objects: boolean;
   sites: boolean;
   employees: boolean;
   activityLogs: boolean;
@@ -247,6 +249,10 @@ export function getUserCapabilities(
       isAuthenticated &&
       (hasCustomerAccess ||
         hasAnyUserPermission(user, CUSTOMER_FEATURE_VIEW_PERMISSIONS)),
+    objects:
+      isAuthenticated &&
+      (hasSiteAccess ||
+        hasAnyUserPermission(user, SITE_FEATURE_VIEW_PERMISSIONS)),
     sites:
       isAuthenticated &&
       (hasSiteAccess ||
@@ -268,6 +274,11 @@ export function getUserCapabilities(
         create: canCreateCustomers,
         update: canUpdateCustomers,
         delete: canDeleteCustomers,
+      },
+      objects: {
+        create: canCreateSites,
+        update: canUpdateSites,
+        delete: canDeleteSites,
       },
       sites: {
         create: canCreateSites,

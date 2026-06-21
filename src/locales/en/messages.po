@@ -205,6 +205,14 @@ msgstr "Upload front and back as separate files if available."
 msgid "Organizational structure"
 msgstr "Organizational structure"
 
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Loading object form"
+msgstr "Loading object form"
+
+#: src/pages/Sites/SiteCreate.tsx
+msgid "Create Object"
+msgstr "Create Object"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Failed to load form template"
 msgstr "Failed to load form template"
@@ -295,10 +303,6 @@ msgstr "Edit email"
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Creating organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Creating organizational units is not possible while offline. Please reconnect to make changes."
-
-#: src/pages/Sites/SiteDetail.tsx
-msgid "Site Number:"
-msgstr "Site Number:"
 
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
@@ -397,11 +401,6 @@ msgstr "Loading employee form"
 msgid "Test Notification"
 msgstr "Test Notification"
 
-#: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
-msgid "Site not found"
-msgstr "Site not found"
-
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "You can inspect Android enrollment status, but write permission is required to create or revoke sessions."
 msgstr "You can inspect Android enrollment status, but write permission is required to create or revoke sessions."
@@ -425,6 +424,10 @@ msgstr "By default (unchecked), users cannot see or edit their own employee reco
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Failed to complete MFA action."
 msgstr "Failed to complete MFA action."
+
+#: src/pages/Sites/SiteDetail.tsx
+msgid "Are you sure you want to delete this object? This action cannot be undone."
+msgstr "Are you sure you want to delete this object? This action cannot be undone."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Invalid onboarding link. Please check your email and try again."
@@ -469,10 +472,6 @@ msgstr "Emergency contact name is required."
 #: src/pages/Login.tsx
 msgid "Retry"
 msgstr "Retry"
-
-#: src/pages/Sites/SiteEdit.tsx
-msgid "Failed to update site"
-msgstr "Failed to update site"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
@@ -539,6 +538,11 @@ msgstr "Failed"
 msgid "Failed to confirm onboarding"
 msgstr "Failed to confirm onboarding"
 
+#. placeholder {0}: customer.sites_count || 0
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "{0, plural, zero {This customer has no objects.} one {This customer has # object.} other {This customer has # objects.}}"
+msgstr "{0, plural, zero {This customer has no objects.} one {This customer has # object.} other {This customer has # objects.}}"
+
 #: src/components/NotificationPermissionPrompt.tsx
 #: src/components/NotificationPreferences.tsx
 msgid "This deployment does not currently publish browser Web Push. Keep HTTPS, the selected deployment domain, and same-origin service-worker hosting aligned before rollout."
@@ -569,6 +573,10 @@ msgstr "Terminate this employee?"
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "OpenTimestamp Confirmed"
 msgstr "OpenTimestamp Confirmed"
+
+#: src/pages/Sites/SitesPage.tsx
+msgid "Search objects..."
+msgstr "Search objects..."
 
 #: src/components/UpdatePrompt.tsx
 msgid "A new version of SecPal is available."
@@ -748,6 +756,10 @@ msgstr "Residence title type"
 msgid "Before you begin"
 msgstr "Before you begin"
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "View Objects"
+msgstr "View Objects"
+
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Make root unit (no parent)"
 msgstr "Make root unit (no parent)"
@@ -780,6 +792,10 @@ msgstr "Device label"
 msgid "Sending verification email..."
 msgstr "Sending verification email..."
 
+#: src/pages/Sites/SitesPage.tsx
+msgid "No objects found"
+msgstr "No objects found"
+
 #: src/pages/Employees/EmployeeList.tsx
 msgid "Unit"
 msgstr "Unit"
@@ -810,9 +826,11 @@ msgstr "Failed to load employee"
 msgid "Failed to load MFA status."
 msgstr "Failed to load MFA status."
 
-#: src/pages/Sites/SiteDetail.tsx
-msgid "Delete Site"
-msgstr "Delete Site"
+#: src/components/application-layout.tsx
+#: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Sites/SitesPage.tsx
+msgid "Objects"
+msgstr "Objects"
 
 #: src/pages/Login.tsx
 msgid "The passkey sign-in completed with an unsupported login mode."
@@ -825,11 +843,6 @@ msgstr "Your current answers will be saved as a draft before the first file uplo
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This field"
 msgstr "This field"
-
-#: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
-msgid "Failed to load site"
-msgstr "Failed to load site"
 
 #: src/pages/Login.tsx
 msgid "Login form"
@@ -856,10 +869,6 @@ msgstr "Minimum Assignable Rank"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Missing onboarding token. Please use the link from your email."
 msgstr "Missing onboarding token. Please use the link from your email."
-
-#: src/pages/Customers/CustomerDetail.tsx
-msgid "View Sites"
-msgstr "View Sites"
 
 #: src/pages/Customers/CustomersPage.tsx
 msgid "No customers found"
@@ -1036,10 +1045,6 @@ msgstr "Resided From"
 msgid "Optional: Upload a second file, for example the reverse side."
 msgstr "Optional: Upload a second file, for example the reverse side."
 
-#: src/pages/Sites/SitesPage.tsx
-msgid "Loading sites table"
-msgstr "Loading sites table"
-
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Required documents for this step"
 msgstr "Required documents for this step"
@@ -1089,6 +1094,10 @@ msgstr "Export Format"
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Step 1: Configure viewing permissions"
 msgstr "Step 1: Configure viewing permissions"
+
+#: src/pages/Sites/SitesPage.tsx
+msgid "Failed to load objects"
+msgstr "Failed to load objects"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Maximum Viewable Rank"
@@ -1188,10 +1197,6 @@ msgstr "Optional: Upload the reverse side as a second file."
 msgid "Loading employee contact form"
 msgstr "Loading employee contact form"
 
-#: src/pages/Sites/SitesPage.tsx
-msgid "Failed to load sites"
-msgstr "Failed to load sites"
-
 #: src/pages/Login.tsx
 msgid "Signing in with passkey..."
 msgstr "Signing in with passkey..."
@@ -1241,10 +1246,6 @@ msgstr "Documents"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Added {0}"
 msgstr "Added {0}"
-
-#: src/pages/Sites/SiteDetail.tsx
-msgid "Site"
-msgstr "Site"
 
 #. placeholder {0}: customer.name
 #: src/pages/Customers/CustomerDetail.tsx
@@ -1405,10 +1406,6 @@ msgstr "My Organization"
 msgid "Suspended"
 msgstr "Suspended"
 
-#: src/pages/Sites/SiteDetail.tsx
-msgid "Failed to delete site"
-msgstr "Failed to delete site"
-
 #: src/lib/organizationalUnitUtils.ts
 msgid "Holding"
 msgstr "Holding"
@@ -1432,6 +1429,13 @@ msgstr "Encrypting files..."
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Residence Title Upload"
 msgstr "Residence Title Upload"
+
+#. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
+#. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
+#. placeholder {2}: pagination.total
+#: src/pages/Sites/SitesPage.tsx
+msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> objects"
+msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> objects"
 
 #: src/components/RouteGuardState.tsx
 msgid "Open the verification email, then return here and check again. If the message is missing, request a new verification email below."
@@ -1529,6 +1533,10 @@ msgstr "Activity Logs"
 msgid "Banking Details"
 msgstr "Banking Details"
 
+#: src/pages/Sites/SiteDetail.tsx
+msgid "Failed to delete object"
+msgstr "Failed to delete object"
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Sent"
 msgstr "Sent"
@@ -1558,6 +1566,10 @@ msgstr "Your onboarding state changed on the server while you were editing. The 
 msgid "New parent"
 msgstr "New parent"
 
+#: src/pages/Sites/SitesPage.tsx
+msgid "Loading objects table"
+msgstr "Loading objects table"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please use the required format ({actualPattern})."
 msgstr "Please use the required format ({actualPattern})."
@@ -1569,6 +1581,11 @@ msgstr "Address Supplement"
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Loading enrollment sessions..."
 msgstr "Loading enrollment sessions..."
+
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SitesPage.tsx
+msgid "New Object"
+msgstr "New Object"
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -1630,10 +1647,6 @@ msgstr "Select organizational unit"
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Managed device rollout"
 msgstr "Managed device rollout"
-
-#: src/pages/Sites/SiteDetail.tsx
-msgid "Back to Sites"
-msgstr "Back to Sites"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Anyone with one of these recovery codes can bypass your authenticator app once. Do not store them in chat, email, or screenshots."
@@ -1707,14 +1720,6 @@ msgstr "Manage your application preferences."
 msgid "Please answer whether you currently have a Bewacher ID (Yes / No) in the section below your address."
 msgstr "Please answer whether you currently have a Bewacher ID (Yes / No) in the section below your address."
 
-#: src/pages/Sites/SiteDetail.tsx
-msgid "Are you sure you want to delete this site? This action cannot be undone."
-msgstr "Are you sure you want to delete this site? This action cannot be undone."
-
-#: src/pages/Sites/SiteCreate.tsx
-msgid "Create Site"
-msgstr "Create Site"
-
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Step 2: Configure assignment permissions"
 msgstr "Step 2: Configure assignment permissions"
@@ -1731,13 +1736,6 @@ msgstr "Turn on notifications for this signed-in browser on the current SecPal d
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Download Latest Export"
 msgstr "Download Latest Export"
-
-#. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
-#. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
-#. placeholder {2}: pagination.total
-#: src/pages/Sites/SitesPage.tsx
-msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
-msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Created, but not sent"
@@ -1822,6 +1820,10 @@ msgstr "View"
 msgid "Validity Period"
 msgstr "Validity Period"
 
+#: src/pages/Sites/SiteDetail.tsx
+msgid "Delete Object"
+msgstr "Delete Object"
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Authenticator app QR code"
 msgstr "Authenticator app QR code"
@@ -1889,10 +1891,6 @@ msgstr "Failed to update contact field."
 msgid "Generating BWR Export..."
 msgstr "Generating BWR Export..."
 
-#: src/pages/Sites/SiteDetail.tsx
-msgid "Loading site details"
-msgstr "Loading site details"
-
 #: src/pages/Login.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "No credential provider is available on this device. Check that a passkey-capable app (e.g. Bitwarden) is installed and enabled as a credential provider in your device settings."
@@ -1901,10 +1899,6 @@ msgstr "No credential provider is available on this device. Check that a passkey
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Passkey registered, but the enrolled passkey list could not be refreshed."
 msgstr "Passkey registered, but the enrolled passkey list could not be refreshed."
-
-#: src/pages/Sites/SitesPage.tsx
-msgid "Site Number"
-msgstr "Site Number"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "You can upload now or continue and add documents later before final submission."
@@ -1960,10 +1954,6 @@ msgstr "Loading passkeys..."
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Yes"
 msgstr "Yes"
-
-#: src/pages/Sites/SitesPage.tsx
-msgid "No sites found"
-msgstr "No sites found"
 
 #: src/components/VerificationDots.tsx
 msgid "{label}: Valid"
@@ -2181,11 +2171,6 @@ msgstr "Welcome to SecPal"
 msgid "Minijob"
 msgstr "Minijob"
 
-#: src/pages/Sites/SiteCreate.tsx
-#: src/pages/Sites/SiteDetail.tsx
-msgid "Loading site lookup data"
-msgstr "Loading site lookup data"
-
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Passwords do not match"
 msgstr "Passwords do not match"
@@ -2362,6 +2347,11 @@ msgstr "Inactive"
 msgid "Choose a new parent unit or make this a root unit."
 msgstr "Choose a new parent unit or make this a root unit."
 
+#: src/pages/Sites/SiteDetail.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Object not found"
+msgstr "Object not found"
+
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
@@ -2482,10 +2472,6 @@ msgstr "Temporary"
 msgid "Position"
 msgstr "Position"
 
-#: src/pages/Sites/SiteEdit.tsx
-msgid "Loading site form"
-msgstr "Loading site form"
-
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Confirm Password"
 msgstr "Confirm Password"
@@ -2525,10 +2511,6 @@ msgstr "Nationality options could not be loaded right now. Please reload this pa
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Select an organizational unit before moving it."
 msgstr "Select an organizational unit before moving it."
-
-#: src/pages/Sites/SiteCreate.tsx
-msgid "Failed to create site"
-msgstr "Failed to create site"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Regenerate recovery codes"
@@ -2602,9 +2584,17 @@ msgstr "Failed to validate onboarding link"
 msgid "Employee ID is missing. Cannot submit form."
 msgstr "Employee ID is missing. Cannot submit form."
 
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Edit Object"
+msgstr "Edit Object"
+
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Highest rank number the user can assign (set to 255 for all, 0 or empty to prevent any assignment). Range: 0-255"
 msgstr "Highest rank number the user can assign (set to 255 for all, 0 or empty to prevent any assignment). Range: 0-255"
+
+#: src/pages/Sites/SiteCreate.tsx
+msgid "Failed to create object"
+msgstr "Failed to create object"
 
 #: src/components/UpdatePrompt.tsx
 msgid "Update now"
@@ -2631,14 +2621,13 @@ msgstr "No qualifications assigned"
 msgid "← Back to Employee"
 msgstr "← Back to Employee"
 
+#: src/pages/Sites/SiteDetail.tsx
+msgid "Loading object details"
+msgstr "Loading object details"
+
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Saving BWR Status..."
 msgstr "Saving BWR Status..."
-
-#: src/pages/Sites/SiteCreate.tsx
-#: src/pages/Sites/SitesPage.tsx
-msgid "New Site"
-msgstr "New Site"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Leave empty for no minimum"
@@ -2652,9 +2641,7 @@ msgstr "Which document are you uploading?"
 msgid "SecPal could not confirm your session quickly enough. Retry the session check or return to the login screen."
 msgstr "SecPal could not confirm your session quickly enough. Retry the session check or return to the login screen."
 
-#: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomersPage.tsx
-#: src/pages/Sites/SitesPage.tsx
 msgid "Sites"
 msgstr "Sites"
 
@@ -2666,11 +2653,6 @@ msgstr "Causer"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Try Again"
 msgstr "Try Again"
-
-#. placeholder {0}: customer.sites_count || 0
-#: src/pages/Customers/CustomerDetail.tsx
-msgid "{0, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
-msgstr "{0, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
 
 #. placeholder {0}: formData.min_viewable_rank
 #: src/components/ScopeAssignmentForm.tsx
@@ -2819,18 +2801,9 @@ msgstr "Edit emergency contacts"
 msgid "From Date"
 msgstr "From Date"
 
-#: src/pages/Sites/SitesPage.tsx
-msgid "Search sites..."
-msgstr "Search sites..."
-
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Management Level"
 msgstr "Management Level"
-
-#: src/pages/Sites/SiteCreate.tsx
-#: src/pages/Sites/SiteEdit.tsx
-msgid "Site Name"
-msgstr "Site Name"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Confirm and enable MFA"
@@ -2840,6 +2813,10 @@ msgstr "Confirm and enable MFA"
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Current Address"
 msgstr "Current Address"
+
+#: src/pages/Sites/SiteDetail.tsx
+msgid "Object:"
+msgstr "Object:"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Error"
@@ -2941,6 +2918,11 @@ msgstr "No postal address stored yet."
 msgid "Failed to save draft"
 msgstr "Failed to save draft"
 
+#: src/pages/Sites/SiteDetail.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Failed to load object"
+msgstr "Failed to load object"
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Confirm this onboarding dossier?"
 msgstr "Confirm this onboarding dossier?"
@@ -3010,10 +2992,6 @@ msgstr "This action could not be completed because the data changed in the meant
 msgid "Organizational unit is required"
 msgstr "Organizational unit is required"
 
-#: src/pages/Sites/SiteDetail.tsx
-msgid "Site:"
-msgstr "Site:"
-
 #. placeholder {0}: unit.name
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Move \"{0}\""
@@ -3051,6 +3029,11 @@ msgstr "Position is required"
 msgid "Loading MFA status..."
 msgstr "Loading MFA status..."
 
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteDetail.tsx
+msgid "Loading object lookup data"
+msgstr "Loading object lookup data"
+
 #: src/components/OfflineDataBanner.tsx
 msgid "You're offline - showing cached data"
 msgstr "You're offline - showing cached data"
@@ -3066,6 +3049,10 @@ msgstr "Additional Properties"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Multi-factor authentication"
 msgstr "Multi-factor authentication"
+
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Failed to update object"
+msgstr "Failed to update object"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Edit Organizational Unit"
@@ -3133,6 +3120,10 @@ msgstr "Passkeys"
 #: src/components/NotificationPreferences.tsx
 msgid "Send Test"
 msgstr "Send Test"
+
+#: src/pages/Sites/SiteDetail.tsx
+msgid "Back to Objects"
+msgstr "Back to Objects"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Who can this user VIEW?"
@@ -3240,6 +3231,10 @@ msgstr "Creating enrollment session..."
 msgid "Failed to load passkeys."
 msgstr "Failed to load passkeys."
 
+#: src/pages/Sites/SiteDetail.tsx
+msgid "Object"
+msgstr "Object"
+
 #: src/components/UpdatePrompt.tsx
 msgid "Updating application"
 msgstr "Updating application"
@@ -3286,6 +3281,11 @@ msgstr "Edit Postal Address"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please select a file to upload."
 msgstr "Please select a file to upload."
+
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Object Name"
+msgstr "Object Name"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "For German nationals, you can provide either identity card or passport."
@@ -3342,10 +3342,6 @@ msgstr "Passkey registration was cancelled or not permitted by the browser."
 #: src/pages/Profile/ProfilePage.tsx
 msgid "Account information"
 msgstr "Account information"
-
-#: src/pages/Sites/SiteEdit.tsx
-msgid "Edit Site"
-msgstr "Edit Site"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Identity Document"
@@ -3430,6 +3426,10 @@ msgstr "Freelance"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Loading onboarding"
 msgstr "Loading onboarding"
+
+#: src/pages/Sites/SiteDetail.tsx
+msgid "Object Number:"
+msgstr "Object Number:"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Optional description for this unit."
@@ -3544,6 +3544,10 @@ msgstr "Close"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please choose whether you want to upload your identity document now."
 msgstr "Please choose whether you want to upload your identity document now."
+
+#: src/pages/Sites/SitesPage.tsx
+msgid "Object Number"
+msgstr "Object Number"
 
 #: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Employees/EmployeeCreate.tsx

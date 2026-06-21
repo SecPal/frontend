@@ -31,12 +31,12 @@ vi.mock("react-router-dom", async () => {
 });
 
 function renderWithRouter() {
-  window.history.pushState({}, "", "/sites/site-123/edit");
+  window.history.pushState({}, "", "/objects/site-123/edit");
   return render(
     <BrowserRouter>
       <I18nProvider i18n={i18n}>
         <Routes>
-          <Route path="/sites/:id/edit" element={<SiteEdit />} />
+          <Route path="/objects/:id/edit" element={<SiteEdit />} />
         </Routes>
       </I18nProvider>
     </BrowserRouter>
@@ -121,13 +121,13 @@ describe("SiteEdit", () => {
 
   const mockUpdatedSite = {
     ...mockSite,
-    name: "Updated Site Name",
+    name: "Updated object name",
     updated_at: "2025-01-20T00:00:00Z",
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getObject).mockResolvedValue(mockSite);
     vi.mocked(customersApi.listCustomers).mockResolvedValue({
       data: mockCustomers,
       meta: {
@@ -153,7 +153,7 @@ describe("SiteEdit", () => {
     renderWithRouter();
 
     await waitFor(() => {
-      expect(customersApi.getSite).toHaveBeenCalledWith("site-123");
+      expect(customersApi.getObject).toHaveBeenCalledWith("site-123");
       expect(customersApi.listCustomers).toHaveBeenCalledWith({
         per_page: 100,
       });
@@ -169,7 +169,7 @@ describe("SiteEdit", () => {
     renderWithRouter();
 
     await waitFor(() => {
-      const nameInput = screen.getByLabelText(/site name/i) as HTMLInputElement;
+      const nameInput = screen.getByLabelText(/object name/i) as HTMLInputElement;
       expect(nameInput.value).toBe("Test Site");
     });
 
@@ -207,40 +207,40 @@ describe("SiteEdit", () => {
   it(
     "updates site with modified data",
     async () => {
-      vi.mocked(customersApi.updateSite).mockResolvedValue(mockUpdatedSite);
+      vi.mocked(customersApi.updateObject).mockResolvedValue(mockUpdatedSite);
 
       renderWithRouter();
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
+        expect(screen.getByLabelText(/object name/i)).toBeInTheDocument();
       });
 
       // Modify name
-      const nameInput = screen.getByLabelText(/site name/i);
+      const nameInput = screen.getByLabelText(/object name/i);
       fireEvent.change(nameInput, {
-        target: { value: "Updated Site Name" },
+        target: { value: "Updated object name" },
       });
 
       // Submit
       fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
       await waitFor(() => {
-        expect(customersApi.updateSite).toHaveBeenCalledWith(
+        expect(customersApi.updateObject).toHaveBeenCalledWith(
           "site-123",
           expect.objectContaining({
-            name: "Updated Site Name",
+            name: "Updated object name",
           })
         );
-        expect(mockNavigate).toHaveBeenCalledWith("/sites/site-123");
+        expect(mockNavigate).toHaveBeenCalledWith("/objects/site-123");
       });
     },
     SLOW_TEST_TIMEOUT
   );
 
   it("displays loading state while fetching data", () => {
-    vi.mocked(customersApi.getSite).mockImplementation(
+    vi.mocked(customersApi.getObject).mockImplementation(
       () =>
-        new Promise<Awaited<ReturnType<typeof customersApi.getSite>>>(() => {})
+        new Promise<Awaited<ReturnType<typeof customersApi.getObject>>>(() => {})
     );
     vi.mocked(customersApi.listCustomers).mockImplementation(
       () =>
@@ -260,23 +260,23 @@ describe("SiteEdit", () => {
     renderWithRouter();
 
     expect(
-      screen.getByRole("heading", { name: /edit site/i })
+      screen.getByRole("heading", { name: /edit object/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("status", { name: "Loading site form" })
+      screen.getByRole("status", { name: "Loading object form" })
     ).toBeInTheDocument();
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 
   it("displays error when site loading fails", async () => {
-    vi.mocked(customersApi.getSite).mockRejectedValue(
-      new Error("Site not found")
+    vi.mocked(customersApi.getObject).mockRejectedValue(
+      new Error("object not found")
     );
 
     renderWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByText(/site not found/i)).toBeInTheDocument();
+      expect(screen.getByText(/object not found/i)).toBeInTheDocument();
     });
   });
 
@@ -288,17 +288,17 @@ describe("SiteEdit", () => {
     });
 
     const cancelButton = screen.getByRole("link", { name: /cancel/i });
-    expect(cancelButton).toHaveAttribute("href", "/sites/site-123");
+    expect(cancelButton).toHaveAttribute("href", "/objects/site-123");
   });
 
   it("handles optional contact fields", async () => {
     const siteWithoutContact = { ...mockSite, contact: undefined };
-    vi.mocked(customersApi.getSite).mockResolvedValue(siteWithoutContact);
-    vi.mocked(customersApi.updateSite).mockResolvedValue(mockUpdatedSite);
+    vi.mocked(customersApi.getObject).mockResolvedValue(siteWithoutContact);
+    vi.mocked(customersApi.updateObject).mockResolvedValue(mockUpdatedSite);
 
     renderWithRouter();
 
-    await screen.findByLabelText(/site name/i);
+    await screen.findByLabelText(/object name/i);
 
     // Add contact info
     fireEvent.change(screen.getByLabelText(/^name$/i), {
@@ -311,7 +311,7 @@ describe("SiteEdit", () => {
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
-      expect(customersApi.updateSite).toHaveBeenCalledWith(
+      expect(customersApi.updateObject).toHaveBeenCalledWith(
         "site-123",
         expect.objectContaining({
           contact: expect.objectContaining({
@@ -323,10 +323,10 @@ describe("SiteEdit", () => {
     });
   });
 
-  it("ignores a late-resolving fetch for the previous site after navigating between /sites/:id/edit routes", async () => {
-    // `renderWithRouter` hard-codes `/sites/site-123/edit` as the initial
+  it("ignores a late-resolving fetch for the previous site after navigating between /objects/:id/edit routes", async () => {
+    // `renderWithRouter` hard-codes `/objects/site-123/edit` as the initial
     // URL, so treat `site-123` as Site A and navigate to a fresh
-    // `site-B`. The default `customersApi.getSite` mock from
+    // `site-B`. The default `customersApi.getObject` mock from
     // `beforeEach` would resolve `site-123` immediately, so override it
     // here to keep that initial fetch pending.
     const siteA = {
@@ -343,9 +343,9 @@ describe("SiteEdit", () => {
     };
 
     let resolveSiteA:
-      | ((site: Awaited<ReturnType<typeof customersApi.getSite>>) => void)
+      | ((site: Awaited<ReturnType<typeof customersApi.getObject>>) => void)
       | undefined;
-    vi.mocked(customersApi.getSite).mockImplementation(async (id) => {
+    vi.mocked(customersApi.getObject).mockImplementation(async (id) => {
       if (id === "site-123") {
         return new Promise((resolve) => {
           resolveSiteA = resolve;
@@ -357,13 +357,13 @@ describe("SiteEdit", () => {
     renderWithRouter();
 
     await act(async () => {
-      window.history.pushState({}, "", "/sites/site-B/edit");
+      window.history.pushState({}, "", "/objects/site-B/edit");
       window.dispatchEvent(new PopStateEvent("popstate"));
       await Promise.resolve();
     });
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/site name/i)).toHaveValue("Site B");
+      expect(screen.getByLabelText(/object name/i)).toHaveValue("Site B");
     });
 
     // Late A resolution must NOT refill the form with Site A's data.
@@ -373,12 +373,12 @@ describe("SiteEdit", () => {
       await Promise.resolve();
     });
 
-    expect(screen.getByLabelText(/site name/i)).toHaveValue("Site B");
+    expect(screen.getByLabelText(/object name/i)).toHaveValue("Site B");
     expect(screen.queryByDisplayValue("Site A")).not.toBeInTheDocument();
   });
 
-  it("clears the previous site's form when navigating between /sites/:id/edit routes", async () => {
-    // `renderWithRouter` hard-codes `/sites/site-123/edit` as the initial
+  it("clears the previous site's form when navigating between /objects/:id/edit routes", async () => {
+    // `renderWithRouter` hard-codes `/objects/site-123/edit` as the initial
     // URL, so treat `site-123` as Site A here and navigate to a fresh
     // `site-B` to exercise the param-only route reuse path.
     const siteA = {
@@ -395,9 +395,9 @@ describe("SiteEdit", () => {
     };
 
     let resolveSiteB:
-      | ((site: Awaited<ReturnType<typeof customersApi.getSite>>) => void)
+      | ((site: Awaited<ReturnType<typeof customersApi.getObject>>) => void)
       | undefined;
-    vi.mocked(customersApi.getSite).mockImplementation(async (id) => {
+    vi.mocked(customersApi.getObject).mockImplementation(async (id) => {
       if (id === "site-123") {
         return siteA;
       }
@@ -409,7 +409,7 @@ describe("SiteEdit", () => {
     renderWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/site name/i)).toHaveValue("Site A");
+      expect(screen.getByLabelText(/object name/i)).toHaveValue("Site A");
     });
 
     // Param-only navigation: same route pattern, different `:id`. React
@@ -417,14 +417,14 @@ describe("SiteEdit", () => {
     // in-effect reset the previous site's form would stay visible and
     // submittable under the new URL until the new fetch resolved.
     await act(async () => {
-      window.history.pushState({}, "", "/sites/site-B/edit");
+      window.history.pushState({}, "", "/objects/site-B/edit");
       window.dispatchEvent(new PopStateEvent("popstate"));
       await Promise.resolve();
     });
 
     await waitFor(() => {
       expect(
-        screen.getByRole("status", { name: /loading site form/i })
+        screen.getByRole("status", { name: /loading object form/i })
       ).toBeInTheDocument();
     });
     expect(screen.queryByDisplayValue("Site A")).not.toBeInTheDocument();
@@ -435,17 +435,17 @@ describe("SiteEdit", () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/site name/i)).toHaveValue("Site B");
+      expect(screen.getByLabelText(/object name/i)).toHaveValue("Site B");
     });
   });
 
   it("preserves batched nested updates when saving", async () => {
-    vi.mocked(customersApi.updateSite).mockResolvedValue(mockUpdatedSite);
+    vi.mocked(customersApi.updateObject).mockResolvedValue(mockUpdatedSite);
 
     renderWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/object name/i)).toBeInTheDocument();
     });
 
     act(() => {
@@ -460,7 +460,7 @@ describe("SiteEdit", () => {
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
-      expect(customersApi.updateSite).toHaveBeenCalledWith(
+      expect(customersApi.updateObject).toHaveBeenCalledWith(
         "site-123",
         expect.objectContaining({
           address: expect.objectContaining({

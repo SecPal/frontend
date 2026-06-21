@@ -20,10 +20,12 @@ describe("getUserCapabilities", () => {
     expect(capabilities.settings).toBe(true);
     expect(capabilities.organization).toBe(true);
     expect(capabilities.customers).toBe(false);
+    expect(capabilities.objects).toBe(false);
     expect(capabilities.sites).toBe(false);
     expect(capabilities.employees).toBe(false);
     expect(capabilities.activityLogs).toBe(false);
     expect(capabilities.actions.customers.create).toBe(false);
+    expect(capabilities.actions.objects.update).toBe(false);
     expect(capabilities.actions.sites.update).toBe(false);
     expect(capabilities.actions.employees.activate).toBe(false);
   });
@@ -47,9 +49,11 @@ describe("getUserCapabilities", () => {
 
     expect(capabilities.organization).toBe(true);
     expect(capabilities.customers).toBe(true);
+    expect(capabilities.objects).toBe(true);
     expect(capabilities.sites).toBe(true);
     expect(capabilities.employees).toBe(true);
     expect(capabilities.actions.customers.create).toBe(true);
+    expect(capabilities.actions.objects.delete).toBe(true);
     expect(capabilities.actions.sites.delete).toBe(true);
     expect(capabilities.actions.employees.terminate).toBe(true);
   });
@@ -64,10 +68,12 @@ describe("getUserCapabilities", () => {
     });
 
     expect(capabilities.customers).toBe(true);
+    expect(capabilities.objects).toBe(true);
     expect(capabilities.sites).toBe(true);
     expect(capabilities.organization).toBe(false);
     expect(capabilities.employees).toBe(false);
     expect(capabilities.actions.customers.create).toBe(false);
+    expect(capabilities.actions.objects.create).toBe(false);
     expect(capabilities.actions.sites.create).toBe(false);
   });
 
@@ -81,6 +87,7 @@ describe("getUserCapabilities", () => {
     });
 
     expect(capabilities.customers).toBe(true);
+    expect(capabilities.objects).toBe(false);
     expect(capabilities.sites).toBe(false);
   });
 
@@ -94,6 +101,7 @@ describe("getUserCapabilities", () => {
     });
 
     expect(capabilities.customers).toBe(false);
+    expect(capabilities.objects).toBe(false);
     expect(capabilities.sites).toBe(false);
   });
 
@@ -109,8 +117,10 @@ describe("getUserCapabilities", () => {
     });
 
     expect(capabilities.customers).toBe(true);
+    expect(capabilities.objects).toBe(true);
     expect(capabilities.sites).toBe(true);
     expect(capabilities.actions.customers.create).toBe(false);
+    expect(capabilities.actions.objects.delete).toBe(false);
     expect(capabilities.actions.sites.delete).toBe(false);
   });
 
@@ -126,6 +136,9 @@ describe("getUserCapabilities", () => {
     expect(capabilities.actions.customers.create).toBe(true);
     expect(capabilities.actions.customers.update).toBe(false);
     expect(capabilities.actions.customers.delete).toBe(false);
+    expect(capabilities.actions.objects.create).toBe(false);
+    expect(capabilities.actions.objects.update).toBe(true);
+    expect(capabilities.actions.objects.delete).toBe(false);
     expect(capabilities.actions.sites.create).toBe(false);
     expect(capabilities.actions.sites.update).toBe(true);
     expect(capabilities.actions.sites.delete).toBe(false);

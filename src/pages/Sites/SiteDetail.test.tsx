@@ -35,7 +35,7 @@ function renderWithRouter() {
     <BrowserRouter>
       <I18nProvider i18n={i18n}>
         <Routes>
-          <Route path="/sites/:id" element={<SiteDetail />} />
+          <Route path="/objects/:id" element={<SiteDetail />} />
         </Routes>
       </I18nProvider>
     </BrowserRouter>
@@ -108,16 +108,16 @@ describe("SiteDetail", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    window.history.pushState({}, "", "/sites/site-123");
+    window.history.pushState({}, "", "/objects/site-123");
     mockUseUserCapabilities.mockReturnValue({
       actions: {
-        sites: { create: true, update: true, delete: true },
+        objects: { create: true, update: true, delete: true },
       },
     });
   });
 
   it("loads and displays site details with customer and org unit names", async () => {
-    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getObject).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
       mockOrgUnit
@@ -126,7 +126,7 @@ describe("SiteDetail", () => {
     renderWithRouter();
 
     await waitFor(() => {
-      expect(customersApi.getSite).toHaveBeenCalledWith("site-123");
+      expect(customersApi.getObject).toHaveBeenCalledWith("site-123");
     });
 
     // Check site details
@@ -147,29 +147,29 @@ describe("SiteDetail", () => {
   });
 
   it("keeps the detail frame visible while site data loads", () => {
-    vi.mocked(customersApi.getSite).mockImplementation(
+    vi.mocked(customersApi.getObject).mockImplementation(
       () =>
-        new Promise<Awaited<ReturnType<typeof customersApi.getSite>>>(() => {})
+        new Promise<Awaited<ReturnType<typeof customersApi.getObject>>>(() => {})
     );
 
     renderWithRouter();
 
-    expect(screen.getByRole("heading", { name: "Site" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Object" })).toBeInTheDocument();
     // Only the first section skeleton announces; the other two are
     // decorative so assistive tech does not stack identical "Loading
     // site details" live regions at the same time.
     expect(
-      screen.getAllByRole("status", { name: "Loading site details" })
+      screen.getAllByRole("status", { name: "Loading object details" })
     ).toHaveLength(1);
     expect(screen.getByRole("link", { name: /back to list/i })).toHaveAttribute(
       "href",
-      "/sites"
+      "/objects"
     );
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 
   it("renders site details while customer and org unit lookup data loads", async () => {
-    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getObject).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockImplementation(
       () =>
         new Promise<Awaited<ReturnType<typeof customersApi.getCustomer>>>(
@@ -190,13 +190,13 @@ describe("SiteDetail", () => {
     expect(await screen.findByText("Munich Office")).toBeInTheDocument();
     expect(screen.getByText("SITE-2025-001")).toBeInTheDocument();
     expect(
-      screen.getByRole("status", { name: "Loading site lookup data" })
+      screen.getByRole("status", { name: "Loading object lookup data" })
     ).toBeInTheDocument();
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 
   it("displays badges for site type and status", async () => {
-    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getObject).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
       mockOrgUnit
@@ -213,7 +213,7 @@ describe("SiteDetail", () => {
 
   it("shows expired badge when site is expired", async () => {
     const expiredSite = { ...mockSite, is_expired: true };
-    vi.mocked(customersApi.getSite).mockResolvedValue(expiredSite);
+    vi.mocked(customersApi.getObject).mockResolvedValue(expiredSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
       mockOrgUnit
@@ -227,7 +227,7 @@ describe("SiteDetail", () => {
   });
 
   it("displays contact information", async () => {
-    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getObject).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
       mockOrgUnit
@@ -260,7 +260,7 @@ describe("SiteDetail", () => {
         phone: "+49?suffix=evil",
       },
     };
-    vi.mocked(customersApi.getSite).mockResolvedValue(unsafeSite);
+    vi.mocked(customersApi.getObject).mockResolvedValue(unsafeSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
       mockOrgUnit
@@ -278,7 +278,7 @@ describe("SiteDetail", () => {
   });
 
   it("shows edit and delete buttons", async () => {
-    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getObject).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
       mockOrgUnit
@@ -295,7 +295,7 @@ describe("SiteDetail", () => {
 
   it("opens delete confirmation dialog", async () => {
     const user = userEvent.setup();
-    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getObject).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
       mockOrgUnit
@@ -316,12 +316,12 @@ describe("SiteDetail", () => {
 
   it("deletes site and navigates to list", async () => {
     const user = userEvent.setup();
-    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getObject).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
       mockOrgUnit
     );
-    vi.mocked(customersApi.deleteSite).mockResolvedValue(undefined);
+    vi.mocked(customersApi.deleteObject).mockResolvedValue(undefined);
 
     renderWithRouter();
 
@@ -347,25 +347,25 @@ describe("SiteDetail", () => {
     await user.click(confirmButton!);
 
     await waitFor(() => {
-      expect(customersApi.deleteSite).toHaveBeenCalledWith("site-123");
-      expect(mockNavigate).toHaveBeenCalledWith("/sites");
+      expect(customersApi.deleteObject).toHaveBeenCalledWith("site-123");
+      expect(mockNavigate).toHaveBeenCalledWith("/objects");
     });
   });
 
   it("displays error when site loading fails", async () => {
-    vi.mocked(customersApi.getSite).mockRejectedValue(
-      new Error("Failed to load site")
+    vi.mocked(customersApi.getObject).mockRejectedValue(
+      new Error("Failed to load object")
     );
 
     renderWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to load site/i)).toBeInTheDocument();
+      expect(screen.getByText(/failed to load object/i)).toBeInTheDocument();
     });
   });
 
   it("falls back to IDs when customer or org unit loading fails", async () => {
-    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getObject).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockRejectedValue(
       new Error("Failed to load customer")
     );
@@ -376,7 +376,7 @@ describe("SiteDetail", () => {
     renderWithRouter();
 
     await waitFor(() => {
-      // Site name should still be displayed
+      // object name should still be displayed
       expect(screen.getByText("Munich Office")).toBeInTheDocument();
     });
 
@@ -388,10 +388,10 @@ describe("SiteDetail", () => {
   it("hides edit and delete actions without site management capabilities", async () => {
     mockUseUserCapabilities.mockReturnValue({
       actions: {
-        sites: { create: false, update: false, delete: false },
+        objects: { create: false, update: false, delete: false },
       },
     });
-    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getObject).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
       mockOrgUnit
@@ -411,7 +411,7 @@ describe("SiteDetail", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("ignores a late-resolving fetch for the previous site after navigating between /sites/:id routes", async () => {
+  it("ignores a late-resolving fetch for the previous site after navigating between /objects/:id routes", async () => {
     const siteA = {
       ...mockSite,
       id: "site-A",
@@ -426,9 +426,9 @@ describe("SiteDetail", () => {
     };
 
     let resolveSiteA:
-      | ((site: Awaited<ReturnType<typeof customersApi.getSite>>) => void)
+      | ((site: Awaited<ReturnType<typeof customersApi.getObject>>) => void)
       | undefined;
-    vi.mocked(customersApi.getSite).mockImplementation(async (id) => {
+    vi.mocked(customersApi.getObject).mockImplementation(async (id) => {
       if (id === "site-A") {
         return new Promise((resolve) => {
           resolveSiteA = resolve;
@@ -441,11 +441,11 @@ describe("SiteDetail", () => {
       mockOrgUnit
     );
 
-    window.history.pushState({}, "", "/sites/site-A");
+    window.history.pushState({}, "", "/objects/site-A");
     renderWithRouter();
 
     await act(async () => {
-      window.history.pushState({}, "", "/sites/site-B");
+      window.history.pushState({}, "", "/objects/site-B");
       window.dispatchEvent(new PopStateEvent("popstate"));
       await Promise.resolve();
     });

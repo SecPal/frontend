@@ -27,6 +27,10 @@ const { mockRouteModuleLoaders } = vi.hoisted(() => {
       customerCreate: createLoader(),
       customerDetail: createLoader(),
       customerEdit: createLoader(),
+      objects: createLoader(),
+      objectCreate: createLoader(),
+      objectDetail: createLoader(),
+      objectEdit: createLoader(),
       sites: createLoader(),
       siteCreate: createLoader(),
       siteDetail: createLoader(),
@@ -75,6 +79,11 @@ describe("usePrefetch route strategy", () => {
       apiPaths: ["/v1/customers?page=1&per_page=15"],
     });
 
+    expect(getRoutePrefetchPlan("/objects")).toEqual({
+      routeModules: ["objects"],
+      apiPaths: ["/v1/sites?page=1&per_page=15"],
+    });
+
     expect(getRoutePrefetchPlan("/employees")).toEqual({
       routeModules: ["employeeList"],
       apiPaths: [
@@ -90,8 +99,8 @@ describe("usePrefetch route strategy", () => {
       apiPaths: ["/v1/customers/customer-123"],
     });
 
-    expect(getRoutePrefetchPlan("/sites/site-123/edit")).toEqual({
-      routeModules: ["siteEdit"],
+    expect(getRoutePrefetchPlan("/objects/site-123/edit")).toEqual({
+      routeModules: ["objectEdit"],
       apiPaths: ["/v1/sites/site-123", "/v1/organizational-units?per_page=100"],
     });
 
@@ -101,14 +110,14 @@ describe("usePrefetch route strategy", () => {
     });
   });
 
-  it("aligns site-create org-units prefetch with the page's listOrganizationalUnits({ per_page: 100 }) call", () => {
-    expect(getRoutePrefetchPlan("/sites/new")).toEqual({
-      routeModules: ["siteCreate"],
+  it("aligns object-create org-units prefetch with the page's listOrganizationalUnits({ per_page: 100 }) call", () => {
+    expect(getRoutePrefetchPlan("/objects/new")).toEqual({
+      routeModules: ["objectCreate"],
       apiPaths: ["/v1/organizational-units?per_page=100"],
     });
 
-    expect(getRoutePrefetchPlan("/sites/new/customer/customer-123")).toEqual({
-      routeModules: ["siteCreate"],
+    expect(getRoutePrefetchPlan("/objects/new/customer/customer-123")).toEqual({
+      routeModules: ["objectCreate"],
       apiPaths: [
         "/v1/customers/customer-123",
         "/v1/organizational-units?per_page=100",
@@ -130,6 +139,21 @@ describe("usePrefetch route strategy", () => {
         headers: { Accept: "application/json" },
       })
     );
+  });
+
+  it("prefetches legacy site routes through object route modules", () => {
+    expect(getRoutePrefetchPlan("/sites/site-123")).toEqual({
+      routeModules: ["objectDetail"],
+      apiPaths: ["/v1/sites/site-123"],
+    });
+
+    expect(getRoutePrefetchPlan("/sites/new/customer/customer-123")).toEqual({
+      routeModules: ["objectCreate"],
+      apiPaths: [
+        "/v1/customers/customer-123",
+        "/v1/organizational-units?per_page=100",
+      ],
+    });
   });
 
   it("does not mark an API path as completed when the response is not ok", async () => {

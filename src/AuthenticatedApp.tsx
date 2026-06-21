@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { lazy, Suspense } from "react";
-import { Link, Navigate, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { Trans } from "@lingui/react/macro";
 import { ApplicationLayout } from "./components/application-layout";
 import {
@@ -34,10 +34,10 @@ const CustomersPage = lazy(routeModuleLoaders.customers);
 const CustomerCreate = lazy(routeModuleLoaders.customerCreate);
 const CustomerDetail = lazy(routeModuleLoaders.customerDetail);
 const CustomerEdit = lazy(routeModuleLoaders.customerEdit);
-const SitesPage = lazy(routeModuleLoaders.sites);
-const SiteCreate = lazy(routeModuleLoaders.siteCreate);
-const SiteDetail = lazy(routeModuleLoaders.siteDetail);
-const SiteEdit = lazy(routeModuleLoaders.siteEdit);
+const ObjectsPage = lazy(routeModuleLoaders.objects);
+const ObjectCreate = lazy(routeModuleLoaders.objectCreate);
+const ObjectDetail = lazy(routeModuleLoaders.objectDetail);
+const ObjectEdit = lazy(routeModuleLoaders.objectEdit);
 const ActivityLogList = lazy(routeModuleLoaders.activityLogs);
 const AndroidProvisioningPage = lazy(routeModuleLoaders.androidProvisioning);
 
@@ -88,6 +88,19 @@ function HiddenAppRouteState() {
       <RouteNotFoundState />
     </ApplicationLayout>
   );
+}
+
+function LegacySiteRouteRedirect({ suffix = "" }: { suffix?: string }) {
+  const { id } = useParams<{ id: string }>();
+
+  return <Navigate to={`/objects/${id ?? ""}${suffix}`} replace />;
+}
+
+function LegacyCustomerSiteRouteRedirect({ create }: { create?: boolean }) {
+  const { customerId } = useParams<{ customerId: string }>();
+  const prefix = create ? "/objects/new/customer" : "/objects/customer";
+
+  return <Navigate to={`${prefix}/${customerId ?? ""}`} replace />;
 }
 
 function AppLayoutRoute({ children }: { children: React.ReactNode }) {
@@ -202,22 +215,93 @@ export default function AuthenticatedApp() {
             }
           />
           <Route
+            path="/objects"
+            element={
+              <AppFeatureRoute feature="objects">
+                <ApplicationLayout>
+                  <ObjectsPage />
+                </ApplicationLayout>
+              </AppFeatureRoute>
+            }
+          />
+          <Route
+            path="/objects/customer/:customerId"
+            element={
+              <AppFeatureRoute feature="objects">
+                <ApplicationLayout>
+                  <ObjectsPage />
+                </ApplicationLayout>
+              </AppFeatureRoute>
+            }
+          />
+          <Route
+            path="/objects/new"
+            element={
+              <AppFeatureRoute
+                feature="objects"
+                requiredAction={(capabilities) =>
+                  capabilities.actions.objects.create
+                }
+              >
+                <ApplicationLayout>
+                  <ObjectCreate />
+                </ApplicationLayout>
+              </AppFeatureRoute>
+            }
+          />
+          <Route
+            path="/objects/new/customer/:customerId"
+            element={
+              <AppFeatureRoute
+                feature="objects"
+                requiredAction={(capabilities) =>
+                  capabilities.actions.objects.create
+                }
+              >
+                <ApplicationLayout>
+                  <ObjectCreate />
+                </ApplicationLayout>
+              </AppFeatureRoute>
+            }
+          />
+          <Route
+            path="/objects/:id"
+            element={
+              <AppFeatureRoute feature="objects">
+                <ApplicationLayout>
+                  <ObjectDetail />
+                </ApplicationLayout>
+              </AppFeatureRoute>
+            }
+          />
+          <Route
+            path="/objects/:id/edit"
+            element={
+              <AppFeatureRoute
+                feature="objects"
+                requiredAction={(capabilities) =>
+                  capabilities.actions.objects.update
+                }
+              >
+                <ApplicationLayout>
+                  <ObjectEdit />
+                </ApplicationLayout>
+              </AppFeatureRoute>
+            }
+          />
+          <Route
             path="/sites"
             element={
-              <AppFeatureRoute feature="sites">
-                <ApplicationLayout>
-                  <SitesPage />
-                </ApplicationLayout>
+              <AppFeatureRoute feature="objects">
+                <Navigate to="/objects" replace />
               </AppFeatureRoute>
             }
           />
           <Route
             path="/sites/customer/:customerId"
             element={
-              <AppFeatureRoute feature="sites">
-                <ApplicationLayout>
-                  <SitesPage />
-                </ApplicationLayout>
+              <AppFeatureRoute feature="objects">
+                <LegacyCustomerSiteRouteRedirect />
               </AppFeatureRoute>
             }
           />
@@ -225,14 +309,12 @@ export default function AuthenticatedApp() {
             path="/sites/new"
             element={
               <AppFeatureRoute
-                feature="sites"
+                feature="objects"
                 requiredAction={(capabilities) =>
-                  capabilities.actions.sites.create
+                  capabilities.actions.objects.create
                 }
               >
-                <ApplicationLayout>
-                  <SiteCreate />
-                </ApplicationLayout>
+                <Navigate to="/objects/new" replace />
               </AppFeatureRoute>
             }
           />
@@ -240,14 +322,12 @@ export default function AuthenticatedApp() {
             path="/sites/new/customer/:customerId"
             element={
               <AppFeatureRoute
-                feature="sites"
+                feature="objects"
                 requiredAction={(capabilities) =>
-                  capabilities.actions.sites.create
+                  capabilities.actions.objects.create
                 }
               >
-                <ApplicationLayout>
-                  <SiteCreate />
-                </ApplicationLayout>
+                <LegacyCustomerSiteRouteRedirect create />
               </AppFeatureRoute>
             }
           />
@@ -264,10 +344,8 @@ export default function AuthenticatedApp() {
           <Route
             path="/sites/:id"
             element={
-              <AppFeatureRoute feature="sites">
-                <ApplicationLayout>
-                  <SiteDetail />
-                </ApplicationLayout>
+              <AppFeatureRoute feature="objects">
+                <LegacySiteRouteRedirect />
               </AppFeatureRoute>
             }
           />
@@ -275,14 +353,12 @@ export default function AuthenticatedApp() {
             path="/sites/:id/edit"
             element={
               <AppFeatureRoute
-                feature="sites"
+                feature="objects"
                 requiredAction={(capabilities) =>
-                  capabilities.actions.sites.update
+                  capabilities.actions.objects.update
                 }
               >
-                <ApplicationLayout>
-                  <SiteEdit />
-                </ApplicationLayout>
+                <LegacySiteRouteRedirect suffix="/edit" />
               </AppFeatureRoute>
             }
           />
