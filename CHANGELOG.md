@@ -47,6 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Made service-worker explicit logout redirects resilient across multiple open app windows: protected clients are redirected to `/login` independently, so a failed `WindowClient.navigate()` call is logged without blocking remaining protected clients from being redirected, and the per-client failure log now redacts query strings and fragments from the client URL.
+
 - Fixed service-worker notification click handler to focus an existing app window when its pathname matches the notification target URL, then navigate it to the full target URL (including query and hash). The handler previously only matched on `pathname` without navigating the window to the specific deep-link, and an intermediate refactor erroneously required an exact `pathname + search + hash` match which prevented focusing any window already open on the same page. The push-notification data builder now also correctly makes the top-level `url` field authoritative over any `url` key nested inside the `data` sub-object.
 
 - Eliminated the gap that appeared below the footer on iOS Safari and PWA standalone installs by adding `viewport-fit=cover` to the viewport meta tag and replacing hardcoded `min-h-dvh` / `min-h: 100vh` values with CSS custom properties (`--app-shell-min-height`, `--app-auth-card-min-height`, `--app-footer-padding-bottom`) that select `100svh` as a baseline, upgrade to `100dvh` where supported, revert to `100svh` in standalone mode, and include `env(safe-area-inset-bottom)` padding on footer elements.
