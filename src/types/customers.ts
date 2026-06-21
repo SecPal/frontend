@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
@@ -111,9 +111,9 @@ export interface Site {
 
 export interface CreateSiteRequest {
   customer_id: string;
-  organizational_unit_id?: string;
+  organizational_unit_id: string;
   name: string;
-  type?: SiteType;
+  type: SiteType;
   address: Address;
   contact?: Contact | null;
   access_instructions?: string | null;

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
@@ -13,12 +13,15 @@ import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { FormSkeleton } from "@/ui";
 import { createSite, listCustomers } from "../../services/customersApi";
+import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type {
   CreateSiteRequest,
   Address,
   Contact,
+  SiteType,
   Customer,
 } from "../../types/customers";
+import type { OrganizationalUnit } from "../../types/organizational";
 import {
   Alert,
   AlertDescription,
@@ -45,11 +48,14 @@ export default function SiteCreate() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [orgUnits, setOrgUnits] = useState<OrganizationalUnit[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
   const [formData, setFormData] = useState<CreateSiteRequest>({
     customer_id: customerId || "",
+    organizational_unit_id: "",
     name: "",
+    type: "permanent",
     address: {
       street: "",
       city: "",
@@ -63,8 +69,12 @@ export default function SiteCreate() {
     async function loadData() {
       setLoadingData(true);
       try {
-        const customersData = await listCustomers({ per_page: 100 });
+        const [customersData, orgUnitsData] = await Promise.all([
+          listCustomers({ per_page: 100 }),
+          listOrganizationalUnits({ per_page: 100 }),
+        ]);
         setCustomers(customersData.data);
+        setOrgUnits(orgUnitsData.data);
       } catch (err) {
         setError(
           err instanceof Error
@@ -115,7 +125,9 @@ export default function SiteCreate() {
       // Clean up the data before sending
       const dataToSend: CreateSiteRequest = {
         customer_id: formData.customer_id,
+        organizational_unit_id: formData.organizational_unit_id,
         name: formData.name,
+        type: formData.type,
         address: formData.address,
       };
 
@@ -153,7 +165,10 @@ export default function SiteCreate() {
             <Trans>New Site</Trans>
           </PageTitle>
         </div>
-        <FormSkeleton loadingLabel={_(msg`Loading customers`)} fields={7} />
+        <FormSkeleton
+          loadingLabel={_(msg`Loading site lookup data`)}
+          fields={10}
+        />
       </div>
     );
   }
@@ -210,6 +225,48 @@ export default function SiteCreate() {
           </Field>
 
           <Field>
+            <FieldLabel htmlFor="site-organizational-unit">
+              <Trans>Organizational Unit</Trans> *
+            </FieldLabel>
+            <Select
+              name="organizational_unit_id"
+              required
+              value={formData.organizational_unit_id}
+              onValueChange={(value) =>
+                updateField("organizational_unit_id", value)
+              }
+            >
+              <SelectTrigger
+                id="site-organizational-unit"
+                aria-invalid={
+                  fieldErrors.organizational_unit_id ? true : undefined
+                }
+                aria-describedby={
+                  fieldErrors.organizational_unit_id
+                    ? "site-organizational-unit-error"
+                    : undefined
+                }
+              >
+                <SelectValue
+                  placeholder={_(msg`Select organizational unit...`)}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {orgUnits.map((unit) => (
+                  <SelectItem key={unit.id} value={unit.id}>
+                    {unit.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {fieldErrors.organizational_unit_id && (
+              <FieldError id="site-organizational-unit-error">
+                {fieldErrors.organizational_unit_id.join(", ")}
+              </FieldError>
+            )}
+          </Field>
+
+          <Field>
             <FieldLabel htmlFor="site-name">
               <Trans>Site Name</Trans> *
             </FieldLabel>
@@ -230,6 +287,26 @@ export default function SiteCreate() {
                 {fieldErrors.name.join(", ")}
               </FieldError>
             )}
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="site-type">
+              <Trans>Type</Trans> *
+            </FieldLabel>
+            <Select
+              name="type"
+              required
+              value={formData.type}
+              onValueChange={(value) => updateField("type", value as SiteType)}
+            >
+              <SelectTrigger id="site-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="permanent">{_(msg`Permanent`)}</SelectItem>
+                <SelectItem value="temporary">{_(msg`Temporary`)}</SelectItem>
+              </SelectContent>
+            </Select>
           </Field>
         </FieldGroup>
 

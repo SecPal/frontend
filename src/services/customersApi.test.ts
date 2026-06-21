@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -414,7 +414,9 @@ describe("customersApi", () => {
     it("creates a site with the Objekt MVP payload", async () => {
       const siteData = {
         customer_id: "customer-123",
+        organizational_unit_id: "internal-default-unit",
         name: "Objekt Alpha",
+        type: "permanent" as const,
         address: minimalAddress,
         contact: {
           name: "Erika Mustermann",
@@ -428,8 +430,6 @@ describe("customersApi", () => {
           data: {
             id: "site-123",
             site_number: "OBJ-2026-0001",
-            organizational_unit_id: "internal-default-unit",
-            type: "permanent",
             is_active: true,
             is_expired: false,
             full_address: "Objektstrasse 1, 10115 Berlin, DE",
@@ -528,7 +528,9 @@ describe("customersApi", () => {
       await expect(
         createSite({
           customer_id: "",
+          organizational_unit_id: "",
           name: "",
+          type: "permanent",
           address: {
             street: "",
             city: "",

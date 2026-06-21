@@ -97,6 +97,7 @@ msgstr "Adding passkey..."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/Organization/OrganizationPage.tsx
+#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Type"
 msgstr "Type"
@@ -1371,10 +1372,6 @@ msgstr "You can upload now or continue and add this document later before final 
 msgid "Edit phone"
 msgstr "Edit phone"
 
-#: src/pages/Sites/SiteCreate.tsx
-msgid "Loading customers"
-msgstr "Loading customers"
-
 #. placeholder {0}: pagination.current_page
 #. placeholder {1}: pagination.last_page
 #: src/pages/ActivityLog/ActivityLogList.tsx
@@ -2177,6 +2174,7 @@ msgstr "Welcome to SecPal"
 msgid "Minijob"
 msgstr "Minijob"
 
+#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Loading site lookup data"
 msgstr "Loading site lookup data"
@@ -2462,6 +2460,7 @@ msgstr "AGPL v3+"
 msgid "Hash Chain (Data)"
 msgstr "Hash Chain (Data)"
 
+#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Temporary"
@@ -2501,6 +2500,7 @@ msgstr "Authentication"
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Employees/EmployeeList.tsx
+#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Organizational Unit"
 msgstr "Organizational Unit"
@@ -2525,6 +2525,7 @@ msgstr "Failed to create site"
 msgid "Regenerate recovery codes"
 msgstr "Regenerate recovery codes"
 
+#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Permanent"
@@ -3572,6 +3573,10 @@ msgstr "Deleting organizational units is not possible while offline. Please reco
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Password must include both uppercase and lowercase letters"
 msgstr "Password must include both uppercase and lowercase letters"
+
+#: src/pages/Sites/SiteCreate.tsx
+msgid "Select organizational unit..."
+msgstr "Select organizational unit..."
 
 #. placeholder {0}: unit.name
 #: src/pages/Organization/OrganizationPage.tsx

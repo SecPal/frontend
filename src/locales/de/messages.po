@@ -97,6 +97,7 @@ msgstr "Passkey wird hinzugefügt..."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/Organization/OrganizationPage.tsx
+#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Type"
 msgstr "Typ"
@@ -1371,10 +1372,6 @@ msgstr "Sie können jetzt hochladen oder fortfahren und dieses Dokument später 
 msgid "Edit phone"
 msgstr "Telefon bearbeiten"
 
-#: src/pages/Sites/SiteCreate.tsx
-msgid "Loading customers"
-msgstr "Kunden werden geladen"
-
 #. placeholder {0}: pagination.current_page
 #. placeholder {1}: pagination.last_page
 #: src/pages/ActivityLog/ActivityLogList.tsx
@@ -2177,6 +2174,7 @@ msgstr "Willkommen bei SecPal"
 msgid "Minijob"
 msgstr "Minijob"
 
+#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Loading site lookup data"
 msgstr "Objekt-Stammdaten werden geladen"
@@ -2462,6 +2460,7 @@ msgstr "AGPL v3+"
 msgid "Hash Chain (Data)"
 msgstr "Hash-Kette (Daten)"
 
+#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Temporary"
@@ -2501,6 +2500,7 @@ msgstr "Authentifizierung"
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Employees/EmployeeList.tsx
+#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Organizational Unit"
 msgstr "Organisatorische Einheit"
@@ -2525,6 +2525,7 @@ msgstr "Objekt konnte nicht erstellt werden"
 msgid "Regenerate recovery codes"
 msgstr "Wiederherstellungscodes neu generieren"
 
+#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Permanent"
@@ -3572,6 +3573,10 @@ msgstr "Das Löschen von Organisationseinheiten ist im Offline-Modus nicht mögl
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Password must include both uppercase and lowercase letters"
 msgstr "Das Passwort muss Groß- und Kleinbuchstaben enthalten"
+
+#: src/pages/Sites/SiteCreate.tsx
+msgid "Select organizational unit..."
+msgstr "Organisationseinheit auswählen..."
 
 #. placeholder {0}: unit.name
 #: src/pages/Organization/OrganizationPage.tsx
