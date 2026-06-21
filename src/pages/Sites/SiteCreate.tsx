@@ -521,11 +521,7 @@ export default function SiteCreate() {
         {/* Actions */}
         <div className="flex gap-4 pt-4 border-t">
           <Button type="submit" disabled={loading}>
-            {loading ? (
-              <Trans>Creating...</Trans>
-            ) : (
-              <Trans>Create Site</Trans>
-            )}
+            {loading ? <Trans>Creating...</Trans> : <Trans>Create Site</Trans>}
           </Button>
           <LinkButton to="/sites" variant="outline">
             <Trans>Cancel</Trans>

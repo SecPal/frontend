@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
@@ -282,10 +288,9 @@ describe("SiteCreate", () => {
 
       await waitFor(() => {
         expect(customersApi.createSite).toHaveBeenCalled();
-        expect(screen.getByRole("combobox", { name: /customer/i })).toHaveAttribute(
-          "aria-describedby",
-          "site-customer-error"
-        );
+        expect(
+          screen.getByRole("combobox", { name: /customer/i })
+        ).toHaveAttribute("aria-describedby", "site-customer-error");
         expect(screen.getByLabelText(/site name/i)).toHaveAttribute(
           "aria-describedby",
           "site-name-error"

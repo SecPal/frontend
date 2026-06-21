@@ -383,7 +383,7 @@ describe("SitesPage", () => {
   it("hides stale customer rows while a new customer-scoped request is loading", async () => {
     vi.mocked(customersApi.listSites)
       .mockResolvedValueOnce({
-        data: [mockSites[0]],
+        data: [mockSites[0]!],
         meta: {
           current_page: 1,
           last_page: 2,
