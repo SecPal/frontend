@@ -97,7 +97,6 @@ msgstr "Passkey wird hinzugefügt..."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/Organization/OrganizationPage.tsx
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Type"
@@ -139,7 +138,6 @@ msgstr "Um einem Mitarbeiter den Dienstgrad zu entziehen, muss der Benutzer die 
 msgid "Still loading your secure session"
 msgstr "Ihre sichere Sitzung wird noch geladen"
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Valid Until"
@@ -191,7 +189,6 @@ msgstr "Browser-Benachrichtigungen aktivieren"
 #: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Notes"
@@ -839,7 +836,6 @@ msgstr "Anmeldeformular"
 msgid "Pre-Contract is the only status that allows onboarding invitations."
 msgstr "Der Vorvertragsstatus ist der einzige Status, der Einladungen zum Onboarding erlaubt."
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Valid From"
@@ -1325,7 +1321,6 @@ msgstr "Geben Sie das Ablaufdatum an, wenn der Aufenthaltstitel befristet ist."
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
 #: src/pages/Employees/EmployeeStatusOptions.tsx
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 #: src/pages/Sites/SitesPage.tsx
@@ -1376,6 +1371,10 @@ msgstr "Sie können jetzt hochladen oder fortfahren und dieses Dokument später 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Edit phone"
 msgstr "Telefon bearbeiten"
+
+#: src/pages/Sites/SiteCreate.tsx
+msgid "Loading customers"
+msgstr "Kunden werden geladen"
 
 #. placeholder {0}: pagination.current_page
 #. placeholder {1}: pagination.last_page
@@ -1816,7 +1815,6 @@ msgstr "Passkey konnte nicht registriert werden."
 msgid "View"
 msgstr "Anzeigen"
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Validity Period"
@@ -2181,7 +2179,6 @@ msgstr "Willkommen bei SecPal"
 msgid "Minijob"
 msgstr "Minijob"
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Loading site lookup data"
 msgstr "Objekt-Stammdaten werden geladen"
@@ -2467,7 +2464,6 @@ msgstr "AGPL v3+"
 msgid "Hash Chain (Data)"
 msgstr "Hash-Kette (Daten)"
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 #: src/pages/Sites/SitesPage.tsx
@@ -2508,7 +2504,6 @@ msgstr "Authentifizierung"
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Employees/EmployeeList.tsx
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Organizational Unit"
@@ -2534,7 +2529,6 @@ msgstr "Objekt konnte nicht erstellt werden"
 msgid "Regenerate recovery codes"
 msgstr "Wiederherstellungscodes neu generieren"
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 #: src/pages/Sites/SitesPage.tsx
@@ -2785,7 +2779,6 @@ msgstr "Aktiviert"
 msgid "Files can only be uploaded while this onboarding step is still editable."
 msgstr "Dateien können nur hochgeladen werden, solange dieser Onboarding-Schritt noch bearbeitbar ist."
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Access Instructions"
@@ -3586,7 +3579,6 @@ msgstr "Das Löschen von Organisationseinheiten ist im Offline-Modus nicht mögl
 msgid "Password must include both uppercase and lowercase letters"
 msgstr "Das Passwort muss Groß- und Kleinbuchstaben enthalten"
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Select organizational unit..."
 msgstr "Organisationseinheit auswählen..."

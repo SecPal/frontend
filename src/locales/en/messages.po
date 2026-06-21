@@ -97,7 +97,6 @@ msgstr "Adding passkey..."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/Organization/OrganizationPage.tsx
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Type"
@@ -139,7 +138,6 @@ msgstr "To remove rank from employee, user must have permission to assign that r
 msgid "Still loading your secure session"
 msgstr "Still loading your secure session"
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Valid Until"
@@ -191,7 +189,6 @@ msgstr "Enable browser notifications"
 #: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Notes"
@@ -839,7 +836,6 @@ msgstr "Login form"
 msgid "Pre-Contract is the only status that allows onboarding invitations."
 msgstr "Pre-Contract is the only status that allows onboarding invitations."
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Valid From"
@@ -1325,7 +1321,6 @@ msgstr "Enter the expiry date if the residence title is limited."
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
 #: src/pages/Employees/EmployeeStatusOptions.tsx
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 #: src/pages/Sites/SitesPage.tsx
@@ -1376,6 +1371,10 @@ msgstr "You can upload now or continue and add this document later before final 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Edit phone"
 msgstr "Edit phone"
+
+#: src/pages/Sites/SiteCreate.tsx
+msgid "Loading customers"
+msgstr "Loading customers"
 
 #. placeholder {0}: pagination.current_page
 #. placeholder {1}: pagination.last_page
@@ -1816,7 +1815,6 @@ msgstr "Failed to register passkey."
 msgid "View"
 msgstr "View"
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Validity Period"
@@ -2181,7 +2179,6 @@ msgstr "Welcome to SecPal"
 msgid "Minijob"
 msgstr "Minijob"
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Loading site lookup data"
 msgstr "Loading site lookup data"
@@ -2467,7 +2464,6 @@ msgstr "AGPL v3+"
 msgid "Hash Chain (Data)"
 msgstr "Hash Chain (Data)"
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 #: src/pages/Sites/SitesPage.tsx
@@ -2508,7 +2504,6 @@ msgstr "Authentication"
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Employees/EmployeeList.tsx
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Organizational Unit"
@@ -2534,7 +2529,6 @@ msgstr "Failed to create site"
 msgid "Regenerate recovery codes"
 msgstr "Regenerate recovery codes"
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 #: src/pages/Sites/SitesPage.tsx
@@ -2785,7 +2779,6 @@ msgstr "Enabled"
 msgid "Files can only be uploaded while this onboarding step is still editable."
 msgstr "Files can only be uploaded while this onboarding step is still editable."
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Access Instructions"
@@ -3586,7 +3579,6 @@ msgstr "Deleting organizational units is not possible while offline. Please reco
 msgid "Password must include both uppercase and lowercase letters"
 msgstr "Password must include both uppercase and lowercase letters"
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Select organizational unit..."
 msgstr "Select organizational unit..."
