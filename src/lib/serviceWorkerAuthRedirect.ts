@@ -30,6 +30,15 @@ export function shouldRedirectLoggedOutNavigation(
   return !PUBLIC_LOGGED_OUT_PATHS.has(normalizedPathname);
 }
 
+function redactClientUrlForLog(clientUrl: string): string {
+  try {
+    const { origin, pathname } = new URL(clientUrl);
+    return `${origin}${pathname}`;
+  } catch {
+    return "[invalid-client-url]";
+  }
+}
+
 export async function redirectProtectedWindowClientsToLogin(
   windowClients: readonly RedirectableWindowClient[],
   origin: string,
@@ -50,7 +59,7 @@ export async function redirectProtectedWindowClientsToLogin(
         return "redirected" as const;
       } catch (error) {
         logger.error("[SW] Failed to redirect protected client to login:", {
-          clientUrl: client.url,
+          clientUrl: redactClientUrlForLog(client.url),
           error,
         });
         return "failed" as const;

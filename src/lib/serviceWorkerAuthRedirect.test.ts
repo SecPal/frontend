@@ -120,5 +120,34 @@ describe("serviceWorkerAuthRedirect", () => {
       );
       expect(summary).toEqual({ redirected: 1, skipped: 1, failed: 1 });
     });
+
+    it("redacts query strings and fragments from logged client URLs", async () => {
+      const logger = {
+        error: vi.fn<Console["error"]>(),
+        warn: vi.fn<Console["warn"]>(),
+      };
+      const failedNavigate = vi
+        .fn<RedirectableWindowClient["navigate"]>()
+        .mockRejectedValue(new Error("navigation failed"));
+
+      await redirectProtectedWindowClientsToLogin(
+        [
+          createWindowClient(
+            "https://app.secpal.dev/reports?token=secret#filters",
+            failedNavigate
+          ),
+        ],
+        "https://app.secpal.dev",
+        logger
+      );
+
+      expect(logger.error).toHaveBeenCalledWith(
+        "[SW] Failed to redirect protected client to login:",
+        expect.objectContaining({
+          clientUrl: "https://app.secpal.dev/reports",
+          error: expect.any(Error),
+        })
+      );
+    });
   });
 });
