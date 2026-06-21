@@ -9,6 +9,8 @@ import {
   getCustomer,
   createCustomer,
   updateCustomer,
+  createSite,
+  updateSite,
   deleteCustomer,
 } from "./customersApi";
 import * as csrf from "./csrf";
@@ -395,6 +397,179 @@ describe("customersApi", () => {
           }),
         })
       );
+    });
+  });
+
+  describe("site write model", () => {
+    const minimalAddress = {
+      street: "Objektstrasse 1",
+      city: "Berlin",
+      postal_code: "10115",
+      country: "DE",
+    };
+
+    it("creates a site with the Objekt MVP payload", async () => {
+      const siteData = {
+        customer_id: "customer-123",
+        name: "Objekt Alpha",
+        address: minimalAddress,
+        contact: {
+          name: "Erika Mustermann",
+          email: "erika@example.test",
+        },
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: {
+            id: "site-123",
+            site_number: "OBJ-2026-0001",
+            organizational_unit_id: "internal-default-unit",
+            type: "permanent",
+            is_active: true,
+            is_expired: false,
+            full_address: "Objektstrasse 1, 10115 Berlin, DE",
+            created_at: "2026-06-21T00:00:00Z",
+            updated_at: "2026-06-21T00:00:00Z",
+            ...siteData,
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await createSite(siteData);
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(`${apiConfig.baseUrl}/v1/sites`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(siteData),
+      });
+      expect(result.id).toBe("site-123");
+      expect(result.name).toBe("Objekt Alpha");
+    });
+
+    it("updates a site with the Objekt MVP payload", async () => {
+      const siteData = {
+        customer_id: "customer-456",
+        name: "Objekt Beta",
+        address: {
+          ...minimalAddress,
+          city: "Hamburg",
+          postal_code: "20095",
+        },
+        contact: null,
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: {
+            id: "site-123",
+            site_number: "OBJ-2026-0001",
+            organizational_unit_id: "internal-default-unit",
+            type: "permanent",
+            is_active: true,
+            is_expired: false,
+            full_address: "Objektstrasse 1, 20095 Hamburg, DE",
+            created_at: "2026-06-21T00:00:00Z",
+            updated_at: "2026-06-21T00:00:00Z",
+            ...siteData,
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await updateSite("site-123", siteData);
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/sites/site-123`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(siteData),
+        }
+      );
+      expect(result.name).toBe("Objekt Beta");
+      expect(result.customer_id).toBe("customer-456");
+    });
+
+    it("surfaces create validation errors for missing customer, missing name, and incomplete address", async () => {
+      const mockResponse = {
+        ok: false,
+        status: 422,
+        json: vi.fn().mockResolvedValue({
+          message: "Validation failed",
+          errors: {
+            customer_id: ["The customer field is required."],
+            name: ["The name field is required."],
+            "address.street": ["The street field is required."],
+            "address.city": ["The city field is required."],
+            "address.postal_code": ["The postal code field is required."],
+            "address.country": ["The country field is required."],
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      await expect(
+        createSite({
+          customer_id: "",
+          name: "",
+          address: {
+            street: "",
+            city: "",
+            postal_code: "",
+            country: "",
+          },
+        })
+      ).rejects.toMatchObject({
+        errors: expect.objectContaining({
+          customer_id: ["The customer field is required."],
+          name: ["The name field is required."],
+          "address.street": ["The street field is required."],
+        }),
+      });
+    });
+
+    it("surfaces update validation errors for missing customer, missing name, and incomplete address", async () => {
+      const mockResponse = {
+        ok: false,
+        status: 422,
+        json: vi.fn().mockResolvedValue({
+          message: "Validation failed",
+          errors: {
+            customer_id: ["The customer field is required."],
+            name: ["The name field is required."],
+            "address.street": ["The street field is required."],
+            "address.city": ["The city field is required."],
+            "address.postal_code": ["The postal code field is required."],
+            "address.country": ["The country field is required."],
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      await expect(
+        updateSite("site-123", {
+          customer_id: "",
+          name: "",
+          address: {
+            street: "",
+            city: "",
+            postal_code: "",
+            country: "",
+          },
+        })
+      ).rejects.toThrow(/customer_id: The customer field is required/);
     });
   });
 
