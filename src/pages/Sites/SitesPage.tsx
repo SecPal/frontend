@@ -6,7 +6,7 @@
  * Epic #210 - Phase 6: Customer & Site Management Frontend
  */
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -80,9 +80,18 @@ function SiteTableSkeletonRows({
   );
 }
 
+const SITE_TABLE_COLUMN_COUNT = 8;
+const DEFAULT_PAGINATION = {
+  current_page: 1,
+  last_page: 1,
+  per_page: 15,
+  total: 0,
+};
+
 export default function SitesPage() {
   const { _ } = useLingui();
   const { customerId } = useParams<{ customerId?: string }>();
+  const customerScope = customerId ?? null;
   const capabilities = useUserCapabilities();
   const [filters, setFilters] = useState<SiteFilters>({
     page: 1,
@@ -95,15 +104,21 @@ export default function SitesPage() {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState({
-    current_page: 1,
-    last_page: 1,
-    per_page: 15,
-    total: 0,
-  });
+  const [pagination, setPagination] = useState(DEFAULT_PAGINATION);
+  const [sitesCustomerScope, setSitesCustomerScope] = useState(customerScope);
+  const sitesCustomerScopeRef = useRef(customerScope);
+  const isSwitchingCustomerScope = sitesCustomerScope !== customerScope;
+  const visibleSites = isSwitchingCustomerScope ? [] : sites;
+  const visiblePagination = isSwitchingCustomerScope
+    ? {
+        ...DEFAULT_PAGINATION,
+        per_page: effectiveFilters.per_page ?? DEFAULT_PAGINATION.per_page,
+      }
+    : pagination;
 
   useEffect(() => {
     let active = true;
+    const requestedCustomerScope = customerScope;
 
     void listSites(effectiveFilters)
       .then((response) => {
@@ -111,6 +126,8 @@ export default function SitesPage() {
           return;
         }
 
+        sitesCustomerScopeRef.current = requestedCustomerScope;
+        setSitesCustomerScope(requestedCustomerScope);
         setSites(response.data);
         setPagination(response.meta);
         setError(null);
@@ -120,6 +137,15 @@ export default function SitesPage() {
           return;
         }
 
+        if (sitesCustomerScopeRef.current !== requestedCustomerScope) {
+          setSites([]);
+          setPagination({
+            ...DEFAULT_PAGINATION,
+            per_page: effectiveFilters.per_page ?? DEFAULT_PAGINATION.per_page,
+          });
+        }
+        sitesCustomerScopeRef.current = requestedCustomerScope;
+        setSitesCustomerScope(requestedCustomerScope);
         setError(
           err instanceof Error ? err.message : _(msg`Failed to load sites`)
         );
@@ -133,7 +159,7 @@ export default function SitesPage() {
     return () => {
       active = false;
     };
-  }, [_, effectiveFilters]);
+  }, [_, customerScope, effectiveFilters]);
 
   function handleSearch(value: string) {
     setLoading(true);
@@ -285,11 +311,14 @@ export default function SitesPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {loading && sites.length === 0 ? (
-                <SiteTableSkeletonRows columns={6} rows={5} />
+              {loading && visibleSites.length === 0 ? (
+                <SiteTableSkeletonRows
+                  columns={SITE_TABLE_COLUMN_COUNT}
+                  rows={5}
+                />
               ) : null}
 
-              {sites.map((site) => (
+              {visibleSites.map((site) => (
                 <TableRow key={site.id}>
                   <TableCell className="font-medium">
                     {site.site_number}
@@ -339,9 +368,12 @@ export default function SitesPage() {
                 </TableRow>
               ))}
 
-              {!loading && sites.length === 0 ? (
+              {!loading && visibleSites.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-12 text-center">
+                  <TableCell
+                    colSpan={SITE_TABLE_COLUMN_COUNT}
+                    className="py-12 text-center"
+                  >
                     <PageText className="text-zinc-500 dark:text-zinc-400">
                       <Trans>No sites found</Trans>
                     </PageText>
@@ -354,19 +386,25 @@ export default function SitesPage() {
       </LoadingRegion>
 
       {/* Pagination */}
-      {pagination.last_page > 1 && (
+      {visiblePagination.last_page > 1 && (
         <div className="mt-6 flex items-center justify-between rounded-md border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 sm:px-6">
           <div className="flex-1 flex justify-between sm:hidden">
             <Button
-              onClick={() => handlePageChange(pagination.current_page - 1)}
-              disabled={pagination.current_page === 1}
+              onClick={() =>
+                handlePageChange(visiblePagination.current_page - 1)
+              }
+              disabled={visiblePagination.current_page === 1}
               variant="outline"
             >
               <Trans>Previous</Trans>
             </Button>
             <Button
-              onClick={() => handlePageChange(pagination.current_page + 1)}
-              disabled={pagination.current_page === pagination.last_page}
+              onClick={() =>
+                handlePageChange(visiblePagination.current_page + 1)
+              }
+              disabled={
+                visiblePagination.current_page === visiblePagination.last_page
+              }
               variant="outline"
             >
               <Trans>Next</Trans>
@@ -378,16 +416,20 @@ export default function SitesPage() {
                 <Trans>
                   Showing{" "}
                   <span className="font-medium">
-                    {(pagination.current_page - 1) * pagination.per_page + 1}
+                    {(visiblePagination.current_page - 1) *
+                      visiblePagination.per_page +
+                      1}
                   </span>{" "}
                   to{" "}
                   <span className="font-medium">
                     {Math.min(
-                      pagination.current_page * pagination.per_page,
-                      pagination.total
+                      visiblePagination.current_page *
+                        visiblePagination.per_page,
+                      visiblePagination.total
                     )}
                   </span>{" "}
-                  of <span className="font-medium">{pagination.total}</span>{" "}
+                  of{" "}
+                  <span className="font-medium">{visiblePagination.total}</span>{" "}
                   sites
                 </Trans>
               </PageText>
@@ -398,15 +440,22 @@ export default function SitesPage() {
                 aria-label={_(msg`Pagination`)}
               >
                 <Button
-                  onClick={() => handlePageChange(pagination.current_page - 1)}
-                  disabled={pagination.current_page === 1}
+                  onClick={() =>
+                    handlePageChange(visiblePagination.current_page - 1)
+                  }
+                  disabled={visiblePagination.current_page === 1}
                   variant="outline"
                 >
                   <Trans>Previous</Trans>
                 </Button>
                 <Button
-                  onClick={() => handlePageChange(pagination.current_page + 1)}
-                  disabled={pagination.current_page === pagination.last_page}
+                  onClick={() =>
+                    handlePageChange(visiblePagination.current_page + 1)
+                  }
+                  disabled={
+                    visiblePagination.current_page ===
+                    visiblePagination.last_page
+                  }
                   variant="outline"
                 >
                   <Trans>Next</Trans>

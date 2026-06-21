@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import SitesPage from "./SitesPage";
@@ -21,11 +21,30 @@ vi.mock("../../hooks/useUserCapabilities", () => ({
   useUserCapabilities: mockUseUserCapabilities,
 }));
 
+function TestNavigationButton({ to, label }: { to: string; label: string }) {
+  const navigate = useNavigate();
+
+  return (
+    <button type="button" onClick={() => navigate(to)}>
+      {label}
+    </button>
+  );
+}
+
 // Helper to render with providers
-const renderWithProviders = (initialEntries = ["/sites"]) => {
+const renderWithProviders = (
+  initialEntries = ["/sites"],
+  navigationTarget?: { to: string; label: string }
+) => {
   return render(
     <I18nProvider i18n={i18n}>
       <MemoryRouter initialEntries={initialEntries}>
+        {navigationTarget ? (
+          <TestNavigationButton
+            to={navigationTarget.to}
+            label={navigationTarget.label}
+          />
+        ) : null}
         <Routes>
           <Route path="/sites" element={<SitesPage />} />
           <Route path="/sites/customer/:customerId" element={<SitesPage />} />
@@ -170,6 +189,7 @@ describe("SitesPage", () => {
     expect(
       screen.getByRole("status", { name: /loading sites table/i })
     ).toBeInTheDocument();
+    expect(container.querySelectorAll("tbody tr td")).toHaveLength(40);
     expect(
       container.querySelectorAll('[data-slot="ui-skeleton"]').length
     ).toBeGreaterThan(0);
@@ -358,6 +378,47 @@ describe("SitesPage", () => {
       "href",
       "/sites/new/customer/cust-1"
     );
+  });
+
+  it("hides stale customer rows while a new customer-scoped request is loading", async () => {
+    vi.mocked(customersApi.listSites)
+      .mockResolvedValueOnce({
+        data: [mockSites[0]],
+        meta: {
+          current_page: 1,
+          last_page: 2,
+          per_page: 15,
+          total: 16,
+        },
+      })
+      .mockImplementationOnce(
+        () =>
+          new Promise<Awaited<ReturnType<typeof customersApi.listSites>>>(
+            () => {}
+          )
+      );
+
+    const user = userEvent.setup();
+    renderWithProviders(["/sites/customer/cust-1"], {
+      to: "/sites/customer/cust-2",
+      label: "Switch customer",
+    });
+
+    expect(await screen.findByText("Main Office")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Switch customer" }));
+
+    expect(screen.queryByText("Main Office")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading sites table/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/showing/i)).not.toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(customersApi.listSites).toHaveBeenLastCalledWith(
+        expect.objectContaining({ customer_id: "cust-2" })
+      );
+    });
   });
 
   it("hides the new site CTA without create capability", async () => {
