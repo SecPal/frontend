@@ -237,7 +237,7 @@ export async function getCustomerSites(
   }
 
   const response = await apiFetch(
-    `/v1/customers/${customerId}/sites?${searchParams.toString()}`
+    `${apiConfig.baseUrl}/v1/customers/${customerId}/sites?${searchParams.toString()}`
   );
 
   if (!response.ok) {

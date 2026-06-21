@@ -9,6 +9,9 @@ import {
   getCustomer,
   createCustomer,
   updateCustomer,
+  listSites,
+  getSite,
+  getCustomerSites,
   createSite,
   updateSite,
   deleteCustomer,
@@ -441,13 +444,16 @@ describe("customersApi", () => {
 
       const result = await createSite(siteData);
 
-      expect(csrf.apiFetch).toHaveBeenCalledWith(`${apiConfig.baseUrl}/v1/sites`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(siteData),
-      });
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/sites`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(siteData),
+        }
+      );
       expect(result.id).toBe("site-123");
       expect(result.name).toBe("Objekt Alpha");
     });
@@ -570,6 +576,201 @@ describe("customersApi", () => {
           },
         })
       ).rejects.toThrow(/customer_id: The customer field is required/);
+    });
+  });
+
+  describe("site read model", () => {
+    const objektAddress = {
+      street: "Objektstrasse 1",
+      city: "Berlin",
+      postal_code: "10115",
+      country: "DE",
+    };
+
+    const customer = {
+      id: "customer-123",
+      customer_number: "KD-2026-0001",
+      name: "Musterkunde GmbH",
+      billing_address: {
+        street: "Kundenweg 5",
+        city: "Berlin",
+        postal_code: "10117",
+        country: "DE",
+      },
+      contact: {
+        name: "Max Mustermann",
+        email: "max@example.test",
+        phone: "+49 30 123456",
+      },
+      is_active: true,
+    };
+
+    const objekt = {
+      id: "site-123",
+      customer_id: customer.id,
+      customer,
+      organizational_unit_id: "internal-default-unit",
+      site_number: "OBJ-2026-0001",
+      name: "Objekt Alpha",
+      type: "permanent",
+      address: objektAddress,
+      contact: {
+        name: "Erika Mustermann",
+        email: "erika@example.test",
+      },
+      is_active: true,
+      valid_from: null,
+      valid_until: null,
+      is_expired: false,
+      full_address: "Objektstrasse 1, 10115 Berlin, DE",
+      created_at: "2026-06-21T00:00:00Z",
+      updated_at: "2026-06-21T00:00:00Z",
+    };
+
+    it("lists objects with customer, address, and optional contact fields", async () => {
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: [objekt],
+          meta: {
+            current_page: 1,
+            last_page: 1,
+            per_page: 15,
+            total: 1,
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await listSites();
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/sites?`
+      );
+      expect(result.data[0]).toMatchObject({
+        customer_id: "customer-123",
+        customer: expect.objectContaining({
+          id: "customer-123",
+          name: "Musterkunde GmbH",
+          billing_address: customer.billing_address,
+          contact: customer.contact,
+        }),
+        address: objektAddress,
+        contact: objekt.contact,
+      });
+      expect(result.meta.total).toBe(1);
+    });
+
+    it("fetches object detail with the same read fields as the list response", async () => {
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({ data: objekt }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await getSite("site-123");
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/sites/site-123`
+      );
+      expect(result).toMatchObject({
+        id: "site-123",
+        customer_id: "customer-123",
+        customer: expect.objectContaining({
+          id: "customer-123",
+          name: "Musterkunde GmbH",
+          billing_address: customer.billing_address,
+        }),
+        address: objektAddress,
+        contact: objekt.contact,
+      });
+    });
+
+    it("filters the object list by customer id", async () => {
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: [objekt],
+          meta: {
+            current_page: 1,
+            last_page: 1,
+            per_page: 15,
+            total: 1,
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await listSites({
+        customer_id: "customer-123",
+        is_active: true,
+        page: 2,
+        per_page: 20,
+      });
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/sites?is_active=1&customer_id=customer-123&page=2&per_page=20`
+      );
+      expect(
+        result.data.every((site) => site.customer_id === "customer-123")
+      ).toBe(true);
+    });
+
+    it("lists objects through the nested customer endpoint", async () => {
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: [objekt],
+          meta: {
+            current_page: 1,
+            last_page: 1,
+            per_page: 15,
+            total: 1,
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await getCustomerSites("customer-123", {
+        search: "Alpha",
+        is_active: true,
+      });
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/customers/customer-123/sites?search=Alpha&is_active=1`
+      );
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0]?.customer_id).toBe("customer-123");
+    });
+
+    it("surfaces missing collection permission as forbidden", async () => {
+      const mockResponse = {
+        ok: false,
+        status: 403,
+        json: vi.fn().mockResolvedValue({ message: "Forbidden" }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      await expect(listSites()).rejects.toThrow("Forbidden");
+    });
+
+    it("surfaces tenant-hidden object details as not found", async () => {
+      const mockResponse = {
+        ok: false,
+        status: 404,
+        json: vi.fn().mockResolvedValue({ message: "Site not found" }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      await expect(getSite("tenant-hidden-site")).rejects.toThrow(
+        "Site not found"
+      );
     });
   });
 
