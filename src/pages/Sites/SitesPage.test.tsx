@@ -94,10 +94,10 @@ async function selectRadixOption(label: RegExp, optionName: RegExp) {
 describe("SitesPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(customersApi.listObjects).mockResolvedValue(mockResponse);
+    vi.mocked(customersApi.listSites).mockResolvedValue(mockResponse);
     mockUseUserCapabilities.mockReturnValue({
       actions: {
-        objects: { create: true, update: true, delete: true },
+        sites: { create: true, update: true, delete: true },
       },
     });
   });
@@ -114,22 +114,22 @@ describe("SitesPage", () => {
   });
 
   it("renders page chrome and table skeleton rows while initially loading", () => {
-    vi.mocked(customersApi.listObjects).mockImplementation(
+    vi.mocked(customersApi.listSites).mockImplementation(
       () =>
-        new Promise<Awaited<ReturnType<typeof customersApi.listObjects>>>(
+        new Promise<Awaited<ReturnType<typeof customersApi.listSites>>>(
           () => {}
         )
     );
 
     const { container } = renderWithProviders();
 
-    expect(screen.getByRole("heading", { name: /objects/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /sites/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/search/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("columnheader", { name: /object number/i })
+      screen.getByRole("columnheader", { name: /site number/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("status", { name: /loading objects table/i })
+      screen.getByRole("status", { name: /loading sites table/i })
     ).toBeInTheDocument();
     expect(
       container.querySelectorAll('[data-slot="ui-skeleton"]').length
@@ -138,7 +138,7 @@ describe("SitesPage", () => {
   });
 
   it("should display empty state inside the table", async () => {
-    vi.mocked(customersApi.listObjects).mockResolvedValue({
+    vi.mocked(customersApi.listSites).mockResolvedValue({
       data: [],
       meta: {
         current_page: 1,
@@ -150,14 +150,14 @@ describe("SitesPage", () => {
 
     renderWithProviders();
 
-    expect(await screen.findByText(/no objects found/i)).toBeInTheDocument();
+    expect(await screen.findByText(/no sites found/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("columnheader", { name: /object number/i })
+      screen.getByRole("columnheader", { name: /site number/i })
     ).toBeInTheDocument();
   });
 
   it("should handle API errors gracefully", async () => {
-    vi.mocked(customersApi.listObjects).mockRejectedValue(new Error("API Error"));
+    vi.mocked(customersApi.listSites).mockRejectedValue(new Error("API Error"));
 
     renderWithProviders();
 
@@ -165,7 +165,7 @@ describe("SitesPage", () => {
       expect(screen.getByText(/API Error/i)).toBeInTheDocument();
     });
     expect(
-      screen.getByRole("columnheader", { name: /object number/i })
+      screen.getByRole("columnheader", { name: /site number/i })
     ).toBeInTheDocument();
   });
 
@@ -176,22 +176,22 @@ describe("SitesPage", () => {
       expect(screen.getByText("Main Office")).toBeInTheDocument();
     });
 
-    const searchInput = screen.getByPlaceholderText(/search objects/i);
+    const searchInput = screen.getByPlaceholderText(/search sites/i);
     fireEvent.change(searchInput, { target: { value: "Main" } });
 
     await waitFor(() => {
-      expect(customersApi.listObjects).toHaveBeenCalledWith(
+      expect(customersApi.listSites).toHaveBeenCalledWith(
         expect.objectContaining({ search: "Main" })
       );
     });
   });
 
   it("keeps the existing table visible while refiltering", async () => {
-    vi.mocked(customersApi.listObjects)
+    vi.mocked(customersApi.listSites)
       .mockResolvedValueOnce(mockResponse)
       .mockImplementationOnce(
         () =>
-          new Promise<Awaited<ReturnType<typeof customersApi.listObjects>>>(
+          new Promise<Awaited<ReturnType<typeof customersApi.listSites>>>(
             () => {}
           )
       );
@@ -200,15 +200,15 @@ describe("SitesPage", () => {
 
     expect(await screen.findByText("Main Office")).toBeInTheDocument();
 
-    const searchInput = screen.getByPlaceholderText(/search objects/i);
+    const searchInput = screen.getByPlaceholderText(/search sites/i);
     fireEvent.change(searchInput, { target: { value: "Project" } });
 
     expect(screen.getByText("Main Office")).toBeInTheDocument();
     expect(
-      screen.getByRole("status", { name: /loading objects table/i })
+      screen.getByRole("status", { name: /loading sites table/i })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("columnheader", { name: /object number/i })
+      screen.getByRole("columnheader", { name: /site number/i })
     ).toBeInTheDocument();
   });
 
@@ -220,12 +220,12 @@ describe("SitesPage", () => {
     });
 
     // Clear call history to isolate this test's API calls
-    vi.mocked(customersApi.listObjects).mockClear();
+    vi.mocked(customersApi.listSites).mockClear();
 
     await selectRadixOption(/type/i, /permanent/i);
 
     await waitFor(() => {
-      expect(customersApi.listObjects).toHaveBeenCalledWith(
+      expect(customersApi.listSites).toHaveBeenCalledWith(
         expect.objectContaining({ type: "permanent" })
       );
     });
@@ -241,7 +241,7 @@ describe("SitesPage", () => {
     await selectRadixOption(/status/i, /inactive/i);
 
     await waitFor(() => {
-      expect(customersApi.listObjects).toHaveBeenCalledWith(
+      expect(customersApi.listSites).toHaveBeenCalledWith(
         expect.objectContaining({ is_active: false })
       );
     });
@@ -285,21 +285,21 @@ describe("SitesPage", () => {
     expect(activeBadges.length).toBeGreaterThan(0);
   });
 
-  it("should have link to new object page", async () => {
+  it("should have link to new site page", async () => {
     renderWithProviders();
 
     await waitFor(() => {
-      expect(screen.getByText(/new object/i)).toBeInTheDocument();
+      expect(screen.getByText(/new site/i)).toBeInTheDocument();
     });
 
-    const newButton = screen.getByText(/new object/i);
-    expect(newButton.closest("a")).toHaveAttribute("href", "/objects/new");
+    const newButton = screen.getByText(/new site/i);
+    expect(newButton.closest("a")).toHaveAttribute("href", "/sites/new");
   });
 
-  it("hides the new object CTA without create capability", async () => {
+  it("hides the new site CTA without create capability", async () => {
     mockUseUserCapabilities.mockReturnValue({
       actions: {
-        objects: { create: false, update: false, delete: false },
+        sites: { create: false, update: false, delete: false },
       },
     });
 
@@ -310,7 +310,7 @@ describe("SitesPage", () => {
     });
 
     expect(
-      screen.queryByRole("link", { name: /new object/i })
+      screen.queryByRole("link", { name: /new site/i })
     ).not.toBeInTheDocument();
   });
 
@@ -323,10 +323,10 @@ describe("SitesPage", () => {
 
     const allLinks = screen.getAllByRole("link");
     const siteLinks = allLinks.filter((link) =>
-      link.getAttribute("href")?.includes("/objects/site")
+      link.getAttribute("href")?.includes("/sites/site")
     );
     expect(siteLinks.length).toBeGreaterThan(0);
-    expect(siteLinks[0]).toHaveAttribute("href", "/objects/site-1");
+    expect(siteLinks[0]).toHaveAttribute("href", "/sites/site-1");
   });
 
   it("should handle pagination", async () => {
@@ -339,7 +339,7 @@ describe("SitesPage", () => {
         total: 45,
       },
     };
-    vi.mocked(customersApi.listObjects).mockResolvedValue(paginatedResponse);
+    vi.mocked(customersApi.listSites).mockResolvedValue(paginatedResponse);
 
     renderWithProviders();
 
@@ -376,11 +376,11 @@ describe("SitesPage", () => {
         total: 45,
       },
     };
-    vi.mocked(customersApi.listObjects)
+    vi.mocked(customersApi.listSites)
       .mockResolvedValueOnce(paginatedResponse)
       .mockImplementationOnce(
         () =>
-          new Promise<Awaited<ReturnType<typeof customersApi.listObjects>>>(
+          new Promise<Awaited<ReturnType<typeof customersApi.listSites>>>(
             () => {}
           )
       );
@@ -399,11 +399,11 @@ describe("SitesPage", () => {
 
     expect(screen.getByText("Main Office")).toBeInTheDocument();
     expect(
-      screen.getByRole("status", { name: /loading objects table/i })
+      screen.getByRole("status", { name: /loading sites table/i })
     ).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(customersApi.listObjects).toHaveBeenCalledWith(
+      expect(customersApi.listSites).toHaveBeenCalledWith(
         expect.objectContaining({ page: 2 })
       );
     });
@@ -419,7 +419,7 @@ describe("SitesPage", () => {
         total: 45,
       },
     };
-    vi.mocked(customersApi.listObjects).mockResolvedValue(paginatedResponse);
+    vi.mocked(customersApi.listSites).mockResolvedValue(paginatedResponse);
 
     renderWithProviders();
 
@@ -438,11 +438,11 @@ describe("SitesPage", () => {
       expect(screen.getByText("Main Office")).toBeInTheDocument();
     });
 
-    const searchInput = screen.getByPlaceholderText(/search objects/i);
+    const searchInput = screen.getByPlaceholderText(/search sites/i);
     fireEvent.change(searchInput, { target: { value: "Project" } });
 
     await waitFor(() => {
-      expect(customersApi.listObjects).toHaveBeenCalledWith(
+      expect(customersApi.listSites).toHaveBeenCalledWith(
         expect.objectContaining({ search: "Project", page: 1 })
       );
     });
@@ -456,12 +456,12 @@ describe("SitesPage", () => {
     });
 
     // Clear call history to isolate this test's API calls
-    vi.mocked(customersApi.listObjects).mockClear();
+    vi.mocked(customersApi.listSites).mockClear();
 
     await selectRadixOption(/type/i, /temporary/i);
 
     await waitFor(() => {
-      expect(customersApi.listObjects).toHaveBeenCalledWith(
+      expect(customersApi.listSites).toHaveBeenCalledWith(
         expect.objectContaining({ type: "temporary", page: 1 })
       );
     });
@@ -477,7 +477,7 @@ describe("SitesPage", () => {
     await selectRadixOption(/status/i, /inactive/i);
 
     await waitFor(() => {
-      expect(customersApi.listObjects).toHaveBeenCalledWith(
+      expect(customersApi.listSites).toHaveBeenCalledWith(
         expect.objectContaining({ is_active: false, page: 1 })
       );
     });

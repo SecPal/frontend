@@ -59,10 +59,6 @@ import type {
   CreateSiteRequest,
   UpdateSiteRequest,
   SiteFilters,
-  Objekt,
-  CreateObjektRequest,
-  UpdateObjektRequest,
-  ObjektFilters,
   CustomerAssignment,
   CreateCustomerAssignmentRequest,
   UpdateCustomerAssignmentRequest,
@@ -255,13 +251,6 @@ export async function getCustomerSites(
   return data;
 }
 
-export async function getCustomerObjects(
-  customerId: string,
-  filters?: ObjektFilters
-): Promise<PaginatedResponse<Objekt>> {
-  return getCustomerSites(customerId, filters);
-}
-
 // ============================================================================
 // Site API
 // ============================================================================
@@ -314,12 +303,6 @@ export async function listSites(
   return data;
 }
 
-export async function listObjects(
-  filters?: ObjektFilters
-): Promise<PaginatedResponse<Objekt>> {
-  return listSites(filters);
-}
-
 /**
  * Gets a single site by ID
  */
@@ -338,10 +321,6 @@ export async function getSite(id: string): Promise<Site> {
     throw new Error("Failed to parse site response");
   }
   return data.data as Site;
-}
-
-export async function getObject(id: string): Promise<Objekt> {
-  return getSite(id);
 }
 
 /**
@@ -368,12 +347,6 @@ export async function createSite(siteData: CreateSiteRequest): Promise<Site> {
     throw new Error("Failed to parse site response");
   }
   return data.data as Site;
-}
-
-export async function createObject(
-  objectData: CreateObjektRequest
-): Promise<Objekt> {
-  return createSite(objectData);
 }
 
 /**
@@ -405,13 +378,6 @@ export async function updateSite(
   return data.data as Site;
 }
 
-export async function updateObject(
-  id: string,
-  objectData: UpdateObjektRequest
-): Promise<Objekt> {
-  return updateSite(id, objectData);
-}
-
 /**
  * Deletes a site (soft delete)
  */
@@ -426,10 +392,6 @@ export async function deleteSite(id: string): Promise<void> {
       .catch(() => ({ message: response.statusText }));
     throw new Error(error.message || "Failed to delete site");
   }
-}
-
-export async function deleteObject(id: string): Promise<void> {
-  return deleteSite(id);
 }
 
 /**

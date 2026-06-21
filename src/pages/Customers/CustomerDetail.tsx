@@ -267,25 +267,22 @@ export default function CustomerDetail() {
             </div>
           )}
 
-          {/* Objects */}
+          {/* Sites */}
           <div>
             <PageTitle level={2} className="mb-4">
-              <Trans>Objects</Trans>
+              <Trans>Sites</Trans>
             </PageTitle>
             <PageText className="mb-4">
               <Plural
                 value={customer.sites_count || 0}
-                zero="This customer has no objects."
-                one="This customer has # object."
-                other="This customer has # objects."
+                zero="This customer has no sites."
+                one="This customer has # site."
+                other="This customer has # sites."
               />
             </PageText>
-            <LinkButton
-              to={`/objects/customer/${customer.id}`}
-              variant="outline"
-            >
+            <LinkButton to={`/sites/customer/${customer.id}`} variant="outline">
               <MapPinned className="size-4" aria-hidden="true" />
-              <Trans>View Objects</Trans>
+              <Trans>View Sites</Trans>
             </LinkButton>
           </div>
 

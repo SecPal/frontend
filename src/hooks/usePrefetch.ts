@@ -85,24 +85,14 @@ export function getRoutePrefetchPlan(
       );
     case "/customers/new":
       return routePlan(["customerCreate"]);
-    case "/objects":
-      return routePlan(
-        ["objects"],
-        [listApiPath("sites", { page: "1", per_page: "15" })]
-      );
-    case "/objects/new":
-      return routePlan(
-        ["objectCreate"],
-        [listApiPath("organizational-units", { per_page: "100" })]
-      );
     case "/sites":
       return routePlan(
-        ["objects"],
+        ["sites"],
         [listApiPath("sites", { page: "1", per_page: "15" })]
       );
     case "/sites/new":
       return routePlan(
-        ["objectCreate"],
+        ["siteCreate"],
         [listApiPath("organizational-units", { per_page: "100" })]
       );
     case "/employees":
@@ -148,12 +138,10 @@ export function getRoutePrefetchPlan(
     return routePlan(["customerEdit"], [`/v1/customers/${id}`]);
   }
 
-  const customerSitesMatch = pathname.match(
-    /^\/(?:objects|sites)\/customer\/([^/]+)$/
-  );
+  const customerSitesMatch = pathname.match(/^\/sites\/customer\/([^/]+)$/);
   if (customerSitesMatch) {
     return routePlan(
-      ["objects"],
+      ["sites"],
       [
         listApiPath("sites", {
           customer_id: encodePathSegment(customerSitesMatch[1] ?? ""),
@@ -165,12 +153,12 @@ export function getRoutePrefetchPlan(
   }
 
   const customerSiteCreateMatch = pathname.match(
-    /^\/(?:objects|sites)\/new\/customer\/([^/]+)$/
+    /^\/sites\/new\/customer\/([^/]+)$/
   );
   if (customerSiteCreateMatch) {
     const customerId = encodePathSegment(customerSiteCreateMatch[1] ?? "");
     return routePlan(
-      ["objectCreate"],
+      ["siteCreate"],
       [
         `/v1/customers/${customerId}`,
         listApiPath("organizational-units", { per_page: "100" }),
@@ -178,17 +166,17 @@ export function getRoutePrefetchPlan(
     );
   }
 
-  const siteMatch = pathname.match(/^\/(?:objects|sites)\/([^/]+)$/);
+  const siteMatch = pathname.match(/^\/sites\/([^/]+)$/);
   if (siteMatch) {
     const id = encodePathSegment(siteMatch[1] ?? "");
-    return routePlan(["objectDetail"], [`/v1/sites/${id}`]);
+    return routePlan(["siteDetail"], [`/v1/sites/${id}`]);
   }
 
-  const siteEditMatch = pathname.match(/^\/(?:objects|sites)\/([^/]+)\/edit$/);
+  const siteEditMatch = pathname.match(/^\/sites\/([^/]+)\/edit$/);
   if (siteEditMatch) {
     const id = encodePathSegment(siteEditMatch[1] ?? "");
     return routePlan(
-      ["objectEdit"],
+      ["siteEdit"],
       [
         `/v1/sites/${id}`,
         listApiPath("organizational-units", { per_page: "100" }),

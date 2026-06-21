@@ -815,28 +815,6 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows not found for object routes when the user cannot discover that feature", async () => {
-    window.history.replaceState({}, "", "/objects");
-
-    await seedPersistedAuthUser({
-      id: 1,
-      name: "User",
-      email: "user@secpal.dev",
-      emailVerified: true,
-      permissions: [],
-    });
-
-    await renderWithI18n(<App />);
-
-    expect(
-      await screen.findByText(
-        /Page Not Found/i,
-        {},
-        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-      )
-    ).toBeInTheDocument();
-  });
-
   it("shows not found for customer-scoped site routes when the user cannot discover that feature", async () => {
     window.history.replaceState({}, "", "/sites/customer/123");
 
@@ -928,29 +906,6 @@ describe("App", () => {
     expect(window.location.pathname).toBe("/sites/new");
   });
 
-  it("shows access denied for known object action routes when the user lacks create permission", async () => {
-    window.history.replaceState({}, "", "/objects/new");
-
-    await seedPersistedAuthUser({
-      id: 1,
-      name: "User",
-      email: "user@secpal.dev",
-      emailVerified: true,
-      permissions: ["sites.read"],
-    });
-
-    await renderWithI18n(<App />);
-
-    expect(
-      await screen.findByText(
-        /Access Denied/i,
-        {},
-        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-      )
-    ).toBeInTheDocument();
-    expect(window.location.pathname).toBe("/objects/new");
-  });
-
   it("shows access denied for known site edit routes when the user lacks update permission", async () => {
     window.history.replaceState({}, "", "/sites/123/edit");
 
@@ -972,29 +927,6 @@ describe("App", () => {
       )
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/sites/123/edit");
-  });
-
-  it("shows access denied for known object edit routes when the user lacks update permission", async () => {
-    window.history.replaceState({}, "", "/objects/123/edit");
-
-    await seedPersistedAuthUser({
-      id: 1,
-      name: "User",
-      email: "user@secpal.dev",
-      emailVerified: true,
-      permissions: ["sites.read"],
-    });
-
-    await renderWithI18n(<App />);
-
-    expect(
-      await screen.findByText(
-        /Access Denied/i,
-        {},
-        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-      )
-    ).toBeInTheDocument();
-    expect(window.location.pathname).toBe("/objects/123/edit");
   });
 
   it("shows access denied for known employee action routes when the user lacks create permission", async () => {

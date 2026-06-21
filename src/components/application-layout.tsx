@@ -10,7 +10,6 @@ import {
   Home,
   LockKeyhole,
   LogOut,
-  MapPinned,
   Settings,
   ShieldCheck,
   Smartphone,
@@ -129,8 +128,8 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
     if (capabilities.customers) {
       primaryDestinations.push("/customers");
     }
-    if (capabilities.objects) {
-      primaryDestinations.push("/objects");
+    if (capabilities.sites) {
+      primaryDestinations.push("/sites");
     }
     if (capabilities.employees) {
       primaryDestinations.push("/employees");
@@ -148,8 +147,8 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
     capabilities.androidProvisioning,
     capabilities.customers,
     capabilities.employees,
-    capabilities.objects,
     capabilities.organization,
+    capabilities.sites,
     prefetchPathsOnIdle,
   ]);
 
@@ -203,14 +202,6 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                 current={isCurrentPath("/customers")}
               >
                 <Trans>Customers</Trans>
-              </NavbarItem>
-            )}
-            {capabilities.objects && (
-              <NavbarItem
-                href="/objects"
-                current={isCurrentPath("/objects")}
-              >
-                <Trans>Objects</Trans>
               </NavbarItem>
             )}
             {capabilities.employees && (
@@ -295,17 +286,6 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                   <Users data-slot="icon" aria-hidden="true" />
                   <SidebarLabel>
                     <Trans>Customers</Trans>
-                  </SidebarLabel>
-                </SidebarItem>
-              )}
-              {capabilities.objects && (
-                <SidebarItem
-                  href="/objects"
-                  current={isCurrentPath("/objects")}
-                >
-                  <MapPinned data-slot="icon" aria-hidden="true" />
-                  <SidebarLabel>
-                    <Trans>Objects</Trans>
                   </SidebarLabel>
                 </SidebarItem>
               )}

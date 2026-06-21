@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
- * Object Create Page
+ * Site Create Page
  * Epic #210 - Customer & Site Management
  */
 
@@ -12,7 +12,7 @@ import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { FormSkeleton } from "@/ui";
-import { createObject, listCustomers } from "../../services/customersApi";
+import { createSite, listCustomers } from "../../services/customersApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type {
   CreateSiteRequest,
@@ -161,8 +161,8 @@ export default function SiteCreate() {
         dataToSend.valid_until = formData.valid_until;
       }
 
-      const site = await createObject(dataToSend);
-      navigate(`/objects/${site.id}`);
+      const site = await createSite(dataToSend);
+      navigate(`/sites/${site.id}`);
     } catch (err: unknown) {
       // Parse validation errors from Laravel API
       const error = err as Error & { errors?: Record<string, string[]> };
@@ -170,7 +170,7 @@ export default function SiteCreate() {
         setFieldErrors(error.errors);
         setError(_(msg`Please correct the errors below.`));
       } else {
-        setError(error.message || _(msg`Failed to create object`));
+        setError(error.message || _(msg`Failed to create site`));
       }
     } finally {
       setLoading(false);
@@ -182,11 +182,11 @@ export default function SiteCreate() {
       <div className="max-w-3xl">
         <div className="mb-6">
           <PageTitle>
-            <Trans>New Object</Trans>
+            <Trans>New Site</Trans>
           </PageTitle>
         </div>
         <FormSkeleton
-          loadingLabel={_(msg`Loading object lookup data`)}
+          loadingLabel={_(msg`Loading site lookup data`)}
           fields={10}
         />
       </div>
@@ -197,7 +197,7 @@ export default function SiteCreate() {
     <div className="max-w-3xl">
       <div className="mb-6">
         <PageTitle>
-          <Trans>New Object</Trans>
+          <Trans>New Site</Trans>
         </PageTitle>
       </div>
 
@@ -288,7 +288,7 @@ export default function SiteCreate() {
 
           <Field>
             <FieldLabel htmlFor="site-name">
-              <Trans>Object Name</Trans> *
+              <Trans>Site Name</Trans> *
             </FieldLabel>
             <Input
               id="site-name"
@@ -591,10 +591,10 @@ export default function SiteCreate() {
             {loading ? (
               <Trans>Creating...</Trans>
             ) : (
-              <Trans>Create Object</Trans>
+              <Trans>Create Site</Trans>
             )}
           </Button>
-          <LinkButton to="/objects" variant="outline">
+          <LinkButton to="/sites" variant="outline">
             <Trans>Cancel</Trans>
           </LinkButton>
         </div>

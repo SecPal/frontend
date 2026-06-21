@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
- * Object Edit Page
+ * Site Edit Page
  * Epic #210 - Customer & Site Management
  */
 
@@ -13,8 +13,8 @@ import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { FormSkeleton } from "@/ui";
 import {
-  getObject,
-  updateObject,
+  getSite,
+  updateSite,
   listCustomers,
 } from "../../services/customersApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
@@ -87,7 +87,7 @@ export default function SiteEdit() {
       setError(null);
       try {
         const [siteData, customersData, orgUnitsData] = await Promise.all([
-          getObject(id),
+          getSite(id),
           listCustomers({ per_page: 100 }),
           listOrganizationalUnits({ per_page: 100 }),
         ]);
@@ -111,7 +111,7 @@ export default function SiteEdit() {
       } catch (err) {
         if (cancelled) return;
         setError(
-          err instanceof Error ? err.message : _(msg`Failed to load object`)
+          err instanceof Error ? err.message : _(msg`Failed to load site`)
         );
       } finally {
         if (!cancelled) setLoading(false);
@@ -159,8 +159,8 @@ export default function SiteEdit() {
     setFieldErrors({});
 
     try {
-      await updateObject(id, formData);
-      navigate(`/objects/${id}`);
+      await updateSite(id, formData);
+      navigate(`/sites/${id}`);
     } catch (err: unknown) {
       // Parse validation errors from Laravel API
       const error = err as Error & { errors?: Record<string, string[]> };
@@ -168,7 +168,7 @@ export default function SiteEdit() {
         setFieldErrors(error.errors);
         setError(_(msg`Please correct the errors below.`));
       } else {
-        setError(error.message || _(msg`Failed to update object`));
+        setError(error.message || _(msg`Failed to update site`));
       }
     } finally {
       setSaving(false);
@@ -181,19 +181,19 @@ export default function SiteEdit() {
     <div className="max-w-3xl">
       <div className="mb-6">
         <PageTitle>
-          <Trans>Edit Object</Trans>
+          <Trans>Edit Site</Trans>
         </PageTitle>
       </div>
 
       {isInitialLoading ? (
-        <FormSkeleton loadingLabel={_(msg`Loading object form`)} fields={10} />
+        <FormSkeleton loadingLabel={_(msg`Loading site form`)} fields={10} />
       ) : error && !site ? (
         <PageText className="py-12 text-center text-red-600 dark:text-red-400">
           {error}
         </PageText>
       ) : !site ? (
         <PageText className="py-12 text-center">
-          <Trans>Object not found</Trans>
+          <Trans>Site not found</Trans>
         </PageText>
       ) : (
         <>
@@ -286,7 +286,7 @@ export default function SiteEdit() {
 
               <Field>
                 <FieldLabel htmlFor="site-name">
-                  <Trans>Object Name</Trans> *
+                  <Trans>Site Name</Trans> *
                 </FieldLabel>
                 <Input
                   id="site-name"
@@ -554,7 +554,7 @@ export default function SiteEdit() {
                   <Trans>Save Changes</Trans>
                 )}
               </Button>
-              <LinkButton to={`/objects/${id}`} variant="outline">
+              <LinkButton to={`/sites/${id}`} variant="outline">
                 <Trans>Cancel</Trans>
               </LinkButton>
             </div>
