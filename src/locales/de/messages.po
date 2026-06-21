@@ -97,7 +97,6 @@ msgstr "Passkey wird hinzugefügt..."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/Organization/OrganizationPage.tsx
-#: src/pages/Sites/SiteEdit.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Type"
 msgstr "Typ"
@@ -139,7 +138,6 @@ msgid "Still loading your secure session"
 msgstr "Ihre sichere Sitzung wird noch geladen"
 
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 msgid "Valid Until"
 msgstr "Gültig bis"
 
@@ -190,7 +188,6 @@ msgstr "Browser-Benachrichtigungen aktivieren"
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 msgid "Notes"
 msgstr "Anmerkungen"
 
@@ -837,7 +834,6 @@ msgid "Pre-Contract is the only status that allows onboarding invitations."
 msgstr "Der Vorvertragsstatus ist der einzige Status, der Einladungen zum Onboarding erlaubt."
 
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 msgid "Valid From"
 msgstr "Gültig von"
 
@@ -1322,7 +1318,6 @@ msgstr "Geben Sie das Ablaufdatum an, wenn der Aufenthaltstitel befristet ist."
 #: src/pages/Employees/EmployeeList.tsx
 #: src/pages/Employees/EmployeeStatusOptions.tsx
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Active"
 msgstr "Aktiv"
@@ -1816,7 +1811,6 @@ msgid "View"
 msgstr "Anzeigen"
 
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 msgid "Validity Period"
 msgstr "Gültigkeitsdauer"
 
@@ -2465,7 +2459,6 @@ msgid "Hash Chain (Data)"
 msgstr "Hash-Kette (Daten)"
 
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Temporary"
 msgstr "Vorübergehend"
@@ -2505,7 +2498,6 @@ msgstr "Authentifizierung"
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Employees/EmployeeList.tsx
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 msgid "Organizational Unit"
 msgstr "Organisatorische Einheit"
 
@@ -2530,7 +2522,6 @@ msgid "Regenerate recovery codes"
 msgstr "Wiederherstellungscodes neu generieren"
 
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Permanent"
 msgstr "Dauerhaft"
@@ -2780,7 +2771,6 @@ msgid "Files can only be uploaded while this onboarding step is still editable."
 msgstr "Dateien können nur hochgeladen werden, solange dieser Onboarding-Schritt noch bearbeitbar ist."
 
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 msgid "Access Instructions"
 msgstr "Zugriffsanweisungen"
 
@@ -3578,10 +3568,6 @@ msgstr "Das Löschen von Organisationseinheiten ist im Offline-Modus nicht mögl
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Password must include both uppercase and lowercase letters"
 msgstr "Das Passwort muss Groß- und Kleinbuchstaben enthalten"
-
-#: src/pages/Sites/SiteEdit.tsx
-msgid "Select organizational unit..."
-msgstr "Organisationseinheit auswählen..."
 
 #. placeholder {0}: unit.name
 #: src/pages/Organization/OrganizationPage.tsx

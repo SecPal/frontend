@@ -14,10 +14,8 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import SiteEdit from "./SiteEdit";
 import * as customersApi from "../../services/customersApi";
-import * as organizationalUnitApi from "../../services/organizationalUnitApi";
 
 vi.mock("../../services/customersApi");
-vi.mock("../../services/organizationalUnitApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
 
@@ -102,23 +100,6 @@ describe("SiteEdit", () => {
     },
   ];
 
-  const mockOrgUnits = [
-    {
-      id: "org-1",
-      type: "department" as const,
-      name: "IT Department",
-      created_at: "2025-01-01T00:00:00Z",
-      updated_at: "2025-01-01T00:00:00Z",
-    },
-    {
-      id: "org-2",
-      type: "division" as const,
-      name: "Security Division",
-      created_at: "2025-01-01T00:00:00Z",
-      updated_at: "2025-01-01T00:00:00Z",
-    },
-  ];
-
   const mockUpdatedSite = {
     ...mockSite,
     name: "Updated site name",
@@ -137,29 +118,14 @@ describe("SiteEdit", () => {
         total: 2,
       },
     });
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
-      data: mockOrgUnits,
-      meta: {
-        current_page: 1,
-        last_page: 1,
-        per_page: 100,
-        total: 2,
-        root_unit_ids: [],
-      },
-    });
   });
 
-  it("loads site data, customers, and org units on mount", async () => {
+  it("loads site data and customers on mount", async () => {
     renderWithRouter();
 
     await waitFor(() => {
       expect(customersApi.getSite).toHaveBeenCalledWith("site-123");
       expect(customersApi.listCustomers).toHaveBeenCalledWith({
-        per_page: 100,
-      });
-      expect(
-        organizationalUnitApi.listOrganizationalUnits
-      ).toHaveBeenCalledWith({
         per_page: 100,
       });
     });
@@ -190,7 +156,7 @@ describe("SiteEdit", () => {
     expect(contactNameInput.value).toBe("John Doe");
   });
 
-  it("pre-selects correct customer and org unit", async () => {
+  it("pre-selects correct customer", async () => {
     renderWithRouter();
 
     await waitFor(() => {
@@ -200,8 +166,9 @@ describe("SiteEdit", () => {
     });
 
     expect(
-      screen.getByRole("combobox", { name: /organizational unit/i })
-    ).toHaveTextContent("IT Department");
+      screen.queryByLabelText(/organizational unit/i)
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/type/i)).not.toBeInTheDocument();
   });
 
   it(
@@ -225,12 +192,21 @@ describe("SiteEdit", () => {
       fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
       await waitFor(() => {
-        expect(customersApi.updateSite).toHaveBeenCalledWith(
-          "site-123",
-          expect.objectContaining({
-            name: "Updated site name",
-          })
-        );
+        expect(customersApi.updateSite).toHaveBeenCalledWith("site-123", {
+          customer_id: "customer-1",
+          name: "Updated site name",
+          address: {
+            street: "Old Street 1",
+            city: "Old City",
+            postal_code: "11111",
+            country: "DE",
+          },
+          contact: {
+            name: "John Doe",
+            email: "john@secpal.dev",
+            phone: "+49 123 456789",
+          },
+        });
         expect(mockNavigate).toHaveBeenCalledWith("/sites/site-123");
       });
     },
@@ -248,15 +224,6 @@ describe("SiteEdit", () => {
           () => {}
         )
     );
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockImplementation(
-      () =>
-        new Promise<
-          Awaited<
-            ReturnType<typeof organizationalUnitApi.listOrganizationalUnits>
-          >
-        >(() => {})
-    );
-
     renderWithRouter();
 
     expect(
@@ -279,6 +246,62 @@ describe("SiteEdit", () => {
       expect(screen.getByText(/site not found/i)).toBeInTheDocument();
     });
   });
+
+  it(
+    "displays validation errors from API",
+    async () => {
+      const validationError = new Error("Validation failed") as Error & {
+        errors?: Record<string, string[]>;
+      };
+      validationError.errors = {
+        customer_id: ["The customer field is required."],
+        name: ["The name must not exceed 255 characters."],
+        "address.street": ["The street field must be a valid address."],
+        "address.postal_code": ["The postal code field is required."],
+        "contact.email": ["The contact email field must be a valid email."],
+      };
+      vi.mocked(customersApi.updateSite).mockRejectedValue(validationError);
+
+      renderWithRouter();
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+      await waitFor(() => {
+        expect(customersApi.updateSite).toHaveBeenCalled();
+        expect(
+          screen.getByRole("combobox", { name: /customer/i })
+        ).toHaveAttribute("aria-describedby", "site-customer-error");
+        expect(screen.getByLabelText(/site name/i)).toHaveAttribute(
+          "aria-describedby",
+          "site-name-error"
+        );
+        expect(screen.getByLabelText(/street/i)).toHaveAttribute(
+          "aria-describedby",
+          "site-street-error"
+        );
+        expect(screen.getByLabelText(/postal code/i)).toHaveAttribute(
+          "aria-describedby",
+          "site-postal-code-error"
+        );
+        expect(screen.getByLabelText(/email/i)).toHaveAttribute(
+          "aria-describedby",
+          "site-contact-email-error"
+        );
+      });
+
+      expect(
+        screen.getByText(/please correct the errors below/i)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/the contact email field must be a valid email/i)
+      ).toBeInTheDocument();
+    },
+    SLOW_TEST_TIMEOUT
+  );
 
   it("shows cancel button that navigates back", async () => {
     renderWithRouter();
@@ -318,6 +341,68 @@ describe("SiteEdit", () => {
             name: "Jane Doe",
             email: "jane@secpal.dev",
           }),
+        })
+      );
+    });
+  });
+
+  it("updates existing optional contact fields", async () => {
+    vi.mocked(customersApi.updateSite).mockResolvedValue(mockUpdatedSite);
+
+    renderWithRouter();
+
+    await screen.findByLabelText(/site name/i);
+
+    fireEvent.change(screen.getByLabelText(/^name$/i), {
+      target: { value: "Jane Updated" },
+    });
+    fireEvent.change(screen.getByLabelText(/phone/i), {
+      target: { value: "+49 987 654321" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(customersApi.updateSite).toHaveBeenCalledWith(
+        "site-123",
+        expect.objectContaining({
+          contact: {
+            name: "Jane Updated",
+            email: "john@secpal.dev",
+            phone: "+49 987 654321",
+          },
+        })
+      );
+    });
+  });
+
+  it("removes optional contact fields when all contact inputs are cleared", async () => {
+    vi.mocked(customersApi.updateSite).mockResolvedValue({
+      ...mockUpdatedSite,
+      contact: null,
+    });
+
+    renderWithRouter();
+
+    await screen.findByLabelText(/site name/i);
+
+    fireEvent.change(screen.getByLabelText(/^name$/i), {
+      target: { value: "" },
+    });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "" },
+    });
+    fireEvent.change(screen.getByLabelText(/phone/i), {
+      target: { value: "" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(customersApi.updateSite).toHaveBeenCalledWith(
+        "site-123",
+        expect.objectContaining({
+          contact: null,
         })
       );
     });

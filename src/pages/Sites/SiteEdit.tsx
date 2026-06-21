@@ -17,26 +17,21 @@ import {
   updateSite,
   listCustomers,
 } from "../../services/customersApi";
-import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type {
   Site,
   UpdateSiteRequest,
   Address,
   Contact,
-  SiteType,
   Customer,
 } from "../../types/customers";
-import type { OrganizationalUnit } from "../../types/organizational";
 import {
   Alert,
   AlertDescription,
   Button,
-  Checkbox,
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-  FormCheckboxField,
   Input,
   LinkButton,
   PageText,
@@ -46,7 +41,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Textarea,
 } from "../CustomerSites/ui";
 
 export default function SiteEdit() {
@@ -59,7 +53,6 @@ export default function SiteEdit() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [site, setSite] = useState<Site | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [orgUnits, setOrgUnits] = useState<OrganizationalUnit[]>([]);
 
   const [formData, setFormData] = useState<UpdateSiteRequest>({});
 
@@ -85,28 +78,20 @@ export default function SiteEdit() {
       setFormData({});
       setLoading(true);
       setError(null);
+      setFieldErrors({});
       try {
-        const [siteData, customersData, orgUnitsData] = await Promise.all([
+        const [siteData, customersData] = await Promise.all([
           getSite(id),
           listCustomers({ per_page: 100 }),
-          listOrganizationalUnits({ per_page: 100 }),
         ]);
         if (cancelled) return;
         setSite(siteData);
         setCustomers(customersData.data);
-        setOrgUnits(orgUnitsData.data);
         setFormData({
           customer_id: siteData.customer_id,
-          organizational_unit_id: siteData.organizational_unit_id,
           name: siteData.name,
-          type: siteData.type,
           address: siteData.address,
           contact: siteData.contact,
-          access_instructions: siteData.access_instructions,
-          notes: siteData.notes,
-          is_active: siteData.is_active,
-          valid_from: siteData.valid_from,
-          valid_until: siteData.valid_until,
         });
       } catch (err) {
         if (cancelled) return;
@@ -150,6 +135,19 @@ export default function SiteEdit() {
     }));
   }
 
+  function hasContactValue(contact: Contact | null | undefined) {
+    return Boolean(contact?.name || contact?.email || contact?.phone);
+  }
+
+  function buildUpdatePayload(): UpdateSiteRequest {
+    return {
+      customer_id: formData.customer_id,
+      name: formData.name,
+      address: formData.address,
+      contact: hasContactValue(formData.contact) ? formData.contact : null,
+    };
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!id) return;
@@ -159,7 +157,7 @@ export default function SiteEdit() {
     setFieldErrors({});
 
     try {
-      await updateSite(id, formData);
+      await updateSite(id, buildUpdatePayload());
       navigate(`/sites/${id}`);
     } catch (err: unknown) {
       // Parse validation errors from Laravel API
@@ -186,7 +184,7 @@ export default function SiteEdit() {
       </div>
 
       {isInitialLoading ? (
-        <FormSkeleton loadingLabel={_(msg`Loading site form`)} fields={10} />
+        <FormSkeleton loadingLabel={_(msg`Loading site form`)} fields={7} />
       ) : error && !site ? (
         <PageText className="py-12 text-center text-red-600 dark:text-red-400">
           {error}
@@ -243,48 +241,6 @@ export default function SiteEdit() {
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="site-organizational-unit">
-                  <Trans>Organizational Unit</Trans> *
-                </FieldLabel>
-                <Select
-                  name="organizational_unit_id"
-                  required
-                  value={formData.organizational_unit_id || ""}
-                  onValueChange={(value) =>
-                    updateField("organizational_unit_id", value)
-                  }
-                >
-                  <SelectTrigger
-                    id="site-organizational-unit"
-                    aria-invalid={
-                      fieldErrors.organizational_unit_id ? true : undefined
-                    }
-                    aria-describedby={
-                      fieldErrors.organizational_unit_id
-                        ? "site-organizational-unit-error"
-                        : undefined
-                    }
-                  >
-                    <SelectValue
-                      placeholder={_(msg`Select organizational unit...`)}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {orgUnits.map((unit) => (
-                      <SelectItem key={unit.id} value={unit.id}>
-                        {unit.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {fieldErrors.organizational_unit_id && (
-                  <FieldError id="site-organizational-unit-error">
-                    {fieldErrors.organizational_unit_id.join(", ")}
-                  </FieldError>
-                )}
-              </Field>
-
-              <Field>
                 <FieldLabel htmlFor="site-name">
                   <Trans>Site Name</Trans> *
                 </FieldLabel>
@@ -306,32 +262,6 @@ export default function SiteEdit() {
                   </FieldError>
                 )}
               </Field>
-
-              <Field>
-                <FieldLabel htmlFor="site-type">
-                  <Trans>Type</Trans> *
-                </FieldLabel>
-                <Select
-                  name="type"
-                  required
-                  value={formData.type || "permanent"}
-                  onValueChange={(value) =>
-                    updateField("type", value as SiteType)
-                  }
-                >
-                  <SelectTrigger id="site-type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="permanent">
-                      {_(msg`Permanent`)}
-                    </SelectItem>
-                    <SelectItem value="temporary">
-                      {_(msg`Temporary`)}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
             </FieldGroup>
 
             {/* Address */}
@@ -351,8 +281,21 @@ export default function SiteEdit() {
                     required
                     autoComplete="street-address"
                     value={formData.address?.street || ""}
+                    aria-invalid={
+                      fieldErrors["address.street"] ? true : undefined
+                    }
+                    aria-describedby={
+                      fieldErrors["address.street"]
+                        ? "site-street-error"
+                        : undefined
+                    }
                     onChange={(e) => updateAddress("street", e.target.value)}
                   />
+                  {fieldErrors["address.street"] && (
+                    <FieldError id="site-street-error">
+                      {fieldErrors["address.street"].join(", ")}
+                    </FieldError>
+                  )}
                 </Field>
 
                 <Field>
@@ -366,8 +309,21 @@ export default function SiteEdit() {
                     required
                     autoComplete="address-level2"
                     value={formData.address?.city || ""}
+                    aria-invalid={
+                      fieldErrors["address.city"] ? true : undefined
+                    }
+                    aria-describedby={
+                      fieldErrors["address.city"]
+                        ? "site-city-error"
+                        : undefined
+                    }
                     onChange={(e) => updateAddress("city", e.target.value)}
                   />
+                  {fieldErrors["address.city"] && (
+                    <FieldError id="site-city-error">
+                      {fieldErrors["address.city"].join(", ")}
+                    </FieldError>
+                  )}
                 </Field>
 
                 <Field>
@@ -381,10 +337,23 @@ export default function SiteEdit() {
                     required
                     autoComplete="postal-code"
                     value={formData.address?.postal_code || ""}
+                    aria-invalid={
+                      fieldErrors["address.postal_code"] ? true : undefined
+                    }
+                    aria-describedby={
+                      fieldErrors["address.postal_code"]
+                        ? "site-postal-code-error"
+                        : undefined
+                    }
                     onChange={(e) =>
                       updateAddress("postal_code", e.target.value)
                     }
                   />
+                  {fieldErrors["address.postal_code"] && (
+                    <FieldError id="site-postal-code-error">
+                      {fieldErrors["address.postal_code"].join(", ")}
+                    </FieldError>
+                  )}
                 </Field>
 
                 <Field>
@@ -397,7 +366,17 @@ export default function SiteEdit() {
                     value={formData.address?.country || "DE"}
                     onValueChange={(value) => updateAddress("country", value)}
                   >
-                    <SelectTrigger id="site-country">
+                    <SelectTrigger
+                      id="site-country"
+                      aria-invalid={
+                        fieldErrors["address.country"] ? true : undefined
+                      }
+                      aria-describedby={
+                        fieldErrors["address.country"]
+                          ? "site-country-error"
+                          : undefined
+                      }
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -406,6 +385,11 @@ export default function SiteEdit() {
                       <SelectItem value="CH">{_(msg`Switzerland`)}</SelectItem>
                     </SelectContent>
                   </Select>
+                  {fieldErrors["address.country"] && (
+                    <FieldError id="site-country-error">
+                      {fieldErrors["address.country"].join(", ")}
+                    </FieldError>
+                  )}
                 </Field>
               </FieldGroup>
             </div>
@@ -429,8 +413,21 @@ export default function SiteEdit() {
                     type="text"
                     autoComplete="name"
                     value={formData.contact?.name || ""}
+                    aria-invalid={
+                      fieldErrors["contact.name"] ? true : undefined
+                    }
+                    aria-describedby={
+                      fieldErrors["contact.name"]
+                        ? "site-contact-name-error"
+                        : undefined
+                    }
                     onChange={(e) => updateContact("name", e.target.value)}
                   />
+                  {fieldErrors["contact.name"] && (
+                    <FieldError id="site-contact-name-error">
+                      {fieldErrors["contact.name"].join(", ")}
+                    </FieldError>
+                  )}
                 </Field>
 
                 <Field>
@@ -443,8 +440,21 @@ export default function SiteEdit() {
                     type="email"
                     autoComplete="email"
                     value={formData.contact?.email || ""}
+                    aria-invalid={
+                      fieldErrors["contact.email"] ? true : undefined
+                    }
+                    aria-describedby={
+                      fieldErrors["contact.email"]
+                        ? "site-contact-email-error"
+                        : undefined
+                    }
                     onChange={(e) => updateContact("email", e.target.value)}
                   />
+                  {fieldErrors["contact.email"] && (
+                    <FieldError id="site-contact-email-error">
+                      {fieldErrors["contact.email"].join(", ")}
+                    </FieldError>
+                  )}
                 </Field>
 
                 <Field>
@@ -457,93 +467,24 @@ export default function SiteEdit() {
                     type="tel"
                     autoComplete="tel"
                     value={formData.contact?.phone || ""}
+                    aria-invalid={
+                      fieldErrors["contact.phone"] ? true : undefined
+                    }
+                    aria-describedby={
+                      fieldErrors["contact.phone"]
+                        ? "site-contact-phone-error"
+                        : undefined
+                    }
                     onChange={(e) => updateContact("phone", e.target.value)}
                   />
+                  {fieldErrors["contact.phone"] && (
+                    <FieldError id="site-contact-phone-error">
+                      {fieldErrors["contact.phone"].join(", ")}
+                    </FieldError>
+                  )}
                 </Field>
               </FieldGroup>
             </div>
-
-            {/* Validity Period */}
-            <div>
-              <PageTitle level={2} className="mb-4">
-                <Trans>Validity Period</Trans>{" "}
-                <span className="text-zinc-500">
-                  <Trans>(Optional)</Trans>
-                </span>
-              </PageTitle>
-              <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="site-valid-from">
-                    <Trans>Valid From</Trans>
-                  </FieldLabel>
-                  <Input
-                    id="site-valid-from"
-                    name="valid_from"
-                    type="date"
-                    value={formData.valid_from || ""}
-                    onChange={(e) => updateField("valid_from", e.target.value)}
-                  />
-                </Field>
-
-                <Field>
-                  <FieldLabel htmlFor="site-valid-until">
-                    <Trans>Valid Until</Trans>
-                  </FieldLabel>
-                  <Input
-                    id="site-valid-until"
-                    name="valid_until"
-                    type="date"
-                    value={formData.valid_until || ""}
-                    onChange={(e) => updateField("valid_until", e.target.value)}
-                  />
-                </Field>
-              </FieldGroup>
-            </div>
-
-            {/* Access Instructions */}
-            <Field>
-              <FieldLabel htmlFor="site-access-instructions">
-                <Trans>Access Instructions</Trans>
-              </FieldLabel>
-              <Textarea
-                id="site-access-instructions"
-                name="access_instructions"
-                rows={4}
-                value={formData.access_instructions || ""}
-                onChange={(e) =>
-                  updateField("access_instructions", e.target.value)
-                }
-              />
-            </Field>
-
-            {/* Notes */}
-            <Field>
-              <FieldLabel htmlFor="site-notes">
-                <Trans>Notes</Trans>
-              </FieldLabel>
-              <Textarea
-                id="site-notes"
-                name="notes"
-                rows={4}
-                value={formData.notes || ""}
-                onChange={(e) => updateField("notes", e.target.value)}
-              />
-            </Field>
-
-            {/* Active Status */}
-            <FormCheckboxField>
-              <Checkbox
-                id="site-is-active"
-                name="is_active"
-                checked={formData.is_active}
-                onCheckedChange={(checked) =>
-                  updateField("is_active", checked === true)
-                }
-              />
-              <FieldLabel htmlFor="site-is-active">
-                <Trans>Active</Trans>
-              </FieldLabel>
-            </FormCheckboxField>
 
             {/* Actions */}
             <div className="flex gap-4 pt-4 border-t">
