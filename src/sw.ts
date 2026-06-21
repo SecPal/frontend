@@ -23,26 +23,12 @@ import {
   focusOrNavigateClient,
   getNotificationNavigationTarget,
 } from "./lib/notificationNavigation";
+import {
+  redirectProtectedWindowClientsToLogin,
+  shouldRedirectLoggedOutNavigation,
+} from "./lib/serviceWorkerAuthRedirect";
 
 declare const self: ServiceWorkerGlobalScope;
-
-const PUBLIC_LOGGED_OUT_PATHS = new Set(["/login", "/onboarding/complete"]);
-
-function shouldRedirectLoggedOutNavigation(
-  pathname: string,
-  isAuthenticated: boolean | null
-): boolean {
-  if (isAuthenticated !== false) {
-    return false;
-  }
-
-  const normalizedPathname =
-    pathname !== "/" && pathname.endsWith("/")
-      ? pathname.slice(0, -1)
-      : pathname;
-
-  return !PUBLIC_LOGGED_OUT_PATHS.has(normalizedPathname);
-}
 
 async function redirectProtectedClientsToLogin(): Promise<void> {
   const windowClients = await self.clients.matchAll({
@@ -50,16 +36,9 @@ async function redirectProtectedClientsToLogin(): Promise<void> {
     includeUncontrolled: true,
   });
 
-  await Promise.all(
-    windowClients.map(async (client) => {
-      const pathname = new URL(client.url).pathname;
-
-      if (!shouldRedirectLoggedOutNavigation(pathname, false)) {
-        return;
-      }
-
-      await client.navigate(new URL("/login", self.location.origin).toString());
-    })
+  await redirectProtectedWindowClientsToLogin(
+    windowClients,
+    self.location.origin
   );
 }
 
