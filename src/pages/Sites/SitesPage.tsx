@@ -108,6 +108,7 @@ export default function SitesPage() {
   const [sitesCustomerScope, setSitesCustomerScope] = useState(customerScope);
   const sitesCustomerScopeRef = useRef(customerScope);
   const isSwitchingCustomerScope = sitesCustomerScope !== customerScope;
+  const tableLoading = loading || isSwitchingCustomerScope;
   const visibleSites = isSwitchingCustomerScope ? [] : sites;
   const visiblePagination = isSwitchingCustomerScope
     ? {
@@ -277,7 +278,7 @@ export default function SitesPage() {
 
       {/* Site Table */}
       <LoadingRegion
-        loading={loading}
+        loading={tableLoading}
         loadingLabel={_(msg`Loading sites table`)}
       >
         <DataTable>
@@ -311,7 +312,7 @@ export default function SitesPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {loading && visibleSites.length === 0 ? (
+              {tableLoading && visibleSites.length === 0 ? (
                 <SiteTableSkeletonRows
                   columns={SITE_TABLE_COLUMN_COUNT}
                   rows={5}
@@ -368,7 +369,7 @@ export default function SitesPage() {
                 </TableRow>
               ))}
 
-              {!loading && visibleSites.length === 0 ? (
+              {!tableLoading && visibleSites.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={SITE_TABLE_COLUMN_COUNT}
