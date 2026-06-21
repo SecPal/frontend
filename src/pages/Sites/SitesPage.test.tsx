@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import SitesPage from "./SitesPage";
@@ -22,11 +22,14 @@ vi.mock("../../hooks/useUserCapabilities", () => ({
 }));
 
 // Helper to render with providers
-const renderWithProviders = () => {
+const renderWithProviders = (initialEntries = ["/sites"]) => {
   return render(
     <I18nProvider i18n={i18n}>
-      <MemoryRouter>
-        <SitesPage />
+      <MemoryRouter initialEntries={initialEntries}>
+        <Routes>
+          <Route path="/sites" element={<SitesPage />} />
+          <Route path="/sites/customer/:customerId" element={<SitesPage />} />
+        </Routes>
       </MemoryRouter>
     </I18nProvider>
   );
@@ -46,7 +49,24 @@ const mockSites: Site[] = [
     },
     is_active: true,
     customer_id: "cust-1",
+    customer: {
+      id: "cust-1",
+      customer_number: "CUST-001",
+      name: "Acme GmbH",
+      billing_address: {
+        street: "Billing St",
+        postal_code: "10115",
+        city: "Berlin",
+        country: "DE",
+      },
+      is_active: true,
+    },
     organizational_unit_id: "unit-1",
+    contact: {
+      name: "Erika Muster",
+      email: "erika@example.test",
+      phone: "+49 30 123456",
+    },
     is_expired: false,
     full_address: "Main St, 12345 Berlin, Germany",
     created_at: "2025-01-01T00:00:00Z",
@@ -65,7 +85,20 @@ const mockSites: Site[] = [
     },
     is_active: true,
     customer_id: "cust-2",
+    customer: {
+      id: "cust-2",
+      customer_number: "CUST-002",
+      name: "Beta AG",
+      billing_address: {
+        street: "Invoice Rd",
+        postal_code: "80331",
+        city: "Munich",
+        country: "DE",
+      },
+      is_active: true,
+    },
     organizational_unit_id: "unit-2",
+    contact: null,
     valid_from: "2025-01-01",
     valid_until: "2025-12-31",
     is_expired: false,
@@ -127,6 +160,12 @@ describe("SitesPage", () => {
     expect(screen.getByLabelText(/search/i)).toBeInTheDocument();
     expect(
       screen.getByRole("columnheader", { name: /site number/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /customer/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /contact person/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("status", { name: /loading sites table/i })
@@ -256,8 +295,18 @@ describe("SitesPage", () => {
 
     // Check all site fields are displayed
     expect(screen.getByText("S001")).toBeInTheDocument();
-    expect(screen.getByText("Berlin, Germany")).toBeInTheDocument();
-    expect(screen.getByText("Munich, Germany")).toBeInTheDocument();
+    expect(
+      screen.getByText("Main St, 12345 Berlin, Germany")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Project Rd, 54321 Munich, Germany")
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Acme GmbH" })).toHaveAttribute(
+      "href",
+      "/customers/cust-1"
+    );
+    expect(screen.getByText("Beta AG")).toBeInTheDocument();
+    expect(screen.getByText("Erika Muster")).toBeInTheDocument();
     expect(screen.getAllByText(/active/i).length).toBeGreaterThan(0);
   });
 
@@ -294,6 +343,21 @@ describe("SitesPage", () => {
 
     const newButton = screen.getByText(/new site/i);
     expect(newButton.closest("a")).toHaveAttribute("href", "/sites/new");
+  });
+
+  it("uses the customer route parameter to filter sites and prefill the create CTA", async () => {
+    renderWithProviders(["/sites/customer/cust-1"]);
+
+    await waitFor(() => {
+      expect(customersApi.listSites).toHaveBeenCalledWith(
+        expect.objectContaining({ customer_id: "cust-1" })
+      );
+    });
+
+    expect(screen.getByRole("link", { name: /new site/i })).toHaveAttribute(
+      "href",
+      "/sites/new/customer/cust-1"
+    );
   });
 
   it("hides the new site CTA without create capability", async () => {
@@ -427,8 +491,9 @@ describe("SitesPage", () => {
       expect(screen.getByText(/showing/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/showing/i)).toBeInTheDocument();
-    expect(screen.getByText(/45/)).toBeInTheDocument();
+    expect(screen.getByText(/showing/i).closest("p")).toHaveTextContent(
+      /of 45 sites/i
+    );
   });
 
   it("should reset page to 1 when searching", async () => {

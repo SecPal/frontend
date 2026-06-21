@@ -6,7 +6,7 @@
  * Epic #210 - Phase 6: Customer & Site Management Frontend
  */
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -42,6 +42,20 @@ import {
 } from "../CustomerSites/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
+function formatSiteAddress(site: Site): string {
+  if (site.full_address) {
+    return site.full_address;
+  }
+
+  return [
+    site.address.street,
+    `${site.address.postal_code} ${site.address.city}`.trim(),
+    site.address.country,
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
 function SiteTableSkeletonRows({
   columns,
   rows,
@@ -73,8 +87,11 @@ export default function SitesPage() {
   const [filters, setFilters] = useState<SiteFilters>({
     page: 1,
     per_page: 15,
-    customer_id: customerId,
   });
+  const effectiveFilters = useMemo<SiteFilters>(
+    () => ({ ...filters, customer_id: customerId }),
+    [customerId, filters]
+  );
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,7 +105,7 @@ export default function SitesPage() {
   useEffect(() => {
     let active = true;
 
-    void listSites(filters)
+    void listSites(effectiveFilters)
       .then((response) => {
         if (!active) {
           return;
@@ -116,7 +133,7 @@ export default function SitesPage() {
     return () => {
       active = false;
     };
-  }, [_, filters]);
+  }, [_, effectiveFilters]);
 
   function handleSearch(value: string) {
     setLoading(true);
@@ -248,10 +265,16 @@ export default function SitesPage() {
                   <Trans>Name</Trans>
                 </TableHeader>
                 <TableHeader>
+                  <Trans>Customer</Trans>
+                </TableHeader>
+                <TableHeader>
                   <Trans>Type</Trans>
                 </TableHeader>
                 <TableHeader>
                   <Trans>Address</Trans>
+                </TableHeader>
+                <TableHeader>
+                  <Trans>Contact Person</Trans>
                 </TableHeader>
                 <TableHeader>
                   <Trans>Status</Trans>
@@ -273,6 +296,15 @@ export default function SitesPage() {
                   </TableCell>
                   <TableCell>{site.name}</TableCell>
                   <TableCell>
+                    {site.customer ? (
+                      <PageLink to={`/customers/${site.customer.id}`}>
+                        {site.customer.name}
+                      </PageLink>
+                    ) : (
+                      site.customer_id
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <StatusBadge
                       color={site.type === "permanent" ? "blue" : "amber"}
                     >
@@ -284,7 +316,10 @@ export default function SitesPage() {
                     </StatusBadge>
                   </TableCell>
                   <TableCell className="text-zinc-500 dark:text-zinc-400">
-                    {site.address.city}, {site.address.country}
+                    {formatSiteAddress(site)}
+                  </TableCell>
+                  <TableCell className="text-zinc-500 dark:text-zinc-400">
+                    {site.contact?.name || "-"}
                   </TableCell>
                   <TableCell>
                     <StatusBadge color={site.is_active ? "lime" : "zinc"}>
@@ -306,7 +341,7 @@ export default function SitesPage() {
 
               {!loading && sites.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-12 text-center">
+                  <TableCell colSpan={8} className="py-12 text-center">
                     <PageText className="text-zinc-500 dark:text-zinc-400">
                       <Trans>No sites found</Trans>
                     </PageText>

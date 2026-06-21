@@ -137,6 +137,11 @@ describe("SiteDetail", () => {
     await waitFor(() => {
       expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
     });
+    expect(
+      screen.getByRole("link", { name: "Test Customer GmbH" })
+    ).toHaveAttribute("href", "/customers/customer-123");
+    expect(screen.getByText("CUST-2025-001")).toBeInTheDocument();
+    expect(screen.getByText("Street, 12345 City, DE")).toBeInTheDocument();
 
     // Check org unit name is displayed (not ID)
     expect(screen.getByText("IT Department")).toBeInTheDocument();
@@ -193,6 +198,27 @@ describe("SiteDetail", () => {
       screen.getByRole("status", { name: "Loading site lookup data" })
     ).toBeInTheDocument();
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
+  });
+
+  it("uses the customer relation from the site response for customer navigation", async () => {
+    vi.mocked(customersApi.getSite).mockResolvedValue({
+      ...mockSite,
+      customer: mockCustomer,
+    });
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
+      mockOrgUnit
+    );
+
+    renderWithRouter();
+
+    const customerLink = await screen.findByRole("link", {
+      name: "Test Customer GmbH",
+    });
+
+    expect(customerLink).toHaveAttribute("href", "/customers/customer-123");
+    expect(screen.getByText("CUST-2025-001")).toBeInTheDocument();
+    expect(customersApi.getCustomer).not.toHaveBeenCalled();
   });
 
   it("displays badges for site type and status", async () => {

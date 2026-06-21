@@ -595,6 +595,7 @@ msgstr "Maximum Assignable Rank"
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
+#: src/pages/Sites/SitesPage.tsx
 msgid "Customer"
 msgstr "Customer"
 
@@ -626,6 +627,7 @@ msgstr "No passkeys enrolled yet."
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Sites/SiteDetail.tsx
 msgid "Billing Address"
 msgstr "Billing Address"
 
@@ -779,6 +781,7 @@ msgid "Unit"
 msgstr "Unit"
 
 #: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Sites/SiteDetail.tsx
 msgid "Customer Number"
 msgstr "Customer Number"
 
@@ -1218,6 +1221,7 @@ msgstr "{label}: N/A"
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
+#: src/pages/Sites/SitesPage.tsx
 msgid "Contact Person"
 msgstr "Contact Person"
 
