@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -108,7 +108,7 @@ describe("SiteCreate", () => {
   const mockCreatedSite = {
     id: "site-new",
     site_number: "SITE-2025-001",
-    name: "New Site",
+    name: "new site",
     type: "permanent" as const,
     customer_id: "customer-1",
     organizational_unit_id: "org-1",
@@ -167,18 +167,23 @@ describe("SiteCreate", () => {
     renderWithRouter();
 
     expect(
-      await screen.findByLabelText(/customer/i, undefined, {
-        timeout: SLOW_TEST_TIMEOUT,
-      })
+      await screen.findByRole(
+        "combobox",
+        { name: /customer/i },
+        { timeout: SLOW_TEST_TIMEOUT }
+      )
     ).toBeInTheDocument();
 
-    expect(screen.getByLabelText(/organizational unit/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/organizational unit/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/type/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/street/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/city/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/postal code/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/country/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^name$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/phone/i)).toBeInTheDocument();
   });
 
   it("pre-selects customer when customerId is in URL", async () => {
@@ -204,7 +209,7 @@ describe("SiteCreate", () => {
       await selectRadixOption(/customer/i, /C001 - Customer One/i);
       await selectRadixOption(/organizational unit/i, /IT Department/i);
       fireEvent.change(screen.getByLabelText(/site name/i), {
-        target: { value: "New Site" },
+        target: { value: "new site" },
       });
       fireEvent.change(screen.getByLabelText(/street/i), {
         target: { value: "Test Street 1" },
@@ -220,20 +225,18 @@ describe("SiteCreate", () => {
       fireEvent.click(screen.getByRole("button", { name: /create site/i }));
 
       await waitFor(() => {
-        expect(customersApi.createSite).toHaveBeenCalledWith(
-          expect.objectContaining({
-            customer_id: "customer-1",
-            organizational_unit_id: "org-1",
-            name: "New Site",
-            type: "permanent",
-            address: expect.objectContaining({
-              street: "Test Street 1",
-              city: "Test City",
-              postal_code: "12345",
-              country: "DE",
-            }),
-          })
-        );
+        expect(customersApi.createSite).toHaveBeenCalledWith({
+          customer_id: "customer-1",
+          organizational_unit_id: "org-1",
+          name: "new site",
+          type: "permanent",
+          address: {
+            street: "Test Street 1",
+            city: "Test City",
+            postal_code: "12345",
+            country: "DE",
+          },
+        });
         expect(mockNavigate).toHaveBeenCalledWith("/sites/site-new");
       });
     },
@@ -247,8 +250,11 @@ describe("SiteCreate", () => {
         errors?: Record<string, string[]>;
       };
       validationError.errors = {
+        customer_id: ["The customer field is required."],
         name: ["The name must not exceed 255 characters."],
         "address.street": ["The street field must be a valid address."],
+        "address.postal_code": ["The postal code field is required."],
+        "contact.email": ["The contact email field must be a valid email."],
       };
       vi.mocked(customersApi.createSite).mockRejectedValue(validationError);
 
@@ -273,12 +279,18 @@ describe("SiteCreate", () => {
       fireEvent.change(screen.getByLabelText(/postal code/i), {
         target: { value: "12345" },
       });
+      fireEvent.change(screen.getByLabelText(/email/i), {
+        target: { value: "not-an-email@secpal.dev" },
+      });
 
       // Submit - API will reject with validation errors
       fireEvent.click(screen.getByRole("button", { name: /create site/i }));
 
       await waitFor(() => {
         expect(customersApi.createSite).toHaveBeenCalled();
+        expect(
+          screen.getByRole("combobox", { name: /customer/i })
+        ).toHaveAttribute("aria-describedby", "site-customer-error");
         expect(screen.getByLabelText(/site name/i)).toHaveAttribute(
           "aria-describedby",
           "site-name-error"
@@ -287,11 +299,28 @@ describe("SiteCreate", () => {
           "aria-describedby",
           "site-street-error"
         );
+        expect(screen.getByLabelText(/postal code/i)).toHaveAttribute(
+          "aria-describedby",
+          "site-postal-code-error"
+        );
+        expect(screen.getByLabelText(/email/i)).toHaveAttribute(
+          "aria-describedby",
+          "site-contact-email-error"
+        );
+        expect(
+          screen.getByText(/the customer field is required/i)
+        ).toBeInTheDocument();
         expect(
           screen.getByText(/the name must not exceed 255 characters/i)
         ).toBeInTheDocument();
         expect(
           screen.getByText(/the street field must be a valid address/i)
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(/the postal code field is required/i)
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(/the contact email field must be a valid email/i)
         ).toBeInTheDocument();
       });
     },
@@ -347,7 +376,7 @@ describe("SiteCreate", () => {
       // Fix the validation error
       const nameInput = screen.getByLabelText(/site name/i);
       fireEvent.change(nameInput, {
-        target: { value: "Valid Site Name" },
+        target: { value: "Valid site name" },
       });
       fireEvent.click(screen.getByRole("button", { name: /create site/i }));
 
@@ -416,7 +445,7 @@ describe("SiteCreate", () => {
       await selectRadixOption(/customer/i, /C001 - Customer One/i);
       await selectRadixOption(/organizational unit/i, /IT Department/i);
       fireEvent.change(screen.getByLabelText(/site name/i), {
-        target: { value: "New Site" },
+        target: { value: "new site" },
       });
       fireEvent.change(screen.getByLabelText(/street/i), {
         target: { value: "Test Street" },

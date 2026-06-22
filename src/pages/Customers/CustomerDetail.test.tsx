@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -358,8 +358,9 @@ describe("CustomerDetail", () => {
       expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
     });
 
-    // Should have link to sites page with customer filter
-    const sitesLink = screen.getByRole("link", { name: /view sites|sites/i });
+    const sitesLink = screen.getByRole("link", {
+      name: /view sites|sites/i,
+    });
     expect(sitesLink).toHaveAttribute(
       "href",
       expect.stringContaining("/sites")

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
@@ -26,12 +26,10 @@ import {
   Alert,
   AlertDescription,
   Button,
-  Checkbox,
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-  FormCheckboxField,
   Input,
   LinkButton,
   PageTitle,
@@ -40,7 +38,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Textarea,
 } from "../CustomerSites/ui";
 
 export default function SiteCreate() {
@@ -132,7 +129,6 @@ export default function SiteCreate() {
         name: formData.name,
         type: formData.type,
         address: formData.address,
-        is_active: formData.is_active,
       };
 
       // Only include contact if at least one field is filled
@@ -143,22 +139,6 @@ export default function SiteCreate() {
           formData.contact.phone)
       ) {
         dataToSend.contact = formData.contact;
-      }
-
-      // Only include optional text fields if not empty
-      if (formData.access_instructions?.trim()) {
-        dataToSend.access_instructions = formData.access_instructions;
-      }
-      if (formData.notes?.trim()) {
-        dataToSend.notes = formData.notes;
-      }
-
-      // Include validity dates if set
-      if (formData.valid_from) {
-        dataToSend.valid_from = formData.valid_from;
-      }
-      if (formData.valid_until) {
-        dataToSend.valid_until = formData.valid_until;
       }
 
       const site = await createSite(dataToSend);
@@ -471,8 +451,19 @@ export default function SiteCreate() {
                 type="text"
                 autoComplete="name"
                 value={formData.contact?.name || ""}
+                aria-invalid={fieldErrors["contact.name"] ? true : undefined}
+                aria-describedby={
+                  fieldErrors["contact.name"]
+                    ? "site-contact-name-error"
+                    : undefined
+                }
                 onChange={(e) => updateContact("name", e.target.value)}
               />
+              {fieldErrors["contact.name"] && (
+                <FieldError id="site-contact-name-error">
+                  {fieldErrors["contact.name"].join(", ")}
+                </FieldError>
+              )}
             </Field>
 
             <Field>
@@ -485,8 +476,19 @@ export default function SiteCreate() {
                 type="email"
                 autoComplete="email"
                 value={formData.contact?.email || ""}
+                aria-invalid={fieldErrors["contact.email"] ? true : undefined}
+                aria-describedby={
+                  fieldErrors["contact.email"]
+                    ? "site-contact-email-error"
+                    : undefined
+                }
                 onChange={(e) => updateContact("email", e.target.value)}
               />
+              {fieldErrors["contact.email"] && (
+                <FieldError id="site-contact-email-error">
+                  {fieldErrors["contact.email"].join(", ")}
+                </FieldError>
+              )}
             </Field>
 
             <Field>
@@ -499,91 +501,22 @@ export default function SiteCreate() {
                 type="tel"
                 autoComplete="tel"
                 value={formData.contact?.phone || ""}
+                aria-invalid={fieldErrors["contact.phone"] ? true : undefined}
+                aria-describedby={
+                  fieldErrors["contact.phone"]
+                    ? "site-contact-phone-error"
+                    : undefined
+                }
                 onChange={(e) => updateContact("phone", e.target.value)}
               />
+              {fieldErrors["contact.phone"] && (
+                <FieldError id="site-contact-phone-error">
+                  {fieldErrors["contact.phone"].join(", ")}
+                </FieldError>
+              )}
             </Field>
           </FieldGroup>
         </div>
-
-        {/* Validity Period */}
-        <div>
-          <PageTitle level={2} className="mb-4">
-            <Trans>Validity Period</Trans>{" "}
-            <span className="text-zinc-500">
-              <Trans>(Optional)</Trans>
-            </span>
-          </PageTitle>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="site-valid-from">
-                <Trans>Valid From</Trans>
-              </FieldLabel>
-              <Input
-                id="site-valid-from"
-                name="valid_from"
-                type="date"
-                value={formData.valid_from || ""}
-                onChange={(e) => updateField("valid_from", e.target.value)}
-              />
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="site-valid-until">
-                <Trans>Valid Until</Trans>
-              </FieldLabel>
-              <Input
-                id="site-valid-until"
-                name="valid_until"
-                type="date"
-                value={formData.valid_until || ""}
-                onChange={(e) => updateField("valid_until", e.target.value)}
-              />
-            </Field>
-          </FieldGroup>
-        </div>
-
-        {/* Access Instructions */}
-        <Field>
-          <FieldLabel htmlFor="site-access-instructions">
-            <Trans>Access Instructions</Trans>
-          </FieldLabel>
-          <Textarea
-            id="site-access-instructions"
-            name="access_instructions"
-            rows={4}
-            value={formData.access_instructions || ""}
-            onChange={(e) => updateField("access_instructions", e.target.value)}
-          />
-        </Field>
-
-        {/* Notes */}
-        <Field>
-          <FieldLabel htmlFor="site-notes">
-            <Trans>Notes</Trans>
-          </FieldLabel>
-          <Textarea
-            id="site-notes"
-            name="notes"
-            rows={4}
-            value={formData.notes || ""}
-            onChange={(e) => updateField("notes", e.target.value)}
-          />
-        </Field>
-
-        {/* Active Status */}
-        <FormCheckboxField>
-          <Checkbox
-            id="site-is-active"
-            name="is_active"
-            checked={formData.is_active}
-            onCheckedChange={(checked) =>
-              updateField("is_active", checked === true)
-            }
-          />
-          <FieldLabel htmlFor="site-is-active">
-            <Trans>Active</Trans>
-          </FieldLabel>
-        </FormCheckboxField>
 
         {/* Actions */}
         <div className="flex gap-4 pt-4 border-t">

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
@@ -15,7 +15,12 @@ import { ArrowLeft, Edit, List, Trash2 } from "lucide-react";
 import { LoadingRegion, SectionSkeleton, Skeleton } from "@/ui";
 import { getSite, deleteSite, getCustomer } from "../../services/customersApi";
 import { getOrganizationalUnit } from "../../services/organizationalUnitApi";
-import type { Site, Customer } from "../../types/customers";
+import type {
+  Address,
+  Customer,
+  Site,
+  SiteCustomer,
+} from "../../types/customers";
 import type { OrganizationalUnit } from "../../types/organizational";
 import {
   DescriptionList,
@@ -42,13 +47,25 @@ import { formatDate } from "../../lib/dateUtils";
 import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
+function formatAddress(address: Address): string {
+  return [
+    address.street,
+    `${address.postal_code} ${address.city}`.trim(),
+    address.country,
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
 export default function SiteDetail() {
   const { _, i18n } = useLingui();
   const capabilities = useUserCapabilities();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [site, setSite] = useState<Site | null>(null);
-  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [customer, setCustomer] = useState<Customer | SiteCustomer | null>(
+    null
+  );
   const [orgUnit, setOrgUnit] = useState<OrganizationalUnit | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -74,10 +91,15 @@ export default function SiteDetail() {
         const siteData = await getSite(id);
         if (cancelled) return;
         setSite(siteData);
+        if (siteData.customer) {
+          setCustomer(siteData.customer);
+        }
 
         // Load customer and org unit in parallel, but don't fail if they error
         const [customerResult, orgUnitResult] = await Promise.allSettled([
-          getCustomer(siteData.customer_id),
+          siteData.customer
+            ? Promise.resolve(siteData.customer)
+            : getCustomer(siteData.customer_id),
           getOrganizationalUnit(siteData.organizational_unit_id),
         ]);
         if (cancelled) return;
@@ -210,6 +232,47 @@ export default function SiteDetail() {
       </div>
 
       <div className="space-y-8">
+        {/* Customer */}
+        <div>
+          <PageTitle level={2} className="mb-4">
+            <Trans>Customer</Trans>
+          </PageTitle>
+          <DescriptionList>
+            <DescriptionTerm>
+              <Trans>Name</Trans>
+            </DescriptionTerm>
+            <DescriptionDetails>
+              {customer ? (
+                <PageLink to={`/customers/${customer.id}`}>
+                  {customer.name}
+                </PageLink>
+              ) : isAssociationLoading ? (
+                <Skeleton className="h-4 w-40" />
+              ) : (
+                site.customer_id
+              )}
+            </DescriptionDetails>
+
+            {customer && (
+              <>
+                <DescriptionTerm>
+                  <Trans>Customer Number</Trans>
+                </DescriptionTerm>
+                <DescriptionDetails>
+                  {customer.customer_number}
+                </DescriptionDetails>
+
+                <DescriptionTerm>
+                  <Trans>Billing Address</Trans>
+                </DescriptionTerm>
+                <DescriptionDetails>
+                  {formatAddress(customer.billing_address)}
+                </DescriptionDetails>
+              </>
+            )}
+          </DescriptionList>
+        </div>
+
         {/* Address */}
         <div>
           <PageTitle level={2} className="mb-4">
@@ -370,21 +433,6 @@ export default function SiteDetail() {
             loadingLabel={_(msg`Loading site lookup data`)}
           >
             <DescriptionList>
-              <DescriptionTerm>
-                <Trans>Customer</Trans>
-              </DescriptionTerm>
-              <DescriptionDetails>
-                {customer ? (
-                  <PageLink to={`/customers/${site.customer_id}`}>
-                    {customer.name}
-                  </PageLink>
-                ) : isAssociationLoading ? (
-                  <Skeleton className="h-4 w-40" />
-                ) : (
-                  site.customer_id
-                )}
-              </DescriptionDetails>
-
               <DescriptionTerm>
                 <Trans>Organizational Unit</Trans>
               </DescriptionTerm>

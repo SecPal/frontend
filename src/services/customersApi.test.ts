@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -9,6 +9,11 @@ import {
   getCustomer,
   createCustomer,
   updateCustomer,
+  listSites,
+  getSite,
+  getCustomerSites,
+  createSite,
+  updateSite,
   deleteCustomer,
 } from "./customersApi";
 import * as csrf from "./csrf";
@@ -394,6 +399,379 @@ describe("customersApi", () => {
             "Content-Type": "application/json",
           }),
         })
+      );
+    });
+  });
+
+  describe("site write model", () => {
+    const minimalAddress = {
+      street: "Objektstrasse 1",
+      city: "Berlin",
+      postal_code: "10115",
+      country: "DE",
+    };
+
+    it("creates a site with the Objekt MVP payload", async () => {
+      const siteData = {
+        customer_id: "customer-123",
+        organizational_unit_id: "internal-default-unit",
+        name: "Objekt Alpha",
+        type: "permanent" as const,
+        address: minimalAddress,
+        contact: {
+          name: "Erika Mustermann",
+          email: "erika@secpal.dev",
+        },
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: {
+            id: "site-123",
+            site_number: "OBJ-2026-0001",
+            is_active: true,
+            is_expired: false,
+            full_address: "Objektstrasse 1, 10115 Berlin, DE",
+            created_at: "2026-06-21T00:00:00Z",
+            updated_at: "2026-06-21T00:00:00Z",
+            ...siteData,
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await createSite(siteData);
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/sites`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(siteData),
+        }
+      );
+      expect(result.id).toBe("site-123");
+      expect(result.name).toBe("Objekt Alpha");
+    });
+
+    it("updates a site with the Objekt MVP payload", async () => {
+      const siteData = {
+        customer_id: "customer-456",
+        name: "Objekt Beta",
+        address: {
+          ...minimalAddress,
+          city: "Hamburg",
+          postal_code: "20095",
+        },
+        contact: null,
+      };
+
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: {
+            id: "site-123",
+            site_number: "OBJ-2026-0001",
+            organizational_unit_id: "internal-default-unit",
+            type: "permanent",
+            is_active: true,
+            is_expired: false,
+            full_address: "Objektstrasse 1, 20095 Hamburg, DE",
+            created_at: "2026-06-21T00:00:00Z",
+            updated_at: "2026-06-21T00:00:00Z",
+            ...siteData,
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await updateSite("site-123", siteData);
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/sites/site-123`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(siteData),
+        }
+      );
+      expect(result.name).toBe("Objekt Beta");
+      expect(result.customer_id).toBe("customer-456");
+    });
+
+    it("surfaces create validation errors for missing customer, missing name, and incomplete address", async () => {
+      const mockResponse = {
+        ok: false,
+        status: 422,
+        json: vi.fn().mockResolvedValue({
+          message: "Validation failed",
+          errors: {
+            customer_id: ["The customer field is required."],
+            name: ["The name field is required."],
+            "address.street": ["The street field is required."],
+            "address.city": ["The city field is required."],
+            "address.postal_code": ["The postal code field is required."],
+            "address.country": ["The country field is required."],
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      await expect(
+        createSite({
+          customer_id: "",
+          organizational_unit_id: "",
+          name: "",
+          type: "permanent",
+          address: {
+            street: "",
+            city: "",
+            postal_code: "",
+            country: "",
+          },
+        })
+      ).rejects.toMatchObject({
+        errors: expect.objectContaining({
+          customer_id: ["The customer field is required."],
+          name: ["The name field is required."],
+          "address.street": ["The street field is required."],
+        }),
+      });
+    });
+
+    it("surfaces update validation errors for missing customer, missing name, and incomplete address", async () => {
+      const mockResponse = {
+        ok: false,
+        status: 422,
+        json: vi.fn().mockResolvedValue({
+          message: "Validation failed",
+          errors: {
+            customer_id: ["The customer field is required."],
+            name: ["The name field is required."],
+            "address.street": ["The street field is required."],
+            "address.city": ["The city field is required."],
+            "address.postal_code": ["The postal code field is required."],
+            "address.country": ["The country field is required."],
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      await expect(
+        updateSite("site-123", {
+          customer_id: "",
+          name: "",
+          address: {
+            street: "",
+            city: "",
+            postal_code: "",
+            country: "",
+          },
+        })
+      ).rejects.toThrow(/customer_id: The customer field is required/);
+    });
+  });
+
+  describe("site read model", () => {
+    const objektAddress = {
+      street: "Objektstrasse 1",
+      city: "Berlin",
+      postal_code: "10115",
+      country: "DE",
+    };
+
+    const customer = {
+      id: "customer-123",
+      customer_number: "KD-2026-0001",
+      name: "Musterkunde GmbH",
+      billing_address: {
+        street: "Kundenweg 5",
+        city: "Berlin",
+        postal_code: "10117",
+        country: "DE",
+      },
+      contact: {
+        name: "Max Mustermann",
+        email: "max@secpal.dev",
+        phone: "+49 30 123456",
+      },
+      is_active: true,
+    };
+
+    const objekt = {
+      id: "site-123",
+      customer_id: customer.id,
+      customer,
+      organizational_unit_id: "internal-default-unit",
+      site_number: "OBJ-2026-0001",
+      name: "Objekt Alpha",
+      type: "permanent",
+      address: objektAddress,
+      contact: {
+        name: "Erika Mustermann",
+        email: "erika@secpal.dev",
+      },
+      is_active: true,
+      valid_from: null,
+      valid_until: null,
+      is_expired: false,
+      full_address: "Objektstrasse 1, 10115 Berlin, DE",
+      created_at: "2026-06-21T00:00:00Z",
+      updated_at: "2026-06-21T00:00:00Z",
+    };
+
+    it("lists sites with customer, address, and optional contact fields", async () => {
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: [objekt],
+          meta: {
+            current_page: 1,
+            last_page: 1,
+            per_page: 15,
+            total: 1,
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await listSites();
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/sites?`
+      );
+      expect(result.data[0]).toMatchObject({
+        customer_id: "customer-123",
+        customer: expect.objectContaining({
+          id: "customer-123",
+          name: "Musterkunde GmbH",
+          billing_address: customer.billing_address,
+          contact: customer.contact,
+        }),
+        address: objektAddress,
+        contact: objekt.contact,
+      });
+      expect(result.meta.total).toBe(1);
+    });
+
+    it("fetches site detail with the same read fields as the list response", async () => {
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({ data: objekt }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await getSite("site-123");
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/sites/site-123`
+      );
+      expect(result).toMatchObject({
+        id: "site-123",
+        customer_id: "customer-123",
+        customer: expect.objectContaining({
+          id: "customer-123",
+          name: "Musterkunde GmbH",
+          billing_address: customer.billing_address,
+        }),
+        address: objektAddress,
+        contact: objekt.contact,
+      });
+    });
+
+    it("filters the site list by customer id", async () => {
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: [objekt],
+          meta: {
+            current_page: 1,
+            last_page: 1,
+            per_page: 15,
+            total: 1,
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await listSites({
+        customer_id: "customer-123",
+        is_active: true,
+        page: 2,
+        per_page: 20,
+      });
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/sites?is_active=1&customer_id=customer-123&page=2&per_page=20`
+      );
+      expect(
+        result.data.every((site) => site.customer_id === "customer-123")
+      ).toBe(true);
+    });
+
+    it("lists sites through the nested customer endpoint", async () => {
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: [objekt],
+          meta: {
+            current_page: 1,
+            last_page: 1,
+            per_page: 15,
+            total: 1,
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await getCustomerSites("customer-123", {
+        search: "Alpha",
+        is_active: true,
+      });
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/customers/customer-123/sites?search=Alpha&is_active=1`
+      );
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0]?.customer_id).toBe("customer-123");
+    });
+
+    it("surfaces missing collection permission as forbidden", async () => {
+      const mockResponse = {
+        ok: false,
+        status: 403,
+        json: vi.fn().mockResolvedValue({ message: "Forbidden" }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      await expect(listSites()).rejects.toThrow("Forbidden");
+    });
+
+    it("surfaces tenant-hidden site details as not found", async () => {
+      const mockResponse = {
+        ok: false,
+        status: 404,
+        json: vi.fn().mockResolvedValue({ message: "Site not found" }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      await expect(getSite("tenant-hidden-site")).rejects.toThrow(
+        "Site not found"
       );
     });
   });

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
@@ -45,6 +45,16 @@ export interface Customer {
   deleted_at?: string | null;
 }
 
+export type SiteCustomer = Pick<
+  Customer,
+  | "id"
+  | "customer_number"
+  | "name"
+  | "billing_address"
+  | "contact"
+  | "is_active"
+>;
+
 export interface CreateCustomerRequest {
   name: string;
   billing_address: Address;
@@ -71,7 +81,7 @@ export interface CustomerFilters {
 }
 
 // ============================================================================
-// Site
+// Site (de: Objekt)
 // ============================================================================
 
 export type SiteType = "permanent" | "temporary";
@@ -79,6 +89,7 @@ export type SiteType = "permanent" | "temporary";
 export interface Site {
   id: string;
   customer_id: string;
+  customer?: SiteCustomer | null;
   organizational_unit_id: string;
   site_number: string; // OBJ-YYYY-####
   name: string;

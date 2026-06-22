@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
@@ -6,7 +6,7 @@
  * Epic #210 - Phase 6: Customer & Site Management Frontend
  */
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -42,6 +42,20 @@ import {
 } from "../CustomerSites/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
+function formatSiteAddress(site: Site): string {
+  if (site.full_address) {
+    return site.full_address;
+  }
+
+  return [
+    site.address.street,
+    `${site.address.postal_code} ${site.address.city}`.trim(),
+    site.address.country,
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
 function SiteTableSkeletonRows({
   columns,
   rows,
@@ -66,29 +80,42 @@ function SiteTableSkeletonRows({
   );
 }
 
+const SITE_TABLE_COLUMN_COUNT = 8;
+const DEFAULT_PAGINATION = {
+  current_page: 1,
+  last_page: 1,
+  per_page: 15,
+  total: 0,
+};
+
 export default function SitesPage() {
-  const { _ } = useLingui();
   const { customerId } = useParams<{ customerId?: string }>();
+
+  return (
+    <SitesPageContent key={customerId ?? "all-sites"} customerId={customerId} />
+  );
+}
+
+function SitesPageContent({ customerId }: { customerId?: string }) {
+  const { _ } = useLingui();
   const capabilities = useUserCapabilities();
   const [filters, setFilters] = useState<SiteFilters>({
     page: 1,
     per_page: 15,
-    customer_id: customerId,
   });
+  const effectiveFilters = useMemo<SiteFilters>(
+    () => ({ ...filters, customer_id: customerId }),
+    [customerId, filters]
+  );
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState({
-    current_page: 1,
-    last_page: 1,
-    per_page: 15,
-    total: 0,
-  });
+  const [pagination, setPagination] = useState(DEFAULT_PAGINATION);
 
   useEffect(() => {
     let active = true;
 
-    void listSites(filters)
+    void listSites(effectiveFilters)
       .then((response) => {
         if (!active) {
           return;
@@ -116,7 +143,7 @@ export default function SitesPage() {
     return () => {
       active = false;
     };
-  }, [_, filters]);
+  }, [_, effectiveFilters]);
 
   function handleSearch(value: string) {
     setLoading(true);
@@ -166,7 +193,6 @@ export default function SitesPage() {
         )}
       </div>
 
-      {/* Search and Filter */}
       <div className="grid gap-4 sm:grid-cols-[1fr_12rem_12rem]">
         <Field className="flex-1">
           <FieldLabel htmlFor="site-search">
@@ -225,14 +251,12 @@ export default function SitesPage() {
         </Field>
       </div>
 
-      {/* Error State */}
       {error && (
         <Alert className="border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
-      {/* Site Table */}
       <LoadingRegion
         loading={loading}
         loadingLabel={_(msg`Loading sites table`)}
@@ -248,10 +272,16 @@ export default function SitesPage() {
                   <Trans>Name</Trans>
                 </TableHeader>
                 <TableHeader>
+                  <Trans>Customer</Trans>
+                </TableHeader>
+                <TableHeader>
                   <Trans>Type</Trans>
                 </TableHeader>
                 <TableHeader>
                   <Trans>Address</Trans>
+                </TableHeader>
+                <TableHeader>
+                  <Trans>Contact Person</Trans>
                 </TableHeader>
                 <TableHeader>
                   <Trans>Status</Trans>
@@ -263,7 +293,10 @@ export default function SitesPage() {
             </TableHead>
             <TableBody>
               {loading && sites.length === 0 ? (
-                <SiteTableSkeletonRows columns={6} rows={5} />
+                <SiteTableSkeletonRows
+                  columns={SITE_TABLE_COLUMN_COUNT}
+                  rows={5}
+                />
               ) : null}
 
               {sites.map((site) => (
@@ -272,6 +305,15 @@ export default function SitesPage() {
                     {site.site_number}
                   </TableCell>
                   <TableCell>{site.name}</TableCell>
+                  <TableCell>
+                    {site.customer ? (
+                      <PageLink to={`/customers/${site.customer.id}`}>
+                        {site.customer.name}
+                      </PageLink>
+                    ) : (
+                      site.customer_id
+                    )}
+                  </TableCell>
                   <TableCell>
                     <StatusBadge
                       color={site.type === "permanent" ? "blue" : "amber"}
@@ -284,7 +326,10 @@ export default function SitesPage() {
                     </StatusBadge>
                   </TableCell>
                   <TableCell className="text-zinc-500 dark:text-zinc-400">
-                    {site.address.city}, {site.address.country}
+                    {formatSiteAddress(site)}
+                  </TableCell>
+                  <TableCell className="text-zinc-500 dark:text-zinc-400">
+                    {site.contact?.name || "-"}
                   </TableCell>
                   <TableCell>
                     <StatusBadge color={site.is_active ? "lime" : "zinc"}>
@@ -306,7 +351,10 @@ export default function SitesPage() {
 
               {!loading && sites.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-12 text-center">
+                  <TableCell
+                    colSpan={SITE_TABLE_COLUMN_COUNT}
+                    className="py-12 text-center"
+                  >
                     <PageText className="text-zinc-500 dark:text-zinc-400">
                       <Trans>No sites found</Trans>
                     </PageText>
@@ -318,7 +366,6 @@ export default function SitesPage() {
         </DataTable>
       </LoadingRegion>
 
-      {/* Pagination */}
       {pagination.last_page > 1 && (
         <div className="mt-6 flex items-center justify-between rounded-md border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 sm:px-6">
           <div className="flex-1 flex justify-between sm:hidden">

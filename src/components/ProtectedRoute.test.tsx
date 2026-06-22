@@ -238,43 +238,53 @@ describe("ProtectedRoute", () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it("renders revalidatingFallback during snapshot revalidation when a verified user is persisted", async () => {
-    mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
+  it(
+    "renders revalidatingFallback during snapshot revalidation when a verified user is persisted",
+    async () => {
+      mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
 
-    await persistAuthUser({
-      id: 1,
-      name: "Test",
-      email: "test@secpal.dev",
-      emailVerified: true,
-    });
+      await persistAuthUser({
+        id: 1,
+        name: "Test",
+        email: "test@secpal.dev",
+        emailVerified: true,
+      });
 
-    render(
-      <BrowserRouter>
-        <I18nProvider i18n={i18n}>
-          <AuthProvider>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute
-                    revalidatingFallback={<div>Revalidating fallback</div>}
-                  >
-                    <TestComponent />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </AuthProvider>
-        </I18nProvider>
-      </BrowserRouter>
-    );
+      render(
+        <BrowserRouter>
+          <I18nProvider i18n={i18n}>
+            <AuthProvider>
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute
+                      revalidatingFallback={<div>Revalidating fallback</div>}
+                    >
+                      <TestComponent />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </AuthProvider>
+          </I18nProvider>
+        </BrowserRouter>
+      );
 
-    await waitFor(() => {
-      expect(screen.getByText("Revalidating fallback")).toBeInTheDocument();
-    });
-    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
-    expect(mockNavigate).not.toHaveBeenCalled();
-  });
+      expect(
+        await screen.findByText(
+          "Revalidating fallback",
+          {},
+          {
+            timeout: AUTH_ROUTE_TIMEOUT_MS,
+          }
+        )
+      ).toBeInTheDocument();
+      expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+      expect(mockNavigate).not.toHaveBeenCalled();
+    },
+    AUTH_ROUTE_TIMEOUT_MS + 5_000
+  );
 
   it("still gates the email verification screen during revalidation when the persisted snapshot is unverified", async () => {
     mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));

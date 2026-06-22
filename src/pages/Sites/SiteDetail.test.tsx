@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -137,6 +137,11 @@ describe("SiteDetail", () => {
     await waitFor(() => {
       expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
     });
+    expect(
+      screen.getByRole("link", { name: "Test Customer GmbH" })
+    ).toHaveAttribute("href", "/customers/customer-123");
+    expect(screen.getByText("CUST-2025-001")).toBeInTheDocument();
+    expect(screen.getByText("Street, 12345 City, DE")).toBeInTheDocument();
 
     // Check org unit name is displayed (not ID)
     expect(screen.getByText("IT Department")).toBeInTheDocument();
@@ -193,6 +198,27 @@ describe("SiteDetail", () => {
       screen.getByRole("status", { name: "Loading site lookup data" })
     ).toBeInTheDocument();
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
+  });
+
+  it("uses the customer relation from the site response for customer navigation", async () => {
+    vi.mocked(customersApi.getSite).mockResolvedValue({
+      ...mockSite,
+      customer: mockCustomer,
+    });
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
+      mockOrgUnit
+    );
+
+    renderWithRouter();
+
+    const customerLink = await screen.findByRole("link", {
+      name: "Test Customer GmbH",
+    });
+
+    expect(customerLink).toHaveAttribute("href", "/customers/customer-123");
+    expect(screen.getByText("CUST-2025-001")).toBeInTheDocument();
+    expect(customersApi.getCustomer).not.toHaveBeenCalled();
   });
 
   it("displays badges for site type and status", async () => {
@@ -354,7 +380,7 @@ describe("SiteDetail", () => {
 
   it("displays error when site loading fails", async () => {
     vi.mocked(customersApi.getSite).mockRejectedValue(
-      new Error("Failed to load site")
+      new Error("failed to load site")
     );
 
     renderWithRouter();
@@ -376,7 +402,7 @@ describe("SiteDetail", () => {
     renderWithRouter();
 
     await waitFor(() => {
-      // Site name should still be displayed
+      // site name should still be displayed
       expect(screen.getByText("Munich Office")).toBeInTheDocument();
     });
 

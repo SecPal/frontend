@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
@@ -237,7 +237,7 @@ export async function getCustomerSites(
   }
 
   const response = await apiFetch(
-    `/v1/customers/${customerId}/sites?${searchParams.toString()}`
+    `${apiConfig.baseUrl}/v1/customers/${customerId}/sites?${searchParams.toString()}`
   );
 
   if (!response.ok) {

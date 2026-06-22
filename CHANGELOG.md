@@ -47,6 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restored API-required organizational-unit and type fields in site creation payloads and aligned the sites table loading skeleton with the added customer/contact columns.
+
 - Made service-worker explicit logout redirects resilient across multiple open app windows: protected clients are redirected to `/login` independently, so a failed `WindowClient.navigate()` call is logged without blocking remaining protected clients from being redirected, and the per-client failure log now redacts query strings and fragments from the client URL.
 
 - Fixed service-worker notification click handler to focus an existing app window when its pathname matches the notification target URL, then navigate it to the full target URL (including query and hash). The handler previously only matched on `pathname` without navigating the window to the specific deep-link, and an intermediate refactor erroneously required an exact `pathname + search + hash` match which prevented focusing any window already open on the same page. The push-notification data builder now also correctly makes the top-level `url` field authoritative over any `url` key nested inside the `data` sub-object.
