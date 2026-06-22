@@ -1727,9 +1727,9 @@ msgstr "Turn on notifications for this signed-in browser on the current SecPal d
 msgid "Download Latest Export"
 msgstr "Download Latest Export"
 
-#. placeholder {0}: (visiblePagination.current_page - 1) * visiblePagination.per_page + 1
-#. placeholder {1}: Math.min( visiblePagination.current_page * visiblePagination.per_page, visiblePagination.total )
-#. placeholder {2}: visiblePagination.total
+#. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
+#. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
+#. placeholder {2}: pagination.total
 #: src/pages/Sites/SitesPage.tsx
 msgid "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
 msgstr "Showing <0>{0}</0> to <1>{1}</1> of <2>{2}</2> sites"
