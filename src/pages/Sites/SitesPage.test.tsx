@@ -83,7 +83,7 @@ const mockSites: Site[] = [
     organizational_unit_id: "unit-1",
     contact: {
       name: "Erika Muster",
-      email: "erika@example.test",
+      email: "erika@secpal.dev",
       phone: "+49 30 123456",
     },
     is_expired: false,
@@ -378,6 +378,49 @@ describe("SitesPage", () => {
       "href",
       "/sites/new/customer/cust-1"
     );
+  });
+
+  it("resets the customer-scoped request to page 1 after navigating from a later global page", async () => {
+    const paginatedResponse: PaginatedResponse<Site> = {
+      ...mockResponse,
+      meta: {
+        current_page: 1,
+        last_page: 3,
+        per_page: 15,
+        total: 45,
+      },
+    };
+    vi.mocked(customersApi.listSites).mockResolvedValue(paginatedResponse);
+
+    const user = userEvent.setup();
+    renderWithProviders(["/sites"], {
+      to: "/sites/customer/cust-1",
+      label: "Open customer scope",
+    });
+
+    expect(await screen.findByText("Main Office")).toBeInTheDocument();
+
+    fireEvent.click(
+      screen
+        .getAllByRole("button")
+        .find((button) => button.textContent?.match(/next/i))!
+    );
+
+    await waitFor(() => {
+      expect(customersApi.listSites).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 2 })
+      );
+    });
+
+    await user.click(
+      screen.getByRole("button", { name: "Open customer scope" })
+    );
+
+    await waitFor(() => {
+      expect(customersApi.listSites).toHaveBeenLastCalledWith(
+        expect.objectContaining({ customer_id: "cust-1", page: 1 })
+      );
+    });
   });
 
   it("hides stale customer rows while a new customer-scoped request is loading", async () => {

@@ -346,6 +346,35 @@ describe("SiteEdit", () => {
     });
   });
 
+  it("omits contact from the update payload when no contact was loaded or edited", async () => {
+    const siteWithoutContact = { ...mockSite, contact: undefined };
+    vi.mocked(customersApi.getSite).mockResolvedValue(siteWithoutContact);
+    vi.mocked(customersApi.updateSite).mockResolvedValue(mockUpdatedSite);
+
+    renderWithRouter();
+
+    await screen.findByLabelText(/site name/i);
+
+    fireEvent.change(screen.getByLabelText(/site name/i), {
+      target: { value: "Updated site name" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(customersApi.updateSite).toHaveBeenCalledWith("site-123", {
+        customer_id: "customer-1",
+        name: "Updated site name",
+        address: {
+          street: "Old Street 1",
+          city: "Old City",
+          postal_code: "11111",
+          country: "DE",
+        },
+      });
+    });
+  });
+
   it("updates existing optional contact fields", async () => {
     vi.mocked(customersApi.updateSite).mockResolvedValue(mockUpdatedSite);
 

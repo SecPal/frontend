@@ -140,12 +140,19 @@ export default function SiteEdit() {
   }
 
   function buildUpdatePayload(): UpdateSiteRequest {
-    return {
+    const payload: UpdateSiteRequest = {
       customer_id: formData.customer_id,
       name: formData.name,
       address: formData.address,
-      contact: hasContactValue(formData.contact) ? formData.contact : null,
     };
+
+    if (formData.contact !== undefined) {
+      payload.contact = hasContactValue(formData.contact)
+        ? formData.contact
+        : null;
+    }
+
+    return payload;
   }
 
   async function handleSubmit(e: React.FormEvent) {

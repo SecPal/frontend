@@ -280,7 +280,7 @@ describe("SiteCreate", () => {
         target: { value: "12345" },
       });
       fireEvent.change(screen.getByLabelText(/email/i), {
-        target: { value: "not-an-email@example.test" },
+        target: { value: "not-an-email@secpal.dev" },
       });
 
       // Submit - API will reject with validation errors

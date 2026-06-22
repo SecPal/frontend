@@ -420,7 +420,7 @@ describe("customersApi", () => {
         address: minimalAddress,
         contact: {
           name: "Erika Mustermann",
-          email: "erika@example.test",
+          email: "erika@secpal.dev",
         },
       };
 
@@ -601,7 +601,7 @@ describe("customersApi", () => {
       },
       contact: {
         name: "Max Mustermann",
-        email: "max@example.test",
+        email: "max@secpal.dev",
         phone: "+49 30 123456",
       },
       is_active: true,
@@ -618,7 +618,7 @@ describe("customersApi", () => {
       address: objektAddress,
       contact: {
         name: "Erika Mustermann",
-        email: "erika@example.test",
+        email: "erika@secpal.dev",
       },
       is_active: true,
       valid_from: null,
