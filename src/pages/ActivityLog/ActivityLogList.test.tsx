@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -22,6 +22,49 @@ vi.mock("./ActivityDetailDialog", () => ({
 }));
 
 const SLOW_TEST_TIMEOUT = 20000;
+
+type MatchMediaListener = (event: MediaQueryListEvent) => void;
+
+function mockMatchMedia(matches: boolean) {
+  const listeners = new Set<MatchMediaListener>();
+
+  const mediaQueryList = {
+    matches,
+    media: "(min-width: 40rem)",
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(
+      (event: string, listener: EventListenerOrEventListenerObject) => {
+        if (event === "change" && typeof listener === "function") {
+          listeners.add(listener as MatchMediaListener);
+        }
+      }
+    ),
+    removeEventListener: vi.fn(
+      (event: string, listener: EventListenerOrEventListenerObject) => {
+        if (event === "change" && typeof listener === "function") {
+          listeners.delete(listener as MatchMediaListener);
+        }
+      }
+    ),
+    dispatchEvent: vi.fn(),
+  } satisfies Partial<MediaQueryList>;
+
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => mediaQueryList)
+  );
+
+  return {
+    setMatches(nextMatches: boolean) {
+      mediaQueryList.matches = nextMatches;
+      listeners.forEach((listener) => {
+        listener({ matches: nextMatches } as MediaQueryListEvent);
+      });
+    },
+  };
+}
 
 // Helper to render with providers
 const renderWithProviders = () => {
@@ -119,6 +162,7 @@ const mockResponse = {
 
 describe("ActivityLogList", () => {
   beforeEach(() => {
+    vi.unstubAllGlobals();
     vi.clearAllMocks();
     vi.mocked(activityLogApi.fetchActivityLogs).mockResolvedValue(mockResponse);
     vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
@@ -783,5 +827,47 @@ describe("ActivityLogList", () => {
         expect.objectContaining({ to_date: "2025-12-31", page: 1 })
       );
     });
+  });
+
+  it("renders mobile card list below the sm breakpoint", async () => {
+    mockMatchMedia(false);
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText("User logged in")).toBeInTheDocument();
+    });
+
+    expect(
+      document.querySelector('[data-slot="activity-log-mobile-list"]')
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector('[data-slot="activity-log-table-container"]')
+    ).not.toBeInTheDocument();
+  });
+
+  it("switches from desktop table to mobile cards when the viewport crosses below sm", async () => {
+    const mediaQuery = mockMatchMedia(true);
+
+    renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText("User logged in")).toBeInTheDocument();
+    });
+
+    expect(
+      document.querySelector('[data-slot="activity-log-table-container"]')
+    ).toBeInTheDocument();
+
+    mediaQuery.setMatches(false);
+
+    await waitFor(() => {
+      expect(
+        document.querySelector('[data-slot="activity-log-mobile-list"]')
+      ).toBeInTheDocument();
+    });
+    expect(
+      document.querySelector('[data-slot="activity-log-table-container"]')
+    ).not.toBeInTheDocument();
   });
 });
