@@ -70,6 +70,16 @@ function LogBadge({ className, ...props }: ComponentPropsWithoutRef<"span">) {
   );
 }
 
+const ACTIVITY_LOG_DESKTOP_MEDIA_QUERY = "(min-width: 640px)";
+
+function readUseDesktopTable(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return true;
+  }
+
+  return window.matchMedia(ACTIVITY_LOG_DESKTOP_MEDIA_QUERY).matches;
+}
+
 function ActivityTableSkeletonRows({
   columns,
   rows,
@@ -179,13 +189,7 @@ export function ActivityLogList() {
     OrganizationalUnit[]
   >([]);
   const [unitsLoading, setUnitsLoading] = useState(true);
-  const [useDesktopTable, setUseDesktopTable] = useState(() => {
-    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-      return true;
-    }
-
-    return window.matchMedia("(min-width: 640px)").matches;
-  });
+  const [useDesktopTable, setUseDesktopTable] = useState(readUseDesktopTable);
 
   // Update URL search params when filters change
   useEffect(() => {
@@ -302,20 +306,13 @@ export function ActivityLogList() {
       return;
     }
 
-    const mediaQuery = window.matchMedia("(min-width: 640px)");
-    const syncLayout = (event?: MediaQueryListEvent) => {
-      setUseDesktopTable(event?.matches ?? mediaQuery.matches);
+    const mediaQuery = window.matchMedia(ACTIVITY_LOG_DESKTOP_MEDIA_QUERY);
+    const syncLayout = (event: MediaQueryListEvent) => {
+      setUseDesktopTable(event.matches);
     };
 
-    syncLayout();
-
-    if (typeof mediaQuery.addEventListener === "function") {
-      mediaQuery.addEventListener("change", syncLayout);
-      return () => mediaQuery.removeEventListener("change", syncLayout);
-    }
-
-    mediaQuery.addListener(syncLayout);
-    return () => mediaQuery.removeListener(syncLayout);
+    mediaQuery.addEventListener("change", syncLayout);
+    return () => mediaQuery.removeEventListener("change", syncLayout);
   }, []);
 
   // Auto-refresh: Reload data every 30 seconds when enabled

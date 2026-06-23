@@ -130,18 +130,26 @@ test.describe("Activity Logs", () => {
       await expect(
         page.locator('[data-slot="activity-log-mobile-list"]')
       ).toBeVisible();
+      await expect(
+        page.locator('[data-slot="activity-log-table-container"]')
+      ).toHaveCount(0);
 
-      const viewportOverflow = await page.evaluate(() => ({
-        root: document.documentElement.scrollWidth - window.innerWidth,
-        body: document.body.scrollWidth - window.innerWidth,
+      const layoutState = await page.evaluate(() => ({
+        usesMobileLayout: !window.matchMedia("(min-width: 640px)").matches,
+        rootOverflow: document.documentElement.scrollWidth - window.innerWidth,
+        bodyOverflow: document.body.scrollWidth - window.innerWidth,
       }));
 
       expect(
-        viewportOverflow.root,
+        layoutState.usesMobileLayout,
+        `mobile layout branch at width ${width}`
+      ).toBe(true);
+      expect(
+        layoutState.rootOverflow,
         `documentElement overflow at width ${width}`
       ).toBeLessThanOrEqual(1);
       expect(
-        viewportOverflow.body,
+        layoutState.bodyOverflow,
         `body overflow at width ${width}`
       ).toBeLessThanOrEqual(1);
     }
