@@ -68,8 +68,8 @@ test.describe("Activity Logs", () => {
               causer_id: "user-2",
               causer: {
                 id: "user-2",
-                name: "Alexandra Example",
-                email: "alexandra@example.test",
+                name: "AlexandraSecpalOverflowCoverage0123456789abcdefghijklmnopqrstuvwxyz",
+                email: "alexandra@secpal.dev",
               },
               properties: { ip: "192.168.1.1" },
               event_hash: "hash-1",

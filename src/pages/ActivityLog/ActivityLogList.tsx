@@ -140,6 +140,60 @@ function ActivityMobileSkeletonCards({ rows }: { rows: number }) {
   );
 }
 
+function ActivityTableChrome({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      data-slot="activity-log-table-container"
+      className="overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800"
+    >
+      <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
+        <thead className="bg-zinc-50 dark:bg-zinc-900/60">
+          <tr>
+            <th
+              scope="col"
+              className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
+            >
+              <Trans>Date/Time</Trans>
+            </th>
+            <th
+              scope="col"
+              className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
+            >
+              <Trans>Description</Trans>
+            </th>
+            <th
+              scope="col"
+              className="hidden px-4 py-3 text-left font-medium text-zinc-600 md:table-cell dark:text-zinc-300"
+            >
+              <Trans>Log Name</Trans>
+            </th>
+            <th
+              scope="col"
+              className="hidden px-4 py-3 text-left font-medium text-zinc-600 lg:table-cell dark:text-zinc-300"
+            >
+              <Trans>Causer</Trans>
+            </th>
+            <th
+              scope="col"
+              className="hidden px-4 py-3 text-left font-medium text-zinc-600 xl:table-cell dark:text-zinc-300"
+            >
+              <Trans>Organizational Unit</Trans>
+            </th>
+            <th scope="col" className="w-20 px-4 py-3">
+              <span className="sr-only">
+                <Trans>Verification Status</Trans>
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-zinc-200 bg-white dark:divide-zinc-800 dark:bg-zinc-950">
+          {children}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /**
  * Activity Log List Page
  *
@@ -574,55 +628,9 @@ export function ActivityLogList() {
       <LoadingRegion loading={loading} loadingLabel={activityTableLoadingLabel}>
         {showInitialActivitySkeleton ? (
           useDesktopTable ? (
-            <div
-              data-slot="activity-log-table-container"
-              className="overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800"
-            >
-              <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
-                <thead className="bg-zinc-50 dark:bg-zinc-900/60">
-                  <tr>
-                    <th
-                      scope="col"
-                      className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
-                    >
-                      <Trans>Date/Time</Trans>
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
-                    >
-                      <Trans>Description</Trans>
-                    </th>
-                    <th
-                      scope="col"
-                      className="hidden px-4 py-3 text-left font-medium text-zinc-600 md:table-cell dark:text-zinc-300"
-                    >
-                      <Trans>Log Name</Trans>
-                    </th>
-                    <th
-                      scope="col"
-                      className="hidden px-4 py-3 text-left font-medium text-zinc-600 lg:table-cell dark:text-zinc-300"
-                    >
-                      <Trans>Causer</Trans>
-                    </th>
-                    <th
-                      scope="col"
-                      className="hidden px-4 py-3 text-left font-medium text-zinc-600 xl:table-cell dark:text-zinc-300"
-                    >
-                      <Trans>Organizational Unit</Trans>
-                    </th>
-                    <th scope="col" className="w-20 px-4 py-3">
-                      <span className="sr-only">
-                        <Trans>Verification Status</Trans>
-                      </span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-200 bg-white dark:divide-zinc-800 dark:bg-zinc-950">
-                  <ActivityTableSkeletonRows columns={6} rows={5} />
-                </tbody>
-              </table>
-            </div>
+            <ActivityTableChrome>
+              <ActivityTableSkeletonRows columns={6} rows={5} />
+            </ActivityTableChrome>
           ) : (
             <div data-slot="activity-log-mobile-list" className="grid gap-3">
               <ActivityMobileSkeletonCards rows={5} />
@@ -635,92 +643,46 @@ export function ActivityLogList() {
             </p>
           </div>
         ) : useDesktopTable ? (
-          <div
-            data-slot="activity-log-table-container"
-            className="overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800"
-          >
-            <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
-              <thead className="bg-zinc-50 dark:bg-zinc-900/60">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
-                  >
-                    <Trans>Date/Time</Trans>
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
-                  >
-                    <Trans>Description</Trans>
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-4 py-3 text-left font-medium text-zinc-600 md:table-cell dark:text-zinc-300"
-                  >
-                    <Trans>Log Name</Trans>
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-4 py-3 text-left font-medium text-zinc-600 lg:table-cell dark:text-zinc-300"
-                  >
-                    <Trans>Causer</Trans>
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden px-4 py-3 text-left font-medium text-zinc-600 xl:table-cell dark:text-zinc-300"
-                  >
-                    <Trans>Organizational Unit</Trans>
-                  </th>
-                  <th scope="col" className="w-20 px-4 py-3">
-                    <span className="sr-only">
-                      <Trans>Verification Status</Trans>
+          <ActivityTableChrome>
+            {activities.map((activity) => (
+              <tr
+                key={activity.id}
+                className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
+                onClick={() => handleRowClick(activity)}
+              >
+                <td className="whitespace-nowrap px-4 py-3 font-medium text-zinc-950 dark:text-zinc-50">
+                  {formatDate(activity.created_at)}
+                </td>
+                <td className="max-w-[200px] truncate px-4 py-3 text-zinc-950 dark:text-zinc-50">
+                  {activity.description}
+                </td>
+                <td className="hidden px-4 py-3 md:table-cell">
+                  <LogBadge>{activity.log_name}</LogBadge>
+                </td>
+                <td className="hidden px-4 py-3 text-zinc-950 lg:table-cell dark:text-zinc-50">
+                  {activity.causer?.name || (
+                    <span className="text-zinc-500 dark:text-zinc-400">
+                      <Trans>System</Trans>
                     </span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-200 bg-white dark:divide-zinc-800 dark:bg-zinc-950">
-                {activities.map((activity) => (
-                  <tr
-                    key={activity.id}
-                    className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
-                    onClick={() => handleRowClick(activity)}
-                  >
-                    <td className="whitespace-nowrap px-4 py-3 font-medium text-zinc-950 dark:text-zinc-50">
-                      {formatDate(activity.created_at)}
-                    </td>
-                    <td className="max-w-[200px] truncate px-4 py-3 text-zinc-950 dark:text-zinc-50">
-                      {activity.description}
-                    </td>
-                    <td className="hidden px-4 py-3 md:table-cell">
-                      <LogBadge>{activity.log_name}</LogBadge>
-                    </td>
-                    <td className="hidden px-4 py-3 text-zinc-950 lg:table-cell dark:text-zinc-50">
-                      {activity.causer?.name || (
-                        <span className="text-zinc-500 dark:text-zinc-400">
-                          <Trans>System</Trans>
-                        </span>
-                      )}
-                    </td>
-                    <td className="hidden px-4 py-3 text-zinc-950 xl:table-cell dark:text-zinc-50">
-                      {activity.organizational_unit?.name || (
-                        <span className="text-zinc-500 dark:text-zinc-400">
-                          <Trans>Global</Trans>
-                        </span>
-                      )}
-                    </td>
-                    <td className="w-20 px-4 py-3">
-                      <VerificationDots
-                        activity={activity}
-                        size="sm"
-                        showLabels={false}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </td>
+                <td className="hidden px-4 py-3 text-zinc-950 xl:table-cell dark:text-zinc-50">
+                  {activity.organizational_unit?.name || (
+                    <span className="text-zinc-500 dark:text-zinc-400">
+                      <Trans>Global</Trans>
+                    </span>
+                  )}
+                </td>
+                <td className="w-20 px-4 py-3">
+                  <VerificationDots
+                    activity={activity}
+                    size="sm"
+                    showLabels={false}
+                  />
+                </td>
+              </tr>
+            ))}
+          </ActivityTableChrome>
         ) : (
           <div data-slot="activity-log-mobile-list" className="grid gap-3">
             {activities.map((activity) => (
@@ -743,9 +705,11 @@ export function ActivityLogList() {
                 <p className="mt-3 break-words text-sm text-zinc-950 dark:text-zinc-50">
                   {activity.description}
                 </p>
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
                   <LogBadge>{activity.log_name}</LogBadge>
-                  <span>{activity.causer?.name || <Trans>System</Trans>}</span>
+                  <span className="min-w-0 break-all">
+                    {activity.causer?.name || <Trans>System</Trans>}
+                  </span>
                 </div>
               </button>
             ))}
