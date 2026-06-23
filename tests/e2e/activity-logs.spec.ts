@@ -1,11 +1,10 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { test, expect } from "./auth.setup";
+import { test, expect, loginViaUI } from "./auth.setup";
 import {
   buildOfflineLiveMockUser,
   installMockAuthRoutes,
-  loginWithMockedBrowserSession,
 } from "./offline-live-helpers";
 
 const MOBILE_VIEWPORT_WIDTHS = [320, 360, 390, 412, 430] as const;
@@ -16,6 +15,7 @@ test.describe("Activity Logs", () => {
     page,
   }) => {
     const user = buildOfflineLiveMockUser({
+      email: "activity-logs-mobile@secpal.dev",
       permissions: ["activity_log.read"],
     });
 
@@ -58,7 +58,8 @@ test.describe("Activity Logs", () => {
               id: "log-1",
               tenant_id: "tenant-1",
               organizational_unit_id: "unit-1",
-              log_name: "permission",
+              log_name:
+                "permission_mobile_overflow_regression_0123456789abcdefghijklmnopqrstuvwxyz",
               description:
                 "PermissionChangeForMobileActivityOverviewOverflowRegressionCoverage0123456789abcdefghijklmnopqrstuvwxyz",
               subject_type: "App\\Models\\User",
@@ -117,7 +118,7 @@ test.describe("Activity Logs", () => {
       });
     });
 
-    await loginWithMockedBrowserSession(page);
+    await loginViaUI(page, user.email, "password");
 
     for (const width of MOBILE_VIEWPORT_WIDTHS) {
       await page.setViewportSize({ width, height: 915 });
@@ -135,7 +136,7 @@ test.describe("Activity Logs", () => {
       ).toHaveCount(0);
 
       const layoutState = await page.evaluate(() => ({
-        usesMobileLayout: !window.matchMedia("(min-width: 640px)").matches,
+        usesMobileLayout: !window.matchMedia("(min-width: 40rem)").matches,
         rootOverflow: document.documentElement.scrollWidth - window.innerWidth,
         bodyOverflow: document.body.scrollWidth - window.innerWidth,
       }));

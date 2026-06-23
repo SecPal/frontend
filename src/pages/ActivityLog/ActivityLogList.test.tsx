@@ -30,7 +30,7 @@ function mockMatchMedia(matches: boolean) {
 
   const mediaQueryList = {
     matches,
-    media: "(min-width: 640px)",
+    media: "(min-width: 40rem)",
     onchange: null,
     addListener: vi.fn(),
     removeListener: vi.fn(),

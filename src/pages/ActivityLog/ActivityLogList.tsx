@@ -70,7 +70,7 @@ function LogBadge({ className, ...props }: ComponentPropsWithoutRef<"span">) {
   );
 }
 
-const ACTIVITY_LOG_DESKTOP_MEDIA_QUERY = "(min-width: 640px)";
+const ACTIVITY_LOG_DESKTOP_MEDIA_QUERY = "(min-width: 40rem)";
 
 function readUseDesktopTable(): boolean {
   if (
@@ -706,7 +706,12 @@ export function ActivityLogList() {
                   {activity.description}
                 </p>
                 <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-                  <LogBadge>{activity.log_name}</LogBadge>
+                  <LogBadge
+                    className="max-w-full min-w-0 truncate"
+                    title={activity.log_name}
+                  >
+                    {activity.log_name}
+                  </LogBadge>
                   <span className="min-w-0 break-all">
                     {activity.causer?.name || <Trans>System</Trans>}
                   </span>
