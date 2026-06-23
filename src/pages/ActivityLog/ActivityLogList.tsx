@@ -126,7 +126,9 @@ interface ActivityMobileSkeletonCardsProps {
   rows: number;
 }
 
-function ActivityMobileSkeletonCards({ rows }: ActivityMobileSkeletonCardsProps) {
+function ActivityMobileSkeletonCards({
+  rows,
+}: ActivityMobileSkeletonCardsProps) {
   return (
     <>
       {Array.from({ length: rows }, (_, rowIndex) => (
