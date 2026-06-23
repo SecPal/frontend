@@ -725,7 +725,7 @@ export function ActivityLogList() {
                 <button
                   key={activity.id}
                   type="button"
-                  className="rounded-md border border-zinc-200 bg-white p-4 text-left hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900/60"
+                  className="min-w-0 rounded-md border border-zinc-200 bg-white p-4 text-left hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900/60"
                   onClick={() => handleRowClick(activity)}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -738,7 +738,7 @@ export function ActivityLogList() {
                       showLabels={false}
                     />
                   </div>
-                  <p className="mt-3 text-sm text-zinc-950 dark:text-zinc-50">
+                  <p className="mt-3 break-words text-sm text-zinc-950 dark:text-zinc-50">
                     {activity.description}
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">

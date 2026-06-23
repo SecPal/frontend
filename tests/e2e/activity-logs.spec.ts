@@ -60,7 +60,7 @@ test.describe("Activity Logs", () => {
               organizational_unit_id: "unit-1",
               log_name: "permission",
               description:
-                "Permission change for mobile activity overview overflow regression coverage",
+                "PermissionChangeForMobileActivityOverviewOverflowRegressionCoverage0123456789abcdefghijklmnopqrstuvwxyz",
               subject_type: "App\\Models\\User",
               subject_id: "user-1",
               subject: { id: "user-1", name: "Test Subject" },
