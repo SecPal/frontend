@@ -122,7 +122,11 @@ function ActivityTableSkeletonRows({
   );
 }
 
-function ActivityMobileSkeletonCards({ rows }: { rows: number }) {
+interface ActivityMobileSkeletonCardsProps {
+  rows: number;
+}
+
+function ActivityMobileSkeletonCards({ rows }: ActivityMobileSkeletonCardsProps) {
   return (
     <>
       {Array.from({ length: rows }, (_, rowIndex) => (
@@ -140,7 +144,11 @@ function ActivityMobileSkeletonCards({ rows }: { rows: number }) {
   );
 }
 
-function ActivityTableChrome({ children }: { children: React.ReactNode }) {
+interface ActivityTableChromeProps {
+  children: React.ReactNode;
+}
+
+function ActivityTableChrome({ children }: ActivityTableChromeProps) {
   return (
     <div
       data-slot="activity-log-table-container"
