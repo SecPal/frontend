@@ -109,6 +109,24 @@ function ActivityTableSkeletonRows({
   );
 }
 
+function ActivityMobileSkeletonCards({ rows }: { rows: number }) {
+  return (
+    <>
+      {Array.from({ length: rows }, (_, rowIndex) => (
+        <div
+          key={rowIndex}
+          className="rounded-md border border-zinc-200 p-4 dark:border-zinc-800"
+        >
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="mt-3 h-5 w-full" />
+          <Skeleton className="mt-2 h-4 w-5/6" />
+          <Skeleton className="mt-4 h-3 w-12" />
+        </div>
+      ))}
+    </>
+  );
+}
+
 /**
  * Activity Log List Page
  *
@@ -161,6 +179,13 @@ export function ActivityLogList() {
     OrganizationalUnit[]
   >([]);
   const [unitsLoading, setUnitsLoading] = useState(true);
+  const [useDesktopTable, setUseDesktopTable] = useState(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return true;
+    }
+
+    return window.matchMedia("(min-width: 640px)").matches;
+  });
 
   // Update URL search params when filters change
   useEffect(() => {
@@ -271,6 +296,27 @@ export function ActivityLogList() {
       active = false;
     };
   }, [filters]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(min-width: 640px)");
+    const syncLayout = (event?: MediaQueryListEvent) => {
+      setUseDesktopTable(event?.matches ?? mediaQuery.matches);
+    };
+
+    syncLayout();
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", syncLayout);
+      return () => mediaQuery.removeEventListener("change", syncLayout);
+    }
+
+    mediaQuery.addListener(syncLayout);
+    return () => mediaQuery.removeListener(syncLayout);
+  }, []);
 
   // Auto-refresh: Reload data every 30 seconds when enabled
   useEffect(() => {
@@ -523,113 +569,202 @@ export function ActivityLogList() {
 
       {/* Table */}
       <LoadingRegion loading={loading} loadingLabel={activityTableLoadingLabel}>
-        <div className="overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800">
-          <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
-            <thead className="bg-zinc-50 dark:bg-zinc-900/60">
-              <tr>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
-                >
-                  <Trans>Date/Time</Trans>
-                </th>
-                <th
-                  scope="col"
-                  className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
-                >
-                  <Trans>Description</Trans>
-                </th>
-                <th
-                  scope="col"
-                  className="hidden px-4 py-3 text-left font-medium text-zinc-600 md:table-cell dark:text-zinc-300"
-                >
-                  <Trans>Log Name</Trans>
-                </th>
-                <th
-                  scope="col"
-                  className="hidden px-4 py-3 text-left font-medium text-zinc-600 lg:table-cell dark:text-zinc-300"
-                >
-                  <Trans>Causer</Trans>
-                </th>
-                <th
-                  scope="col"
-                  className="hidden px-4 py-3 text-left font-medium text-zinc-600 xl:table-cell dark:text-zinc-300"
-                >
-                  <Trans>Organizational Unit</Trans>
-                </th>
-                <th scope="col" className="w-20 px-4 py-3">
-                  <span className="sr-only">
-                    <Trans>Verification Status</Trans>
-                  </span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-200 bg-white dark:divide-zinc-800 dark:bg-zinc-950">
-              {showInitialActivitySkeleton ? (
-                <ActivityTableSkeletonRows columns={6} rows={5} />
-              ) : !showActivityRows ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center">
-                    <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                      <Trans>No activity logs found.</Trans>
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                activities.map((activity) => (
-                  <tr
-                    key={activity.id}
-                    className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
-                    onClick={() => handleRowClick(activity)}
-                  >
-                    <td className="whitespace-nowrap px-4 py-3 font-medium text-zinc-950 dark:text-zinc-50">
-                      {formatDate(activity.created_at)}
-                    </td>
-                    <td className="max-w-[200px] truncate px-4 py-3 text-zinc-950 dark:text-zinc-50">
-                      {activity.description}
-                    </td>
-                    <td className="hidden px-4 py-3 md:table-cell">
-                      <LogBadge>{activity.log_name}</LogBadge>
-                    </td>
-                    <td className="hidden px-4 py-3 text-zinc-950 lg:table-cell dark:text-zinc-50">
-                      {activity.causer?.name || (
-                        <span className="text-zinc-500 dark:text-zinc-400">
-                          <Trans>System</Trans>
-                        </span>
-                      )}
-                    </td>
-                    <td className="hidden px-4 py-3 text-zinc-950 xl:table-cell dark:text-zinc-50">
-                      {activity.organizational_unit?.name || (
-                        <span className="text-zinc-500 dark:text-zinc-400">
-                          <Trans>Global</Trans>
-                        </span>
-                      )}
-                    </td>
-                    <td className="w-20 px-4 py-3">
-                      <VerificationDots
-                        activity={activity}
-                        size="sm"
-                        showLabels={false}
-                      />
-                    </td>
+        {showInitialActivitySkeleton ? (
+          useDesktopTable ? (
+            <div
+              data-slot="activity-log-table-container"
+              className="overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800"
+            >
+              <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
+                <thead className="bg-zinc-50 dark:bg-zinc-900/60">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
+                    >
+                      <Trans>Date/Time</Trans>
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
+                    >
+                      <Trans>Description</Trans>
+                    </th>
+                    <th
+                      scope="col"
+                      className="hidden px-4 py-3 text-left font-medium text-zinc-600 md:table-cell dark:text-zinc-300"
+                    >
+                      <Trans>Log Name</Trans>
+                    </th>
+                    <th
+                      scope="col"
+                      className="hidden px-4 py-3 text-left font-medium text-zinc-600 lg:table-cell dark:text-zinc-300"
+                    >
+                      <Trans>Causer</Trans>
+                    </th>
+                    <th
+                      scope="col"
+                      className="hidden px-4 py-3 text-left font-medium text-zinc-600 xl:table-cell dark:text-zinc-300"
+                    >
+                      <Trans>Organizational Unit</Trans>
+                    </th>
+                    <th scope="col" className="w-20 px-4 py-3">
+                      <span className="sr-only">
+                        <Trans>Verification Status</Trans>
+                      </span>
+                    </th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody className="divide-y divide-zinc-200 bg-white dark:divide-zinc-800 dark:bg-zinc-950">
+                  <ActivityTableSkeletonRows columns={6} rows={5} />
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div data-slot="activity-log-mobile-list" className="grid gap-3">
+              <ActivityMobileSkeletonCards rows={5} />
+            </div>
+          )
+        ) : !showActivityRows ? (
+          <div className="rounded-md border border-zinc-200 px-4 py-12 text-center dark:border-zinc-800">
+            <p className="text-sm text-zinc-600 dark:text-zinc-300">
+              <Trans>No activity logs found.</Trans>
+            </p>
+          </div>
+        ) : (
+          useDesktopTable ? (
+            <div
+              data-slot="activity-log-table-container"
+              className="overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800"
+            >
+              <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
+                <thead className="bg-zinc-50 dark:bg-zinc-900/60">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
+                    >
+                      <Trans>Date/Time</Trans>
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
+                    >
+                      <Trans>Description</Trans>
+                    </th>
+                    <th
+                      scope="col"
+                      className="hidden px-4 py-3 text-left font-medium text-zinc-600 md:table-cell dark:text-zinc-300"
+                    >
+                      <Trans>Log Name</Trans>
+                    </th>
+                    <th
+                      scope="col"
+                      className="hidden px-4 py-3 text-left font-medium text-zinc-600 lg:table-cell dark:text-zinc-300"
+                    >
+                      <Trans>Causer</Trans>
+                    </th>
+                    <th
+                      scope="col"
+                      className="hidden px-4 py-3 text-left font-medium text-zinc-600 xl:table-cell dark:text-zinc-300"
+                    >
+                      <Trans>Organizational Unit</Trans>
+                    </th>
+                    <th scope="col" className="w-20 px-4 py-3">
+                      <span className="sr-only">
+                        <Trans>Verification Status</Trans>
+                      </span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-200 bg-white dark:divide-zinc-800 dark:bg-zinc-950">
+                  {activities.map((activity) => (
+                    <tr
+                      key={activity.id}
+                      className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
+                      onClick={() => handleRowClick(activity)}
+                    >
+                      <td className="whitespace-nowrap px-4 py-3 font-medium text-zinc-950 dark:text-zinc-50">
+                        {formatDate(activity.created_at)}
+                      </td>
+                      <td className="max-w-[200px] truncate px-4 py-3 text-zinc-950 dark:text-zinc-50">
+                        {activity.description}
+                      </td>
+                      <td className="hidden px-4 py-3 md:table-cell">
+                        <LogBadge>{activity.log_name}</LogBadge>
+                      </td>
+                      <td className="hidden px-4 py-3 text-zinc-950 lg:table-cell dark:text-zinc-50">
+                        {activity.causer?.name || (
+                          <span className="text-zinc-500 dark:text-zinc-400">
+                            <Trans>System</Trans>
+                          </span>
+                        )}
+                      </td>
+                      <td className="hidden px-4 py-3 text-zinc-950 xl:table-cell dark:text-zinc-50">
+                        {activity.organizational_unit?.name || (
+                          <span className="text-zinc-500 dark:text-zinc-400">
+                            <Trans>Global</Trans>
+                          </span>
+                        )}
+                      </td>
+                      <td className="w-20 px-4 py-3">
+                        <VerificationDots
+                          activity={activity}
+                          size="sm"
+                          showLabels={false}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div data-slot="activity-log-mobile-list" className="grid gap-3">
+              {activities.map((activity) => (
+                <button
+                  key={activity.id}
+                  type="button"
+                  className="rounded-md border border-zinc-200 bg-white p-4 text-left hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900/60"
+                  onClick={() => handleRowClick(activity)}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-sm leading-5 font-medium text-zinc-950 dark:text-zinc-50">
+                      {formatDate(activity.created_at)}
+                    </p>
+                    <VerificationDots
+                      activity={activity}
+                      size="sm"
+                      showLabels={false}
+                    />
+                  </div>
+                  <p className="mt-3 text-sm text-zinc-950 dark:text-zinc-50">
+                    {activity.description}
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                    <LogBadge>{activity.log_name}</LogBadge>
+                    <span>
+                      {activity.causer?.name || <Trans>System</Trans>}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )
+        )}
 
         {/* Pagination */}
         {pagination.last_page > 1 && showActivityRows && (
-          <div className="mt-6 flex items-center justify-between">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Button
               variant="outline"
               disabled={pagination.current_page === 1}
               onClick={() => handlePageChange(pagination.current_page - 1)}
+              className="w-full sm:w-auto"
             >
               <Trans>Previous</Trans>
             </Button>
-            <p className="text-sm text-zinc-600 dark:text-zinc-300">
+            <p className="text-center text-sm text-zinc-600 dark:text-zinc-300">
               <Trans>
                 Page {pagination.current_page} of {pagination.last_page}
               </Trans>
@@ -638,6 +773,7 @@ export function ActivityLogList() {
               variant="outline"
               disabled={pagination.current_page === pagination.last_page}
               onClick={() => handlePageChange(pagination.current_page + 1)}
+              className="w-full sm:w-auto"
             >
               <Trans>Next</Trans>
             </Button>

@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Reworked the Activity Logs overview to avoid unnecessary horizontal page scrolling on narrow viewports. Below the `sm` breakpoint the page now renders each activity as a stacked card instead of forcing the desktop table layout into the available width, and the pagination controls wrap vertically on mobile. Added `tests/e2e/activity-logs.spec.ts` to assert that the overview stays free of horizontal overflow across multiple narrow viewport widths (`320`, `360`, `390`, `412`, `430`).
 - Restored API-required organizational-unit and type fields in site creation payloads and aligned the sites table loading skeleton with the added customer/contact columns.
 
 - Made service-worker explicit logout redirects resilient across multiple open app windows: protected clients are redirected to `/login` independently, so a failed `WindowClient.navigate()` call is logged without blocking remaining protected clients from being redirected, and the per-client failure log now redacts query strings and fragments from the client URL.
