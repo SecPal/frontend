@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useMemo } from "react";
@@ -337,9 +337,11 @@ function MoveOrganizationalUnitDialogContent({
               <SelectContent>
                 {/* Root option */}
                 <SelectItem value={ROOT_PARENT_SELECT_VALUE}>
-                  <RootIcon className="h-4 w-4" />
-                  <span className="ml-2.5 truncate first:ml-0 sm:ml-2 sm:first:ml-0">
-                    {t`Make root unit (no parent)`}
+                  <span className="flex w-full min-w-0 items-center gap-2">
+                    <RootIcon className="h-4 w-4 shrink-0" />
+                    <span className="min-w-0 truncate">
+                      {t`Make root unit (no parent)`}
+                    </span>
                   </span>
                 </SelectItem>
 
