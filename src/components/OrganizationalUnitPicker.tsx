@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useMemo } from "react";
@@ -196,9 +196,11 @@ export function OrganizationalUnitPicker({
       <SelectContent>
         {/* "All Units" option */}
         <SelectItem value={ALL_UNITS_SELECT_VALUE}>
-          <RootIcon className="h-4 w-4" />
-          <span className="ml-2.5 truncate first:ml-0 sm:ml-2 sm:first:ml-0">
-            {allUnitsLabel || <Trans>All Units</Trans>}
+          <span className="flex w-full min-w-0 items-center gap-2">
+            <RootIcon className="h-4 w-4 shrink-0" />
+            <span className="min-w-0 truncate">
+              {allUnitsLabel || <Trans>All Units</Trans>}
+            </span>
           </span>
         </SelectItem>
 

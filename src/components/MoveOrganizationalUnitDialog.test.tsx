@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import {
+  render,
+  screen,
+  waitFor,
+  fireEvent,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -309,6 +315,44 @@ describe("MoveOrganizationalUnitDialog", () => {
         },
         { timeout: 5000 }
       );
+    }, 15000);
+
+    it("keeps the root option icon aligned and label truncatable", async () => {
+      renderWithI18n(
+        <MoveOrganizationalUnitDialog
+          open={true}
+          unit={mockUnitWithParent}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      await waitFor(
+        () => {
+          expect(getParentSelectTrigger()).toBeInTheDocument();
+        },
+        { timeout: 5000 }
+      );
+
+      openParentSelect();
+
+      const option = await screen.findByRole(
+        "option",
+        { name: /Make root unit/i },
+        { timeout: 5000 }
+      );
+      const label = within(option).getByText(/Make root unit/i);
+      const contentRow = label.parentElement;
+
+      expect(contentRow).toHaveClass(
+        "flex",
+        "w-full",
+        "min-w-0",
+        "items-center",
+        "gap-2"
+      );
+      expect(contentRow?.querySelector("svg")).toHaveClass("shrink-0");
+      expect(label).toHaveClass("min-w-0", "truncate");
     }, 15000);
 
     it("allows selecting a new parent from the list", async () => {

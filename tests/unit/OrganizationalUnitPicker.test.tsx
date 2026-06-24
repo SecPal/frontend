@@ -1,8 +1,8 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, test, expect, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -154,6 +154,37 @@ describe("OrganizationalUnitPicker", () => {
     );
 
     expect(screen.getByText("All Organizations")).toBeInTheDocument();
+  });
+
+  test("keeps All Units icon aligned and label truncatable after opening", () => {
+    const onChange = vi.fn();
+    const allUnitsLabel =
+      "All organizational units with a deliberately long label";
+
+    renderWithI18n(
+      <OrganizationalUnitPicker
+        units={mockUnits}
+        value=""
+        onChange={onChange}
+        allUnitsLabel={allUnitsLabel}
+      />
+    );
+
+    openOrganizationalUnitPicker();
+
+    const option = screen.getByRole("option", { name: allUnitsLabel });
+    const label = within(option).getByText(allUnitsLabel);
+    const contentRow = label.parentElement;
+
+    expect(contentRow).toHaveClass(
+      "flex",
+      "w-full",
+      "min-w-0",
+      "items-center",
+      "gap-2"
+    );
+    expect(contentRow?.querySelector("svg")).toHaveClass("shrink-0");
+    expect(label).toHaveClass("min-w-0", "truncate");
   });
 
   test("handles disabled state", () => {
