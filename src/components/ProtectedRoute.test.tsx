@@ -241,14 +241,13 @@ describe("ProtectedRoute", () => {
   it(
     "renders revalidatingFallback during snapshot revalidation when a verified user is persisted",
     async () => {
-      mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
-
       await persistAuthUser({
         id: 1,
         name: "Test",
         email: "test@secpal.dev",
         emailVerified: true,
       });
+      mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
 
       render(
         <BrowserRouter>
@@ -287,9 +286,8 @@ describe("ProtectedRoute", () => {
   );
 
   it("still gates the email verification screen during revalidation when the persisted snapshot is unverified", async () => {
-    mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
-
     await persistAuthUser(unverifiedUser);
+    mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
 
     render(
       <BrowserRouter>
