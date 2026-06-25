@@ -27,8 +27,11 @@
 # Security headers
 <IfModule mod_headers.c>
   # Restrict script execution to same-origin assets. connect-src stays HTTPS-only
-  # because deployments may point at customer-specific API origins.
-  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; connect-src 'self' https:; font-src 'self' data:; form-action 'self'; frame-ancestors 'none'; frame-src 'none'; img-src 'self' data: blob:; manifest-src 'self'; media-src 'self'; object-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; worker-src 'self'; upgrade-insecure-requests"
+  # because deployments may point at customer-specific API origins. Apache
+  # .htaccess cannot reliably mint a valid per-response CSP nonce, so this
+  # fallback keeps runtime style libraries working without emitting a broken
+  # nonce source. The canonical nginx deployment carries the strict nonce CSP.
+  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; connect-src 'self' https:; font-src 'self' data:; form-action 'self'; frame-ancestors 'none'; frame-src 'none'; img-src 'self' data: blob:; manifest-src 'self'; media-src 'self'; object-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; style-src-elem 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; worker-src 'self'; upgrade-insecure-requests"
 
   # Explicitly deny browser capabilities the app does not require.
   Header always set Permissions-Policy "accelerometer=(), autoplay=(), camera=(), clipboard-read=(), clipboard-write=(), display-capture=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"

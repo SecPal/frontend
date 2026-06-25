@@ -47,6 +47,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Tightened runtime-style CSP delivery on the nginx PWA host with SSI-injected
+  nonces, moved third-party runtime style shims into app CSS where possible,
+  kept Apache `.htaccess` deployments on a functional inline-style fallback
+  instead of emitting an invalid empty nonce, and stopped precaching
+  nonce-bearing HTML shells so service-worker-controlled navigations fetch a
+  fresh CSP nonce online.
 - Aligned the root/all-units organizational-unit select options with the rest of the hierarchical unit rows, keeping their icons from shrinking and their labels truncatable in narrow menus.
 - Reworked the Activity Logs overview to avoid unnecessary horizontal page scrolling on narrow viewports. Below the `sm` breakpoint the page now renders each activity as a stacked card instead of forcing the desktop table layout into the available width, and the pagination controls wrap vertically on mobile. The responsive layout switch now reads the breakpoint once on mount, listens only via `MediaQueryList.addEventListener("change")`, and updates on viewport resize without redundant state writes. Added `tests/e2e/activity-logs.spec.ts` to assert that the mobile card layout is active, the desktop table stays unmounted, and the overview stays free of horizontal overflow across multiple narrow viewport widths (`320`, `360`, `390`, `412`, `430`).
 - Restored API-required organizational-unit and type fields in site creation payloads and aligned the sites table loading skeleton with the added customer/contact columns.

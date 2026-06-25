@@ -34,6 +34,7 @@ import {
   type ButtonVariant,
   uiControlBase,
 } from "@/ui";
+import { getCspNonce } from "@/lib/cspNonce";
 import { cn } from "./utils";
 
 export type LoginButtonVariant = NonNullable<
@@ -393,6 +394,8 @@ export const LoginSelectContent = forwardRef<
   { className, children, position = "popper", ...props },
   ref
 ) {
+  const cspNonce = getCspNonce();
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -409,6 +412,7 @@ export const LoginSelectContent = forwardRef<
       >
         <LoginSelectScrollUpButton />
         <SelectPrimitive.Viewport
+          nonce={cspNonce}
           data-slot="login-select-viewport"
           className={cn(
             "p-1",
@@ -547,6 +551,7 @@ export function LoginInputOtp({
         containerClassName
       )}
       className={cn("disabled:cursor-not-allowed", className)}
+      noScriptCSSFallback={null}
       onFocus={(event) => {
         onFocus?.(event);
         // Keep the OTP cells visible above mobile soft keyboards. The

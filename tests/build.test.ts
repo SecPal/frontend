@@ -241,6 +241,7 @@ describe("Build Configuration and Source Verification", () => {
   it("ships an enforceable CSP that fits the PWA runtime", () => {
     const htaccess = readRepoFile("public/.htaccess");
     const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");
+    const viteConfig = readRepoFile("vite.config.ts");
 
     expect(htaccess).toContain("default-src 'self'");
     expect(htaccess).toContain("script-src 'self'");
@@ -249,6 +250,11 @@ describe("Build Configuration and Source Verification", () => {
     expect(htaccess).toContain("worker-src 'self'");
     expect(htaccess).toContain("manifest-src 'self'");
     expect(htaccess).toContain("connect-src 'self'");
+    expect(htaccess).toContain("style-src 'self'");
+    expect(htaccess).toContain("style-src 'self' 'unsafe-inline'");
+    expect(htaccess).toContain("style-src-elem 'self' 'unsafe-inline'");
+    expect(htaccess).not.toContain("nonce-%{csp_nonce}e");
+    expect(htaccess).not.toContain("UNIQUE_ID");
 
     expect(nginxConfig).toContain("default-src 'self'");
     expect(nginxConfig).toContain("script-src 'self'");
@@ -257,6 +263,34 @@ describe("Build Configuration and Source Verification", () => {
     expect(nginxConfig).toContain("worker-src 'self'");
     expect(nginxConfig).toContain("manifest-src 'self'");
     expect(nginxConfig).toContain("connect-src 'self'");
+    expect(nginxConfig).toContain("style-src 'self'");
+    expect(nginxConfig).toContain("style-src-elem 'self' 'nonce-$csp_nonce'");
+    expect(nginxConfig).not.toContain("style-src 'self' 'unsafe-inline'");
+    expect(viteConfig).toContain("html: {");
+    expect(viteConfig).toContain("cspNonce: cspNonceSsiPlaceholder");
+    expect(viteConfig).toContain(
+      "<!--#echo var='csp_nonce' encoding='none' -->"
+    );
+    expect(viteConfig).toContain(
+      'globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"]'
+    );
+    expect(viteConfig).toContain('globIgnores: ["**/*.html"]');
+    expect(viteConfig).toContain("navigateFallback: null");
+    expect(viteConfig).toContain("nonceBearingHtmlShellPattern");
+    expect(viteConfig).toContain("manifestTransforms");
+    expect(viteConfig).not.toContain("js,css,html,ico");
+  });
+
+  it("does not precache nonce-bearing HTML shells", () => {
+    const serviceWorker = readRepoFile("src/sw.ts");
+    const viteConfig = readRepoFile("vite.config.ts");
+
+    expect(viteConfig).not.toContain("html,ico");
+    expect(serviceWorker).toContain("new NetworkFirst");
+    expect(serviceWorker).toContain('cacheName: "html-shell"');
+    expect(serviceWorker).not.toContain(
+      'createHandlerBoundToURL("/index.html")'
+    );
   });
 
   it("uses an external theme-color bootstrap so CSP can block inline scripts", () => {
@@ -271,6 +305,14 @@ describe("Build Configuration and Source Verification", () => {
     expect(themeColorJs.trim().length).toBeGreaterThan(0);
     expect(themeColorJs).toContain("theme-color");
     expect(themeColorJs).not.toContain("<script");
+  });
+
+  it("reads CSP nonces from emitted script/link tags instead of a custom meta carrier", () => {
+    const nonceHelper = readRepoFile("src/lib/cspNonce.tsx");
+
+    expect(nonceHelper).toContain("script[nonce]");
+    expect(nonceHelper).toContain('link[rel="stylesheet"][nonce]');
+    expect(nonceHelper).not.toContain('property="csp-nonce"');
   });
 
   it("adds dedicated delivery rules for service worker and manifest files", () => {
@@ -292,11 +334,19 @@ describe("Build Configuration and Source Verification", () => {
     expect(
       existsSync(path.join(repoRoot, "scripts/check-live-pwa-headers.sh"))
     ).toBe(true);
+    expect(
+      existsSync(
+        path.join(repoRoot, "scripts/check-workspace-preview-pwa-headers.mjs")
+      )
+    ).toBe(true);
 
     const packageJson = readRepoFile("package.json");
 
     expect(packageJson).toContain(
       '"test:live:pwa-headers": "bash ./scripts/check-live-pwa-headers.sh"'
+    );
+    expect(packageJson).toContain(
+      '"test:preview:pwa-headers": "node ./scripts/check-workspace-preview-pwa-headers.mjs"'
     );
   });
 
