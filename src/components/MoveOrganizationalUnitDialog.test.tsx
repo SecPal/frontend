@@ -171,6 +171,19 @@ describe("MoveOrganizationalUnitDialog", () => {
       expect(screen.getByText(/Move "Berlin Mitte"/)).toBeInTheDocument();
     });
 
+    it("uses the larger dialog width for the move flow", () => {
+      renderWithI18n(
+        <MoveOrganizationalUnitDialog
+          open={true}
+          unit={mockUnit}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      expect(screen.getByRole("dialog")).toHaveClass("sm:max-w-lg");
+    });
+
     it("does not render when unit is null", () => {
       renderWithI18n(
         <MoveOrganizationalUnitDialog
