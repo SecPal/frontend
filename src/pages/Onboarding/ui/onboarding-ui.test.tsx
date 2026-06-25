@@ -5,6 +5,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { RuntimeStyleCspSupport } from "@/lib/RuntimeStyleCspSupport";
 import {
   Alert,
   AlertDescription,
@@ -212,6 +213,35 @@ describe("onboarding shadcn primitives", () => {
         target: expect.objectContaining({ value: "contractor" }),
       })
     );
+  });
+
+  it("passes the CSP nonce through to the onboarding Radix select viewport style", async () => {
+    const user = userEvent.setup();
+    const nonceCarrier = document.createElement("script");
+    nonceCarrier.setAttribute("nonce", "nonce-onboarding");
+    document.head.appendChild(nonceCarrier);
+
+    render(
+      <>
+        <RuntimeStyleCspSupport />
+        <Field>
+          <FieldLabel htmlFor="contract-type-csp">Contract type</FieldLabel>
+          <Select id="contract-type-csp" defaultValue="">
+            <option value="">Select an option</option>
+            <option value="contractor">Contractor</option>
+          </Select>
+        </Field>
+      </>
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Contract type" }));
+
+    const style = Array.from(document.querySelectorAll("style")).find((node) =>
+      node.textContent?.includes("data-radix-select-viewport")
+    );
+
+    expect(style).toHaveAttribute("nonce", "nonce-onboarding");
+    nonceCarrier.remove();
   });
 
   it("hands the Select onChange callback a React-style synthetic event whose preventDefault and stopPropagation flags stay consistent after they are called", async () => {

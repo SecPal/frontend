@@ -26,13 +26,17 @@ get_header_value() {
     local header_name="$2"
 
     printf '%s\n' "$headers" | awk -v target="$header_name" '
-        BEGIN {
-            FS = ": "
-        }
-        tolower($1) == tolower(target) {
-            gsub(/\r/, "", $2)
-            print $2
-            exit
+        {
+            line = $0
+            sub(/\r$/, "", line)
+            lower = tolower(line)
+            prefix = tolower(target) ":"
+            if (index(lower, prefix) == 1) {
+                value = substr(line, length(target) + 2)
+                sub(/^ /, "", value)
+                print value
+                exit
+            }
         }
     '
 }
@@ -103,6 +107,8 @@ assert_common_hardening() {
     echo "Checking hardening headers on ${label}"
 
     assert_header_contains "$headers" "Content-Security-Policy" "default-src 'self'"
+    assert_header_contains "$headers" "Content-Security-Policy" "style-src 'self'"
+    assert_header_contains "$headers" "Content-Security-Policy" "style-src-elem 'self' 'nonce-"
     assert_header_contains "$headers" "Permissions-Policy" "camera=()"
     assert_header_contains "$headers" "Strict-Transport-Security" "max-age=63072000"
     assert_header_contains "$headers" "Referrer-Policy" "strict-origin-when-cross-origin"

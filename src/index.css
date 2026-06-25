@@ -97,3 +97,46 @@ header h1 {
   font-size: 3.2em;
   line-height: 1.1;
 }
+
+/* Keep static library CSS in first-class app styles so strict CSP does not
+   depend on runtime-injected <style> tags for fixed rules. */
+[data-radix-select-viewport] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+[data-radix-select-viewport]::-webkit-scrollbar {
+  display: none;
+}
+
+[data-input-otp]::selection {
+  background: transparent !important;
+  color: transparent !important;
+}
+
+[data-input-otp]:autofill,
+[data-input-otp]:-webkit-autofill {
+  background: transparent !important;
+  color: transparent !important;
+  border-color: transparent !important;
+  opacity: 0 !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+@supports (-webkit-touch-callout: none) {
+  [data-input-otp] {
+    letter-spacing: -0.6em !important;
+    font-weight: 100 !important;
+    font-stretch: ultra-condensed;
+    font-optical-sizing: none !important;
+    left: -1px !important;
+    right: 1px !important;
+  }
+}
+
+[data-input-otp] + * {
+  pointer-events: all !important;
+}

@@ -49,6 +49,7 @@ import {
   Textarea as AppTextarea,
   uiControlBase,
 } from "@/ui";
+import { getCspNonce } from "@/lib/cspNonce";
 import { cn } from "./utils";
 
 export const Button = AppButton;
@@ -185,6 +186,7 @@ export const Select = forwardRef(function Select(
   const initialValue =
     defaultValue === undefined ? undefined : toRadixSelectValue(defaultValue);
   const emptyOption = options.find((option) => option.value === "");
+  const cspNonce = getCspNonce();
 
   return (
     <SelectPrimitive.Root
@@ -241,6 +243,7 @@ export const Select = forwardRef(function Select(
             <ChevronUp className="size-4" aria-hidden="true" />
           </SelectPrimitive.ScrollUpButton>
           <SelectPrimitive.Viewport
+            nonce={cspNonce}
             data-slot="onboarding-select-viewport"
             className="h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] p-1"
           >

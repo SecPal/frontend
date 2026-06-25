@@ -19,6 +19,9 @@ import { buildPwaRuntimeCaching } from "./src/lib/pwaRuntimeCaching";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const { lingui } = resolveLinguiVitePluginExports(linguiVitePlugin);
 const linguiMacroImportPattern = /@lingui\/(?:core|react)\/macro/;
+const cspNonceSsiPlaceholder =
+  "<!--#echo var='csp_nonce' encoding='none' -->";
+const nonceBearingHtmlShellPattern = /\.html$/;
 const linguiMacroBabelPreset = defineRolldownBabelPreset({
   preset: [
     () => ({
@@ -84,6 +87,18 @@ export default defineConfig(({ mode }) => {
   const isCi = Boolean(process.env.CI);
   return {
     plugins: [
+      {
+        name: "strip-vite-csp-meta-carrier",
+        transformIndexHtml: {
+          order: "post",
+          handler(html) {
+            return html.replace(
+              /\s*<meta property="csp-nonce" nonce="[^"]*">\s*/g,
+              "\n"
+            );
+          },
+        },
+      },
       react({}),
       babel({
         presets: [linguiMacroBabelPreset],
@@ -121,6 +136,18 @@ export default defineConfig(({ mode }) => {
         strategies: "injectManifest",
         integration: {
           configureCustomSWViteBuild: applyInjectManifestCodeSplittingFix,
+        },
+        injectManifest: {
+          globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"],
+          globIgnores: ["**/*.html"],
+          manifestTransforms: [
+            async (entries) => ({
+              manifest: entries.filter(
+                (entry) => !nonceBearingHtmlShellPattern.test(entry.url)
+              ),
+              warnings: [],
+            }),
+          ],
         },
         srcDir: "src",
         filename: "sw.ts",
@@ -171,10 +198,9 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
-          // Enable navigation fallback for SPA offline support
-          navigateFallback: "/index.html",
-          navigateFallbackDenylist: [/^\/v1\//, /^\/__/], // Exclude API and Vite internal routes from SPA fallback
+          globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"],
+          globIgnores: ["**/*.html"],
+          navigateFallback: null,
           cleanupOutdatedCaches: true,
           runtimeCaching: buildPwaRuntimeCaching(),
         },
@@ -192,6 +218,9 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@": path.resolve(__dirname, "src"),
       },
+    },
+    html: {
+      cspNonce: cspNonceSsiPlaceholder,
     },
     build: {
       rollupOptions: {

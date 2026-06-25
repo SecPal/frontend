@@ -57,6 +57,7 @@
     "test:live:assetlinks": "bash ./scripts/check-live-assetlinks.sh",
     "test:live:auth-routes": "bash ./scripts/check-live-auth-route-separation.sh",
     "test:live:pwa-headers": "bash ./scripts/check-live-pwa-headers.sh",
+    "test:preview:pwa-headers": "node ./scripts/check-workspace-preview-pwa-headers.mjs",
     "format": "prettier --write --cache '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}'",
     "format:check": "prettier --check '**/*.{md,yml,yaml,json,ts,tsx,js,jsx}'",
     "lingui:extract": "lingui extract",

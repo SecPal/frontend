@@ -4,13 +4,9 @@
 /// <reference lib="webworker" />
 
 import { clientsClaim } from "workbox-core";
-import {
-  precacheAndRoute,
-  cleanupOutdatedCaches,
-  createHandlerBoundToURL,
-} from "workbox-precaching";
+import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
 import { registerRoute, NavigationRoute } from "workbox-routing";
-import { CacheFirst } from "workbox-strategies";
+import { CacheFirst, NetworkFirst } from "workbox-strategies";
 import {
   isAuthSessionChangedMessage,
   readOfflineSessionState,
@@ -84,11 +80,9 @@ registerRoute(
   })
 );
 
-/**
- * Navigation fallback: serve cached index.html for SPA navigation
- * This enables offline navigation and page reloads
- */
-const navigationHandler = createHandlerBoundToURL("/index.html");
+const navigationHandler = new NetworkFirst({
+  cacheName: "html-shell",
+});
 const navigationRoute = new NavigationRoute(
   async (context) => {
     let sessionState = null;
@@ -113,7 +107,7 @@ const navigationRoute = new NavigationRoute(
       );
     }
 
-    return navigationHandler(context);
+    return navigationHandler.handle(context);
   },
   {
     // Exclude API routes and special paths

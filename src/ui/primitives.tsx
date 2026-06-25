@@ -18,6 +18,7 @@ import * as ProgressPrimitive from "@radix-ui/react-progress";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp, Circle, Loader2 } from "lucide-react";
+import { getCspNonce } from "@/lib/cspNonce";
 import { cn } from "@/lib/utils";
 import { buttonVariants, type ButtonVariant, uiControlBase } from "./styles";
 
@@ -232,6 +233,8 @@ export const SelectContent = forwardRef<
   { className, children, position = "popper", onCloseAutoFocus, ...props },
   ref
 ) {
+  const cspNonce = getCspNonce();
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -254,6 +257,7 @@ export const SelectContent = forwardRef<
       >
         <SelectScrollUpButton />
         <SelectPrimitive.Viewport
+          nonce={cspNonce}
           data-slot="ui-select-viewport"
           className={cn(
             "p-1",

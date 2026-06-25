@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { StrictMode, useEffect } from "react";
@@ -7,6 +7,7 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import App from "./App";
 import { activateLocale, detectLocale } from "./i18n";
+import { RuntimeStyleCspSupport } from "./lib/RuntimeStyleCspSupport";
 import { initWebVitals } from "./lib/webVitals";
 import "./index.css";
 
@@ -25,6 +26,7 @@ export function AppWithI18n() {
 
   return (
     <I18nProvider i18n={i18n}>
+      <RuntimeStyleCspSupport />
       <App />
     </I18nProvider>
   );
