@@ -19,8 +19,7 @@ import { buildPwaRuntimeCaching } from "./src/lib/pwaRuntimeCaching";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const { lingui } = resolveLinguiVitePluginExports(linguiVitePlugin);
 const linguiMacroImportPattern = /@lingui\/(?:core|react)\/macro/;
-const cspNonceSsiPlaceholder =
-  "<!--#echo var='csp_nonce' encoding='none' -->";
+const cspNonceSsiPlaceholder = "<!--#echo var='csp_nonce' encoding='none' -->";
 const nonceBearingHtmlShellPattern = /\.html$/;
 const linguiMacroBabelPreset = defineRolldownBabelPreset({
   preset: [

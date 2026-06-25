@@ -268,7 +268,9 @@ describe("Build Configuration and Source Verification", () => {
     expect(nginxConfig).not.toContain("style-src 'self' 'unsafe-inline'");
     expect(viteConfig).toContain("html: {");
     expect(viteConfig).toContain("cspNonce: cspNonceSsiPlaceholder");
-    expect(viteConfig).toContain("<!--#echo var='csp_nonce' encoding='none' -->");
+    expect(viteConfig).toContain(
+      "<!--#echo var='csp_nonce' encoding='none' -->"
+    );
     expect(viteConfig).toContain(
       'globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"]'
     );
@@ -286,7 +288,9 @@ describe("Build Configuration and Source Verification", () => {
     expect(viteConfig).not.toContain("html,ico");
     expect(serviceWorker).toContain("new NetworkFirst");
     expect(serviceWorker).toContain('cacheName: "html-shell"');
-    expect(serviceWorker).not.toContain('createHandlerBoundToURL("/index.html")');
+    expect(serviceWorker).not.toContain(
+      'createHandlerBoundToURL("/index.html")'
+    );
   });
 
   it("uses an external theme-color bootstrap so CSP can block inline scripts", () => {

@@ -19,10 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui";
-import {
-  getCspNonce,
-  INPUT_OTP_STYLE_MARKER_ID,
-} from "./cspNonce";
+import { getCspNonce, INPUT_OTP_STYLE_MARKER_ID } from "./cspNonce";
 import { RuntimeStyleCspSupport } from "./RuntimeStyleCspSupport";
 
 function installCspNonceCarrier(nonce: string) {
@@ -41,9 +38,9 @@ describe("runtime CSP nonce support", () => {
 
     expect(getCspNonce()).toBe("nonce-sync");
     expect(getNonce()).toBe("nonce-sync");
-    expect((globalThis as { __webpack_nonce__?: string }).__webpack_nonce__).toBe(
-      "nonce-sync"
-    );
+    expect(
+      (globalThis as { __webpack_nonce__?: string }).__webpack_nonce__
+    ).toBe("nonce-sync");
   });
 
   it("reads the nonce property when browsers hide the nonce attribute value", () => {
@@ -56,7 +53,9 @@ describe("runtime CSP nonce support", () => {
 
     carrier.nonce = "nonce-property";
     carrier.getAttribute = ((name: string) =>
-      name === "nonce" ? "" : originalGetAttribute(name)) as typeof carrier.getAttribute;
+      name === "nonce"
+        ? ""
+        : originalGetAttribute(name)) as typeof carrier.getAttribute;
 
     expect(getCspNonce()).toBe("nonce-property");
     expect(getNonce()).toBe("nonce-property");
