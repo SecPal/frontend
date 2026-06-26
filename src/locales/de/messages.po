@@ -126,9 +126,21 @@ msgstr "Empfangstablet"
 msgid "Edit Phone"
 msgstr "Telefonnummer bearbeiten"
 
+#: src/pages/SourcePage.tsx
+msgid "Further links"
+msgstr "Weitere Links"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Employment permitted"
 msgstr "Erwerbstätigkeit gestattet"
+
+#: src/pages/SourcePage.tsx
+msgid "Source offer for users interacting with SecPal over a network."
+msgstr "Quelltextangebot für Benutzer, die über ein Netzwerk mit SecPal interagieren."
+
+#: src/pages/SourcePage.tsx
+msgid "These repositories contain the preferred form for making modifications to the SecPal components made available through this service."
+msgstr "Diese Repositories enthalten die bevorzugte Form zum Bearbeiten der SecPal-Komponenten, die über diesen Dienst bereitgestellt werden."
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
@@ -278,6 +290,10 @@ msgstr "Datei konnte nicht gelöscht werden"
 #: src/pages/Sites/SiteEdit.tsx
 msgid "City"
 msgstr "Stadt"
+
+#: src/pages/SourcePage.tsx
+msgid "Laravel backend used by SecPal deployments for API and business logic."
+msgstr "Laravel-Backend für SecPal-Deployments mit API und Geschäftslogik."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Failed to update BWR status"
@@ -432,6 +448,10 @@ msgstr "Die neue Einheit wird unter dieser übergeordneten Einheit erstellt."
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "You can continue now and upload your documents later."
 msgstr "Sie können jetzt fortfahren und Ihre Dokumente später hochladen."
+
+#: src/pages/SourcePage.tsx
+msgid "This program is distributed without any warranty; without even the implied warranty of merchantability or fitness for a particular purpose."
+msgstr "Dieses Programm wird ohne jegliche Gewährleistung verbreitet; sogar ohne die stillschweigende Gewährleistung der Marktgängigkeit oder Eignung für einen bestimmten Zweck."
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Please select whether you currently have a Bewacher ID."
@@ -648,6 +668,10 @@ msgstr "Benutzerdefiniert"
 msgid "Filter by organizational unit"
 msgstr "nach Organisationseinheit filtern"
 
+#: src/pages/SourcePage.tsx
+msgid "SecPal/frontend issues"
+msgstr "SecPal/frontend-Issues"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Password"
 msgstr "Passwort"
@@ -720,6 +744,10 @@ msgstr "Suche"
 #: src/components/NotificationPreferences.tsx
 msgid "This is a test notification from SecPal"
 msgstr "Dies ist eine Testbenachrichtigung von SecPal"
+
+#: src/pages/SourcePage.tsx
+msgid "Issue tracker"
+msgstr "Issue-Tracker"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Select a new parent for this organizational unit."
@@ -852,6 +880,10 @@ msgstr "Minimaler zuweisbarer Rang"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Missing onboarding token. Please use the link from your email."
 msgstr "Fehlender Onboarding-Token. Bitte verwenden Sie den Link in Ihrer E-Mail."
+
+#: src/pages/SourcePage.tsx
+msgid "React/TypeScript frontend for the running SecPal web application."
+msgstr "React/TypeScript-Frontend der laufenden SecPal-Webanwendung."
 
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "View Sites"
@@ -1400,6 +1432,10 @@ msgstr "Meine Organisation"
 msgid "Suspended"
 msgstr "Ausgesetzt"
 
+#: src/pages/SourcePage.tsx
+msgid "Corresponding source repositories"
+msgstr "Entsprechende Quelltext-Repositories"
+
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Failed to delete site"
 msgstr "Objekt konnte nicht gelöscht werden"
@@ -1656,6 +1692,7 @@ msgid "Failed to load customer"
 msgstr "Kunde konnte nicht geladen werden"
 
 #: src/components/ScopeAssignmentForm.tsx
+#: src/pages/SourcePage.tsx
 msgid "Back"
 msgstr "Zurück"
 
@@ -1965,6 +2002,10 @@ msgstr "{label}: Gültig"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Failed to complete onboarding. Please try again or contact support."
 msgstr "Das Onboarding konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support."
+
+#: src/pages/SourcePage.tsx
+msgid "Legal notices"
+msgstr "Rechtliche Hinweise"
 
 #. js-lingui-explicit-id
 #: src/components/sidebar-layout.tsx
@@ -2295,6 +2336,10 @@ msgstr "Wir gleichen dieses Datum mit dem hinterlegten Geburtsdatum ab, um Ihre 
 msgid "No action available"
 msgstr "Keine Aktion verfügbar"
 
+#: src/pages/SourcePage.tsx
+msgid "This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version."
+msgstr "Dieses Programm ist freie Software: Sie können es unter den Bedingungen der von der Free Software Foundation veröffentlichten GNU Affero General Public License weitergeben und/oder verändern, entweder gemäß Version 3 der Lizenz oder (nach Ihrer Wahl) jeder späteren Version."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please upload at least one identity document file before continuing."
 msgstr "Bitte laden Sie mindestens eine Datei zum Ausweisdokument hoch, bevor Sie fortfahren."
@@ -2322,6 +2367,10 @@ msgstr "Bitte geben Sie Ihre Bewacher-ID ein oder geben Sie an, dass Sie sie nic
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Mail Sent"
 msgstr "Einladungsmail verschickt"
+
+#: src/pages/SourcePage.tsx
+msgid "Shared OpenAPI contracts and interface definitions used across SecPal components."
+msgstr "Gemeinsame OpenAPI-Verträge und Schnittstellendefinitionen für alle SecPal-Komponenten."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Step {currentStep} of {totalSteps}"
@@ -2450,9 +2499,8 @@ msgstr "Standard"
 msgid "Back to Login"
 msgstr ""
 
-#: src/components/Footer.tsx
-#: src/components/LoginRouteState.tsx
-#: src/pages/Login.tsx
+#: src/components/LegalFooterLinks.tsx
+#: src/pages/SourcePage.tsx
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
@@ -2561,9 +2609,7 @@ msgstr "Vertragsart ist erforderlich"
 msgid "Password must include at least one symbol"
 msgstr "Das Passwort muss mindestens ein Sonderzeichen enthalten"
 
-#: src/components/Footer.tsx
-#: src/components/LoginRouteState.tsx
-#: src/pages/Login.tsx
+#: src/components/LegalFooterLinks.tsx
 msgid "Source Code"
 msgstr "Quelltext"
 
@@ -2661,6 +2707,10 @@ msgstr "Erneut versuchen"
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "{0, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
 msgstr "{0, plural, zero {Dieser Kunde hat keine Objekte.} one {Dieser Kunde hat # Objekt.} other {Dieser Kunde hat # Objekte.}}"
+
+#: src/pages/SourcePage.tsx
+msgid "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the repositories linked below."
+msgstr "SecPal ist unter der GNU Affero General Public License, Version 3 oder jeder späteren Version, lizenziert. Wenn Sie diesen Dienst über ein Netzwerk nutzen, können Sie den entsprechenden Quelltext für die über diesen Dienst bereitgestellten SecPal-Komponenten kostenlos aus den unten verlinkten Repositories beziehen."
 
 #. placeholder {0}: formData.min_viewable_rank
 #: src/components/ScopeAssignmentForm.tsx
@@ -3131,6 +3181,10 @@ msgstr "Wen kann dieser Benutzer SEHEN?"
 msgid "Unlock"
 msgstr "Entsperren"
 
+#: src/pages/SourcePage.tsx
+msgid "Back to login"
+msgstr "Zurück zur Anmeldung"
+
 #: src/components/LoginRouteState.tsx
 #: src/components/RouteGuardState.tsx
 msgid "SecPal could not unlock the encrypted offline data on this device. Sign in again to rebuild the local vault."
@@ -3245,6 +3299,10 @@ msgstr "Beziehung des Notfallkontakts"
 msgid "0 or empty for non-leadership only"
 msgstr "0 oder leer nur für Nicht-Führungskräfte"
 
+#: src/pages/SourcePage.tsx
+msgid "Project license files"
+msgstr "Projektlizenzdateien"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "File removed successfully."
 msgstr "Datei erfolgreich entfernt."
@@ -3271,9 +3329,17 @@ msgstr "Log Name"
 msgid "Edit Postal Address"
 msgstr "Postanschrift bearbeiten"
 
+#: src/pages/SourcePage.tsx
+msgid "Read the AGPL v3 license"
+msgstr "AGPL-v3-Lizenz lesen"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please select a file to upload."
 msgstr "Bitte wählen Sie eine Datei zum Hochladen aus."
+
+#: src/pages/SourcePage.tsx
+msgid "Source code and license"
+msgstr "Quelltext und Lizenz"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "For German nationals, you can provide either identity card or passport."
@@ -3577,6 +3643,10 @@ msgstr "Das Passwort muss Groß- und Kleinbuchstaben enthalten"
 #: src/pages/Sites/SiteCreate.tsx
 msgid "Select organizational unit..."
 msgstr "Organisationseinheit auswählen..."
+
+#: src/pages/SourcePage.tsx
+msgid "Copyright SecPal and contributors."
+msgstr "Copyright SecPal und Mitwirkende."
 
 #. placeholder {0}: unit.name
 #: src/pages/Organization/OrganizationPage.tsx

@@ -3314,12 +3314,14 @@ describe("Login", () => {
         "https://www.gnu.org/licenses/agpl-3.0.html"
       );
       expect(licenseLink).toHaveAttribute("target", "_blank");
+      expect(licenseLink).toHaveAttribute("rel", "noopener noreferrer");
 
       // Check for source code link
       const sourceLink = screen.getByRole("link", { name: /source code/i });
       expect(sourceLink).toBeInTheDocument();
-      expect(sourceLink).toHaveAttribute("href", "https://github.com/SecPal");
-      expect(sourceLink).toHaveAttribute("target", "_blank");
+      expect(sourceLink).toHaveAttribute("href", "/source");
+      expect(screen.getByRole("contentinfo")).toHaveTextContent("AGPL v3+");
+      expect(screen.getByRole("contentinfo")).toHaveTextContent("Source Code");
     });
 
     it("renders footer with SecPal slogan", async () => {

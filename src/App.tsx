@@ -21,6 +21,7 @@ import { isRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
 const LOGIN_ROUTE_BOOTSTRAP_INTERACTIVE_DELAY_MS = 1000;
 
 import { Login } from "./pages/Login";
+import { SourcePage } from "./pages/SourcePage";
 
 const OnboardingComplete = lazy(() =>
   import("./pages/Onboarding/OnboardingComplete").then((module) => ({
@@ -167,6 +168,7 @@ function App() {
         <Suspense fallback={<PublicRouteLoader />}>
           <Routes>
             <Route path="/login" element={<LoginRoute />} />
+            <Route path="/source" element={<SourcePage />} />
             <Route
               path="/onboarding/complete"
               element={<OnboardingComplete />}

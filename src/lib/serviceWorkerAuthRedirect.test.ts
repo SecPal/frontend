@@ -30,6 +30,8 @@ describe("serviceWorkerAuthRedirect", () => {
     it("allows logged-out public paths, including trailing-slash variants", () => {
       expect(shouldRedirectLoggedOutNavigation("/login", false)).toBe(false);
       expect(shouldRedirectLoggedOutNavigation("/login/", false)).toBe(false);
+      expect(shouldRedirectLoggedOutNavigation("/source", false)).toBe(false);
+      expect(shouldRedirectLoggedOutNavigation("/source/", false)).toBe(false);
       expect(
         shouldRedirectLoggedOutNavigation("/onboarding/complete/", false)
       ).toBe(false);

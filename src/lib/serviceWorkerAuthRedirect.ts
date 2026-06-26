@@ -1,7 +1,11 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-const PUBLIC_LOGGED_OUT_PATHS = new Set(["/login", "/onboarding/complete"]);
+const PUBLIC_LOGGED_OUT_PATHS = new Set([
+  "/login",
+  "/onboarding/complete",
+  "/source",
+]);
 
 export interface RedirectableWindowClient {
   url: string;

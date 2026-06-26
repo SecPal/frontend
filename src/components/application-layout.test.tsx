@@ -22,7 +22,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { ApplicationLayout } from "./application-layout";
 import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
@@ -102,6 +102,16 @@ const renderWithProviders = (
     </MemoryRouter>
   );
 };
+
+function LocationStateProbe() {
+  const location = useLocation();
+  const state =
+    typeof location.state === "object" && location.state !== null
+      ? location.state
+      : {};
+
+  return <output data-testid="location-state">{JSON.stringify(state)}</output>;
+}
 
 async function seedAuthenticatedUser(user: Record<string, unknown>) {
   const persistedUser = sanitizePersistedAuthUser({
@@ -891,9 +901,29 @@ describe("ApplicationLayout", () => {
 
       const sourceLink = screen.getByRole("link", { name: /source code/i });
       expect(sourceLink).toBeInTheDocument();
-      expect(sourceLink).toHaveAttribute("href", "https://github.com/SecPal");
-      expect(sourceLink).toHaveAttribute("target", "_blank");
-      expect(sourceLink).toHaveAttribute("rel", "noopener noreferrer");
+      expect(sourceLink).toHaveAttribute("href", "/source");
+      expect(screen.getByText("AGPL v3+")).toBeInTheDocument();
+      expect(screen.getByText("Source Code")).toBeInTheDocument();
+    });
+
+    it("stores the current app route when navigating to source from the footer", async () => {
+      const user = userEvent.setup();
+
+      renderWithProviders(
+        <>
+          <ApplicationLayout>
+            <div>Content</div>
+          </ApplicationLayout>
+          <LocationStateProbe />
+        </>,
+        { route: "/customers/new?draft=1#notes" }
+      );
+
+      await user.click(screen.getByRole("link", { name: /source code/i }));
+
+      expect(screen.getByTestId("location-state")).toHaveTextContent(
+        JSON.stringify({ sourceReturnTo: "/customers/new?draft=1#notes" })
+      );
     });
 
     it("renders SecPal slogan in footer", () => {

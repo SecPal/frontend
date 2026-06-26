@@ -6,6 +6,7 @@ import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { MemoryRouter } from "react-router-dom";
 import { messages as deMessages } from "../locales/de/messages.mjs";
 import { SidebarLayout } from "./sidebar-layout";
 import { StackedLayout } from "./stacked-layout";
@@ -42,11 +43,13 @@ describe("mobile sidebar layouts", () => {
       const user = userEvent.setup();
 
       render(
-        <I18nProvider i18n={i18n}>
-          <Layout navbar={<div>Navbar</div>} sidebar={<div>Sidebar</div>}>
-            <div>Content</div>
-          </Layout>
-        </I18nProvider>
+        <MemoryRouter>
+          <I18nProvider i18n={i18n}>
+            <Layout navbar={<div>Navbar</div>} sidebar={<div>Sidebar</div>}>
+              <div>Content</div>
+            </Layout>
+          </I18nProvider>
+        </MemoryRouter>
       );
 
       expect(document.querySelector("header")).toHaveClass(

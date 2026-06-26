@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { Trans } from "@lingui/react/macro";
-import { Code2, Scale } from "lucide-react";
+import { LegalFooterLinks } from "./LegalFooterLinks";
 
 export function Footer() {
   return (
@@ -21,29 +21,7 @@ export function Footer() {
             <Trans>Powered by SecPal – A guard's best friend</Trans>
           </a>
         </div>
-        <div className="flex items-center justify-center gap-3">
-          <a
-            href="https://www.gnu.org/licenses/agpl-3.0.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white"
-          >
-            <Scale className="h-4 w-4" aria-hidden="true" />
-            <Trans>AGPL v3+</Trans>
-          </a>
-          <span className="text-zinc-300 dark:text-zinc-600" aria-hidden="true">
-            |
-          </span>
-          <a
-            href="https://github.com/SecPal"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white"
-          >
-            <Code2 className="h-4 w-4" aria-hidden="true" />
-            <Trans>Source Code</Trans>
-          </a>
-        </div>
+        <LegalFooterLinks className="flex items-center justify-center gap-3 text-zinc-500 dark:text-zinc-400" />
       </div>
     </footer>
   );
