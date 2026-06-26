@@ -254,9 +254,7 @@ describe("App", () => {
         /source offer for users interacting with secpal over a network\./i
       )
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/source code and license/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/source code and license/i)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "https://github.com/SecPal/frontend" })
     ).toHaveAttribute("href", "https://github.com/SecPal/frontend");
@@ -304,7 +302,10 @@ describe("App", () => {
     );
     expect(
       screen.getByRole("link", { name: /secpal\/api license/i })
-    ).toHaveAttribute("href", "https://github.com/SecPal/api/blob/main/LICENSE");
+    ).toHaveAttribute(
+      "href",
+      "https://github.com/SecPal/api/blob/main/LICENSE"
+    );
     expect(
       screen.getByRole("link", { name: /secpal\/contracts license/i })
     ).toHaveAttribute(

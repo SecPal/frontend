@@ -104,9 +104,9 @@ export function SourcePage() {
                     SecPal is licensed under the GNU Affero General Public
                     License, version 3 or any later version. If you use this
                     service over a network, you may obtain the corresponding
-                    source code for the SecPal components made available
-                    through this service at no charge from the repositories
-                    linked below.
+                    source code for the SecPal components made available through
+                    this service at no charge from the repositories linked
+                    below.
                   </Trans>
                 </p>
 
@@ -203,17 +203,17 @@ export function SourcePage() {
                 <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
                   <Trans>
                     This program is free software: you can redistribute it
-                    and/or modify it under the terms of the GNU Affero
-                    General Public License as published by the Free Software
-                    Foundation, either version 3 of the License, or (at your
-                    option) any later version.
+                    and/or modify it under the terms of the GNU Affero General
+                    Public License as published by the Free Software Foundation,
+                    either version 3 of the License, or (at your option) any
+                    later version.
                   </Trans>
                 </p>
                 <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
                   <Trans>
                     This program is distributed without any warranty; without
-                    even the implied warranty of merchantability or fitness
-                    for a particular purpose.
+                    even the implied warranty of merchantability or fitness for
+                    a particular purpose.
                   </Trans>
                 </p>
               </CardContent>

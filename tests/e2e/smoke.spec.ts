@@ -89,12 +89,22 @@ test.describe("Application Smoke Tests", () => {
       await page.waitForLoadState("domcontentloaded");
 
       await expect(page).toHaveURL(/\/source$/);
-      await expect(page.getByRole("heading", { name: "AGPL v3+" })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "AGPL v3+" })
+      ).toBeVisible();
       await expect(page.getByText("Source code and license")).toBeVisible();
-      await expect(page.getByText("https://github.com/SecPal/frontend")).toBeVisible();
-      await expect(page.getByText("https://github.com/SecPal/api")).toBeVisible();
-      await expect(page.getByText("https://github.com/SecPal/contracts")).toBeVisible();
-      await expect(page.getByText("https://github.com/SecPal/android")).toBeVisible();
+      await expect(
+        page.getByText("https://github.com/SecPal/frontend")
+      ).toBeVisible();
+      await expect(
+        page.getByText("https://github.com/SecPal/api")
+      ).toBeVisible();
+      await expect(
+        page.getByText("https://github.com/SecPal/contracts")
+      ).toBeVisible();
+      await expect(
+        page.getByText("https://github.com/SecPal/android")
+      ).toBeVisible();
     });
 
     test("should keep /source public even when the service worker has a logged-out auth state", async ({
@@ -125,7 +135,9 @@ test.describe("Application Smoke Tests", () => {
       await page.waitForLoadState("domcontentloaded");
 
       await expect(page).toHaveURL(/\/source$/);
-      await expect(page.getByRole("heading", { name: "AGPL v3+" })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "AGPL v3+" })
+      ).toBeVisible();
       await expect(page.getByText("Source code and license")).toBeVisible();
     });
   });
