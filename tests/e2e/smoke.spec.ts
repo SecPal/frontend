@@ -8,7 +8,6 @@ import {
   buildOfflineLiveMockUser,
   installMockAuthRoutes,
   installMockOrganizationRoutes,
-  installStoredMockBrowserSession,
 } from "./offline-live-helpers";
 import {
   filterExpectedSmokeConsoleErrors,
@@ -264,7 +263,7 @@ test.describe("Application Smoke Tests", () => {
 });
 
 const employeeSmokeMockUser = buildOfflineLiveMockUser({
-  permissions: ["employees.read"],
+  permissions: ["employees.read", "activity_log.read"],
 });
 
 interface ActivityLogSmokeCapture {
@@ -371,8 +370,7 @@ test.describe("Authenticated Smoke Tests", () => {
       await installMockAuthRoutes(context, employeeSmokeMockUser);
       await installMockOrganizationRoutes(context);
       await installMockEmployeeListRoute(context);
-
-      await installStoredMockBrowserSession(page, employeeSmokeMockUser);
+      await loginViaUI(page, employeeSmokeMockUser.email, "password");
       const capture = attachActivityLogSmokeCapture(page);
       await expectEmployeesPageWithoutActivityLogFailures(page, capture);
     } finally {
