@@ -151,11 +151,13 @@ function getPersistentOnboardingNavigationState(
 function hasPersistentOnboardingNavigationState(
   routeState: OnboardingRouteState | null
 ): boolean {
+  const persistentNavigationState =
+    getPersistentOnboardingNavigationState(routeState);
+
   return (
-    routeState != null &&
+    persistentNavigationState != null &&
     Object.keys(routeState).length === 1 &&
-    getPersistentOnboardingNavigationState(routeState)?.returnTo ===
-      routeState.returnTo
+    persistentNavigationState.returnTo === routeState.returnTo
   );
 }
 

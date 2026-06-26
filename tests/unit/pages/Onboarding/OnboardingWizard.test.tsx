@@ -104,7 +104,20 @@ function OnboardingCompletionStub() {
   );
 }
 
-function renderWizard(routeState?: Record<string, unknown>) {
+function RouteStateProbe() {
+  const location = useLocation();
+
+  return (
+    <output data-testid="route-state">
+      {location.state == null ? "null" : JSON.stringify(location.state)}
+    </output>
+  );
+}
+
+function renderWizard(
+  routeState?: Record<string, unknown>,
+  { includeRouteStateProbe = false }: { includeRouteStateProbe?: boolean } = {}
+) {
   const initialEntries = routeState
     ? [{ pathname: "/onboarding", state: routeState }]
     : ["/onboarding"];
@@ -113,7 +126,19 @@ function renderWizard(routeState?: Record<string, unknown>) {
     <MemoryRouter initialEntries={initialEntries}>
       <I18nProvider i18n={i18n}>
         <Routes>
-          <Route path="/onboarding" element={<OnboardingWizard />} />
+          <Route
+            path="/onboarding"
+            element={
+              includeRouteStateProbe ? (
+                <>
+                  <OnboardingWizard />
+                  <RouteStateProbe />
+                </>
+              ) : (
+                <OnboardingWizard />
+              )
+            }
+          />
           <Route
             path="/onboarding/submitted"
             element={<OnboardingCompletionStub />}
@@ -520,6 +545,21 @@ describe("OnboardingWizard", () => {
         /your onboarding is not complete yet\. please complete onboarding/i
       )
     ).not.toBeInTheDocument();
+  });
+
+  it("cleans transient route state after mount when returnTo is absent", async () => {
+    renderWizard(
+      { onboardingRequired: true },
+      { includeRouteStateProbe: true }
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Personal Information")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("route-state")).toHaveTextContent("null");
+    });
   });
 
   it("preserves the original deep link when the wizard redirects to the submitted screen", async () => {
