@@ -1101,6 +1101,55 @@ describe("App", () => {
     }
   );
 
+  it("preserves the original deep link when snapshot revalidation clears a stale pre-contract redirect", async () => {
+    window.history.replaceState({}, "", "/settings");
+
+    await seedPersistedAuthUser({
+      id: 1,
+      name: "Stale Snapshot User",
+      email: "stale.snapshot@secpal.dev",
+      emailVerified: false,
+      employee: {
+        id: "employee-1",
+        status: "pre_contract",
+        onboarding_workflow: {
+          status: "account_initialized",
+        },
+      },
+    });
+
+    mockGetCurrentUser.mockResolvedValue(
+      sanitizePersistedAuthUser({
+        id: 1,
+        name: "Active User",
+        email: "guard@secpal.dev",
+        emailVerified: true,
+        employee: {
+          id: "employee-2",
+          status: "active",
+          onboarding_workflow: {
+            status: "active",
+          },
+        },
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    await waitFor(
+      () => {
+        expect(window.location.pathname).toBe("/settings");
+      },
+      { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /settings/i,
+      })
+    ).toBeInTheDocument();
+  });
+
   it("renders onboarding-only routes without the normal application navigation for pre-contract users", async () => {
     window.history.replaceState({}, "", "/onboarding");
 

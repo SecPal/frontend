@@ -16,7 +16,18 @@ vi.mock("react-router-dom", async () => {
 
   return {
     ...actual,
-    Navigate: ({ to }: { to: string }) => <div>Redirected to {to}</div>,
+    Navigate: ({
+      to,
+      state,
+    }: {
+      to: string;
+      state?: { returnTo?: string };
+    }) => (
+      <div>
+        Redirected to {to}
+        {state?.returnTo ? ` (returnTo: ${state.returnTo})` : ""}
+      </div>
+    ),
   };
 });
 
@@ -93,7 +104,9 @@ describe("OnboardingAccessRoute", () => {
       </AppAccessRoute>
     );
 
-    expect(screen.getByText("Redirected to /onboarding")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Redirected to \/onboarding \(returnTo: \/\)/)
+    ).toBeInTheDocument();
     expect(screen.queryByText("Protected App Content")).not.toBeInTheDocument();
   });
 
@@ -131,6 +144,30 @@ describe("OnboardingAccessRoute", () => {
     );
 
     expect(screen.getByText("Redirected to /")).toBeInTheDocument();
+    expect(screen.queryByText("Onboarding Content")).not.toBeInTheDocument();
+  });
+
+  it("restores the original deep link after onboarding redirect state is cleared by revalidation", () => {
+    mockAuthenticatedUser("active");
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: "/onboarding",
+            state: { returnTo: "/settings" },
+          },
+        ]}
+      >
+        <I18nProvider i18n={i18n}>
+          <OnboardingOnlyRoute>
+            <div>Onboarding Content</div>
+          </OnboardingOnlyRoute>
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("Redirected to /settings")).toBeInTheDocument();
     expect(screen.queryByText("Onboarding Content")).not.toBeInTheDocument();
   });
 
@@ -176,7 +213,7 @@ describe("OnboardingAccessRoute", () => {
     );
 
     expect(
-      screen.getByText("Redirected to /onboarding/submitted")
+      screen.getByText(/Redirected to \/onboarding\/submitted \(returnTo: \/\)/)
     ).toBeInTheDocument();
     expect(screen.queryByText("Protected App Content")).not.toBeInTheDocument();
   });
@@ -200,7 +237,9 @@ describe("OnboardingAccessRoute", () => {
       </AppAccessRoute>
     );
 
-    expect(screen.getByText("Redirected to /onboarding")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Redirected to \/onboarding \(returnTo: \/\)/)
+    ).toBeInTheDocument();
     expect(screen.queryByText("Protected App Content")).not.toBeInTheDocument();
   });
 

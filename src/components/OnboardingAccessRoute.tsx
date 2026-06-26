@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import {
   getAuthOnboardingWorkflowStatus,
@@ -10,6 +10,11 @@ import {
 
 interface OnboardingAccessRouteProps {
   children: React.ReactNode;
+}
+
+interface OnboardingRedirectState {
+  onboardingRequired?: boolean;
+  returnTo?: string;
 }
 
 function isPreContractUser(user: ReturnType<typeof useAuth>["user"]): boolean {
@@ -33,8 +38,37 @@ function hasKnownEmployeeStatus(
   );
 }
 
+function buildReturnTo(
+  pathname: string,
+  search: string,
+  hash: string
+): string | null {
+  const target = `${pathname}${search}${hash}`;
+
+  if (!target.startsWith("/")) {
+    return null;
+  }
+
+  return target;
+}
+
+function getSafeOnboardingReturnTarget(state: unknown): string | null {
+  if (typeof state !== "object" || state === null) {
+    return null;
+  }
+
+  const returnTo = (state as OnboardingRedirectState).returnTo;
+
+  if (typeof returnTo !== "string" || !returnTo.startsWith("/")) {
+    return null;
+  }
+
+  return returnTo;
+}
+
 export function AppAccessRoute({ children }: OnboardingAccessRouteProps) {
   const { user } = useAuth();
+  const location = useLocation();
   const onboardingWorkflowStatus = getAuthOnboardingWorkflowStatus(user);
 
   if (isPreContractUser(user)) {
@@ -46,7 +80,14 @@ export function AppAccessRoute({ children }: OnboardingAccessRouteProps) {
             : "/onboarding"
         }
         replace
-        state={{ onboardingRequired: true }}
+        state={{
+          onboardingRequired: true,
+          returnTo: buildReturnTo(
+            location.pathname,
+            location.search,
+            location.hash
+          ),
+        }}
       />
     );
   }
@@ -56,6 +97,7 @@ export function AppAccessRoute({ children }: OnboardingAccessRouteProps) {
 
 export function OnboardingOnlyRoute({ children }: OnboardingAccessRouteProps) {
   const { user } = useAuth();
+  const location = useLocation();
 
   // Allow access when employee status is unknown (offline / stale persisted
   // user): a pre-contract user who cannot reach the API should stay at
@@ -64,5 +106,10 @@ export function OnboardingOnlyRoute({ children }: OnboardingAccessRouteProps) {
     return <>{children}</>;
   }
 
-  return <Navigate to="/" replace />;
+  return (
+    <Navigate
+      to={getSafeOnboardingReturnTarget(location.state) ?? "/"}
+      replace
+    />
+  );
 }
