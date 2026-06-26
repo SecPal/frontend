@@ -805,10 +805,6 @@ msgstr "Gerätebezeichnung"
 msgid "Sending verification email..."
 msgstr "Senden einer Bestätigungs-E-Mail..."
 
-#: src/pages/SourcePage.tsx
-#~ msgid "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the deployed SecPal components at no charge from the repositories linked below."
-#~ msgstr ""
-
 #: src/pages/Employees/EmployeeList.tsx
 msgid "Unit"
 msgstr "Einheit"
@@ -1269,10 +1265,6 @@ msgstr "Überprüfen..."
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Documents"
 msgstr "Dokumente"
-
-#: src/pages/SourcePage.tsx
-#~ msgid "Project license file"
-#~ msgstr ""
 
 #. placeholder {0}: formatDateTime( passkey.created_at, i18n.locale )
 #: src/pages/Settings/SettingsPage.tsx
@@ -1885,10 +1877,6 @@ msgstr "Alle Protokolle"
 msgid "Processing..."
 msgstr "Verarbeitung..."
 
-#: src/pages/SourcePage.tsx
-#~ msgid "Open repository"
-#~ msgstr ""
-
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Last Updated"
 msgstr "Zuletzt aktualisiert"
@@ -2450,10 +2438,6 @@ msgstr "Datum/Uhrzeit"
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Email"
 msgstr "E-Mail-Adresse"
-
-#: src/pages/SourcePage.tsx
-#~ msgid "These repositories contain the preferred form of the SecPal code for making modifications to the software delivered through this service."
-#~ msgstr ""
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "User's own rank (FE{userRank}) is within viewable range. Should this user be able to view/edit their own HR data?"
