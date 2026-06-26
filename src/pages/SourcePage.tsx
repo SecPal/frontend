@@ -46,8 +46,7 @@ function getSourceReturnTo(state: unknown): string | null {
     return null;
   }
 
-  const sourceReturnTo = (state as { sourceReturnTo?: unknown })
-    .sourceReturnTo;
+  const sourceReturnTo = (state as { sourceReturnTo?: unknown }).sourceReturnTo;
 
   if (
     typeof sourceReturnTo !== "string" ||
@@ -73,7 +72,7 @@ export function SourcePage() {
   const sourceReturnTo = getSourceReturnTo(location.state);
   const showAuthenticatedReturn = isAuthenticated || isLoading;
   const secondaryActionHref = showAuthenticatedReturn
-    ? sourceReturnTo ?? "/"
+    ? (sourceReturnTo ?? "/")
     : "/login";
   const secondaryActionLabel = showAuthenticatedReturn ? (
     <Trans>Back</Trans>

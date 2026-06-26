@@ -110,9 +110,7 @@ function LocationStateProbe() {
       ? location.state
       : {};
 
-  return (
-    <output data-testid="location-state">{JSON.stringify(state)}</output>
-  );
+  return <output data-testid="location-state">{JSON.stringify(state)}</output>;
 }
 
 async function seedAuthenticatedUser(user: Record<string, unknown>) {
