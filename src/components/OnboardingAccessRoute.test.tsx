@@ -171,6 +171,30 @@ describe("OnboardingAccessRoute", () => {
     expect(screen.queryByText("Onboarding Content")).not.toBeInTheDocument();
   });
 
+  it("rejects protocol-relative return targets when leaving onboarding-only routes", () => {
+    mockAuthenticatedUser("active");
+
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: "/onboarding",
+            state: { returnTo: "//attacker.example/path" },
+          },
+        ]}
+      >
+        <I18nProvider i18n={i18n}>
+          <OnboardingOnlyRoute>
+            <div>Onboarding Content</div>
+          </OnboardingOnlyRoute>
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText("Redirected to /")).toBeInTheDocument();
+    expect(screen.queryByText("Onboarding Content")).not.toBeInTheDocument();
+  });
+
   it("allows access to app routes when employee status is unknown (offline/stale user)", () => {
     vi.mocked(authHook.useAuth).mockReturnValue({
       ...authContext,

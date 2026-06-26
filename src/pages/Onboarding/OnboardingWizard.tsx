@@ -34,6 +34,12 @@ import {
   getAuthOnboardingWorkflowStatus,
   isSubmittedOnboardingWorkflowStatus,
 } from "../../lib/onboardingWorkflow";
+import {
+  getEntryOnboardingRouteState,
+  getPersistentOnboardingNavigationState,
+  hasNormalizedOnboardingNavigationState,
+  type OnboardingRouteState,
+} from "../../lib/onboardingRouteState";
 import { AuthContext } from "../../contexts/auth-context";
 import { getAuthTransport } from "../../services/authTransport";
 import {
@@ -103,64 +109,6 @@ interface WizardFeedback {
   tone: "success" | "error";
   message: string;
 }
-
-interface OnboardingRouteState {
-  onboardingRequired?: boolean;
-  message?: string;
-  returnTo?: string;
-}
-
-function getPersistentOnboardingRouteState(
-  routeState: OnboardingRouteState | null
-): OnboardingRouteState | null {
-  if (!routeState) {
-    return null;
-  }
-
-  if (routeState.onboardingRequired === true) {
-    return { onboardingRequired: true };
-  }
-
-  if (typeof routeState.message === "string") {
-    const trimmedMessage = routeState.message.trim();
-    if (trimmedMessage.length > 0) {
-      return { message: trimmedMessage };
-    }
-  }
-
-  return null;
-}
-
-function getPersistentOnboardingNavigationState(
-  routeState: OnboardingRouteState | null
-): Pick<OnboardingRouteState, "returnTo"> | null {
-  if (!routeState) {
-    return null;
-  }
-
-  if (
-    typeof routeState.returnTo === "string" &&
-    routeState.returnTo.startsWith("/")
-  ) {
-    return { returnTo: routeState.returnTo };
-  }
-
-  return null;
-}
-
-function hasPersistentOnboardingNavigationState(
-  routeState: OnboardingRouteState | null
-): boolean {
-  const persistentNavigationState =
-    getPersistentOnboardingNavigationState(routeState);
-
-  return (
-    persistentNavigationState != null &&
-    Object.keys(routeState).length === 1 &&
-    persistentNavigationState.returnTo === routeState.returnTo
-  );
-}
-
 function getEntryFeedbackFromRouteState(
   routeState: OnboardingRouteState | null,
   translate: ReturnType<typeof useLingui>["_"]
@@ -1801,7 +1749,7 @@ export function OnboardingWizard() {
   const location = useLocation();
   const routeState = location.state as OnboardingRouteState | null;
   const [entryRouteState] = useState<OnboardingRouteState | null>(() =>
-    getPersistentOnboardingRouteState(routeState)
+    getEntryOnboardingRouteState(routeState)
   );
   const persistentNavigationState = useMemo(
     () => getPersistentOnboardingNavigationState(routeState),
@@ -2176,15 +2124,15 @@ export function OnboardingWizard() {
       return;
     }
 
-    if (hasPersistentOnboardingNavigationState(routeState)) {
+    if (hasNormalizedOnboardingNavigationState(routeState)) {
       return;
     }
 
     navigate(location.pathname, {
       replace: true,
-      state: persistentNavigationState,
+      state: getPersistentOnboardingNavigationState(routeState),
     });
-  }, [location.pathname, navigate, persistentNavigationState, routeState]);
+  }, [location.pathname, navigate, routeState]);
 
   useEffect(() => {
     if (feedback?.tone !== "error" && !error) {
@@ -2212,9 +2160,9 @@ export function OnboardingWizard() {
 
     navigate("/onboarding/submitted", {
       replace: true,
-      state: persistentNavigationState,
+      state: getPersistentOnboardingNavigationState(entryRouteState),
     });
-  }, [currentOnboardingWorkflowStatus, navigate, persistentNavigationState]);
+  }, [currentOnboardingWorkflowStatus, entryRouteState, navigate]);
 
   useEffect(() => {
     let active = true;

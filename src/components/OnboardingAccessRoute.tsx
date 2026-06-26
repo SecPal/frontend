@@ -3,6 +3,7 @@
 
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { sanitizeOnboardingReturnTarget } from "../lib/onboardingRouteState";
 import {
   getAuthOnboardingWorkflowStatus,
   isSubmittedOnboardingWorkflowStatus,
@@ -10,11 +11,6 @@ import {
 
 interface OnboardingAccessRouteProps {
   children: React.ReactNode;
-}
-
-interface OnboardingRedirectState {
-  onboardingRequired?: boolean;
-  returnTo?: string;
 }
 
 function isPreContractUser(user: ReturnType<typeof useAuth>["user"]): boolean {
@@ -43,13 +39,7 @@ function buildReturnTo(
   search: string,
   hash: string
 ): string | null {
-  const target = `${pathname}${search}${hash}`;
-
-  if (!target.startsWith("/")) {
-    return null;
-  }
-
-  return target;
+  return sanitizeOnboardingReturnTarget(`${pathname}${search}${hash}`);
 }
 
 function getSafeOnboardingReturnTarget(state: unknown): string | null {
@@ -57,13 +47,9 @@ function getSafeOnboardingReturnTarget(state: unknown): string | null {
     return null;
   }
 
-  const returnTo = (state as OnboardingRedirectState).returnTo;
-
-  if (typeof returnTo !== "string" || !returnTo.startsWith("/")) {
-    return null;
-  }
-
-  return returnTo;
+  return sanitizeOnboardingReturnTarget(
+    (state as { returnTo?: unknown }).returnTo
+  );
 }
 
 export function AppAccessRoute({ children }: OnboardingAccessRouteProps) {
