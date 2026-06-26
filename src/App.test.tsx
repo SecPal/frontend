@@ -243,6 +243,7 @@ describe("App", () => {
 
   it("renders the public source route without requiring authentication", async () => {
     window.history.replaceState({}, "", "/source");
+    clearXsrfCookie();
 
     await renderWithI18n(<App />);
 
@@ -270,6 +271,7 @@ describe("App", () => {
     expect(
       screen.getByRole("link", { name: /back to login/i })
     ).toHaveAttribute("href", "/login");
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
     expect(screen.getByText(/without any warranty/i)).toBeInTheDocument();
   });
 
@@ -311,8 +313,62 @@ describe("App", () => {
     );
   });
 
+  it("preserves the authenticated return route when opening source from app content", async () => {
+    window.history.replaceState(
+      { usr: { sourceReturnTo: "/customers/new?draft=1#notes" } },
+      "",
+      "/source"
+    );
+    await seedPersistedAuthUser({
+      id: "42",
+      name: "Legal Reader",
+      email: "legal.reader@secpal.dev",
+      emailVerified: true,
+    });
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: /agpl v3\+/i })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^back$/i })).toHaveAttribute(
+      "href",
+      "/customers/new?draft=1#notes"
+    );
+  });
+
+  it("rehydrates browser-session auth on source when no local snapshot exists", async () => {
+    window.history.replaceState({}, "", "/source");
+    mockGetCurrentUser.mockResolvedValueOnce({
+      id: "42",
+      name: "Recovered Source Reader",
+      email: "source.reader@secpal.dev",
+      emailVerified: true,
+      permissions: [],
+      roles: [],
+      hasOrganizationalScopes: false,
+      hasCustomerAccess: false,
+      hasSiteAccess: false,
+    });
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: /agpl v3\+/i })
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+    });
+    expect(screen.getByRole("link", { name: /^back$/i })).toHaveAttribute(
+      "href",
+      "/"
+    );
+  });
+
   it("renders the public source route with a trailing slash", async () => {
     window.history.replaceState({}, "", "/source/");
+    clearXsrfCookie();
 
     await renderWithI18n(<App />);
 

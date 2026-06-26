@@ -11,7 +11,7 @@ import {
   FolderGit2,
   Scale,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
 import {
@@ -41,11 +41,41 @@ const SOURCE_REPOSITORIES = [
   },
 ] as const;
 
+function getSourceReturnTo(state: unknown): string | null {
+  if (typeof state !== "object" || state === null) {
+    return null;
+  }
+
+  const sourceReturnTo = (state as { sourceReturnTo?: unknown })
+    .sourceReturnTo;
+
+  if (
+    typeof sourceReturnTo !== "string" ||
+    !sourceReturnTo.startsWith("/") ||
+    sourceReturnTo.startsWith("//")
+  ) {
+    return null;
+  }
+
+  const [pathname] = sourceReturnTo.split(/[?#]/, 1);
+
+  if (pathname === "/source" || pathname === "/source/") {
+    return null;
+  }
+
+  return sourceReturnTo;
+}
+
 export function SourcePage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const { _ } = useLingui();
-  const secondaryActionHref = isAuthenticated ? "/" : "/login";
-  const secondaryActionLabel = isAuthenticated ? (
+  const location = useLocation();
+  const sourceReturnTo = getSourceReturnTo(location.state);
+  const showAuthenticatedReturn = isAuthenticated || isLoading;
+  const secondaryActionHref = showAuthenticatedReturn
+    ? sourceReturnTo ?? "/"
+    : "/login";
+  const secondaryActionLabel = showAuthenticatedReturn ? (
     <Trans>Back</Trans>
   ) : (
     <Trans>Back to login</Trans>

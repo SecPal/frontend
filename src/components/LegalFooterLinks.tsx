@@ -3,13 +3,16 @@
 
 import { Trans } from "@lingui/react/macro";
 import { Code2, Scale } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 interface LegalFooterLinksProps {
   className?: string;
 }
 
 export function LegalFooterLinks({ className }: LegalFooterLinksProps) {
+  const location = useLocation();
+  const sourceReturnTo = `${location.pathname}${location.search}${location.hash}`;
+
   return (
     <div className={className}>
       <a
@@ -26,6 +29,7 @@ export function LegalFooterLinks({ className }: LegalFooterLinksProps) {
       </span>
       <Link
         to="/source"
+        state={{ sourceReturnTo }}
         className="inline-flex items-center gap-1.5 hover:text-zinc-950 dark:hover:text-white"
       >
         <Code2 className="h-4 w-4" aria-hidden="true" />

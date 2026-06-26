@@ -128,7 +128,7 @@ msgstr "Telefonnummer bearbeiten"
 
 #: src/pages/SourcePage.tsx
 msgid "Further links"
-msgstr ""
+msgstr "Weitere Links"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Employment permitted"
@@ -136,11 +136,11 @@ msgstr "Erwerbstätigkeit gestattet"
 
 #: src/pages/SourcePage.tsx
 msgid "Source offer for users interacting with SecPal over a network."
-msgstr ""
+msgstr "Quelltextangebot für Benutzer, die über ein Netzwerk mit SecPal interagieren."
 
 #: src/pages/SourcePage.tsx
 msgid "These repositories contain the preferred form for making modifications to the SecPal components made available through this service."
-msgstr ""
+msgstr "Diese Repositories enthalten die bevorzugte Form zum Bearbeiten der SecPal-Komponenten, die über diesen Dienst bereitgestellt werden."
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
@@ -451,7 +451,7 @@ msgstr "Sie können jetzt fortfahren und Ihre Dokumente später hochladen."
 
 #: src/pages/SourcePage.tsx
 msgid "This program is distributed without any warranty; without even the implied warranty of merchantability or fitness for a particular purpose."
-msgstr ""
+msgstr "Dieses Programm wird ohne jegliche Gewährleistung verbreitet; sogar ohne die stillschweigende Gewährleistung der Marktgängigkeit oder Eignung für einen bestimmten Zweck."
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Please select whether you currently have a Bewacher ID."
@@ -670,7 +670,7 @@ msgstr "nach Organisationseinheit filtern"
 
 #: src/pages/SourcePage.tsx
 msgid "SecPal/frontend issues"
-msgstr ""
+msgstr "SecPal/frontend-Issues"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Password"
@@ -747,7 +747,7 @@ msgstr "Dies ist eine Testbenachrichtigung von SecPal"
 
 #: src/pages/SourcePage.tsx
 msgid "Issue tracker"
-msgstr ""
+msgstr "Issue-Tracker"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Select a new parent for this organizational unit."
@@ -1434,7 +1434,7 @@ msgstr "Ausgesetzt"
 
 #: src/pages/SourcePage.tsx
 msgid "Corresponding source repositories"
-msgstr ""
+msgstr "Entsprechende Quelltext-Repositories"
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Failed to delete site"
@@ -2005,7 +2005,7 @@ msgstr "Das Onboarding konnte nicht abgeschlossen werden. Bitte versuchen Sie es
 
 #: src/pages/SourcePage.tsx
 msgid "Legal notices"
-msgstr ""
+msgstr "Rechtliche Hinweise"
 
 #. js-lingui-explicit-id
 #: src/components/sidebar-layout.tsx
@@ -2338,7 +2338,7 @@ msgstr "Keine Aktion verfügbar"
 
 #: src/pages/SourcePage.tsx
 msgid "This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version."
-msgstr ""
+msgstr "Dieses Programm ist freie Software: Sie können es unter den Bedingungen der von der Free Software Foundation veröffentlichten GNU Affero General Public License weitergeben und/oder verändern, entweder gemäß Version 3 der Lizenz oder (nach Ihrer Wahl) jeder späteren Version."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please upload at least one identity document file before continuing."
@@ -2710,7 +2710,7 @@ msgstr "{0, plural, zero {Dieser Kunde hat keine Objekte.} one {Dieser Kunde hat
 
 #: src/pages/SourcePage.tsx
 msgid "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the repositories linked below."
-msgstr ""
+msgstr "SecPal ist unter der GNU Affero General Public License, Version 3 oder jeder späteren Version, lizenziert. Wenn Sie diesen Dienst über ein Netzwerk nutzen, können Sie den entsprechenden Quelltext für die über diesen Dienst bereitgestellten SecPal-Komponenten kostenlos aus den unten verlinkten Repositories beziehen."
 
 #. placeholder {0}: formData.min_viewable_rank
 #: src/components/ScopeAssignmentForm.tsx
@@ -3183,7 +3183,7 @@ msgstr "Entsperren"
 
 #: src/pages/SourcePage.tsx
 msgid "Back to login"
-msgstr ""
+msgstr "Zurück zur Anmeldung"
 
 #: src/components/LoginRouteState.tsx
 #: src/components/RouteGuardState.tsx
@@ -3301,7 +3301,7 @@ msgstr "0 oder leer nur für Nicht-Führungskräfte"
 
 #: src/pages/SourcePage.tsx
 msgid "Project license files"
-msgstr ""
+msgstr "Projektlizenzdateien"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "File removed successfully."
@@ -3331,7 +3331,7 @@ msgstr "Postanschrift bearbeiten"
 
 #: src/pages/SourcePage.tsx
 msgid "Read the AGPL v3 license"
-msgstr ""
+msgstr "AGPL-v3-Lizenz lesen"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please select a file to upload."
@@ -3339,7 +3339,7 @@ msgstr "Bitte wählen Sie eine Datei zum Hochladen aus."
 
 #: src/pages/SourcePage.tsx
 msgid "Source code and license"
-msgstr ""
+msgstr "Quelltext und Lizenz"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "For German nationals, you can provide either identity card or passport."
@@ -3646,7 +3646,7 @@ msgstr "Organisationseinheit auswählen..."
 
 #: src/pages/SourcePage.tsx
 msgid "Copyright SecPal and contributors."
-msgstr ""
+msgstr "Copyright SecPal und Mitwirkende."
 
 #. placeholder {0}: unit.name
 #: src/pages/Organization/OrganizationPage.tsx

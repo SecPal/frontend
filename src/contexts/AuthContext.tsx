@@ -64,7 +64,7 @@ function shouldBootstrapBrowserSessionWithoutStoredUser(
       ? window.location.pathname.slice(0, -1)
       : window.location.pathname;
 
-  if (normalizedPathname === "/login") {
+  if (normalizedPathname === "/login" || normalizedPathname === "/source") {
     return getCsrfTokenFromCookie() !== null;
   }
 

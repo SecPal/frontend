@@ -205,6 +205,7 @@ describe("useAuth", () => {
 
   it("initializes with no user on /source when localStorage is empty", () => {
     window.history.replaceState({}, "", "/source");
+    clearCsrfTokenCookie();
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -214,6 +215,30 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.isLoading).toBe(false);
     expect(mockGetCurrentUser).not.toHaveBeenCalled();
+  });
+
+  it("rehydrates browser-session auth on /source when csrf exists and localStorage is empty", async () => {
+    window.history.replaceState({}, "", "/source");
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.isLoading).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    expect(result.current.user).toEqual({
+      id: "1",
+      name: "Bootstrap User",
+      email: "bootstrap@secpal.dev",
+      emailVerified: false,
+    });
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
   it("bootstraps a protected browser-session route even when local auth storage is empty", async () => {
