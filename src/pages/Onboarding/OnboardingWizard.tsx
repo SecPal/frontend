@@ -107,6 +107,7 @@ interface WizardFeedback {
 interface OnboardingRouteState {
   onboardingRequired?: boolean;
   message?: string;
+  returnTo?: string;
 }
 
 function getPersistentOnboardingRouteState(
@@ -128,6 +129,34 @@ function getPersistentOnboardingRouteState(
   }
 
   return null;
+}
+
+function getPersistentOnboardingNavigationState(
+  routeState: OnboardingRouteState | null
+): Pick<OnboardingRouteState, "returnTo"> | null {
+  if (!routeState) {
+    return null;
+  }
+
+  if (
+    typeof routeState.returnTo === "string" &&
+    routeState.returnTo.startsWith("/")
+  ) {
+    return { returnTo: routeState.returnTo };
+  }
+
+  return null;
+}
+
+function hasPersistentOnboardingNavigationState(
+  routeState: OnboardingRouteState | null
+): boolean {
+  return (
+    routeState != null &&
+    Object.keys(routeState).length === 1 &&
+    getPersistentOnboardingNavigationState(routeState)?.returnTo ===
+      routeState.returnTo
+  );
 }
 
 function getEntryFeedbackFromRouteState(
@@ -1768,10 +1797,13 @@ export function OnboardingWizard() {
   const translateRef = useRef(_);
   const navigate = useNavigate();
   const location = useLocation();
+  const routeState = location.state as OnboardingRouteState | null;
   const [entryRouteState] = useState<OnboardingRouteState | null>(() =>
-    getPersistentOnboardingRouteState(
-      location.state as OnboardingRouteState | null
-    )
+    getPersistentOnboardingRouteState(routeState)
+  );
+  const persistentNavigationState = useMemo(
+    () => getPersistentOnboardingNavigationState(routeState),
+    [routeState]
   );
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -1977,7 +2009,10 @@ export function OnboardingWizard() {
 
       if (isOnboardingAwaitingHrReview(data)) {
         setLoading(false);
-        navigate("/onboarding/submitted", { replace: true });
+        navigate("/onboarding/submitted", {
+          replace: true,
+          state: persistentNavigationState,
+        });
         return;
       }
 
@@ -1994,7 +2029,7 @@ export function OnboardingWizard() {
       setTemplate(null);
       setTemplateResetKey((k) => k + 1);
     },
-    [navigate]
+    [navigate, persistentNavigationState]
   );
 
   const resetUploadState = useCallback(() => {
@@ -2043,7 +2078,10 @@ export function OnboardingWizard() {
 
     if (isSubmittedOnboardingWorkflowStatus(refreshedStatus)) {
       setLoading(false);
-      navigate("/onboarding/submitted", { replace: true });
+      navigate("/onboarding/submitted", {
+        replace: true,
+        state: persistentNavigationState,
+      });
       return;
     }
 
@@ -2072,6 +2110,7 @@ export function OnboardingWizard() {
     authContext?.user,
     applyLoadedSteps,
     navigate,
+    persistentNavigationState,
     resetUploadState,
     syncAuthenticatedUser,
   ]);
@@ -2131,13 +2170,19 @@ export function OnboardingWizard() {
   }, [_]);
 
   useEffect(() => {
-    const routeState = location.state as OnboardingRouteState | null;
     if (!routeState) {
       return;
     }
 
-    navigate(location.pathname, { replace: true, state: null });
-  }, [location.pathname, location.state, navigate]);
+    if (hasPersistentOnboardingNavigationState(routeState)) {
+      return;
+    }
+
+    navigate(location.pathname, {
+      replace: true,
+      state: persistentNavigationState,
+    });
+  }, [location.pathname, navigate, persistentNavigationState, routeState]);
 
   useEffect(() => {
     if (feedback?.tone !== "error" && !error) {
@@ -2163,8 +2208,11 @@ export function OnboardingWizard() {
       return;
     }
 
-    navigate("/onboarding/submitted", { replace: true });
-  }, [currentOnboardingWorkflowStatus, navigate]);
+    navigate("/onboarding/submitted", {
+      replace: true,
+      state: persistentNavigationState,
+    });
+  }, [currentOnboardingWorkflowStatus, navigate, persistentNavigationState]);
 
   useEffect(() => {
     let active = true;
@@ -2924,7 +2972,10 @@ export function OnboardingWizard() {
 
     if (await persistCurrentStep("submitted")) {
       if (currentStepIndex >= steps.length - 1) {
-        navigate("/onboarding/submitted", { replace: true });
+        navigate("/onboarding/submitted", {
+          replace: true,
+          state: persistentNavigationState,
+        });
         return;
       }
 

@@ -11,7 +11,7 @@ import {
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { messages as deMessages } from "../../../../src/locales/de/messages.mjs";
@@ -88,9 +88,18 @@ function makeSubmission(
 }
 
 function OnboardingCompletionStub() {
+  const location = useLocation();
+  const returnTo =
+    typeof location.state === "object" &&
+    location.state !== null &&
+    typeof (location.state as { returnTo?: string }).returnTo === "string"
+      ? (location.state as { returnTo: string }).returnTo
+      : null;
+
   return (
     <div>
       <h1>You&apos;re all set</h1>
+      {returnTo ? <p>Return to {returnTo}</p> : null}
     </div>
   );
 }
@@ -511,6 +520,40 @@ describe("OnboardingWizard", () => {
         /your onboarding is not complete yet\. please complete onboarding/i
       )
     ).not.toBeInTheDocument();
+  });
+
+  it("preserves the original deep link when the wizard redirects to the submitted screen", async () => {
+    vi.mocked(onboardingApi.createOnboardingSubmission).mockResolvedValueOnce(
+      makeSubmission("template-1")
+    );
+    vi.mocked(onboardingApi.updateOnboardingSubmission)
+      .mockResolvedValueOnce({
+        ...makeSubmission("template-1"),
+        status: "submitted",
+      })
+      .mockResolvedValueOnce({
+        ...makeSubmission("template-2"),
+        status: "submitted",
+      });
+
+    renderWizard({ onboardingRequired: true, returnTo: "/settings" });
+
+    await waitFor(() => {
+      expect(screen.getByText("Personal Information")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Tax Details")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: /you're all set/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Return to /settings")).toBeInTheDocument();
   });
 
   it("blocks moving to the next step until required fields are filled", async () => {
