@@ -3,9 +3,12 @@
 
 import { loginViaUI, test, expect } from "./auth.setup";
 import { isRemoteE2ETarget } from "./auth-helpers";
+import type { BrowserContext, Page } from "@playwright/test";
 import {
+  buildOfflineLiveMockUser,
   ensureActiveServiceWorker,
   installMockAuthRoutes,
+  installMockOrganizationRoutes,
 } from "./offline-live-helpers";
 import {
   filterExpectedSmokeConsoleErrors,
@@ -102,7 +105,10 @@ test.describe("Application Smoke Tests", () => {
 
       await page.evaluate(async () => {
         const cache = await caches.open("auth-session-state");
-        const stateUrl = new URL("/__session-state__", window.location.origin).toString();
+        const stateUrl = new URL(
+          "/__session-state__",
+          window.location.origin
+        ).toString();
 
         await cache.put(
           stateUrl,
@@ -122,7 +128,6 @@ test.describe("Application Smoke Tests", () => {
       await expect(page.getByRole("heading", { name: "AGPL v3+" })).toBeVisible();
       await expect(page.getByText("Source code and license")).toBeVisible();
     });
-
   });
 
   test.describe("Navigation", () => {
@@ -302,5 +307,122 @@ test.describe("Application Smoke Tests", () => {
       // CLS should be below 0.1 (good threshold)
       expect(cls).toBeLessThan(0.1);
     });
+  });
+});
+
+const employeeSmokeMockUser = buildOfflineLiveMockUser({
+  permissions: ["employees.read", "activity_log.read"],
+});
+
+interface ActivityLogSmokeCapture {
+  activityLogRequests: Array<{ url: string; status: number }>;
+  failedRequests: Array<{ url: string; error: string }>;
+  jsErrors: string[];
+  responses: SmokeResponseRecord[];
+}
+
+async function installMockEmployeeListRoute(
+  context: BrowserContext
+): Promise<void> {
+  await context.route(/\/v1\/employees(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: [],
+        meta: {
+          current_page: 1,
+          last_page: 1,
+          per_page: 15,
+          total: 0,
+        },
+      }),
+    });
+  });
+}
+
+function attachActivityLogSmokeCapture(page: Page): ActivityLogSmokeCapture {
+  const activityLogRequests: Array<{ url: string; status: number }> = [];
+  const failedRequests: Array<{ url: string; error: string }> = [];
+  const jsErrors: string[] = [];
+  const responses: SmokeResponseRecord[] = [];
+
+  page.on("response", (response) => {
+    responses.push({ url: response.url(), status: response.status() });
+    if (response.url().includes("/v1/activity-logs")) {
+      activityLogRequests.push({
+        url: response.url(),
+        status: response.status(),
+      });
+    }
+  });
+
+  page.on("requestfailed", (request) => {
+    if (request.url().includes("/v1/activity-logs")) {
+      failedRequests.push({
+        url: request.url(),
+        error: request.failure()?.errorText ?? "unknown",
+      });
+    }
+  });
+
+  page.on("console", (msg) => {
+    if (msg.type() === "error") {
+      jsErrors.push(msg.text());
+    }
+  });
+
+  return {
+    activityLogRequests,
+    failedRequests,
+    jsErrors,
+    responses,
+  };
+}
+
+async function expectEmployeesPageWithoutActivityLogFailures(
+  page: Page,
+  capture: ActivityLogSmokeCapture
+): Promise<void> {
+  await page.goto("/employees");
+  await page.waitForLoadState("networkidle");
+
+  await expect(
+    page.getByRole("heading", { name: /employee management/i })
+  ).toBeVisible();
+
+  expect(capture.activityLogRequests).toEqual([]);
+  expect(capture.failedRequests).toEqual([]);
+  expect(
+    filterExpectedSmokeConsoleErrors(capture.jsErrors, capture.responses)
+  ).toHaveLength(0);
+}
+
+test.describe("Authenticated Smoke Tests", () => {
+  test("should load employees without activity-log fetch failures", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext();
+
+    try {
+      const page = await context.newPage();
+
+      if (isRemoteE2ETarget()) {
+        await loginViaUI(page);
+        const capture = attachActivityLogSmokeCapture(page);
+        await expectEmployeesPageWithoutActivityLogFailures(page, capture);
+
+        return;
+      }
+
+      await installMockAuthRoutes(context, employeeSmokeMockUser);
+      await installMockOrganizationRoutes(context);
+      await installMockEmployeeListRoute(context);
+      await loginViaUI(page, employeeSmokeMockUser.email, "password");
+      const capture = attachActivityLogSmokeCapture(page);
+      await expectEmployeesPageWithoutActivityLogFailures(page, capture);
+    } finally {
+      await context.close();
+    }
   });
 });
