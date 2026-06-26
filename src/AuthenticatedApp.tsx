@@ -92,19 +92,17 @@ function HiddenAppRouteState() {
 
 function AppLayoutRoute({ children }: { children: React.ReactNode }) {
   return (
-    <ProtectedRoute
-      revalidatingFallback={
-        <AppAccessRoute>
+    <AppAccessRoute>
+      <ProtectedRoute
+        revalidatingFallback={
           <ApplicationLayout>
             <RouteContentFallback />
           </ApplicationLayout>
-        </AppAccessRoute>
-      }
-    >
-      <AppAccessRoute>
+        }
+      >
         <ApplicationLayout>{children}</ApplicationLayout>
-      </AppAccessRoute>
-    </ProtectedRoute>
+      </ProtectedRoute>
+    </AppAccessRoute>
   );
 }
 

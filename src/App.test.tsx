@@ -1051,6 +1051,105 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it.each([
+    "/",
+    "/profile",
+    "/settings",
+    "/customers",
+    "/sites",
+    "/employees",
+    "/organization",
+    "/activity-logs",
+    "/android-provisioning",
+  ])(
+    "redirects unverified pre-contract users from %s to onboarding before email verification",
+    async (path) => {
+      window.history.replaceState({}, "", path);
+
+      await seedPersistedAuthUser({
+        id: 1,
+        name: "Pre-Contract User",
+        email: "new.hire@secpal.dev",
+        emailVerified: false,
+        hasCustomerAccess: true,
+        hasOrganizationalScopes: true,
+        hasSiteAccess: true,
+        permissions: [
+          "customers.view",
+          "sites.view",
+          "employees.view",
+          "activity_logs.view",
+          "android_provisioning.view",
+        ],
+        employee: {
+          id: "employee-1",
+          status: "pre_contract",
+          onboarding_workflow: {
+            status: "account_initialized",
+          },
+        },
+      });
+
+      await renderWithI18n(<App />);
+
+      await waitFor(
+        () => {
+          expect(window.location.pathname).toBe("/onboarding");
+        },
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      );
+    }
+  );
+
+  it("preserves the original deep link when snapshot revalidation clears a stale pre-contract redirect", async () => {
+    window.history.replaceState({}, "", "/settings");
+
+    await seedPersistedAuthUser({
+      id: 1,
+      name: "Stale Snapshot User",
+      email: "stale.snapshot@secpal.dev",
+      emailVerified: false,
+      employee: {
+        id: "employee-1",
+        status: "pre_contract",
+        onboarding_workflow: {
+          status: "account_initialized",
+        },
+      },
+    });
+
+    mockGetCurrentUser.mockResolvedValue(
+      sanitizePersistedAuthUser({
+        id: 1,
+        name: "Active User",
+        email: "guard@secpal.dev",
+        emailVerified: true,
+        employee: {
+          id: "employee-2",
+          status: "active",
+          onboarding_workflow: {
+            status: "active",
+          },
+        },
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    await waitFor(
+      () => {
+        expect(window.location.pathname).toBe("/settings");
+      },
+      { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /settings/i,
+      })
+    ).toBeInTheDocument();
+  });
+
   it("renders onboarding-only routes without the normal application navigation for pre-contract users", async () => {
     window.history.replaceState({}, "", "/onboarding");
 

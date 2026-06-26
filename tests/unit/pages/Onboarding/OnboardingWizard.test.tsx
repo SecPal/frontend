@@ -11,11 +11,15 @@ import {
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { messages as deMessages } from "../../../../src/locales/de/messages.mjs";
 import { OnboardingWizard } from "../../../../src/pages/Onboarding/OnboardingWizard";
+import {
+  AuthContext,
+  type AuthContextType,
+} from "../../../../src/contexts/auth-context";
 import * as onboardingApi from "../../../../src/services/onboardingApi";
 import * as employeeApi from "../../../../src/services/employeeApi";
 import { ApiError } from "../../../../src/services/ApiError";
@@ -88,29 +92,73 @@ function makeSubmission(
 }
 
 function OnboardingCompletionStub() {
+  const location = useLocation();
+
   return (
     <div>
       <h1>You&apos;re all set</h1>
+      <pre data-testid="completion-route-state">
+        {JSON.stringify(location.state)}
+      </pre>
     </div>
   );
 }
 
-function renderWizard(routeState?: Record<string, unknown>) {
+const defaultAuthContext: AuthContextType = {
+  user: null,
+  isAuthenticated: true,
+  isLoading: false,
+  bootstrapRecoveryReason: null,
+  login: vi.fn(async () => undefined),
+  logout: vi.fn(async () => undefined),
+  retryBootstrap: vi.fn(),
+  hasPermission: vi.fn(() => false),
+  hasOrganizationalAccess: vi.fn(() => false),
+};
+
+function WizardRouteStateProbe() {
+  const location = useLocation();
+
+  return (
+    <pre data-testid="wizard-route-state">{JSON.stringify(location.state)}</pre>
+  );
+}
+
+function renderWizard(
+  routeState?: Record<string, unknown>,
+  {
+    authContext,
+    includeRouteStateProbe = true,
+  }: {
+    authContext?: AuthContextType;
+    includeRouteStateProbe?: boolean;
+  } = {}
+) {
   const initialEntries = routeState
     ? [{ pathname: "/onboarding", state: routeState }]
     : ["/onboarding"];
 
   return render(
     <MemoryRouter initialEntries={initialEntries}>
-      <I18nProvider i18n={i18n}>
-        <Routes>
-          <Route path="/onboarding" element={<OnboardingWizard />} />
-          <Route
-            path="/onboarding/submitted"
-            element={<OnboardingCompletionStub />}
-          />
-        </Routes>
-      </I18nProvider>
+      <AuthContext.Provider value={authContext}>
+        <I18nProvider i18n={i18n}>
+          <Routes>
+            <Route
+              path="/onboarding"
+              element={
+                <>
+                  {includeRouteStateProbe ? <WizardRouteStateProbe /> : null}
+                  <OnboardingWizard />
+                </>
+              }
+            />
+            <Route
+              path="/onboarding/submitted"
+              element={<OnboardingCompletionStub />}
+            />
+          </Routes>
+        </I18nProvider>
+      </AuthContext.Provider>
     </MemoryRouter>
   );
 }
@@ -511,6 +559,125 @@ describe("OnboardingWizard", () => {
         /your onboarding is not complete yet\. please complete onboarding/i
       )
     ).not.toBeInTheDocument();
+  });
+
+  it("keeps only a safe return target in route state after onboarding entry cleanup", async () => {
+    renderWizard({
+      onboardingRequired: true,
+      message: "Complete onboarding now",
+      returnTo: "/settings?tab=security",
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Personal Information")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("wizard-route-state")).toHaveTextContent(
+        JSON.stringify({ returnTo: "/settings?tab=security" })
+      );
+    });
+  });
+
+  it("drops unsafe protocol-relative return targets during onboarding entry cleanup", async () => {
+    renderWizard({
+      onboardingRequired: true,
+      returnTo: "//attacker.example/path",
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Personal Information")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("wizard-route-state")).toHaveTextContent(
+        "null"
+      );
+    });
+  });
+
+  it("preserves the return target when routing to the submitted screen", async () => {
+    renderWizard(
+      {
+        onboardingRequired: true,
+        returnTo: "/settings",
+      },
+      {
+        authContext: {
+          ...defaultAuthContext,
+          user: {
+            id: "1",
+            name: "Pre-Contract User",
+            email: "user@secpal.dev",
+            employeeStatus: "pre_contract",
+            onboardingWorkflowStatus: "submitted_for_review",
+          },
+        },
+      }
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: /you're all set/i })
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId("completion-route-state")).toHaveTextContent(
+      JSON.stringify({ returnTo: "/settings" })
+    );
+  });
+
+  it("cleans transient route state after mount when returnTo is absent", async () => {
+    renderWizard(
+      { onboardingRequired: true },
+      { includeRouteStateProbe: true }
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Personal Information")).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("wizard-route-state")).toHaveTextContent(
+        "null"
+      );
+    });
+  });
+
+  it("preserves the original deep link when the wizard redirects to the submitted screen", async () => {
+    vi.mocked(onboardingApi.createOnboardingSubmission).mockResolvedValueOnce(
+      makeSubmission("template-1")
+    );
+    vi.mocked(onboardingApi.updateOnboardingSubmission)
+      .mockResolvedValueOnce({
+        ...makeSubmission("template-1"),
+        status: "submitted",
+      })
+      .mockResolvedValueOnce({
+        ...makeSubmission("template-2"),
+        status: "submitted",
+      });
+
+    renderWizard({ onboardingRequired: true, returnTo: "/settings" });
+
+    await waitFor(() => {
+      expect(screen.getByText("Personal Information")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /next/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Tax Details")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /submit for review/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: /you're all set/i })
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("completion-route-state")).toHaveTextContent(
+      JSON.stringify({ returnTo: "/settings" })
+    );
   });
 
   it("blocks moving to the next step until required fields are filled", async () => {

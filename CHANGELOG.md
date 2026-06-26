@@ -47,6 +47,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Gave the move organizational unit dialog more horizontal room and tightened
+  truncation handling so long unit names and hierarchy labels stay contained in
+  the move flow.
+- Redirected pre-contract users away from normal app routes before the email
+  verification gate, so deep links such as `/profile`, `/settings`, or feature
+  sections land in the onboarding flow first.
 - Tightened runtime-style CSP delivery on the nginx PWA host with SSI-injected
   nonces, moved third-party runtime style shims into app CSS where possible,
   kept Apache `.htaccess` deployments on a functional inline-style fallback

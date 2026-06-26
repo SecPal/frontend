@@ -1,8 +1,9 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { sanitizeOnboardingReturnTarget } from "../lib/onboardingRouteState";
 import {
   getAuthOnboardingWorkflowStatus,
   isSubmittedOnboardingWorkflowStatus,
@@ -33,8 +34,27 @@ function hasKnownEmployeeStatus(
   );
 }
 
+function buildReturnTo(
+  pathname: string,
+  search: string,
+  hash: string
+): string | null {
+  return sanitizeOnboardingReturnTarget(`${pathname}${search}${hash}`);
+}
+
+function getSafeOnboardingReturnTarget(state: unknown): string | null {
+  if (typeof state !== "object" || state === null) {
+    return null;
+  }
+
+  return sanitizeOnboardingReturnTarget(
+    (state as { returnTo?: unknown }).returnTo
+  );
+}
+
 export function AppAccessRoute({ children }: OnboardingAccessRouteProps) {
   const { user } = useAuth();
+  const location = useLocation();
   const onboardingWorkflowStatus = getAuthOnboardingWorkflowStatus(user);
 
   if (isPreContractUser(user)) {
@@ -46,7 +66,14 @@ export function AppAccessRoute({ children }: OnboardingAccessRouteProps) {
             : "/onboarding"
         }
         replace
-        state={{ onboardingRequired: true }}
+        state={{
+          onboardingRequired: true,
+          returnTo: buildReturnTo(
+            location.pathname,
+            location.search,
+            location.hash
+          ),
+        }}
       />
     );
   }
@@ -56,6 +83,7 @@ export function AppAccessRoute({ children }: OnboardingAccessRouteProps) {
 
 export function OnboardingOnlyRoute({ children }: OnboardingAccessRouteProps) {
   const { user } = useAuth();
+  const location = useLocation();
 
   // Allow access when employee status is unknown (offline / stale persisted
   // user): a pre-contract user who cannot reach the API should stay at
@@ -64,5 +92,10 @@ export function OnboardingOnlyRoute({ children }: OnboardingAccessRouteProps) {
     return <>{children}</>;
   }
 
-  return <Navigate to="/" replace />;
+  return (
+    <Navigate
+      to={getSafeOnboardingReturnTarget(location.state) ?? "/"}
+      replace
+    />
+  );
 }

@@ -34,6 +34,12 @@ import {
   getAuthOnboardingWorkflowStatus,
   isSubmittedOnboardingWorkflowStatus,
 } from "../../lib/onboardingWorkflow";
+import {
+  getEntryOnboardingRouteState,
+  getPersistentOnboardingNavigationState,
+  hasNormalizedOnboardingNavigationState,
+  type OnboardingRouteState,
+} from "../../lib/onboardingRouteState";
 import { AuthContext } from "../../contexts/auth-context";
 import { getAuthTransport } from "../../services/authTransport";
 import {
@@ -103,33 +109,6 @@ interface WizardFeedback {
   tone: "success" | "error";
   message: string;
 }
-
-interface OnboardingRouteState {
-  onboardingRequired?: boolean;
-  message?: string;
-}
-
-function getPersistentOnboardingRouteState(
-  routeState: OnboardingRouteState | null
-): OnboardingRouteState | null {
-  if (!routeState) {
-    return null;
-  }
-
-  if (routeState.onboardingRequired === true) {
-    return { onboardingRequired: true };
-  }
-
-  if (typeof routeState.message === "string") {
-    const trimmedMessage = routeState.message.trim();
-    if (trimmedMessage.length > 0) {
-      return { message: trimmedMessage };
-    }
-  }
-
-  return null;
-}
-
 function getEntryFeedbackFromRouteState(
   routeState: OnboardingRouteState | null,
   translate: ReturnType<typeof useLingui>["_"]
@@ -1768,10 +1747,13 @@ export function OnboardingWizard() {
   const translateRef = useRef(_);
   const navigate = useNavigate();
   const location = useLocation();
+  const routeState = location.state as OnboardingRouteState | null;
   const [entryRouteState] = useState<OnboardingRouteState | null>(() =>
-    getPersistentOnboardingRouteState(
-      location.state as OnboardingRouteState | null
-    )
+    getEntryOnboardingRouteState(routeState)
+  );
+  const persistentNavigationState = useMemo(
+    () => getPersistentOnboardingNavigationState(routeState),
+    [routeState]
   );
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -1977,7 +1959,10 @@ export function OnboardingWizard() {
 
       if (isOnboardingAwaitingHrReview(data)) {
         setLoading(false);
-        navigate("/onboarding/submitted", { replace: true });
+        navigate("/onboarding/submitted", {
+          replace: true,
+          state: persistentNavigationState,
+        });
         return;
       }
 
@@ -1994,7 +1979,7 @@ export function OnboardingWizard() {
       setTemplate(null);
       setTemplateResetKey((k) => k + 1);
     },
-    [navigate]
+    [navigate, persistentNavigationState]
   );
 
   const resetUploadState = useCallback(() => {
@@ -2043,7 +2028,10 @@ export function OnboardingWizard() {
 
     if (isSubmittedOnboardingWorkflowStatus(refreshedStatus)) {
       setLoading(false);
-      navigate("/onboarding/submitted", { replace: true });
+      navigate("/onboarding/submitted", {
+        replace: true,
+        state: persistentNavigationState,
+      });
       return;
     }
 
@@ -2072,6 +2060,7 @@ export function OnboardingWizard() {
     authContext?.user,
     applyLoadedSteps,
     navigate,
+    persistentNavigationState,
     resetUploadState,
     syncAuthenticatedUser,
   ]);
@@ -2131,13 +2120,19 @@ export function OnboardingWizard() {
   }, [_]);
 
   useEffect(() => {
-    const routeState = location.state as OnboardingRouteState | null;
     if (!routeState) {
       return;
     }
 
-    navigate(location.pathname, { replace: true, state: null });
-  }, [location.pathname, location.state, navigate]);
+    if (hasNormalizedOnboardingNavigationState(routeState)) {
+      return;
+    }
+
+    navigate(location.pathname, {
+      replace: true,
+      state: getPersistentOnboardingNavigationState(routeState),
+    });
+  }, [location.pathname, navigate, routeState]);
 
   useEffect(() => {
     if (feedback?.tone !== "error" && !error) {
@@ -2163,8 +2158,11 @@ export function OnboardingWizard() {
       return;
     }
 
-    navigate("/onboarding/submitted", { replace: true });
-  }, [currentOnboardingWorkflowStatus, navigate]);
+    navigate("/onboarding/submitted", {
+      replace: true,
+      state: getPersistentOnboardingNavigationState(entryRouteState),
+    });
+  }, [currentOnboardingWorkflowStatus, entryRouteState, navigate]);
 
   useEffect(() => {
     let active = true;
@@ -2924,7 +2922,10 @@ export function OnboardingWizard() {
 
     if (await persistCurrentStep("submitted")) {
       if (currentStepIndex >= steps.length - 1) {
-        navigate("/onboarding/submitted", { replace: true });
+        navigate("/onboarding/submitted", {
+          replace: true,
+          state: persistentNavigationState,
+        });
         return;
       }
 

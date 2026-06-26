@@ -256,11 +256,11 @@ function MoveOrganizationalUnitDialogContent({
 
   return (
     <>
-      <div className="flex items-center gap-4">
+      <div className="flex min-w-0 items-center gap-4">
         <div className="shrink-0 rounded-full bg-blue-100 p-2 dark:bg-blue-900/50">
           <MoveHorizontal className="h-6 w-6 text-blue-600 dark:text-blue-400" />
         </div>
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <DialogTitle>
             <Trans>Move "{unit.name}"</Trans>
           </DialogTitle>
@@ -271,7 +271,7 @@ function MoveOrganizationalUnitDialogContent({
         <Trans>Select a new parent for this organizational unit.</Trans>
       </DialogDescription>
 
-      <DialogBody>
+      <DialogBody className="min-w-0">
         {/* Offline warning banner - mutations not possible */}
         {isOffline && (
           <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
@@ -398,7 +398,7 @@ export function MoveOrganizationalUnitDialog({
     <Dialog open={open} onClose={onClose}>
       <DialogPortal>
         <DialogOverlay />
-        <DialogContent size="md">
+        <DialogContent size="lg">
           {!unit ? (
             <>
               <DialogTitle className="sr-only">
