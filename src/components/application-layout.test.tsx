@@ -891,9 +891,9 @@ describe("ApplicationLayout", () => {
 
       const sourceLink = screen.getByRole("link", { name: /source code/i });
       expect(sourceLink).toBeInTheDocument();
-      expect(sourceLink).toHaveAttribute("href", "https://github.com/SecPal");
-      expect(sourceLink).toHaveAttribute("target", "_blank");
-      expect(sourceLink).toHaveAttribute("rel", "noopener noreferrer");
+      expect(sourceLink).toHaveAttribute("href", "/source");
+      expect(screen.getByText("AGPL v3+")).toBeInTheDocument();
+      expect(screen.getByText("Source Code")).toBeInTheDocument();
     });
 
     it("renders SecPal slogan in footer", () => {

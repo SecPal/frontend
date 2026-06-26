@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Added an authenticated/public AGPL source-offer route at `/source`, kept the shared `AGPL v3+ | Source Code` footer links visible on both login and app shells, exempted `/source` from logged-out service-worker/auth bootstrap redirects, and integrated the source-offer screen into the SecPal PWA with repository/license links and focused regression coverage for footer navigation plus public route access.
 - Gave the move organizational unit dialog more horizontal room and tightened
   truncation handling so long unit names and hierarchy labels stay contained in
   the move flow.

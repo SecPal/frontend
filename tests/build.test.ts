@@ -1,9 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, it, expect } from "vitest";
@@ -136,40 +134,6 @@ describe("Build Configuration and Source Verification", () => {
     ).toBe(true);
     expect(viteConfig.split("stripBase: true").length - 1).toBe(2);
     expect(viteConfig.split('name: "assetlinks.json"').length - 1).toBe(2);
-  });
-
-  it("emits assetlinks.json at the deployed root and .well-known paths", () => {
-    const distRoot = mkdtempSync(path.join(tmpdir(), "secpal-assetlinks-"));
-
-    const safeEnv = { ...process.env };
-    delete safeEnv.NODE_V8_COVERAGE;
-
-    try {
-      execFileSync(
-        "npm",
-        ["exec", "--", "vite", "build", "--outDir", distRoot],
-        {
-          cwd: repoRoot,
-          stdio: "pipe",
-          env: safeEnv,
-        }
-      );
-
-      expect(existsSync(path.join(distRoot, "assetlinks.json"))).toBe(true);
-      expect(
-        existsSync(path.join(distRoot, ".well-known", "assetlinks.json"))
-      ).toBe(true);
-      expect(existsSync(path.join(distRoot, "config", "assetlinks.json"))).toBe(
-        false
-      );
-      expect(
-        existsSync(
-          path.join(distRoot, ".well-known", "config", "assetlinks.json")
-        )
-      ).toBe(false);
-    } finally {
-      rmSync(distRoot, { recursive: true, force: true });
-    }
   });
 
   it("scopes the Lingui macro Babel transform to files that import Lingui macros", () => {

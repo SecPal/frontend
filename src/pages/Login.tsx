@@ -6,9 +6,10 @@ import { useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { Code2, KeyRound, Scale } from "lucide-react";
+import { KeyRound } from "lucide-react";
 
 import type { MfaChallenge, MfaVerificationMethod } from "@/types/api";
+import { LegalFooterLinks } from "@/components/LegalFooterLinks";
 import { useAuth } from "../hooks/useAuth";
 import { useRecoverableLazyComponent } from "../hooks/useRecoverableLazyComponent";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
@@ -1041,29 +1042,7 @@ function LoginLegalFooter() {
         >
           <Trans>Powered by SecPal – A guard's best friend</Trans>
         </a>
-        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
-          <a
-            href="https://www.gnu.org/licenses/agpl-3.0.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 hover:text-zinc-950 dark:hover:text-white"
-          >
-            <Scale className="h-4 w-4" aria-hidden="true" />
-            <Trans>AGPL v3+</Trans>
-          </a>
-          <span className="text-zinc-300 dark:text-zinc-700" aria-hidden="true">
-            |
-          </span>
-          <a
-            href="https://github.com/SecPal"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 hover:text-zinc-950 dark:hover:text-white"
-          >
-            <Code2 className="h-4 w-4" aria-hidden="true" />
-            <Trans>Source Code</Trans>
-          </a>
-        </div>
+        <LegalFooterLinks className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2" />
       </div>
     </footer>
   );

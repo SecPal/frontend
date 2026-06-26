@@ -3,7 +3,10 @@
 
 import { loginViaUI, test, expect } from "./auth.setup";
 import { isRemoteE2ETarget } from "./auth-helpers";
-import { installMockAuthRoutes } from "./offline-live-helpers";
+import {
+  ensureActiveServiceWorker,
+  installMockAuthRoutes,
+} from "./offline-live-helpers";
 import {
   filterExpectedSmokeConsoleErrors,
   type SmokeResponseRecord,
@@ -75,6 +78,51 @@ test.describe("Application Smoke Tests", () => {
       const hasLoginElements = await loginForm.count();
       expect(hasLoginElements).toBeGreaterThanOrEqual(0); // Page loads successfully
     });
+
+    test("should expose the AGPL source page publicly without redirecting to login", async ({
+      page,
+    }) => {
+      await page.goto("/source");
+      await page.waitForLoadState("domcontentloaded");
+
+      await expect(page).toHaveURL(/\/source$/);
+      await expect(page.getByRole("heading", { name: "AGPL v3+" })).toBeVisible();
+      await expect(page.getByText("Source code and license")).toBeVisible();
+      await expect(page.getByText("https://github.com/SecPal/frontend")).toBeVisible();
+      await expect(page.getByText("https://github.com/SecPal/api")).toBeVisible();
+      await expect(page.getByText("https://github.com/SecPal/contracts")).toBeVisible();
+      await expect(page.getByText("https://github.com/SecPal/android")).toBeVisible();
+    });
+
+    test("should keep /source public even when the service worker has a logged-out auth state", async ({
+      page,
+    }) => {
+      await page.goto("/login");
+      await ensureActiveServiceWorker(page);
+
+      await page.evaluate(async () => {
+        const cache = await caches.open("auth-session-state");
+        const stateUrl = new URL("/__session-state__", window.location.origin).toString();
+
+        await cache.put(
+          stateUrl,
+          new Response(JSON.stringify({ isAuthenticated: false }), {
+            headers: {
+              "content-type": "application/json",
+              "cache-control": "no-store",
+            },
+          })
+        );
+      });
+
+      await page.goto("/source");
+      await page.waitForLoadState("domcontentloaded");
+
+      await expect(page).toHaveURL(/\/source$/);
+      await expect(page.getByRole("heading", { name: "AGPL v3+" })).toBeVisible();
+      await expect(page.getByText("Source code and license")).toBeVisible();
+    });
+
   });
 
   test.describe("Navigation", () => {

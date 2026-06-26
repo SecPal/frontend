@@ -4,9 +4,10 @@
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { Code2, KeyRound, Scale } from "lucide-react";
+import { KeyRound } from "lucide-react";
 import { useState } from "react";
 import { Logo } from "./Logo";
+import { LegalFooterLinks } from "./LegalFooterLinks";
 import {
   LoginButton,
   LoginCard,
@@ -120,22 +121,7 @@ export function LoginRouteLoadingState() {
           <span className="font-semibold text-zinc-700 dark:text-zinc-300">
             <Trans>Powered by SecPal – A guard's best friend</Trans>
           </span>
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
-            <span className="inline-flex items-center gap-1.5">
-              <Scale className="h-4 w-4" aria-hidden="true" />
-              <Trans>AGPL v3+</Trans>
-            </span>
-            <span
-              className="text-zinc-300 dark:text-zinc-700"
-              aria-hidden="true"
-            >
-              |
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Code2 className="h-4 w-4" aria-hidden="true" />
-              <Trans>Source Code</Trans>
-            </span>
-          </div>
+          <LegalFooterLinks className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2" />
         </div>
       </footer>
     </LoginShell>

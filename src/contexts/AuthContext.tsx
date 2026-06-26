@@ -43,7 +43,8 @@ function isPublicUnauthenticatedRoute(pathname: string): boolean {
     pathname !== "/" && pathname.endsWith("/")
       ? pathname.slice(0, -1)
       : pathname;
-  return normalized === "/onboarding/complete";
+
+  return normalized === "/onboarding/complete" || normalized === "/source";
 }
 
 function shouldBootstrapBrowserSessionWithoutStoredUser(
@@ -67,7 +68,7 @@ function shouldBootstrapBrowserSessionWithoutStoredUser(
     return getCsrfTokenFromCookie() !== null;
   }
 
-  if (isPublicUnauthenticatedRoute(window.location.pathname)) {
+  if (isPublicUnauthenticatedRoute(normalizedPathname)) {
     return false;
   }
 
