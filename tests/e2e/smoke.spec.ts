@@ -3,6 +3,7 @@
 
 import { loginViaUI, test, expect } from "./auth.setup";
 import { isRemoteE2ETarget } from "./auth-helpers";
+import type { BrowserContext, Page } from "@playwright/test";
 import {
   buildOfflineLiveMockUser,
   installMockAuthRoutes,
@@ -24,10 +25,6 @@ import {
  */
 
 test.describe("Application Smoke Tests", () => {
-  const employeeSmokeMockUser = buildOfflineLiveMockUser({
-    permissions: ["employees.read"],
-  });
-
   test.beforeEach(async ({ context }) => {
     const usesLocalPreviewTarget =
       Boolean(process.env.CI) && !isRemoteE2ETarget();
@@ -96,84 +93,6 @@ test.describe("Application Smoke Tests", () => {
 
       // Basic navigation should work
       expect(initialUrl).toContain("/");
-    });
-  });
-
-  // This test uses the `authenticatedPage` fixture, which creates and manages its
-  // own browser context (including mock-auth route installation). It is intentionally
-  // placed in its own describe block so it does not inherit the outer `beforeEach`
-  // context fixture, which operates on a different context and would be a no-op here.
-  test.describe("Authenticated Navigation", () => {
-    test("should load employees without spurious activity-log requests", async ({
-      authenticatedPage: page,
-    }) => {
-      await installMockAuthRoutes(page.context(), employeeSmokeMockUser);
-      await installStoredMockBrowserSession(page, employeeSmokeMockUser);
-      await installMockOrganizationRoutes(page.context());
-      await page.context().route("**/v1/employees**", async (route) => {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({
-            data: [],
-            meta: {
-              current_page: 1,
-              last_page: 1,
-              per_page: 15,
-              total: 0,
-            },
-          }),
-        });
-      });
-
-      // Invariant: the /employees page must not trigger any /v1/activity-logs
-      // fetches. Any such request indicates a regression where the employees view
-      // is incorrectly wired to the activity-log data source.
-      const activityLogRequests: Array<{ url: string; status: number }> = [];
-      const failedRequests: Array<{ url: string; error: string }> = [];
-      const jsErrors: string[] = [];
-      const responses: SmokeResponseRecord[] = [];
-
-      page.on("response", (response) => {
-        responses.push({ url: response.url(), status: response.status() });
-        if (response.url().includes("/v1/activity-logs")) {
-          activityLogRequests.push({
-            url: response.url(),
-            status: response.status(),
-          });
-        }
-      });
-
-      page.on("requestfailed", (request) => {
-        if (request.url().includes("/v1/activity-logs")) {
-          failedRequests.push({
-            url: request.url(),
-            error: request.failure()?.errorText ?? "unknown",
-          });
-        }
-      });
-
-      page.on("console", (msg) => {
-        if (msg.type() === "error") {
-          jsErrors.push(msg.text());
-        }
-      });
-
-      await page.goto("/employees");
-      await page.waitForLoadState("networkidle");
-
-      await expect(
-        page.getByRole("heading", { name: /employee management/i })
-      ).toBeVisible();
-
-      // No /v1/activity-logs requests should be fired from the employees page.
-      expect(activityLogRequests).toEqual([]);
-      // No network-level failures for any activity-log request.
-      expect(failedRequests).toEqual([]);
-      // No unexpected console errors on the employees page.
-      expect(
-        filterExpectedSmokeConsoleErrors(jsErrors, responses)
-      ).toHaveLength(0);
     });
   });
 
@@ -341,5 +260,122 @@ test.describe("Application Smoke Tests", () => {
       // CLS should be below 0.1 (good threshold)
       expect(cls).toBeLessThan(0.1);
     });
+  });
+});
+
+const employeeSmokeMockUser = buildOfflineLiveMockUser({
+  permissions: ["employees.read"],
+});
+
+interface ActivityLogSmokeCapture {
+  activityLogRequests: Array<{ url: string; status: number }>;
+  failedRequests: Array<{ url: string; error: string }>;
+  jsErrors: string[];
+  responses: SmokeResponseRecord[];
+}
+
+async function installMockEmployeeListRoute(
+  context: BrowserContext
+): Promise<void> {
+  await context.route(/\/v1\/employees(\?.*)?$/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: [],
+        meta: {
+          current_page: 1,
+          last_page: 1,
+          per_page: 15,
+          total: 0,
+        },
+      }),
+    });
+  });
+}
+
+function attachActivityLogSmokeCapture(page: Page): ActivityLogSmokeCapture {
+  const activityLogRequests: Array<{ url: string; status: number }> = [];
+  const failedRequests: Array<{ url: string; error: string }> = [];
+  const jsErrors: string[] = [];
+  const responses: SmokeResponseRecord[] = [];
+
+  page.on("response", (response) => {
+    responses.push({ url: response.url(), status: response.status() });
+    if (response.url().includes("/v1/activity-logs")) {
+      activityLogRequests.push({
+        url: response.url(),
+        status: response.status(),
+      });
+    }
+  });
+
+  page.on("requestfailed", (request) => {
+    if (request.url().includes("/v1/activity-logs")) {
+      failedRequests.push({
+        url: request.url(),
+        error: request.failure()?.errorText ?? "unknown",
+      });
+    }
+  });
+
+  page.on("console", (msg) => {
+    if (msg.type() === "error") {
+      jsErrors.push(msg.text());
+    }
+  });
+
+  return {
+    activityLogRequests,
+    failedRequests,
+    jsErrors,
+    responses,
+  };
+}
+
+async function expectEmployeesPageWithoutActivityLogFailures(
+  page: Page,
+  capture: ActivityLogSmokeCapture
+): Promise<void> {
+  await page.goto("/employees");
+  await page.waitForLoadState("networkidle");
+
+  await expect(
+    page.getByRole("heading", { name: /employee management/i })
+  ).toBeVisible();
+
+  expect(capture.activityLogRequests).toEqual([]);
+  expect(capture.failedRequests).toEqual([]);
+  expect(
+    filterExpectedSmokeConsoleErrors(capture.jsErrors, capture.responses)
+  ).toHaveLength(0);
+}
+
+test.describe("Authenticated Smoke Tests", () => {
+  test("should load employees without activity-log fetch failures", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext();
+
+    try {
+      const page = await context.newPage();
+      const capture = attachActivityLogSmokeCapture(page);
+
+      if (isRemoteE2ETarget()) {
+        await loginViaUI(page);
+        await expectEmployeesPageWithoutActivityLogFailures(page, capture);
+
+        return;
+      }
+
+      await installMockAuthRoutes(context, employeeSmokeMockUser);
+      await installMockOrganizationRoutes(context);
+      await installMockEmployeeListRoute(context);
+
+      await installStoredMockBrowserSession(page, employeeSmokeMockUser);
+      await expectEmployeesPageWithoutActivityLogFailures(page, capture);
+    } finally {
+      await context.close();
+    }
   });
 });
