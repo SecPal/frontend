@@ -102,9 +102,6 @@ test.describe("Application Smoke Tests", () => {
       await expect(
         page.getByText("https://github.com/SecPal/contracts")
       ).toBeVisible();
-      await expect(
-        page.getByText("https://github.com/SecPal/android")
-      ).toBeVisible();
     });
 
     test("should keep /source public even when the service worker has a logged-out auth state", async ({

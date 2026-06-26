@@ -38,11 +38,6 @@ const SOURCE_REPOSITORIES = [
     description: msg`Shared OpenAPI contracts and interface definitions used across SecPal components.`,
     href: "https://github.com/SecPal/contracts",
   },
-  {
-    name: "SecPal/android",
-    description: msg`Android companion app for SecPal, distributed via apk.secpal.app.`,
-    href: "https://github.com/SecPal/android",
-  },
 ] as const;
 
 export function SourcePage() {

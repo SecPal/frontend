@@ -265,9 +265,6 @@ describe("App", () => {
       screen.getByRole("link", { name: "https://github.com/SecPal/contracts" })
     ).toHaveAttribute("href", "https://github.com/SecPal/contracts");
     expect(
-      screen.getByRole("link", { name: "https://github.com/SecPal/android" })
-    ).toHaveAttribute("href", "https://github.com/SecPal/android");
-    expect(
       screen.getByRole("link", { name: /read the agpl v3 license/i })
     ).toHaveAttribute("href", "https://www.gnu.org/licenses/agpl-3.0.html");
     expect(
@@ -312,12 +309,20 @@ describe("App", () => {
       "href",
       "https://github.com/SecPal/contracts/blob/main/LICENSE"
     );
+  });
+
+  it("renders the public source route with a trailing slash", async () => {
+    window.history.replaceState({}, "", "/source/");
+
+    await renderWithI18n(<App />);
+
     expect(
-      screen.getByRole("link", { name: /secpal\/android license/i })
-    ).toHaveAttribute(
-      "href",
-      "https://github.com/SecPal/android/blob/main/LICENSE"
-    );
+      await screen.findByRole("heading", { name: /agpl v3\+/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText(/source code and license/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "https://github.com/SecPal/frontend" })
+    ).toHaveAttribute("href", "https://github.com/SecPal/frontend");
   });
 
   it("keeps the update prompt mounted on public login routes", async () => {

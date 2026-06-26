@@ -445,10 +445,6 @@ msgstr "Invalid onboarding link. Please check your email and try again."
 msgid "The new unit will be created under this parent."
 msgstr "The new unit will be created under this parent."
 
-#: src/pages/SourcePage.tsx
-msgid "Android companion app for SecPal, distributed via apk.secpal.app."
-msgstr "Android companion app for SecPal, distributed via apk.secpal.app."
-
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "You can continue now and upload your documents later."
 msgstr "You can continue now and upload your documents later."
