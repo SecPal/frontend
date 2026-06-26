@@ -11,6 +11,7 @@ import {
   FolderGit2,
   Scale,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
 import {
@@ -65,8 +66,8 @@ export function SourcePage() {
               </h1>
             </div>
           </div>
-          <a
-            href={secondaryActionHref}
+          <Link
+            to={secondaryActionHref}
             className={buttonVariants({
               variant: "outline",
               className: "shrink-0 rounded-xl",
@@ -76,7 +77,7 @@ export function SourcePage() {
               <ArrowLeft className="size-4" aria-hidden="true" />
               {secondaryActionLabel}
             </span>
-          </a>
+          </Link>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.85fr)]">
@@ -257,7 +258,9 @@ export function SourcePage() {
                     rel="noopener noreferrer"
                     className="flex items-center justify-between rounded-xl border border-zinc-200 px-4 py-3 text-sm font-medium text-zinc-950 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-950"
                   >
-                    <span>SecPal/frontend issues</span>
+                    <span>
+                      <Trans>SecPal/frontend issues</Trans>
+                    </span>
                     <ExternalLink className="size-4" aria-hidden="true" />
                   </a>
                 </div>

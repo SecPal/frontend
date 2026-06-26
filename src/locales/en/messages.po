@@ -668,6 +668,10 @@ msgstr "Custom"
 msgid "Filter by organizational unit"
 msgstr "Filter by organizational unit"
 
+#: src/pages/SourcePage.tsx
+msgid "SecPal/frontend issues"
+msgstr "SecPal/frontend issues"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Password"
 msgstr "Password"

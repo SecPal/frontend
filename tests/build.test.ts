@@ -18,8 +18,7 @@ function readRepoFile(relativePath: string): string {
  *
  * These tests verify that the required source files and build configuration
  * are present and contain the expected directives. They read repo source
- * files directly, except for focused regressions that intentionally run a
- * real build to verify emitted output paths.
+ * files directly to guard deployment inputs and packaging regressions.
  */
 describe("Build Configuration and Source Verification", () => {
   it("keeps the Apache SPA routing file in the build inputs", () => {
