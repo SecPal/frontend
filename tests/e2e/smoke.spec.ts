@@ -359,10 +359,10 @@ test.describe("Authenticated Smoke Tests", () => {
 
     try {
       const page = await context.newPage();
-      const capture = attachActivityLogSmokeCapture(page);
 
       if (isRemoteE2ETarget()) {
         await loginViaUI(page);
+        const capture = attachActivityLogSmokeCapture(page);
         await expectEmployeesPageWithoutActivityLogFailures(page, capture);
 
         return;
@@ -373,6 +373,7 @@ test.describe("Authenticated Smoke Tests", () => {
       await installMockEmployeeListRoute(context);
 
       await installStoredMockBrowserSession(page, employeeSmokeMockUser);
+      const capture = attachActivityLogSmokeCapture(page);
       await expectEmployeesPageWithoutActivityLogFailures(page, capture);
     } finally {
       await context.close();
