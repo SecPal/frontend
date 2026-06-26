@@ -90,6 +90,63 @@ test.describe("Application Smoke Tests", () => {
     });
   });
 
+  // This test uses the `authenticatedPage` fixture, which creates and manages its
+  // own browser context (including mock-auth route installation). It is intentionally
+  // placed in its own describe block so it does not inherit the outer `beforeEach`
+  // context fixture, which operates on a different context and would be a no-op here.
+  test.describe("Authenticated Navigation", () => {
+    test("should load employees without spurious activity-log requests", async ({
+      authenticatedPage: page,
+    }) => {
+      // Invariant: the /employees page must not trigger any /v1/activity-logs
+      // fetches. Any such request indicates a regression where the employees view
+      // is incorrectly wired to the activity-log data source.
+      const activityLogRequests: Array<{ url: string; status: number }> = [];
+      const failedRequests: Array<{ url: string; error: string }> = [];
+      const jsErrors: string[] = [];
+      const responses: SmokeResponseRecord[] = [];
+
+      page.on("response", (response) => {
+        responses.push({ url: response.url(), status: response.status() });
+        if (response.url().includes("/v1/activity-logs")) {
+          activityLogRequests.push({
+            url: response.url(),
+            status: response.status(),
+          });
+        }
+      });
+
+      page.on("requestfailed", (request) => {
+        if (request.url().includes("/v1/activity-logs")) {
+          failedRequests.push({
+            url: request.url(),
+            error: request.failure()?.errorText ?? "unknown",
+          });
+        }
+      });
+
+      page.on("console", (msg) => {
+        if (msg.type() === "error") {
+          jsErrors.push(msg.text());
+        }
+      });
+
+      await page.goto("/employees");
+      await page.waitForLoadState("networkidle");
+
+      await expect(
+        page.getByRole("heading", { name: /employee management/i })
+      ).toBeVisible();
+
+      // No /v1/activity-logs requests should be fired from the employees page.
+      expect(activityLogRequests).toEqual([]);
+      // No network-level failures for any activity-log request.
+      expect(failedRequests).toEqual([]);
+      // No unexpected console errors on the employees page.
+      expect(filterExpectedSmokeConsoleErrors(jsErrors, responses)).toHaveLength(0);
+    });
+  });
+
   test.describe("Accessibility Basics", () => {
     test("should have valid HTML structure", async ({ page }) => {
       await page.goto("/");
