@@ -3,7 +3,12 @@
 
 import { loginViaUI, test, expect } from "./auth.setup";
 import { isRemoteE2ETarget } from "./auth-helpers";
-import { installMockAuthRoutes } from "./offline-live-helpers";
+import {
+  buildOfflineLiveMockUser,
+  installMockAuthRoutes,
+  installMockOrganizationRoutes,
+  installStoredMockBrowserSession,
+} from "./offline-live-helpers";
 import {
   filterExpectedSmokeConsoleErrors,
   type SmokeResponseRecord,
@@ -19,6 +24,10 @@ import {
  */
 
 test.describe("Application Smoke Tests", () => {
+  const employeeSmokeMockUser = buildOfflineLiveMockUser({
+    permissions: ["employees.read"],
+  });
+
   test.beforeEach(async ({ context }) => {
     const usesLocalPreviewTarget =
       Boolean(process.env.CI) && !isRemoteE2ETarget();
@@ -98,6 +107,25 @@ test.describe("Application Smoke Tests", () => {
     test("should load employees without spurious activity-log requests", async ({
       authenticatedPage: page,
     }) => {
+      await installMockAuthRoutes(page.context(), employeeSmokeMockUser);
+      await installStoredMockBrowserSession(page, employeeSmokeMockUser);
+      await installMockOrganizationRoutes(page.context());
+      await page.context().route("**/v1/employees**", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            data: [],
+            meta: {
+              current_page: 1,
+              last_page: 1,
+              per_page: 15,
+              total: 0,
+            },
+          }),
+        });
+      });
+
       // Invariant: the /employees page must not trigger any /v1/activity-logs
       // fetches. Any such request indicates a regression where the employees view
       // is incorrectly wired to the activity-log data source.
@@ -143,7 +171,9 @@ test.describe("Application Smoke Tests", () => {
       // No network-level failures for any activity-log request.
       expect(failedRequests).toEqual([]);
       // No unexpected console errors on the employees page.
-      expect(filterExpectedSmokeConsoleErrors(jsErrors, responses)).toHaveLength(0);
+      expect(
+        filterExpectedSmokeConsoleErrors(jsErrors, responses)
+      ).toHaveLength(0);
     });
   });
 
