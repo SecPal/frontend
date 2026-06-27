@@ -26,12 +26,22 @@ import {
   FieldGroup,
   FieldLabel,
   Input,
+  DataTable,
+  DescriptionDetails,
+  DescriptionList,
+  DescriptionTerm,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
   Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
   Textarea,
   buttonVariants,
   cn,
@@ -70,12 +80,22 @@ export {
   FieldGroup,
   FieldLabel,
   Input,
+  DataTable,
+  DescriptionDetails,
+  DescriptionList,
+  DescriptionTerm,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
   Spinner,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
   Textarea,
 };
 
@@ -154,145 +174,6 @@ export function StatusBadge({
     <UiBadge
       data-slot="customer-site-status-badge"
       className={cn(badgeColors[color], className)}
-      {...props}
-    />
-  );
-}
-
-export function DataTable({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"div">) {
-  return (
-    <div
-      data-slot="customer-site-table-shell"
-      className={cn(
-        "overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800",
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-export function Table({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"table">) {
-  return (
-    <table
-      data-slot="customer-site-table"
-      className={cn(
-        "min-w-full divide-y divide-zinc-200 text-left text-sm text-zinc-950 dark:divide-zinc-800 dark:text-zinc-50",
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-export function TableHead(props: ComponentPropsWithoutRef<"thead">) {
-  return <thead data-slot="customer-site-table-head" {...props} />;
-}
-
-export function TableBody({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"tbody">) {
-  return (
-    <tbody
-      data-slot="customer-site-table-body"
-      className={cn("divide-y divide-zinc-100 dark:divide-zinc-800", className)}
-      {...props}
-    />
-  );
-}
-
-export function TableRow({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"tr">) {
-  return (
-    <tr
-      data-slot="customer-site-table-row"
-      className={cn("bg-white dark:bg-zinc-950", className)}
-      {...props}
-    />
-  );
-}
-
-export function TableHeader({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"th">) {
-  return (
-    <th
-      data-slot="customer-site-table-header"
-      className={cn(
-        "px-4 py-3 text-xs font-medium uppercase tracking-normal text-zinc-500 dark:text-zinc-400",
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-export function TableCell({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"td">) {
-  return (
-    <td
-      data-slot="customer-site-table-cell"
-      className={cn("px-4 py-4 align-middle", className)}
-      {...props}
-    />
-  );
-}
-
-export function DescriptionList({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"dl">) {
-  return (
-    <dl
-      data-slot="customer-site-description-list"
-      className={cn(
-        "grid grid-cols-1 text-sm sm:grid-cols-[minmax(10rem,16rem)_1fr]",
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-export function DescriptionTerm({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"dt">) {
-  return (
-    <dt
-      data-slot="customer-site-description-term"
-      className={cn(
-        "border-t border-zinc-100 py-3 font-medium text-zinc-500 first:border-t-0 dark:border-zinc-800 dark:text-zinc-400 sm:first:border-t",
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-export function DescriptionDetails({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"dd">) {
-  return (
-    <dd
-      data-slot="customer-site-description-details"
-      className={cn(
-        "border-t border-zinc-100 pt-0 pb-3 text-zinc-950 first:border-t-0 dark:border-zinc-800 dark:text-zinc-50 sm:py-3 sm:first:border-t",
-        className
-      )}
       {...props}
     />
   );

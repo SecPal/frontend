@@ -9,27 +9,23 @@ import {
   ChevronDown,
   ChevronRight,
   EllipsisVertical,
-  MapPin,
   MoveHorizontal,
   Pencil,
   Plus,
   Trash2,
-  Users,
 } from "lucide-react";
 import {
   Badge,
   Button,
   Card,
   CardContent,
+  Dropdown,
+  DropdownButton,
+  DropdownItem,
+  DropdownMenu,
   LoadingRegion,
   SectionSkeleton,
 } from "@/ui";
-import {
-  Dropdown,
-  DropdownButton,
-  DropdownMenu,
-  DropdownItem,
-} from "./dropdown";
 import type {
   OrganizationalUnit,
   OrganizationalUnitType,
@@ -39,6 +35,7 @@ import {
   getTypeBadgeColor,
 } from "../lib/organizationalUnitUtils";
 import { useOrganizationalUnitsWithOffline } from "../hooks/useOrganizationalUnitsWithOffline";
+import { OrganizationalUnitTypeIcon } from "./organizationalUnitIcons";
 
 // Lazy load heavy dialogs for better initial performance
 const DeleteOrganizationalUnitDialog = lazy(() =>
@@ -69,23 +66,6 @@ function getTypeBadgeClassName(type: OrganizationalUnitType) {
 /**
  * Get icon for organizational unit type
  */
-function getUnitIcon(type: OrganizationalUnitType) {
-  switch (type) {
-    case "holding":
-    case "company":
-      return <Building2 className="h-5 w-5 text-blue-500" />;
-    case "department":
-    case "division":
-      return <Users className="h-5 w-5 text-green-500" />;
-    case "branch":
-      return <Building2 className="h-5 w-5 text-purple-500" />;
-    case "region":
-      return <MapPin className="h-5 w-5 text-orange-500" />;
-    default:
-      return <Building2 className="h-5 w-5 text-gray-500" />;
-  }
-}
-
 // Badge color is now provided by getTypeBadgeColor from organizationalUnitUtils
 
 interface TreeNodeProps {
@@ -210,7 +190,9 @@ const TreeNode = memo(
           </button>
 
           {/* Icon */}
-          <span className="shrink-0">{getUnitIcon(unit.type)}</span>
+          <span className="shrink-0">
+            <OrganizationalUnitTypeIcon type={unit.type} className="h-5 w-5" />
+          </span>
 
           {/* Name */}
           <span className="flex-1 min-w-0 font-medium text-gray-900 dark:text-gray-100 truncate">

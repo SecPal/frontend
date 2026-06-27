@@ -47,6 +47,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Consolidated the shared frontend UI layer on `@/ui`, removed remaining
+  legacy shell and auth wrapper paths, replaced productive custom inline UI
+  icon usage with Lucide components, and added guardrails so migrated routes
+  stay on the shared shadcn/Radix/Lucide stack.
+- Kept the shared command-popover listbox's committed selection separate from
+  its keyboard highlight and carried validation descriptions onto the focused
+  search input, so screen readers announce the selected value and error state
+  correctly while the popover is open.
 - Added an authenticated/public AGPL source-offer route at `/source`, kept the shared `AGPL v3+ | Source Code` footer links visible on both login and app shells, exempted `/source` from logged-out service-worker/auth bootstrap redirects, and integrated the source-offer screen into the SecPal PWA with repository/license links and focused regression coverage for footer navigation plus public route access.
 - Gave the move organizational unit dialog more horizontal room and tightened
   truncation handling so long unit names and hierarchy labels stay contained in

@@ -50,7 +50,6 @@ const forbiddenTextMarkers = [
 const oldComponentWrapperPaths = new Set([
   "src/components/alert",
   "src/components/auth-layout",
-  "src/components/avatar",
   "src/components/badge",
   "src/components/button",
   "src/components/checkbox",

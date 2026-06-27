@@ -487,6 +487,38 @@ describe("onboarding shadcn primitives", () => {
     expect(handleValueChange).toHaveBeenCalledWith("fr");
   });
 
+  it("keeps committed selection separate from keyboard highlight", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TestCommandPopover
+        label="Country"
+        value="de"
+        onValueChange={vi.fn()}
+        options={[
+          { value: "de", label: "Germany" },
+          { value: "fr", label: "France" },
+          { value: "es", label: "Spain" },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+
+    const searchbox = screen.getByRole("searchbox");
+    const germany = screen.getByRole("option", { name: "Germany" });
+    const france = screen.getByRole("option", { name: "France" });
+
+    expect(germany).toHaveAttribute("aria-selected", "true");
+    expect(france).toHaveAttribute("aria-selected", "false");
+
+    await user.keyboard("{ArrowDown}");
+
+    expect(searchbox).toHaveAttribute("aria-activedescendant", france.id);
+    expect(germany).toHaveAttribute("aria-selected", "true");
+    expect(france).toHaveAttribute("aria-selected", "false");
+  });
+
   it("closes the popover when Escape is pressed and clears stale query/active index for the next open", async () => {
     const user = userEvent.setup();
 
@@ -699,7 +731,11 @@ describe("onboarding shadcn primitives", () => {
     expect(options[1]).toHaveFocus();
 
     await user.tab();
-    expect(screen.getByRole("button", { name: "After country" })).toHaveFocus();
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "After country" })
+      ).toHaveFocus();
+    });
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
   });
 
@@ -743,6 +779,25 @@ describe("onboarding shadcn primitives", () => {
     const trigger = screen.getByRole("combobox", { name: "Country" });
     expect(trigger).toBeInvalid();
     expect(trigger).toHaveAccessibleDescription("Country is required");
+  });
+
+  it("keeps the focused searchbox associated with the error while open", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TestCommandPopover
+        label="Country"
+        errorMessage="Country is required"
+        onValueChange={vi.fn()}
+        options={[{ value: "de", label: "Germany" }]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+
+    const searchbox = screen.getByRole("searchbox");
+    expect(searchbox).toBeInvalid();
+    expect(searchbox).toHaveAccessibleDescription("Country is required");
   });
 
   it("ignores Enter on a disabled active option", async () => {

@@ -32,14 +32,16 @@ vi.mock("../services/organizationalUnitApi", () => ({
   detachOrganizationalUnitParent: detachOrganizationalUnitParentMock,
 }));
 
-vi.mock("./dropdown", async () => {
+vi.mock("@/ui", async () => {
   const React = await vi.importActual<typeof import("react")>("react");
+  const actual = await vi.importActual<typeof import("@/ui")>("@/ui");
   const DropdownContext = React.createContext<{
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   } | null>(null);
 
   return {
+    ...actual,
     Dropdown: ({ children }: { children: React.ReactNode }) => {
       const [open, setOpen] = React.useState(false);
       return (

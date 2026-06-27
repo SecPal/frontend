@@ -19,7 +19,7 @@ import {
   LoginFieldSeparator,
   LoginInput,
   LoginShell,
-} from "../pages/Auth/ui-lite";
+} from "../pages/Auth/ui";
 
 interface LoginRouteVaultLockedStateProps {
   onUnlock: () => Promise<boolean>;

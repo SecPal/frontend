@@ -4,7 +4,6 @@
 import { useMemo } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Building2, Home, MapPin, Users } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -17,6 +16,10 @@ import type {
   OrganizationalUnitType,
 } from "../types/organizational";
 import { getTypeLabel } from "../lib/organizationalUnitUtils";
+import {
+  OrganizationalUnitRootIcon,
+  OrganizationalUnitTypeIcon,
+} from "./organizationalUnitIcons";
 
 /**
  * Flattened unit with hierarchy information for display
@@ -41,55 +44,6 @@ function fromSelectValue(value: string) {
 /**
  * Icon component for organizational unit types
  */
-function UnitTypeIcon({
-  type,
-  className = "h-4 w-4",
-}: {
-  type: OrganizationalUnitType;
-  className?: string;
-}) {
-  switch (type) {
-    case "holding":
-    case "company":
-      return (
-        <Building2
-          className={`${className} text-blue-500`}
-          aria-hidden="true"
-        />
-      );
-    case "department":
-    case "division":
-      return (
-        <Users className={`${className} text-green-500`} aria-hidden="true" />
-      );
-    case "branch":
-      return (
-        <Building2
-          className={`${className} text-purple-500`}
-          aria-hidden="true"
-        />
-      );
-    case "region":
-      return (
-        <MapPin className={`${className} text-orange-500`} aria-hidden="true" />
-      );
-    default:
-      return (
-        <Building2
-          className={`${className} text-gray-500`}
-          aria-hidden="true"
-        />
-      );
-  }
-}
-
-/**
- * Root icon for "All Units" option
- */
-function RootIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return <Home aria-hidden="true" className={`${className} text-gray-400`} />;
-}
-
 /**
  * Props for OrganizationalUnitPicker
  */
@@ -197,7 +151,7 @@ export function OrganizationalUnitPicker({
         {/* "All Units" option */}
         <SelectItem value={ALL_UNITS_SELECT_VALUE}>
           <span className="flex w-full min-w-0 items-center gap-2">
-            <RootIcon className="h-4 w-4 shrink-0" />
+            <OrganizationalUnitRootIcon className="h-4 w-4 shrink-0" />
             <span className="min-w-0 truncate">
               {allUnitsLabel || <Trans>All Units</Trans>}
             </span>
@@ -211,7 +165,10 @@ export function OrganizationalUnitPicker({
               className="flex items-center gap-2"
               style={{ paddingLeft: `${u.depth * 16}px` }}
             >
-              <UnitTypeIcon type={u.type} className="h-4 w-4 shrink-0" />
+              <OrganizationalUnitTypeIcon
+                type={u.type}
+                className="h-4 w-4 shrink-0"
+              />
               <span className="truncate">{u.name}</span>
               <span className="text-xs text-zinc-500 dark:text-zinc-400">
                 ({getTypeLabel(u.type)})

@@ -16,9 +16,8 @@ import {
 } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as LabelPrimitive from "@radix-ui/react-label";
-import * as SelectPrimitive from "@radix-ui/react-select";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Check, ChevronDown, ChevronUp, Minus } from "lucide-react";
+import { Minus } from "lucide-react";
 import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from "input-otp";
 import {
   Button as AppButton,
@@ -30,11 +29,15 @@ import {
   DialogTitle as AppDialogTitle,
   FieldLabel as AppFieldLabel,
   Input as AppInput,
+  Select as AppSelect,
+  SelectContent as AppSelectContent,
+  SelectGroup as AppSelectGroup,
+  SelectItem as AppSelectItem,
+  SelectTrigger as AppSelectTrigger,
+  SelectValue as AppSelectValue,
   Spinner as AppSpinner,
   type ButtonVariant,
-  uiControlBase,
 } from "@/ui";
-import { getCspNonce } from "@/lib/cspNonce";
 import { cn } from "./utils";
 
 export type LoginButtonVariant = NonNullable<
@@ -304,153 +307,12 @@ export function LoginStatusMessage({
   );
 }
 
-export function LoginSelect(
-  props: ComponentProps<typeof SelectPrimitive.Root>
-) {
-  return <SelectPrimitive.Root {...props} />;
-}
-
-export function LoginSelectGroup(
-  props: ComponentProps<typeof SelectPrimitive.Group>
-) {
-  return <SelectPrimitive.Group {...props} />;
-}
-
-export function LoginSelectValue(
-  props: ComponentProps<typeof SelectPrimitive.Value>
-) {
-  return <SelectPrimitive.Value {...props} />;
-}
-
-export const LoginSelectTrigger = forwardRef<
-  ElementRef<typeof SelectPrimitive.Trigger>,
-  ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(function LoginSelectTrigger({ className, children, ...props }, ref) {
-  return (
-    <SelectPrimitive.Trigger
-      ref={ref}
-      data-slot="login-select-trigger"
-      className={cn(
-        uiControlBase,
-        "flex h-10 items-center justify-between gap-2 [&>span]:line-clamp-1",
-        className
-      )}
-      {...props}
-    >
-      {children}
-      <SelectPrimitive.Icon asChild>
-        <ChevronDown
-          className="size-4 opacity-50"
-          aria-hidden="true"
-          data-slot="login-select-trigger-icon"
-        />
-      </SelectPrimitive.Icon>
-    </SelectPrimitive.Trigger>
-  );
-});
-
-const LoginSelectScrollUpButton = forwardRef<
-  ElementRef<typeof SelectPrimitive.ScrollUpButton>,
-  ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollUpButton>
->(function LoginSelectScrollUpButton({ className, ...props }, ref) {
-  return (
-    <SelectPrimitive.ScrollUpButton
-      ref={ref}
-      data-slot="login-select-scroll-up"
-      className={cn(
-        "flex cursor-default items-center justify-center py-1",
-        className
-      )}
-      {...props}
-    >
-      <ChevronUp className="size-4" aria-hidden="true" />
-    </SelectPrimitive.ScrollUpButton>
-  );
-});
-
-const LoginSelectScrollDownButton = forwardRef<
-  ElementRef<typeof SelectPrimitive.ScrollDownButton>,
-  ComponentPropsWithoutRef<typeof SelectPrimitive.ScrollDownButton>
->(function LoginSelectScrollDownButton({ className, ...props }, ref) {
-  return (
-    <SelectPrimitive.ScrollDownButton
-      ref={ref}
-      data-slot="login-select-scroll-down"
-      className={cn(
-        "flex cursor-default items-center justify-center py-1",
-        className
-      )}
-      {...props}
-    >
-      <ChevronDown className="size-4" aria-hidden="true" />
-    </SelectPrimitive.ScrollDownButton>
-  );
-});
-
-export const LoginSelectContent = forwardRef<
-  ElementRef<typeof SelectPrimitive.Content>,
-  ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(function LoginSelectContent(
-  { className, children, position = "popper", ...props },
-  ref
-) {
-  const cspNonce = getCspNonce();
-
-  return (
-    <SelectPrimitive.Portal>
-      <SelectPrimitive.Content
-        ref={ref}
-        data-slot="login-select-content"
-        position={position}
-        className={cn(
-          "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-zinc-200 bg-white text-zinc-950 shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
-          position === "popper" &&
-            "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
-          className
-        )}
-        {...props}
-      >
-        <LoginSelectScrollUpButton />
-        <SelectPrimitive.Viewport
-          nonce={cspNonce}
-          data-slot="login-select-viewport"
-          className={cn(
-            "p-1",
-            position === "popper" &&
-              "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
-          )}
-        >
-          {children}
-        </SelectPrimitive.Viewport>
-        <LoginSelectScrollDownButton />
-      </SelectPrimitive.Content>
-    </SelectPrimitive.Portal>
-  );
-});
-
-export const LoginSelectItem = forwardRef<
-  ElementRef<typeof SelectPrimitive.Item>,
-  ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(function LoginSelectItem({ className, children, ...props }, ref) {
-  return (
-    <SelectPrimitive.Item
-      ref={ref}
-      data-slot="login-select-item"
-      className={cn(
-        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pr-8 pl-2 text-sm text-zinc-950 outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-zinc-100 data-[disabled]:opacity-50 dark:text-zinc-50 dark:data-[highlighted]:bg-zinc-800",
-        className
-      )}
-      {...props}
-    >
-      <span className="absolute right-2 flex size-3.5 items-center justify-center">
-        <SelectPrimitive.ItemIndicator>
-          <Check className="size-4" aria-hidden="true" />
-        </SelectPrimitive.ItemIndicator>
-      </span>
-      <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-    </SelectPrimitive.Item>
-  );
-});
+export const LoginSelect = AppSelect;
+export const LoginSelectGroup = AppSelectGroup;
+export const LoginSelectValue = AppSelectValue;
+export const LoginSelectTrigger = AppSelectTrigger;
+export const LoginSelectContent = AppSelectContent;
+export const LoginSelectItem = AppSelectItem;
 
 export function LoginDialog({
   size = "md",

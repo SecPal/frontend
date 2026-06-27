@@ -17,7 +17,15 @@ import * as LabelPrimitive from "@radix-ui/react-label";
 import * as ProgressPrimitive from "@radix-ui/react-progress";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { Check, ChevronDown, ChevronUp, Circle, Loader2 } from "lucide-react";
+import * as SwitchPrimitive from "@radix-ui/react-switch";
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Circle,
+  Loader2,
+  X,
+} from "lucide-react";
 import { getCspNonce } from "@/lib/cspNonce";
 import { cn } from "@/lib/utils";
 import { buttonVariants, type ButtonVariant, uiControlBase } from "./styles";
@@ -315,6 +323,45 @@ export const Checkbox = forwardRef<
         <Check className="size-3.5" aria-hidden="true" />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
+  );
+});
+
+export const Switch = forwardRef<
+  ElementRef<typeof SwitchPrimitive.Root>,
+  Omit<
+    ComponentPropsWithoutRef<typeof SwitchPrimitive.Root>,
+    "onChange" | "onCheckedChange"
+  > & {
+    showIcons?: boolean;
+    onChange?: (checked: boolean) => void;
+  }
+>(function Switch({ className, showIcons = false, onChange, ...props }, ref) {
+  return (
+    <SwitchPrimitive.Root
+      ref={ref}
+      data-slot="ui-switch"
+      className={cn(
+        "group relative inline-flex h-6 w-10 shrink-0 cursor-default items-center rounded-full border border-transparent bg-zinc-200 p-[3px] shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-zinc-950 sm:h-5 sm:w-8 dark:bg-zinc-800 dark:focus-visible:ring-offset-zinc-950 dark:data-[state=checked]:bg-zinc-50",
+        className
+      )}
+      onCheckedChange={(checked) => onChange?.(checked === true)}
+      {...props}
+    >
+      <SwitchPrimitive.Thumb className="pointer-events-none relative block size-4.5 rounded-full bg-white shadow transition-transform data-[state=checked]:translate-x-4 sm:size-3.5 sm:data-[state=checked]:translate-x-3 dark:data-[state=checked]:bg-zinc-950">
+        {showIcons ? (
+          <>
+            <X
+              aria-hidden="true"
+              className="absolute inset-0 m-auto size-3 text-zinc-400 opacity-100 transition-opacity group-data-[state=checked]:opacity-0 dark:text-zinc-600"
+            />
+            <Check
+              aria-hidden="true"
+              className="absolute inset-0 m-auto size-3 text-zinc-950 opacity-0 transition-opacity group-data-[state=checked]:opacity-100 dark:text-zinc-50"
+            />
+          </>
+        ) : null}
+      </SwitchPrimitive.Thumb>
+    </SwitchPrimitive.Root>
   );
 });
 
@@ -627,6 +674,49 @@ export function CardFooter({
   );
 }
 
+export interface AvatarProps extends ComponentPropsWithoutRef<"span"> {
+  src?: string | null;
+  square?: boolean;
+  initials?: string;
+  alt?: string;
+}
+
+export function Avatar({
+  src = null,
+  square = false,
+  initials,
+  alt = "",
+  className,
+  ...props
+}: AvatarProps) {
+  return (
+    <span
+      data-slot="avatar"
+      {...props}
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center align-middle text-sm font-medium uppercase leading-none outline -outline-offset-1 outline-black/10 dark:outline-white/10",
+        square ? "rounded-[20%]" : "rounded-full",
+        className
+      )}
+    >
+      {src ? (
+        <img
+          className={cn(
+            "size-full object-cover",
+            square ? "rounded-[20%]" : "rounded-full"
+          )}
+          src={src}
+          alt={alt}
+        />
+      ) : (
+        <span aria-hidden={alt ? undefined : "true"} title={alt || undefined}>
+          {initials}
+        </span>
+      )}
+    </span>
+  );
+}
+
 export function Badge({
   className,
   ...props
@@ -675,6 +765,145 @@ export function Progress({
         style={{ transform: `translateX(-${100 - percentage}%)` }}
       />
     </ProgressPrimitive.Root>
+  );
+}
+
+export function DataTable({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"div">) {
+  return (
+    <div
+      data-slot="ui-table-shell"
+      className={cn(
+        "overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function Table({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"table">) {
+  return (
+    <table
+      data-slot="ui-table"
+      className={cn(
+        "min-w-full divide-y divide-zinc-200 text-left text-sm text-zinc-950 dark:divide-zinc-800 dark:text-zinc-50",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function TableHead(props: ComponentPropsWithoutRef<"thead">) {
+  return <thead data-slot="ui-table-head" {...props} />;
+}
+
+export function TableBody({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"tbody">) {
+  return (
+    <tbody
+      data-slot="ui-table-body"
+      className={cn("divide-y divide-zinc-100 dark:divide-zinc-800", className)}
+      {...props}
+    />
+  );
+}
+
+export function TableRow({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"tr">) {
+  return (
+    <tr
+      data-slot="ui-table-row"
+      className={cn("bg-white dark:bg-zinc-950", className)}
+      {...props}
+    />
+  );
+}
+
+export function TableHeader({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"th">) {
+  return (
+    <th
+      data-slot="ui-table-header"
+      className={cn(
+        "px-4 py-3 text-xs font-medium uppercase tracking-normal text-zinc-500 dark:text-zinc-400",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function TableCell({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"td">) {
+  return (
+    <td
+      data-slot="ui-table-cell"
+      className={cn("px-4 py-4 align-middle", className)}
+      {...props}
+    />
+  );
+}
+
+export function DescriptionList({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"dl">) {
+  return (
+    <dl
+      data-slot="ui-description-list"
+      className={cn(
+        "grid grid-cols-1 text-sm sm:grid-cols-[minmax(10rem,16rem)_1fr]",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function DescriptionTerm({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"dt">) {
+  return (
+    <dt
+      data-slot="ui-description-term"
+      className={cn(
+        "border-t border-zinc-100 py-3 font-medium text-zinc-500 first:border-t-0 dark:border-zinc-800 dark:text-zinc-400 sm:first:border-t",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function DescriptionDetails({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"dd">) {
+  return (
+    <dd
+      data-slot="ui-description-details"
+      className={cn(
+        "border-t border-zinc-100 pt-0 pb-3 text-zinc-950 first:border-t-0 dark:border-zinc-800 dark:text-zinc-50 sm:py-3 sm:first:border-t",
+        className
+      )}
+      {...props}
+    />
   );
 }
 

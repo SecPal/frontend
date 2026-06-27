@@ -38,7 +38,7 @@ import {
   LoginShell,
   LoginSpinner,
   LoginStatusMessage,
-} from "./Auth/ui-lite";
+} from "./Auth/ui";
 
 const HEALTH_CHECK_RETRY_DELAYS_MS = [0, 1500, 5000];
 const TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE =
@@ -742,7 +742,7 @@ export function Login() {
                   id="offline-warning"
                   variant="error"
                   live="assertive"
-                  heading={
+                  title={
                     <Trans id="login.offlineWarning.title">
                       No internet connection
                     </Trans>
@@ -762,7 +762,7 @@ export function Login() {
                   id="health-warning"
                   variant="warning"
                   live="assertive"
-                  heading={
+                  title={
                     <Trans id="login.healthWarning.title">
                       System not ready
                     </Trans>
@@ -782,7 +782,7 @@ export function Login() {
                   id="lockout-warning"
                   variant="error"
                   live="assertive"
-                  heading={
+                  title={
                     <Trans id="login.rateLimitLocked.title">
                       Too many failed attempts
                     </Trans>

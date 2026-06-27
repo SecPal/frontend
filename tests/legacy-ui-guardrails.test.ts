@@ -29,11 +29,14 @@ const forbiddenHeroiconsPackage = ["@heroicons", "react"].join("/");
 const forbiddenTailwindPlusLicenseMarker = ["LicenseRef", "TailwindPlus"].join(
   "-"
 );
+const forbiddenAuthUiLitePath = "pages/Auth/ui-lite";
 
 const forbiddenSourceMarkers = [
   forbiddenHeadlessPackage,
   forbiddenHeroiconsPackage,
   forbiddenTailwindPlusLicenseMarker,
+  "<svg",
+  forbiddenAuthUiLitePath,
 ] as const;
 
 const productionSourceEntries = [
@@ -50,6 +53,7 @@ const oldComponentWrapperPaths = new Set([
   "src/components/checkbox",
   "src/components/combobox",
   "src/components/description-list",
+  "src/components/dropdown",
   "src/components/dialog",
   "src/components/divider",
   "src/components/fieldset",
@@ -57,9 +61,11 @@ const oldComponentWrapperPaths = new Set([
   "src/components/input",
   "src/components/link",
   "src/components/listbox",
+  "src/components/navbar",
   "src/components/pagination",
   "src/components/radio",
   "src/components/select",
+  "src/components/sidebar",
   "src/components/spinner",
   "src/components/switch",
   "src/components/table",
@@ -191,6 +197,9 @@ describe("legacy UI guardrails", () => {
           `${forbiddenTailwindPlusLicenseMarker}.txt`
         )
       )
+    ).toBe(false);
+    expect(
+      existsSync(path.resolve(projectRoot, "src/pages/Auth/ui-lite.tsx"))
     ).toBe(false);
   });
 
