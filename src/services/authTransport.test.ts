@@ -789,13 +789,61 @@ describe("authTransport", () => {
         | undefined;
 
       expect(transport.kind).toBe("native-bridge");
-      expect(resolvedBridge).toBe(nativeBridge);
-      expect(resolvedBridge?.createPasskeyAttestation).toBe(
-        createPasskeyAttestation
-      );
+      expect(resolvedBridge).not.toBe(nativeBridge);
+      await resolvedBridge?.createPasskeyAttestation();
 
       await resolvedBridge?.logout();
 
+      expect(createPasskeyAttestation).toHaveBeenCalledOnce();
+      expect(nativeLogout).toHaveBeenCalledOnce();
+      expect(handleNativeLogout).toHaveBeenCalledOnce();
+    } finally {
+      window.removeEventListener(
+        NATIVE_AUTH_LOGOUT_EVENT_NAME,
+        handleNativeLogout
+      );
+    }
+  });
+
+  it("supports native bridges with a non-writable logout property", async () => {
+    const createPasskeyAttestation = vi.fn().mockResolvedValue(undefined);
+    const nativeLogout = vi.fn().mockResolvedValue(undefined);
+    const nativeBridge = {
+      login: vi.fn().mockResolvedValue(undefined),
+      logout: nativeLogout,
+      getCurrentUser: vi.fn().mockResolvedValue(undefined),
+      createPasskeyAttestation,
+    } as NativeAuthBridge & {
+      createPasskeyAttestation: typeof createPasskeyAttestation;
+      logout(): Promise<void>;
+    };
+    const handleNativeLogout = vi.fn();
+
+    Object.defineProperty(nativeBridge, "logout", {
+      configurable: true,
+      enumerable: true,
+      value: nativeLogout,
+      writable: false,
+    });
+
+    authTransportGlobal.SecPalNativeAuthBridge = nativeBridge;
+    window.addEventListener(NATIVE_AUTH_LOGOUT_EVENT_NAME, handleNativeLogout);
+
+    try {
+      const transport = getAuthTransport();
+      const resolvedBridge = authTransportGlobal.SecPalNativeAuthBridge as
+        | (NativeAuthBridge & {
+            createPasskeyAttestation: typeof createPasskeyAttestation;
+          })
+        | undefined;
+
+      expect(transport.kind).toBe("native-bridge");
+      expect(resolvedBridge).not.toBe(nativeBridge);
+
+      await resolvedBridge?.createPasskeyAttestation();
+      await resolvedBridge?.logout();
+
+      expect(createPasskeyAttestation).toHaveBeenCalledOnce();
       expect(nativeLogout).toHaveBeenCalledOnce();
       expect(handleNativeLogout).toHaveBeenCalledOnce();
     } finally {

@@ -16,9 +16,11 @@ import { isOnline } from "./sessionEvents";
 
 export { AuthApiError } from "./AuthApiError";
 
-const NATIVE_AUTH_BRIDGE_DISPATCHES_LOGOUT_EVENT = Symbol(
-  "nativeAuthBridgeDispatchesLogoutEvent"
-);
+const nativeAuthBridgeLogoutEventProxies = new WeakSet<NativeAuthBridge>();
+const nativeAuthBridgeLogoutEventProxyCache = new WeakMap<
+  NativeAuthBridge,
+  NativeAuthBridge
+>();
 
 async function loadAuthApiModule() {
   return await import("./authApi");
@@ -359,30 +361,46 @@ function isNativeAuthBridge(value: unknown): value is NativeAuthBridge {
 }
 
 function bridgeDispatchesLogoutEvent(bridge: NativeAuthBridge): boolean {
-  return (
-    (
-      bridge as NativeAuthBridge & {
-        [NATIVE_AUTH_BRIDGE_DISPATCHES_LOGOUT_EVENT]?: boolean;
-      }
-    )[NATIVE_AUTH_BRIDGE_DISPATCHES_LOGOUT_EVENT] === true
-  );
+  return nativeAuthBridgeLogoutEventProxies.has(bridge);
 }
 
-function wrapNativeAuthBridgeLogout(nativeAuthBridge: NativeAuthBridge): void {
+function wrapNativeAuthBridgeLogout(
+  nativeAuthBridge: NativeAuthBridge
+): NativeAuthBridge {
   if (bridgeDispatchesLogoutEvent(nativeAuthBridge)) {
-    return;
+    return nativeAuthBridge;
   }
 
-  const bridgeWithMetadata = nativeAuthBridge as NativeAuthBridge & {
-    [NATIVE_AUTH_BRIDGE_DISPATCHES_LOGOUT_EVENT]?: boolean;
-  };
-  const originalLogout = nativeAuthBridge.logout;
+  const cachedProxy =
+    nativeAuthBridgeLogoutEventProxyCache.get(nativeAuthBridge);
 
-  bridgeWithMetadata.logout = async function logoutWithEventDispatch() {
-    await originalLogout.call(nativeAuthBridge);
-    dispatchNativeAuthLogoutEvent();
-  };
-  bridgeWithMetadata[NATIVE_AUTH_BRIDGE_DISPATCHES_LOGOUT_EVENT] = true;
+  if (cachedProxy) {
+    return cachedProxy;
+  }
+
+  const proxy = new Proxy(nativeAuthBridge, {
+    get(target, property, receiver) {
+      const value = Reflect.get(target, property, receiver);
+
+      if (property === "logout") {
+        return async () => {
+          await target.logout.call(target);
+          dispatchNativeAuthLogoutEvent();
+        };
+      }
+
+      if (typeof value === "function") {
+        return value.bind(target);
+      }
+
+      return value;
+    },
+  });
+
+  nativeAuthBridgeLogoutEventProxies.add(proxy);
+  nativeAuthBridgeLogoutEventProxyCache.set(nativeAuthBridge, proxy);
+
+  return proxy;
 }
 
 function getNativeAuthBridge(): NativeAuthBridge | null {
@@ -395,10 +413,16 @@ function getNativeAuthBridge(): NativeAuthBridge | null {
     return null;
   }
 
-  wrapNativeAuthBridgeLogout(candidate);
-  bridgeGlobal.SecPalNativeAuthBridge = candidate;
+  const wrappedBridge = wrapNativeAuthBridgeLogout(candidate);
 
-  return candidate;
+  try {
+    bridgeGlobal.SecPalNativeAuthBridge = wrappedBridge;
+  } catch {
+    // Read-only host globals still need a usable auth transport even if direct
+    // callers cannot be redirected through the proxied bridge handle.
+  }
+
+  return wrappedBridge;
 }
 
 export function resolveAuthTransport(options?: {
