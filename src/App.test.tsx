@@ -216,6 +216,8 @@ describe("App", () => {
     await authStorage.clear();
     localStorage.clear();
     sessionStorage.clear();
+    delete (globalThis as { SecPalNativeAuthBridge?: unknown })
+      .SecPalNativeAuthBridge;
     clearXsrfCookie();
     setXsrfCookie();
     window.history.replaceState({}, "", "/login");
@@ -1365,6 +1367,63 @@ describe("App", () => {
         { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
       )
     ).toBeInTheDocument();
+  });
+
+  it("redirects native-bridge users to login after a native logout event", async () => {
+    window.history.replaceState({}, "", "/");
+
+    const persistedUser = await seedPersistedAuthUser({
+      id: 1,
+      name: "Native User",
+      email: "native@secpal.dev",
+      emailVerified: true,
+      employee: {
+        id: "employee-3",
+        status: "active",
+      },
+    });
+
+    (
+      globalThis as {
+        SecPalNativeAuthBridge?: {
+          login(credentials: {
+            email: string;
+            password: string;
+          }): Promise<unknown>;
+          logout(): Promise<void>;
+          getCurrentUser(): Promise<unknown>;
+        };
+      }
+    ).SecPalNativeAuthBridge = {
+      login: vi.fn(),
+      logout: vi.fn(),
+      getCurrentUser: vi.fn().mockResolvedValue(persistedUser),
+    };
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /welcome to secpal/i },
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
+
+    await act(async () => {
+      window.dispatchEvent(new Event("secpal:native-auth-logout"));
+      await Promise.resolve();
+      await new Promise((resolve) => globalThis.setTimeout(resolve, 0));
+    });
+
+    await waitFor(
+      () => {
+        expect(window.location.pathname).toBe("/login");
+      },
+      { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+    );
+
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
   });
 
   it("redirects unauthenticated users from the protected onboarding route to login", async () => {

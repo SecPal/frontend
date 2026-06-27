@@ -29,6 +29,7 @@ import {
 } from "../lib/offlineVaultKeys";
 
 export const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
+const NATIVE_AUTH_LOGOUT_EVENT_NAME = "secpal:native-auth-logout";
 
 async function loadOfflineVaultModule() {
   return await import("../lib/offlineVault");
@@ -507,6 +508,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearAuthenticatedState(true, { redirectOpenClients: true });
     await clearAuthenticatedStatePromiseRef.current;
   }, [clearAuthenticatedState]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const handleNativeLogout = () => {
+      void logout();
+    };
+
+    window.addEventListener(NATIVE_AUTH_LOGOUT_EVENT_NAME, handleNativeLogout);
+
+    return () => {
+      window.removeEventListener(
+        NATIVE_AUTH_LOGOUT_EVENT_NAME,
+        handleNativeLogout
+      );
+    };
+  }, [logout]);
 
   const lock = useCallback(() => {
     authStorage.lockVault?.();
