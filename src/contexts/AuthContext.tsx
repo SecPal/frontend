@@ -373,15 +373,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (isClearingSessionRef.current) {
         const shouldUpgradeSensitiveState =
           clearSensitiveState && !shouldClearSensitiveStateRef.current;
-        const shouldUpgradeRedirectOpenClients =
-          options?.redirectOpenClients === true &&
-          !shouldRedirectOpenClientsRef.current;
+        const shouldRedirectOpenClients =
+          shouldRedirectOpenClientsRef.current ||
+          options?.redirectOpenClients === true;
+        const previousShouldSkipBarrierVaultTableCleanup =
+          shouldSkipBarrierVaultTableCleanupRef.current;
 
         shouldClearSensitiveStateRef.current =
           shouldClearSensitiveStateRef.current || clearSensitiveState;
-        shouldRedirectOpenClientsRef.current =
-          shouldRedirectOpenClientsRef.current ||
-          options?.redirectOpenClients === true;
+        shouldRedirectOpenClientsRef.current = shouldRedirectOpenClients;
         shouldSkipBarrierVaultTableCleanupRef.current =
           shouldSkipBarrierVaultTableCleanupRef.current || clearSensitiveState;
 
@@ -391,15 +391,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsVaultLocked(false);
         setIsLoading(false);
         syncOfflineAuthState(false, {
-          redirectOpenClients: shouldRedirectOpenClientsRef.current,
+          redirectOpenClients: shouldRedirectOpenClients,
         });
 
         if (shouldUpgradeSensitiveState) {
-          beginSensitiveLogoutBarrierCleanup();
-        }
-
-        if (shouldUpgradeRedirectOpenClients) {
-          syncOfflineAuthState(false, { redirectOpenClients: true });
+          try {
+            beginSensitiveLogoutBarrierCleanup();
+          } catch (error: unknown) {
+            shouldSkipBarrierVaultTableCleanupRef.current =
+              previousShouldSkipBarrierVaultTableCleanup;
+            console.warn(
+              "Failed to create a sensitive logout barrier before cleanup:",
+              error
+            );
+          }
         }
 
         return;
@@ -434,6 +439,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           beginSensitiveLogoutBarrierCleanup();
         } catch (error: unknown) {
+          shouldSkipBarrierVaultTableCleanupRef.current = false;
           console.warn(
             "Failed to create a sensitive logout barrier before cleanup:",
             error
