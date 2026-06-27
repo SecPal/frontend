@@ -789,7 +789,7 @@ describe("authTransport", () => {
         | undefined;
 
       expect(transport.kind).toBe("native-bridge");
-      expect(resolvedBridge).not.toBe(nativeBridge);
+      expect(resolvedBridge).toBe(nativeBridge);
       await resolvedBridge?.createPasskeyAttestation();
 
       await resolvedBridge?.logout();
@@ -838,7 +838,7 @@ describe("authTransport", () => {
         | undefined;
 
       expect(transport.kind).toBe("native-bridge");
-      expect(resolvedBridge).not.toBe(nativeBridge);
+      expect(resolvedBridge).toBe(nativeBridge);
 
       await resolvedBridge?.createPasskeyAttestation();
       await resolvedBridge?.logout();
@@ -846,6 +846,55 @@ describe("authTransport", () => {
       expect(createPasskeyAttestation).toHaveBeenCalledOnce();
       expect(nativeLogout).toHaveBeenCalledOnce();
       expect(handleNativeLogout).toHaveBeenCalledOnce();
+    } finally {
+      window.removeEventListener(
+        NATIVE_AUTH_LOGOUT_EVENT_NAME,
+        handleNativeLogout
+      );
+    }
+  });
+
+  it("warns and leaves direct logout untouched when the bridge is fully immutable", async () => {
+    const nativeLogout = vi.fn().mockResolvedValue(undefined);
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const nativeBridge = {
+      login: vi.fn().mockResolvedValue(undefined),
+      logout: nativeLogout,
+      getCurrentUser: vi.fn().mockResolvedValue(undefined),
+    } as NativeAuthBridge;
+    const handleNativeLogout = vi.fn();
+
+    Object.defineProperty(nativeBridge, "logout", {
+      configurable: false,
+      enumerable: true,
+      value: nativeLogout,
+      writable: false,
+    });
+    Object.defineProperty(authTransportGlobal, "SecPalNativeAuthBridge", {
+      configurable: true,
+      enumerable: true,
+      value: nativeBridge,
+      writable: false,
+    });
+    window.addEventListener(NATIVE_AUTH_LOGOUT_EVENT_NAME, handleNativeLogout);
+
+    try {
+      const transport = getAuthTransport();
+      const resolvedBridge = authTransportGlobal.SecPalNativeAuthBridge as
+        | NativeAuthBridge
+        | undefined;
+
+      expect(transport.kind).toBe("native-bridge");
+      expect(resolvedBridge).toBe(nativeBridge);
+
+      await transport.logout();
+      await resolvedBridge?.logout();
+
+      expect(nativeLogout).toHaveBeenCalledTimes(2);
+      expect(handleNativeLogout).toHaveBeenCalledOnce();
+      expect(consoleWarn).toHaveBeenCalledWith(
+        "SecPalNativeAuthBridge is immutable; direct logout calls must dispatch secpal:native-auth-logout from the native runtime."
+      );
     } finally {
       window.removeEventListener(
         NATIVE_AUTH_LOGOUT_EVENT_NAME,

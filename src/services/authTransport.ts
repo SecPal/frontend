@@ -17,10 +17,12 @@ import { isOnline } from "./sessionEvents";
 export { AuthApiError } from "./AuthApiError";
 
 const nativeAuthBridgeLogoutEventProxies = new WeakSet<NativeAuthBridge>();
+const nativeAuthBridgePatchedLogouts = new WeakSet<NativeAuthBridge>();
 const nativeAuthBridgeLogoutEventProxyCache = new WeakMap<
   NativeAuthBridge,
   NativeAuthBridge
 >();
+const nativeAuthBridgeImmutableWarnings = new WeakSet<NativeAuthBridge>();
 
 async function loadAuthApiModule() {
   return await import("./authApi");
@@ -361,7 +363,133 @@ function isNativeAuthBridge(value: unknown): value is NativeAuthBridge {
 }
 
 function bridgeDispatchesLogoutEvent(bridge: NativeAuthBridge): boolean {
-  return nativeAuthBridgeLogoutEventProxies.has(bridge);
+  return (
+    nativeAuthBridgeLogoutEventProxies.has(bridge) ||
+    nativeAuthBridgePatchedLogouts.has(bridge)
+  );
+}
+
+function getLogoutPropertyDescriptor(
+  nativeAuthBridge: NativeAuthBridge
+): PropertyDescriptor | undefined {
+  return Object.getOwnPropertyDescriptor(nativeAuthBridge, "logout");
+}
+
+function canProxyNativeAuthBridgeLogout(
+  nativeAuthBridge: NativeAuthBridge
+): boolean {
+  const logoutDescriptor = getLogoutPropertyDescriptor(nativeAuthBridge);
+
+  return !(
+    logoutDescriptor &&
+    "value" in logoutDescriptor &&
+    logoutDescriptor.configurable === false &&
+    logoutDescriptor.writable === false
+  );
+}
+
+function canPatchNativeAuthBridgeLogout(
+  nativeAuthBridge: NativeAuthBridge
+): boolean {
+  const logoutDescriptor = getLogoutPropertyDescriptor(nativeAuthBridge);
+
+  if (!logoutDescriptor) {
+    return Object.isExtensible(nativeAuthBridge);
+  }
+
+  if ("value" in logoutDescriptor) {
+    return (
+      logoutDescriptor.writable === true ||
+      logoutDescriptor.configurable === true
+    );
+  }
+
+  return (
+    logoutDescriptor.set !== undefined || logoutDescriptor.configurable === true
+  );
+}
+
+function canReplaceGlobalNativeAuthBridge(): boolean {
+  const bridgeDescriptor = Object.getOwnPropertyDescriptor(
+    globalThis,
+    "SecPalNativeAuthBridge"
+  );
+
+  if (!bridgeDescriptor) {
+    return true;
+  }
+
+  if ("value" in bridgeDescriptor) {
+    return (
+      bridgeDescriptor.writable === true ||
+      bridgeDescriptor.configurable === true
+    );
+  }
+
+  return (
+    bridgeDescriptor.set !== undefined || bridgeDescriptor.configurable === true
+  );
+}
+
+function setGlobalNativeAuthBridge(bridge: NativeAuthBridge): boolean {
+  const bridgeDescriptor = Object.getOwnPropertyDescriptor(
+    globalThis,
+    "SecPalNativeAuthBridge"
+  );
+
+  if (!bridgeDescriptor || bridgeDescriptor.writable === true) {
+    (
+      globalThis as {
+        SecPalNativeAuthBridge?: NativeAuthBridge;
+      }
+    ).SecPalNativeAuthBridge = bridge;
+    return true;
+  }
+
+  if (bridgeDescriptor.configurable === true) {
+    Object.defineProperty(globalThis, "SecPalNativeAuthBridge", {
+      configurable: true,
+      enumerable: bridgeDescriptor.enumerable ?? true,
+      value: bridge,
+      writable: true,
+    });
+    return true;
+  }
+
+  return false;
+}
+
+function warnImmutableNativeAuthBridge(
+  nativeAuthBridge: NativeAuthBridge
+): void {
+  if (nativeAuthBridgeImmutableWarnings.has(nativeAuthBridge)) {
+    return;
+  }
+
+  nativeAuthBridgeImmutableWarnings.add(nativeAuthBridge);
+  console.warn(
+    "SecPalNativeAuthBridge is immutable; direct logout calls must dispatch secpal:native-auth-logout from the native runtime."
+  );
+}
+
+function patchNativeAuthBridgeLogout(nativeAuthBridge: NativeAuthBridge): void {
+  if (bridgeDispatchesLogoutEvent(nativeAuthBridge)) {
+    return;
+  }
+
+  const originalLogout = nativeAuthBridge.logout;
+  const logoutWithEventDispatch = async function logoutWithEventDispatch() {
+    await originalLogout.call(nativeAuthBridge);
+    dispatchNativeAuthLogoutEvent();
+  };
+
+  Object.defineProperty(nativeAuthBridge, "logout", {
+    configurable: true,
+    enumerable: true,
+    value: logoutWithEventDispatch,
+    writable: true,
+  });
+  nativeAuthBridgePatchedLogouts.add(nativeAuthBridge);
 }
 
 function wrapNativeAuthBridgeLogout(
@@ -371,11 +499,21 @@ function wrapNativeAuthBridgeLogout(
     return nativeAuthBridge;
   }
 
+  if (canPatchNativeAuthBridgeLogout(nativeAuthBridge)) {
+    patchNativeAuthBridgeLogout(nativeAuthBridge);
+    return nativeAuthBridge;
+  }
+
   const cachedProxy =
     nativeAuthBridgeLogoutEventProxyCache.get(nativeAuthBridge);
 
   if (cachedProxy) {
     return cachedProxy;
+  }
+
+  if (!canProxyNativeAuthBridgeLogout(nativeAuthBridge)) {
+    warnImmutableNativeAuthBridge(nativeAuthBridge);
+    return nativeAuthBridge;
   }
 
   const proxy = new Proxy(nativeAuthBridge, {
@@ -415,11 +553,14 @@ function getNativeAuthBridge(): NativeAuthBridge | null {
 
   const wrappedBridge = wrapNativeAuthBridgeLogout(candidate);
 
-  try {
-    bridgeGlobal.SecPalNativeAuthBridge = wrappedBridge;
-  } catch {
-    // Read-only host globals still need a usable auth transport even if direct
-    // callers cannot be redirected through the proxied bridge handle.
+  if (wrappedBridge !== candidate) {
+    if (
+      !canReplaceGlobalNativeAuthBridge() ||
+      !setGlobalNativeAuthBridge(wrappedBridge)
+    ) {
+      warnImmutableNativeAuthBridge(candidate);
+      return candidate;
+    }
   }
 
   return wrappedBridge;
