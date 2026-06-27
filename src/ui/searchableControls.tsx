@@ -229,24 +229,26 @@ export function SearchableCommandPopover({
   }
 
   function getNextFocusableElementAfterTrigger() {
-    if (!triggerRef.current) {
+    const trigger = triggerRef.current;
+
+    if (!trigger) {
       return null;
     }
 
     const focusableElements = getFocusableElements(document).filter(
       (element) =>
         !contentRef.current?.contains(element) &&
-        (element === triggerRef.current || !element.hasAttribute("inert"))
+        (element === trigger || !element.hasAttribute("inert"))
     );
     return (
       focusableElements.find(
         (element) =>
-          element !== triggerRef.current &&
+          element !== trigger &&
           Boolean(
-            triggerRef.current?.compareDocumentPosition(element) &
+            trigger.compareDocumentPosition(element) &
             Node.DOCUMENT_POSITION_FOLLOWING
           )
-      ) ?? triggerRef.current
+      ) ?? trigger
     );
   }
 
