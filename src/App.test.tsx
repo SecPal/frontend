@@ -10,8 +10,8 @@ import App from "./App";
 import { AuthApiError } from "./services/authApi";
 import { sanitizePersistedAuthUser } from "./services/authState";
 import { authStorage } from "./services/storage";
+import { NATIVE_AUTH_LOGOUT_EVENT_NAME } from "./services/nativeAuthEvents";
 import { createRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
-import { NATIVE_AUTH_LOGOUT_EVENT_NAME } from "./contexts/AuthContext";
 
 const ROUTE_NAVIGATION_TIMEOUT_MS = 20_000;
 

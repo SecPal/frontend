@@ -8,6 +8,7 @@ import {
   getAuthTransport,
   resolveAuthTransport,
 } from "./authTransport";
+import { NATIVE_AUTH_LOGOUT_EVENT_NAME } from "./nativeAuthEvents";
 
 const {
   mockBrowserLogin,
@@ -736,6 +737,34 @@ describe("authTransport", () => {
 
     expect(nativeBridge.logout).toHaveBeenCalledOnce();
     expect(mockBrowserLogout).not.toHaveBeenCalled();
+  });
+
+  it("dispatches the native logout event after a successful bridge logout", async () => {
+    const nativeBridge: NativeAuthBridge = {
+      login: vi.fn().mockResolvedValue(undefined),
+      logout: vi.fn().mockResolvedValue(undefined),
+      getCurrentUser: vi.fn().mockResolvedValue(undefined),
+    };
+    const handleNativeLogout = vi.fn();
+
+    window.addEventListener(
+      NATIVE_AUTH_LOGOUT_EVENT_NAME,
+      handleNativeLogout
+    );
+
+    try {
+      const transport = resolveAuthTransport({ nativeBridge });
+
+      await transport.logout();
+
+      expect(nativeBridge.logout).toHaveBeenCalledOnce();
+      expect(handleNativeLogout).toHaveBeenCalledOnce();
+    } finally {
+      window.removeEventListener(
+        NATIVE_AUTH_LOGOUT_EVENT_NAME,
+        handleNativeLogout
+      );
+    }
   });
 
   it("delegates native bridge logoutAll to the bridge when supported", async () => {

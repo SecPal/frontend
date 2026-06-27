@@ -11,6 +11,7 @@ import {
 import { isTransientModuleLoadError } from "../lib/lazyModuleErrors";
 import { AuthApiError } from "./AuthApiError";
 import { sanitizeAuthUser } from "./authState";
+import { NATIVE_AUTH_LOGOUT_EVENT_NAME } from "./nativeAuthEvents";
 import { isOnline } from "./sessionEvents";
 
 export { AuthApiError } from "./AuthApiError";
@@ -21,6 +22,14 @@ async function loadAuthApiModule() {
 
 async function loadNotificationInstallationsModule() {
   return await import("./notificationInstallationsApi");
+}
+
+function dispatchNativeAuthLogoutEvent(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.dispatchEvent(new Event(NATIVE_AUTH_LOGOUT_EVENT_NAME));
 }
 
 export interface AuthCredentials {
@@ -299,6 +308,7 @@ function createNativeBridgeAuthTransport(
     },
     async logout(): Promise<void> {
       await nativeAuthBridge.logout();
+      dispatchNativeAuthLogoutEvent();
     },
     async logoutAll(): Promise<void> {
       if (typeof nativeAuthBridge.logoutAll !== "function") {

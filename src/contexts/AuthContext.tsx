@@ -15,6 +15,7 @@ import {
 } from "./auth-context";
 import { getAuthTransport } from "../services/authTransport";
 import { sanitizeAuthUser } from "../services/authState";
+import { NATIVE_AUTH_LOGOUT_EVENT_NAME } from "../services/nativeAuthEvents";
 import { authStorage } from "../services/storage";
 import { fetchCsrfToken, getCsrfTokenFromCookie } from "../services/csrf";
 import { sessionEvents, isOnline } from "../services/sessionEvents";
@@ -29,7 +30,6 @@ import {
 } from "../lib/offlineVaultKeys";
 
 export const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
-export const NATIVE_AUTH_LOGOUT_EVENT_NAME = "secpal:native-auth-logout";
 
 async function loadOfflineVaultModule() {
   return await import("../lib/offlineVault");
