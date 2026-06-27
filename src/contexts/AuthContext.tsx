@@ -373,24 +373,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (isClearingSessionRef.current) {
         const shouldUpgradeSensitiveState =
           clearSensitiveState && !shouldClearSensitiveStateRef.current;
-        const shouldUpgradeRedirectOpenClients =
-          options?.redirectOpenClients === true &&
-          !shouldRedirectOpenClientsRef.current;
+        const shouldRedirectOpenClients =
+          shouldRedirectOpenClientsRef.current ||
+          options?.redirectOpenClients === true;
+        const previousShouldSkipBarrierVaultTableCleanup =
+          shouldSkipBarrierVaultTableCleanupRef.current;
 
         shouldClearSensitiveStateRef.current =
           shouldClearSensitiveStateRef.current || clearSensitiveState;
-        shouldRedirectOpenClientsRef.current =
-          shouldRedirectOpenClientsRef.current ||
-          options?.redirectOpenClients === true;
+        shouldRedirectOpenClientsRef.current = shouldRedirectOpenClients;
         shouldSkipBarrierVaultTableCleanupRef.current =
           shouldSkipBarrierVaultTableCleanupRef.current || clearSensitiveState;
 
-        if (shouldUpgradeSensitiveState) {
-          beginSensitiveLogoutBarrierCleanup();
-        }
+        hasLogoutBarrierRef.current = true;
+        setBootstrapRecoveryReason(null);
+        setUser(null);
+        setIsVaultLocked(false);
+        setIsLoading(false);
+        syncOfflineAuthState(false, {
+          redirectOpenClients: shouldRedirectOpenClients,
+        });
 
-        if (shouldUpgradeRedirectOpenClients) {
-          syncOfflineAuthState(false, { redirectOpenClients: true });
+        if (shouldUpgradeSensitiveState) {
+          try {
+            beginSensitiveLogoutBarrierCleanup();
+          } catch (error: unknown) {
+            shouldSkipBarrierVaultTableCleanupRef.current =
+              previousShouldSkipBarrierVaultTableCleanup;
+            console.warn(
+              "Failed to create a sensitive logout barrier before cleanup:",
+              error
+            );
+          }
         }
 
         return;
@@ -404,6 +418,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options?.redirectOpenClients === true;
       shouldSkipBarrierVaultTableCleanupRef.current = clearSensitiveState;
 
+      hasLogoutBarrierRef.current = true;
+      setBootstrapRecoveryReason(null);
+      setUser(null);
+      setIsVaultLocked(false);
+      setIsLoading(false);
+      syncOfflineAuthState(false, {
+        redirectOpenClients: shouldRedirectOpenClientsRef.current,
+      });
+
       if (clearSensitiveState) {
         // Drop prefetch warm-up state on every full session teardown
         // (explicit logout, `session:expired` 401, invalid-payload recovery,
@@ -412,21 +435,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // who signs in, weakening the cross-session isolation introduced
         // alongside the prefetch epoch counter in usePrefetch.ts.
         resetPrefetchCache();
-        beginSensitiveLogoutBarrierCleanup();
+
+        try {
+          beginSensitiveLogoutBarrierCleanup();
+        } catch (error: unknown) {
+          shouldSkipBarrierVaultTableCleanupRef.current = false;
+          console.warn(
+            "Failed to create a sensitive logout barrier before cleanup:",
+            error
+          );
+        }
       }
 
-      hasLogoutBarrierRef.current = true;
-      setBootstrapRecoveryReason(null);
-      const clearAuthStoragePromise = authStorage.clear({
-        clearOfflineVaultTables: !shouldSkipBarrierVaultTableCleanupRef.current,
-      });
+      let clearAuthStoragePromise: Promise<void>;
+
+      try {
+        clearAuthStoragePromise = authStorage.clear({
+          clearOfflineVaultTables:
+            !shouldSkipBarrierVaultTableCleanupRef.current,
+        });
+      } catch (error: unknown) {
+        clearAuthStoragePromise = Promise.reject(error);
+      }
+
       const resetAnalyticsStatePromise = resetAnalyticsState();
-      setUser(null);
-      setIsVaultLocked(false);
-      setIsLoading(false);
-      syncOfflineAuthState(false, {
-        redirectOpenClients: shouldRedirectOpenClientsRef.current,
-      });
 
       clearAuthenticatedStatePromiseRef.current = Promise.allSettled([
         clearAuthStoragePromise,
@@ -509,24 +541,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await clearAuthenticatedStatePromiseRef.current;
   }, [clearAuthenticatedState]);
 
+  const handleNativeLogout = useCallback(async () => {
+    clearAuthenticatedState(true, { redirectOpenClients: false });
+    await clearAuthenticatedStatePromiseRef.current;
+  }, [clearAuthenticatedState]);
+
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
     }
 
-    const handleNativeLogout = () => {
-      void logout();
+    const handleNativeLogoutEvent = () => {
+      void handleNativeLogout();
     };
 
-    window.addEventListener(NATIVE_AUTH_LOGOUT_EVENT_NAME, handleNativeLogout);
+    window.addEventListener(
+      NATIVE_AUTH_LOGOUT_EVENT_NAME,
+      handleNativeLogoutEvent
+    );
 
     return () => {
       window.removeEventListener(
         NATIVE_AUTH_LOGOUT_EVENT_NAME,
-        handleNativeLogout
+        handleNativeLogoutEvent
       );
     };
-  }, [logout]);
+  }, [handleNativeLogout]);
 
   const lock = useCallback(() => {
     authStorage.lockVault?.();

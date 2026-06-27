@@ -1480,6 +1480,48 @@ describe("useAuth", () => {
     }
   });
 
+  it("does not skip vault-table cleanup when sensitive logout barrier setup fails", async () => {
+    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
+    const barrierError = new Error("barrier unavailable");
+    const clearSpy = vi.spyOn(authStorage, "clear").mockResolvedValue();
+    const beginBarrierSpy = vi
+      .spyOn(authStorage, "beginSensitiveLogoutBarrierCleanup")
+      .mockImplementationOnce(() => {
+        throw barrierError;
+      });
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
+    try {
+      await persistAuthUser(mockUser);
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.logout();
+      });
+
+      expect(clearSpy).toHaveBeenCalledWith({
+        clearOfflineVaultTables: true,
+      });
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "Failed to create a sensitive logout barrier before cleanup:",
+        barrierError
+      );
+    } finally {
+      consoleWarnSpy.mockRestore();
+      beginBarrierSpy.mockRestore();
+      clearSpy.mockRestore();
+    }
+  });
+
   it("logout resolves only after sensitive client cleanup settles", async () => {
     const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
 
@@ -1523,12 +1565,21 @@ describe("useAuth", () => {
   it("upgrades an in-flight non-sensitive auth clear when logout is requested", async () => {
     const storageClear = createDeferredPromise<void>();
     const restoreError = new Error("restore failed");
+    const barrierError = new Error("barrier unavailable");
     const clearSpy = vi
       .spyOn(authStorage, "clear")
       .mockImplementation(() => storageClear.promise);
     const getUserSpy = vi
       .spyOn(authStorage, "getUser")
       .mockRejectedValue(restoreError);
+    const beginBarrierSpy = vi
+      .spyOn(authStorage, "beginSensitiveLogoutBarrierCleanup")
+      .mockImplementationOnce(() => {
+        throw barrierError;
+      });
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
 
     try {
       const { result } = renderHook(() => useAuth(), {
@@ -1550,13 +1601,22 @@ describe("useAuth", () => {
         result.current.logout();
       });
 
-      storageClear.resolve();
-
-      await waitForSensitiveClientCleanup();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "Failed to create a sensitive logout barrier before cleanup:",
+        barrierError
+      );
+      expect(syncOfflineSessionAccess).toHaveBeenCalledTimes(2);
       expect(syncOfflineSessionAccess).toHaveBeenNthCalledWith(2, false, {
         redirectOpenClients: true,
       });
+
+      storageClear.resolve();
+
+      await waitForSensitiveClientCleanup();
+      expect(syncOfflineSessionAccess).toHaveBeenCalledTimes(2);
     } finally {
+      consoleWarnSpy.mockRestore();
+      beginBarrierSpy.mockRestore();
       clearSpy.mockRestore();
       getUserSpy.mockRestore();
     }

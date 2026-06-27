@@ -54,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   source-offer page so the frontend's corresponding-source list again
   reflects the Android wrapper that consumes the shared frontend build output.
 - Native-bridge logout now tears down the frontend auth session even when logout is triggered directly through `SecPalNativeAuthBridge.logout()`, so protected routes immediately fall back to `/login` instead of leaving the WebView on the authenticated `/` shell with stale frontend auth state.
+- Native logout events now update the foreground WebView auth state before storage cleanup and avoid service-worker client redirects, preventing stale authenticated shells when Android logout overlaps an in-flight session teardown.
 - Native-bridge auth bootstrap now handles a writable but non-configurable `SecPalNativeAuthBridge.logout()` property without throwing while wiring the direct-logout event dispatch wrapper.
 - Consolidated the shared frontend UI layer on `@/ui`, removed remaining
   legacy shell and auth wrapper paths, replaced productive custom inline UI
