@@ -477,18 +477,28 @@ function patchNativeAuthBridgeLogout(nativeAuthBridge: NativeAuthBridge): void {
     return;
   }
 
+  const logoutDescriptor = getLogoutPropertyDescriptor(nativeAuthBridge);
   const originalLogout = nativeAuthBridge.logout;
   const logoutWithEventDispatch = async function logoutWithEventDispatch() {
     await originalLogout.call(nativeAuthBridge);
     dispatchNativeAuthLogoutEvent();
   };
 
-  Object.defineProperty(nativeAuthBridge, "logout", {
-    configurable: true,
-    enumerable: true,
-    value: logoutWithEventDispatch,
-    writable: true,
-  });
+  if (
+    !logoutDescriptor ||
+    ("value" in logoutDescriptor && logoutDescriptor.writable === true) ||
+    logoutDescriptor.set !== undefined
+  ) {
+    nativeAuthBridge.logout = logoutWithEventDispatch;
+  } else {
+    Object.defineProperty(nativeAuthBridge, "logout", {
+      configurable: true,
+      enumerable: logoutDescriptor.enumerable ?? true,
+      value: logoutWithEventDispatch,
+      writable: true,
+    });
+  }
+
   nativeAuthBridgePatchedLogouts.add(nativeAuthBridge);
 }
 
