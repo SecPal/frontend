@@ -21,7 +21,10 @@ import { AuthApiError } from "../services/AuthApiError";
 import { sanitizePersistedAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
 import { db } from "../lib/db";
-import { clearOfflineVaultSession } from "../lib/offlineVault";
+import {
+  clearOfflineVaultSession,
+  clearRecentAuthVaultKeyMaterials,
+} from "../lib/offlineVault";
 import { useAuth } from "../hooks/useAuth";
 
 const mockNavigate = vi.fn();
@@ -168,6 +171,7 @@ describe("ProtectedRoute", () => {
     ]);
     localStorage.clear();
     clearOfflineVaultSession();
+    clearRecentAuthVaultKeyMaterials();
     setCsrfTokenCookie("test-csrf-token");
     i18n.load("en", {});
     i18n.activate("en");
@@ -180,6 +184,7 @@ describe("ProtectedRoute", () => {
 
   afterEach(() => {
     clearOfflineVaultSession();
+    clearRecentAuthVaultKeyMaterials();
   });
 
   it("redirects to login when not authenticated", async () => {
