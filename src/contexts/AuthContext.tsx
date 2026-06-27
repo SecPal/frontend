@@ -29,7 +29,7 @@ import {
 } from "../lib/offlineVaultKeys";
 
 export const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
-const NATIVE_AUTH_LOGOUT_EVENT_NAME = "secpal:native-auth-logout";
+export const NATIVE_AUTH_LOGOUT_EVENT_NAME = "secpal:native-auth-logout";
 
 async function loadOfflineVaultModule() {
   return await import("../lib/offlineVault");

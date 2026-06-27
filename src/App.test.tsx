@@ -11,6 +11,7 @@ import { AuthApiError } from "./services/authApi";
 import { sanitizePersistedAuthUser } from "./services/authState";
 import { authStorage } from "./services/storage";
 import { createRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
+import { NATIVE_AUTH_LOGOUT_EVENT_NAME } from "./contexts/AuthContext";
 
 const ROUTE_NAVIGATION_TIMEOUT_MS = 20_000;
 
@@ -1411,7 +1412,7 @@ describe("App", () => {
     ).toBeInTheDocument();
 
     await act(async () => {
-      window.dispatchEvent(new Event("secpal:native-auth-logout"));
+      window.dispatchEvent(new Event(NATIVE_AUTH_LOGOUT_EVENT_NAME));
       await Promise.resolve();
       await new Promise((resolve) => globalThis.setTimeout(resolve, 0));
     });
