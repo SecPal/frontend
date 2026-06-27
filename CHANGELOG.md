@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Included `.github/instructions/github-workflows.instructions.md` in the frontend AI-governance baseline so provider-neutral agents and Copilot-derived tooling load the same workflow-policy overlay when reviewing or editing GitHub automation.
 - `/login` no longer renders the legacy split brand-panel layout on large viewports; the `login-05` centered card is now the single layout across breakpoints. The `LoginBrandPanel` primitive remains available in `src/pages/Auth/ui/primitives.tsx` for future use but is no longer composed on the login route.
 - Swapped the three icons on the login surface from the legacy outline icon package to `lucide-react`: passkey-action `KeyIcon` → `KeyRound`, AGPL-license `ScaleIcon` → `Scale`, source-code `CodeBracketIcon` → `Code2`.
 - Migrated every remaining non-shadcn surface on the login route to true Radix-backed shadcn primitives, fulfilling the "Login uses shadcn exclusively" requirement:
