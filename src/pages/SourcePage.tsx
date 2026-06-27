@@ -39,6 +39,11 @@ const SOURCE_REPOSITORIES = [
     description: msg`Shared OpenAPI contracts and interface definitions used across SecPal components.`,
     href: "https://github.com/SecPal/contracts",
   },
+  {
+    name: "SecPal/android",
+    description: msg`Android Capacitor wrapper that reuses the shared frontend build and adds native Android-specific code.`,
+    href: "https://github.com/SecPal/android",
+  },
 ] as const;
 
 function getSourceReturnTo(state: unknown): string | null {

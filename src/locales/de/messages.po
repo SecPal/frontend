@@ -676,6 +676,10 @@ msgstr "SecPal/frontend-Issues"
 msgid "Password"
 msgstr "Passwort"
 
+#: src/pages/SourcePage.tsx
+msgid "Android Capacitor wrapper that reuses the shared frontend build and adds native Android-specific code."
+msgstr "Android-Capacitor-Wrapper, der den gemeinsamen Frontend-Build wiederverwendet und nativen Android-spezifischen Code hinzufügt."
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Expires:"
 msgstr "Läuft ab:"

@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Added the missing `SecPal/android` repository to the `/source` AGPL source-offer page so the frontend's corresponding-source list again reflects the Android wrapper that consumes the shared frontend build output.
 - Consolidated the shared frontend UI layer on `@/ui`, removed remaining
   legacy shell and auth wrapper paths, replaced productive custom inline UI
   icon usage with Lucide components, and added guardrails so migrated routes
