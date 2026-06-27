@@ -747,10 +747,7 @@ describe("authTransport", () => {
     };
     const handleNativeLogout = vi.fn();
 
-    window.addEventListener(
-      NATIVE_AUTH_LOGOUT_EVENT_NAME,
-      handleNativeLogout
-    );
+    window.addEventListener(NATIVE_AUTH_LOGOUT_EVENT_NAME, handleNativeLogout);
 
     try {
       const transport = resolveAuthTransport({ nativeBridge });
