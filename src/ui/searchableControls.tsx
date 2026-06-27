@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+  useEffect,
   useId,
   useMemo,
   useRef,
@@ -109,6 +110,8 @@ const commandPopoverFocusableSelector = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(",");
 
+type PendingFocusTarget = HTMLElement | "trigger" | null;
+
 export interface SearchableCommandPopoverProps {
   label: string;
   options: CommandOption[];
@@ -140,6 +143,7 @@ export function SearchableCommandPopover({
   const optionIdPrefix = useId();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const pendingFocusTargetRef = useRef<PendingFocusTarget>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -224,28 +228,40 @@ export function SearchableCommandPopover({
     ).filter((element) => element.tabIndex >= 0);
   }
 
-  function focusNextElementAfterTrigger() {
+  function getNextFocusableElementAfterTrigger() {
     if (!triggerRef.current) {
-      return;
+      return null;
     }
 
     const focusableElements = getFocusableElements(document).filter(
       (element) =>
-        !contentRef.current?.contains(element) && element !== triggerRef.current
+        !contentRef.current?.contains(element) &&
+        (element === triggerRef.current || !element.hasAttribute("inert"))
     );
-    const triggerIndex = Array.from(document.querySelectorAll<HTMLElement>("*"))
-      .filter(
+    return (
+      focusableElements.find(
         (element) =>
-          focusableElements.includes(element) || element === triggerRef.current
-      )
-      .indexOf(triggerRef.current);
-    const nextElement =
-      triggerIndex >= 0
-        ? focusableElements[triggerIndex]
-        : focusableElements[0];
-
-    nextElement?.focus();
+          element !== triggerRef.current &&
+          Boolean(
+            triggerRef.current?.compareDocumentPosition(element) &
+            Node.DOCUMENT_POSITION_FOLLOWING
+          )
+      ) ?? triggerRef.current
+    );
   }
+
+  useEffect(() => {
+    if (open || !pendingFocusTargetRef.current) {
+      return;
+    }
+
+    if (pendingFocusTargetRef.current === "trigger") {
+      triggerRef.current?.focus();
+    } else {
+      pendingFocusTargetRef.current.focus();
+    }
+    pendingFocusTargetRef.current = null;
+  }, [open]);
 
   function handleContentKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key !== "Tab") {
@@ -270,14 +286,18 @@ export function SearchableCommandPopover({
     }
 
     event.preventDefault();
-    closePopover();
-
     if (isLeavingStart) {
-      triggerRef.current?.focus();
+      pendingFocusTargetRef.current = "trigger";
+      closePopover();
       return;
     }
 
-    focusNextElementAfterTrigger();
+    const nextElement = getNextFocusableElementAfterTrigger();
+    pendingFocusTargetRef.current =
+      nextElement && nextElement !== triggerRef.current
+        ? nextElement
+        : "trigger";
+    closePopover();
   }
 
   return (

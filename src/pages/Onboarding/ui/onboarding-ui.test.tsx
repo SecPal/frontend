@@ -731,7 +731,11 @@ describe("onboarding shadcn primitives", () => {
     expect(options[1]).toHaveFocus();
 
     await user.tab();
-    expect(screen.getByRole("button", { name: "After country" })).toHaveFocus();
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "After country" })
+      ).toHaveFocus();
+    });
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
   });
 
