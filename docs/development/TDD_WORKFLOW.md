@@ -317,4 +317,4 @@ git log --oneline
 - [Growing Object-Oriented Software, Guided by Tests](http://www.growing-object-oriented-software.com/)
 - [Martin Fowler: Test-Driven Development](https://martinfowler.com/bliki/TestDrivenDevelopment.html)
 - [SecPal Contributing Guide](../../CONTRIBUTING.md)
-- [Organization-wide Copilot Instructions](../../.github/copilot-instructions.md)
+- [Repository AI Instructions](../../AGENTS.md)
