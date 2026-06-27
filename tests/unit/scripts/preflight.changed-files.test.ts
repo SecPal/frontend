@@ -115,7 +115,7 @@ describe("preflight changed-file detection", () => {
 
       const npxLog = readFileSync(npxLogPath, "utf8");
       expect(npxLog).toContain("prettier");
-      expect(npxLog).toContain("markdownlint-cli2");
+      expect(npxLog).toContain("markdownlint-cli@0.49.0");
       expect(preflight.stdout + preflight.stderr).not.toContain(
         "No markdown files changed, skipping markdownlint"
       );
@@ -178,7 +178,7 @@ describe("preflight changed-file detection", () => {
 
       const npxLog = readFileSync(npxLogPath, "utf8");
       expect(npxLog).toContain("prettier");
-      expect(npxLog).toContain("markdownlint-cli2");
+      expect(npxLog).toContain("markdownlint-cli@0.49.0");
       expect(preflight.stdout + preflight.stderr).not.toContain(
         "No markdown files changed, skipping markdownlint"
       );
@@ -253,7 +253,7 @@ describe("preflight changed-file detection", () => {
       expect(preflight.status, preflight.stderr).toBe(0);
 
       const npxLog = readFileSync(npxLogPath, "utf8");
-      expect(npxLog).toContain("markdownlint-cli2");
+      expect(npxLog).toContain("markdownlint-cli@0.49.0");
       expect(preflight.stdout + preflight.stderr).not.toContain(
         "No markdown files changed, skipping markdownlint"
       );
