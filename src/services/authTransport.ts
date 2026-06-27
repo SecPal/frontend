@@ -368,45 +368,21 @@ function bridgeDispatchesLogoutEvent(bridge: NativeAuthBridge): boolean {
   );
 }
 
-function wrapNativeAuthBridge(
-  nativeAuthBridge: NativeAuthBridge
-): NativeAuthBridge {
+function wrapNativeAuthBridgeLogout(nativeAuthBridge: NativeAuthBridge): void {
   if (bridgeDispatchesLogoutEvent(nativeAuthBridge)) {
-    return nativeAuthBridge;
+    return;
   }
 
-  const wrappedBridge: NativeAuthBridge & {
-    [NATIVE_AUTH_BRIDGE_DISPATCHES_LOGOUT_EVENT]: true;
-  } = {
-    login(credentials) {
-      return nativeAuthBridge.login.call(nativeAuthBridge, credentials);
-    },
-    async logout() {
-      await nativeAuthBridge.logout.call(nativeAuthBridge);
-      dispatchNativeAuthLogoutEvent();
-    },
-    getCurrentUser() {
-      return nativeAuthBridge.getCurrentUser.call(nativeAuthBridge);
-    },
-    [NATIVE_AUTH_BRIDGE_DISPATCHES_LOGOUT_EVENT]: true,
+  const bridgeWithMetadata = nativeAuthBridge as NativeAuthBridge & {
+    [NATIVE_AUTH_BRIDGE_DISPATCHES_LOGOUT_EVENT]?: boolean;
   };
+  const originalLogout = nativeAuthBridge.logout;
 
-  if (typeof nativeAuthBridge.loginWithPasskey === "function") {
-    wrappedBridge.loginWithPasskey = () =>
-      nativeAuthBridge.loginWithPasskey!.call(nativeAuthBridge);
-  }
-
-  if (typeof nativeAuthBridge.logoutAll === "function") {
-    wrappedBridge.logoutAll = () =>
-      nativeAuthBridge.logoutAll!.call(nativeAuthBridge);
-  }
-
-  if (typeof nativeAuthBridge.isNetworkAvailable === "function") {
-    wrappedBridge.isNetworkAvailable = () =>
-      nativeAuthBridge.isNetworkAvailable!.call(nativeAuthBridge);
-  }
-
-  return wrappedBridge;
+  bridgeWithMetadata.logout = async function logoutWithEventDispatch() {
+    await originalLogout.call(nativeAuthBridge);
+    dispatchNativeAuthLogoutEvent();
+  };
+  bridgeWithMetadata[NATIVE_AUTH_BRIDGE_DISPATCHES_LOGOUT_EVENT] = true;
 }
 
 function getNativeAuthBridge(): NativeAuthBridge | null {
@@ -419,10 +395,10 @@ function getNativeAuthBridge(): NativeAuthBridge | null {
     return null;
   }
 
-  const wrappedBridge = wrapNativeAuthBridge(candidate);
-  bridgeGlobal.SecPalNativeAuthBridge = wrappedBridge;
+  wrapNativeAuthBridgeLogout(candidate);
+  bridgeGlobal.SecPalNativeAuthBridge = candidate;
 
-  return wrappedBridge;
+  return candidate;
 }
 
 export function resolveAuthTransport(options?: {

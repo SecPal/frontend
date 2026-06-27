@@ -765,10 +765,15 @@ describe("authTransport", () => {
   });
 
   it("wraps the global native bridge so direct logout calls dispatch the event", async () => {
-    const nativeBridge: NativeAuthBridge = {
+    const createPasskeyAttestation = vi.fn().mockResolvedValue(undefined);
+    const nativeLogout = vi.fn().mockResolvedValue(undefined);
+    const nativeBridge: NativeAuthBridge & {
+      createPasskeyAttestation: typeof createPasskeyAttestation;
+    } = {
       login: vi.fn().mockResolvedValue(undefined),
-      logout: vi.fn().mockResolvedValue(undefined),
+      logout: nativeLogout,
       getCurrentUser: vi.fn().mockResolvedValue(undefined),
+      createPasskeyAttestation,
     };
     const handleNativeLogout = vi.fn();
 
@@ -778,15 +783,20 @@ describe("authTransport", () => {
     try {
       const transport = getAuthTransport();
       const resolvedBridge = authTransportGlobal.SecPalNativeAuthBridge as
-        | NativeAuthBridge
+        | (NativeAuthBridge & {
+            createPasskeyAttestation: typeof createPasskeyAttestation;
+          })
         | undefined;
 
       expect(transport.kind).toBe("native-bridge");
-      expect(resolvedBridge).not.toBe(nativeBridge);
+      expect(resolvedBridge).toBe(nativeBridge);
+      expect(resolvedBridge?.createPasskeyAttestation).toBe(
+        createPasskeyAttestation
+      );
 
       await resolvedBridge?.logout();
 
-      expect(nativeBridge.logout).toHaveBeenCalledOnce();
+      expect(nativeLogout).toHaveBeenCalledOnce();
       expect(handleNativeLogout).toHaveBeenCalledOnce();
     } finally {
       window.removeEventListener(
