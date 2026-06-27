@@ -4,7 +4,7 @@
 import { useState, useMemo } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { Building2, Home, MapPin, MoveHorizontal, Users } from "lucide-react";
+import { MoveHorizontal } from "lucide-react";
 import {
   Dialog,
   DialogActions,
@@ -34,6 +34,10 @@ import {
 } from "../services/organizationalUnitApi";
 import { getTypeLabel, TYPE_HIERARCHY } from "../lib/organizationalUnitUtils";
 import { useOrganizationalUnitsWithOffline } from "../hooks/useOrganizationalUnitsWithOffline";
+import {
+  OrganizationalUnitRootIcon,
+  OrganizationalUnitTypeIcon,
+} from "./organizationalUnitIcons";
 
 /**
  * Props for MoveOrganizationalUnitDialog
@@ -72,49 +76,6 @@ function fromParentSelectValue(value: string) {
 /**
  * Icon component for organizational unit types
  */
-function UnitTypeIcon({
-  type,
-  className = "h-4 w-4",
-}: {
-  type: OrganizationalUnitType;
-  className?: string;
-}) {
-  switch (type) {
-    case "holding":
-    case "company":
-      return (
-        <Building2 className={`${className} text-blue-500`} data-slot="icon" />
-      );
-    case "department":
-    case "division":
-      return (
-        <Users className={`${className} text-green-500`} data-slot="icon" />
-      );
-    case "branch":
-      return (
-        <Building2
-          className={`${className} text-purple-500`}
-          data-slot="icon"
-        />
-      );
-    case "region":
-      return (
-        <MapPin className={`${className} text-orange-500`} data-slot="icon" />
-      );
-    default:
-      return (
-        <Building2 className={`${className} text-gray-500`} data-slot="icon" />
-      );
-  }
-}
-
-/**
- * Root icon for the "no parent" option
- */
-function RootIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return <Home className={`${className} text-gray-400`} data-slot="icon" />;
-}
-
 /**
  * Move/Reparent dialog for organizational units
  *
@@ -338,7 +299,7 @@ function MoveOrganizationalUnitDialogContent({
                 {/* Root option */}
                 <SelectItem value={ROOT_PARENT_SELECT_VALUE}>
                   <span className="flex w-full min-w-0 items-center gap-2">
-                    <RootIcon className="h-4 w-4 shrink-0" />
+                    <OrganizationalUnitRootIcon className="h-4 w-4 shrink-0" />
                     <span className="min-w-0 truncate">
                       {t`Make root unit (no parent)`}
                     </span>
@@ -352,7 +313,7 @@ function MoveOrganizationalUnitDialogContent({
                       className="flex items-center gap-2"
                       style={{ paddingLeft: `${u.depth * 16}px` }}
                     >
-                      <UnitTypeIcon
+                      <OrganizationalUnitTypeIcon
                         type={u.type}
                         className="h-4 w-4 shrink-0"
                       />

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
- * App-shell wrappers (`NavbarItem`, `SidebarItem`, `DropdownItem`,
- * `AvatarButton`) translate a custom `href` prop into router navigation by
+ * App-shell wrappers (`NavbarItem`, `SidebarItem`, `DropdownItem`) translate a
+ * custom `href` prop into router navigation by
  * passing `to` to `react-router-dom`'s `<Link>`. Their wrapper API must not
  * also forward `href` as a separate prop into the underlying router `<Link>`:
  * the custom `href` is the wrapper-level API, not a prop the router consumes.
@@ -73,7 +73,7 @@ function findCapture(targetTo: string) {
 
 describe("App-shell router-link wrappers do not leak `href` into Link", () => {
   it("NavbarItem passes `to` and not `href` to react-router-dom Link", async () => {
-    const { NavbarItem } = await import("./navbar");
+    const { NavbarItem } = await import("@/ui");
 
     render(<NavbarItem href="/profile">Profile</NavbarItem>);
 
@@ -82,7 +82,7 @@ describe("App-shell router-link wrappers do not leak `href` into Link", () => {
   });
 
   it("SidebarItem passes `to` and not `href` to react-router-dom Link", async () => {
-    const { SidebarItem } = await import("./sidebar");
+    const { SidebarItem } = await import("@/ui");
 
     render(<SidebarItem href="/customers">Customers</SidebarItem>);
 
@@ -90,19 +90,8 @@ describe("App-shell router-link wrappers do not leak `href` into Link", () => {
     expect(capture).not.toHaveProperty("href");
   });
 
-  it("AvatarButton passes `to` and not `href` to react-router-dom Link", async () => {
-    const { AvatarButton } = await import("./avatar");
-
-    render(
-      <AvatarButton href="/profile" initials="JD" alt="John Doe profile" />
-    );
-
-    const capture = findCapture("/profile");
-    expect(capture).not.toHaveProperty("href");
-  });
-
   it("DropdownItem passes `to` and not `href` to react-router-dom Link", async () => {
-    const { DropdownItem } = await import("./dropdown");
+    const { DropdownItem } = await import("@/ui");
 
     render(
       <DropdownMenuPrimitive.Root open>

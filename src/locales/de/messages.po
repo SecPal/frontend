@@ -2008,20 +2008,17 @@ msgid "Legal notices"
 msgstr "Rechtliche Hinweise"
 
 #. js-lingui-explicit-id
-#: src/components/sidebar-layout.tsx
-#: src/components/stacked-layout.tsx
+#: src/components/mobile-sidebar-dialog.tsx
 msgid "layout.mobileNavigation.close"
 msgstr "Navigation schließen"
 
 #. js-lingui-explicit-id
-#: src/components/sidebar-layout.tsx
-#: src/components/stacked-layout.tsx
+#: src/components/mobile-sidebar-dialog.tsx
 msgid "layout.mobileNavigation.description"
 msgstr "Hauptnavigation der Anwendung"
 
 #. js-lingui-explicit-id
-#: src/components/sidebar-layout.tsx
-#: src/components/stacked-layout.tsx
+#: src/components/mobile-sidebar-dialog.tsx
 msgid "layout.mobileNavigation.title"
 msgstr "Navigationsmenü"
 

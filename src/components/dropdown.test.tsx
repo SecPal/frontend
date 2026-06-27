@@ -9,7 +9,7 @@ import {
   DropdownButton,
   DropdownItem,
   DropdownMenu,
-} from "./dropdown";
+} from "@/ui";
 
 function renderOpenDropdown(children: React.ReactNode) {
   return render(

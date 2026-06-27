@@ -16,22 +16,18 @@ import {
   UserRoundCheck,
   Users,
 } from "lucide-react";
-import { useAuth } from "../hooks/useAuth";
-import { usePrefetch } from "../hooks/usePrefetch";
-import { useUserCapabilities } from "../hooks/useUserCapabilities";
-import { getAuthTransport } from "../services/authTransport";
-import { getInitials } from "../lib/stringUtils";
-import { Avatar } from "./avatar";
 import {
+  Avatar,
   Dropdown,
   DropdownButton,
   DropdownDivider,
   DropdownItem,
   DropdownLabel,
   DropdownMenu,
-} from "./dropdown";
-import { Navbar, NavbarItem, NavbarSection, NavbarSpacer } from "./navbar";
-import {
+  Navbar,
+  NavbarItem,
+  NavbarSection,
+  NavbarSpacer,
   Sidebar,
   SidebarBody,
   SidebarHeader,
@@ -39,7 +35,12 @@ import {
   SidebarLabel,
   SidebarSection,
   SidebarSpacer,
-} from "./sidebar";
+} from "@/ui";
+import { useAuth } from "../hooks/useAuth";
+import { usePrefetch } from "../hooks/usePrefetch";
+import { useUserCapabilities } from "../hooks/useUserCapabilities";
+import { getAuthTransport } from "../services/authTransport";
+import { getInitials } from "../lib/stringUtils";
 import { StackedLayout } from "./stacked-layout";
 import { Logo } from "./Logo";
 import { RouteContentFallback } from "./RouteContentFallback";

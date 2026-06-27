@@ -5,22 +5,16 @@ import {
   Children,
   forwardRef,
   isValidElement,
-  useId,
-  useMemo,
-  useRef,
-  useState,
   type ChangeEvent,
   type ComponentPropsWithoutRef,
   type ElementRef,
   type ForwardedRef,
   type InputHTMLAttributes,
-  type KeyboardEvent,
   type ReactElement,
   type ReactNode,
 } from "react";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import * as LabelPrimitive from "@radix-ui/react-label";
-import * as PopoverPrimitive from "@radix-ui/react-popover";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
@@ -46,7 +40,11 @@ import {
   Progress as AppProgress,
   RadioGroup as AppRadioGroup,
   RadioGroupItem as AppRadioGroupItem,
+  SearchableAutocompleteListbox,
+  SearchableAutocompleteOption,
+  SearchableCommandPopover,
   Textarea as AppTextarea,
+  type CommandOption,
   uiControlBase,
 } from "@/ui";
 import { getCspNonce } from "@/lib/cspNonce";
@@ -533,13 +531,6 @@ export function FormSection({
   return <section className={cn("space-y-6", className)} {...props} />;
 }
 
-export interface CommandOption {
-  value: string;
-  label: string;
-  disabled?: boolean;
-  keywords?: string[];
-}
-
 export function AutocompleteListbox({
   anchor,
   open,
@@ -554,26 +545,15 @@ export function AutocompleteListbox({
   children: ReactNode;
 }) {
   return (
-    <PopoverPrimitive.Root open={open}>
-      <PopoverPrimitive.Anchor asChild>{anchor}</PopoverPrimitive.Anchor>
-      <PopoverPrimitive.Portal>
-        <PopoverPrimitive.Content
-          id={listboxId}
-          role="listbox"
-          align="start"
-          sideOffset={4}
-          data-slot="onboarding-autocomplete-listbox"
-          className={cn(
-            "z-50 w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-md border border-zinc-200 bg-white text-zinc-950 shadow-lg outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50",
-            className
-          )}
-          onOpenAutoFocus={(event) => event.preventDefault()}
-          onCloseAutoFocus={(event) => event.preventDefault()}
-        >
-          {children}
-        </PopoverPrimitive.Content>
-      </PopoverPrimitive.Portal>
-    </PopoverPrimitive.Root>
+    <SearchableAutocompleteListbox
+      anchor={anchor}
+      open={open}
+      listboxId={listboxId}
+      className={className}
+      slotPrefix="onboarding"
+    >
+      {children}
+    </SearchableAutocompleteListbox>
   );
 }
 
@@ -587,32 +567,16 @@ export function AutocompleteOption({
   highlighted?: boolean;
 }) {
   return (
-    <button
+    <SearchableAutocompleteOption
+      className={className}
+      highlighted={highlighted}
+      slotPrefix="onboarding"
       type={type}
       tabIndex={tabIndex}
-      role="option"
-      aria-selected={highlighted}
-      data-slot="onboarding-autocomplete-option"
-      data-highlighted={highlighted ? "" : undefined}
-      className={cn(
-        "block w-full px-3 py-2 text-left text-sm text-zinc-950 hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800",
-        "border-b border-zinc-100 last:border-b-0 dark:border-zinc-800",
-        highlighted && "bg-zinc-100 dark:bg-zinc-800",
-        className
-      )}
       {...props}
     />
   );
 }
-
-const commandPopoverFocusableSelector = [
-  "a[href]",
-  "button:not([disabled])",
-  "input:not([disabled])",
-  "select:not([disabled])",
-  "textarea:not([disabled])",
-  '[tabindex]:not([tabindex="-1"])',
-].join(",");
 
 export function CommandPopover({
   label,
@@ -635,283 +599,18 @@ export function CommandPopover({
   disabled?: boolean;
   errorMessage?: string;
 }) {
-  const labelId = useId();
-  const listboxId = useId();
-  const errorId = useId();
-  const optionIdPrefix = useId();
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  const selectedOption = options.find((option) => option.value === value);
-  const filteredOptions = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-
-    if (!normalizedQuery) {
-      return options;
-    }
-
-    return options.filter((option) =>
-      [option.label, option.value, ...(option.keywords ?? [])].some((entry) =>
-        entry.toLowerCase().includes(normalizedQuery)
-      )
-    );
-  }, [options, query]);
-
-  function getOptionId(index: number) {
-    return `${optionIdPrefix}-option-${index}`;
-  }
-
-  const activeOptionId =
-    open && activeIndex < filteredOptions.length
-      ? getOptionId(activeIndex)
-      : undefined;
-
-  function resetCommandState() {
-    setQuery("");
-    setActiveIndex(0);
-  }
-
-  function closePopover() {
-    setOpen(false);
-    resetCommandState();
-  }
-
-  function handleOpenChange(nextOpen: boolean) {
-    setOpen(nextOpen);
-
-    if (!nextOpen) {
-      resetCommandState();
-    }
-  }
-
-  function selectOption(option: CommandOption) {
-    if (option.disabled) {
-      return;
-    }
-
-    onValueChange(option.value);
-    closePopover();
-  }
-
-  function moveActiveIndex(direction: 1 | -1) {
-    if (filteredOptions.length === 0) {
-      return;
-    }
-
-    setActiveIndex((currentIndex) => {
-      let nextIndex = currentIndex;
-
-      for (let step = 0; step < filteredOptions.length; step += 1) {
-        nextIndex =
-          (nextIndex + direction + filteredOptions.length) %
-          filteredOptions.length;
-
-        if (!filteredOptions[nextIndex]?.disabled) {
-          return nextIndex;
-        }
-      }
-
-      return currentIndex;
-    });
-  }
-
-  function getFocusableElements(root: ParentNode) {
-    return Array.from(
-      root.querySelectorAll<HTMLElement>(commandPopoverFocusableSelector)
-    ).filter((element) => element.tabIndex >= 0);
-  }
-
-  function focusNextElementAfterTrigger() {
-    if (!triggerRef.current) {
-      return;
-    }
-
-    // Walk the page's focusable elements in DOM order (matching visual tab sequence
-    // for a standard flat layout). Elements inside the popover portal are excluded
-    // because the portal is being closed; the trigger itself is excluded from the
-    // "next" candidates so we always advance past it.
-    const focusableElements = getFocusableElements(document).filter(
-      (element) =>
-        !contentRef.current?.contains(element) && element !== triggerRef.current
-    );
-    const triggerIndex = Array.from(document.querySelectorAll<HTMLElement>("*"))
-      .filter(
-        (el) => focusableElements.includes(el) || el === triggerRef.current
-      )
-      .indexOf(triggerRef.current);
-    const nextElement =
-      triggerIndex >= 0
-        ? focusableElements[triggerIndex]
-        : focusableElements[0];
-
-    nextElement?.focus();
-  }
-
-  function handleContentKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key !== "Tab") {
-      return;
-    }
-
-    const focusableElements = getFocusableElements(event.currentTarget);
-    const currentIndex = focusableElements.indexOf(
-      document.activeElement as HTMLElement
-    );
-
-    if (currentIndex < 0) {
-      return;
-    }
-
-    const isLeavingStart = event.shiftKey && currentIndex === 0;
-    const isLeavingEnd =
-      !event.shiftKey && currentIndex === focusableElements.length - 1;
-
-    if (!isLeavingStart && !isLeavingEnd) {
-      return;
-    }
-
-    event.preventDefault();
-    closePopover();
-
-    if (isLeavingStart) {
-      triggerRef.current?.focus();
-      return;
-    }
-
-    focusNextElementAfterTrigger();
-  }
-
   return (
-    <PopoverPrimitive.Root open={open} onOpenChange={handleOpenChange}>
-      <div className="space-y-2">
-        <span
-          id={labelId}
-          className="block text-sm font-medium text-zinc-950 dark:text-zinc-50"
-        >
-          {label}
-        </span>
-        <PopoverPrimitive.Trigger asChild>
-          <Button
-            ref={triggerRef}
-            variant="outline"
-            className="w-full justify-between"
-            aria-labelledby={labelId}
-            aria-controls={listboxId}
-            aria-expanded={open}
-            aria-haspopup="listbox"
-            aria-invalid={errorMessage ? true : undefined}
-            aria-describedby={errorMessage ? errorId : undefined}
-            aria-activedescendant={activeOptionId}
-            disabled={disabled}
-            role="combobox"
-            onKeyDown={(event) => {
-              if (event.key === "ArrowDown") {
-                event.preventDefault();
-                // When opening from a closed state, keep the active option at the
-                // first item so initial keyboard focus matches the visual order.
-                // Only advance when the popover is already open.
-                if (open) {
-                  moveActiveIndex(1);
-                } else {
-                  setOpen(true);
-                }
-              }
-            }}
-          >
-            <span>{selectedOption?.label ?? placeholder}</span>
-            <ChevronDown className="size-4 opacity-50" aria-hidden="true" />
-          </Button>
-        </PopoverPrimitive.Trigger>
-        <PopoverPrimitive.Portal>
-          <PopoverPrimitive.Content
-            ref={contentRef}
-            align="start"
-            sideOffset={4}
-            data-slot="onboarding-command-popover-content"
-            className="z-50 w-[var(--radix-popover-trigger-width)] rounded-md border border-zinc-200 bg-white p-2 text-zinc-950 shadow-lg outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
-            onOpenAutoFocus={(event) => {
-              event.preventDefault();
-              searchInputRef.current?.focus();
-            }}
-            onKeyDown={handleContentKeyDown}
-          >
-            <Input
-              ref={searchInputRef}
-              role="searchbox"
-              aria-label={searchPlaceholder}
-              value={query}
-              placeholder={searchPlaceholder}
-              aria-activedescendant={activeOptionId}
-              aria-controls={listboxId}
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setActiveIndex(0);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "ArrowDown") {
-                  event.preventDefault();
-                  moveActiveIndex(1);
-                }
-
-                if (event.key === "ArrowUp") {
-                  event.preventDefault();
-                  moveActiveIndex(-1);
-                }
-
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  const activeOption = filteredOptions[activeIndex];
-
-                  if (activeOption) {
-                    selectOption(activeOption);
-                  }
-                }
-
-                if (event.key === "Escape") {
-                  event.preventDefault();
-                  closePopover();
-                }
-              }}
-            />
-            <div
-              id={listboxId}
-              role="listbox"
-              className="mt-2 max-h-60 overflow-auto"
-            >
-              {filteredOptions.length === 0 ? (
-                <div className="px-3 py-2 text-sm text-zinc-600 dark:text-zinc-300">
-                  {emptyMessage}
-                </div>
-              ) : (
-                filteredOptions.map((option, index) => (
-                  <button
-                    key={option.value}
-                    id={getOptionId(index)}
-                    type="button"
-                    role="option"
-                    aria-selected={option.value === value}
-                    disabled={option.disabled}
-                    className={cn(
-                      "flex w-full items-center rounded-md px-3 py-2 text-left text-sm disabled:cursor-not-allowed disabled:opacity-50",
-                      index === activeIndex
-                        ? "bg-blue-600 text-white"
-                        : "text-zinc-950 hover:bg-zinc-100 dark:text-zinc-50 dark:hover:bg-zinc-800"
-                    )}
-                    onMouseEnter={() => setActiveIndex(index)}
-                    onClick={() => selectOption(option)}
-                  >
-                    {option.label}
-                  </button>
-                ))
-              )}
-            </div>
-          </PopoverPrimitive.Content>
-        </PopoverPrimitive.Portal>
-        {errorMessage && <FieldError id={errorId}>{errorMessage}</FieldError>}
-      </div>
-    </PopoverPrimitive.Root>
+    <SearchableCommandPopover
+      label={label}
+      options={options}
+      value={value}
+      onValueChange={onValueChange}
+      placeholder={placeholder}
+      searchPlaceholder={searchPlaceholder}
+      emptyMessage={emptyMessage}
+      disabled={disabled}
+      errorMessage={errorMessage}
+      slotPrefix="onboarding"
+    />
   );
 }

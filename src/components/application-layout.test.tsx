@@ -52,12 +52,10 @@ vi.mock("../lib/analytics", () => ({
 const QUERY_TIMEOUT = 15000;
 const migratedShellFiles = [
   "src/components/application-layout.tsx",
+  "src/components/mobile-sidebar-dialog.tsx",
   "src/components/stacked-layout.tsx",
   "src/components/sidebar-layout.tsx",
-  "src/components/navbar.tsx",
-  "src/components/sidebar.tsx",
-  "src/components/dropdown.tsx",
-  "src/components/avatar.tsx",
+  "src/ui/appShell.tsx",
   "src/components/LanguageSwitcher.tsx",
   "src/components/Footer.tsx",
 ] as const;
