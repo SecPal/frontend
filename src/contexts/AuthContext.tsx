@@ -15,6 +15,7 @@ import {
 } from "./auth-context";
 import { getAuthTransport } from "../services/authTransport";
 import { sanitizeAuthUser } from "../services/authState";
+import { NATIVE_AUTH_LOGOUT_EVENT_NAME } from "../services/nativeAuthEvents";
 import { authStorage } from "../services/storage";
 import { fetchCsrfToken, getCsrfTokenFromCookie } from "../services/csrf";
 import { sessionEvents, isOnline } from "../services/sessionEvents";
@@ -507,6 +508,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearAuthenticatedState(true, { redirectOpenClients: true });
     await clearAuthenticatedStatePromiseRef.current;
   }, [clearAuthenticatedState]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const handleNativeLogout = () => {
+      void logout();
+    };
+
+    window.addEventListener(NATIVE_AUTH_LOGOUT_EVENT_NAME, handleNativeLogout);
+
+    return () => {
+      window.removeEventListener(
+        NATIVE_AUTH_LOGOUT_EVENT_NAME,
+        handleNativeLogout
+      );
+    };
+  }, [logout]);
 
   const lock = useCallback(() => {
     authStorage.lockVault?.();
