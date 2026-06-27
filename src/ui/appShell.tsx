@@ -81,7 +81,8 @@ interface NavbarItemBaseProps {
 }
 
 export interface NavbarItemButtonProps
-  extends NavbarItemBaseProps,
+  extends
+    NavbarItemBaseProps,
     Omit<
       React.ButtonHTMLAttributes<HTMLButtonElement>,
       "className" | "children"
@@ -90,7 +91,8 @@ export interface NavbarItemButtonProps
 }
 
 export interface NavbarItemLinkProps
-  extends NavbarItemBaseProps,
+  extends
+    NavbarItemBaseProps,
     Omit<RouterLinkProps, "to" | "className" | "children"> {
   href: string;
 }
@@ -294,7 +296,8 @@ interface SidebarItemBaseProps {
 }
 
 export interface SidebarItemButtonProps
-  extends SidebarItemBaseProps,
+  extends
+    SidebarItemBaseProps,
     Omit<
       React.ButtonHTMLAttributes<HTMLButtonElement>,
       "className" | "children"
@@ -303,7 +306,8 @@ export interface SidebarItemButtonProps
 }
 
 export interface SidebarItemLinkProps
-  extends SidebarItemBaseProps,
+  extends
+    SidebarItemBaseProps,
     Omit<RouterLinkProps, "to" | "className" | "children"> {
   href: string;
 }

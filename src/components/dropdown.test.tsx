@@ -4,12 +4,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import {
-  Dropdown,
-  DropdownButton,
-  DropdownItem,
-  DropdownMenu,
-} from "@/ui";
+import { Dropdown, DropdownButton, DropdownItem, DropdownMenu } from "@/ui";
 
 function renderOpenDropdown(children: React.ReactNode) {
   return render(

@@ -69,8 +69,7 @@ export function SearchableAutocompleteListbox({
  * (which provides the required `role="listbox"` owner). Using this component
  * in isolation will produce an orphaned `role="option"` — an ARIA violation.
  */
-export interface SearchableAutocompleteOptionProps
-  extends ComponentPropsWithoutRef<"button"> {
+export interface SearchableAutocompleteOptionProps extends ComponentPropsWithoutRef<"button"> {
   highlighted?: boolean;
   slotPrefix: string;
 }
@@ -372,7 +371,11 @@ export function SearchableCommandPopover({
                 }
               }}
             />
-            <div id={listboxId} role="listbox" className="mt-2 max-h-60 overflow-auto">
+            <div
+              id={listboxId}
+              role="listbox"
+              className="mt-2 max-h-60 overflow-auto"
+            >
               {filteredOptions.length === 0 ? (
                 <div className="px-3 py-2 text-sm text-zinc-600 dark:text-zinc-300">
                   {emptyMessage}
@@ -403,7 +406,9 @@ export function SearchableCommandPopover({
             </div>
           </PopoverPrimitive.Content>
         </PopoverPrimitive.Portal>
-        {errorMessage ? <FieldError id={errorId}>{errorMessage}</FieldError> : null}
+        {errorMessage ? (
+          <FieldError id={errorId}>{errorMessage}</FieldError>
+        ) : null}
       </div>
     </PopoverPrimitive.Root>
   );

@@ -62,7 +62,9 @@ export function MobileSidebarDialog({
                 </NavbarItem>
               </DialogPrimitive.Close>
             </div>
-            <SidebarCloseProvider close={close}>{children}</SidebarCloseProvider>
+            <SidebarCloseProvider close={close}>
+              {children}
+            </SidebarCloseProvider>
           </div>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

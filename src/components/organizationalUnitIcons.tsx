@@ -41,19 +41,11 @@ export function OrganizationalUnitTypeIcon({
     case "department":
     case "division":
       return (
-        <Users
-          aria-hidden="true"
-          className={iconClassName}
-          data-slot={slot}
-        />
+        <Users aria-hidden="true" className={iconClassName} data-slot={slot} />
       );
     case "region":
       return (
-        <MapPin
-          aria-hidden="true"
-          className={iconClassName}
-          data-slot={slot}
-        />
+        <MapPin aria-hidden="true" className={iconClassName} data-slot={slot} />
       );
     default:
       return (

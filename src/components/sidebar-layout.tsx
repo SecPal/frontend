@@ -26,7 +26,10 @@ export function SidebarLayout({
     >
       <div className="fixed inset-y-0 left-0 w-64 max-lg:hidden">{sidebar}</div>
 
-      <MobileSidebarDialog open={showSidebar} close={() => setShowSidebar(false)}>
+      <MobileSidebarDialog
+        open={showSidebar}
+        close={() => setShowSidebar(false)}
+      >
         {sidebar}
       </MobileSidebarDialog>
 

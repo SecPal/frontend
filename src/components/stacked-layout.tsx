@@ -24,7 +24,10 @@ export function StackedLayout({
       data-slot="app-stacked-layout"
       className="relative isolate flex min-h-[var(--app-shell-min-height)] w-full flex-col bg-white lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950"
     >
-      <MobileSidebarDialog open={showSidebar} close={() => setShowSidebar(false)}>
+      <MobileSidebarDialog
+        open={showSidebar}
+        close={() => setShowSidebar(false)}
+      >
         {sidebar}
       </MobileSidebarDialog>
 
