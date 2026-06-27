@@ -441,12 +441,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      const clearAuthStoragePromise = Promise.resolve().then(() =>
-        authStorage.clear({
+      let clearAuthStoragePromise: Promise<void>;
+
+      try {
+        clearAuthStoragePromise = authStorage.clear({
           clearOfflineVaultTables:
             !shouldSkipBarrierVaultTableCleanupRef.current,
-        })
-      );
+        });
+      } catch (error: unknown) {
+        clearAuthStoragePromise = Promise.reject(error);
+      }
+
       const resetAnalyticsStatePromise = resetAnalyticsState();
 
       clearAuthenticatedStatePromiseRef.current = Promise.allSettled([
