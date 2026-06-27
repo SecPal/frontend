@@ -14,6 +14,8 @@ import {
 } from "../lib/offlineVault";
 import { authStorage } from "../services/storage";
 import { resetPrefetchCache } from "../hooks/usePrefetch";
+import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
+import { NATIVE_AUTH_LOGOUT_EVENT_NAME } from "../services/nativeAuthEvents";
 
 vi.mock("../services/authApi", () => ({
   getCurrentUser: vi.fn(),
@@ -28,6 +30,10 @@ vi.mock("../hooks/usePrefetch", async () => {
     resetPrefetchCache: vi.fn(),
   };
 });
+
+vi.mock("../lib/serviceWorkerSession", () => ({
+  syncOfflineSessionAccess: vi.fn().mockResolvedValue(undefined),
+}));
 
 type SessionEventName = "session:expired" | "session:invalid";
 type SessionEventHandler = () => void;
@@ -91,6 +97,7 @@ describe("AuthContext", () => {
     vi.mocked(getCurrentUser).mockReset();
     vi.mocked(isOnline).mockReturnValue(false);
     vi.mocked(resetPrefetchCache).mockClear();
+    vi.mocked(syncOfflineSessionAccess).mockClear();
   });
 
   afterEach(() => {
@@ -434,6 +441,95 @@ describe("AuthContext", () => {
       });
 
       expect(resetPrefetchCache).toHaveBeenCalled();
+    });
+
+    it("tears down native logout events without service-worker client redirects", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        permissions: ["employees.read"],
+      });
+
+      render(
+        <AuthProvider>
+          <PermissionTestComponent permission="employees.read" />
+        </AuthProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
+      });
+
+      vi.mocked(resetPrefetchCache).mockClear();
+      vi.mocked(syncOfflineSessionAccess).mockClear();
+
+      await act(async () => {
+        window.dispatchEvent(new Event(NATIVE_AUTH_LOGOUT_EVENT_NAME));
+        await new Promise((r) => setTimeout(r, 0));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+      });
+
+      expect(resetPrefetchCache).toHaveBeenCalled();
+      expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false, {
+        redirectOpenClients: false,
+      });
+      expect(syncOfflineSessionAccess).not.toHaveBeenCalledWith(false, {
+        redirectOpenClients: true,
+      });
+    });
+
+    it("updates auth state for native logout even when storage cleanup throws synchronously", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        permissions: ["employees.read"],
+      });
+
+      render(
+        <AuthProvider>
+          <PermissionTestComponent permission="employees.read" />
+        </AuthProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
+      });
+
+      const storageError = new Error("storage unavailable");
+      const clearStorageSpy = vi
+        .spyOn(authStorage, "clear")
+        .mockImplementationOnce(() => {
+          throw storageError;
+        });
+      const consoleWarnSpy = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => undefined);
+
+      try {
+        await act(async () => {
+          window.dispatchEvent(new Event(NATIVE_AUTH_LOGOUT_EVENT_NAME));
+          await new Promise((r) => setTimeout(r, 0));
+        });
+
+        await waitFor(() => {
+          expect(screen.getByTestId("hasPermission")).toHaveTextContent(
+            "false"
+          );
+        });
+
+        expect(clearStorageSpy).toHaveBeenCalled();
+        expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false, {
+          redirectOpenClients: false,
+        });
+      } finally {
+        clearStorageSpy.mockRestore();
+        consoleWarnSpy.mockRestore();
+      }
     });
 
     it("clears the prefetch cache when cross-tab storage removal falls back to logout", async () => {
