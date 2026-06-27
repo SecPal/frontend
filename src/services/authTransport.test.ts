@@ -764,6 +764,38 @@ describe("authTransport", () => {
     }
   });
 
+  it("wraps the global native bridge so direct logout calls dispatch the event", async () => {
+    const nativeBridge: NativeAuthBridge = {
+      login: vi.fn().mockResolvedValue(undefined),
+      logout: vi.fn().mockResolvedValue(undefined),
+      getCurrentUser: vi.fn().mockResolvedValue(undefined),
+    };
+    const handleNativeLogout = vi.fn();
+
+    authTransportGlobal.SecPalNativeAuthBridge = nativeBridge;
+    window.addEventListener(NATIVE_AUTH_LOGOUT_EVENT_NAME, handleNativeLogout);
+
+    try {
+      const transport = getAuthTransport();
+      const resolvedBridge = authTransportGlobal.SecPalNativeAuthBridge as
+        | NativeAuthBridge
+        | undefined;
+
+      expect(transport.kind).toBe("native-bridge");
+      expect(resolvedBridge).not.toBe(nativeBridge);
+
+      await resolvedBridge?.logout();
+
+      expect(nativeBridge.logout).toHaveBeenCalledOnce();
+      expect(handleNativeLogout).toHaveBeenCalledOnce();
+    } finally {
+      window.removeEventListener(
+        NATIVE_AUTH_LOGOUT_EVENT_NAME,
+        handleNativeLogout
+      );
+    }
+  });
+
   it("delegates native bridge logoutAll to the bridge when supported", async () => {
     const nativeBridge: NativeAuthBridge = {
       login: vi.fn().mockResolvedValue(undefined),

@@ -16,6 +16,10 @@ import { isOnline } from "./sessionEvents";
 
 export { AuthApiError } from "./AuthApiError";
 
+const NATIVE_AUTH_BRIDGE_DISPATCHES_LOGOUT_EVENT = Symbol(
+  "nativeAuthBridgeDispatchesLogoutEvent"
+);
+
 async function loadAuthApiModule() {
   return await import("./authApi");
 }
@@ -308,7 +312,9 @@ function createNativeBridgeAuthTransport(
     },
     async logout(): Promise<void> {
       await nativeAuthBridge.logout();
-      dispatchNativeAuthLogoutEvent();
+      if (!bridgeDispatchesLogoutEvent(nativeAuthBridge)) {
+        dispatchNativeAuthLogoutEvent();
+      }
     },
     async logoutAll(): Promise<void> {
       if (typeof nativeAuthBridge.logoutAll !== "function") {
@@ -352,11 +358,71 @@ function isNativeAuthBridge(value: unknown): value is NativeAuthBridge {
   );
 }
 
-function getNativeAuthBridge(): NativeAuthBridge | null {
-  const candidate = (globalThis as { SecPalNativeAuthBridge?: unknown })
-    .SecPalNativeAuthBridge;
+function bridgeDispatchesLogoutEvent(bridge: NativeAuthBridge): boolean {
+  return (
+    (
+      bridge as NativeAuthBridge & {
+        [NATIVE_AUTH_BRIDGE_DISPATCHES_LOGOUT_EVENT]?: boolean;
+      }
+    )[NATIVE_AUTH_BRIDGE_DISPATCHES_LOGOUT_EVENT] === true
+  );
+}
 
-  return isNativeAuthBridge(candidate) ? candidate : null;
+function wrapNativeAuthBridge(
+  nativeAuthBridge: NativeAuthBridge
+): NativeAuthBridge {
+  if (bridgeDispatchesLogoutEvent(nativeAuthBridge)) {
+    return nativeAuthBridge;
+  }
+
+  const wrappedBridge: NativeAuthBridge & {
+    [NATIVE_AUTH_BRIDGE_DISPATCHES_LOGOUT_EVENT]: true;
+  } = {
+    login(credentials) {
+      return nativeAuthBridge.login.call(nativeAuthBridge, credentials);
+    },
+    async logout() {
+      await nativeAuthBridge.logout.call(nativeAuthBridge);
+      dispatchNativeAuthLogoutEvent();
+    },
+    getCurrentUser() {
+      return nativeAuthBridge.getCurrentUser.call(nativeAuthBridge);
+    },
+    [NATIVE_AUTH_BRIDGE_DISPATCHES_LOGOUT_EVENT]: true,
+  };
+
+  if (typeof nativeAuthBridge.loginWithPasskey === "function") {
+    wrappedBridge.loginWithPasskey = () =>
+      nativeAuthBridge.loginWithPasskey!.call(nativeAuthBridge);
+  }
+
+  if (typeof nativeAuthBridge.logoutAll === "function") {
+    wrappedBridge.logoutAll = () =>
+      nativeAuthBridge.logoutAll!.call(nativeAuthBridge);
+  }
+
+  if (typeof nativeAuthBridge.isNetworkAvailable === "function") {
+    wrappedBridge.isNetworkAvailable = () =>
+      nativeAuthBridge.isNetworkAvailable!.call(nativeAuthBridge);
+  }
+
+  return wrappedBridge;
+}
+
+function getNativeAuthBridge(): NativeAuthBridge | null {
+  const bridgeGlobal = globalThis as {
+    SecPalNativeAuthBridge?: unknown;
+  };
+  const candidate = bridgeGlobal.SecPalNativeAuthBridge;
+
+  if (!isNativeAuthBridge(candidate)) {
+    return null;
+  }
+
+  const wrappedBridge = wrapNativeAuthBridge(candidate);
+  bridgeGlobal.SecPalNativeAuthBridge = wrappedBridge;
+
+  return wrappedBridge;
 }
 
 export function resolveAuthTransport(options?: {

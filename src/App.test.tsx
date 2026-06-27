@@ -10,7 +10,6 @@ import App from "./App";
 import { AuthApiError } from "./services/authApi";
 import { sanitizePersistedAuthUser } from "./services/authState";
 import { authStorage } from "./services/storage";
-import { NATIVE_AUTH_LOGOUT_EVENT_NAME } from "./services/nativeAuthEvents";
 import { createRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
 
 const ROUTE_NAVIGATION_TIMEOUT_MS = 20_000;
@@ -1370,7 +1369,7 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
-  it("redirects native-bridge users to login after a native logout event", async () => {
+  it("redirects native-bridge users to login after a direct bridge logout", async () => {
     window.history.replaceState({}, "", "/");
 
     const persistedUser = await seedPersistedAuthUser({
@@ -1412,7 +1411,13 @@ describe("App", () => {
     ).toBeInTheDocument();
 
     await act(async () => {
-      window.dispatchEvent(new Event(NATIVE_AUTH_LOGOUT_EVENT_NAME));
+      await (
+        globalThis as {
+          SecPalNativeAuthBridge?: {
+            logout(): Promise<void>;
+          };
+        }
+      ).SecPalNativeAuthBridge?.logout();
       await Promise.resolve();
       await new Promise((resolve) => globalThis.setTimeout(resolve, 0));
     });
