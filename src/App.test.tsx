@@ -266,6 +266,9 @@ describe("App", () => {
       screen.getByRole("link", { name: "https://github.com/SecPal/contracts" })
     ).toHaveAttribute("href", "https://github.com/SecPal/contracts");
     expect(
+      screen.getByRole("link", { name: "https://github.com/SecPal/android" })
+    ).toHaveAttribute("href", "https://github.com/SecPal/android");
+    expect(
       screen.getByRole("link", { name: /read the agpl v3 license/i })
     ).toHaveAttribute("href", "https://www.gnu.org/licenses/agpl-3.0.html");
     expect(
@@ -310,6 +313,12 @@ describe("App", () => {
     ).toHaveAttribute(
       "href",
       "https://github.com/SecPal/contracts/blob/main/LICENSE"
+    );
+    expect(
+      screen.getByRole("link", { name: /secpal\/android license/i })
+    ).toHaveAttribute(
+      "href",
+      "https://github.com/SecPal/android/blob/main/LICENSE"
     );
   });
 
