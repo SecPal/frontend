@@ -115,7 +115,7 @@ describe("preflight changed-file detection", () => {
 
       const npxLog = readFileSync(npxLogPath, "utf8");
       expect(npxLog).toContain("prettier");
-      expect(npxLog).toContain("markdownlint-cli2");
+      expect(npxLog).toContain("markdownlint-cli@0.49.0");
       expect(preflight.stdout + preflight.stderr).not.toContain(
         "No markdown files changed, skipping markdownlint"
       );
@@ -178,7 +178,7 @@ describe("preflight changed-file detection", () => {
 
       const npxLog = readFileSync(npxLogPath, "utf8");
       expect(npxLog).toContain("prettier");
-      expect(npxLog).toContain("markdownlint-cli2");
+      expect(npxLog).toContain("markdownlint-cli@0.49.0");
       expect(preflight.stdout + preflight.stderr).not.toContain(
         "No markdown files changed, skipping markdownlint"
       );
@@ -253,10 +253,57 @@ describe("preflight changed-file detection", () => {
       expect(preflight.status, preflight.stderr).toBe(0);
 
       const npxLog = readFileSync(npxLogPath, "utf8");
-      expect(npxLog).toContain("markdownlint-cli2");
+      expect(npxLog).toContain("markdownlint-cli@0.49.0");
       expect(preflight.stdout + preflight.stderr).not.toContain(
         "No markdown files changed, skipping markdownlint"
       );
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("keeps generated markdown paths ignored during markdownlint runs", () => {
+    const tempDir = mkdtempSync(path.join(os.tmpdir(), "secpal-preflight-"));
+
+    try {
+      const preflightScriptPath = prepareScript(tempDir);
+      const binDir = installMockBinaries(tempDir);
+      const npxLogPath = path.join(tempDir, "npx.log");
+      const reuseLogPath = path.join(tempDir, "reuse.log");
+
+      run("git", ["init", "-b", "main"], tempDir);
+      run("git", ["config", "user.name", "SecPal Test"], tempDir);
+      run("git", ["config", "user.email", "test@secpal.dev"], tempDir);
+
+      writeFileSync(path.join(tempDir, "README.md"), "# SecPal\n", "utf8");
+      run("git", ["add", "README.md"], tempDir);
+      run("git", ["commit", "-m", "init"], tempDir);
+      run("git", ["checkout", "-b", "topic/preflight-md-ignores"], tempDir);
+
+      writeFileSync(
+        path.join(tempDir, "README.md"),
+        "# SecPal\n\nUpdated content.\n",
+        "utf8"
+      );
+
+      const preflight = spawnSync("bash", [preflightScriptPath], {
+        cwd: tempDir,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PATH: `${binDir}:${process.env.PATH ?? ""}`,
+          NPX_LOG_PATH: npxLogPath,
+          REUSE_LOG_PATH: reuseLogPath,
+        },
+      });
+
+      expect(preflight.error).toBeUndefined();
+      expect(preflight.status, preflight.stderr).toBe(0);
+
+      const npxLog = readFileSync(npxLogPath, "utf8");
+      expect(npxLog).toContain("--ignore coverage");
+      expect(npxLog).toContain("--ignore dist");
+      expect(npxLog).toContain("--ignore .context");
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }

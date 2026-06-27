@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replaced the repo-local `markdownlint-cli2` pre-commit and preflight path with pinned `markdownlint-cli@0.49.0` usage so markdown validation now matches the shared `.github` governance baseline
 - Included `.github/instructions/github-workflows.instructions.md` in the frontend AI-governance baseline so provider-neutral agents and Copilot-derived tooling load the same workflow-policy overlay when reviewing or editing GitHub automation.
 - Updated `docs/development/TDD_WORKFLOW.md` to keep the SPDX copyright year current after the 2026 governance-link refresh.
 - `/login` no longer renders the legacy split brand-panel layout on large viewports; the `login-05` centered card is now the single layout across breakpoints. The `LoginBrandPanel` primitive remains available in `src/pages/Auth/ui/primitives.tsx` for future use but is no longer composed on the login route.

@@ -362,6 +362,14 @@ describe("Build Configuration and Source Verification", () => {
     );
   });
 
+  it("pins markdownlint-cli to the governed repo version", () => {
+    const packageJson = JSON.parse(readRepoFile("package.json")) as {
+      devDependencies?: Record<string, string>;
+    };
+
+    expect(packageJson.devDependencies?.["markdownlint-cli"]).toBe("0.49.0");
+  });
+
   it("keeps PWA shortcuts limited to live routes", () => {
     const viteConfig = readRepoFile("vite.config.ts");
 
