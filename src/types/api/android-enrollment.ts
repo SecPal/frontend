@@ -16,10 +16,7 @@ export const ANDROID_RELEASE_CHANNELS = [
 
 export type AndroidReleaseChannel = (typeof ANDROID_RELEASE_CHANNELS)[number];
 export type AndroidEnrollmentStatus =
-  | "pending"
-  | "exchanged"
-  | "revoked"
-  | "expired";
+  "pending" | "exchanged" | "revoked" | "expired";
 
 export interface AndroidEnrollmentSession {
   id: string;

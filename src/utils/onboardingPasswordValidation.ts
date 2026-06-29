@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export type OnboardingPasswordIssue =
-  | "too_short"
-  | "mixed_case"
-  | "number"
-  | "symbol";
+  "too_short" | "mixed_case" | "number" | "symbol";
 
 /**
  * Client-side checks aligned with backend

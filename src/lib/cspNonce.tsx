@@ -36,8 +36,7 @@ function readCspNonce(): string | undefined {
   }
 
   const carrier = document.querySelector(NONCE_ATTR_SELECTOR) as
-    | (Element & { nonce?: string })
-    | null;
+    (Element & { nonce?: string }) | null;
 
   return normalizeCspNonce(carrier?.nonce || carrier?.getAttribute("nonce"));
 }

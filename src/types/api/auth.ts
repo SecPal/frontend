@@ -130,12 +130,7 @@ export interface MfaRecoveryCodeRevealResponse {
 }
 
 export type PasskeyTransport =
-  | "ble"
-  | "hybrid"
-  | "internal"
-  | "nfc"
-  | "usb"
-  | (string & {});
+  "ble" | "hybrid" | "internal" | "nfc" | "usb" | (string & {});
 
 export interface PasskeyCredentialSummary {
   id: string;

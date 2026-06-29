@@ -269,16 +269,9 @@ function ProfileTab({ employee }: { employee: Employee }) {
 }
 
 type EditableContactField =
-  | "email"
-  | "phone"
-  | "postal_address"
-  | "emergency_contacts";
+  "email" | "phone" | "postal_address" | "emergency_contacts";
 type EmployeeDetailTab =
-  | "profile"
-  | "contacts"
-  | "qualifications"
-  | "documents"
-  | "bwr";
+  "profile" | "contacts" | "qualifications" | "documents" | "bwr";
 
 function formatPostalAddress(employee: Employee): string | null {
   const structured = employee.structured_address?.trim();
@@ -904,8 +897,7 @@ export function EmployeeDetail() {
 
         const emergencyIndex = invalidField?.dataset.emergencyIndex;
         const emergencyField = invalidField?.dataset.emergencyField as
-          | EmergencyContactValidationError["field"]
-          | undefined;
+          EmergencyContactValidationError["field"] | undefined;
         if (emergencyIndex !== undefined && emergencyField) {
           setContactEmergencyInvalidField({
             index: Number(emergencyIndex),

@@ -128,8 +128,7 @@ function createAuthenticationOptions(
       rpId: options.rp_id,
       timeout: options.timeout,
       userVerification: options.user_verification as
-        | UserVerificationRequirement
-        | undefined,
+        UserVerificationRequirement | undefined,
       ...(mappedCredentials !== undefined
         ? { allowCredentials: mappedCredentials }
         : {}),

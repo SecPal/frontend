@@ -10,24 +10,13 @@
  */
 
 export type EmployeeStatus =
-  | "applicant"
-  | "pre_contract"
-  | "active"
-  | "on_leave"
-  | "terminated";
+  "applicant" | "pre_contract" | "active" | "on_leave" | "terminated";
 
 export type EmployeeContractType =
-  | "full_time"
-  | "part_time"
-  | "minijob"
-  | "freelance";
+  "full_time" | "part_time" | "minijob" | "freelance";
 
 export type EmployeeBwrStatus =
-  | "not_registered"
-  | "pending"
-  | "active"
-  | "suspended"
-  | "revoked";
+  "not_registered" | "pending" | "active" | "suspended" | "revoked";
 
 export type EmployeeBwrManagedStatus = Exclude<
   EmployeeBwrStatus,
@@ -74,10 +63,7 @@ export interface EmployeeOrganizationalUnitSummary {
 }
 
 export type EmployeeOnboardingInvitationStatus =
-  | "not_requested"
-  | "sent"
-  | "created_not_sent"
-  | "failed";
+  "not_requested" | "sent" | "created_not_sent" | "failed";
 
 export type EmployeeOnboardingWorkflowStatus =
   | "invited"

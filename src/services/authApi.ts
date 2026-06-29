@@ -21,8 +21,7 @@ interface LoginCredentials {
 }
 
 export type BrowserLoginResponse =
-  | SessionLoginResponse
-  | LoginMfaChallengeResponse;
+  SessionLoginResponse | LoginMfaChallengeResponse;
 
 export { AuthApiError } from "./AuthApiError";
 
