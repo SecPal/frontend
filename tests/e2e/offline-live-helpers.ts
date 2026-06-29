@@ -164,8 +164,7 @@ export async function installMockAuthRoutes(
 
   await context.route("**/v1/auth/login", async (route) => {
     const requestBody = route.request().postDataJSON() as
-      | { email?: string }
-      | undefined;
+      { email?: string } | undefined;
 
     if (requestBody?.email?.startsWith("wrong-user@")) {
       await route.fulfill({

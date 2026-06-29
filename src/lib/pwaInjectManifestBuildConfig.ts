@@ -31,8 +31,7 @@ export function applyInjectManifestCodeSplittingFix(
   inlineConfig: InlineConfig
 ): void {
   const rollupOptions = inlineConfig.build?.rollupOptions as
-    | ServiceWorkerRollupOptions
-    | undefined;
+    ServiceWorkerRollupOptions | undefined;
 
   if (!rollupOptions?.output) {
     return;

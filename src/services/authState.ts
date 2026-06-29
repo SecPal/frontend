@@ -166,8 +166,7 @@ export function sanitizeAuthUser(
     sanitizeOnboardingWorkflowStatus(
       (
         candidate.employee as
-          | { onboarding_workflow?: { status?: unknown } }
-          | undefined
+          { onboarding_workflow?: { status?: unknown } } | undefined
       )?.onboarding_workflow?.status
     );
   if (onboardingWorkflowStatus !== undefined) {

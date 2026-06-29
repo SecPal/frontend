@@ -12,8 +12,8 @@ const mockUpdateSW = vi.fn();
 let mockOnNeedRefresh: ((needRefresh: boolean) => void) | null = null;
 let mockOnOfflineReady: ((offlineReady: boolean) => void) | null = null;
 let capturedOnRegisteredSW:
-  | ((swUrl: string, registration?: ServiceWorkerRegistration) => void)
-  | null = null;
+  ((swUrl: string, registration?: ServiceWorkerRegistration) => void) | null =
+  null;
 let capturedOnRegisterError: ((error: unknown) => void) | null = null;
 
 vi.mock("virtual:pwa-register/react", () => ({

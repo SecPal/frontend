@@ -84,8 +84,7 @@ test.describe("Authentication", () => {
       await context.unroute("**/v1/auth/login");
       await context.route("**/v1/auth/login", async (route) => {
         const requestBody = route.request().postDataJSON() as
-          | { email?: string }
-          | undefined;
+          { email?: string } | undefined;
 
         if (requestBody?.email === "lockout-user@secpal.dev") {
           await route.fulfill({

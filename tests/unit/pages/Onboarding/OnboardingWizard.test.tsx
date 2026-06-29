@@ -1670,8 +1670,7 @@ describe("OnboardingWizard", () => {
   it("disables step navigation and draft actions while an upload is in flight", async () => {
     mockUploadStepContext({ includeSecondStep: true, hasSubmission: true });
     let resolveUpload:
-      | ((value: { id: string; filename: string }) => void)
-      | null = null;
+      ((value: { id: string; filename: string }) => void) | null = null;
 
     vi.mocked(onboardingApi.uploadOnboardingFile).mockImplementationOnce(
       () =>

@@ -96,8 +96,7 @@ interface AuthVaultStateEnvelopeV2 {
 }
 
 type AuthVaultStateEnvelope =
-  | AuthVaultStateEnvelopeV1
-  | AuthVaultStateEnvelopeV2;
+  AuthVaultStateEnvelopeV1 | AuthVaultStateEnvelopeV2;
 
 interface VaultSession {
   rootKeyBytes: Uint8Array;

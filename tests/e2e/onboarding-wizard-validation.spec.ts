@@ -162,8 +162,7 @@ async function installWizardValidationRoutes(
     }
 
     const requestBody = route.request().postDataJSON() as
-      | { status?: string }
-      | undefined;
+      { status?: string } | undefined;
     const submissionId = route.request().url().split("/").at(-1);
 
     if (

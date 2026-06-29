@@ -67,15 +67,7 @@ import {
 type SensitiveMfaAction = "disable" | "regenerate";
 
 type SettingsDialogSize =
-  | "xs"
-  | "sm"
-  | "md"
-  | "lg"
-  | "xl"
-  | "2xl"
-  | "3xl"
-  | "4xl"
-  | "5xl";
+  "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
 
 function getStatusLabel(status: MfaStatus | null): ReactNode {
   if (!status?.enabled) {

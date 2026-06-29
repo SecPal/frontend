@@ -32,10 +32,7 @@ export interface AuthResolutionState {
 }
 
 export type AuthResolution =
-  | "authenticated"
-  | "login"
-  | "recovery"
-  | "unresolved";
+  "authenticated" | "login" | "recovery" | "unresolved";
 
 const DEFAULT_LOCAL_TEST_USER: TestUserCredentials = {
   email: "test@example.com",

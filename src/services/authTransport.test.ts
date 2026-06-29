@@ -930,8 +930,7 @@ describe("authTransport", () => {
     try {
       const transport = getAuthTransport();
       const resolvedBridge = authTransportGlobal.SecPalNativeAuthBridge as
-        | NativeAuthBridge
-        | undefined;
+        NativeAuthBridge | undefined;
 
       expect(transport.kind).toBe("native-bridge");
       expect(resolvedBridge).toBe(nativeBridge);

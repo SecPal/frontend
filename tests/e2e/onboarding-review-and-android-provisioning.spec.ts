@@ -111,8 +111,7 @@ async function installAndroidProvisioningRoutes(
     }
 
     const payload = route.request().postDataJSON() as
-      | { device_label?: string; update_channel?: string }
-      | undefined;
+      { device_label?: string; update_channel?: string } | undefined;
     const createdSession = {
       id: "session-2",
       device_label: payload?.device_label ?? "Reception kiosk",

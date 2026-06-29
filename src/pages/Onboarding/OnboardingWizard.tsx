@@ -3173,9 +3173,7 @@ export function OnboardingWizard() {
 
   async function handleUpload(
     targetUploadContext:
-      | "identity_document"
-      | "residence_permit"
-      | null = uploadContext
+      "identity_document" | "residence_permit" | null = uploadContext
   ): Promise<boolean> {
     if (uploadFiles.length === 0) {
       return true;

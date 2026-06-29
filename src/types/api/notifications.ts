@@ -46,9 +46,7 @@ export interface BrowserPushBootstrapResponse {
 }
 
 export type NotificationInstallationLifecycleEvent =
-  | "registered"
-  | "credential_rotated"
-  | "client_updated";
+  "registered" | "credential_rotated" | "client_updated";
 
 export interface BrowserNotificationInstallationRequest {
   channel: "web_push";
