@@ -16,11 +16,13 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
+  FormSkeleton,
   Input,
   OnboardingAuthCard,
   OnboardingAuthHeader,
   OnboardingAuthShell,
-} from "./ui";
+  Skeleton,
+} from "@/ui";
 import {
   getErrorRetryAfterSeconds,
   getErrorValidationErrors,
@@ -28,7 +30,6 @@ import {
 } from "../../lib/errorUtils";
 import { Logo } from "../../components/Logo";
 import { LanguageSwitcher } from "../../components/LanguageSwitcher";
-import { FormSkeleton, Skeleton } from "@/ui";
 import { useAuth } from "../../hooks/useAuth";
 import {
   completeOnboarding,

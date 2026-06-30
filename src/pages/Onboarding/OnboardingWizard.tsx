@@ -46,7 +46,6 @@ import {
   getOnboardingStepState,
   isOnboardingAwaitingHrReview,
 } from "./onboardingWizardState";
-import { FormSkeleton, Skeleton } from "@/ui";
 import {
   OnboardingResidentialAddressHistoryFields,
   type ResidentialAddressHistoryChange,
@@ -66,20 +65,22 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  Checkbox as UiCheckbox,
-  CommandPopover,
   Field as UiField,
   FieldDescription as UiFieldDescription,
   FieldError as UiFieldError,
   FieldGroup as UiFieldGroup,
   FieldLabel as UiFieldLabel,
+  FormSkeleton,
   Input as UiInput,
-  Progress,
-  RadioGroup as UiRadioGroup,
-  RadioGroupItem as UiRadioGroupItem,
-  Select as UiSelect,
+  OnboardingCheckbox as UiCheckbox,
+  OnboardingCommandPopover as CommandPopover,
+  OnboardingProgress as Progress,
+  OnboardingRadioGroup as UiRadioGroup,
+  OnboardingRadioGroupItem as UiRadioGroupItem,
+  OnboardingSelect as UiSelect,
+  Skeleton,
   Textarea as UiTextarea,
-} from "./ui";
+} from "@/ui";
 
 interface OnboardingSchemaArrayItems {
   enum?: Array<string | number>;

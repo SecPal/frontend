@@ -113,14 +113,8 @@ const remainingNonCanonicalUiLayerAllowlist = [
   "src/components/table.tsx",
   "src/components/text.tsx",
   "src/components/textarea.tsx",
-  "src/pages/Auth/ui/index.ts",
-  "src/pages/Auth/ui/primitives.tsx",
-  "src/pages/Auth/ui/utils.ts",
   "src/pages/CustomerSites/ui.tsx",
   "src/pages/Employees/ui.tsx",
-  "src/pages/Onboarding/ui/index.ts",
-  "src/pages/Onboarding/ui/primitives.tsx",
-  "src/pages/Onboarding/ui/utils.ts",
   "src/ui/appShell.tsx",
 ] as const;
 

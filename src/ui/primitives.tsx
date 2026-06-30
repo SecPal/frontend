@@ -488,6 +488,7 @@ export function SearchableCommandPopover({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const closeFocusTargetRef = useRef<"trigger" | "next" | null>(null);
   const [open, setOpen] = useState(false);
 
   const selectedOption = options.find((option) => option.value === value);
@@ -505,8 +506,8 @@ export function SearchableCommandPopover({
     }
 
     onValueChange(option.value);
+    closeFocusTargetRef.current = "trigger";
     setOpen(false);
-    window.requestAnimationFrame(() => triggerRef.current?.focus());
   }
 
   function handleTriggerKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
@@ -573,6 +574,24 @@ export function SearchableCommandPopover({
               event.preventDefault();
               inputRef.current?.focus();
             }}
+            onCloseAutoFocus={(event) => {
+              const closeFocusTarget = closeFocusTargetRef.current;
+
+              if (!closeFocusTarget) {
+                return;
+              }
+
+              event.preventDefault();
+              closeFocusTargetRef.current = null;
+              window.requestAnimationFrame(() => {
+                if (closeFocusTarget === "next") {
+                  focusNextElementAfterTrigger();
+                  return;
+                }
+
+                triggerRef.current?.focus();
+              });
+            }}
           >
             <Command
               label={searchPlaceholder}
@@ -582,6 +601,7 @@ export function SearchableCommandPopover({
               onKeyDown={(event) => {
                 if (event.key === "Escape") {
                   event.preventDefault();
+                  closeFocusTargetRef.current = "trigger";
                   setOpen(false);
                 }
               }}
@@ -594,14 +614,10 @@ export function SearchableCommandPopover({
                 onKeyDown={(event) => {
                   if (event.key === "Tab") {
                     event.preventDefault();
+                    closeFocusTargetRef.current = event.shiftKey
+                      ? "trigger"
+                      : "next";
                     setOpen(false);
-                    if (event.shiftKey) {
-                      triggerRef.current?.focus();
-                    } else {
-                      window.requestAnimationFrame(
-                        focusNextElementAfterTrigger
-                      );
-                    }
                   }
                 }}
               />

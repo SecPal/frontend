@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it } from "vitest";
-import { cn as authCn } from "@/pages/Auth/ui";
-import { cn as onboardingCn } from "@/pages/Onboarding/ui";
+import { cn as authCn, cn as onboardingCn } from "@/ui";
 import { cn } from "./utils";
 
 describe("shadcn utility helpers", () => {

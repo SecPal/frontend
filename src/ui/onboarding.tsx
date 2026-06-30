@@ -45,10 +45,10 @@ import {
   SearchableCommandPopover,
   Textarea as AppTextarea,
   type CommandOption,
-  uiControlBase,
-} from "@/ui";
+} from "./primitives";
 import { getCspNonce } from "@/lib/cspNonce";
-import { cn } from "./utils";
+import { cn } from "@/lib/utils";
+import { uiControlBase } from "./styles";
 
 export const Button = AppButton;
 

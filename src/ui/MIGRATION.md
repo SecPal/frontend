@@ -21,13 +21,13 @@ Migration rules:
 - Prefer `src/ui` for new shared primitive work: `Button`, `Input`, `Textarea`,
   `Select*`, `Command*`, `Checkbox`, `RadioGroup*`, `Dialog*`, `Alert*`,
   `Card*`, `Badge`, `Progress`, and `Field*`.
-- Keep route-local barrels such as `src/pages/Auth/ui` and
-  `src/pages/Onboarding/ui` as the public compatibility surface while a route
-  still needs prefixed slots, route-specific helpers, or legacy-compatible
-  event shapes.
+- Keep route-specific composition helpers in `src/ui` behind explicit names
+  such as `Login*` and `Onboarding*` when a migrated route still needs prefixed
+  slots, route-specific helpers, or legacy-compatible event shapes.
 - Do not import old shared UI wrappers from `src/components/*` in migrated
-  code. The migration boundary tests cover migrated route scopes and the shared
-  UI layer.
+  code, and do not reintroduce route-local primitive barrels for auth or
+  onboarding. The migration boundary tests cover migrated route scopes and the
+  shared UI layer.
 - Primitives must not provide English user-facing fallback copy for labels,
   placeholders, loading labels, empty states, or error messages. Pass localized
   route-owned copy at the call site.
@@ -44,8 +44,8 @@ Current exceptions:
   `checkbox`, `description-list`, `dialog`, `divider`, `fieldset`, `heading`,
   `input`, `link`, `pagination`, `radio`, `spinner`, `switch`, `table`,
   `text`, and `textarea`.
-- Route-scoped UI barrels in `src/pages/Auth/ui`, `src/pages/Onboarding/ui`,
-  `src/pages/CustomerSites/ui.tsx`, and `src/pages/Employees/ui.tsx`.
+- Route-scoped UI barrels in `src/pages/CustomerSites/ui.tsx` and
+  `src/pages/Employees/ui.tsx`.
 - Shared-but-not-primitive modules such as `src/ui/appShell.tsx`.
 
 ## Loading Contract

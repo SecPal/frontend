@@ -20,7 +20,7 @@ import {
   LoginFieldLabel,
   LoginForm,
   LoginOtpInput,
-} from "./Auth/ui";
+} from "@/ui";
 
 const TOTP_CODE_LENGTH = 6;
 const RECOVERY_CODE_LENGTH = 8;

@@ -38,7 +38,7 @@ import {
   LoginShell,
   LoginSpinner,
   LoginStatusMessage,
-} from "./Auth/ui";
+} from "@/ui";
 
 const HEALTH_CHECK_RETRY_DELAYS_MS = [0, 1500, 5000];
 const TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE =

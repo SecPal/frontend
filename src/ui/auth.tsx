@@ -36,9 +36,9 @@ import {
   SelectTrigger as AppSelectTrigger,
   SelectValue as AppSelectValue,
   Spinner as AppSpinner,
-  type ButtonVariant,
-} from "@/ui";
-import { cn } from "./utils";
+} from "./primitives";
+import { cn } from "@/lib/utils";
+import type { ButtonVariant } from "./styles";
 
 export type LoginButtonVariant = NonNullable<
   Exclude<ButtonVariant, "destructive">

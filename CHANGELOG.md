@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Moved the auth and onboarding route-local primitive layers into the canonical
+  shared `@/ui` surface, updated login, MFA, onboarding wizard, completion, and
+  submitted screens to import shared primitives directly, and deleted
+  `src/pages/Auth/ui` plus `src/pages/Onboarding/ui` from the remaining
+  compatibility inventory while preserving command-popover Tab focus handoff
+  through the shared primitive (US-005).
 - Replaced the shared searchable/selectable control compatibility layer with
   canonical shadcn `Command*` primitives backed by `cmdk`, migrated the
   onboarding and employee command-popover adapters onto that pattern, and

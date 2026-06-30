@@ -11,12 +11,12 @@ import {
   FieldDescription,
   FieldError,
   FieldLabel,
-  FormSection,
   Input,
-  Checkbox,
-  RadioGroup,
-  RadioGroupItem,
-} from "./ui";
+  OnboardingCheckbox as Checkbox,
+  OnboardingFormSection as FormSection,
+  OnboardingRadioGroup as RadioGroup,
+  OnboardingRadioGroupItem as RadioGroupItem,
+} from "@/ui";
 import type { PostalAddressDraft } from "../../lib/employeeAddresses";
 import { EmployeeAddressFields } from "../Employees/EmployeeAddressFields";
 import {
