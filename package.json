@@ -136,7 +136,7 @@
     "rollup-plugin-visualizer": "^7.0.1",
     "tailwindcss": "^4.3.2",
     "typescript": "6.0.x",
-    "typescript-eslint": "^8.62.0",
+    "typescript-eslint": "^8.62.1",
     "vite": "^8.1.0",
     "vite-plugin-pwa": "^1.3.0",
     "vite-plugin-static-copy": "^4.1.1",
