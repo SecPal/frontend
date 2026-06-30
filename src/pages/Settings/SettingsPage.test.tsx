@@ -855,7 +855,7 @@ describe("SettingsPage", () => {
 
     const select = screen.getByRole("combobox", { name: /select language/i });
     expect(select).toHaveTextContent("English");
-    expect(select).toHaveAttribute("data-slot", "ui-select-trigger");
+    expect(select).toHaveAttribute("data-slot", "select-trigger");
   });
 
   it("changes language when selection changes", async () => {

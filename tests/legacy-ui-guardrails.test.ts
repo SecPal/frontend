@@ -286,7 +286,7 @@ describe("legacy UI guardrails", () => {
         config: "",
         css: "src/index.css",
         baseColor: "zinc",
-        cssVariables: false,
+        cssVariables: true,
       },
       aliases: {
         components: "@/components",

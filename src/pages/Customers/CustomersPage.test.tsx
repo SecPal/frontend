@@ -124,7 +124,7 @@ describe("CustomersPage", () => {
       screen.getByRole("status", { name: /loading customers table/i })
     ).toBeInTheDocument();
     expect(
-      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+      container.querySelectorAll('[data-slot="skeleton"]').length
     ).toBeGreaterThan(0);
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });

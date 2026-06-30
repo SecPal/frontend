@@ -383,7 +383,7 @@ describe("EmployeeCreate", () => {
       screen.getByRole("status", { name: /loading unit options/i })
     ).toBeInTheDocument();
     expect(
-      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+      container.querySelectorAll('[data-slot="skeleton"]').length
     ).toBeGreaterThan(0);
   });
 

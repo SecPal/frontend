@@ -106,7 +106,7 @@ describe("EmployeeContactsEdit", () => {
       screen.getByRole("status", { name: /loading employee contact form/i })
     ).toBeInTheDocument();
     expect(
-      document.querySelectorAll('[data-slot="ui-skeleton"]').length
+      document.querySelectorAll('[data-slot="skeleton"]').length
     ).toBeGreaterThan(0);
   });
 

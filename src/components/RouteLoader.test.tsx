@@ -64,7 +64,7 @@ describe("RouteLoader", () => {
 
     expect(container.querySelector(".animate-spin")).not.toBeInTheDocument();
     expect(
-      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+      container.querySelectorAll('[data-slot="skeleton"]').length
     ).toBeGreaterThan(0);
   });
 });

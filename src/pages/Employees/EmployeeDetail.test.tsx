@@ -197,8 +197,8 @@ describe("EmployeeDetail", () => {
       ).toBeInTheDocument();
     });
 
-    const detailCard = document.querySelector('[data-slot="ui-card"]');
-    expect(detailCard).toHaveClass("bg-white", "dark:bg-zinc-950");
+    const detailCard = document.querySelector('[data-slot="card"]');
+    expect(detailCard).toHaveClass("bg-card", "text-card-foreground");
 
     const statusBadge = document.querySelector(
       '[data-slot="employee-status-badge"]'
@@ -211,11 +211,11 @@ describe("EmployeeDetail", () => {
     const dialogContent = await screen.findByRole("dialog", {
       name: /edit email/i,
     });
-    expect(dialogContent).toHaveAttribute("data-slot", "ui-dialog-content");
-    expect(dialogContent).toHaveClass("bg-white", "dark:bg-zinc-950");
+    expect(dialogContent).toHaveAttribute("data-slot", "dialog-content");
+    expect(dialogContent).toHaveClass("bg-background", "text-foreground");
     expect(screen.getByLabelText(/^email$/i)).toHaveAttribute(
       "data-slot",
-      "ui-input"
+      "input"
     );
   });
 

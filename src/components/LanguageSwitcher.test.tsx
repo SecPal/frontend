@@ -70,7 +70,7 @@ describe("LanguageSwitcher", () => {
     const select = screen.getByRole("combobox", { name: /select language/i });
     expect(select).toBeInTheDocument();
     expect(select).toHaveTextContent("English");
-    expect(select).toHaveAttribute("data-slot", "ui-select-trigger");
+    expect(select).toHaveAttribute("data-slot", "select-trigger");
   });
 
   it("changes locale when selection changes", async () => {

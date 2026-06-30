@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Migrated the shared `src/ui` core primitives to canonical shadcn slot names,
+  CSS-variable theme tokens, and Radix-backed avatar structure. Buttons,
+  inputs, textareas, fields, selects, checkboxes, switches, radios, dialogs,
+  alerts, cards, badges, progress, avatars, tables, skeletons, and loading
+  states now share the shadcn token layer from `src/index.css`, and affected
+  primitive tests assert the canonical structure directly (US-002).
 - Replaced the repo-local `markdownlint-cli2` pre-commit and preflight path with pinned `markdownlint-cli@0.49.0` usage so markdown validation now matches the shared `.github` governance baseline
 - Included `.github/instructions/github-workflows.instructions.md` in the frontend AI-governance baseline so provider-neutral agents and Copilot-derived tooling load the same workflow-policy overlay when reviewing or editing GitHub automation.
 - Updated `docs/development/TDD_WORKFLOW.md` to keep the SPDX copyright year current after the 2026 governance-link refresh.

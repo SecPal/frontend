@@ -125,7 +125,7 @@ describe("AndroidProvisioningPage", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("combobox", { name: /update channel/i })
-    ).toHaveAttribute("data-slot", "ui-select-trigger");
+    ).toHaveAttribute("data-slot", "select-trigger");
     expect(apiFetch).toHaveBeenCalledWith(
       `${apiConfig.baseUrl}/v1/android-enrollment-sessions?per_page=15`,
       expect.objectContaining({ headers: expect.any(Headers) })

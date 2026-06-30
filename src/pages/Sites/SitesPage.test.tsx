@@ -191,7 +191,7 @@ describe("SitesPage", () => {
     ).toBeInTheDocument();
     expect(container.querySelectorAll("tbody tr td")).toHaveLength(40);
     expect(
-      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+      container.querySelectorAll('[data-slot="skeleton"]').length
     ).toBeGreaterThan(0);
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });

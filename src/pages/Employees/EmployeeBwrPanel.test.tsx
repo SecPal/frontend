@@ -271,8 +271,9 @@ describe("EmployeeBwrPanel", () => {
     expect(
       document.querySelector('[data-slot="employee-status-badge"]')
     ).toHaveClass("dark:text-zinc-400");
-    expect(document.querySelector('[data-slot="ui-card"]')).toHaveClass(
-      "dark:bg-zinc-950"
+    expect(document.querySelector('[data-slot="card"]')).toHaveClass(
+      "bg-card",
+      "text-card-foreground"
     );
 
     i18n.activate("en");

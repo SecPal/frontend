@@ -215,12 +215,12 @@ describe("EmployeeList", () => {
       expect(screen.getByText("John Doe")).toBeInTheDocument();
     });
 
-    const filterCard = document.querySelector('[data-slot="ui-card"]');
-    expect(filterCard).toHaveClass("bg-white", "dark:bg-zinc-950");
+    const filterCard = document.querySelector('[data-slot="card"]');
+    expect(filterCard).toHaveClass("bg-card", "text-card-foreground");
 
     const statusTrigger = screen.getByRole("combobox", { name: /^status$/i });
-    expect(statusTrigger).toHaveAttribute("data-slot", "ui-select-trigger");
-    expect(statusTrigger).toHaveClass("dark:bg-zinc-950");
+    expect(statusTrigger).toHaveAttribute("data-slot", "select-trigger");
+    expect(statusTrigger).toHaveClass("bg-background", "border-input");
 
     expect(
       document.querySelector('[data-slot="employee-table-shell"]')
@@ -340,7 +340,7 @@ describe("EmployeeList", () => {
       screen.getByRole("status", { name: /loading employees table/i })
     ).toBeInTheDocument();
     expect(
-      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+      container.querySelectorAll('[data-slot="skeleton"]').length
     ).toBeGreaterThan(0);
     expect(
       screen.queryByText(/^Loading employees\.\.\.$/i)
