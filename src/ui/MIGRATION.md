@@ -3,11 +3,17 @@ SPDX-FileCopyrightText: 2026 SecPal
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-# Shared shadcn/Radix UI Basis
+# Canonical shadcn/Radix/Lucide Layer
 
-`src/ui` is the shared app UI layer for migrated surfaces. It owns the common
-zinc/blue SecPal tokens, rounded `md` controls, focus rings, dark-mode classes,
-Radix-backed interactive primitives, and the canonical `cn` export from
+`src/ui` is the canonical app UI layer for migrated surfaces. It owns the
+common zinc/blue SecPal tokens, rounded `md` controls, focus rings, dark-mode
+classes, Radix-backed interactive primitives, Lucide icon composition, and the
+canonical `cn` export from `@/lib/utils`.
+
+The shadcn project metadata lives in `components.json`. It pins the `new-york`
+style, TypeScript React output, Tailwind v4 CSS entry at `src/index.css`, the
+`zinc` base color, Lucide icons, and aliases that route generated or manually
+ported primitives to `@/ui`, `@/components`, `@/lib`, `@/hooks`, and
 `@/lib/utils`.
 
 Migration rules:
@@ -19,12 +25,29 @@ Migration rules:
   `src/pages/Onboarding/ui` as the public compatibility surface while a route
   still needs prefixed slots, route-specific helpers, or legacy-compatible
   event shapes.
-- Do not import old shared UI wrappers from `src/components/*` in migrated Auth
-  or Onboarding code. The migration boundary test covers this route scope and
-  the shared UI layer.
+- Do not import old shared UI wrappers from `src/components/*` in migrated
+  code. The migration boundary tests cover migrated route scopes and the shared
+  UI layer.
 - Primitives must not provide English user-facing fallback copy for labels,
   placeholders, loading labels, empty states, or error messages. Pass localized
   route-owned copy at the call site.
+
+## Temporary Compatibility Exceptions
+
+The only remaining non-canonical UI layers are inventoried by
+`tests/legacy-ui-guardrails.test.ts`. Later migration stories must remove items
+from that explicit allowlist when they move a surface onto `src/ui`.
+
+Current exceptions:
+
+- Old generic `src/components/*` UI wrappers for `alert`, `badge`, `button`,
+  `checkbox`, `combobox`, `description-list`, `dialog`, `divider`, `fieldset`,
+  `heading`, `input`, `link`, `listbox`, `pagination`, `radio`, `select`,
+  `spinner`, `switch`, `table`, `text`, and `textarea`.
+- Route-scoped UI barrels in `src/pages/Auth/ui`, `src/pages/Onboarding/ui`,
+  `src/pages/CustomerSites/ui.tsx`, and `src/pages/Employees/ui.tsx`.
+- Shared-but-not-primitive modules `src/ui/appShell.tsx` and
+  `src/ui/searchableControls.tsx`.
 
 ## Loading Contract
 

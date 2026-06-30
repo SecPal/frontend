@@ -22,6 +22,27 @@ interface SourceFile {
   path: string;
 }
 
+interface ShadcnComponentsConfig {
+  $schema: string;
+  style: string;
+  rsc: boolean;
+  tsx: boolean;
+  tailwind: {
+    config: string;
+    css: string;
+    baseColor: string;
+    cssVariables: boolean;
+  };
+  aliases: {
+    components: string;
+    ui: string;
+    lib: string;
+    hooks: string;
+    utils: string;
+  };
+  iconLibrary: string;
+}
+
 const projectRoot = cwd();
 
 const forbiddenHeadlessPackage = ["@headlessui", "react"].join("/");
@@ -73,6 +94,40 @@ const oldComponentWrapperPaths = new Set([
   "src/components/textarea",
 ]);
 
+const remainingNonCanonicalUiLayerAllowlist = [
+  "src/components/alert.tsx",
+  "src/components/badge.tsx",
+  "src/components/button.tsx",
+  "src/components/checkbox.tsx",
+  "src/components/combobox.tsx",
+  "src/components/description-list.tsx",
+  "src/components/dialog.tsx",
+  "src/components/divider.tsx",
+  "src/components/fieldset.tsx",
+  "src/components/heading.tsx",
+  "src/components/input.tsx",
+  "src/components/link.tsx",
+  "src/components/listbox.tsx",
+  "src/components/pagination.tsx",
+  "src/components/radio.tsx",
+  "src/components/select.tsx",
+  "src/components/spinner.tsx",
+  "src/components/switch.tsx",
+  "src/components/table.tsx",
+  "src/components/text.tsx",
+  "src/components/textarea.tsx",
+  "src/pages/Auth/ui/index.ts",
+  "src/pages/Auth/ui/primitives.tsx",
+  "src/pages/Auth/ui/utils.ts",
+  "src/pages/CustomerSites/ui.tsx",
+  "src/pages/Employees/ui.tsx",
+  "src/pages/Onboarding/ui/index.ts",
+  "src/pages/Onboarding/ui/primitives.tsx",
+  "src/pages/Onboarding/ui/utils.ts",
+  "src/ui/appShell.tsx",
+  "src/ui/searchableControls.tsx",
+] as const;
+
 function toProjectPath(filePath: string) {
   return path.relative(projectRoot, filePath).replaceAll(path.sep, "/");
 }
@@ -106,6 +161,34 @@ function readProductionSources(): SourceFile[] {
       path: toProjectPath(filePath),
     }))
   );
+}
+
+function listProductionSourceFiles(entryPath: string) {
+  return listFiles(entryPath).map(toProjectPath);
+}
+
+function collectRemainingNonCanonicalUiLayers() {
+  const legacyComponentWrapperFiles = listProductionSourceFiles(
+    "src/components"
+  ).filter((filePath) =>
+    oldComponentWrapperPaths.has(filePath.replace(/\.(?:ts|tsx)$/, ""))
+  );
+
+  const pageUiLayerFiles = listProductionSourceFiles("src/pages").filter(
+    (filePath) =>
+      /^src\/pages\/[^/]+\/ui(?:\.[tj]sx?|\/.+\.[tj]sx?)$/.test(filePath)
+  );
+
+  const canonicalLayerExceptions = [
+    "src/ui/appShell.tsx",
+    "src/ui/searchableControls.tsx",
+  ].filter((filePath) => existsSync(path.resolve(projectRoot, filePath)));
+
+  return [
+    ...legacyComponentWrapperFiles,
+    ...pageUiLayerFiles,
+    ...canonicalLayerExceptions,
+  ].sort();
 }
 
 function collectSourceMarkerViolations(sources: SourceFile[]) {
@@ -187,6 +270,35 @@ function readJsonFile<T>(filePath: string): T {
 }
 
 describe("legacy UI guardrails", () => {
+  it("inventories the remaining non-canonical UI compatibility layers", () => {
+    expect(collectRemainingNonCanonicalUiLayers()).toEqual([
+      ...remainingNonCanonicalUiLayerAllowlist,
+    ]);
+  });
+
+  it("keeps shadcn project metadata aligned with the canonical UI layer", () => {
+    expect(readJsonFile<ShadcnComponentsConfig>("components.json")).toEqual({
+      $schema: "https://ui.shadcn.com/schema.json",
+      style: "new-york",
+      rsc: false,
+      tsx: true,
+      tailwind: {
+        config: "",
+        css: "src/index.css",
+        baseColor: "zinc",
+        cssVariables: false,
+      },
+      aliases: {
+        components: "@/components",
+        ui: "@/ui",
+        lib: "@/lib",
+        hooks: "@/hooks",
+        utils: "@/lib/utils",
+      },
+      iconLibrary: "lucide",
+    });
+  });
+
   it("keeps production source and project metadata free of legacy UI markers", () => {
     expect(collectSourceMarkerViolations(readProductionSources())).toEqual([]);
     expect(
