@@ -5,7 +5,7 @@
 
 import { Menu } from "lucide-react";
 import React, { useState } from "react";
-import { NavbarItem } from "@/ui";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/ui";
 import { Footer } from "./Footer";
 import { MobileSidebarDialog } from "./mobile-sidebar-dialog";
 
@@ -20,8 +20,10 @@ export function SidebarLayout({
   const [showSidebar, setShowSidebar] = useState(false);
 
   return (
-    <div
-      data-slot="app-sidebar-layout"
+    <SidebarProvider
+      open={showSidebar}
+      onOpenChange={setShowSidebar}
+      data-layout="sidebar"
       className="relative isolate flex min-h-[var(--app-shell-min-height)] w-full bg-white max-lg:flex-col lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950"
     >
       <div className="fixed inset-y-0 left-0 w-64 max-lg:hidden">{sidebar}</div>
@@ -35,17 +37,17 @@ export function SidebarLayout({
 
       <header className="flex items-center px-4 pt-[var(--app-safe-area-inset-top)] lg:hidden">
         <div className="py-2.5">
-          <NavbarItem
+          <SidebarTrigger
             onClick={() => setShowSidebar(true)}
             aria-label="Open navigation"
           >
             <Menu data-slot="icon" aria-hidden="true" />
-          </NavbarItem>
+          </SidebarTrigger>
         </div>
         <div className="min-w-0 flex-1">{navbar}</div>
       </header>
 
-      <main className="flex flex-1 flex-col lg:min-w-0 lg:pl-64">
+      <SidebarInset className="flex flex-1 flex-col lg:min-w-0 lg:pl-64">
         <div className="flex flex-1 flex-col bg-white dark:bg-zinc-900">
           <div className="grow p-6 lg:p-10">
             <div className="mx-auto max-w-6xl">{children}</div>
@@ -55,7 +57,7 @@ export function SidebarLayout({
 
           <Footer />
         </div>
-      </main>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

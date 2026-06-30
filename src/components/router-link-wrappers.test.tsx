@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
- * App-shell wrappers (`NavbarItem`, `SidebarItem`, `DropdownItem`) translate a
+ * App-shell wrappers (`NavbarItem`, `SidebarMenuButton`, `DropdownMenuItem`) translate a
  * custom `href` prop into router navigation by
  * passing `to` to `react-router-dom`'s `<Link>`. Their wrapper API must not
  * also forward `href` as a separate prop into the underlying router `<Link>`:
@@ -81,24 +81,24 @@ describe("App-shell router-link wrappers do not leak `href` into Link", () => {
     expect(capture).not.toHaveProperty("href");
   });
 
-  it("SidebarItem passes `to` and not `href` to react-router-dom Link", async () => {
-    const { SidebarItem } = await import("@/ui");
+  it("SidebarMenuButton passes `to` and not `href` to react-router-dom Link", async () => {
+    const { SidebarMenuButton } = await import("@/ui");
 
-    render(<SidebarItem href="/customers">Customers</SidebarItem>);
+    render(<SidebarMenuButton href="/customers">Customers</SidebarMenuButton>);
 
     const capture = findCapture("/customers");
     expect(capture).not.toHaveProperty("href");
   });
 
-  it("DropdownItem passes `to` and not `href` to react-router-dom Link", async () => {
-    const { DropdownItem } = await import("@/ui");
+  it("DropdownMenuItem passes `to` and not `href` to react-router-dom Link", async () => {
+    const { DropdownMenuItem } = await import("@/ui");
 
     render(
       <DropdownMenuPrimitive.Root open>
         <DropdownMenuPrimitive.Trigger>Open</DropdownMenuPrimitive.Trigger>
         <DropdownMenuPrimitive.Portal>
           <DropdownMenuPrimitive.Content>
-            <DropdownItem href="/settings">Settings</DropdownItem>
+            <DropdownMenuItem href="/settings">Settings</DropdownMenuItem>
           </DropdownMenuPrimitive.Content>
         </DropdownMenuPrimitive.Portal>
       </DropdownMenuPrimitive.Root>

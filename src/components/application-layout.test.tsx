@@ -252,7 +252,7 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      const shell = container.querySelector('[data-slot="app-stacked-layout"]');
+      const shell = container.querySelector('[data-slot="sidebar-wrapper"]');
       const contentSurface = screen.getByRole("main").firstElementChild;
 
       expect(shell).toHaveClass(
@@ -302,7 +302,10 @@ describe("ApplicationLayout", () => {
       const dialog = await screen.findByRole("dialog", {
         name: /navigation/i,
       });
-      expect(dialog).toHaveAttribute("data-slot", "app-mobile-sidebar-content");
+      expect(dialog).toHaveAttribute("data-slot", "sheet-content");
+      expect(document.querySelector('[data-slot="sheet-overlay"]'))
+        .toBeInTheDocument();
+      expect(dialog.querySelector('[data-slot="sidebar"]')).toBeInTheDocument();
       expect(screen.getByRole("link", { name: /home/i })).toBeInTheDocument();
 
       await user.click(
@@ -355,6 +358,8 @@ describe("ApplicationLayout", () => {
 
         await openUserMenu();
 
+        expect(document.querySelector('[data-slot="dropdown-menu-content"]'))
+          .toBeInTheDocument();
         expect(
           await screen.findByRole(
             "menuitem",

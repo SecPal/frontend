@@ -61,9 +61,9 @@ describe("mobile sidebar layouts", () => {
       expect(
         await screen.findByRole("dialog", { name: "Navigationsmenü" })
       ).toBeInTheDocument();
-      expect(
-        document.querySelector('[data-slot="app-mobile-sidebar-content"]')
-      ).toHaveClass("pt-[calc(0.5rem+var(--app-safe-area-inset-top))]");
+      expect(document.querySelector('[data-slot="sheet-content"]')).toHaveClass(
+        "pt-[calc(0.5rem+var(--app-safe-area-inset-top))]"
+      );
       expect(
         screen.getByText("Hauptnavigation der Anwendung")
       ).toBeInTheDocument();

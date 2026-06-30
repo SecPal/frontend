@@ -19,10 +19,10 @@ import {
   Button,
   Card,
   CardContent,
-  Dropdown,
-  DropdownButton,
-  DropdownItem,
   DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   LoadingRegion,
   SectionSkeleton,
 } from "@/ui";
@@ -208,44 +208,46 @@ const TreeNode = memo(
 
           {/* Actions Menu */}
           {hasActions && (
-            <Dropdown>
-              <DropdownButton
-                plain
-                aria-label={t`Actions for ${unit.name}`}
-                className="shrink-0 p-1"
-                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              >
-                <EllipsisVertical className="h-5 w-5 text-gray-500" />
-              </DropdownButton>
-              <DropdownMenu anchor="bottom end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={t`Actions for ${unit.name}`}
+                  className="shrink-0 rounded-md p-1 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                >
+                  <EllipsisVertical className="h-5 w-5 text-gray-500" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent anchor="bottom end">
                 {canCreateChild && (
-                  <DropdownItem onClick={handleCreateChild}>
+                  <DropdownMenuItem onClick={handleCreateChild}>
                     <Plus data-slot="icon" className="h-4 w-4" />
                     <Trans>Add child</Trans>
-                  </DropdownItem>
+                  </DropdownMenuItem>
                 )}
                 {canEdit && (
-                  <DropdownItem onClick={handleEdit}>
+                  <DropdownMenuItem onClick={handleEdit}>
                     <Pencil data-slot="icon" className="h-4 w-4" />
                     <Trans>Edit</Trans>
-                  </DropdownItem>
+                  </DropdownMenuItem>
                 )}
                 {canMove && (
-                  <DropdownItem onClick={handleMove}>
+                  <DropdownMenuItem onClick={handleMove}>
                     <MoveHorizontal data-slot="icon" className="h-4 w-4" />
                     <Trans>Move</Trans>
-                  </DropdownItem>
+                  </DropdownMenuItem>
                 )}
                 {canDelete && (
-                  <DropdownItem onClick={handleDelete}>
+                  <DropdownMenuItem onClick={handleDelete}>
                     <Trash2 data-slot="icon" className="h-4 w-4 text-red-500" />
                     <span className="text-red-600 dark:text-red-400">
                       <Trans>Delete</Trans>
                     </span>
-                  </DropdownItem>
+                  </DropdownMenuItem>
                 )}
-              </DropdownMenu>
-            </Dropdown>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
 

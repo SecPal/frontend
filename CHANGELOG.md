@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Migrated the authenticated application shell navigation from bespoke
+  app-shell sidebar, mobile drawer, and dropdown approximations to shadcn/Radix
+  `Sidebar`, `Sheet`, and `DropdownMenu` composition. The global user menu,
+  mobile navigation overlay, sidebar links, and shell layout now expose
+  canonical shadcn slot names with regression coverage for focusable menu and
+  sheet behavior (US-003).
 - Migrated the shared `src/ui` core primitives to canonical shadcn slot names,
   CSS-variable theme tokens, and Radix-backed avatar structure. Buttons,
   inputs, textareas, fields, selects, checkboxes, switches, radios, dialogs,

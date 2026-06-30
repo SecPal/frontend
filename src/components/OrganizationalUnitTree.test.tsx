@@ -42,7 +42,7 @@ vi.mock("@/ui", async () => {
 
   return {
     ...actual,
-    Dropdown: ({ children }: { children: React.ReactNode }) => {
+    DropdownMenu: ({ children }: { children: React.ReactNode }) => {
       const [open, setOpen] = React.useState(false);
       return (
         <DropdownContext.Provider value={{ open, setOpen }}>
@@ -50,35 +50,50 @@ vi.mock("@/ui", async () => {
         </DropdownContext.Provider>
       );
     },
-    DropdownButton: ({
+    DropdownMenuTrigger: ({
       children,
       onClick,
-      plain: plainProp,
+      asChild: asChildProp,
       ...props
     }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
       children: React.ReactNode;
-      plain?: boolean;
+      asChild?: boolean;
     }) => {
-      void plainProp;
+      void asChildProp;
       const context = React.useContext(DropdownContext);
+      const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(event);
+        context?.setOpen((current) => !current);
+      };
+
+      if (React.isValidElement(children)) {
+        const child =
+          children as React.ReactElement<
+            React.ButtonHTMLAttributes<HTMLButtonElement>
+          >;
+
+        return React.cloneElement(
+          child,
+          {
+            onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+              child.props.onClick?.(event);
+              handleClick(event);
+            },
+          }
+        );
+      }
+
       return (
-        <button
-          type="button"
-          {...props}
-          onClick={(event) => {
-            onClick?.(event);
-            context?.setOpen((current) => !current);
-          }}
-        >
+        <button type="button" {...props} onClick={handleClick}>
           {children}
         </button>
       );
     },
-    DropdownMenu: ({ children }: { children: React.ReactNode }) => {
+    DropdownMenuContent: ({ children }: { children: React.ReactNode }) => {
       const context = React.useContext(DropdownContext);
       return context?.open ? <div role="menu">{children}</div> : null;
     },
-    DropdownItem: ({
+    DropdownMenuItem: ({
       children,
       onClick,
     }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
