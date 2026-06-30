@@ -25,11 +25,11 @@ import {
   Field,
   FieldGroup,
   FieldLabel,
-  FormCheckboxField,
+  CustomerSiteFormCheckboxField as FormCheckboxField,
   Input,
-  PageTitle,
+  CustomerSitePageTitle as PageTitle,
   Textarea,
-} from "../CustomerSites/ui";
+} from "@/ui";
 
 export default function CustomerCreate() {
   const { _ } = useLingui();

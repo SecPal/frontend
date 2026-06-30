@@ -94,29 +94,7 @@ const oldComponentWrapperPaths = new Set([
   "src/components/textarea",
 ]);
 
-const remainingNonCanonicalUiLayerAllowlist = [
-  "src/components/alert.tsx",
-  "src/components/badge.tsx",
-  "src/components/button.tsx",
-  "src/components/checkbox.tsx",
-  "src/components/description-list.tsx",
-  "src/components/dialog.tsx",
-  "src/components/divider.tsx",
-  "src/components/fieldset.tsx",
-  "src/components/heading.tsx",
-  "src/components/input.tsx",
-  "src/components/link.tsx",
-  "src/components/pagination.tsx",
-  "src/components/radio.tsx",
-  "src/components/spinner.tsx",
-  "src/components/switch.tsx",
-  "src/components/table.tsx",
-  "src/components/text.tsx",
-  "src/components/textarea.tsx",
-  "src/pages/CustomerSites/ui.tsx",
-  "src/pages/Employees/ui.tsx",
-  "src/ui/appShell.tsx",
-] as const;
+const remainingNonCanonicalUiLayerAllowlist = ["src/ui/appShell.tsx"] as const;
 
 function toProjectPath(filePath: string) {
   return path.relative(projectRoot, filePath).replaceAll(path.sep, "/");

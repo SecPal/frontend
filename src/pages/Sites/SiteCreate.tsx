@@ -31,14 +31,14 @@ import {
   FieldGroup,
   FieldLabel,
   Input,
-  LinkButton,
-  PageTitle,
+  CustomerSiteLinkButton as LinkButton,
+  CustomerSitePageTitle as PageTitle,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../CustomerSites/ui";
+} from "@/ui";
 
 export default function SiteCreate() {
   const navigate = useNavigate();

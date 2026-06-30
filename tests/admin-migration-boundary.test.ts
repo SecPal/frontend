@@ -18,7 +18,6 @@ const scopedEntries = [
   "src/pages/Settings/SettingsPage.tsx",
   "src/pages/Profile/ProfilePage.tsx",
   "src/pages/Organization/OrganizationPage.tsx",
-  "src/pages/CustomerSites/ui.tsx",
   "src/pages/Customers/CustomersPage.tsx",
   "src/pages/Customers/CustomerCreate.tsx",
   "src/pages/Customers/CustomerEdit.tsx",
@@ -27,7 +26,6 @@ const scopedEntries = [
   "src/pages/Sites/SiteCreate.tsx",
   "src/pages/Sites/SiteEdit.tsx",
   "src/pages/Sites/SiteDetail.tsx",
-  "src/pages/Employees/ui.tsx",
   "src/pages/Employees/EmployeeList.tsx",
   "src/pages/Employees/EmployeeDetail.tsx",
   "src/pages/Employees/EmployeeBwrPanel.tsx",
@@ -83,6 +81,11 @@ const oldComponentWrapperPaths = new Set([
   "src/components/table",
   "src/components/text",
   "src/components/textarea",
+]);
+
+const oldPageUiLayerPaths = new Set([
+  "src/pages/CustomerSites/ui",
+  "src/pages/Employees/ui",
 ]);
 
 function readScopedSources(): ScopedSource[] {
@@ -158,9 +161,13 @@ function collectAdminMigrationViolations(sources: ScopedSource[]) {
           moduleSpecifier
         );
 
-        if (resolvedImport && oldComponentWrapperPaths.has(resolvedImport)) {
+        if (
+          resolvedImport &&
+          (oldComponentWrapperPaths.has(resolvedImport) ||
+            oldPageUiLayerPaths.has(resolvedImport))
+        ) {
           return [
-            `${source.path}: imports old component wrapper ${moduleSpecifier}`,
+            `${source.path}: imports old UI compatibility layer ${moduleSpecifier}`,
           ];
         }
 
@@ -199,7 +206,7 @@ describe("admin migration boundary", () => {
       `src/pages/Settings/SettingsPage.tsx: contains forbidden marker ${forbiddenHeroiconsPackage}`,
       `src/pages/Settings/SettingsPage.tsx: contains forbidden marker ${forbiddenTailwindPlusLicenseMarker}`,
       "src/pages/Settings/SettingsPage.tsx: contains forbidden marker <svg",
-      "src/pages/Settings/SettingsPage.tsx: imports old component wrapper ../../components/button",
+      "src/pages/Settings/SettingsPage.tsx: imports old UI compatibility layer ../../components/button",
       `src/pages/Settings/SettingsPage.tsx: imports forbidden package ${forbiddenHeadlessPackage}`,
       `src/pages/Settings/SettingsPage.tsx: imports forbidden package ${forbiddenHeroiconsPackage}/24/outline`,
     ]);

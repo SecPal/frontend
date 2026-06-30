@@ -34,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Moved the remaining Customers, Sites, Employees, and admin/domain surface UI
+  consumers onto direct `@/ui` imports, promoted the still-needed customer/site
+  and employee compositions to prefixed shared exports, and deleted the
+  route-local `CustomerSites` / `Employees` UI barrels plus obsolete generic
+  `src/components/*` wrapper files from the compatibility inventory (US-006).
 - Moved the auth and onboarding route-local primitive layers into the canonical
   shared `@/ui` surface, updated login, MFA, onboarding wizard, completion, and
   submitted screens to import shared primitives directly, and deleted

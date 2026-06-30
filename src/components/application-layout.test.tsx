@@ -303,8 +303,9 @@ describe("ApplicationLayout", () => {
         name: /navigation/i,
       });
       expect(dialog).toHaveAttribute("data-slot", "sheet-content");
-      expect(document.querySelector('[data-slot="sheet-overlay"]'))
-        .toBeInTheDocument();
+      expect(
+        document.querySelector('[data-slot="sheet-overlay"]')
+      ).toBeInTheDocument();
       expect(dialog.querySelector('[data-slot="sidebar"]')).toBeInTheDocument();
       expect(screen.getByRole("link", { name: /home/i })).toBeInTheDocument();
 
@@ -358,8 +359,9 @@ describe("ApplicationLayout", () => {
 
         await openUserMenu();
 
-        expect(document.querySelector('[data-slot="dropdown-menu-content"]'))
-          .toBeInTheDocument();
+        expect(
+          document.querySelector('[data-slot="dropdown-menu-content"]')
+        ).toBeInTheDocument();
         expect(
           await screen.findByRole(
             "menuitem",

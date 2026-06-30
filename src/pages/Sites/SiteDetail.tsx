@@ -37,12 +37,12 @@ import {
   DialogOverlay,
   DialogPortal,
   DialogTitle,
-  LinkButton,
-  PageLink,
-  PageText,
-  PageTitle,
-  StatusBadge,
-} from "../CustomerSites/ui";
+  CustomerSiteLinkButton as LinkButton,
+  CustomerSitePageLink as PageLink,
+  CustomerSitePageText as PageText,
+  CustomerSitePageTitle as PageTitle,
+  CustomerSiteStatusBadge as StatusBadge,
+} from "@/ui";
 import { formatDate } from "../../lib/dateUtils";
 import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";

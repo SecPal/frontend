@@ -22,14 +22,14 @@ import {
   Card,
   CardContent,
   Field,
-  Fieldset,
+  EmployeeFieldset as Fieldset,
   FieldGroup,
   FieldError,
   FieldLabel,
-  Legend,
+  EmployeeLegend as Legend,
   Input,
-  PageTitle,
-} from "./ui";
+  EmployeePageTitle as PageTitle,
+} from "@/ui";
 import { EmployeeAddressFields } from "./EmployeeAddressFields";
 import {
   employeeAddressToDraft,

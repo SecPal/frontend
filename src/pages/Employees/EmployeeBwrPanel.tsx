@@ -23,16 +23,16 @@ import {
   FieldError,
   FieldLabel,
   Input,
-  PageText,
-  PageTitle,
+  EmployeePageText as PageText,
+  EmployeePageTitle as PageTitle,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  StatusBadge,
+  EmployeeStatusBadge as StatusBadge,
   Textarea,
-} from "./ui";
+} from "@/ui";
 import { ApiError } from "../../services/ApiError";
 import {
   exportEmployeeBwr,

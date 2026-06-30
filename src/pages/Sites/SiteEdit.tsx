@@ -33,15 +33,15 @@ import {
   FieldGroup,
   FieldLabel,
   Input,
-  LinkButton,
-  PageText,
-  PageTitle,
+  CustomerSiteLinkButton as LinkButton,
+  CustomerSitePageText as PageText,
+  CustomerSitePageTitle as PageTitle,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../CustomerSites/ui";
+} from "@/ui";
 
 export default function SiteEdit() {
   const { id } = useParams<{ id: string }>();

@@ -13,16 +13,16 @@ import {
   type KeyboardEvent,
 } from "react";
 import {
-  AutocompleteListbox,
-  AutocompleteOption,
+  EmployeeAutocompleteListbox as AutocompleteListbox,
+  EmployeeAutocompleteOption as AutocompleteOption,
   Field,
   FieldDescription as Description,
   FieldError as ErrorMessage,
   FieldLabel as Label,
   Input,
-  CommandPopover,
+  EmployeeCommandPopover as CommandPopover,
   type CommandOption,
-} from "./ui";
+} from "@/ui";
 import type { PostalAddressDraft } from "../../lib/employeeAddresses";
 import {
   getCountrySelectOptions,

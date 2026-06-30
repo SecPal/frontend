@@ -39,11 +39,11 @@ import {
   FieldError,
   FieldLabel,
   Input,
-  LinkButton,
-  PageText,
-  PageTitle,
-  StatusBadge as EmployeeStatusBadge,
-} from "./ui";
+  EmployeeLinkButton as LinkButton,
+  EmployeePageText as PageText,
+  EmployeePageTitle as PageTitle,
+  EmployeeStatusBadge,
+} from "@/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { formatDate, formatDateTime } from "../../lib/dateUtils";
 import {

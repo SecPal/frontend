@@ -23,23 +23,23 @@ import {
   Field,
   FieldLabel,
   Input,
-  LinkButton,
-  PageLink,
-  PageText,
-  PageTitle,
+  CustomerSiteLinkButton as LinkButton,
+  CustomerSitePageLink as PageLink,
+  CustomerSitePageText as PageText,
+  CustomerSitePageTitle as PageTitle,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  StatusBadge,
+  CustomerSiteStatusBadge as StatusBadge,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "../CustomerSites/ui";
+} from "@/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
 function formatSiteAddress(site: Site): string {

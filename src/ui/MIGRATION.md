@@ -22,12 +22,12 @@ Migration rules:
   `Select*`, `Command*`, `Checkbox`, `RadioGroup*`, `Dialog*`, `Alert*`,
   `Card*`, `Badge`, `Progress`, and `Field*`.
 - Keep route-specific composition helpers in `src/ui` behind explicit names
-  such as `Login*` and `Onboarding*` when a migrated route still needs prefixed
-  slots, route-specific helpers, or legacy-compatible event shapes.
+  such as `Login*`, `Onboarding*`, `CustomerSite*`, and `Employee*` when a
+  migrated route still needs prefixed slots, route-specific helpers, or
+  legacy-compatible event shapes.
 - Do not import old shared UI wrappers from `src/components/*` in migrated
-  code, and do not reintroduce route-local primitive barrels for auth or
-  onboarding. The migration boundary tests cover migrated route scopes and the
-  shared UI layer.
+  code, and do not reintroduce route-local primitive barrels. The migration
+  boundary tests cover migrated route scopes and the shared UI layer.
 - Primitives must not provide English user-facing fallback copy for labels,
   placeholders, loading labels, empty states, or error messages. Pass localized
   route-owned copy at the call site.
@@ -38,14 +38,8 @@ The only remaining non-canonical UI layers are inventoried by
 `tests/legacy-ui-guardrails.test.ts`. Later migration stories must remove items
 from that explicit allowlist when they move a surface onto `src/ui`.
 
-Current exceptions:
+Current exception:
 
-- Old generic `src/components/*` UI wrappers for `alert`, `badge`, `button`,
-  `checkbox`, `description-list`, `dialog`, `divider`, `fieldset`, `heading`,
-  `input`, `link`, `pagination`, `radio`, `spinner`, `switch`, `table`,
-  `text`, and `textarea`.
-- Route-scoped UI barrels in `src/pages/CustomerSites/ui.tsx` and
-  `src/pages/Employees/ui.tsx`.
 - Shared-but-not-primitive modules such as `src/ui/appShell.tsx`.
 
 ## Loading Contract
@@ -83,9 +77,9 @@ navigation warmups:
   primary destinations. Keep this capability-gated so users do not prefetch
   areas they cannot discover, and do not run idle API prefetches from the shell
   because auth bootstrap and E2E `networkidle` waits must stay stable.
-- High-frequency internal links should use `PrefetchLink` directly or through
-  route-local wrappers such as `PageLink` and `LinkButton`. The shared link
-  triggers route and API warmup on hover, focus, and touch intent.
+- High-frequency internal links should use `PrefetchLink` directly or the
+  prefixed shared `CustomerSite*` / `Employee*` link helpers in `@/ui`. The
+  shared link triggers route and API warmup on hover, focus, and touch intent.
 - Add route plans for predictable list and detail destinations in
   `getRoutePrefetchPlan`. Include API GET paths only when they match the data
   the destination page will request on first render.

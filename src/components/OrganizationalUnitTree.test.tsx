@@ -67,20 +67,16 @@ vi.mock("@/ui", async () => {
       };
 
       if (React.isValidElement(children)) {
-        const child =
-          children as React.ReactElement<
-            React.ButtonHTMLAttributes<HTMLButtonElement>
-          >;
+        const child = children as React.ReactElement<
+          React.ButtonHTMLAttributes<HTMLButtonElement>
+        >;
 
-        return React.cloneElement(
-          child,
-          {
-            onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
-              child.props.onClick?.(event);
-              handleClick(event);
-            },
-          }
-        );
+        return React.cloneElement(child, {
+          onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+            child.props.onClick?.(event);
+            handleClick(event);
+          },
+        });
       }
 
       return (

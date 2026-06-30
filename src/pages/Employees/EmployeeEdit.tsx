@@ -22,19 +22,19 @@ import {
   FieldDescription,
   FieldError,
   FieldLabel,
-  Fieldset,
+  EmployeeFieldset as Fieldset,
   Input,
-  Legend,
-  LinkButton,
-  PageText,
-  PageTitle,
+  EmployeeLegend as Legend,
+  EmployeeLinkButton as LinkButton,
+  EmployeePageText as PageText,
+  EmployeePageTitle as PageTitle,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
   Switch,
-} from "./ui";
+} from "@/ui";
 import { EmployeeStatusSelectItems } from "./EmployeeStatusOptions";
 import { EmployeeAddressFields } from "./EmployeeAddressFields";
 import {
