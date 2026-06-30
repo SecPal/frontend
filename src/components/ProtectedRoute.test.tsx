@@ -266,37 +266,34 @@ describe("ProtectedRoute", () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it(
-    "renders revalidatingFallback during snapshot revalidation when a verified user is persisted",
-    () => {
-      const useAuthSpy = mockVerifiedRevalidatingAuth();
+  it("renders revalidatingFallback during snapshot revalidation when a verified user is persisted", () => {
+    const useAuthSpy = mockVerifiedRevalidatingAuth();
 
-      render(
-        <BrowserRouter>
-          <I18nProvider i18n={i18n}>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute
-                    revalidatingFallback={<div>Revalidating fallback</div>}
-                  >
-                    <TestComponent />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </I18nProvider>
-        </BrowserRouter>
-      );
+    render(
+      <BrowserRouter>
+        <I18nProvider i18n={i18n}>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute
+                  revalidatingFallback={<div>Revalidating fallback</div>}
+                >
+                  <TestComponent />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </I18nProvider>
+      </BrowserRouter>
+    );
 
-      expect(screen.getByText("Revalidating fallback")).toBeInTheDocument();
-      expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
-      expect(mockNavigate).not.toHaveBeenCalled();
+    expect(screen.getByText("Revalidating fallback")).toBeInTheDocument();
+    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+    expect(mockNavigate).not.toHaveBeenCalled();
 
-      useAuthSpy.mockRestore();
-    }
-  );
+    useAuthSpy.mockRestore();
+  });
 
   it("still gates the email verification screen during revalidation when the persisted snapshot is unverified", () => {
     const useAuthSpy = vi.spyOn(authHook, "useAuth").mockReturnValue({
