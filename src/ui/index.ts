@@ -3,6 +3,5 @@
 
 export * from "./primitives";
 export * from "./appShell";
-export * from "./searchableControls";
 export * from "./styles";
 export { cn } from "@/lib/utils";

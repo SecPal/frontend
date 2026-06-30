@@ -3,7 +3,7 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
@@ -16,9 +16,7 @@ import { Field, Label } from "./fieldset";
 import { Heading } from "./heading";
 import { Input } from "./input";
 import { Link } from "./link";
-import { Listbox, ListboxLabel, ListboxOption } from "./listbox";
 import { Pagination, PaginationNext, PaginationPrevious } from "./pagination";
-import { Select } from "./select";
 import { Spinner } from "./spinner";
 import {
   Table,
@@ -37,7 +35,6 @@ const migratedWidgetFiles = [
   "badge.tsx",
   "button.tsx",
   "checkbox.tsx",
-  "combobox.tsx",
   "description-list.tsx",
   "dialog.tsx",
   "divider.tsx",
@@ -45,10 +42,8 @@ const migratedWidgetFiles = [
   "heading.tsx",
   "input.tsx",
   "link.tsx",
-  "listbox.tsx",
   "pagination.tsx",
   "radio.tsx",
-  "select.tsx",
   "spinner.tsx",
   "switch.tsx",
   "table.tsx",
@@ -136,13 +131,6 @@ describe("shared widget compatibility layer", () => {
           <Label htmlFor="notes">Notes</Label>
           <Textarea id="notes" resizable={false} />
         </Field>
-        <Field>
-          <Label htmlFor="status">Status</Label>
-          <Select id="status" defaultValue="active">
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </Select>
-        </Field>
       </form>
     );
 
@@ -153,7 +141,6 @@ describe("shared widget compatibility layer", () => {
     await user.type(name, "Alice");
     expect(name).toHaveValue("Alice");
     expect(screen.getByLabelText("Notes")).toHaveClass("resize-none");
-    expect(screen.getByLabelText("Status")).toHaveValue("active");
   });
 
   it("adapts Radix checkbox and switch interactions to the old boolean onChange shape", async () => {
@@ -185,52 +172,6 @@ describe("shared widget compatibility layer", () => {
     expect(screen.getByRole("switch")).toHaveClass(
       "dark:data-[state=checked]:bg-zinc-50"
     );
-  });
-
-  it("uses Radix listbox semantics while preserving empty-string option values", async () => {
-    const onChange = vi.fn();
-    render(
-      <Listbox value="" onChange={onChange} aria-label="Unit">
-        <ListboxOption value="">
-          <ListboxLabel>All Units</ListboxLabel>
-        </ListboxOption>
-        <ListboxOption value="unit-1">
-          <ListboxLabel>Head Office</ListboxLabel>
-        </ListboxOption>
-      </Listbox>
-    );
-
-    const trigger = screen.getByRole("combobox", { name: "Unit" });
-    fireEvent.pointerDown(trigger, {
-      button: 0,
-      pointerId: 1,
-      pointerType: "mouse",
-    });
-    fireEvent.pointerUp(trigger, {
-      button: 0,
-      pointerId: 1,
-      pointerType: "mouse",
-    });
-    fireEvent.click(trigger, { button: 0 });
-
-    const listbox = await screen.findByRole("listbox");
-    expect(
-      within(listbox).getByRole("option", { name: "All Units" })
-    ).toBeInTheDocument();
-    const option = within(listbox).getByRole("option", { name: "Head Office" });
-    fireEvent.pointerDown(option, {
-      button: 0,
-      pointerId: 1,
-      pointerType: "mouse",
-    });
-    fireEvent.pointerUp(option, {
-      button: 0,
-      pointerId: 1,
-      pointerType: "mouse",
-    });
-    fireEvent.click(option, { button: 0 });
-
-    expect(onChange).toHaveBeenCalledWith("unit-1");
   });
 
   it("keeps Radix dialog and alert dismissal accessible", async () => {

@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+  useCallback,
+  useId,
+  useRef,
+  useState,
   forwardRef,
   type ButtonHTMLAttributes,
   type ComponentProps,
@@ -9,22 +13,28 @@ import {
   type ElementRef,
   type ForwardedRef,
   type InputHTMLAttributes,
+  type KeyboardEvent,
+  type ReactElement,
+  type ReactNode,
   type TextareaHTMLAttributes,
 } from "react";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import * as LabelPrimitive from "@radix-ui/react-label";
+import * as PopoverPrimitive from "@radix-ui/react-popover";
 import * as ProgressPrimitive from "@radix-ui/react-progress";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import * as SwitchPrimitive from "@radix-ui/react-switch";
+import { Command as CommandPrimitive } from "cmdk";
 import {
   Check,
   ChevronDown,
   ChevronUp,
   Circle,
   Loader2,
+  Search,
   X,
 } from "lucide-react";
 import { getCspNonce } from "@/lib/cspNonce";
@@ -144,6 +154,497 @@ export function FieldError({
       className={cn("text-sm font-medium text-destructive", className)}
       {...props}
     />
+  );
+}
+
+function setForwardedRef<T>(ref: ForwardedRef<T>, value: T | null) {
+  if (typeof ref === "function") {
+    ref(value);
+    return;
+  }
+
+  if (ref) {
+    ref.current = value;
+  }
+}
+
+export const Command = forwardRef<
+  ElementRef<typeof CommandPrimitive>,
+  ComponentPropsWithoutRef<typeof CommandPrimitive>
+>(function Command({ className, ...props }, ref) {
+  return (
+    <CommandPrimitive
+      ref={ref}
+      data-slot="command"
+      className={cn(
+        "bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md",
+        className
+      )}
+      {...props}
+    />
+  );
+});
+
+export const CommandInput = forwardRef<
+  ElementRef<typeof CommandPrimitive.Input>,
+  ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
+>(function CommandInput({ className, ...props }, ref) {
+  const inputRef = useCallback(
+    (node: ElementRef<typeof CommandPrimitive.Input> | null) => {
+      if (node) {
+        node.setAttribute("role", "searchbox");
+      }
+      setForwardedRef(ref, node);
+    },
+    [ref]
+  );
+
+  return (
+    <div
+      data-slot="command-input-wrapper"
+      className="flex h-9 items-center gap-2 border-b px-3"
+    >
+      <Search className="size-4 shrink-0 opacity-50" aria-hidden="true" />
+      <CommandPrimitive.Input
+        ref={inputRef}
+        data-slot="command-input"
+        className={cn(
+          "placeholder:text-muted-foreground flex h-9 w-full rounded-md bg-transparent py-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        {...props}
+      />
+    </div>
+  );
+});
+
+export const CommandList = forwardRef<
+  ElementRef<typeof CommandPrimitive.List>,
+  ComponentPropsWithoutRef<typeof CommandPrimitive.List>
+>(function CommandList({ className, ...props }, ref) {
+  const listRef = useCallback(
+    (node: ElementRef<typeof CommandPrimitive.List> | null) => {
+      if (node && props.id) {
+        node.id = props.id;
+      }
+      setForwardedRef(ref, node);
+    },
+    [props.id, ref]
+  );
+
+  return (
+    <CommandPrimitive.List
+      ref={listRef}
+      data-slot="command-list"
+      className={cn("max-h-72 overflow-x-hidden overflow-y-auto", className)}
+      {...props}
+    />
+  );
+});
+
+export const CommandEmpty = forwardRef<
+  ElementRef<typeof CommandPrimitive.Empty>,
+  ComponentPropsWithoutRef<typeof CommandPrimitive.Empty>
+>(function CommandEmpty({ className, ...props }, ref) {
+  return (
+    <CommandPrimitive.Empty
+      ref={ref}
+      data-slot="command-empty"
+      className={cn("py-6 text-center text-sm", className)}
+      {...props}
+    />
+  );
+});
+
+export const CommandGroup = forwardRef<
+  ElementRef<typeof CommandPrimitive.Group>,
+  ComponentPropsWithoutRef<typeof CommandPrimitive.Group>
+>(function CommandGroup({ className, ...props }, ref) {
+  return (
+    <CommandPrimitive.Group
+      ref={ref}
+      data-slot="command-group"
+      className={cn(
+        "text-foreground overflow-hidden p-1 [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium",
+        className
+      )}
+      {...props}
+    />
+  );
+});
+
+export const CommandSeparator = forwardRef<
+  ElementRef<typeof CommandPrimitive.Separator>,
+  ComponentPropsWithoutRef<typeof CommandPrimitive.Separator>
+>(function CommandSeparator({ className, ...props }, ref) {
+  return (
+    <CommandPrimitive.Separator
+      ref={ref}
+      data-slot="command-separator"
+      className={cn("bg-border -mx-1 h-px", className)}
+      {...props}
+    />
+  );
+});
+
+export const CommandItem = forwardRef<
+  ElementRef<typeof CommandPrimitive.Item>,
+  ComponentPropsWithoutRef<typeof CommandPrimitive.Item>
+>(function CommandItem({ className, ...props }, ref) {
+  return (
+    <CommandPrimitive.Item
+      ref={ref}
+      data-slot="command-item"
+      className={cn(
+        "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        className
+      )}
+      {...props}
+    />
+  );
+});
+
+export function CommandShortcut({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"span">) {
+  return (
+    <span
+      data-slot="command-shortcut"
+      className={cn(
+        "text-muted-foreground ml-auto text-xs tracking-widest",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+const emptyCommandValue = "__secpal_empty_command_value__";
+
+function toCommandValue(value: string) {
+  return value === "" ? emptyCommandValue : value;
+}
+
+function fromCommandValue(value: string) {
+  return value === emptyCommandValue ? "" : value;
+}
+
+function commandOptionFilter(
+  value: string,
+  search: string,
+  keywords: string[] = []
+) {
+  const normalizedSearch = search.trim().toLowerCase();
+
+  if (!normalizedSearch) {
+    return 1;
+  }
+
+  const entries = [value, ...keywords].map((entry) =>
+    entry.trim().toLowerCase()
+  );
+
+  if (entries.some((entry) => entry === normalizedSearch)) {
+    return 1;
+  }
+
+  if (entries.some((entry) => entry.startsWith(normalizedSearch))) {
+    return 0.9;
+  }
+
+  if (
+    entries.some((entry) =>
+      entry
+        .split(/[\s,./()_-]+/)
+        .some((word) => word.startsWith(normalizedSearch))
+    )
+  ) {
+    return 0.8;
+  }
+
+  return 0;
+}
+
+export interface CommandOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
+  keywords?: string[];
+}
+
+export interface SearchableAutocompleteListboxProps {
+  anchor: ReactElement;
+  open: boolean;
+  listboxId: string;
+  className?: string;
+  slotPrefix: string;
+  children: ReactNode;
+}
+
+export function SearchableAutocompleteListbox({
+  anchor,
+  open,
+  listboxId,
+  className,
+  slotPrefix,
+  children,
+}: SearchableAutocompleteListboxProps) {
+  return (
+    <PopoverPrimitive.Root open={open}>
+      <PopoverPrimitive.Anchor asChild>{anchor}</PopoverPrimitive.Anchor>
+      <PopoverPrimitive.Portal>
+        <PopoverPrimitive.Content
+          align="start"
+          sideOffset={4}
+          data-slot={`${slotPrefix}-autocomplete-popover-content`}
+          className={cn(
+            "z-50 w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-lg outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            className
+          )}
+          onOpenAutoFocus={(event) => event.preventDefault()}
+          onCloseAutoFocus={(event) => event.preventDefault()}
+        >
+          <Command
+            shouldFilter={false}
+            data-prefixed-slot={`${slotPrefix}-autocomplete-command`}
+          >
+            <CommandList
+              id={listboxId}
+              data-slot={`${slotPrefix}-autocomplete-listbox`}
+            >
+              {children}
+            </CommandList>
+          </Command>
+        </PopoverPrimitive.Content>
+      </PopoverPrimitive.Portal>
+    </PopoverPrimitive.Root>
+  );
+}
+
+export interface SearchableAutocompleteOptionProps
+  extends ComponentPropsWithoutRef<"button"> {
+  highlighted?: boolean;
+  slotPrefix: string;
+}
+
+export function SearchableAutocompleteOption({
+  className,
+  highlighted = false,
+  slotPrefix,
+  type: _type,
+  value,
+  ...props
+}: SearchableAutocompleteOptionProps) {
+  void _type;
+
+  const commandValue = typeof value === "string" ? value : undefined;
+  const commandItemProps =
+    props as ComponentPropsWithoutRef<typeof CommandItem>;
+
+  return (
+    <CommandItem
+      forceMount
+      value={commandValue}
+      data-slot={`${slotPrefix}-autocomplete-option`}
+      data-highlighted={highlighted ? "" : undefined}
+      className={cn(
+        "block w-full border-b border-border px-3 py-2 text-left last:border-b-0 hover:bg-accent",
+        highlighted && "bg-accent text-accent-foreground",
+        className
+      )}
+      {...commandItemProps}
+    />
+  );
+}
+
+export interface SearchableCommandPopoverProps {
+  label: string;
+  options: CommandOption[];
+  value?: string;
+  onValueChange: (value: string) => void;
+  placeholder: string;
+  searchPlaceholder: string;
+  emptyMessage: string;
+  disabled?: boolean;
+  errorMessage?: string;
+  slotPrefix: string;
+}
+
+export function SearchableCommandPopover({
+  label,
+  options,
+  value,
+  onValueChange,
+  placeholder,
+  searchPlaceholder,
+  emptyMessage,
+  disabled = false,
+  errorMessage,
+  slotPrefix,
+}: SearchableCommandPopoverProps) {
+  const labelId = useId();
+  const errorId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
+
+  const selectedOption = options.find((option) => option.value === value);
+
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+  }
+
+  function selectOption(commandValue: string) {
+    const optionValue = fromCommandValue(commandValue);
+    const option = options.find((candidate) => candidate.value === optionValue);
+
+    if (!option || option.disabled) {
+      return;
+    }
+
+    onValueChange(option.value);
+    setOpen(false);
+    window.requestAnimationFrame(() => triggerRef.current?.focus());
+  }
+
+  function handleTriggerKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setOpen(true);
+    }
+  }
+
+  function focusNextElementAfterTrigger() {
+    const trigger = triggerRef.current;
+
+    if (!trigger) {
+      return;
+    }
+
+    const focusableElements = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
+      )
+    ).filter((element) => !contentRef.current?.contains(element));
+    const triggerIndex = focusableElements.indexOf(trigger);
+    const nextElement =
+      triggerIndex >= 0 ? focusableElements[triggerIndex + 1] : undefined;
+
+    (nextElement ?? trigger).focus();
+  }
+
+  return (
+    <PopoverPrimitive.Root open={open} onOpenChange={handleOpenChange}>
+      <div className="space-y-2">
+        <span
+          id={labelId}
+          className="block text-sm font-medium text-foreground"
+        >
+          {label}
+        </span>
+        <PopoverPrimitive.Trigger asChild>
+          <Button
+            ref={triggerRef}
+            variant="outline"
+            className="w-full justify-between"
+            aria-labelledby={labelId}
+            aria-expanded={open}
+            aria-haspopup="listbox"
+            aria-invalid={errorMessage ? true : undefined}
+            aria-describedby={errorMessage ? errorId : undefined}
+            disabled={disabled}
+            role="combobox"
+            onKeyDown={handleTriggerKeyDown}
+          >
+            <span>{selectedOption?.label ?? placeholder}</span>
+            <ChevronDown className="size-4 opacity-50" aria-hidden="true" />
+          </Button>
+        </PopoverPrimitive.Trigger>
+        <PopoverPrimitive.Portal>
+          <PopoverPrimitive.Content
+            ref={contentRef}
+            align="start"
+            sideOffset={4}
+            data-slot={`${slotPrefix}-command-popover-content`}
+            className="z-50 w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-lg outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+            onOpenAutoFocus={(event) => {
+              event.preventDefault();
+              inputRef.current?.focus();
+            }}
+          >
+            <Command
+              label={searchPlaceholder}
+              filter={commandOptionFilter}
+              loop
+              data-prefixed-slot={`${slotPrefix}-command`}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  setOpen(false);
+                }
+              }}
+            >
+              <CommandInput
+                ref={inputRef}
+                aria-invalid={errorMessage ? true : undefined}
+                aria-describedby={errorMessage ? errorId : undefined}
+                placeholder={searchPlaceholder}
+                onKeyDown={(event) => {
+                  if (event.key === "Tab") {
+                    event.preventDefault();
+                    setOpen(false);
+                    if (event.shiftKey) {
+                      triggerRef.current?.focus();
+                    } else {
+                      window.requestAnimationFrame(
+                        focusNextElementAfterTrigger
+                      );
+                    }
+                  }
+                }}
+              />
+              <CommandList>
+                <CommandEmpty>{emptyMessage}</CommandEmpty>
+                <CommandGroup>
+                  {options.map((option) => {
+                    const commandValue = toCommandValue(option.value);
+
+                    return (
+                      <CommandItem
+                        key={commandValue}
+                        value={commandValue}
+                        keywords={[
+                          option.label,
+                          option.value,
+                          ...(option.keywords ?? []),
+                        ]}
+                        disabled={option.disabled}
+                        data-current={
+                          option.value === value ? "" : undefined
+                        }
+                        onSelect={selectOption}
+                      >
+                        <span className="min-w-0 flex-1 truncate">
+                          {option.label}
+                        </span>
+                        {option.value === value ? (
+                          <Check className="size-4" aria-hidden="true" />
+                        ) : null}
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverPrimitive.Content>
+        </PopoverPrimitive.Portal>
+        {errorMessage ? (
+          <FieldError id={errorId}>{errorMessage}</FieldError>
+        ) : null}
+      </div>
+    </PopoverPrimitive.Root>
   );
 }
 

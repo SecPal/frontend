@@ -427,6 +427,37 @@ describe("onboarding shadcn primitives", () => {
     expect(handleValueChange).toHaveBeenCalledWith("fr");
   });
 
+  it("renders searchable select content with canonical shadcn command slots", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TestCommandPopover
+        label="Nationality"
+        value="de"
+        onValueChange={vi.fn()}
+        options={[
+          { value: "de", label: "Germany", keywords: ["Deutschland"] },
+          { value: "fr", label: "France" },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Nationality" }));
+
+    expect(document.querySelector('[data-slot="command"]')).toBeInTheDocument();
+    expect(
+      screen.getByRole("searchbox", { name: "Search options" })
+    ).toHaveAttribute("data-slot", "command-input");
+    expect(screen.getByRole("listbox")).toHaveAttribute(
+      "data-slot",
+      "command-list"
+    );
+    expect(screen.getByRole("option", { name: "Germany" })).toHaveAttribute(
+      "data-slot",
+      "command-item"
+    );
+  });
+
   it("opens the popover and highlights the first option when ArrowDown is pressed on the closed trigger", async () => {
     const user = userEvent.setup();
 
@@ -452,8 +483,7 @@ describe("onboarding shadcn primitives", () => {
     const options = screen.getAllByRole("option");
     // First ArrowDown opens the popover and highlights the first option,
     // matching the visual list order. It must not skip past the first item.
-    const searchbox = screen.getByRole("searchbox");
-    expect(searchbox).toHaveAttribute("aria-activedescendant", options[0]!.id);
+    expect(options[0]).toHaveAttribute("aria-selected", "true");
   });
 
   it("navigates options with ArrowDown/ArrowUp inside the search box and selects with Enter", async () => {
@@ -473,14 +503,13 @@ describe("onboarding shadcn primitives", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
-    const searchbox = screen.getByRole("searchbox");
 
     await user.keyboard("{ArrowDown}");
     await user.keyboard("{ArrowDown}");
     await user.keyboard("{ArrowUp}");
-    expect(searchbox).toHaveAttribute(
-      "aria-activedescendant",
-      screen.getAllByRole("option")[1]!.id
+    expect(screen.getAllByRole("option")[1]).toHaveAttribute(
+      "aria-selected",
+      "true"
     );
 
     await user.keyboard("{Enter}");
@@ -509,14 +538,16 @@ describe("onboarding shadcn primitives", () => {
     const germany = screen.getByRole("option", { name: "Germany" });
     const france = screen.getByRole("option", { name: "France" });
 
+    expect(germany).toHaveAttribute("data-current", "");
     expect(germany).toHaveAttribute("aria-selected", "true");
     expect(france).toHaveAttribute("aria-selected", "false");
 
     await user.keyboard("{ArrowDown}");
 
-    expect(searchbox).toHaveAttribute("aria-activedescendant", france.id);
-    expect(germany).toHaveAttribute("aria-selected", "true");
-    expect(france).toHaveAttribute("aria-selected", "false");
+    expect(searchbox).toHaveFocus();
+    expect(germany).toHaveAttribute("data-current", "");
+    expect(germany).toHaveAttribute("aria-selected", "false");
+    expect(france).toHaveAttribute("aria-selected", "true");
   });
 
   it("closes the popover when Escape is pressed and clears stale query/active index for the next open", async () => {
@@ -553,10 +584,7 @@ describe("onboarding shadcn primitives", () => {
     expect(screen.getByRole("searchbox")).toHaveValue("");
     const options = screen.getAllByRole("option");
     expect(options).toHaveLength(3);
-    expect(screen.getByRole("searchbox")).toHaveAttribute(
-      "aria-activedescendant",
-      options[0]!.id
-    );
+    expect(options[0]).toHaveAttribute("aria-selected", "true");
   });
 
   it("clears stale query/active index when the trigger closes the popover", async () => {
@@ -587,10 +615,7 @@ describe("onboarding shadcn primitives", () => {
     expect(screen.getByRole("searchbox")).toHaveValue("");
     const options = screen.getAllByRole("option");
     expect(options).toHaveLength(3);
-    expect(screen.getByRole("searchbox")).toHaveAttribute(
-      "aria-activedescendant",
-      options[0]!.id
-    );
+    expect(options[0]).toHaveAttribute("aria-selected", "true");
   });
 
   it("renders the empty message when no options match the query", async () => {
@@ -634,10 +659,7 @@ describe("onboarding shadcn primitives", () => {
     const options = screen.getAllByRole("option");
 
     await user.hover(options[1]!);
-    expect(screen.getByRole("searchbox")).toHaveAttribute(
-      "aria-activedescendant",
-      options[1]!.id
-    );
+    expect(options[1]).toHaveAttribute("aria-selected", "true");
 
     await user.click(options[1]!);
     expect(handleValueChange).toHaveBeenCalledWith("fr");
@@ -698,7 +720,7 @@ describe("onboarding shadcn primitives", () => {
     expect(trigger).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("keeps command popover tab flow predictable before focus leaves", async () => {
+  it("closes the command popover when tab leaves the search field", async () => {
     const user = userEvent.setup();
 
     render(
@@ -720,15 +742,8 @@ describe("onboarding shadcn primitives", () => {
     const searchbox = screen.getByRole("searchbox", {
       name: "Search options",
     });
-    const options = screen.getAllByRole("option");
 
     expect(searchbox).toHaveFocus();
-
-    await user.tab();
-    expect(options[0]).toHaveFocus();
-
-    await user.tab();
-    expect(options[1]).toHaveFocus();
 
     await user.tab();
     await waitFor(() => {
@@ -756,11 +771,10 @@ describe("onboarding shadcn primitives", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
-    const searchbox = screen.getByRole("searchbox");
     const options = screen.getAllByRole("option");
 
     await user.keyboard("{ArrowDown}");
-    expect(searchbox).toHaveAttribute("aria-activedescendant", options[2]!.id);
+    expect(options[2]).toHaveAttribute("aria-selected", "true");
 
     await user.keyboard("{Enter}");
     expect(handleValueChange).toHaveBeenCalledWith("es");
@@ -838,7 +852,7 @@ describe("onboarding shadcn primitives", () => {
     await user.type(searchbox, "zzzzz");
 
     await user.keyboard("{ArrowDown}");
-    expect(searchbox).not.toHaveAttribute("aria-activedescendant");
+    expect(screen.queryAllByRole("option")).toHaveLength(0);
   });
 
   it("keeps the active index stable when ArrowDown only finds disabled options", async () => {
@@ -892,5 +906,29 @@ describe("onboarding shadcn primitives", () => {
     );
 
     expect(screen.getByRole("combobox", { name: "Country" })).toBeDisabled();
+  });
+
+  it("selects an empty command value without leaking the internal sentinel", async () => {
+    const user = userEvent.setup();
+    const handleValueChange = vi.fn();
+
+    render(
+      <TestCommandPopover
+        label="Country"
+        value="de"
+        onValueChange={handleValueChange}
+        options={[
+          { value: "", label: "No country selected" },
+          { value: "de", label: "Germany" },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+    await user.click(
+      screen.getByRole("option", { name: "No country selected" })
+    );
+
+    expect(handleValueChange).toHaveBeenCalledWith("");
   });
 });

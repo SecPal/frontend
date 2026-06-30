@@ -19,8 +19,8 @@ ported primitives to `@/ui`, `@/components`, `@/lib`, `@/hooks`, and
 Migration rules:
 
 - Prefer `src/ui` for new shared primitive work: `Button`, `Input`, `Textarea`,
-  `Select*`, `Checkbox`, `RadioGroup*`, `Dialog*`, `Alert*`, `Card*`, `Badge`,
-  `Progress`, and `Field*`.
+  `Select*`, `Command*`, `Checkbox`, `RadioGroup*`, `Dialog*`, `Alert*`,
+  `Card*`, `Badge`, `Progress`, and `Field*`.
 - Keep route-local barrels such as `src/pages/Auth/ui` and
   `src/pages/Onboarding/ui` as the public compatibility surface while a route
   still needs prefixed slots, route-specific helpers, or legacy-compatible
@@ -41,13 +41,12 @@ from that explicit allowlist when they move a surface onto `src/ui`.
 Current exceptions:
 
 - Old generic `src/components/*` UI wrappers for `alert`, `badge`, `button`,
-  `checkbox`, `combobox`, `description-list`, `dialog`, `divider`, `fieldset`,
-  `heading`, `input`, `link`, `listbox`, `pagination`, `radio`, `select`,
-  `spinner`, `switch`, `table`, `text`, and `textarea`.
+  `checkbox`, `description-list`, `dialog`, `divider`, `fieldset`, `heading`,
+  `input`, `link`, `pagination`, `radio`, `spinner`, `switch`, `table`,
+  `text`, and `textarea`.
 - Route-scoped UI barrels in `src/pages/Auth/ui`, `src/pages/Onboarding/ui`,
   `src/pages/CustomerSites/ui.tsx`, and `src/pages/Employees/ui.tsx`.
-- Shared-but-not-primitive modules `src/ui/appShell.tsx` and
-  `src/ui/searchableControls.tsx`.
+- Shared-but-not-primitive modules such as `src/ui/appShell.tsx`.
 
 ## Loading Contract
 

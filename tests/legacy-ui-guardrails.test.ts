@@ -99,7 +99,6 @@ const remainingNonCanonicalUiLayerAllowlist = [
   "src/components/badge.tsx",
   "src/components/button.tsx",
   "src/components/checkbox.tsx",
-  "src/components/combobox.tsx",
   "src/components/description-list.tsx",
   "src/components/dialog.tsx",
   "src/components/divider.tsx",
@@ -107,10 +106,8 @@ const remainingNonCanonicalUiLayerAllowlist = [
   "src/components/heading.tsx",
   "src/components/input.tsx",
   "src/components/link.tsx",
-  "src/components/listbox.tsx",
   "src/components/pagination.tsx",
   "src/components/radio.tsx",
-  "src/components/select.tsx",
   "src/components/spinner.tsx",
   "src/components/switch.tsx",
   "src/components/table.tsx",
@@ -125,7 +122,6 @@ const remainingNonCanonicalUiLayerAllowlist = [
   "src/pages/Onboarding/ui/primitives.tsx",
   "src/pages/Onboarding/ui/utils.ts",
   "src/ui/appShell.tsx",
-  "src/ui/searchableControls.tsx",
 ] as const;
 
 function toProjectPath(filePath: string) {
@@ -179,10 +175,9 @@ function collectRemainingNonCanonicalUiLayers() {
       /^src\/pages\/[^/]+\/ui(?:\.[tj]sx?|\/.+\.[tj]sx?)$/.test(filePath)
   );
 
-  const canonicalLayerExceptions = [
-    "src/ui/appShell.tsx",
-    "src/ui/searchableControls.tsx",
-  ].filter((filePath) => existsSync(path.resolve(projectRoot, filePath)));
+  const canonicalLayerExceptions = ["src/ui/appShell.tsx"].filter((filePath) =>
+    existsSync(path.resolve(projectRoot, filePath))
+  );
 
   return [
     ...legacyComponentWrapperFiles,

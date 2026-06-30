@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replaced the shared searchable/selectable control compatibility layer with
+  canonical shadcn `Command*` primitives backed by `cmdk`, migrated the
+  onboarding and employee command-popover adapters onto that pattern, and
+  removed the obsolete generic `combobox`, `listbox`, `select`, and
+  `src/ui/searchableControls.tsx` wrappers from the remaining legacy UI
+  inventory (US-004).
 - Migrated the authenticated application shell navigation from bespoke
   app-shell sidebar, mobile drawer, and dropdown approximations to shadcn/Radix
   `Sidebar`, `Sheet`, and `DropdownMenu` composition. The global user menu,
