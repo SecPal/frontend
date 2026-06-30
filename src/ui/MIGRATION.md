@@ -5,10 +5,10 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 # Canonical shadcn/Radix/Lucide Layer
 
-`src/ui` is the canonical app UI layer for migrated surfaces. It owns the
+`src/ui` is the canonical app UI layer for production surfaces. It owns the
 common zinc/blue SecPal tokens, rounded `md` controls, focus rings, dark-mode
-classes, Radix-backed interactive primitives, Lucide icon composition, and the
-canonical `cn` export from `@/lib/utils`.
+classes, Radix-backed interactive primitives, shell composition, Lucide icon
+composition, and the canonical `cn` export from `@/lib/utils`.
 
 The shadcn project metadata lives in `components.json`. It pins the `new-york`
 style, TypeScript React output, Tailwind v4 CSS entry at `src/index.css`, the
@@ -26,21 +26,25 @@ Migration rules:
   migrated route still needs prefixed slots, route-specific helpers, or
   legacy-compatible event shapes.
 - Do not import old shared UI wrappers from `src/components/*` in migrated
-  code, and do not reintroduce route-local primitive barrels. The migration
-  boundary tests cover migrated route scopes and the shared UI layer.
+  code, and do not reintroduce route-local primitive barrels or shared
+  compatibility aliases. The migration boundary tests cover production source
+  imports, migrated route scopes, and the shared UI layer.
 - Primitives must not provide English user-facing fallback copy for labels,
   placeholders, loading labels, empty states, or error messages. Pass localized
   route-owned copy at the call site.
 
-## Temporary Compatibility Exceptions
+## Final Architecture
 
-The only remaining non-canonical UI layers are inventoried by
-`tests/legacy-ui-guardrails.test.ts`. Later migration stories must remove items
-from that explicit allowlist when they move a surface onto `src/ui`.
+`tests/legacy-ui-guardrails.test.ts` expects zero remaining non-canonical UI
+layers in production code. Deprecated generic UI wrappers under
+`src/components/*`, route-local UI barrels such as `src/pages/*/ui`, and shared
+compatibility exports that imitate old shell/dropdown names are blocked from
+returning.
 
-Current exception:
-
-- Shared-but-not-primitive modules such as `src/ui/appShell.tsx`.
+Canonical shell primitives such as `Sidebar*`, `Sheet*`, `DropdownMenu*`, and
+`Navbar*` remain in `src/ui` under their shadcn/Radix names. Feature-specific
+helpers remain explicit and prefixed so they cannot be confused with canonical
+shared primitives.
 
 ## Loading Contract
 

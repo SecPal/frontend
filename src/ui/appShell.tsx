@@ -808,39 +808,3 @@ export function NavbarLabel({
 }: React.ComponentPropsWithoutRef<"span">) {
   return <span className={cn("truncate", className)} {...props} />;
 }
-
-export const SidebarBody = SidebarContent;
-export const SidebarSection = SidebarGroup;
-export const SidebarItem = SidebarMenuButton;
-export const SidebarLabel = SidebarMenuLabel;
-export const SidebarSpacer = SidebarMenuSpacer;
-export const SidebarHeading = SidebarGroupLabel;
-export const Dropdown = DropdownMenu;
-export const DropdownButton = DropdownMenuTrigger;
-export const DropdownItem = DropdownMenuItem;
-export const DropdownDivider = DropdownMenuSeparator;
-export const DropdownLabel = DropdownMenuLabel;
-export const DropdownSection = DropdownMenuGroup;
-export const DropdownShortcut = DropdownMenuShortcut;
-
-export function DropdownHeader({
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<"div">) {
-  return <div className={cn("px-2 pt-2.5 pb-1", className)} {...props} />;
-}
-
-export const DropdownHeading = DropdownMenuLabel;
-export const DropdownDescription = forwardRef<
-  HTMLDivElement,
-  React.ComponentPropsWithoutRef<"div">
->(function DropdownDescription({ className, ...props }, ref) {
-  return (
-    <div
-      ref={ref}
-      data-slot="dropdown-menu-description"
-      className={cn("ml-6 text-xs text-muted-foreground", className)}
-      {...props}
-    />
-  );
-});

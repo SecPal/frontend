@@ -141,9 +141,11 @@ application UI components.
 React output, Tailwind v4 CSS entry at `src/index.css`, the `zinc` base color,
 Lucide icons, and the canonical aliases (`@/ui`, `@/components`, `@/lib`,
 `@/hooks`, `@/lib/utils`).
-**Components:** Shared primitives live in `src/ui`; temporary compatibility
-exceptions are documented in [`src/ui/MIGRATION.md`](src/ui/MIGRATION.md) and
-inventoried by `tests/legacy-ui-guardrails.test.ts`.
+**Components:** Shared primitives, shell composition, route-specific prefixed
+helpers, and canonical `cn` live in `src/ui`. Production code must not import
+deprecated `src/components` UI wrappers, route-local UI barrels, or shared
+compatibility aliases; `tests/legacy-ui-guardrails.test.ts` keeps that
+inventory at zero.
 **Routing:** React Router v7 with client-side navigation
 **Typography:** Inter font family
 **Icons:** Lucide React

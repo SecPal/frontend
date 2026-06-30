@@ -34,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Completed the shadcn/Radix/Lucide UI migration proof by tightening the
+  repo-wide legacy UI guardrail to a zero allowlist, removing the final shared
+  shell compatibility aliases, and documenting `src/ui` as the complete
+  canonical production UI layer (US-007).
 - Moved the remaining Customers, Sites, Employees, and admin/domain surface UI
   consumers onto direct `@/ui` imports, promoted the still-needed customer/site
   and employee compositions to prefixed shared exports, and deleted the
