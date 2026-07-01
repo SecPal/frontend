@@ -448,6 +448,45 @@ describe("App", () => {
     expect(screen.getByTestId("update-prompt")).toBeInTheDocument();
   });
 
+  it.each([
+    {
+      path: "/onboarding",
+      onboardingWorkflowStatus: "changes_requested" as const,
+    },
+    {
+      path: "/onboarding/submitted",
+      onboardingWorkflowStatus: "submitted_for_review" as const,
+    },
+  ])(
+    "keeps the update prompt mounted on authenticated onboarding route $path",
+    async ({ path, onboardingWorkflowStatus }) => {
+      window.history.replaceState({}, "", path);
+
+      await seedPersistedAuthUser({
+        id: 1,
+        name: "Pre-Contract User",
+        email: "new.hire@secpal.dev",
+        emailVerified: true,
+        employee: {
+          id: "employee-1",
+          status: "pre_contract",
+          onboarding_workflow: {
+            status: onboardingWorkflowStatus,
+          },
+        },
+      });
+
+      await renderWithI18n(<App />);
+
+      await waitFor(() => {
+        expect(window.location.pathname).toBe(path);
+      });
+
+      await screen.findByRole("button", { name: /sign out/i });
+      expect(screen.getByTestId("update-prompt")).toBeInTheDocument();
+    }
+  );
+
   it("uses a login-shaped bootstrap placeholder on the login route", async () => {
     mockGetCurrentUser.mockImplementationOnce(
       () =>

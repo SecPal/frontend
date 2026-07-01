@@ -27,11 +27,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/ui/breadcrumb";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/ui/sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/ui/sidebar";
 import { useAuth } from "../hooks/useAuth";
 import { usePrefetch } from "../hooks/usePrefetch";
 import { useUserCapabilities } from "../hooks/useUserCapabilities";
@@ -133,62 +129,63 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
   const isDefined = <T,>(value: T | null): value is T => value !== null;
 
   const navMain = useMemo(
-    () => [
-      {
-        title: t`Home`,
-        url: "/",
-        icon: Home,
-        isActive: location.pathname === "/",
-      },
-      capabilities.customers
-        ? {
-            title: t`Customers`,
-            url: "/customers",
-            icon: Users,
-            isActive: isCurrentPath("/customers"),
-          }
-        : null,
-      capabilities.sites
-        ? {
-            title: t`Sites`,
-            url: "/sites",
-            icon: MapPinned,
-            isActive: isCurrentPath("/sites"),
-          }
-        : null,
-      capabilities.employees
-        ? {
-            title: t`Employees`,
-            url: "/employees",
-            icon: UserRound,
-            isActive: isCurrentPath("/employees"),
-          }
-        : null,
-      capabilities.organization
-        ? {
-            title: t`Organization`,
-            url: "/organization",
-            icon: Building2,
-            isActive: isCurrentPath("/organization"),
-          }
-        : null,
-      capabilities.activityLogs
-        ? {
-            title: t`Activity Logs`,
-            url: "/activity-logs",
-            icon: SquareChartGantt,
-            isActive: isCurrentPath("/activity-logs"),
-          }
-        : null,
-      capabilities.androidProvisioning
-        ? {
-            title: t`Android Provisioning`,
-            url: "/android-provisioning",
-            icon: Smartphone,
-            isActive: isCurrentPath("/android-provisioning"),
-          }
-        : null,
-    ].filter(isDefined),
+    () =>
+      [
+        {
+          title: t`Home`,
+          url: "/",
+          icon: Home,
+          isActive: location.pathname === "/",
+        },
+        capabilities.customers
+          ? {
+              title: t`Customers`,
+              url: "/customers",
+              icon: Users,
+              isActive: isCurrentPath("/customers"),
+            }
+          : null,
+        capabilities.sites
+          ? {
+              title: t`Sites`,
+              url: "/sites",
+              icon: MapPinned,
+              isActive: isCurrentPath("/sites"),
+            }
+          : null,
+        capabilities.employees
+          ? {
+              title: t`Employees`,
+              url: "/employees",
+              icon: UserRound,
+              isActive: isCurrentPath("/employees"),
+            }
+          : null,
+        capabilities.organization
+          ? {
+              title: t`Organization`,
+              url: "/organization",
+              icon: Building2,
+              isActive: isCurrentPath("/organization"),
+            }
+          : null,
+        capabilities.activityLogs
+          ? {
+              title: t`Activity Logs`,
+              url: "/activity-logs",
+              icon: SquareChartGantt,
+              isActive: isCurrentPath("/activity-logs"),
+            }
+          : null,
+        capabilities.androidProvisioning
+          ? {
+              title: t`Android Provisioning`,
+              url: "/android-provisioning",
+              icon: Smartphone,
+              isActive: isCurrentPath("/android-provisioning"),
+            }
+          : null,
+      ].filter(isDefined),
     [
       capabilities.activityLogs,
       capabilities.androidProvisioning,
@@ -232,8 +229,16 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
     }
 
     const shortcut = shortcuts.find((item) => item.isActive);
-    return shortcut?.name ?? t`Home`;
-  }, [navMain, shortcuts]);
+    if (shortcut) {
+      return shortcut.name;
+    }
+
+    if (location.pathname === "/about") {
+      return t`About`;
+    }
+
+    return t`Home`;
+  }, [location.pathname, navMain, shortcuts]);
 
   return (
     <SidebarProvider
@@ -278,7 +283,9 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
         <div className="bg-background flex flex-1 flex-col">
           <div className="grow p-6 lg:p-10">
             <div className="mx-auto max-w-6xl">
-              <Suspense fallback={<RouteContentFallback />}>{children}</Suspense>
+              <Suspense fallback={<RouteContentFallback />}>
+                {children}
+              </Suspense>
             </div>
           </div>
           <Footer />

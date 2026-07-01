@@ -36,12 +36,38 @@ const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
+function getSidebarOpenFromCookie(defaultOpen: boolean): boolean {
+  if (typeof document === "undefined") {
+    return defaultOpen;
+  }
+
+  const sidebarStateCookie = document.cookie
+    .split("; ")
+    .find((cookie) => cookie.startsWith(`${SIDEBAR_COOKIE_NAME}=`));
+
+  if (!sidebarStateCookie) {
+    return defaultOpen;
+  }
+
+  const storedValue = sidebarStateCookie.slice(
+    `${SIDEBAR_COOKIE_NAME}=`.length
+  );
+
+  if (storedValue === "true") {
+    return true;
+  }
+
+  if (storedValue === "false") {
+    return false;
+  }
+
+  return defaultOpen;
+}
+
 type SidebarContextProps = {
   state: "expanded" | "collapsed";
   open: boolean;
-  setOpen: (
-    open: boolean | ((open: boolean) => boolean)
-  ) => void;
+  setOpen: (open: boolean | ((open: boolean) => boolean)) => void;
   openMobile: boolean;
   setOpenMobile: React.Dispatch<React.SetStateAction<boolean>>;
   isMobile: boolean;
@@ -75,7 +101,9 @@ export function SidebarProvider({
 }) {
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
-  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen);
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(() =>
+    getSidebarOpenFromCookie(defaultOpen)
+  );
   const open = openProp ?? uncontrolledOpen;
 
   const setOpen = React.useCallback(

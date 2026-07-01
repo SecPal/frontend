@@ -100,6 +100,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restored the PWA update banner on authenticated onboarding routes, close the
+  mobile sidebar sheet after primary navigation, persist the desktop sidebar
+  collapse preference across reloads, and keep the authenticated breadcrumb
+  label aligned with standalone routes such as `/about`.
 - Fixed shadcn/Radix migration regressions in dev proxy startup, mobile sheet
   overlays, address autocomplete active-descendant IDs, login status message
   markup, and passive advisory alert roles.

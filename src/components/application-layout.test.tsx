@@ -75,10 +75,20 @@ const forbiddenHeroiconsPackagePattern = new RegExp(
 const forbiddenTailwindPlusLicenseMarkerPattern = new RegExp(
   ["LicenseRef", "TailwindPlus"].join("-")
 );
+const SIDEBAR_STATE_COOKIE_NAME = "sidebar_state";
 
 function setCsrfTokenCookie(value: string): void {
   document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
   document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
+}
+
+function clearSidebarStateCookie(): void {
+  document.cookie = `${SIDEBAR_STATE_COOKIE_NAME}=;expires=${new Date(0).toUTCString()};path=/`;
+}
+
+function setSidebarStateCookie(value: boolean): void {
+  clearSidebarStateCookie();
+  document.cookie = `${SIDEBAR_STATE_COOKIE_NAME}=${value};path=/`;
 }
 
 function getStoredAuthState(): string | null {
@@ -115,6 +125,12 @@ function LocationStateProbe() {
       : {};
 
   return <output data-testid="location-state">{JSON.stringify(state)}</output>;
+}
+
+function PathnameProbe() {
+  const location = useLocation();
+
+  return <output data-testid="pathname">{location.pathname}</output>;
 }
 
 async function seedAuthenticatedUser(user: Record<string, unknown>) {
@@ -198,6 +214,7 @@ describe("ApplicationLayout", () => {
     localStorage.clear();
     clearOfflineVaultSession();
     setCsrfTokenCookie("test-csrf-token");
+    clearSidebarStateCookie();
     Object.defineProperty(window, "innerWidth", {
       configurable: true,
       value: 1024,
@@ -209,6 +226,7 @@ describe("ApplicationLayout", () => {
   });
 
   afterEach(() => {
+    clearSidebarStateCookie();
     clearOfflineVaultSession();
   });
 
@@ -245,6 +263,23 @@ describe("ApplicationLayout", () => {
       }
 
       await user.click(sidebarTrigger);
+
+      expect(desktopSidebar).toHaveAttribute("data-state", "collapsed");
+      expect(desktopSidebar).toHaveAttribute("data-collapsible", "icon");
+    });
+
+    it("restores the desktop sidebar state from the persisted cookie", () => {
+      setSidebarStateCookie(false);
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const desktopSidebar = document.querySelector(
+        '[data-slot="sidebar"][data-side="left"]'
+      );
 
       expect(desktopSidebar).toHaveAttribute("data-state", "collapsed");
       expect(desktopSidebar).toHaveAttribute("data-collapsible", "icon");
@@ -468,6 +503,54 @@ describe("ApplicationLayout", () => {
       }
     });
 
+    it("closes the mobile sidebar after primary navigation", async () => {
+      const user = userEvent.setup();
+      const originalInnerWidth = window.innerWidth;
+
+      try {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: 480,
+        });
+
+        await seedAuthenticatedUser({
+          ...authenticatedUser,
+          hasCustomerAccess: true,
+        });
+
+        renderWithProviders(
+          <ApplicationLayout>
+            <PathnameProbe />
+          </ApplicationLayout>,
+          { route: "/" }
+        );
+
+        await user.click(
+          screen.getByRole("button", { name: /toggle sidebar/i })
+        );
+
+        await screen.findByRole("dialog", {
+          name: /sidebar/i,
+        });
+
+        await user.click(screen.getByRole("link", { name: /customers/i }));
+
+        await waitFor(() => {
+          expect(screen.getByTestId("pathname")).toHaveTextContent(
+            "/customers"
+          );
+          expect(
+            screen.queryByRole("dialog", { name: /sidebar/i })
+          ).not.toBeInTheDocument();
+        });
+      } finally {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: originalInnerWidth,
+        });
+      }
+    });
+
     it("renders user initials in avatar", async () => {
       renderWithProviders(
         <ApplicationLayout>
@@ -494,6 +577,19 @@ describe("ApplicationLayout", () => {
         '[data-slot="sidebar-menu-button"][href="/"]'
       );
       expect(homeLink).toHaveAttribute("data-active", "true");
+    });
+
+    it("shows the current standalone page in the breadcrumb", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>,
+        { route: "/about" }
+      );
+
+      expect(screen.getByRole("link", { current: "page" })).toHaveTextContent(
+        "About"
+      );
     });
   });
 
@@ -1296,7 +1392,9 @@ describe("ApplicationLayout", () => {
 
   describe("migration boundary", () => {
     it("removes the legacy app shell implementation from the active UI surface", () => {
-      expect(existsSync(join(process.cwd(), "src/ui/appShell.tsx"))).toBe(false);
+      expect(existsSync(join(process.cwd(), "src/ui/appShell.tsx"))).toBe(
+        false
+      );
     });
 
     it("keeps the migrated shell free of Headless, Heroicons and inline UI icon sources", () => {
