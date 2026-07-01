@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { installSystemColorSchemeSync } from "./lib/systemColorScheme";
+import {
+  installSystemColorSchemeSync,
+  syncSystemColorScheme,
+} from "./lib/systemColorScheme";
 
 function createMatchMediaStub(initialMatches: boolean) {
   let matches = initialMatches;
@@ -36,6 +39,9 @@ function createMatchMediaStub(initialMatches: boolean) {
 
   return {
     matchMedia: vi.fn<(query: string) => MediaQueryList>(() => mediaQueryList),
+    listenerCount() {
+      return listeners.size;
+    },
     emit(nextMatches: boolean) {
       matches = nextMatches;
       const event = { matches: nextMatches } as MediaQueryListEvent;
@@ -84,5 +90,18 @@ describe("system color scheme sync", () => {
     expect(document.documentElement.style.colorScheme).toBe("light");
 
     cleanup();
+  });
+
+  it("can apply the current system preference without registering a long-lived listener", () => {
+    const matchMediaStub = createMatchMediaStub(true);
+
+    syncSystemColorScheme({
+      document: window.document,
+      matchMedia: matchMediaStub.matchMedia,
+    });
+
+    expect(document.documentElement).toHaveClass("dark");
+    expect(document.documentElement.style.colorScheme).toBe("dark");
+    expect(matchMediaStub.listenerCount()).toBe(0);
   });
 });

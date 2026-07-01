@@ -225,6 +225,10 @@ msgstr "Ein gültiger Aufenthaltstitel ohne Arbeitserlaubnis kann nicht akzeptie
 msgid "No"
 msgstr "Nein"
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "City is required."
+msgstr ""
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Verification method"
 msgstr "Methode zur Überprüfung"
@@ -310,6 +314,13 @@ msgstr "Das Anlegen von Organisationseinheiten ist im Offline-Modus nicht mögli
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Site Number:"
 msgstr "Objektnummer:"
+
+#. placeholder {0}: customer.name
+#. placeholder {0}: employee.full_name
+#: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Employees/EmployeeList.tsx
+msgid "View {0}"
+msgstr ""
 
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
@@ -648,6 +659,7 @@ msgstr "Es sind noch keine Passkeys eingerichtet."
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Billing Address"
 msgstr "Rechnungsadresse"
@@ -919,6 +931,10 @@ msgstr "Name des Notfallkontakts"
 msgid "House Number"
 msgstr "Hausnummer"
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Country must use a 2-letter code."
+msgstr ""
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Unnamed Android enrollment session"
 msgstr "Unbenannte Android-Enrollment-Sitzung"
@@ -1137,6 +1153,7 @@ msgstr "Vielen Dank für die Einreichung Ihrer Onboarding-Angaben. Unser HR-Team
 #: src/components/MoveOrganizationalUnitDialog.tsx
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
@@ -1168,10 +1185,12 @@ msgid "Please use the required format."
 msgstr "Bitte verwenden Sie das erforderliche Format."
 
 #: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Postal Code"
 msgstr "Postleitzahl"
@@ -1859,6 +1878,10 @@ msgstr "QR-Code der Authenticator-App"
 msgid "Get started by creating your first organizational unit."
 msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
+msgid "Provide a short reason before this Android enrollment session is revoked."
+msgstr ""
+
 #: src/pages/Login.tsx
 msgid "Select language"
 msgstr "Sprache auswählen"
@@ -1913,6 +1936,10 @@ msgstr "Browser-Benachrichtigungen sind für diesen angemeldeten Browser auf die
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to update contact field."
 msgstr "Kontaktfeld konnte nicht aktualisiert werden."
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Postal code is required."
+msgstr ""
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Generating BWR Export..."
@@ -2460,6 +2487,10 @@ msgstr "Ich habe diese Wiederherstellungscodes sicher gespeichert und weiß, das
 msgid "Store your recovery codes now"
 msgstr "Speichern Sie jetzt Ihre Wiederherstellungscodes"
 
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
+msgid "Revoke enrollment session"
+msgstr ""
+
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "Create Customer"
 msgstr "Kunde anlegen"
@@ -2479,6 +2510,10 @@ msgstr "Obtainium"
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Organization Structure"
 msgstr "Organisationsstruktur"
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Customer name is required."
+msgstr ""
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -2624,6 +2659,10 @@ msgstr "Führungsebene ist erforderlich, wenn es eine Führungsposition ist"
 msgid "Description must be at most 1000 characters"
 msgstr "Die Beschreibung darf höchstens 1000 Zeichen lang sein"
 
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
+msgid "Revocation reason is required."
+msgstr ""
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Failed to validate onboarding link"
 msgstr "Onboarding-Link konnte nicht validiert werden"
@@ -2652,6 +2691,10 @@ msgstr "Sie haben keine Berechtigung, diese Aktion auszufuehren."
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Failed to delete passkey."
 msgstr "Passkey konnte nicht gelöscht werden."
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Street is required."
+msgstr ""
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No qualifications assigned"
@@ -3332,6 +3375,10 @@ msgstr "AGPL-v3-Lizenz lesen"
 msgid "Please select a file to upload."
 msgstr "Bitte wählen Sie eine Datei zum Hochladen aus."
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Please enter a valid email address."
+msgstr ""
+
 #: src/pages/SourcePage.tsx
 msgid "Source code and license"
 msgstr "Quelltext und Lizenz"
@@ -3676,3 +3723,7 @@ msgstr "Fehler beim Aktualisieren des Mitarbeiters"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to activate employee"
 msgstr "Mitarbeiter konnte nicht aktiviert werden"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
+msgid "Revoking..."
+msgstr ""

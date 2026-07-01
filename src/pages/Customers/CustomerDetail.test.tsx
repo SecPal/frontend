@@ -101,8 +101,25 @@ describe("CustomerDetail", () => {
     expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
     expect(screen.getByText("CUST-2025-001")).toBeInTheDocument();
     expect(screen.getByText("Teststrasse 42")).toBeInTheDocument();
-    expect(screen.getByText("80331 München")).toBeInTheDocument();
+    expect(screen.getByText("80331")).toBeInTheDocument();
+    expect(screen.getByText("München")).toBeInTheDocument();
     expect(screen.getByText("DE")).toBeInTheDocument();
+  });
+
+  it("renders postal code and city on separate billing-address lines", async () => {
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Postal Code")).toBeInTheDocument();
+    expect(screen.getByText("City")).toBeInTheDocument();
+    expect(screen.getByText("80331")).toBeInTheDocument();
+    expect(screen.getByText("München")).toBeInTheDocument();
+    expect(screen.queryByText("80331 München")).not.toBeInTheDocument();
   });
 
   it("displays contact information", async () => {

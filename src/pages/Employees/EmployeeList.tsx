@@ -40,6 +40,19 @@ import {
 } from "@/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
+const EMPLOYEES_DESKTOP_MEDIA_QUERY = "(min-width: 40rem)";
+
+function readUseDesktopTable(): boolean {
+  if (
+    typeof window === "undefined" ||
+    typeof window.matchMedia !== "function"
+  ) {
+    return true;
+  }
+
+  return window.matchMedia(EMPLOYEES_DESKTOP_MEDIA_QUERY).matches;
+}
+
 function StatusBadge({ status }: { status: EmployeeStatus }) {
   const colors = {
     applicant: "orange",
@@ -115,6 +128,28 @@ export function EmployeeList() {
     OrganizationalUnit[]
   >([]);
   const [unitsLoading, setUnitsLoading] = useState(true);
+  const [useDesktopTable, setUseDesktopTable] = useState(readUseDesktopTable);
+
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      typeof window.matchMedia !== "function"
+    ) {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia(EMPLOYEES_DESKTOP_MEDIA_QUERY);
+    const updateLayout = () => {
+      setUseDesktopTable(mediaQuery.matches);
+    };
+
+    updateLayout();
+    mediaQuery.addEventListener("change", updateLayout);
+
+    return () => {
+      mediaQuery.removeEventListener("change", updateLayout);
+    };
+  }, []);
 
   // Load organizational units on mount
   useEffect(() => {
@@ -312,97 +347,185 @@ export function EmployeeList() {
         loading={loading}
         loadingLabel={_(msg`Loading employees table`)}
       >
-        <DataTable>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableHeader>
-                  <Trans>Employee</Trans>
-                </TableHeader>
-                <TableHeader>
-                  <Trans>Employee #</Trans>
-                </TableHeader>
-                <TableHeader>
-                  <Trans>Position</Trans>
-                </TableHeader>
-                <TableHeader>
-                  <Trans>Status</Trans>
-                </TableHeader>
-                <TableHeader>
-                  <Trans>Unit</Trans>
-                </TableHeader>
-                <TableHeader>
-                  <span className="sr-only">
-                    <Trans>Actions</Trans>
-                  </span>
-                </TableHeader>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading && employees.length === 0 ? (
-                <EmployeeTableSkeletonRows columns={6} rows={5} />
-              ) : null}
-
-              {employees.map((employee) => (
-                <TableRow
-                  key={employee.id}
-                  to={`/employees/${employee.id}`}
-                  title={employee.full_name}
-                >
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{employee.full_name}</div>
-                      <div className="text-muted-foreground">
-                        {employee.email}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {employee.employee_number}
-                  </TableCell>
-                  <TableCell>
-                    {employee.management_level > 0 ? (
-                      <>
-                        <span className="font-medium">
-                          <Trans>ML</Trans> {employee.management_level}
-                        </span>
-                        {" - "}
-                        {employee.position}
-                      </>
-                    ) : (
-                      employee.position
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={employee.status} />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {employee.organizational_unit?.name || "-"}
-                  </TableCell>
-                  <TableCell>
-                    <LinkButton
-                      variant="outline"
-                      to={`/employees/${employee.id}`}
-                      className="relative z-10"
-                    >
-                      <Trans>View</Trans>
-                    </LinkButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-
-              {!loading && !error && employees.length === 0 ? (
+        {useDesktopTable ? (
+          <DataTable>
+            <Table>
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={6} className="py-12 text-center">
-                    <PageText className="text-muted-foreground">
-                      <Trans>No employees found</Trans>
-                    </PageText>
-                  </TableCell>
+                  <TableHeader>
+                    <Trans>Employee</Trans>
+                  </TableHeader>
+                  <TableHeader>
+                    <Trans>Employee #</Trans>
+                  </TableHeader>
+                  <TableHeader>
+                    <Trans>Position</Trans>
+                  </TableHeader>
+                  <TableHeader>
+                    <Trans>Status</Trans>
+                  </TableHeader>
+                  <TableHeader>
+                    <Trans>Unit</Trans>
+                  </TableHeader>
+                  <TableHeader>
+                    <span className="sr-only">
+                      <Trans>Actions</Trans>
+                    </span>
+                  </TableHeader>
                 </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
-        </DataTable>
+              </TableHead>
+              <TableBody>
+                {loading && employees.length === 0 ? (
+                  <EmployeeTableSkeletonRows columns={6} rows={5} />
+                ) : null}
+
+                {employees.map((employee) => (
+                  <TableRow
+                    key={employee.id}
+                    to={`/employees/${employee.id}`}
+                    title={employee.full_name}
+                  >
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{employee.full_name}</div>
+                        <div className="text-muted-foreground">
+                          {employee.email}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {employee.employee_number}
+                    </TableCell>
+                    <TableCell>
+                      {employee.management_level > 0 ? (
+                        <>
+                          <span className="font-medium">
+                            <Trans>ML</Trans> {employee.management_level}
+                          </span>
+                          {" - "}
+                          {employee.position}
+                        </>
+                      ) : (
+                        employee.position
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={employee.status} />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {employee.organizational_unit?.name || "-"}
+                    </TableCell>
+                    <TableCell>
+                      <LinkButton
+                        variant="outline"
+                        to={`/employees/${employee.id}`}
+                        className="relative z-10"
+                      >
+                        <Trans>View</Trans>
+                      </LinkButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+
+                {!loading && !error && employees.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-12 text-center">
+                      <PageText className="text-muted-foreground">
+                        <Trans>No employees found</Trans>
+                      </PageText>
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
+          </DataTable>
+        ) : (
+          <div className="space-y-3">
+            {loading && employees.length === 0
+              ? Array.from({ length: 5 }, (_, index) => (
+                  <div
+                    key={index}
+                    className="rounded-md border border-border bg-card p-4"
+                    aria-hidden="true"
+                  >
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="mt-2 h-4 w-40" />
+                    <Skeleton className="mt-4 h-4 w-24" />
+                    <Skeleton className="mt-4 h-9 w-24" />
+                  </div>
+                ))
+              : null}
+
+            {employees.map((employee) => (
+              <div
+                key={employee.id}
+                className="rounded-md border border-border bg-card p-4"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-foreground text-sm font-semibold">
+                      {employee.full_name}
+                    </p>
+                    <p className="text-muted-foreground mt-1 break-words text-sm">
+                      {employee.email}
+                    </p>
+                  </div>
+                  <StatusBadge status={employee.status} />
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">
+                      <Trans>Employee #</Trans>
+                    </p>
+                    <p className="text-foreground">{employee.employee_number}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">
+                      <Trans>Unit</Trans>
+                    </p>
+                    <p className="text-foreground">
+                      {employee.organizational_unit?.name || "-"}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">
+                      <Trans>Position</Trans>
+                    </p>
+                    <p className="text-foreground">
+                      {employee.management_level > 0 ? (
+                        <>
+                          <Trans>ML</Trans> {employee.management_level} -{" "}
+                          {employee.position}
+                        </>
+                      ) : (
+                        employee.position
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <LinkButton
+                    variant="outline"
+                    to={`/employees/${employee.id}`}
+                    aria-label={_(msg`View ${employee.full_name}`)}
+                  >
+                    <Trans>View</Trans>
+                  </LinkButton>
+                </div>
+              </div>
+            ))}
+
+            {!loading && !error && employees.length === 0 ? (
+              <div className="rounded-md border border-border bg-card px-4 py-12 text-center">
+                <PageText className="text-muted-foreground">
+                  <Trans>No employees found</Trans>
+                </PageText>
+              </div>
+            ) : null}
+          </div>
+        )}
       </LoadingRegion>
 
       {/* Pagination */}

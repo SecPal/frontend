@@ -8,6 +8,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/ui";
 
@@ -45,5 +46,18 @@ describe("DropdownMenuItem", () => {
     expect(menuItem).toHaveClass("w-full");
     fireEvent.click(menuItem);
     expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders item labels as inline content instead of nested menu section labels", () => {
+    renderOpenDropdown(
+      <DropdownMenuItem href="/settings">
+        <DropdownMenuLabel>Settings</DropdownMenuLabel>
+      </DropdownMenuItem>
+    );
+
+    const label = screen.getByText("Settings");
+
+    expect(label.tagName).toBe("SPAN");
+    expect(label).toHaveAttribute("data-slot", "dropdown-menu-label");
   });
 });

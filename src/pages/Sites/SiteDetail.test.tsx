@@ -148,7 +148,28 @@ describe("SiteDetail", () => {
 
     // Check address
     expect(screen.getByText("Teststrasse 42")).toBeInTheDocument();
-    expect(screen.getByText(/80331 München/)).toBeInTheDocument();
+    expect(screen.getByText("80331")).toBeInTheDocument();
+    expect(screen.getByText("München")).toBeInTheDocument();
+  });
+
+  it("renders postal code and city on separate site-address lines", async () => {
+    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
+      mockOrgUnit
+    );
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByText("Munich Office")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Postal Code")).toBeInTheDocument();
+    expect(screen.getByText("City")).toBeInTheDocument();
+    expect(screen.getByText("80331")).toBeInTheDocument();
+    expect(screen.getByText("München")).toBeInTheDocument();
+    expect(screen.queryByText("80331 München")).not.toBeInTheDocument();
   });
 
   it("keeps the detail frame visible while site data loads", () => {

@@ -6,7 +6,7 @@ import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { ChevronDown, WifiOff } from "lucide-react";
-import { Alert, AlertDescription } from "@/ui";
+import { Alert, AlertDescription, AlertTitle } from "@/ui";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 /** Time in milliseconds before the banner auto-minimizes */
@@ -90,30 +90,28 @@ export function OfflineIndicator() {
     >
       <Alert
         role="presentation"
-        className="border-amber-500/30 bg-amber-500/10 shadow-lg"
+        className="grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 border-amber-500/30 bg-amber-500/10 shadow-lg [&>svg+div]:translate-y-0 [&>svg]:static [&>svg]:mt-0.5 [&>svg~*]:pl-0"
       >
         <WifiOff className="text-foreground h-5 w-5 shrink-0" aria-hidden="true" />
-        <div className="flex w-full items-center gap-3">
-          <div className="flex-1">
-            <AlertDescription className="mt-0 text-foreground text-sm font-semibold">
-              <Trans>You're offline</Trans>
-            </AlertDescription>
-            <AlertDescription className="text-muted-foreground mt-0 text-xs">
-              <Trans>
-                Some features may be limited. Your changes will sync when you're
-                back online.
-              </Trans>
-            </AlertDescription>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsMinimized(true)}
-            className="text-foreground hover:bg-accent focus:ring-ring/50 ml-2 rounded p-1 transition-colors focus:outline-none focus:ring-2"
-            aria-label={_(msg`Minimize offline notice`)}
-          >
-            <ChevronDown className="h-4 w-4" aria-hidden="true" />
-          </button>
+        <div className="min-w-0">
+          <AlertTitle className="text-foreground text-sm font-semibold">
+            <Trans>You're offline</Trans>
+          </AlertTitle>
+          <AlertDescription className="mt-1 text-xs">
+            <Trans>
+              Some features may be limited. Your changes will sync when you're
+              back online.
+            </Trans>
+          </AlertDescription>
         </div>
+        <button
+          type="button"
+          onClick={() => setIsMinimized(true)}
+          className="text-foreground hover:bg-accent focus:ring-ring/50 self-start shrink-0 rounded p-1 transition-colors focus:outline-none focus:ring-2"
+          aria-label={_(msg`Minimize offline notice`)}
+        >
+          <ChevronDown className="h-4 w-4" aria-hidden="true" />
+        </button>
       </Alert>
     </div>
   );

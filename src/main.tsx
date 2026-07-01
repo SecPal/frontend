@@ -8,7 +8,10 @@ import { i18n } from "@lingui/core";
 import App from "./App";
 import { activateLocale, detectLocale } from "./i18n";
 import { RuntimeStyleCspSupport } from "./lib/RuntimeStyleCspSupport";
-import { installSystemColorSchemeSync } from "./lib/systemColorScheme";
+import {
+  installSystemColorSchemeSync,
+  syncSystemColorScheme,
+} from "./lib/systemColorScheme";
 import { initWebVitals } from "./lib/webVitals";
 import "./index.css";
 
@@ -43,7 +46,7 @@ if (typeof window !== "undefined" && !isTest) {
     throw new Error("Root element not found");
   }
 
-  installSystemColorSchemeSync();
+  syncSystemColorScheme();
 
   // Cache root instance to avoid HMR warning
   type WindowWithRoot = Window & { __app_root?: ReturnType<typeof createRoot> };

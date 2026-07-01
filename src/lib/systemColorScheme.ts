@@ -11,6 +11,15 @@ export function applySystemColorSchemeClass(
   rootElement.style.colorScheme = isDarkMode ? "dark" : "light";
 }
 
+export function syncSystemColorScheme(
+  win: Pick<Window, "document" | "matchMedia"> = window
+): void {
+  applySystemColorSchemeClass(
+    win.document.documentElement,
+    win.matchMedia(DARK_MODE_MEDIA_QUERY).matches
+  );
+}
+
 export function installSystemColorSchemeSync(
   win: Pick<Window, "document" | "matchMedia"> = window
 ): () => void {
@@ -21,7 +30,7 @@ export function installSystemColorSchemeSync(
     applySystemColorSchemeClass(rootElement, matches);
   };
 
-  syncColorScheme(mediaQuery.matches);
+  syncSystemColorScheme(win);
 
   const handleChange = (event: MediaQueryListEvent) => {
     syncColorScheme(event.matches);

@@ -186,12 +186,16 @@ export default function CustomerDetail() {
               </DescriptionDetails>
 
               <DescriptionTerm>
-                <Trans>City</Trans>
+                <Trans>Postal Code</Trans>
               </DescriptionTerm>
               <DescriptionDetails>
-                {customer.billing_address.postal_code}{" "}
-                {customer.billing_address.city}
+                {customer.billing_address.postal_code}
               </DescriptionDetails>
+
+              <DescriptionTerm>
+                <Trans>City</Trans>
+              </DescriptionTerm>
+              <DescriptionDetails>{customer.billing_address.city}</DescriptionDetails>
 
               <DescriptionTerm>
                 <Trans>Country</Trans>

@@ -93,6 +93,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restored the checked/unchecked icon state on shared `Switch` controls with
+  `showIcons`, corrected dropdown-menu item labels to render as inline content
+  instead of nested Radix menu-section labels, and split system color-scheme
+  bootstrap from listener installation so startup no longer registers a
+  duplicate media-query subscription.
 - Added the missing `SecPal/android` repository to the `/source` AGPL
   source-offer page so the frontend's corresponding-source list again
   reflects the Android wrapper that consumes the shared frontend build output.

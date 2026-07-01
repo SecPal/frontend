@@ -169,6 +169,30 @@ describe("OfflineIndicator", () => {
       expect(banner).toHaveClass("fixed");
       expect(banner).toHaveClass("bottom-4");
     });
+
+    it("keeps the expanded banner on a single canonical alert grid", () => {
+      vi.mocked(useOnlineStatus).mockReturnValue(false);
+
+      renderWithI18n(<OfflineIndicator />);
+
+      const title = screen.getByText(/you're offline/i);
+      const description = screen.getByText(
+        /some features may be limited\. your changes will sync when you're back online\./i
+      );
+      const minimizeButton = screen.getByRole("button", {
+        name: /minimize offline notice/i,
+      });
+      const alert = title.closest('[data-slot="alert"]');
+
+      expect(alert).toHaveClass(
+        "grid-cols-[auto_minmax(0,1fr)_auto]",
+        "items-start"
+      );
+      expect(alert).toHaveClass("[&>svg]:static", "[&>svg~*]:pl-0");
+      expect(title).toHaveAttribute("data-slot", "alert-title");
+      expect(description).toHaveAttribute("data-slot", "alert-description");
+      expect(minimizeButton).toHaveClass("self-start", "shrink-0");
+    });
   });
 
   describe("Auto-minimize behavior", () => {

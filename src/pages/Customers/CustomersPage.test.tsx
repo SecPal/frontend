@@ -32,6 +32,22 @@ const renderWithProviders = () => {
   );
 };
 
+function setViewportMatchesDesktop(matches: boolean) {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: vi.fn().mockImplementation(() => ({
+      matches,
+      media: "(min-width: 40rem)",
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+}
+
 const mockCustomers: Customer[] = [
   {
     id: "cust-1",
@@ -84,6 +100,7 @@ async function selectRadixOption(label: RegExp, optionName: RegExp) {
 describe("CustomersPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setViewportMatchesDesktop(true);
     vi.mocked(customersApi.listCustomers).mockResolvedValue(mockResponse);
     mockUseUserCapabilities.mockReturnValue({
       actions: {
@@ -101,6 +118,23 @@ describe("CustomersPage", () => {
       })
     ).toBeInTheDocument();
     expect(screen.getByText("C001")).toBeInTheDocument();
+  });
+
+  it("renders customers as mobile cards on narrow viewports", async () => {
+    setViewportMatchesDesktop(false);
+
+    renderWithProviders();
+
+    expect(await screen.findByText("Acme Corp")).toBeInTheDocument();
+    expect(screen.getByText("C001")).toBeInTheDocument();
+    expect(screen.getByText(/12345 Berlin/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /view acme corp/i })).toHaveAttribute(
+      "href",
+      "/customers/cust-1"
+    );
+    expect(
+      screen.queryByRole("columnheader", { name: /customer number/i })
+    ).not.toBeInTheDocument();
   });
 
   it("renders page chrome and table skeleton rows while initially loading", () => {

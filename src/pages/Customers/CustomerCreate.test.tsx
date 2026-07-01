@@ -98,6 +98,37 @@ describe("CustomerCreate", () => {
     );
   });
 
+  it("uses in-app validation instead of browser-native email validation", async () => {
+    const user = userEvent.setup();
+    renderWithRouter(<CustomerCreate />);
+
+    fireEvent.change(screen.getByLabelText(/customer name/i), {
+      target: { value: "Test Customer" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Test Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "Test City" },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: /email/i }), {
+      target: { value: "invalid-email" },
+    });
+
+    const submitButton = screen.getByRole("button", { name: /create customer/i });
+    expect(submitButton.closest("form")).toHaveAttribute("novalidate");
+
+    await user.click(submitButton);
+
+    expect(
+      await screen.findByText(/please enter a valid email address/i)
+    ).toBeInTheDocument();
+    expect(customersApi.createCustomer).not.toHaveBeenCalled();
+  });
+
   it("submits form with valid data", async () => {
     const user = userEvent.setup();
     const mockCustomer = {

@@ -246,6 +246,14 @@ describe("shared shadcn/radix UI basis", () => {
     );
   });
 
+  it("keeps icon-enabled switches in a group state context so checked icons can toggle", () => {
+    render(<Switch aria-label="Leadership" showIcons checked />);
+
+    expect(screen.getByRole("switch", { name: "Leadership" })).toHaveClass(
+      "group"
+    );
+  });
+
   it("keeps shared shell primitives on canonical theme tokens instead of bespoke sidebar tokens", () => {
     const { container } = render(
       <MemoryRouter>

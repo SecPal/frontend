@@ -287,11 +287,14 @@ export default function SiteDetail() {
             <DescriptionDetails>{site.address.street}</DescriptionDetails>
 
             <DescriptionTerm>
+              <Trans>Postal Code</Trans>
+            </DescriptionTerm>
+            <DescriptionDetails>{site.address.postal_code}</DescriptionDetails>
+
+            <DescriptionTerm>
               <Trans>City</Trans>
             </DescriptionTerm>
-            <DescriptionDetails>
-              {site.address.postal_code} {site.address.city}
-            </DescriptionDetails>
+            <DescriptionDetails>{site.address.city}</DescriptionDetails>
 
             <DescriptionTerm>
               <Trans>Country</Trans>

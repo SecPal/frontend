@@ -26,7 +26,16 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
   Field,
+  FieldError,
   FieldLabel,
   Input,
   LoadingRegion,
@@ -254,8 +263,16 @@ export default function AndroidProvisioningPage() {
     useState<AndroidEnrollmentSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [revoking, setRevoking] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [revokeError, setRevokeError] = useState<string | null>(null);
+  const [revokeReasonError, setRevokeReasonError] = useState<string | null>(
+    null
+  );
+  const [revokeReason, setRevokeReason] = useState("");
+  const [sessionToRevoke, setSessionToRevoke] =
+    useState<AndroidEnrollmentSession | null>(null);
 
   const canCreate = capabilities.actions.androidProvisioning.create;
   const canRevoke = capabilities.actions.androidProvisioning.revoke;
@@ -330,20 +347,48 @@ export default function AndroidProvisioningPage() {
     }
   }
 
-  async function handleRevoke(session: AndroidEnrollmentSession) {
-    const reason = window.prompt(_(msg`Revocation reason`), "");
+  function openRevokeDialog(session: AndroidEnrollmentSession) {
+    setSessionToRevoke(session);
+    setRevokeReason("");
+    setRevokeReasonError(null);
+    setRevokeError(null);
+  }
 
-    if (!reason || reason.trim().length === 0) {
+  function closeRevokeDialog() {
+    if (revoking) {
       return;
     }
 
+    setSessionToRevoke(null);
+    setRevokeReason("");
+    setRevokeReasonError(null);
+    setRevokeError(null);
+  }
+
+  async function handleRevoke(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!sessionToRevoke) {
+      return;
+    }
+
+    const normalizedReason = revokeReason.trim();
+    if (normalizedReason.length === 0) {
+      setRevokeReasonError(_(msg`Revocation reason is required.`));
+      return;
+    }
+
+    setRevoking(true);
+    setRevokeReasonError(null);
+    setRevokeError(null);
+
     try {
       const response = await requestJson<ApiEnvelope<AndroidEnrollmentSession>>(
-        `/v1/android-enrollment-sessions/${session.id}/revoke`,
+        `/v1/android-enrollment-sessions/${sessionToRevoke.id}/revoke`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reason: reason.trim() }),
+          body: JSON.stringify({ reason: normalizedReason }),
         }
       );
 
@@ -356,15 +401,93 @@ export default function AndroidProvisioningPage() {
         current?.id === response.data.id ? response.data : current
       );
       setLoadError(null);
+      closeRevokeDialog();
     } catch (error) {
-      setLoadError(
-        getErrorMessage(error, "Failed to revoke Android enrollment session")
+      const message = getErrorMessage(
+        error,
+        "Failed to revoke Android enrollment session"
       );
+      setRevokeError(message);
+    } finally {
+      setRevoking(false);
     }
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      {sessionToRevoke ? (
+        <Dialog open={true} onClose={closeRevokeDialog}>
+          <DialogPortal>
+            <DialogOverlay />
+            <DialogContent>
+              <form className="space-y-4" onSubmit={handleRevoke} noValidate>
+                <DialogTitle>
+                  <Trans>Revoke enrollment session</Trans>
+                </DialogTitle>
+                <DialogDescription>
+                  <Trans>
+                    Provide a short reason before this Android enrollment
+                    session is revoked.
+                  </Trans>
+                </DialogDescription>
+                <DialogBody className="space-y-4">
+                  <Field>
+                    <FieldLabel htmlFor="android-revoke-reason">
+                      <Trans>Revocation reason</Trans>
+                    </FieldLabel>
+                    <Input
+                      id="android-revoke-reason"
+                      name="reason"
+                      autoFocus
+                      value={revokeReason}
+                      onChange={(event) => {
+                        setRevokeReason(event.target.value);
+                        if (revokeReasonError) {
+                          setRevokeReasonError(null);
+                        }
+                      }}
+                      aria-invalid={revokeReasonError ? true : undefined}
+                      aria-describedby={
+                        revokeReasonError
+                          ? "android-revoke-reason-error"
+                          : undefined
+                      }
+                    />
+                    {revokeReasonError ? (
+                      <FieldError id="android-revoke-reason-error">
+                        {revokeReasonError}
+                      </FieldError>
+                    ) : null}
+                  </Field>
+
+                  {revokeError ? (
+                    <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+                      <AlertDescription className="text-destructive">
+                        {revokeError}
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
+                </DialogBody>
+                <DialogActions>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={closeRevokeDialog}
+                    disabled={revoking}
+                  >
+                    <Trans>Cancel</Trans>
+                  </Button>
+                  <Button type="submit" disabled={revoking}>
+                    <RotateCcw className="size-4" aria-hidden="true" />
+                    {revoking ? <Trans>Revoking...</Trans> : <Trans>Revoke</Trans>}
+                  </Button>
+                </DialogActions>
+              </form>
+            </DialogContent>
+          </DialogPortal>
+        </Dialog>
+      ) : null}
+      <div className="space-y-6">
       <h1 className="text-foreground text-2xl font-semibold tracking-normal">
         <Trans>Android Provisioning</Trans>
       </h1>
@@ -552,7 +675,7 @@ export default function AndroidProvisioningPage() {
                       {canRevoke && session.status === "pending" ? (
                         <Button
                           variant="outline"
-                          onClick={() => void handleRevoke(session)}
+                          onClick={() => openRevokeDialog(session)}
                         >
                           <RotateCcw className="size-4" aria-hidden="true" />
                           <Trans>Revoke</Trans>
@@ -574,6 +697,7 @@ export default function AndroidProvisioningPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

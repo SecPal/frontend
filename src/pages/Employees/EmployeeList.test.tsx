@@ -36,6 +36,22 @@ const renderWithProviders = () => {
   );
 };
 
+function setViewportMatchesDesktop(matches: boolean) {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: vi.fn().mockImplementation(() => ({
+      matches,
+      media: "(min-width: 40rem)",
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+}
+
 async function selectRadixOption(
   triggerName: RegExp,
   optionName: RegExp | string
@@ -140,6 +156,7 @@ const mockResponse: EmployeeListResponse = {
 describe("EmployeeList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setViewportMatchesDesktop(true);
     mockUseUserCapabilities.mockReturnValue({
       actions: {
         employees: {
@@ -206,6 +223,23 @@ describe("EmployeeList", () => {
     expect(screen.getByText("E002")).toBeInTheDocument();
     expect(screen.getByText("Designer")).toBeInTheDocument();
     expect(screen.getByText("Design")).toBeInTheDocument();
+  });
+
+  it("renders employees as mobile cards on narrow viewports", async () => {
+    setViewportMatchesDesktop(false);
+
+    renderWithProviders();
+
+    expect(await screen.findByText("John Doe")).toBeInTheDocument();
+    expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
+    expect(screen.getByText("Engineering")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /view john doe/i })).toHaveAttribute(
+      "href",
+      "/employees/emp-1"
+    );
+    expect(
+      screen.queryByRole("columnheader", { name: /employee/i })
+    ).not.toBeInTheDocument();
   });
 
   it("renders the migrated shadcn/Radix list surface with light and dark classes", async () => {

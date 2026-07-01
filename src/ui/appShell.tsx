@@ -641,9 +641,9 @@ export function DropdownMenuItem({
 export function DropdownMenuLabel({
   className,
   ...props
-}: React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label>) {
+}: React.ComponentPropsWithoutRef<"span">) {
   return (
-    <DropdownMenuPrimitive.Label
+    <span
       data-slot="dropdown-menu-label"
       className={cn("px-2 py-1.5 text-sm font-medium", className)}
       {...props}

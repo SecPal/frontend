@@ -23,6 +23,7 @@ import {
   Button,
   Checkbox,
   Field,
+  FieldError,
   FieldGroup,
   FieldLabel,
   CustomerSiteFormCheckboxField as FormCheckboxField,
@@ -31,11 +32,24 @@ import {
   Textarea,
 } from "@/ui";
 
+type CustomerFormErrors = Partial<
+  Record<
+    | "name"
+    | "billing_address.street"
+    | "billing_address.postal_code"
+    | "billing_address.city"
+    | "billing_address.country"
+    | "contact.email",
+    string
+  >
+>;
+
 export default function CustomerCreate() {
   const { _ } = useLingui();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<CustomerFormErrors>({});
 
   const [formData, setFormData] = useState<CreateCustomerRequest>({
     name: "",
@@ -54,6 +68,18 @@ export default function CustomerCreate() {
   });
 
   function updateField(field: keyof CreateCustomerRequest, value: unknown) {
+    if (field === "name") {
+      setFieldErrors((current) => {
+        if (!current.name) {
+          return current;
+        }
+
+        const next = { ...current };
+        delete next.name;
+        return next;
+      });
+    }
+
     setFormData((currentFormData) => ({
       ...currentFormData,
       [field]: value,
@@ -61,6 +87,17 @@ export default function CustomerCreate() {
   }
 
   function updateAddress(field: keyof Address, value: string) {
+    const errorKey = `billing_address.${field}` as keyof CustomerFormErrors;
+    setFieldErrors((current) => {
+      if (!current[errorKey]) {
+        return current;
+      }
+
+      const next = { ...current };
+      delete next[errorKey];
+      return next;
+    });
+
     setFormData((currentFormData) => ({
       ...currentFormData,
       billing_address: {
@@ -71,6 +108,18 @@ export default function CustomerCreate() {
   }
 
   function updateContact(field: keyof Contact, value: string) {
+    if (field === "email") {
+      setFieldErrors((current) => {
+        if (!current["contact.email"]) {
+          return current;
+        }
+
+        const next = { ...current };
+        delete next["contact.email"];
+        return next;
+      });
+    }
+
     setFormData((currentFormData) => ({
       ...currentFormData,
       contact: {
@@ -80,10 +129,55 @@ export default function CustomerCreate() {
     }));
   }
 
+  function validateForm(): CustomerFormErrors {
+    const validationErrors: CustomerFormErrors = {};
+
+    if (formData.name.trim().length === 0) {
+      validationErrors.name = _(msg`Customer name is required.`);
+    }
+
+    if (formData.billing_address.street.trim().length === 0) {
+      validationErrors["billing_address.street"] = _(msg`Street is required.`);
+    }
+
+    if (formData.billing_address.postal_code.trim().length === 0) {
+      validationErrors["billing_address.postal_code"] = _(
+        msg`Postal code is required.`
+      );
+    }
+
+    if (formData.billing_address.city.trim().length === 0) {
+      validationErrors["billing_address.city"] = _(msg`City is required.`);
+    }
+
+    if (formData.billing_address.country.trim().length !== 2) {
+      validationErrors["billing_address.country"] = _(
+        msg`Country must use a 2-letter code.`
+      );
+    }
+
+    const email = formData.contact?.email?.trim() ?? "";
+    if (email.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      validationErrors["contact.email"] = _(
+        msg`Please enter a valid email address.`
+      );
+    }
+
+    return validationErrors;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+    const validationErrors = validateForm();
+
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
+      return;
+    }
+
+    setFieldErrors({});
+    setLoading(true);
 
     try {
       // Clean up the data before sending
@@ -135,7 +229,7 @@ export default function CustomerCreate() {
         </Alert>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6" noValidate>
         {/* Basic Information */}
         <FieldGroup>
           <Field>
@@ -149,8 +243,13 @@ export default function CustomerCreate() {
               required
               autoComplete="organization"
               value={formData.name}
+              aria-invalid={fieldErrors.name ? true : undefined}
+              aria-describedby={fieldErrors.name ? "customer-name-error" : undefined}
               onChange={(e) => updateField("name", e.target.value)}
             />
+            {fieldErrors.name ? (
+              <FieldError id="customer-name-error">{fieldErrors.name}</FieldError>
+            ) : null}
           </Field>
         </FieldGroup>
 
@@ -171,8 +270,21 @@ export default function CustomerCreate() {
                 required
                 autoComplete="street-address"
                 value={formData.billing_address.street}
+                aria-invalid={
+                  fieldErrors["billing_address.street"] ? true : undefined
+                }
+                aria-describedby={
+                  fieldErrors["billing_address.street"]
+                    ? "customer-street-error"
+                    : undefined
+                }
                 onChange={(e) => updateAddress("street", e.target.value)}
               />
+              {fieldErrors["billing_address.street"] ? (
+                <FieldError id="customer-street-error">
+                  {fieldErrors["billing_address.street"]}
+                </FieldError>
+              ) : null}
             </Field>
 
             <div className="grid grid-cols-2 gap-4">
@@ -187,8 +299,21 @@ export default function CustomerCreate() {
                   required
                   autoComplete="postal-code"
                   value={formData.billing_address.postal_code}
+                  aria-invalid={
+                    fieldErrors["billing_address.postal_code"] ? true : undefined
+                  }
+                  aria-describedby={
+                    fieldErrors["billing_address.postal_code"]
+                      ? "customer-postal-code-error"
+                      : undefined
+                  }
                   onChange={(e) => updateAddress("postal_code", e.target.value)}
                 />
+                {fieldErrors["billing_address.postal_code"] ? (
+                  <FieldError id="customer-postal-code-error">
+                    {fieldErrors["billing_address.postal_code"]}
+                  </FieldError>
+                ) : null}
               </Field>
 
               <Field>
@@ -202,8 +327,21 @@ export default function CustomerCreate() {
                   required
                   autoComplete="address-level2"
                   value={formData.billing_address.city}
+                  aria-invalid={
+                    fieldErrors["billing_address.city"] ? true : undefined
+                  }
+                  aria-describedby={
+                    fieldErrors["billing_address.city"]
+                      ? "customer-city-error"
+                      : undefined
+                  }
                   onChange={(e) => updateAddress("city", e.target.value)}
                 />
+                {fieldErrors["billing_address.city"] ? (
+                  <FieldError id="customer-city-error">
+                    {fieldErrors["billing_address.city"]}
+                  </FieldError>
+                ) : null}
               </Field>
             </div>
 
@@ -220,10 +358,23 @@ export default function CustomerCreate() {
                 placeholder="DE"
                 autoComplete="country"
                 value={formData.billing_address.country}
+                aria-invalid={
+                  fieldErrors["billing_address.country"] ? true : undefined
+                }
+                aria-describedby={
+                  fieldErrors["billing_address.country"]
+                    ? "customer-country-error"
+                    : undefined
+                }
                 onChange={(e) =>
                   updateAddress("country", e.target.value.toUpperCase())
                 }
               />
+              {fieldErrors["billing_address.country"] ? (
+                <FieldError id="customer-country-error">
+                  {fieldErrors["billing_address.country"]}
+                </FieldError>
+              ) : null}
             </Field>
           </FieldGroup>
         </div>
@@ -258,8 +409,19 @@ export default function CustomerCreate() {
                 type="email"
                 autoComplete="email"
                 value={formData.contact?.email || ""}
+                aria-invalid={fieldErrors["contact.email"] ? true : undefined}
+                aria-describedby={
+                  fieldErrors["contact.email"]
+                    ? "customer-contact-email-error"
+                    : undefined
+                }
                 onChange={(e) => updateContact("email", e.target.value)}
               />
+              {fieldErrors["contact.email"] ? (
+                <FieldError id="customer-contact-email-error">
+                  {fieldErrors["contact.email"]}
+                </FieldError>
+              ) : null}
             </Field>
 
             <Field>

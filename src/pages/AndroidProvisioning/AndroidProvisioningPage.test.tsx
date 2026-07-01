@@ -4,6 +4,7 @@
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiConfig } from "../../config";
 import type { UserCapabilities } from "../../lib/capabilities";
@@ -465,11 +466,7 @@ describe("AndroidProvisioningPage", () => {
     );
   });
 
-  it("revokes a pending session when the user confirms a reason", async () => {
-    const promptSpy = vi
-      .spyOn(window, "prompt")
-      .mockReturnValue("Device retired");
-
+  it("revokes a pending session when the user submits a revocation reason", async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({
         ok: true,
@@ -502,36 +499,43 @@ describe("AndroidProvisioningPage", () => {
         }),
       } as Response);
 
+    const user = userEvent.setup();
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Revoke" }));
+    await user.click(await screen.findByRole("button", { name: "Revoke" }));
+    expect(
+      screen.getByRole("heading", { name: /revoke enrollment session/i })
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/revocation reason/i), "Device retired");
+    await user.click(screen.getByRole("button", { name: /^revoke$/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/Device retired/)).toBeInTheDocument();
     });
-    expect(promptSpy).toHaveBeenCalled();
-    promptSpy.mockRestore();
+    expect(apiFetch).toHaveBeenLastCalledWith(
+      `${apiConfig.baseUrl}/v1/android-enrollment-sessions/session-1/revoke`,
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ reason: "Device retired" }),
+      })
+    );
   });
 
   it("does not revoke a session when no reason is provided", async () => {
-    const promptSpy = vi.spyOn(window, "prompt").mockReturnValue("   ");
-
+    const user = userEvent.setup();
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Revoke" }));
+    await user.click(await screen.findByRole("button", { name: "Revoke" }));
+    await user.click(screen.getByRole("button", { name: /^revoke$/i }));
 
-    await waitFor(() => {
-      expect(apiFetch).toHaveBeenCalledTimes(1);
-    });
-
-    promptSpy.mockRestore();
+    expect(
+      await screen.findByText(/revocation reason is required/i)
+    ).toBeInTheDocument();
+    expect(apiFetch).toHaveBeenCalledTimes(1);
   });
 
   it("shows a fallback error when revoking a session fails unexpectedly", async () => {
-    const promptSpy = vi
-      .spyOn(window, "prompt")
-      .mockReturnValue("Device retired");
-
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({
         ok: true,
@@ -551,16 +555,17 @@ describe("AndroidProvisioningPage", () => {
       } as Response)
       .mockRejectedValueOnce({});
 
+    const user = userEvent.setup();
     renderPage();
 
-    fireEvent.click(await screen.findByRole("button", { name: "Revoke" }));
+    await user.click(await screen.findByRole("button", { name: "Revoke" }));
+    await user.type(screen.getByLabelText(/revocation reason/i), "Device retired");
+    await user.click(screen.getByRole("button", { name: /^revoke$/i }));
 
     expect(
       await screen.findByText("Failed to revoke Android enrollment session")
     ).toBeInTheDocument();
     expect(screen.getByText("Front desk tablet")).toBeInTheDocument();
-
-    promptSpy.mockRestore();
   });
 
   it("shows a read-only message when create permission is missing", async () => {
