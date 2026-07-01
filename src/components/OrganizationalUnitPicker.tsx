@@ -10,7 +10,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/ui";
+} from "@/ui/select";
 import type {
   OrganizationalUnit,
   OrganizationalUnitType,

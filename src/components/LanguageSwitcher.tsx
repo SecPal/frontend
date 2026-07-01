@@ -1,19 +1,18 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState } from "react";
 import { useLingui } from "@lingui/react";
-import { activateLocale, locales, setLocalePreference } from "../i18n";
+import { Alert, AlertDescription } from "@/ui/alert";
 import {
-  Alert,
-  AlertDescription,
   Select,
   SelectContent,
   SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/ui";
+} from "@/ui/select";
+import { activateLocale, locales, setLocalePreference } from "../i18n";
 
 export function LanguageSwitcher() {
   const { i18n } = useLingui();

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useEffect } from "react";
@@ -6,7 +6,7 @@ import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { ChevronDown, WifiOff } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/ui";
+import { Alert, AlertDescription, AlertTitle } from "@/ui/alert";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 /** Time in milliseconds before the banner auto-minimizes */

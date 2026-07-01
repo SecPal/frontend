@@ -5,6 +5,14 @@ import { useState, useMemo } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { MoveHorizontal } from "lucide-react";
+import { Button } from "@/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui/select";
 import {
   Alert,
   AlertDescription,
@@ -20,12 +28,6 @@ import {
   Field,
   FieldDescription,
   FieldLabel,
-  Button,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from "@/ui";
 import type {
   OrganizationalUnit,

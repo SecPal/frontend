@@ -34,6 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Rebuilt the authenticated application shell navigation on the canonical shadcn
+  `sidebar-07` composition: the old bespoke menu shell is replaced by shared
+  shadcn/Radix/Lucide `Sidebar`, `Collapsible`, `DropdownMenu`, `Sheet`,
+  `Breadcrumb`, `Separator`, and avatar primitives, with the desktop sidebar
+  collapsing to icons, the mobile menu using the matching sheet pattern, and
+  regression coverage updated to assert the real `sidebar-07` structure instead
+  of the removed custom grouping model.
 - Completed the shadcn/Radix/Lucide UI migration proof by tightening the
   repo-wide legacy UI guardrail to a zero allowlist, removing the final shared
   shell compatibility aliases, and documenting `src/ui` as the complete

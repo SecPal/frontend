@@ -12,7 +12,9 @@ import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { ArrowLeft, Edit, List, Trash2 } from "lucide-react";
-import { LoadingRegion, SectionSkeleton, Skeleton } from "@/ui";
+import { Button } from "@/ui/button";
+import { LoadingRegion, SectionSkeleton } from "@/ui/loading";
+import { Skeleton } from "@/ui/skeleton";
 import { getSite, deleteSite, getCustomer } from "../../services/customersApi";
 import { getOrganizationalUnit } from "../../services/organizationalUnitApi";
 import type {
@@ -28,7 +30,6 @@ import {
   DescriptionTerm,
   Alert,
   AlertDescription,
-  Button,
   Dialog,
   DialogActions,
   DialogBody,

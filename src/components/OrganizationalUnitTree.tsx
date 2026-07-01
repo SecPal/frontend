@@ -14,14 +14,16 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
+import { Button } from "@/ui/button";
 import {
-  Button,
-  Card,
-  CardContent,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+} from "@/ui/dropdown-menu";
+import {
+  Card,
+  CardContent,
   LoadingRegion,
   OrganizationalUnitTypeBadge,
   SectionSkeleton,
@@ -195,7 +197,7 @@ const TreeNode = memo(
                   <EllipsisVertical className="text-muted-foreground h-5 w-5" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent anchor="bottom end">
+              <DropdownMenuContent side="bottom" align="end">
                 {canCreateChild && (
                   <DropdownMenuItem onClick={handleCreateChild}>
                     <Plus data-slot="icon" className="h-4 w-4" />

@@ -220,6 +220,10 @@ msgstr "Formularvorlage konnte nicht geladen werden"
 msgid "A valid residence title without employment authorization cannot be accepted. Please contact HR."
 msgstr "Ein gültiger Aufenthaltstitel ohne Arbeitserlaubnis kann nicht akzeptiert werden. Bitte kontaktieren Sie HR."
 
+#: src/components/nav-projects.tsx
+msgid "Open"
+msgstr "Öffnen"
+
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "No"
@@ -276,6 +280,7 @@ msgstr "Dieser Onboarding-Schritt verwendet ein Schema, das noch nicht dargestel
 msgid "No address suggestions found."
 msgstr "Keine Adressvorschläge gefunden."
 
+#: src/components/nav-projects.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "More options"
 msgstr "weitere Optionen"
@@ -615,6 +620,10 @@ msgstr "Onboarding-Einladung senden"
 msgid "Name is required"
 msgstr "Name ist erforderlich"
 
+#: src/components/application-layout.tsx
+msgid "Administration"
+msgstr "Administration"
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Enter a label for this passkey."
 msgstr "Geben Sie eine Bezeichnung für diesen Passkey ein."
@@ -793,6 +802,10 @@ msgstr "Bevor Sie starten"
 msgid "Make root unit (no parent)"
 msgstr "Zur Stammeinheit machen (keine übergeordnete Einheit)"
 
+#: src/components/application-layout.tsx
+msgid "SecPal"
+msgstr ""
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Supporting documents"
 msgstr "Belege und Nachweise"
@@ -839,6 +852,10 @@ msgstr "Keine Ergebnisse gefunden"
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Enter your Bewacher ID or indicate that you do not know it."
 msgstr "Geben Sie Ihre Bewacher-ID ein, oder geben Sie an, dass Sie sie nicht kennen."
+
+#: src/components/application-layout.tsx
+msgid "Operations"
+msgstr "Betrieb"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Create New Employee"
@@ -944,6 +961,7 @@ msgid "Full Time"
 msgstr "Vollzeit"
 
 #: src/components/application-layout.tsx
+#: src/components/nav-user.tsx
 #: src/pages/Profile/ProfilePage.tsx
 msgid "My profile"
 msgstr "Mein Profil"
@@ -1386,8 +1404,8 @@ msgstr "{label}: Ungültig"
 msgid "Failed to change language. Please try again."
 msgstr "Die Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut."
 
-#: src/components/application-layout.tsx
 #: src/components/LoginRouteState.tsx
+#: src/components/nav-user.tsx
 #: src/components/onboarding-layout.tsx
 #: src/components/RouteGuardState.tsx
 msgid "Sign out"
@@ -1983,7 +2001,7 @@ msgstr "Vorname"
 msgid "Contract"
 msgstr "Vertrag"
 
-#: src/components/application-layout.tsx
+#: src/components/nav-user.tsx
 msgid "Lock app"
 msgstr "App sperren"
 
@@ -2576,6 +2594,10 @@ msgstr "Der Mindestrang kann nicht größer als der Höchstrang sein."
 msgid "Authentication"
 msgstr "Authentifizierung"
 
+#: src/components/nav-projects.tsx
+msgid "Quick access"
+msgstr "Schnellzugriff"
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -2643,6 +2665,12 @@ msgstr "Vertragsart ist erforderlich"
 msgid "Password must include at least one symbol"
 msgstr "Das Passwort muss mindestens ein Sonderzeichen enthalten"
 
+#: src/components/app-sidebar.tsx
+#: src/components/team-switcher.tsx
+msgid "Workspace"
+msgstr "Arbeitsbereich"
+
+#: src/components/application-layout.tsx
 #: src/components/LegalFooterLinks.tsx
 msgid "Source Code"
 msgstr "Quelltext"
@@ -2730,6 +2758,7 @@ msgstr "Welches Dokument laden Sie hoch?"
 msgid "SecPal could not confirm your session quickly enough. Retry the session check or return to the login screen."
 msgstr "SecPal konnte Ihre Sitzung nicht schnell genug bestätigen. Wiederholen Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
 
+#: src/components/application-layout.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Sites/SitesPage.tsx
@@ -3030,6 +3059,7 @@ msgid "We couldn't submit the form yet. Please review the highlighted fields."
 msgstr "Wir konnten das Formular noch nicht abschicken. Bitte überprüfen Sie die markierten Felder."
 
 #: src/components/application-layout.tsx
+#: src/components/nav-user.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Settings"
 msgstr "Einstellungen"
@@ -3187,6 +3217,10 @@ msgstr "Nachname"
 #: src/components/VerificationDots.tsx
 msgid "Hash Chain (Link)"
 msgstr "Hash-Kette (Link)"
+
+#: src/components/nav-main.tsx
+msgid "Navigation"
+msgstr "Navigation"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Attachment"

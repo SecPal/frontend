@@ -5,8 +5,18 @@ import { useState, useEffect } from "react";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { LoadingRegion, Skeleton } from "@/ui";
 import type { Employee, EmployeeFilters, EmployeeStatus } from "@/types/api";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
+import { LoadingRegion } from "@/ui/loading";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui/select";
+import { Skeleton } from "@/ui/skeleton";
 import { fetchEmployees } from "../../services/employeeApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type { OrganizationalUnit } from "../../types/organizational";
@@ -15,21 +25,14 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Button,
   Card,
   CardContent,
   EmployeeDataTable as DataTable,
   Field,
   FieldLabel,
-  Input,
   EmployeeLinkButton as LinkButton,
   EmployeePageText as PageText,
   EmployeePageTitle as PageTitle,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   EmployeeStatusBadge,
   EmployeeTable as Table,
   EmployeeTableBody as TableBody,

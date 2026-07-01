@@ -7,7 +7,7 @@ import { Suspense, type ReactNode } from "react";
 import { Logo } from "./Logo";
 import { useAuth } from "../hooks/useAuth";
 import { getAuthTransport } from "../services/authTransport";
-import { Button } from "@/ui";
+import { Button } from "@/ui/button";
 import { RouteContentFallback } from "./RouteContentFallback";
 
 export const LOGOUT_TIMEOUT_MS = 8000;

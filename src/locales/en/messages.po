@@ -220,6 +220,10 @@ msgstr "Failed to load form template"
 msgid "A valid residence title without employment authorization cannot be accepted. Please contact HR."
 msgstr "A valid residence title without employment authorization cannot be accepted. Please contact HR."
 
+#: src/components/nav-projects.tsx
+msgid "Open"
+msgstr "Open"
+
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "No"
@@ -276,6 +280,7 @@ msgstr "This onboarding step uses a schema we cannot render yet."
 msgid "No address suggestions found."
 msgstr "No address suggestions found."
 
+#: src/components/nav-projects.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "More options"
 msgstr "More options"
@@ -615,6 +620,10 @@ msgstr "Send Onboarding Invitation"
 msgid "Name is required"
 msgstr "Name is required"
 
+#: src/components/application-layout.tsx
+msgid "Administration"
+msgstr "Administration"
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Enter a label for this passkey."
 msgstr "Enter a label for this passkey."
@@ -793,6 +802,10 @@ msgstr "Before you begin"
 msgid "Make root unit (no parent)"
 msgstr "Make root unit (no parent)"
 
+#: src/components/application-layout.tsx
+msgid "SecPal"
+msgstr "SecPal"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Supporting documents"
 msgstr "Supporting documents"
@@ -839,6 +852,10 @@ msgstr "No results found"
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Enter your Bewacher ID or indicate that you do not know it."
 msgstr "Enter your Bewacher ID or indicate that you do not know it."
+
+#: src/components/application-layout.tsx
+msgid "Operations"
+msgstr "Operations"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Create New Employee"
@@ -944,6 +961,7 @@ msgid "Full Time"
 msgstr "Full Time"
 
 #: src/components/application-layout.tsx
+#: src/components/nav-user.tsx
 #: src/pages/Profile/ProfilePage.tsx
 msgid "My profile"
 msgstr "My profile"
@@ -1386,8 +1404,8 @@ msgstr "{label}: Invalid"
 msgid "Failed to change language. Please try again."
 msgstr "Failed to change language. Please try again."
 
-#: src/components/application-layout.tsx
 #: src/components/LoginRouteState.tsx
+#: src/components/nav-user.tsx
 #: src/components/onboarding-layout.tsx
 #: src/components/RouteGuardState.tsx
 msgid "Sign out"
@@ -1983,7 +2001,7 @@ msgstr "First Name"
 msgid "Contract"
 msgstr "Contract"
 
-#: src/components/application-layout.tsx
+#: src/components/nav-user.tsx
 msgid "Lock app"
 msgstr "Lock app"
 
@@ -2576,6 +2594,10 @@ msgstr "Minimum rank cannot be greater than maximum rank."
 msgid "Authentication"
 msgstr "Authentication"
 
+#: src/components/nav-projects.tsx
+msgid "Quick access"
+msgstr "Quick access"
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -2643,6 +2665,12 @@ msgstr "Contract type is required"
 msgid "Password must include at least one symbol"
 msgstr "Password must include at least one symbol"
 
+#: src/components/app-sidebar.tsx
+#: src/components/team-switcher.tsx
+msgid "Workspace"
+msgstr "Workspace"
+
+#: src/components/application-layout.tsx
 #: src/components/LegalFooterLinks.tsx
 msgid "Source Code"
 msgstr "Source Code"
@@ -2730,6 +2758,7 @@ msgstr "Which document are you uploading?"
 msgid "SecPal could not confirm your session quickly enough. Retry the session check or return to the login screen."
 msgstr "SecPal could not confirm your session quickly enough. Retry the session check or return to the login screen."
 
+#: src/components/application-layout.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Sites/SitesPage.tsx
@@ -3030,6 +3059,7 @@ msgid "We couldn't submit the form yet. Please review the highlighted fields."
 msgstr "We couldn't submit the form yet. Please review the highlighted fields."
 
 #: src/components/application-layout.tsx
+#: src/components/nav-user.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Settings"
 msgstr "Settings"
@@ -3187,6 +3217,10 @@ msgstr "Last Name"
 #: src/components/VerificationDots.tsx
 msgid "Hash Chain (Link)"
 msgstr "Hash Chain (Link)"
+
+#: src/components/nav-main.tsx
+msgid "Navigation"
+msgstr "Navigation"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Attachment"

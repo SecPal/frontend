@@ -11,7 +11,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { FormSkeleton } from "@/ui";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
+import { FormSkeleton } from "@/ui/loading";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui/select";
 import {
   getSite,
   updateSite,
@@ -27,20 +36,13 @@ import type {
 import {
   Alert,
   AlertDescription,
-  Button,
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-  Input,
   CustomerSiteLinkButton as LinkButton,
   CustomerSitePageText as PageText,
   CustomerSitePageTitle as PageTitle,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from "@/ui";
 
 export default function SiteEdit() {

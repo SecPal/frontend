@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
@@ -11,7 +11,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { FormSkeleton } from "@/ui";
+import { Button } from "@/ui/button";
+import { Checkbox } from "@/ui/checkbox";
+import { Input } from "@/ui/input";
+import { FormSkeleton } from "@/ui/loading";
+import { Textarea } from "@/ui/textarea";
 import { getCustomer, updateCustomer } from "../../services/customersApi";
 import type {
   Customer,
@@ -22,16 +26,12 @@ import type {
 import {
   Alert,
   AlertDescription,
-  Button,
-  Checkbox,
   Field,
   FieldGroup,
   FieldLabel,
   CustomerSiteFormCheckboxField as FormCheckboxField,
-  Input,
   CustomerSitePageText as PageText,
   CustomerSitePageTitle as PageTitle,
-  Textarea,
 } from "@/ui";
 
 export default function CustomerEdit() {

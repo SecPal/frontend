@@ -5,7 +5,7 @@ import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { Clock, RefreshCw, WifiOff } from "lucide-react";
-import { Alert, AlertDescription } from "@/ui";
+import { Alert, AlertDescription } from "@/ui/alert";
 
 export interface OfflineDataBannerProps {
   /** Whether the device is currently offline */

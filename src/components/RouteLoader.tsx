@@ -3,7 +3,8 @@
 
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { PageSkeleton, Skeleton } from "@/ui";
+import { PageSkeleton } from "@/ui/loading";
+import { Skeleton } from "@/ui/skeleton";
 import { Logo } from "./Logo";
 
 export function RouteLoader() {

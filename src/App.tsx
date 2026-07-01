@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { lazy, Suspense, useEffect, useState } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import { NativeRuntimePwaGuard } from "./components/NativeRuntimePwaGuard";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -159,12 +165,27 @@ function AuthenticatedAppRoute() {
   return <AuthenticatedAppSlot onSignInAgain={logout} />;
 }
 
+function PublicRouteUpdatePrompt() {
+  const { pathname } = useLocation();
+  const isPublicRoute =
+    pathname === "/login" ||
+    pathname === "/source" ||
+    pathname === "/source/" ||
+    pathname === "/onboarding/complete";
+
+  if (!isPublicRoute) {
+    return null;
+  }
+
+  return <UpdatePrompt />;
+}
+
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <NativeRuntimePwaGuard />
-        <UpdatePrompt />
+        <PublicRouteUpdatePrompt />
         <Suspense fallback={<PublicRouteLoader />}>
           <Routes>
             <Route path="/login" element={<LoginRoute />} />

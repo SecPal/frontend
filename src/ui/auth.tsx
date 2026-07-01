@@ -20,9 +20,6 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Minus } from "lucide-react";
 import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from "input-otp";
 import {
-  Alert as AppAlert,
-  AlertTitle as AppAlertTitle,
-  Button as AppButton,
   Dialog as AppDialog,
   DialogContent as AppDialogContent,
   DialogDescription as AppDialogDescription,
@@ -30,15 +27,19 @@ import {
   DialogPortal as AppDialogPortal,
   DialogTitle as AppDialogTitle,
   FieldLabel as AppFieldLabel,
-  Input as AppInput,
+} from "./primitives";
+import { Alert as AppAlert, AlertTitle as AppAlertTitle } from "./alert";
+import { Button as AppButton } from "./button";
+import { Input as AppInput } from "./input";
+import { Spinner as AppSpinner } from "./loading";
+import {
   Select as AppSelect,
   SelectContent as AppSelectContent,
   SelectGroup as AppSelectGroup,
   SelectItem as AppSelectItem,
   SelectTrigger as AppSelectTrigger,
   SelectValue as AppSelectValue,
-  Spinner as AppSpinner,
-} from "./primitives";
+} from "./select";
 import { cn } from "@/lib/utils";
 import type { ButtonVariant } from "./styles";
 
