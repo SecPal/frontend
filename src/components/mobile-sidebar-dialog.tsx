@@ -6,15 +6,14 @@
 import { t } from "@lingui/core/macro";
 import { X } from "lucide-react";
 import type React from "react";
+import { Button } from "@/ui/button";
 import {
-  NavbarItem,
   Sheet,
   SheetClose,
   SheetContent,
   SheetDescription,
   SheetTitle,
-  SidebarCloseProvider,
-} from "@/ui";
+} from "@/ui/sheet";
 import { cn } from "@/lib/utils";
 
 export function MobileSidebarDialog({
@@ -33,11 +32,10 @@ export function MobileSidebarDialog({
     >
       <SheetContent
         side="left"
-        showCloseButton={false}
         overlayClassName="lg:hidden"
         className={cn(
           "w-full max-w-80 border-r-0 bg-transparent p-2 pt-[calc(0.5rem+var(--app-safe-area-inset-top))] shadow-none lg:hidden",
-          "focus:outline-none"
+          "focus:outline-none [&>button]:hidden"
         )}
       >
         <SheetTitle className="sr-only">
@@ -55,17 +53,20 @@ export function MobileSidebarDialog({
         <div className="bg-background ring-border/50 flex h-full flex-col rounded-md shadow-lg ring-1">
           <div className="-mb-3 px-4 pt-3">
             <SheetClose asChild>
-              <NavbarItem
+              <Button
+                type="button"
+                variant="ghost"
+                className="size-10 p-2"
                 aria-label={t({
                   id: "layout.mobileNavigation.close",
                   message: "Close navigation",
                 })}
               >
                 <X data-slot="icon" aria-hidden="true" />
-              </NavbarItem>
+              </Button>
             </SheetClose>
           </div>
-          <SidebarCloseProvider close={close}>{children}</SidebarCloseProvider>
+          {children}
         </div>
       </SheetContent>
     </Sheet>

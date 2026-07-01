@@ -4,12 +4,21 @@
 import { useState, useCallback } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui/select";
+import { Textarea } from "@/ui/textarea";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Button,
   Dialog,
   DialogActions,
   DialogBody,
@@ -22,13 +31,6 @@ import {
   FieldDescription,
   FieldError,
   FieldLabel,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Textarea,
 } from "@/ui";
 import type {
   OrganizationalUnit,

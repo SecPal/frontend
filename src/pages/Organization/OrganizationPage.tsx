@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
@@ -13,10 +13,10 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { X } from "lucide-react";
+import { Button } from "@/ui/button";
 import {
   Alert,
   AlertDescription,
-  Button,
   Card,
   CardContent,
   OrganizationalUnitTypeBadge,

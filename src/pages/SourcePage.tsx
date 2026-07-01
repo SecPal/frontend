@@ -14,13 +14,13 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
+import { buttonVariants } from "@/ui/styles";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  buttonVariants,
 } from "@/ui";
 
 const SOURCE_REPOSITORIES = [

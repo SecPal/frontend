@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import QRCode from "qrcode";
-import { Alert, AlertDescription } from "@/ui";
+import { Alert, AlertDescription } from "@/ui/alert";
 
 interface MfaQrCodeProps {
   value: string;

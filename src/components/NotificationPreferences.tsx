@@ -9,7 +9,8 @@ import {
   NotificationDeploymentUnavailableError,
   useNotifications,
 } from "@/hooks/useNotifications";
-import { Alert, AlertDescription, Button } from "@/ui";
+import { Alert, AlertDescription } from "@/ui/alert";
+import { Button } from "@/ui/button";
 import { getNotificationInstallationsErrorMessage } from "./notificationInstallationsErrorMessage";
 
 type NotificationStatusTone = "blue" | "green" | "yellow" | "red";

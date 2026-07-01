@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
@@ -11,26 +11,29 @@ import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { Eye, Plus } from "lucide-react";
-import { LoadingRegion, Skeleton } from "@/ui";
-import { listCustomers } from "../../services/customersApi";
-import type { Customer, CustomerFilters } from "../../types/customers";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
+import { LoadingRegion } from "@/ui/loading";
 import {
-  Alert,
-  AlertDescription,
-  Button,
-  DataTable,
-  Field,
-  FieldLabel,
-  Input,
-  CustomerSiteLinkButton as LinkButton,
-  CustomerSitePageLink as PageLink,
-  CustomerSitePageText as PageText,
-  CustomerSitePageTitle as PageTitle,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+} from "@/ui/select";
+import { Skeleton } from "@/ui/skeleton";
+import { listCustomers } from "../../services/customersApi";
+import type { Customer, CustomerFilters } from "../../types/customers";
+import {
+  Alert,
+  AlertDescription,
+  DataTable,
+  Field,
+  FieldLabel,
+  CustomerSiteLinkButton as LinkButton,
+  CustomerSitePageLink as PageLink,
+  CustomerSitePageText as PageText,
+  CustomerSitePageTitle as PageTitle,
   CustomerSiteStatusBadge as StatusBadge,
   Table,
   TableBody,

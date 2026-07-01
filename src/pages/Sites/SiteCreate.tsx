@@ -11,7 +11,16 @@ import { useNavigate, useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { FormSkeleton } from "@/ui";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
+import { FormSkeleton } from "@/ui/loading";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui/select";
 import { createSite, listCustomers } from "../../services/customersApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type {
@@ -25,19 +34,12 @@ import type { OrganizationalUnit } from "../../types/organizational";
 import {
   Alert,
   AlertDescription,
-  Button,
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-  Input,
   CustomerSiteLinkButton as LinkButton,
   CustomerSitePageTitle as PageTitle,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from "@/ui";
 
 export default function SiteCreate() {

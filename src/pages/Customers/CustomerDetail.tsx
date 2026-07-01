@@ -12,13 +12,14 @@ import { msg } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { ArrowLeft, Edit, List, MapPinned, Trash2 } from "lucide-react";
-import { SectionSkeleton, Skeleton } from "@/ui";
+import { Button } from "@/ui/button";
+import { Skeleton } from "@/ui/skeleton";
+import { SectionSkeleton } from "@/ui";
 import { deleteCustomer, getCustomer } from "../../services/customersApi";
 import type { Customer } from "../../types/customers";
 import {
   Alert,
   AlertDescription,
-  Button,
   DescriptionDetails,
   DescriptionList,
   DescriptionTerm,

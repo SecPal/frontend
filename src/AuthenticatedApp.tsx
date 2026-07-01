@@ -14,7 +14,7 @@ import { FeatureRoute } from "./components/FeatureRoute";
 import { RouteLoader } from "./components/RouteLoader";
 import { RouteNotFoundState } from "./components/RouteGuardState";
 import { OnboardingLayout } from "./components/onboarding-layout";
-import { buttonVariants } from "./ui";
+import { buttonVariants } from "./ui/styles";
 import { RouteContentFallback } from "./components/RouteContentFallback";
 import { routeModuleLoaders } from "./routeModules";
 import { useNotifications } from "./hooks/useNotifications";

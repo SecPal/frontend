@@ -34,6 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Rebuilt the authenticated application shell navigation on the canonical shadcn
+  `sidebar-07` composition: the old bespoke menu shell is replaced by shared
+  shadcn/Radix/Lucide `Sidebar`, `Collapsible`, `DropdownMenu`, `Sheet`,
+  `Breadcrumb`, `Separator`, and avatar primitives, with the desktop sidebar
+  collapsing to icons, the mobile menu using the matching sheet pattern, and
+  regression coverage updated to assert the real `sidebar-07` structure instead
+  of the removed custom grouping model.
 - Completed the shadcn/Radix/Lucide UI migration proof by tightening the
   repo-wide legacy UI guardrail to a zero allowlist, removing the final shared
   shell compatibility aliases, and documenting `src/ui` as the complete
@@ -93,6 +100,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Localized the sidebar user-menu trigger label, corrected destructive
+  dropdown-menu icon tinting to use the canonical shadcn descendant selector,
+  and removed the unused quick-access sidebar section that was no longer part
+  of the approved static menu shell.
+- Restored the PWA update banner on authenticated onboarding routes, close the
+  mobile sidebar sheet after primary navigation, persist the desktop sidebar
+  collapse preference across reloads, and keep the authenticated breadcrumb
+  label aligned with standalone routes such as `/about`.
 - Fixed shadcn/Radix migration regressions in dev proxy startup, mobile sheet
   overlays, address autocomplete active-descendant IDs, login status message
   markup, and passive advisory alert roles.

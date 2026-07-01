@@ -10,7 +10,7 @@ import {
   useNotifications,
 } from "@/hooks/useNotifications";
 import { getNotificationInstallationsErrorMessage } from "@/components/notificationInstallationsErrorMessage";
-import { Button } from "@/ui";
+import { Button } from "@/ui/button";
 import { Bell, X } from "lucide-react";
 
 function getPromptErrorMessage(

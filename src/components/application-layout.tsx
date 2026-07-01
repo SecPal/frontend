@@ -1,96 +1,41 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { Suspense, useEffect, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Suspense, useCallback, useEffect, useMemo } from "react";
+import { t } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
-  Building2,
   CircleUserRound,
   Home,
-  LockKeyhole,
-  LogOut,
+  MapPinned,
   Settings,
-  ShieldCheck,
   Smartphone,
-  UserRoundCheck,
+  SquareChartGantt,
+  Building2,
+  ShieldCheck,
+  UserRound,
   Users,
 } from "lucide-react";
+import { AppSidebar } from "@/components/app-sidebar";
+import { UpdatePrompt } from "@/components/UpdatePrompt";
 import {
-  Avatar,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  Navbar,
-  NavbarItem,
-  NavbarSection,
-  NavbarSpacer,
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuLabel,
-  SidebarMenuSpacer,
-} from "@/ui";
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/ui/breadcrumb";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/ui/sidebar";
 import { useAuth } from "../hooks/useAuth";
 import { usePrefetch } from "../hooks/usePrefetch";
 import { useUserCapabilities } from "../hooks/useUserCapabilities";
 import { getAuthTransport } from "../services/authTransport";
-import { getInitials } from "../lib/stringUtils";
-import { StackedLayout } from "./stacked-layout";
-import { Logo } from "./Logo";
+import { Footer } from "./Footer";
+import { PrefetchLink } from "./PrefetchLink";
 import { RouteContentFallback } from "./RouteContentFallback";
-
-/**
- * Shared user menu items for both navbar and sidebar dropdowns.
- * Extracted to maintain DRY principles and ensure consistency.
- */
-function UserMenuItems({
-  onLock,
-  onLogout,
-}: {
-  onLock?: () => void;
-  onLogout: () => void;
-}) {
-  return (
-    <>
-      <DropdownMenuItem href="/profile">
-        <CircleUserRound data-slot="icon" aria-hidden="true" />
-        <DropdownMenuLabel>
-          <Trans>My profile</Trans>
-        </DropdownMenuLabel>
-      </DropdownMenuItem>
-      <DropdownMenuItem href="/settings">
-        <Settings data-slot="icon" aria-hidden="true" />
-        <DropdownMenuLabel>
-          <Trans>Settings</Trans>
-        </DropdownMenuLabel>
-      </DropdownMenuItem>
-      {onLock ? (
-        <DropdownMenuItem onClick={onLock}>
-          <LockKeyhole data-slot="icon" aria-hidden="true" />
-          <DropdownMenuLabel>
-            <Trans>Lock app</Trans>
-          </DropdownMenuLabel>
-        </DropdownMenuItem>
-      ) : null}
-      <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={onLogout}>
-        <LogOut data-slot="icon" aria-hidden="true" />
-        <DropdownMenuLabel>
-          <Trans>Sign out</Trans>
-        </DropdownMenuLabel>
-      </DropdownMenuItem>
-    </>
-  );
-}
 
 const LOGOUT_TIMEOUT_MS = 8000;
 
@@ -117,6 +62,8 @@ async function logoutWithTimeout(logoutRequest: Promise<void>): Promise<void> {
 
 export function ApplicationLayout({ children }: { children: React.ReactNode }) {
   const { lock, user, logout } = useAuth();
+  const { i18n } = useLingui();
+  const activeLocale = i18n.locale;
   const capabilities = useUserCapabilities();
   const { prefetchPathsOnIdle } = usePrefetch();
   const authTransport = useMemo(() => getAuthTransport(), []);
@@ -171,209 +118,186 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const isCurrentPath = (path: string) => {
-    if (path === "/") {
-      return location.pathname === "/";
+  const isCurrentPath = useCallback(
+    (path: string) => {
+      if (path === "/") {
+        return location.pathname === "/";
+      }
+
+      return location.pathname.startsWith(path);
+    },
+    [location.pathname]
+  );
+
+  const isDefined = <T,>(value: T | null): value is T => value !== null;
+
+  const navMain = useMemo(() => {
+    void activeLocale;
+
+    return [
+      {
+        title: t`Home`,
+        url: "/",
+        icon: Home,
+        isActive: location.pathname === "/",
+      },
+      capabilities.customers
+        ? {
+            title: t`Customers`,
+            url: "/customers",
+            icon: Users,
+            isActive: isCurrentPath("/customers"),
+          }
+        : null,
+      capabilities.sites
+        ? {
+            title: t`Sites`,
+            url: "/sites",
+            icon: MapPinned,
+            isActive: isCurrentPath("/sites"),
+          }
+        : null,
+      capabilities.employees
+        ? {
+            title: t`Employees`,
+            url: "/employees",
+            icon: UserRound,
+            isActive: isCurrentPath("/employees"),
+          }
+        : null,
+      capabilities.organization
+        ? {
+            title: t`Organization`,
+            url: "/organization",
+            icon: Building2,
+            isActive: isCurrentPath("/organization"),
+          }
+        : null,
+      capabilities.activityLogs
+        ? {
+            title: t`Activity Logs`,
+            url: "/activity-logs",
+            icon: SquareChartGantt,
+            isActive: isCurrentPath("/activity-logs"),
+          }
+        : null,
+      capabilities.androidProvisioning
+        ? {
+            title: t`Android Provisioning`,
+            url: "/android-provisioning",
+            icon: Smartphone,
+            isActive: isCurrentPath("/android-provisioning"),
+          }
+        : null,
+    ].filter(isDefined);
+  }, [
+    activeLocale,
+    capabilities.activityLogs,
+    capabilities.androidProvisioning,
+    capabilities.customers,
+    capabilities.employees,
+    capabilities.organization,
+    capabilities.sites,
+    isCurrentPath,
+    location.pathname,
+  ]);
+
+  const shortcuts = useMemo(() => {
+    void activeLocale;
+
+    return [
+      {
+        name: t`My profile`,
+        url: "/profile",
+        icon: CircleUserRound,
+        isActive: isCurrentPath("/profile"),
+      },
+      {
+        name: t`Settings`,
+        url: "/settings",
+        icon: Settings,
+        isActive: isCurrentPath("/settings"),
+      },
+      {
+        name: t`Source Code`,
+        url: "/source",
+        icon: ShieldCheck,
+        isActive: isCurrentPath("/source"),
+      },
+    ];
+  }, [activeLocale, isCurrentPath]);
+
+  const currentPageLabel = useMemo(() => {
+    void activeLocale;
+
+    const page = navMain.find((item) => item.isActive);
+    if (page) {
+      return page.title;
     }
-    return location.pathname.startsWith(path);
-  };
+
+    const shortcut = shortcuts.find((item) => item.isActive);
+    if (shortcut) {
+      return shortcut.name;
+    }
+
+    if (location.pathname === "/about") {
+      return t`About`;
+    }
+
+    return t`Home`;
+  }, [activeLocale, location.pathname, navMain, shortcuts]);
 
   return (
-    <StackedLayout
-      navbar={
-        <Navbar>
-          <NavbarSection className="max-lg:hidden">
-            <NavbarItem href="/">
-              <Logo size="32" />
-            </NavbarItem>
-            <NavbarItem
-              href="/"
-              current={isCurrentPath("/") && location.pathname === "/"}
-            >
-              <Trans>Home</Trans>
-            </NavbarItem>
-            {capabilities.organization && (
-              <NavbarItem
-                href="/organization"
-                current={isCurrentPath("/organization")}
-              >
-                <Trans>Organization</Trans>
-              </NavbarItem>
-            )}
-            {capabilities.customers && (
-              <NavbarItem
-                href="/customers"
-                current={isCurrentPath("/customers")}
-              >
-                <Trans>Customers</Trans>
-              </NavbarItem>
-            )}
-            {capabilities.employees && (
-              <NavbarItem
-                href="/employees"
-                current={isCurrentPath("/employees")}
-              >
-                <Trans>Employees</Trans>
-              </NavbarItem>
-            )}
-            {capabilities.activityLogs && (
-              <NavbarItem
-                href="/activity-logs"
-                current={isCurrentPath("/activity-logs")}
-              >
-                <Trans>Activity Logs</Trans>
-              </NavbarItem>
-            )}
-            {capabilities.androidProvisioning && (
-              <NavbarItem
-                href="/android-provisioning"
-                current={isCurrentPath("/android-provisioning")}
-              >
-                <Trans>Android Provisioning</Trans>
-              </NavbarItem>
-            )}
-          </NavbarSection>
-          <NavbarSpacer />
-          <NavbarSection>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <NavbarItem aria-label="User menu">
-                  <Avatar
-                    initials={user?.name?.trim() ? getInitials(user.name) : "U"}
-                    className="size-8 bg-primary text-primary-foreground"
-                  />
-                </NavbarItem>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="min-w-64" anchor="bottom end">
-                <UserMenuItems onLock={lock} onLogout={handleLogout} />
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </NavbarSection>
-        </Navbar>
-      }
-      sidebar={
-        <Sidebar>
-          <SidebarHeader>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton href="/">
-                  <Logo size="48" />
-                  <SidebarMenuLabel className="text-lg font-semibold">
-                    SecPal
-                  </SidebarMenuLabel>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarHeader>
-
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      href="/"
-                      current={isCurrentPath("/") && location.pathname === "/"}
-                    >
-                      <Home data-slot="icon" aria-hidden="true" />
-                      <SidebarMenuLabel>
-                        <Trans>Home</Trans>
-                      </SidebarMenuLabel>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  {capabilities.organization && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        href="/organization"
-                        current={isCurrentPath("/organization")}
-                      >
-                        <Building2 data-slot="icon" aria-hidden="true" />
-                        <SidebarMenuLabel>
-                          <Trans>Organization</Trans>
-                        </SidebarMenuLabel>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )}
-                  {capabilities.customers && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        href="/customers"
-                        current={isCurrentPath("/customers")}
-                      >
-                        <Users data-slot="icon" aria-hidden="true" />
-                        <SidebarMenuLabel>
-                          <Trans>Customers</Trans>
-                        </SidebarMenuLabel>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )}
-                  {capabilities.employees && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        href="/employees"
-                        current={isCurrentPath("/employees")}
-                      >
-                        <UserRoundCheck data-slot="icon" aria-hidden="true" />
-                        <SidebarMenuLabel>
-                          <Trans>Employees</Trans>
-                        </SidebarMenuLabel>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )}
-                  {capabilities.activityLogs && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        href="/activity-logs"
-                        current={isCurrentPath("/activity-logs")}
-                      >
-                        <ShieldCheck data-slot="icon" aria-hidden="true" />
-                        <SidebarMenuLabel>
-                          <Trans>Activity Logs</Trans>
-                        </SidebarMenuLabel>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )}
-                  {capabilities.androidProvisioning && (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        href="/android-provisioning"
-                        current={isCurrentPath("/android-provisioning")}
-                      >
-                        <Smartphone data-slot="icon" aria-hidden="true" />
-                        <SidebarMenuLabel>
-                          <Trans>Android Provisioning</Trans>
-                        </SidebarMenuLabel>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  )}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            <SidebarMenuSpacer />
-
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      href="/settings"
-                      current={isCurrentPath("/settings")}
-                    >
-                      <Settings data-slot="icon" aria-hidden="true" />
-                      <SidebarMenuLabel>
-                        <Trans>Settings</Trans>
-                      </SidebarMenuLabel>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-        </Sidebar>
+    <SidebarProvider
+      className="min-h-[var(--app-shell-min-height)]"
+      style={
+        {
+          "--sidebar-width": "18rem",
+        } as React.CSSProperties
       }
     >
-      <Suspense fallback={<RouteContentFallback />}>{children}</Suspense>
-    </StackedLayout>
+      <AppSidebar
+        navMain={navMain}
+        user={{
+          name: user?.name ?? "User",
+          email: user?.email ?? "user@secpal.dev",
+        }}
+        onLock={lock}
+        onLogout={handleLogout}
+      />
+      <SidebarInset>
+        <UpdatePrompt />
+        <header className="flex h-16 shrink-0 items-center gap-2 pt-[var(--app-safe-area-inset-top)] transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink asChild>
+                    <PrefetchLink to="/">
+                      <Trans>SecPal</Trans>
+                    </PrefetchLink>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{currentPageLabel}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        </header>
+        <div className="bg-background flex flex-1 flex-col">
+          <div className="grow p-6 lg:p-10">
+            <div className="mx-auto max-w-6xl">
+              <Suspense fallback={<RouteContentFallback />}>
+                {children}
+              </Suspense>
+            </div>
+          </div>
+          <Footer />
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

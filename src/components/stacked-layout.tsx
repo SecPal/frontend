@@ -5,7 +5,7 @@
 
 import { Menu } from "lucide-react";
 import React, { useState } from "react";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/ui";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/ui/sidebar";
 import { Footer } from "./Footer";
 import { MobileSidebarDialog } from "./mobile-sidebar-dialog";
 

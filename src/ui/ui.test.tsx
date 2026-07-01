@@ -10,6 +10,7 @@ import {
   AlertDescription,
   AlertTitle,
   Avatar,
+  AvatarFallback,
   Badge,
   Button,
   Card,
@@ -60,6 +61,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarProvider,
   SectionSkeleton,
   Skeleton,
   Switch,
@@ -77,7 +79,9 @@ describe("shared shadcn/radix UI basis", () => {
   it("uses canonical shadcn slots and theme-token classes across core primitives", () => {
     const { container } = render(
       <div>
-        <Button>Save</Button>
+        <Button size="sm" variant="outline">
+          Save
+        </Button>
         <Input aria-label="Name" />
         <Textarea aria-label="Notes" />
         <FieldLabel htmlFor="switch">Enabled</FieldLabel>
@@ -105,7 +109,9 @@ describe("shared shadcn/radix UI basis", () => {
           <CardContent>
             <Badge>Active</Badge>
             <Progress value={40} />
-            <Avatar initials="SP" />
+            <Avatar size="sm">
+              <AvatarFallback>SP</AvatarFallback>
+            </Avatar>
             <Skeleton className="h-4 w-16" />
             <Table>
               <TableHead>
@@ -129,11 +135,18 @@ describe("shared shadcn/radix UI basis", () => {
       "button"
     );
     expect(screen.getByRole("button", { name: "Save" })).toHaveClass(
-      "bg-primary",
-      "text-primary-foreground",
-      "h-9",
-      "px-4",
-      "py-2"
+      "border",
+      "bg-background",
+      "h-8",
+      "px-3"
+    );
+    expect(screen.getByRole("button", { name: "Save" })).toHaveAttribute(
+      "data-size",
+      "sm"
+    );
+    expect(screen.getByRole("button", { name: "Save" })).toHaveAttribute(
+      "data-variant",
+      "outline"
     );
     expect(screen.getByRole("textbox", { name: "Name" })).toHaveAttribute(
       "data-slot",
@@ -180,11 +193,15 @@ describe("shared shadcn/radix UI basis", () => {
     expect(container.querySelector('[data-slot="avatar"]')).toHaveClass(
       "rounded-full"
     );
+    expect(container.querySelector('[data-slot="avatar"]')).toHaveAttribute(
+      "data-size",
+      "sm"
+    );
     expect(
       container.querySelector('[data-slot="avatar-fallback"]')
-    ).toHaveClass("bg-inherit", "text-inherit");
+    ).toHaveClass("bg-muted", "text-muted-foreground");
     expect(container.querySelector('[data-slot="skeleton"]')).toHaveClass(
-      "bg-accent"
+      "bg-muted"
     );
     expect(container.querySelector('[data-slot="table"]')).toHaveClass(
       "caption-bottom"
@@ -195,6 +212,19 @@ describe("shared shadcn/radix UI basis", () => {
     expect(
       container.querySelectorAll('[data-slot="table-row"]')[0]
     ).toHaveClass("border-border");
+  });
+
+  it("keeps native buttons on type=button by default", () => {
+    render(
+      <form>
+        <Button>Open dialog</Button>
+      </form>
+    );
+
+    expect(screen.getByRole("button", { name: "Open dialog" })).toHaveAttribute(
+      "type",
+      "button"
+    );
   });
 
   it("uses the login-derived control tokens for fields and actions", () => {
@@ -254,21 +284,19 @@ describe("shared shadcn/radix UI basis", () => {
     );
   });
 
-  it("keeps shared shell primitives on canonical theme tokens instead of bespoke sidebar tokens", () => {
+  it("keeps shared shell primitives on the canonical sidebar theme tokens", () => {
     const { container } = render(
-      <MemoryRouter>
-        <Sidebar>
+      <SidebarProvider>
+        <Sidebar collapsible="none">
           <SidebarHeader>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton href="/settings" current>
-                  Settings
-                </SidebarMenuButton>
+                <SidebarMenuButton isActive>Settings</SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarHeader>
         </Sidebar>
-      </MemoryRouter>
+      </SidebarProvider>
     );
 
     const sidebar = container.querySelector('[data-slot="sidebar"]');
@@ -280,20 +308,22 @@ describe("shared shadcn/radix UI basis", () => {
       '[data-slot="sidebar-menu-button"]'
     );
 
-    expect(sidebar).toHaveClass("bg-background", "text-foreground");
-    expect(sidebarHeader).toHaveClass("border-border");
-    expect(sidebarMenu).toHaveClass("list-none", "m-0", "p-0");
+    expect(sidebar).toHaveClass("bg-sidebar", "text-sidebar-foreground");
+    expect(sidebarHeader).toHaveClass("p-2");
+    expect(sidebarMenu).toHaveClass("flex", "w-full", "min-w-0", "flex-col");
     expect(sidebarButton).toHaveClass(
-      "text-foreground",
-      "hover:bg-accent",
-      "data-[active=true]:bg-accent"
+      "hover:bg-sidebar-accent",
+      "data-[active=true]:bg-sidebar-accent",
+      "data-[active=true]:text-sidebar-accent-foreground"
     );
 
-    expect(sidebar?.className).not.toContain("bg-sidebar");
-    expect(sidebar?.className).not.toContain("text-sidebar-foreground");
-    expect(sidebarHeader?.className).not.toContain("border-sidebar-border");
-    expect(sidebarButton?.className).not.toContain("text-sidebar-foreground");
-    expect(sidebarButton?.className).not.toContain("bg-sidebar-accent");
+    expect(sidebar?.className).not.toContain("bg-background");
+    expect(sidebar?.className).not.toContain("text-foreground");
+    expect(sidebarHeader?.className).not.toContain("border-border");
+    expect(sidebarButton?.className).not.toContain("hover:bg-accent");
+    expect(sidebarButton?.className).not.toContain(
+      "data-[active=true]:bg-accent"
+    );
   });
 
   it("keeps app-specific page typography, links, and tables on canonical tokens", () => {
@@ -580,7 +610,7 @@ describe("shared shadcn/radix UI basis", () => {
     expect(decorativeSkeleton).toHaveClass(
       "animate-pulse",
       "rounded-md",
-      "bg-accent"
+      "bg-muted"
     );
 
     expect(

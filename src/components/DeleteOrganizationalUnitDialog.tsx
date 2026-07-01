@@ -1,16 +1,16 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { TriangleAlert } from "lucide-react";
+import { Button } from "@/ui/button";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Button,
   Dialog,
   DialogActions,
   DialogBody,

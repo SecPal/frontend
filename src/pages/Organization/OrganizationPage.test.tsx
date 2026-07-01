@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -43,6 +43,12 @@ describe("OrganizationPage", () => {
       type: "holding",
       name: "SecPal Holding",
       description: "Root organizational unit",
+      permissions: {
+        create_child: true,
+        update: true,
+        delete: true,
+        manage_scopes: true,
+      },
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     },
@@ -51,6 +57,12 @@ describe("OrganizationPage", () => {
       type: "company",
       name: "SecPal GmbH",
       description: "Main operating company",
+      permissions: {
+        create_child: true,
+        update: true,
+        delete: true,
+        manage_scopes: true,
+      },
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     },
@@ -413,6 +425,69 @@ describe("OrganizationPage", () => {
   );
 
   it(
+    "removes the create dialog overlay after a successful create so page actions remain interactive",
+    async () => {
+      const user = userEvent.setup();
+      const newUnit: OrganizationalUnit = {
+        id: "new-unit",
+        type: "branch",
+        name: "New Branch",
+        description: null,
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-01T00:00:00Z",
+      };
+
+      vi.mocked(
+        organizationalUnitApi.createOrganizationalUnit
+      ).mockResolvedValue(newUnit);
+
+      renderWithProviders(<OrganizationPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole("button", { name: /Add Root Unit/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Create Organizational Unit")
+        ).toBeInTheDocument();
+      });
+
+      await user.type(
+        screen.getByPlaceholderText(/e\.g\., Berlin Branch/i),
+        "New Branch"
+      );
+      await user.click(screen.getByRole("button", { name: /^Create$/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText("Create Organizational Unit")
+        ).not.toBeInTheDocument();
+      });
+
+      expect(document.querySelector('[data-slot="dialog-overlay"]')).toBeNull();
+      expect(document.body.style.pointerEvents).toBe("");
+      expect(document.body.style.overflow).toBe("");
+
+      const addRootUnitButton = screen.getByRole("button", {
+        name: /Add Root Unit/i,
+      });
+      expect(addRootUnitButton).toBeEnabled();
+
+      await user.click(addRootUnitButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Create Organizational Unit")
+        ).toBeInTheDocument();
+      });
+    },
+    SLOW_TEST_TIMEOUT
+  );
+
+  it(
     "keeps a newly created company visible when a child branch is created before hook refresh catches up",
     async () => {
       const user = userEvent.setup();
@@ -616,6 +691,132 @@ describe("OrganizationPage", () => {
       expect(success).toHaveAttribute("data-slot", "alert");
       expect(success).toHaveClass("border-emerald-500/30", "bg-emerald-500/10");
       expect(success).toHaveClass("text-foreground");
+    },
+    SLOW_TEST_TIMEOUT
+  );
+
+  it(
+    "removes the edit dialog overlay after a successful rename so page actions remain interactive",
+    async () => {
+      const user = userEvent.setup();
+      const updatedUnit: OrganizationalUnit = {
+        id: "unit-1",
+        type: "holding",
+        name: "SecPal Holding Updated",
+        description: "Root organizational unit",
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-02T00:00:00Z",
+      };
+
+      vi.mocked(
+        organizationalUnitApi.updateOrganizationalUnit
+      ).mockResolvedValueOnce(updatedUnit);
+
+      renderWithProviders(<OrganizationPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByText("SecPal Holding"));
+      await user.click(screen.getByRole("button", { name: /^Edit$/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Edit Organizational Unit")
+        ).toBeInTheDocument();
+      });
+
+      const nameInput = screen.getByDisplayValue("SecPal Holding");
+      await user.clear(nameInput);
+      await user.type(nameInput, updatedUnit.name);
+      await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText("Edit Organizational Unit")
+        ).not.toBeInTheDocument();
+      });
+
+      expect(document.querySelector('[data-slot="dialog-overlay"]')).toBeNull();
+      expect(document.body.style.pointerEvents).toBe("");
+      expect(document.body.style.overflow).toBe("");
+
+      const addChildUnitButton = screen.getByRole("button", {
+        name: /Add Child Unit/i,
+      });
+      expect(addChildUnitButton).toBeEnabled();
+    },
+    SLOW_TEST_TIMEOUT
+  );
+
+  it(
+    "closes the row actions menu completely after opening edit from the dropdown and saving",
+    async () => {
+      const user = userEvent.setup();
+      const updatedUnit: OrganizationalUnit = {
+        id: "unit-1",
+        type: "holding",
+        name: "SecPal Holding Updated",
+        description: "Root organizational unit",
+        permissions: {
+          create_child: true,
+          update: true,
+          delete: true,
+          manage_scopes: true,
+        },
+        created_at: "2025-01-01T00:00:00Z",
+        updated_at: "2025-01-02T00:00:00Z",
+      };
+
+      vi.mocked(
+        organizationalUnitApi.updateOrganizationalUnit
+      ).mockResolvedValueOnce(updatedUnit);
+
+      renderWithProviders(<OrganizationPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+      });
+
+      const actionButtons = screen.getAllByRole("button", {
+        name: /actions for /i,
+      });
+      const actionButton = actionButtons[0];
+      expect(actionButton).toBeDefined();
+      await user.click(actionButton!);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("menuitem", { name: /^Edit$/i })
+        ).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole("menuitem", { name: /^Edit$/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Edit Organizational Unit")
+        ).toBeInTheDocument();
+      });
+
+      const nameInput = screen.getByDisplayValue("SecPal Holding");
+      await user.clear(nameInput);
+      await user.type(nameInput, updatedUnit.name);
+      await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+      await waitFor(() => {
+        expect(
+          screen.queryByText("Edit Organizational Unit")
+        ).not.toBeInTheDocument();
+      });
+
+      expect(
+        document.querySelector('[data-slot="dropdown-menu-content"]')
+      ).toBeNull();
+      expect(document.querySelector('[data-slot="dialog-overlay"]')).toBeNull();
+      expect(document.body.style.pointerEvents).toBe("");
+      expect(document.body.style.overflow).toBe("");
     },
     SLOW_TEST_TIMEOUT
   );

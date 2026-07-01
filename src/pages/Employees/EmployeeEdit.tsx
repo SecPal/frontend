@@ -6,8 +6,18 @@ import { useNavigate, useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { FormSkeleton, LoadingRegion, Skeleton } from "@/ui";
 import type { Employee, EmployeeAddress, EmployeeFormData } from "@/types/api";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui/select";
+import { FormSkeleton, LoadingRegion } from "@/ui/loading";
+import { Skeleton } from "@/ui/skeleton";
 import { fetchEmployee, updateEmployee } from "../../services/employeeApi";
 import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
 import type { OrganizationalUnit } from "../../types/organizational";
@@ -15,7 +25,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Button,
   Card,
   CardContent,
   FieldGroup,
@@ -24,16 +33,10 @@ import {
   FieldError,
   FieldLabel,
   EmployeeFieldset as Fieldset,
-  Input,
   EmployeeLegend as Legend,
   EmployeeLinkButton as LinkButton,
   EmployeePageText as PageText,
   EmployeePageTitle as PageTitle,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from "@/ui";
 import { EmployeeStatusSelectItems } from "./EmployeeStatusOptions";
 import { EmployeeAddressFields } from "./EmployeeAddressFields";

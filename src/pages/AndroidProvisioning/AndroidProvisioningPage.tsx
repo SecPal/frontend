@@ -11,6 +11,17 @@ import {
   type FormEvent,
 } from "react";
 import { Plus, QrCode, RotateCcw } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui/select";
+import { Skeleton } from "@/ui/skeleton";
 import { apiConfig } from "../../config";
 import { MfaQrCode } from "../../components/MfaQrCode";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
@@ -21,7 +32,6 @@ import {
   Alert,
   AlertDescription,
   Badge,
-  Button,
   Card,
   CardContent,
   CardHeader,
@@ -37,15 +47,7 @@ import {
   Field,
   FieldError,
   FieldLabel,
-  Input,
   LoadingRegion,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Skeleton,
-  cn,
 } from "@/ui";
 import {
   ANDROID_RELEASE_CHANNELS,

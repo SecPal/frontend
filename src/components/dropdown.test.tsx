@@ -4,6 +4,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { PrefetchLink } from "@/components/PrefetchLink";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,17 +25,19 @@ function renderOpenDropdown(children: React.ReactNode) {
 }
 
 describe("DropdownMenuItem", () => {
-  it("renders link items with a full-width hit target", () => {
+  it("supports `asChild` link composition", () => {
     renderOpenDropdown(
-      <DropdownMenuItem href="/settings">Settings</DropdownMenuItem>
+      <DropdownMenuItem asChild>
+        <PrefetchLink to="/settings">Settings</PrefetchLink>
+      </DropdownMenuItem>
     );
 
-    expect(screen.getByRole("menuitem", { name: "Settings" })).toHaveClass(
-      "w-full"
-    );
+    const menuItem = screen.getByRole("menuitem", { name: "Settings" });
+    expect(menuItem).toHaveAttribute("href", "/settings");
+    expect(menuItem).toHaveAttribute("data-slot", "dropdown-menu-item");
   });
 
-  it("renders button items with a full-width hit target and click handler", () => {
+  it("renders button items with click handler support", () => {
     const onClick = vi.fn();
 
     renderOpenDropdown(
@@ -43,21 +46,37 @@ describe("DropdownMenuItem", () => {
 
     const menuItem = screen.getByRole("menuitem", { name: "Lock app" });
 
-    expect(menuItem).toHaveClass("w-full");
+    expect(menuItem).toHaveAttribute("data-slot", "dropdown-menu-item");
     fireEvent.click(menuItem);
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps destructive items on the canonical shadcn descendant svg selector", () => {
+    renderOpenDropdown(
+      <DropdownMenuItem variant="destructive">Delete unit</DropdownMenuItem>
+    );
+
+    const menuItem = screen.getByRole("menuitem", { name: "Delete unit" });
+
+    expect(menuItem).toHaveClass(
+      "data-[variant=destructive]:text-destructive",
+      "data-[variant=destructive]:[&_svg]:text-destructive"
+    );
+    expect(menuItem.className).not.toContain("*:[svg]:text-destructive!");
+  });
+
   it("renders item labels as inline content instead of nested menu section labels", () => {
     renderOpenDropdown(
-      <DropdownMenuItem href="/settings">
-        <DropdownMenuLabel>Settings</DropdownMenuLabel>
+      <DropdownMenuItem asChild>
+        <PrefetchLink to="/settings">
+          <DropdownMenuLabel>Settings</DropdownMenuLabel>
+        </PrefetchLink>
       </DropdownMenuItem>
     );
 
     const label = screen.getByText("Settings");
 
-    expect(label.tagName).toBe("SPAN");
+    expect(label.tagName).toBe("DIV");
     expect(label).toHaveAttribute("data-slot", "dropdown-menu-label");
   });
 });
