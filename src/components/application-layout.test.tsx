@@ -1467,6 +1467,34 @@ describe("ApplicationLayout", () => {
       expect(screen.queryByText("Einstellungen")).not.toBeInTheDocument();
     });
 
+    it("updates the active workspace subtitle when the locale changes after render", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "Operations User",
+        email: "operations@secpal.dev",
+        hasOrganizationalScopes: true,
+        roles: [],
+        permissions: ["customers.read"],
+      });
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("Workspace")).toBeInTheDocument();
+
+      act(() => {
+        i18n.load("de", deMessages);
+        i18n.activate("de");
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Arbeitsbereich")).toBeInTheDocument();
+      });
+    });
+
     it("hides the Android provisioning navigation entry without read access", async () => {
       await seedAuthenticatedUser({
         id: 1,

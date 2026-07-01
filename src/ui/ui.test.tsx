@@ -214,6 +214,19 @@ describe("shared shadcn/radix UI basis", () => {
     ).toHaveClass("border-border");
   });
 
+  it("keeps native buttons on type=button by default", () => {
+    render(
+      <form>
+        <Button>Open dialog</Button>
+      </form>
+    );
+
+    expect(screen.getByRole("button", { name: "Open dialog" })).toHaveAttribute(
+      "type",
+      "button"
+    );
+  });
+
   it("uses the login-derived control tokens for fields and actions", () => {
     render(
       <FieldGroup>

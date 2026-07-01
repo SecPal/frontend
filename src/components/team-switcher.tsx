@@ -33,7 +33,13 @@ type Workspace = {
 
 export function TeamSwitcher({ workspaces }: { workspaces: Workspace[] }) {
   const { isMobile } = useSidebar();
-  const [activeWorkspace, setActiveWorkspace] = React.useState(workspaces[0]);
+  const [activeWorkspaceName, setActiveWorkspaceName] = React.useState(
+    workspaces[0]?.name ?? null
+  );
+  const activeWorkspace =
+    workspaces.find((workspace) => workspace.name === activeWorkspaceName) ??
+    workspaces[0] ??
+    null;
 
   if (!activeWorkspace) {
     return null;
@@ -72,7 +78,7 @@ export function TeamSwitcher({ workspaces }: { workspaces: Workspace[] }) {
             {workspaces.map((workspace) => (
               <DropdownMenuItem
                 key={workspace.name}
-                onClick={() => setActiveWorkspace(workspace)}
+                onClick={() => setActiveWorkspaceName(workspace.name)}
                 className="gap-2 p-2"
               >
                 <div className="flex size-6 items-center justify-center rounded-md border">
