@@ -2581,10 +2581,6 @@ msgstr "Der Mindestrang kann nicht größer als der Höchstrang sein."
 msgid "Authentication"
 msgstr "Authentifizierung"
 
-#: src/components/nav-projects.tsx
-msgid "Quick access"
-msgstr "Schnellzugriff"
-
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -3321,6 +3317,10 @@ msgstr "Zugang verweigert"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Relationship"
 msgstr "Beziehung"
+
+#: src/components/nav-user.tsx
+msgid "User menu"
+msgstr "Benutzermenü"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."

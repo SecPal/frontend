@@ -100,6 +100,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Localized the sidebar user-menu trigger label, corrected destructive
+  dropdown-menu icon tinting to use the canonical shadcn descendant selector,
+  and removed the unused quick-access sidebar section that was no longer part
+  of the approved static menu shell.
 - Restored the PWA update banner on authenticated onboarding routes, close the
   mobile sidebar sheet after primary navigation, persist the desktop sidebar
   collapse preference across reloads, and keep the authenticated breadcrumb

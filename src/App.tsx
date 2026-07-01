@@ -47,11 +47,14 @@ function AuthenticatedAppSlot({
   if (error) {
     if (isRecoverableLazyModuleError(error)) {
       return (
-        <RouteBootstrapRecoveryState
-          onRetry={retry}
-          onSignInAgain={onSignInAgain}
-          reason="network"
-        />
+        <>
+          <UpdatePrompt />
+          <RouteBootstrapRecoveryState
+            onRetry={retry}
+            onSignInAgain={onSignInAgain}
+            reason="network"
+          />
+        </>
       );
     }
 
@@ -59,7 +62,12 @@ function AuthenticatedAppSlot({
   }
 
   if (isLoading || !Component) {
-    return <PublicRouteLoader />;
+    return (
+      <>
+        <UpdatePrompt />
+        <PublicRouteLoader />
+      </>
+    );
   }
 
   return <Component />;
@@ -135,7 +143,12 @@ function AuthenticatedAppRoute() {
   } = auth;
 
   if (isRouteAuthBootstrapPending(auth)) {
-    return <PublicRouteLoader />;
+    return (
+      <>
+        <UpdatePrompt />
+        <PublicRouteLoader />
+      </>
+    );
   }
 
   if (isVaultLocked) {
@@ -144,17 +157,23 @@ function AuthenticatedAppRoute() {
     }
 
     return (
-      <LoginRouteVaultLockedState onUnlock={unlock} onSignInAgain={logout} />
+      <>
+        <UpdatePrompt />
+        <LoginRouteVaultLockedState onUnlock={unlock} onSignInAgain={logout} />
+      </>
     );
   }
 
   if (bootstrapRecoveryReason) {
     return (
-      <RouteBootstrapRecoveryState
-        onRetry={retryBootstrap}
-        onSignInAgain={logout}
-        reason={bootstrapRecoveryReason}
-      />
+      <>
+        <UpdatePrompt />
+        <RouteBootstrapRecoveryState
+          onRetry={retryBootstrap}
+          onSignInAgain={logout}
+          reason={bootstrapRecoveryReason}
+        />
+      </>
     );
   }
 

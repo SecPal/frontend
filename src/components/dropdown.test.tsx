@@ -51,6 +51,20 @@ describe("DropdownMenuItem", () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
+  it("keeps destructive items on the canonical shadcn descendant svg selector", () => {
+    renderOpenDropdown(
+      <DropdownMenuItem variant="destructive">Delete unit</DropdownMenuItem>
+    );
+
+    const menuItem = screen.getByRole("menuitem", { name: "Delete unit" });
+
+    expect(menuItem).toHaveClass(
+      "data-[variant=destructive]:text-destructive",
+      "data-[variant=destructive]:[&_svg]:text-destructive"
+    );
+    expect(menuItem.className).not.toContain("*:[svg]:text-destructive!");
+  });
+
   it("renders item labels as inline content instead of nested menu section labels", () => {
     renderOpenDropdown(
       <DropdownMenuItem asChild>

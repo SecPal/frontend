@@ -674,6 +674,7 @@ describe("App", () => {
         name: /still loading your secure session/i,
       })
     ).toBeInTheDocument();
+    expect(screen.getByTestId("update-prompt")).toBeInTheDocument();
 
     mockLoadAuthenticatedAppModule.mockImplementationOnce(
       () => import("./AuthenticatedApp")
@@ -801,6 +802,7 @@ describe("App", () => {
     expect(
       screen.getByRole("status", { name: /loading page/i })
     ).toBeInTheDocument();
+    expect(screen.getByTestId("update-prompt")).toBeInTheDocument();
     expect(
       screen.queryByRole("status", { name: /loading login/i })
     ).not.toBeInTheDocument();

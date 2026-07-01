@@ -1,7 +1,9 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
+import type { MouseEvent } from "react";
 import {
   CircleUserRound,
   LockKeyhole,
@@ -9,6 +11,7 @@ import {
   Settings,
   ShieldCheck,
 } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import { getInitials } from "@/lib/stringUtils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
@@ -43,8 +46,28 @@ export function NavUser({
   onLock?: () => void;
   onLogout: () => void;
 }) {
-  const { isMobile } = useSidebar();
+  const { isMobile, setOpenMobile } = useSidebar();
+  const location = useLocation();
   const initials = user.name.trim() ? getInitials(user.name) : "U";
+  const sourceReturnTo = `${location.pathname}${location.search}${location.hash}`;
+
+  function handleMenuLinkClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (
+      !isMobile ||
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.shiftKey
+    ) {
+      return;
+    }
+
+    queueMicrotask(() => {
+      setOpenMobile(false);
+    });
+  }
 
   return (
     <SidebarMenu>
@@ -52,7 +75,7 @@ export function NavUser({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
-              aria-label="User menu"
+              aria-label={t`User menu`}
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
@@ -95,19 +118,23 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <PrefetchLink to="/profile">
+                <PrefetchLink to="/profile" onClick={handleMenuLinkClick}>
                   <CircleUserRound />
                   <Trans>My profile</Trans>
                 </PrefetchLink>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <PrefetchLink to="/settings">
+                <PrefetchLink to="/settings" onClick={handleMenuLinkClick}>
                   <Settings />
                   <Trans>Settings</Trans>
                 </PrefetchLink>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <PrefetchLink to="/source">
+                <PrefetchLink
+                  to="/source"
+                  state={{ sourceReturnTo }}
+                  onClick={handleMenuLinkClick}
+                >
                   <ShieldCheck />
                   <Trans>Source Code</Trans>
                 </PrefetchLink>

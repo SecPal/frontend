@@ -3,6 +3,7 @@
 
 import { Suspense, useCallback, useEffect, useMemo } from "react";
 import { t } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -61,6 +62,8 @@ async function logoutWithTimeout(logoutRequest: Promise<void>): Promise<void> {
 
 export function ApplicationLayout({ children }: { children: React.ReactNode }) {
   const { lock, user, logout } = useAuth();
+  const { i18n } = useLingui();
+  const activeLocale = i18n.locale;
   const capabilities = useUserCapabilities();
   const { prefetchPathsOnIdle } = usePrefetch();
   const authTransport = useMemo(() => getAuthTransport(), []);
@@ -128,78 +131,81 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
 
   const isDefined = <T,>(value: T | null): value is T => value !== null;
 
-  const navMain = useMemo(
-    () =>
-      [
-        {
-          title: t`Home`,
-          url: "/",
-          icon: Home,
-          isActive: location.pathname === "/",
-        },
-        capabilities.customers
-          ? {
-              title: t`Customers`,
-              url: "/customers",
-              icon: Users,
-              isActive: isCurrentPath("/customers"),
-            }
-          : null,
-        capabilities.sites
-          ? {
-              title: t`Sites`,
-              url: "/sites",
-              icon: MapPinned,
-              isActive: isCurrentPath("/sites"),
-            }
-          : null,
-        capabilities.employees
-          ? {
-              title: t`Employees`,
-              url: "/employees",
-              icon: UserRound,
-              isActive: isCurrentPath("/employees"),
-            }
-          : null,
-        capabilities.organization
-          ? {
-              title: t`Organization`,
-              url: "/organization",
-              icon: Building2,
-              isActive: isCurrentPath("/organization"),
-            }
-          : null,
-        capabilities.activityLogs
-          ? {
-              title: t`Activity Logs`,
-              url: "/activity-logs",
-              icon: SquareChartGantt,
-              isActive: isCurrentPath("/activity-logs"),
-            }
-          : null,
-        capabilities.androidProvisioning
-          ? {
-              title: t`Android Provisioning`,
-              url: "/android-provisioning",
-              icon: Smartphone,
-              isActive: isCurrentPath("/android-provisioning"),
-            }
-          : null,
-      ].filter(isDefined),
-    [
-      capabilities.activityLogs,
-      capabilities.androidProvisioning,
-      capabilities.customers,
-      capabilities.employees,
-      capabilities.organization,
-      capabilities.sites,
-      isCurrentPath,
-      location.pathname,
-    ]
-  );
+  const navMain = useMemo(() => {
+    void activeLocale;
 
-  const shortcuts = useMemo(
-    () => [
+    return [
+      {
+        title: t`Home`,
+        url: "/",
+        icon: Home,
+        isActive: location.pathname === "/",
+      },
+      capabilities.customers
+        ? {
+            title: t`Customers`,
+            url: "/customers",
+            icon: Users,
+            isActive: isCurrentPath("/customers"),
+          }
+        : null,
+      capabilities.sites
+        ? {
+            title: t`Sites`,
+            url: "/sites",
+            icon: MapPinned,
+            isActive: isCurrentPath("/sites"),
+          }
+        : null,
+      capabilities.employees
+        ? {
+            title: t`Employees`,
+            url: "/employees",
+            icon: UserRound,
+            isActive: isCurrentPath("/employees"),
+          }
+        : null,
+      capabilities.organization
+        ? {
+            title: t`Organization`,
+            url: "/organization",
+            icon: Building2,
+            isActive: isCurrentPath("/organization"),
+          }
+        : null,
+      capabilities.activityLogs
+        ? {
+            title: t`Activity Logs`,
+            url: "/activity-logs",
+            icon: SquareChartGantt,
+            isActive: isCurrentPath("/activity-logs"),
+          }
+        : null,
+      capabilities.androidProvisioning
+        ? {
+            title: t`Android Provisioning`,
+            url: "/android-provisioning",
+            icon: Smartphone,
+            isActive: isCurrentPath("/android-provisioning"),
+          }
+        : null,
+    ].filter(isDefined);
+  }, [
+    activeLocale,
+    capabilities.activityLogs,
+    capabilities.androidProvisioning,
+    capabilities.customers,
+    capabilities.employees,
+    capabilities.organization,
+    capabilities.sites,
+    isCurrentPath,
+    location.pathname,
+  ]);
+
+  const shortcuts = useMemo(() => {
+    void activeLocale;
+
+    return [
       {
         name: t`My profile`,
         url: "/profile",
@@ -218,11 +224,12 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
         icon: ShieldCheck,
         isActive: isCurrentPath("/source"),
       },
-    ],
-    [isCurrentPath]
-  );
+    ];
+  }, [activeLocale, isCurrentPath]);
 
   const currentPageLabel = useMemo(() => {
+    void activeLocale;
+
     const page = navMain.find((item) => item.isActive);
     if (page) {
       return page.title;
@@ -238,7 +245,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
     }
 
     return t`Home`;
-  }, [location.pathname, navMain, shortcuts]);
+  }, [activeLocale, location.pathname, navMain, shortcuts]);
 
   return (
     <SidebarProvider
@@ -260,7 +267,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
       />
       <SidebarInset>
         <UpdatePrompt />
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header className="flex h-16 shrink-0 items-center gap-2 pt-[var(--app-safe-area-inset-top)] transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Breadcrumb>

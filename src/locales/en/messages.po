@@ -2581,10 +2581,6 @@ msgstr "Minimum rank cannot be greater than maximum rank."
 msgid "Authentication"
 msgstr "Authentication"
 
-#: src/components/nav-projects.tsx
-msgid "Quick access"
-msgstr "Quick access"
-
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -3321,6 +3317,10 @@ msgstr "Access Denied"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Relationship"
 msgstr "Relationship"
+
+#: src/components/nav-user.tsx
+msgid "User menu"
+msgstr "User menu"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."

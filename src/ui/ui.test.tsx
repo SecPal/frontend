@@ -271,7 +271,7 @@ describe("shared shadcn/radix UI basis", () => {
     );
   });
 
-  it("keeps shared shell primitives on canonical theme tokens instead of bespoke sidebar tokens", () => {
+  it("keeps shared shell primitives on the canonical sidebar theme tokens", () => {
     const { container } = render(
       <SidebarProvider>
         <Sidebar collapsible="none">

@@ -247,6 +247,9 @@ describe("ApplicationLayout", () => {
       expect(desktopSidebar).toHaveAttribute("data-state", "expanded");
       expect(desktopSidebar).toHaveAttribute("data-collapsible", "");
       expect(
+        document.querySelector('[data-slot="sidebar-inner"]')?.tagName
+      ).toBe("NAV");
+      expect(
         document.querySelector('[data-slot="sidebar-rail"]')
       ).toBeInTheDocument();
       expect(
@@ -343,6 +346,7 @@ describe("ApplicationLayout", () => {
       expect(verticalSeparator).toBeNull();
       expect(sidebarContainer?.className).not.toContain("border-r");
       expect(sidebarContainer?.className).not.toContain("border-l");
+      expect(header).toHaveClass("pt-[var(--app-safe-area-inset-top)]");
     });
 
     it("renders children content", () => {
@@ -480,13 +484,15 @@ describe("ApplicationLayout", () => {
         const dialog = await screen.findByRole("dialog", {
           name: /sidebar/i,
         });
+        const mobileSidebar = document.querySelector(
+          '[data-slot="sidebar"][data-mobile="true"]'
+        );
         expect(dialog).toBeInTheDocument();
         expect(
           document.querySelector('[data-slot="sheet-overlay"]')
         ).toBeInTheDocument();
-        expect(
-          document.querySelector('[data-slot="sidebar"][data-mobile="true"]')
-        ).toBeInTheDocument();
+        expect(mobileSidebar).toBeInTheDocument();
+        expect(mobileSidebar?.className).not.toContain("[&>button]:hidden");
 
         await user.click(screen.getByRole("button", { name: /close/i }));
 
@@ -551,6 +557,48 @@ describe("ApplicationLayout", () => {
       }
     });
 
+    it("closes the mobile sidebar after user-menu navigation", async () => {
+      const user = userEvent.setup();
+      const originalInnerWidth = window.innerWidth;
+
+      try {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: 480,
+        });
+
+        renderWithProviders(
+          <ApplicationLayout>
+            <PathnameProbe />
+          </ApplicationLayout>,
+          { route: "/" }
+        );
+
+        await user.click(
+          screen.getByRole("button", { name: /toggle sidebar/i })
+        );
+
+        await screen.findByRole("dialog", {
+          name: /sidebar/i,
+        });
+
+        await openUserMenu();
+        await user.click(screen.getByRole("menuitem", { name: /settings/i }));
+
+        await waitFor(() => {
+          expect(screen.getByTestId("pathname")).toHaveTextContent("/settings");
+          expect(
+            screen.queryByRole("dialog", { name: /sidebar/i })
+          ).not.toBeInTheDocument();
+        });
+      } finally {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: originalInnerWidth,
+        });
+      }
+    });
+
     it("renders user initials in avatar", async () => {
       renderWithProviders(
         <ApplicationLayout>
@@ -590,6 +638,30 @@ describe("ApplicationLayout", () => {
       expect(screen.getByRole("link", { current: "page" })).toHaveTextContent(
         "About"
       );
+    });
+
+    it("recomputes breadcrumb labels when the locale changes without navigation", async () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>,
+        { route: "/settings" }
+      );
+
+      expect(screen.getByRole("link", { current: "page" })).toHaveTextContent(
+        "Settings"
+      );
+
+      act(() => {
+        i18n.load("de", deMessages);
+        i18n.activate("de");
+      });
+
+      await waitFor(() => {
+        expect(screen.getByRole("link", { current: "page" })).toHaveTextContent(
+          "Einstellungen"
+        );
+      });
     });
   });
 
@@ -690,6 +762,33 @@ describe("ApplicationLayout", () => {
         );
 
         expect(sourceCodeItem).toHaveAttribute("href", "/source");
+      },
+      SLOW_TEST_TIMEOUT
+    );
+
+    it(
+      "preserves the current route when opening source from the user menu",
+      async () => {
+        const user = userEvent.setup();
+
+        renderWithProviders(
+          <>
+            <ApplicationLayout>
+              <div>Content</div>
+            </ApplicationLayout>
+            <LocationStateProbe />
+          </>,
+          { route: "/customers/new?draft=1#notes" }
+        );
+
+        await openUserMenu();
+        await user.click(
+          screen.getByRole("menuitem", { name: /source code/i })
+        );
+
+        expect(screen.getByTestId("location-state")).toHaveTextContent(
+          JSON.stringify({ sourceReturnTo: "/customers/new?draft=1#notes" })
+        );
       },
       SLOW_TEST_TIMEOUT
     );
