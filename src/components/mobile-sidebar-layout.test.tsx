@@ -77,6 +77,9 @@ describe("mobile sidebar layouts", () => {
       expect(
         screen.getByRole("button", { name: "Navigation schließen" })
       ).toBeInTheDocument();
+      expect(document.querySelector('[data-slot="sheet-overlay"]')).toHaveClass(
+        "lg:hidden"
+      );
     }
   );
 });

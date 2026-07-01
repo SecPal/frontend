@@ -210,7 +210,10 @@ export function NotificationPreferences() {
         ) : null}
       </div>
 
-      <Alert className={statusStyles.alertClassName}>
+      <Alert
+        role={status.tone === "red" ? "alert" : "status"}
+        className={statusStyles.alertClassName}
+      >
         <AlertDescription
           className={`mt-0 text-base/6 sm:text-sm/6 ${statusStyles.descriptionClassName}`}
         >

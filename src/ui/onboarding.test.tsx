@@ -293,7 +293,7 @@ describe("onboarding shadcn primitives", () => {
           <CardTitle id="required-information">Required information</CardTitle>
         </CardHeader>
         <CardContent>
-          <Alert>
+          <Alert role="alert">
             <AlertTitle>Missing fields</AlertTitle>
             <AlertDescription>Complete the required fields.</AlertDescription>
           </Alert>
@@ -474,6 +474,10 @@ describe("onboarding shadcn primitives", () => {
     expect(screen.getByRole("option", { name: "Main Street" })).toHaveAttribute(
       "data-highlighted",
       ""
+    );
+    expect(screen.getByRole("option", { name: "Main Street" })).toHaveAttribute(
+      "id",
+      "street-option-0"
     );
   });
 

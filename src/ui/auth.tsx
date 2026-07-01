@@ -21,7 +21,6 @@ import { Minus } from "lucide-react";
 import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from "input-otp";
 import {
   Alert as AppAlert,
-  AlertDescription as AppAlertDescription,
   AlertTitle as AppAlertTitle,
   Button as AppButton,
   Dialog as AppDialog,
@@ -321,15 +320,16 @@ export function LoginStatusMessage({
           {title}
         </AppAlertTitle>
       ) : null}
-      <AppAlertDescription
+      <div
+        data-slot="alert-description"
         className={cn(
-          "break-words",
+          "col-start-2 grid justify-items-start gap-1 text-sm break-words [&_p]:leading-relaxed",
           variantStyles.descriptionClassName,
           title && "mt-1"
         )}
       >
         {children}
-      </AppAlertDescription>
+      </div>
     </AppAlert>
   );
 }

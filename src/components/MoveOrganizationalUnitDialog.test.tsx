@@ -316,6 +316,10 @@ describe("MoveOrganizationalUnitDialog", () => {
         "border-primary/30",
         "bg-primary/10"
       );
+      expect(staleBanner.closest('[data-slot="alert"]')).toHaveAttribute(
+        "role",
+        "status"
+      );
       expect(staleBanner).toHaveClass("text-primary");
     });
   });

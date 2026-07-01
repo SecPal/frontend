@@ -69,4 +69,12 @@ describe("vite config dev proxy", () => {
       },
     });
   });
+
+  it("keeps the DDEV proxy defaults when the API base URL env is missing", async () => {
+    const { buildDevServerProxyConfig } = await import("../vite.config");
+
+    expect(buildDevServerProxyConfig(undefined)).toEqual(
+      buildDevServerProxyConfig("")
+    );
+  });
 });

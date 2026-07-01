@@ -93,6 +93,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed shadcn/Radix migration regressions in dev proxy startup, mobile sheet
+  overlays, address autocomplete active-descendant IDs, login status message
+  markup, and passive advisory alert roles.
 - Restored the checked/unchecked icon state on shared `Switch` controls with
   `showIcons`, corrected dropdown-menu item labels to render as inline content
   instead of nested Radix menu-section labels, and split system color-scheme

@@ -94,7 +94,7 @@ describe("shared shadcn/radix UI basis", () => {
             <SelectItem value="de">German</SelectItem>
           </SelectContent>
         </Select>
-        <Alert>
+        <Alert role="alert">
           <AlertTitle>Heads up</AlertTitle>
           <AlertDescription>Check this before continuing.</AlertDescription>
         </Alert>
@@ -541,7 +541,7 @@ describe("shared shadcn/radix UI basis", () => {
           <Badge>Optional</Badge>
         </CardHeader>
         <CardContent>
-          <Alert>
+          <Alert role="alert">
             <AlertTitle>Missing fields</AlertTitle>
             <AlertDescription>Complete every required field.</AlertDescription>
           </Alert>
@@ -552,6 +552,7 @@ describe("shared shadcn/radix UI basis", () => {
     expect(
       screen.getByRole("region", { name: "Required information" })
     ).toHaveAttribute("data-slot", "card");
+    expect(screen.getByRole("alert")).toHaveAttribute("data-slot", "alert");
     expect(screen.getByText("Optional")).toHaveAttribute("data-slot", "badge");
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Missing fieldsComplete every required field."

@@ -303,15 +303,26 @@ export const CommandSeparator = forwardRef<
 export const CommandItem = forwardRef<
   ElementRef<typeof CommandPrimitive.Item>,
   ComponentPropsWithoutRef<typeof CommandPrimitive.Item>
->(function CommandItem({ className, ...props }, ref) {
+>(function CommandItem({ className, id, ...props }, ref) {
+  const itemRef = useCallback(
+    (node: ElementRef<typeof CommandPrimitive.Item> | null) => {
+      if (node && id) {
+        node.id = id;
+      }
+      setForwardedRef(ref, node);
+    },
+    [id, ref]
+  );
+
   return (
     <CommandPrimitive.Item
-      ref={ref}
+      ref={itemRef}
       data-slot="command-item"
       className={cn(
         "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
         className
       )}
+      id={id}
       {...props}
     />
   );
@@ -1068,13 +1079,19 @@ export function DialogActions({
 }
 
 export const Alert = forwardRef(function Alert(
-  { className, role = "alert", ...props }: ComponentPropsWithoutRef<"div">,
+  { className, role, ...props }: ComponentPropsWithoutRef<"div">,
   ref: ForwardedRef<HTMLDivElement>
 ) {
+  const resolvedRole =
+    role ??
+    (typeof className === "string" && className.includes("destructive")
+      ? "alert"
+      : undefined);
+
   return (
     <div
       ref={ref}
-      role={role}
+      role={resolvedRole}
       data-slot="alert"
       className={cn(
         "relative grid w-full grid-cols-[0_1fr] rounded-lg border border-border px-4 py-3 text-sm text-card-foreground [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:top-4 [&>svg]:left-4 [&>svg~*]:pl-7",
@@ -1473,11 +1490,16 @@ const organizationalUnitBadgeColors = {
   zinc: "bg-muted text-muted-foreground",
 } satisfies Record<OrganizationalUnitBadgeColor, string>;
 
+export interface CustomerSitePageTitleProps
+  extends ComponentPropsWithoutRef<"h1"> {
+  level?: 1 | 2;
+}
+
 export function CustomerSitePageTitle({
   level = 1,
   className,
   ...props
-}: ComponentPropsWithoutRef<"h1"> & { level?: 1 | 2 }) {
+}: CustomerSitePageTitleProps) {
   const Component = level === 1 ? "h1" : "h2";
 
   return (
@@ -1494,10 +1516,15 @@ export function CustomerSitePageTitle({
   );
 }
 
+export interface CustomerSitePageTextProps
+  extends ComponentPropsWithoutRef<"p"> {
+  className?: string;
+}
+
 export function CustomerSitePageText({
   className,
   ...props
-}: ComponentPropsWithoutRef<"p">) {
+}: CustomerSitePageTextProps) {
   return (
     <p
       data-slot="customer-site-text"
@@ -1509,7 +1536,7 @@ export function CustomerSitePageText({
 
 export const CustomerSitePageLink = forwardRef<
   HTMLAnchorElement,
-  ComponentPropsWithoutRef<typeof PrefetchLink>
+  CustomerSitePageLinkProps
 >(function CustomerSitePageLink({ className, ...props }, ref) {
   return (
     <PrefetchLink
@@ -1525,9 +1552,19 @@ export const CustomerSitePageLink = forwardRef<
   );
 });
 
+export interface CustomerSitePageLinkProps
+  extends ComponentPropsWithoutRef<typeof PrefetchLink> {
+  className?: string;
+}
+
+export interface CustomerSiteLinkButtonProps
+  extends ComponentPropsWithoutRef<typeof PrefetchLink> {
+  variant?: ButtonVariant;
+}
+
 export const CustomerSiteLinkButton = forwardRef<
   HTMLAnchorElement,
-  ComponentPropsWithoutRef<typeof PrefetchLink> & { variant?: ButtonVariant }
+  CustomerSiteLinkButtonProps
 >(function CustomerSiteLinkButton({ className, variant, ...props }, ref) {
   return (
     <PrefetchLink
@@ -1539,11 +1576,16 @@ export const CustomerSiteLinkButton = forwardRef<
   );
 });
 
+export interface CustomerSiteStatusBadgeProps
+  extends ComponentPropsWithoutRef<"span"> {
+  color?: CustomerSiteBadgeColor;
+}
+
 export function CustomerSiteStatusBadge({
   color = "zinc",
   className,
   ...props
-}: ComponentPropsWithoutRef<"span"> & { color?: CustomerSiteBadgeColor }) {
+}: CustomerSiteStatusBadgeProps) {
   return (
     <Badge
       data-slot="customer-site-status-badge"
@@ -1553,11 +1595,16 @@ export function CustomerSiteStatusBadge({
   );
 }
 
+export interface OrganizationalUnitTypeBadgeProps
+  extends ComponentPropsWithoutRef<"span"> {
+  type: string;
+}
+
 export function OrganizationalUnitTypeBadge({
   type,
   className,
   ...props
-}: ComponentPropsWithoutRef<"span"> & { type: string }) {
+}: OrganizationalUnitTypeBadgeProps) {
   return (
     <Badge
       className={cn(
@@ -1571,10 +1618,15 @@ export function OrganizationalUnitTypeBadge({
   );
 }
 
+export interface CustomerSiteFormCheckboxFieldProps
+  extends ComponentPropsWithoutRef<"div"> {
+  className?: string;
+}
+
 export function CustomerSiteFormCheckboxField({
   className,
   ...props
-}: ComponentPropsWithoutRef<"div">) {
+}: CustomerSiteFormCheckboxFieldProps) {
   return (
     <div
       data-slot="customer-site-checkbox-field"
@@ -1607,10 +1659,15 @@ const employeeBadgeColors = {
   zinc: "bg-muted text-muted-foreground",
 } satisfies Record<EmployeeBadgeColor, string>;
 
+export interface EmployeeFieldsetProps
+  extends ComponentPropsWithoutRef<"fieldset"> {
+  className?: string;
+}
+
 export function EmployeeFieldset({
   className,
   ...props
-}: ComponentPropsWithoutRef<"fieldset">) {
+}: EmployeeFieldsetProps) {
   return (
     <fieldset
       data-slot="employee-fieldset"
@@ -1620,10 +1677,15 @@ export function EmployeeFieldset({
   );
 }
 
+export interface EmployeeLegendProps
+  extends ComponentPropsWithoutRef<"legend"> {
+  className?: string;
+}
+
 export function EmployeeLegend({
   className,
   ...props
-}: ComponentPropsWithoutRef<"legend">) {
+}: EmployeeLegendProps) {
   return (
     <legend
       data-slot="employee-legend"
@@ -1642,13 +1704,7 @@ export function EmployeeAutocompleteListbox({
   listboxId,
   className,
   children,
-}: {
-  anchor: ReactElement;
-  open: boolean;
-  listboxId: string;
-  className?: string;
-  children: ReactNode;
-}) {
+}: EmployeeAutocompleteListboxProps) {
   return (
     <SearchableAutocompleteListbox
       anchor={anchor}
@@ -1662,15 +1718,26 @@ export function EmployeeAutocompleteListbox({
   );
 }
 
+export interface EmployeeAutocompleteListboxProps {
+  anchor: ReactElement;
+  open: boolean;
+  listboxId: string;
+  className?: string;
+  children: ReactNode;
+}
+
+export interface EmployeeAutocompleteOptionProps
+  extends ComponentPropsWithoutRef<"button"> {
+  highlighted?: boolean;
+}
+
 export function EmployeeAutocompleteOption({
   className,
   highlighted = false,
   type = "button",
   tabIndex = -1,
   ...props
-}: ComponentPropsWithoutRef<"button"> & {
-  highlighted?: boolean;
-}) {
+}: EmployeeAutocompleteOptionProps) {
   return (
     <SearchableAutocompleteOption
       className={className}
@@ -1693,17 +1760,7 @@ export function EmployeeCommandPopover({
   emptyMessage,
   disabled = false,
   errorMessage,
-}: {
-  label: string;
-  options: CommandOption[];
-  value?: string;
-  onValueChange: (value: string) => void;
-  placeholder: string;
-  searchPlaceholder: string;
-  emptyMessage: string;
-  disabled?: boolean;
-  errorMessage?: string;
-}) {
+}: EmployeeCommandPopoverProps) {
   return (
     <SearchableCommandPopover
       label={label}
@@ -1720,11 +1777,28 @@ export function EmployeeCommandPopover({
   );
 }
 
+export interface EmployeeCommandPopoverProps {
+  label: string;
+  options: CommandOption[];
+  value?: string;
+  onValueChange: (value: string) => void;
+  placeholder: string;
+  searchPlaceholder: string;
+  emptyMessage: string;
+  disabled?: boolean;
+  errorMessage?: string;
+}
+
+export interface EmployeePageTitleProps
+  extends ComponentPropsWithoutRef<"h1"> {
+  level?: 1 | 2 | 3;
+}
+
 export function EmployeePageTitle({
   level = 1,
   className,
   ...props
-}: ComponentPropsWithoutRef<"h1"> & { level?: 1 | 2 | 3 }) {
+}: EmployeePageTitleProps) {
   const Component = level === 1 ? "h1" : level === 2 ? "h2" : "h3";
 
   return (
@@ -1741,10 +1815,14 @@ export function EmployeePageTitle({
   );
 }
 
+export interface EmployeePageTextProps extends ComponentPropsWithoutRef<"p"> {
+  className?: string;
+}
+
 export function EmployeePageText({
   className,
   ...props
-}: ComponentPropsWithoutRef<"p">) {
+}: EmployeePageTextProps) {
   return (
     <p
       data-slot="employee-text"
@@ -1756,7 +1834,7 @@ export function EmployeePageText({
 
 export const EmployeePageLink = forwardRef<
   HTMLAnchorElement,
-  ComponentPropsWithoutRef<typeof PrefetchLink>
+  EmployeePageLinkProps
 >(function EmployeePageLink({ className, ...props }, ref) {
   return (
     <PrefetchLink
@@ -1772,9 +1850,19 @@ export const EmployeePageLink = forwardRef<
   );
 });
 
+export interface EmployeePageLinkProps
+  extends ComponentPropsWithoutRef<typeof PrefetchLink> {
+  className?: string;
+}
+
+export interface EmployeeLinkButtonProps
+  extends ComponentPropsWithoutRef<typeof PrefetchLink> {
+  variant?: ButtonVariant;
+}
+
 export const EmployeeLinkButton = forwardRef<
   HTMLAnchorElement,
-  ComponentPropsWithoutRef<typeof PrefetchLink> & { variant?: ButtonVariant }
+  EmployeeLinkButtonProps
 >(function EmployeeLinkButton({ className, variant, ...props }, ref) {
   return (
     <PrefetchLink
@@ -1786,11 +1874,16 @@ export const EmployeeLinkButton = forwardRef<
   );
 });
 
+export interface EmployeeStatusBadgeProps
+  extends ComponentPropsWithoutRef<"span"> {
+  color?: EmployeeBadgeColor;
+}
+
 export function EmployeeStatusBadge({
   color = "zinc",
   className,
   ...props
-}: ComponentPropsWithoutRef<"span"> & { color?: EmployeeBadgeColor }) {
+}: EmployeeStatusBadgeProps) {
   return (
     <Badge
       data-slot="employee-status-badge"
@@ -1800,10 +1893,15 @@ export function EmployeeStatusBadge({
   );
 }
 
+export interface EmployeeDataTableProps
+  extends ComponentPropsWithoutRef<"div"> {
+  className?: string;
+}
+
 export function EmployeeDataTable({
   className,
   ...props
-}: ComponentPropsWithoutRef<"div">) {
+}: EmployeeDataTableProps) {
   return (
     <div
       data-slot="employee-table-shell"
@@ -1816,10 +1914,15 @@ export function EmployeeDataTable({
   );
 }
 
+export interface EmployeeTableProps
+  extends ComponentPropsWithoutRef<"table"> {
+  className?: string;
+}
+
 export function EmployeeTable({
   className,
   ...props
-}: ComponentPropsWithoutRef<"table">) {
+}: EmployeeTableProps) {
   return (
     <table
       data-slot="employee-table"
@@ -1832,14 +1935,24 @@ export function EmployeeTable({
   );
 }
 
-export function EmployeeTableHead(props: ComponentPropsWithoutRef<"thead">) {
+export interface EmployeeTableHeadProps
+  extends ComponentPropsWithoutRef<"thead"> {
+  className?: string;
+}
+
+export function EmployeeTableHead(props: EmployeeTableHeadProps) {
   return <thead data-slot="employee-table-head" {...props} />;
+}
+
+export interface EmployeeTableBodyProps
+  extends ComponentPropsWithoutRef<"tbody"> {
+  className?: string;
 }
 
 export function EmployeeTableBody({
   className,
   ...props
-}: ComponentPropsWithoutRef<"tbody">) {
+}: EmployeeTableBodyProps) {
   return (
     <tbody
       data-slot="employee-table-body"
@@ -1854,12 +1967,17 @@ const EmployeeTableRowLinkContext = createContext<{
   title?: string;
 }>({});
 
+export interface EmployeeTableRowProps extends ComponentPropsWithoutRef<"tr"> {
+  to?: string;
+  title?: string;
+}
+
 export function EmployeeTableRow({
   className,
   to,
   title,
   ...props
-}: ComponentPropsWithoutRef<"tr"> & { to?: string; title?: string }) {
+}: EmployeeTableRowProps) {
   return (
     <EmployeeTableRowLinkContext.Provider value={{ to, title }}>
       <tr
@@ -1876,10 +1994,15 @@ export function EmployeeTableRow({
   );
 }
 
+export interface EmployeeTableHeaderProps
+  extends ComponentPropsWithoutRef<"th"> {
+  className?: string;
+}
+
 export function EmployeeTableHeader({
   className,
   ...props
-}: ComponentPropsWithoutRef<"th">) {
+}: EmployeeTableHeaderProps) {
   return (
     <th
       data-slot="employee-table-header"
@@ -1892,11 +2015,16 @@ export function EmployeeTableHeader({
   );
 }
 
+export interface EmployeeTableCellProps
+  extends ComponentPropsWithoutRef<"td"> {
+  className?: string;
+}
+
 export function EmployeeTableCell({
   className,
   children,
   ...props
-}: ComponentPropsWithoutRef<"td">) {
+}: EmployeeTableCellProps) {
   const { to, title } = useContext(EmployeeTableRowLinkContext);
   const [cellRef, setCellRef] = useState<HTMLTableCellElement | null>(null);
 

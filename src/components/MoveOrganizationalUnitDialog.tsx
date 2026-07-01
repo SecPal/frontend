@@ -253,7 +253,10 @@ function MoveOrganizationalUnitDialogContent({
 
         {/* Stale data indicator banner */}
         {!isOffline && isStale && (
-          <Alert className="mb-4 border-primary/30 bg-primary/10 text-primary">
+          <Alert
+            role="status"
+            className="mb-4 border-primary/30 bg-primary/10 text-primary"
+          >
             <AlertDescription className="mt-0 text-primary">
               <Trans>Viewing cached data. Some units may be outdated.</Trans>
             </AlertDescription>

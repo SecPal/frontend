@@ -178,6 +178,25 @@ describe("auth login shadcn primitives", () => {
     expect(emptyDescription.className).not.toContain("text-zinc-500");
   });
 
+  it("keeps paragraph children directly under login status messages", () => {
+    render(
+      <LoginStatusMessage variant="error" live="assertive" title="Offline">
+        <p>Login requires a network connection.</p>
+      </LoginStatusMessage>
+    );
+
+    const alert = screen.getByRole("alert");
+    const message = screen.getByText("Login requires a network connection.");
+
+    expect(message.tagName).toBe("P");
+    expect(message.parentElement).toHaveAttribute(
+      "data-slot",
+      "alert-description"
+    );
+    expect(message.parentElement?.parentElement).toBe(alert);
+    expect(message.parentElement).toHaveClass("text-destructive");
+  });
+
   it("keeps warning status messages on canonical text tokens", () => {
     render(
       <LoginStatusMessage variant="warning" title="Warning">
