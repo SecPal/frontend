@@ -15,7 +15,9 @@ function isJsdomRuntime() {
   );
 }
 
-export function Select(props: React.ComponentProps<typeof SelectPrimitive.Root>) {
+export function Select(
+  props: React.ComponentProps<typeof SelectPrimitive.Root>
+) {
   return <SelectPrimitive.Root {...props} />;
 }
 

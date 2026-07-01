@@ -25,12 +25,7 @@ import * as PopoverPrimitive from "@radix-ui/react-popover";
 import * as ProgressPrimitive from "@radix-ui/react-progress";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import { Command as CommandPrimitive } from "cmdk";
-import {
-  Check,
-  ChevronDown,
-  Circle,
-  Search,
-} from "lucide-react";
+import { Check, ChevronDown, Circle, Search } from "lucide-react";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import {
   getTypeBadgeColor,
@@ -38,11 +33,7 @@ import {
   type OrganizationalUnitBadgeColor,
 } from "@/lib/organizationalUnitUtils";
 import { cn } from "@/lib/utils";
-import {
-  buttonVariants,
-  type ButtonVariant,
-  uiFocusRing,
-} from "./styles";
+import { buttonVariants, type ButtonVariant, uiFocusRing } from "./styles";
 
 const Button = forwardRef(function Button(
   {

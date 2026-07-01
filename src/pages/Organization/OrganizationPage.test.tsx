@@ -462,7 +462,9 @@ describe("OrganizationPage", () => {
       await user.click(screen.getByRole("button", { name: /^Create$/i }));
 
       await waitFor(() => {
-        expect(screen.queryByText("Create Organizational Unit")).not.toBeInTheDocument();
+        expect(
+          screen.queryByText("Create Organizational Unit")
+        ).not.toBeInTheDocument();
       });
 
       expect(document.querySelector('[data-slot="dialog-overlay"]')).toBeNull();
@@ -731,7 +733,9 @@ describe("OrganizationPage", () => {
       await user.click(screen.getByRole("button", { name: /save changes/i }));
 
       await waitFor(() => {
-        expect(screen.queryByText("Edit Organizational Unit")).not.toBeInTheDocument();
+        expect(
+          screen.queryByText("Edit Organizational Unit")
+        ).not.toBeInTheDocument();
       });
 
       expect(document.querySelector('[data-slot="dialog-overlay"]')).toBeNull();
@@ -783,7 +787,9 @@ describe("OrganizationPage", () => {
       await user.click(actionButton!);
 
       await waitFor(() => {
-        expect(screen.getByRole("menuitem", { name: /^Edit$/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole("menuitem", { name: /^Edit$/i })
+        ).toBeInTheDocument();
       });
 
       await user.click(screen.getByRole("menuitem", { name: /^Edit$/i }));
@@ -800,7 +806,9 @@ describe("OrganizationPage", () => {
       await user.click(screen.getByRole("button", { name: /save changes/i }));
 
       await waitFor(() => {
-        expect(screen.queryByText("Edit Organizational Unit")).not.toBeInTheDocument();
+        expect(
+          screen.queryByText("Edit Organizational Unit")
+        ).not.toBeInTheDocument();
       });
 
       expect(

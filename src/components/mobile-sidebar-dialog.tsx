@@ -32,6 +32,7 @@ export function MobileSidebarDialog({
     >
       <SheetContent
         side="left"
+        overlayClassName="lg:hidden"
         className={cn(
           "w-full max-w-80 border-r-0 bg-transparent p-2 pt-[calc(0.5rem+var(--app-safe-area-inset-top))] shadow-none lg:hidden",
           "focus:outline-none [&>button]:hidden"

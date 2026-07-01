@@ -220,10 +220,6 @@ msgstr "Failed to load form template"
 msgid "A valid residence title without employment authorization cannot be accepted. Please contact HR."
 msgstr "A valid residence title without employment authorization cannot be accepted. Please contact HR."
 
-#: src/components/nav-projects.tsx
-msgid "Open"
-msgstr "Open"
-
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "No"
@@ -280,7 +276,6 @@ msgstr "This onboarding step uses a schema we cannot render yet."
 msgid "No address suggestions found."
 msgstr "No address suggestions found."
 
-#: src/components/nav-projects.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "More options"
 msgstr "More options"
@@ -620,10 +615,6 @@ msgstr "Send Onboarding Invitation"
 msgid "Name is required"
 msgstr "Name is required"
 
-#: src/components/application-layout.tsx
-msgid "Administration"
-msgstr "Administration"
-
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Enter a label for this passkey."
 msgstr "Enter a label for this passkey."
@@ -852,10 +843,6 @@ msgstr "No results found"
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Enter your Bewacher ID or indicate that you do not know it."
 msgstr "Enter your Bewacher ID or indicate that you do not know it."
-
-#: src/components/application-layout.tsx
-msgid "Operations"
-msgstr "Operations"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Create New Employee"
@@ -2672,6 +2659,7 @@ msgstr "Workspace"
 
 #: src/components/application-layout.tsx
 #: src/components/LegalFooterLinks.tsx
+#: src/components/nav-user.tsx
 msgid "Source Code"
 msgstr "Source Code"
 
@@ -3236,6 +3224,7 @@ msgid "Customer not found"
 msgstr "Customer not found"
 
 #: src/AuthenticatedApp.tsx
+#: src/components/application-layout.tsx
 msgid "About"
 msgstr "About"
 

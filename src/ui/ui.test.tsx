@@ -190,7 +190,9 @@ describe("shared shadcn/radix UI basis", () => {
     expect(container.querySelector('[data-slot="progress"]')).toHaveClass(
       "bg-primary/20"
     );
-    expect(container.querySelector('[data-slot="avatar"]')).toHaveClass("rounded-full");
+    expect(container.querySelector('[data-slot="avatar"]')).toHaveClass(
+      "rounded-full"
+    );
     expect(container.querySelector('[data-slot="avatar"]')).toHaveAttribute(
       "data-size",
       "sm"
@@ -276,9 +278,7 @@ describe("shared shadcn/radix UI basis", () => {
           <SidebarHeader>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton isActive>
-                  Settings
-                </SidebarMenuButton>
+                <SidebarMenuButton isActive>Settings</SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarHeader>
@@ -308,7 +308,9 @@ describe("shared shadcn/radix UI basis", () => {
     expect(sidebar?.className).not.toContain("text-foreground");
     expect(sidebarHeader?.className).not.toContain("border-border");
     expect(sidebarButton?.className).not.toContain("hover:bg-accent");
-    expect(sidebarButton?.className).not.toContain("data-[active=true]:bg-accent");
+    expect(sidebarButton?.className).not.toContain(
+      "data-[active=true]:bg-accent"
+    );
   });
 
   it("keeps app-specific page typography, links, and tables on canonical tokens", () => {

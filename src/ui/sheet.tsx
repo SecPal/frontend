@@ -8,7 +8,9 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function Sheet(props: React.ComponentProps<typeof DialogPrimitive.Root>) {
+export function Sheet(
+  props: React.ComponentProps<typeof DialogPrimitive.Root>
+) {
   return <DialogPrimitive.Root data-slot="sheet" {...props} />;
 }
 
@@ -49,16 +51,18 @@ function SheetOverlay({
 export function SheetContent({
   className,
   children,
+  overlayClassName,
   side = "right",
   showCloseButton = true,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  overlayClassName?: string;
   side?: "top" | "right" | "bottom" | "left";
   showCloseButton?: boolean;
 }) {
   return (
     <SheetPortal>
-      <SheetOverlay />
+      <SheetOverlay className={overlayClassName} />
       <DialogPrimitive.Content
         data-slot="sheet-content"
         className={cn(

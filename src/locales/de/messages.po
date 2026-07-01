@@ -220,10 +220,6 @@ msgstr "Formularvorlage konnte nicht geladen werden"
 msgid "A valid residence title without employment authorization cannot be accepted. Please contact HR."
 msgstr "Ein gültiger Aufenthaltstitel ohne Arbeitserlaubnis kann nicht akzeptiert werden. Bitte kontaktieren Sie HR."
 
-#: src/components/nav-projects.tsx
-msgid "Open"
-msgstr "Öffnen"
-
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "No"
@@ -280,7 +276,6 @@ msgstr "Dieser Onboarding-Schritt verwendet ein Schema, das noch nicht dargestel
 msgid "No address suggestions found."
 msgstr "Keine Adressvorschläge gefunden."
 
-#: src/components/nav-projects.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "More options"
 msgstr "weitere Optionen"
@@ -620,10 +615,6 @@ msgstr "Onboarding-Einladung senden"
 msgid "Name is required"
 msgstr "Name ist erforderlich"
 
-#: src/components/application-layout.tsx
-msgid "Administration"
-msgstr "Administration"
-
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Enter a label for this passkey."
 msgstr "Geben Sie eine Bezeichnung für diesen Passkey ein."
@@ -852,10 +843,6 @@ msgstr "Keine Ergebnisse gefunden"
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "Enter your Bewacher ID or indicate that you do not know it."
 msgstr "Geben Sie Ihre Bewacher-ID ein, oder geben Sie an, dass Sie sie nicht kennen."
-
-#: src/components/application-layout.tsx
-msgid "Operations"
-msgstr "Betrieb"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Create New Employee"
@@ -2672,6 +2659,7 @@ msgstr "Arbeitsbereich"
 
 #: src/components/application-layout.tsx
 #: src/components/LegalFooterLinks.tsx
+#: src/components/nav-user.tsx
 msgid "Source Code"
 msgstr "Quelltext"
 
@@ -3236,6 +3224,7 @@ msgid "Customer not found"
 msgstr "Kunde nicht gefunden"
 
 #: src/AuthenticatedApp.tsx
+#: src/components/application-layout.tsx
 msgid "About"
 msgstr "Über uns"
 
