@@ -30,14 +30,22 @@ import {
   DialogOverlay,
   DialogPortal,
   DialogTitle,
-  LinkButton,
-  PageLink,
-  PageText,
-  PageTitle,
-  StatusBadge,
-} from "../CustomerSites/ui";
+  CustomerSiteLinkButton as LinkButton,
+  CustomerSitePageLink as PageLink,
+  CustomerSitePageText as PageText,
+  CustomerSitePageTitle as PageTitle,
+  CustomerSiteStatusBadge as StatusBadge,
+} from "@/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
+
+function getCustomerSitesCount(customer: Customer): number | null {
+  if (Array.isArray(customer.sites)) {
+    return customer.sites.length;
+  }
+
+  return typeof customer.sites_count === "number" ? customer.sites_count : null;
+}
 
 function CustomerDetailSkeleton({ loadingLabel }: { loadingLabel: string }) {
   return (
@@ -123,13 +131,16 @@ export default function CustomerDetail() {
   }
 
   const isInitialLoading = loading && customer === null;
+  const sitesCount = customer ? getCustomerSitesCount(customer) : null;
 
   if (!isInitialLoading && (loadError || !customer)) {
     return (
-      <div className="text-center py-12">
-        <PageText className="text-red-600 dark:text-red-400">
-          {loadError || <Trans>Customer not found</Trans>}
-        </PageText>
+      <div className="py-12 text-center">
+        <Alert className="mx-auto max-w-md border-destructive/30 bg-destructive/10 text-foreground">
+          <AlertDescription className="text-destructive">
+            {loadError || <Trans>Customer not found</Trans>}
+          </AlertDescription>
+        </Alert>
         <LinkButton to="/customers" variant="outline" className="mt-4">
           <ArrowLeft className="size-4" aria-hidden="true" />
           <Trans>Back to Customers</Trans>
@@ -146,7 +157,7 @@ export default function CustomerDetail() {
             {customer ? customer.name : <Trans>Customer</Trans>}
           </PageTitle>
           {customer ? (
-            <PageText className="mt-1 text-zinc-500">
+            <PageText className="text-muted-foreground mt-1">
               {customer.customer_number}
             </PageText>
           ) : (
@@ -184,10 +195,16 @@ export default function CustomerDetail() {
               </DescriptionDetails>
 
               <DescriptionTerm>
+                <Trans>Postal Code</Trans>
+              </DescriptionTerm>
+              <DescriptionDetails>
+                {customer.billing_address.postal_code}
+              </DescriptionDetails>
+
+              <DescriptionTerm>
                 <Trans>City</Trans>
               </DescriptionTerm>
               <DescriptionDetails>
-                {customer.billing_address.postal_code}{" "}
                 {customer.billing_address.city}
               </DescriptionDetails>
 
@@ -272,14 +289,20 @@ export default function CustomerDetail() {
             <PageTitle level={2} className="mb-4">
               <Trans>Sites</Trans>
             </PageTitle>
-            <PageText className="mb-4">
-              <Plural
-                value={customer.sites_count || 0}
-                zero="This customer has no sites."
-                one="This customer has # site."
-                other="This customer has # sites."
-              />
-            </PageText>
+            {sitesCount === null ? (
+              <PageText className="mb-4">
+                <Trans>This customer's site count is unavailable.</Trans>
+              </PageText>
+            ) : (
+              <PageText className="mb-4">
+                <Plural
+                  value={sitesCount}
+                  zero="This customer has no sites."
+                  one="This customer has # site."
+                  other="This customer has # sites."
+                />
+              </PageText>
+            )}
             <LinkButton to={`/sites/customer/${customer.id}`} variant="outline">
               <MapPinned className="size-4" aria-hidden="true" />
               <Trans>View Sites</Trans>
@@ -349,8 +372,10 @@ export default function CustomerDetail() {
               </DialogDescription>
               <DialogBody>
                 {deleteError && (
-                  <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
-                    <AlertDescription>{deleteError}</AlertDescription>
+                  <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+                    <AlertDescription className="text-destructive">
+                      {deleteError}
+                    </AlertDescription>
                   </Alert>
                 )}
               </DialogBody>

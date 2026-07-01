@@ -18,23 +18,26 @@ import {
 } from "lucide-react";
 import {
   Avatar,
-  Dropdown,
-  DropdownButton,
-  DropdownDivider,
-  DropdownItem,
-  DropdownLabel,
   DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
   Navbar,
   NavbarItem,
   NavbarSection,
   NavbarSpacer,
   Sidebar,
-  SidebarBody,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
   SidebarHeader,
-  SidebarItem,
-  SidebarLabel,
-  SidebarSection,
-  SidebarSpacer,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuLabel,
+  SidebarMenuSpacer,
 } from "@/ui";
 import { useAuth } from "../hooks/useAuth";
 import { usePrefetch } from "../hooks/usePrefetch";
@@ -58,33 +61,33 @@ function UserMenuItems({
 }) {
   return (
     <>
-      <DropdownItem href="/profile">
+      <DropdownMenuItem href="/profile">
         <CircleUserRound data-slot="icon" aria-hidden="true" />
-        <DropdownLabel>
+        <DropdownMenuLabel>
           <Trans>My profile</Trans>
-        </DropdownLabel>
-      </DropdownItem>
-      <DropdownItem href="/settings">
+        </DropdownMenuLabel>
+      </DropdownMenuItem>
+      <DropdownMenuItem href="/settings">
         <Settings data-slot="icon" aria-hidden="true" />
-        <DropdownLabel>
+        <DropdownMenuLabel>
           <Trans>Settings</Trans>
-        </DropdownLabel>
-      </DropdownItem>
+        </DropdownMenuLabel>
+      </DropdownMenuItem>
       {onLock ? (
-        <DropdownItem onClick={onLock}>
+        <DropdownMenuItem onClick={onLock}>
           <LockKeyhole data-slot="icon" aria-hidden="true" />
-          <DropdownLabel>
+          <DropdownMenuLabel>
             <Trans>Lock app</Trans>
-          </DropdownLabel>
-        </DropdownItem>
+          </DropdownMenuLabel>
+        </DropdownMenuItem>
       ) : null}
-      <DropdownDivider />
-      <DropdownItem onClick={onLogout}>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem onClick={onLogout}>
         <LogOut data-slot="icon" aria-hidden="true" />
-        <DropdownLabel>
+        <DropdownMenuLabel>
           <Trans>Sign out</Trans>
-        </DropdownLabel>
-      </DropdownItem>
+        </DropdownMenuLabel>
+      </DropdownMenuItem>
     </>
   );
 }
@@ -232,113 +235,141 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
           </NavbarSection>
           <NavbarSpacer />
           <NavbarSection>
-            <Dropdown>
-              <DropdownButton as={NavbarItem} aria-label="User menu">
-                <Avatar
-                  initials={user?.name?.trim() ? getInitials(user.name) : "U"}
-                  className="size-8 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
-                />
-              </DropdownButton>
-              <DropdownMenu className="min-w-64" anchor="bottom end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <NavbarItem aria-label="User menu">
+                  <Avatar
+                    initials={user?.name?.trim() ? getInitials(user.name) : "U"}
+                    className="size-8 bg-primary text-primary-foreground"
+                  />
+                </NavbarItem>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="min-w-64" anchor="bottom end">
                 <UserMenuItems onLock={lock} onLogout={handleLogout} />
-              </DropdownMenu>
-            </Dropdown>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </NavbarSection>
         </Navbar>
       }
       sidebar={
         <Sidebar>
           <SidebarHeader>
-            <SidebarItem href="/">
-              <Logo size="48" />
-              <SidebarLabel className="text-lg font-semibold">
-                SecPal
-              </SidebarLabel>
-            </SidebarItem>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton href="/">
+                  <Logo size="48" />
+                  <SidebarMenuLabel className="text-lg font-semibold">
+                    SecPal
+                  </SidebarMenuLabel>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
           </SidebarHeader>
 
-          <SidebarBody>
-            <SidebarSection>
-              <SidebarItem
-                href="/"
-                current={isCurrentPath("/") && location.pathname === "/"}
-              >
-                <Home data-slot="icon" aria-hidden="true" />
-                <SidebarLabel>
-                  <Trans>Home</Trans>
-                </SidebarLabel>
-              </SidebarItem>
-              {capabilities.organization && (
-                <SidebarItem
-                  href="/organization"
-                  current={isCurrentPath("/organization")}
-                >
-                  <Building2 data-slot="icon" aria-hidden="true" />
-                  <SidebarLabel>
-                    <Trans>Organization</Trans>
-                  </SidebarLabel>
-                </SidebarItem>
-              )}
-              {capabilities.customers && (
-                <SidebarItem
-                  href="/customers"
-                  current={isCurrentPath("/customers")}
-                >
-                  <Users data-slot="icon" aria-hidden="true" />
-                  <SidebarLabel>
-                    <Trans>Customers</Trans>
-                  </SidebarLabel>
-                </SidebarItem>
-              )}
-              {capabilities.employees && (
-                <SidebarItem
-                  href="/employees"
-                  current={isCurrentPath("/employees")}
-                >
-                  <UserRoundCheck data-slot="icon" aria-hidden="true" />
-                  <SidebarLabel>
-                    <Trans>Employees</Trans>
-                  </SidebarLabel>
-                </SidebarItem>
-              )}
-              {capabilities.activityLogs && (
-                <SidebarItem
-                  href="/activity-logs"
-                  current={isCurrentPath("/activity-logs")}
-                >
-                  <ShieldCheck data-slot="icon" aria-hidden="true" />
-                  <SidebarLabel>
-                    <Trans>Activity Logs</Trans>
-                  </SidebarLabel>
-                </SidebarItem>
-              )}
-              {capabilities.androidProvisioning && (
-                <SidebarItem
-                  href="/android-provisioning"
-                  current={isCurrentPath("/android-provisioning")}
-                >
-                  <Smartphone data-slot="icon" aria-hidden="true" />
-                  <SidebarLabel>
-                    <Trans>Android Provisioning</Trans>
-                  </SidebarLabel>
-                </SidebarItem>
-              )}
-            </SidebarSection>
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      href="/"
+                      current={isCurrentPath("/") && location.pathname === "/"}
+                    >
+                      <Home data-slot="icon" aria-hidden="true" />
+                      <SidebarMenuLabel>
+                        <Trans>Home</Trans>
+                      </SidebarMenuLabel>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  {capabilities.organization && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        href="/organization"
+                        current={isCurrentPath("/organization")}
+                      >
+                        <Building2 data-slot="icon" aria-hidden="true" />
+                        <SidebarMenuLabel>
+                          <Trans>Organization</Trans>
+                        </SidebarMenuLabel>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+                  {capabilities.customers && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        href="/customers"
+                        current={isCurrentPath("/customers")}
+                      >
+                        <Users data-slot="icon" aria-hidden="true" />
+                        <SidebarMenuLabel>
+                          <Trans>Customers</Trans>
+                        </SidebarMenuLabel>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+                  {capabilities.employees && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        href="/employees"
+                        current={isCurrentPath("/employees")}
+                      >
+                        <UserRoundCheck data-slot="icon" aria-hidden="true" />
+                        <SidebarMenuLabel>
+                          <Trans>Employees</Trans>
+                        </SidebarMenuLabel>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+                  {capabilities.activityLogs && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        href="/activity-logs"
+                        current={isCurrentPath("/activity-logs")}
+                      >
+                        <ShieldCheck data-slot="icon" aria-hidden="true" />
+                        <SidebarMenuLabel>
+                          <Trans>Activity Logs</Trans>
+                        </SidebarMenuLabel>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+                  {capabilities.androidProvisioning && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        href="/android-provisioning"
+                        current={isCurrentPath("/android-provisioning")}
+                      >
+                        <Smartphone data-slot="icon" aria-hidden="true" />
+                        <SidebarMenuLabel>
+                          <Trans>Android Provisioning</Trans>
+                        </SidebarMenuLabel>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-            <SidebarSpacer />
+            <SidebarMenuSpacer />
 
-            <SidebarSection>
-              <SidebarItem
-                href="/settings"
-                current={isCurrentPath("/settings")}
-              >
-                <Settings data-slot="icon" aria-hidden="true" />
-                <SidebarLabel>
-                  <Trans>Settings</Trans>
-                </SidebarLabel>
-              </SidebarItem>
-            </SidebarSection>
-          </SidebarBody>
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      href="/settings"
+                      current={isCurrentPath("/settings")}
+                    >
+                      <Settings data-slot="icon" aria-hidden="true" />
+                      <SidebarMenuLabel>
+                        <Trans>Settings</Trans>
+                      </SidebarMenuLabel>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
         </Sidebar>
       }
     >

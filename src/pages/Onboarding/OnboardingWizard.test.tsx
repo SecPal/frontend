@@ -2226,6 +2226,88 @@ describe("OnboardingWizard", () => {
     );
   });
 
+  it("keeps the residence-title upload helper surfaces on canonical theme tokens", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
+      { code: "TR", name: "Turkey" },
+    ]);
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["gender", "nationalities"],
+        properties: {
+          gender: {
+            type: "string",
+            title: "Gender",
+            enum: ["male", "female", "diverse"],
+          },
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+              enum: ["TR"],
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+    await renderWithAuthenticatedProviders({ contractStartDate: "2031-01-01" });
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    await selectOnboardingOption(user, /^gender$/i, "female");
+    await selectNationality(user, "tr");
+    await deferIdentityUpload(user);
+    await selectOnboardingOption(
+      user,
+      /residence title type/i,
+      "Aufenthaltserlaubnis"
+    );
+
+    const expiryInput = screen.getByLabelText(/residence title valid until/i);
+    fireEvent.change(expiryInput, { target: { value: "2032-01-01" } });
+    fireEvent.blur(expiryInput);
+    await setEmploymentPermitted(user, "yes");
+
+    const residenceTitleUploadGroup = await screen.findByRole("radiogroup", {
+      name: /would you like to upload your residence title now\?/i,
+    });
+    await user.click(
+      within(residenceTitleUploadGroup).getByRole("radio", {
+        name: /^(yes|ja)$/i,
+      })
+    );
+
+    const uploadHeading = await screen.findByRole("heading", {
+      name: /residence title upload/i,
+    });
+    const uploadSection = uploadHeading.closest("div")?.parentElement;
+    const attachmentInput = screen.getByLabelText(/^attachment$/i);
+
+    expect(uploadSection).toHaveClass("border-border", "bg-muted");
+    expect(uploadHeading).toHaveClass("text-foreground");
+    expect(screen.getByText(/please upload your residence title/i)).toHaveClass(
+      "text-muted-foreground"
+    );
+    expect(
+      screen.getByText(/upload front and back as separate files if available/i)
+    ).toHaveClass("text-muted-foreground");
+    expect(attachmentInput).toHaveClass("file:bg-muted");
+  });
+
   it("blocks submission when residence title expiry date is already in the past", async () => {
     const user = userEvent.setup();
     onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValueOnce([
@@ -2376,8 +2458,33 @@ describe("OnboardingWizard", () => {
       new File(["passport"], "passport.png", { type: "image/png" })
     );
     await user.click(screen.getByRole("button", { name: /upload file/i }));
-    await screen.findByText(/file uploaded successfully\./i);
-    expect(screen.getByText("passport.png")).toBeInTheDocument();
+    const uploadSuccess = await screen.findByText(
+      /file uploaded successfully\./i
+    );
+    const uploadedSection = await screen.findByText(
+      /uploaded in this session/i
+    );
+    const uploadedFilename = screen.getByText("passport.png");
+
+    expect(uploadSuccess.closest('[role="status"]')).toHaveClass(
+      "border-emerald-500/30",
+      "bg-emerald-500/10"
+    );
+    expect(uploadSuccess.closest('[role="status"]')).toHaveAttribute(
+      "data-slot",
+      "alert"
+    );
+    expect(uploadSuccess).toHaveClass("text-foreground");
+    expect(uploadSuccess.className).not.toContain("text-emerald-700");
+    expect(uploadedSection.closest("div")).toHaveClass(
+      "border-border",
+      "bg-muted"
+    );
+    expect(uploadedFilename.closest("li")).toHaveClass(
+      "border-border",
+      "bg-background"
+    );
+    expect(uploadedFilename).toHaveClass("text-muted-foreground");
 
     await user.click(screen.getByRole("button", { name: /^remove$/i }));
 
@@ -2388,9 +2495,17 @@ describe("OnboardingWizard", () => {
       );
     });
 
-    expect(
-      await screen.findByText(/file removed successfully/i)
-    ).toBeInTheDocument();
+    const removeSuccess = await screen.findByText(/file removed successfully/i);
+    expect(removeSuccess.closest('[role="status"]')).toHaveClass(
+      "border-emerald-500/30",
+      "bg-emerald-500/10"
+    );
+    expect(removeSuccess.closest('[role="status"]')).toHaveAttribute(
+      "data-slot",
+      "alert"
+    );
+    expect(removeSuccess).toHaveClass("text-foreground");
+    expect(removeSuccess.className).not.toContain("text-emerald-700");
     expect(screen.queryByText("passport.png")).not.toBeInTheDocument();
   });
 
@@ -2771,6 +2886,39 @@ describe("OnboardingWizard optional emergency contact schema", () => {
       );
       expect(payload?.form_data).not.toHaveProperty("residence_permit_expiry");
     });
+  });
+
+  it("keeps unsupported schema fallback copy on canonical theme tokens", async () => {
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Legacy Step",
+      title: "Legacy Step",
+      description: "Unsupported schema shape.",
+      form_schema: {
+        title: "Legacy Step",
+        type: "array",
+        items: {
+          type: "string",
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+
+    renderWithProviders();
+
+    const unsupportedCopy = await screen.findByText(
+      /this onboarding step uses a schema we cannot render yet\./i
+    );
+    expect(unsupportedCopy.closest('[data-slot="alert"]')).toHaveClass(
+      "border-amber-500/30",
+      "bg-amber-500/10"
+    );
+    expect(unsupportedCopy).toHaveClass("text-foreground");
+    expect(unsupportedCopy.className).not.toContain("text-amber-700");
   });
 
   it("requires a phone number for each emergency contact with a name", async () => {
@@ -3493,6 +3641,126 @@ describe("OnboardingWizard server-side validation feedback", () => {
     expect(
       await screen.findByText(/Submission contains HR-managed fields\./i)
     ).toBeInTheDocument();
+  });
+
+  it("keeps server validation feedback on canonical theme tokens", async () => {
+    onboardingApiMocks.createOnboardingSubmission.mockRejectedValueOnce(
+      new ApiError("The given data was invalid.", 422, {
+        form_data: ["Submission contains HR-managed fields."],
+        "form_data.iban": ["The string does not match the required pattern."],
+      })
+    );
+
+    const user = userEvent.setup();
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /bank account details/i })
+    ).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/^iban$/i), "INVALID");
+    await user.type(screen.getByLabelText(/^account holder$/i), "Ada Lovelace");
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    const errorAlert = await screen.findByText(
+      /we couldn't submit the form yet\. please review the highlighted fields\./i
+    );
+    const detailsRegion = await screen.findByRole("region", {
+      name: /additional validation messages from the server/i,
+    });
+
+    expect(errorAlert.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+    expect(detailsRegion).toHaveClass("border-border", "bg-muted");
+    expect(
+      screen.getAllByText(/additional validation messages from the server/i)[0]
+    ).toHaveAttribute("data-slot", "alert-title");
+  });
+
+  it("keeps the onboarding overview and upload helper surfaces on canonical theme tokens", async () => {
+    const user = userEvent.setup();
+    onboardingApiMocks.fetchOnboardingTemplate.mockResolvedValueOnce({
+      id: "template-1",
+      name: "Personal Information Form",
+      title: "Personal Information Form",
+      description: "BewachV information required for registration.",
+      form_schema: {
+        title: "Personal Information Form",
+        type: "object",
+        required: ["nationalities"],
+        properties: {
+          nationalities: {
+            type: "array",
+            title: "Nationalities",
+            items: {
+              type: "string",
+              enum: ["DE", "TR"],
+            },
+          },
+        },
+      },
+      is_required: true,
+      is_system_template: true,
+      sort_order: 1,
+      can_be_deleted: false,
+      can_be_edited: false,
+    });
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: /personal information form/i })
+    ).toBeInTheDocument();
+
+    const progressSummary = screen.getByText(/step 1 of 1/i);
+    const overviewHeading = screen.getByRole("heading", {
+      name: /before you begin/i,
+    });
+    const requiredList = screen
+      .getByText(/step 1: bank account details/i)
+      .closest("ul");
+    const supportHeading = screen.getByText(/supporting documents/i);
+    const optionalBadge = screen
+      .getAllByText(/optional sections/i)[1]
+      ?.closest("span");
+
+    expect(progressSummary.closest("div")).toHaveClass("text-muted-foreground");
+    expect(overviewHeading.closest('[data-slot="card"]')).toHaveClass(
+      "bg-muted"
+    );
+    expect(requiredList).toHaveClass("text-muted-foreground");
+    expect(optionalBadge).toHaveClass("bg-background");
+    expect(supportHeading.closest("section")).toHaveClass("border-border");
+
+    await selectNationality(user, "de");
+    await enableIdentityUpload(user, "passport");
+
+    const uploadHeading = screen.getByRole("heading", {
+      name: /identity document upload/i,
+    });
+    const requirementBox = screen
+      .getByText(/required documents for this step/i)
+      .closest("div");
+    const fileInput = screen.getByLabelText(/^attachment$/i);
+
+    expect(uploadHeading.closest("div")).toHaveClass(
+      "border-border",
+      "bg-muted"
+    );
+    expect(requirementBox).toHaveClass("border-border", "bg-background");
+    expect(fileInput).toHaveClass("file:bg-muted");
+
+    await deferIdentityUpload(user);
+
+    const deferCopy = await screen.findByText(
+      /you can continue now and upload your documents later/i
+    );
+    expect(deferCopy).toHaveClass("text-muted-foreground");
   });
 });
 

@@ -19,13 +19,23 @@ import { ApiError } from "../../services/ApiError";
 import { apiFetch } from "../../services/csrf";
 import {
   Alert,
+  AlertDescription,
   Badge,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
   Field,
+  FieldError,
   FieldLabel,
   Input,
   LoadingRegion,
@@ -85,22 +95,19 @@ function formatDateTime(value: string | null): string {
 function getStatusBadgeClass(status: AndroidEnrollmentStatus) {
   switch (status) {
     case "pending":
-      return "bg-sky-500/15 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300";
+      return "bg-sky-500/15 text-foreground dark:bg-sky-500/10";
     case "exchanged":
-      return "bg-lime-400/20 text-lime-700 dark:bg-lime-400/10 dark:text-lime-300";
+      return "bg-lime-400/20 text-foreground dark:bg-lime-400/10";
     case "revoked":
-      return "bg-rose-400/15 text-rose-700 dark:bg-rose-400/10 dark:text-rose-400";
+      return "bg-rose-400/15 text-foreground dark:bg-rose-400/10";
     case "expired":
-      return "bg-amber-400/20 text-amber-700 dark:bg-amber-400/10 dark:text-amber-400";
+      return "bg-amber-400/20 text-foreground dark:bg-amber-400/10";
   }
 }
 
 function MutedText({ className, ...props }: ComponentPropsWithoutRef<"p">) {
   return (
-    <p
-      className={cn("text-sm text-zinc-500 dark:text-zinc-400", className)}
-      {...props}
-    />
+    <p className={cn("text-sm text-muted-foreground", className)} {...props} />
   );
 }
 
@@ -121,7 +128,7 @@ function EnrollmentSessionSkeletonList({
       {Array.from({ length: 3 }, (_, index) => (
         <div
           key={index}
-          className="rounded-md border border-zinc-200 p-4 dark:border-zinc-800"
+          className="rounded-md border border-border bg-card p-4"
           aria-hidden="true"
         >
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -256,8 +263,16 @@ export default function AndroidProvisioningPage() {
     useState<AndroidEnrollmentSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [revoking, setRevoking] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [revokeError, setRevokeError] = useState<string | null>(null);
+  const [revokeReasonError, setRevokeReasonError] = useState<string | null>(
+    null
+  );
+  const [revokeReason, setRevokeReason] = useState("");
+  const [sessionToRevoke, setSessionToRevoke] =
+    useState<AndroidEnrollmentSession | null>(null);
 
   const canCreate = capabilities.actions.androidProvisioning.create;
   const canRevoke = capabilities.actions.androidProvisioning.revoke;
@@ -332,20 +347,48 @@ export default function AndroidProvisioningPage() {
     }
   }
 
-  async function handleRevoke(session: AndroidEnrollmentSession) {
-    const reason = window.prompt(_(msg`Revocation reason`), "");
+  function openRevokeDialog(session: AndroidEnrollmentSession) {
+    setSessionToRevoke(session);
+    setRevokeReason("");
+    setRevokeReasonError(null);
+    setRevokeError(null);
+  }
 
-    if (!reason || reason.trim().length === 0) {
+  function closeRevokeDialog() {
+    if (revoking) {
       return;
     }
 
+    setSessionToRevoke(null);
+    setRevokeReason("");
+    setRevokeReasonError(null);
+    setRevokeError(null);
+  }
+
+  async function handleRevoke(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!sessionToRevoke) {
+      return;
+    }
+
+    const normalizedReason = revokeReason.trim();
+    if (normalizedReason.length === 0) {
+      setRevokeReasonError(_(msg`Revocation reason is required.`));
+      return;
+    }
+
+    setRevoking(true);
+    setRevokeReasonError(null);
+    setRevokeError(null);
+
     try {
       const response = await requestJson<ApiEnvelope<AndroidEnrollmentSession>>(
-        `/v1/android-enrollment-sessions/${session.id}/revoke`,
+        `/v1/android-enrollment-sessions/${sessionToRevoke.id}/revoke`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reason: reason.trim() }),
+          body: JSON.stringify({ reason: normalizedReason }),
         }
       );
 
@@ -358,220 +401,309 @@ export default function AndroidProvisioningPage() {
         current?.id === response.data.id ? response.data : current
       );
       setLoadError(null);
+      closeRevokeDialog();
     } catch (error) {
-      setLoadError(
-        getErrorMessage(error, "Failed to revoke Android enrollment session")
+      const message = getErrorMessage(
+        error,
+        "Failed to revoke Android enrollment session"
       );
+      setRevokeError(message);
+    } finally {
+      setRevoking(false);
     }
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
-        <Trans>Android Provisioning</Trans>
-      </h1>
+    <>
+      {sessionToRevoke ? (
+        <Dialog open={true} onClose={closeRevokeDialog}>
+          <DialogPortal>
+            <DialogOverlay />
+            <DialogContent>
+              <form className="space-y-4" onSubmit={handleRevoke} noValidate>
+                <DialogTitle>
+                  <Trans>Revoke enrollment session</Trans>
+                </DialogTitle>
+                <DialogDescription>
+                  <Trans>
+                    Provide a short reason before this Android enrollment
+                    session is revoked.
+                  </Trans>
+                </DialogDescription>
+                <DialogBody className="space-y-4">
+                  <Field>
+                    <FieldLabel htmlFor="android-revoke-reason">
+                      <Trans>Revocation reason</Trans>
+                    </FieldLabel>
+                    <Input
+                      id="android-revoke-reason"
+                      name="reason"
+                      autoFocus
+                      value={revokeReason}
+                      onChange={(event) => {
+                        setRevokeReason(event.target.value);
+                        if (revokeReasonError) {
+                          setRevokeReasonError(null);
+                        }
+                      }}
+                      aria-invalid={revokeReasonError ? true : undefined}
+                      aria-describedby={
+                        revokeReasonError
+                          ? "android-revoke-reason-error"
+                          : undefined
+                      }
+                    />
+                    {revokeReasonError ? (
+                      <FieldError id="android-revoke-reason-error">
+                        {revokeReasonError}
+                      </FieldError>
+                    ) : null}
+                  </Field>
 
-      {loadError ? (
-        <Alert className="border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
-          {loadError}
-        </Alert>
-      ) : null}
-
-      <div className="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
-        <Card>
-          <CardContent className="space-y-4 p-6">
-            {canCreate ? (
-              <form className="space-y-4" onSubmit={handleCreateSession}>
-                <Field>
-                  <FieldLabel htmlFor="android-device-label">
-                    <Trans>Device label</Trans>
-                  </FieldLabel>
-                  <Input
-                    id="android-device-label"
-                    name="device_label"
-                    value={formState.device_label}
-                    onChange={(event) =>
-                      setFormState((current) => ({
-                        ...current,
-                        device_label: event.target.value,
-                      }))
-                    }
-                    placeholder={_(msg`Front desk tablet`)}
-                  />
-                </Field>
-
-                <Field>
-                  <FieldLabel htmlFor="android-update-channel">
-                    <Trans>Update channel</Trans>
-                  </FieldLabel>
-                  <Select
-                    name="update_channel"
-                    value={formState.update_channel}
-                    onValueChange={(value) =>
-                      setFormState((current) => ({
-                        ...current,
-                        update_channel: value as AndroidReleaseChannel,
-                      }))
-                    }
+                  {revokeError ? (
+                    <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+                      <AlertDescription className="text-destructive">
+                        {revokeError}
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
+                </DialogBody>
+                <DialogActions>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={closeRevokeDialog}
+                    disabled={revoking}
                   >
-                    <SelectTrigger
-                      id="android-update-channel"
-                      aria-label={_(msg`Update channel`)}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CHANNELS.map((channel) => (
-                        <SelectItem
-                          key={channel}
-                          value={channel}
-                          data-value={channel}
-                        >
-                          {getChannelLabel(channel, _)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-
-                {submitError ? (
-                  <Alert className="border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
-                    {submitError}
-                  </Alert>
-                ) : null}
-
-                <Button type="submit" disabled={creating}>
-                  <Plus className="size-4" aria-hidden="true" />
-                  {creating ? (
-                    <Trans>Creating enrollment session...</Trans>
-                  ) : (
-                    <Trans>Create enrollment session</Trans>
-                  )}
-                </Button>
+                    <Trans>Cancel</Trans>
+                  </Button>
+                  <Button type="submit" disabled={revoking}>
+                    <RotateCcw className="size-4" aria-hidden="true" />
+                    {revoking ? (
+                      <Trans>Revoking...</Trans>
+                    ) : (
+                      <Trans>Revoke</Trans>
+                    )}
+                  </Button>
+                </DialogActions>
               </form>
-            ) : (
-              <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                <Trans>
-                  You can inspect Android enrollment status, but write
-                  permission is required to create or revoke sessions.
-                </Trans>
-              </p>
-            )}
+            </DialogContent>
+          </DialogPortal>
+        </Dialog>
+      ) : null}
+      <div className="space-y-6">
+        <h1 className="text-foreground text-2xl font-semibold tracking-normal">
+          <Trans>Android Provisioning</Trans>
+        </h1>
 
-            {latestQrPayload && latestSession ? (
-              <div className="space-y-3 rounded-md border border-sky-200 bg-sky-50 p-5 dark:border-sky-900/60 dark:bg-sky-950/30">
-                <h2 className="flex items-center gap-2 text-base font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
-                  <QrCode className="size-4" aria-hidden="true" />
-                  <Trans>Provisioning QR code</Trans>
-                </h2>
-                <MfaQrCode
-                  value={latestQrPayload}
-                  alt={_(msg`Android provisioning QR code`)}
-                />
-                <p className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
-                  {latestSession.device_label ||
-                    _(msg`Unnamed Android enrollment session`)}
-                </p>
-                <MutedText>
-                  {getChannelLabel(latestSession.update_channel, _)}
-                </MutedText>
-                <MutedText>
-                  <Trans>Expires</Trans>:{" "}
-                  {formatDateTime(latestSession.bootstrap_token_expires_at)}
-                </MutedText>
-                <MutedText>
-                  {getStatusGuidance(latestSession.status, _)}
-                </MutedText>
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
+        {loadError ? (
+          <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+            <AlertDescription className="text-destructive">
+              {loadError}
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <Trans>Enrollment Sessions</Trans>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {loading && sessions.length === 0 ? (
-              <EnrollmentSessionSkeletonList
-                loadingLabel={sessionsLoadingLabel}
-              />
-            ) : null}
-            {!loading && sessions.length === 0 ? (
-              <p className="text-sm text-zinc-600 dark:text-zinc-300">
-                <Trans>
-                  No Android enrollment sessions have been created yet.
-                </Trans>
-              </p>
-            ) : null}
+        <div className="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
+          <Card>
+            <CardContent className="space-y-4 p-6">
+              {canCreate ? (
+                <form className="space-y-4" onSubmit={handleCreateSession}>
+                  <Field>
+                    <FieldLabel htmlFor="android-device-label">
+                      <Trans>Device label</Trans>
+                    </FieldLabel>
+                    <Input
+                      id="android-device-label"
+                      name="device_label"
+                      value={formState.device_label}
+                      onChange={(event) =>
+                        setFormState((current) => ({
+                          ...current,
+                          device_label: event.target.value,
+                        }))
+                      }
+                      placeholder={_(msg`Front desk tablet`)}
+                    />
+                  </Field>
 
-            {sessions.length > 0 ? (
-              <LoadingRegion
-                loading={loading}
-                loadingLabel={sessionsLoadingLabel}
-              >
-                <div className="space-y-3">
-                  {sessions.map((session) => (
-                    <div
-                      key={session.id}
-                      className="flex flex-col gap-3 rounded-md border border-zinc-200 p-4 dark:border-zinc-800 md:flex-row md:items-center md:justify-between"
+                  <Field>
+                    <FieldLabel htmlFor="android-update-channel">
+                      <Trans>Update channel</Trans>
+                    </FieldLabel>
+                    <Select
+                      name="update_channel"
+                      value={formState.update_channel}
+                      onValueChange={(value) =>
+                        setFormState((current) => ({
+                          ...current,
+                          update_channel: value as AndroidReleaseChannel,
+                        }))
+                      }
                     >
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
-                          {session.device_label ||
-                            _(msg`Unnamed Android enrollment session`)}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge
-                            className={getStatusBadgeClass(session.status)}
+                      <SelectTrigger
+                        id="android-update-channel"
+                        aria-label={_(msg`Update channel`)}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CHANNELS.map((channel) => (
+                          <SelectItem
+                            key={channel}
+                            value={channel}
+                            data-value={channel}
                           >
-                            {getStatusLabel(session.status, _)}
-                          </Badge>
-                          <MutedText>
-                            {getChannelLabel(session.update_channel, _)}
-                          </MutedText>
-                          <MutedText>
-                            <Trans>Expires</Trans>:{" "}
-                            {formatDateTime(session.bootstrap_token_expires_at)}
-                          </MutedText>
-                        </div>
-                        <MutedText>
-                          {getStatusGuidance(session.status, _)}
-                        </MutedText>
-                        {session.revocation_reason ? (
-                          <MutedText>
-                            <Trans>Reason</Trans>: {session.revocation_reason}
-                          </MutedText>
-                        ) : null}
-                      </div>
+                            {getChannelLabel(channel, _)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
 
-                      {canRevoke && session.status === "pending" ? (
-                        <Button
-                          variant="outline"
-                          onClick={() => void handleRevoke(session)}
-                        >
-                          <RotateCcw className="size-4" aria-hidden="true" />
-                          <Trans>Revoke</Trans>
-                        </Button>
-                      ) : (
-                        <MutedText>
-                          {session.revoked_at ? (
-                            <Trans>Revoked</Trans>
-                          ) : (
-                            <Trans>No action available</Trans>
-                          )}
-                        </MutedText>
-                      )}
-                    </div>
-                  ))}
+                  {submitError ? (
+                    <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+                      <AlertDescription className="text-destructive">
+                        {submitError}
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
+
+                  <Button type="submit" disabled={creating}>
+                    <Plus className="size-4" aria-hidden="true" />
+                    {creating ? (
+                      <Trans>Creating enrollment session...</Trans>
+                    ) : (
+                      <Trans>Create enrollment session</Trans>
+                    )}
+                  </Button>
+                </form>
+              ) : (
+                <MutedText>
+                  <Trans>
+                    You can inspect Android enrollment status, but write
+                    permission is required to create or revoke sessions.
+                  </Trans>
+                </MutedText>
+              )}
+
+              {latestQrPayload && latestSession ? (
+                <div className="space-y-3 rounded-md border border-border bg-muted p-5">
+                  <h2 className="text-foreground flex items-center gap-2 text-base font-semibold tracking-normal">
+                    <QrCode className="size-4" aria-hidden="true" />
+                    <Trans>Provisioning QR code</Trans>
+                  </h2>
+                  <MfaQrCode
+                    value={latestQrPayload}
+                    alt={_(msg`Android provisioning QR code`)}
+                  />
+                  <p className="text-foreground text-sm font-medium">
+                    {latestSession.device_label ||
+                      _(msg`Unnamed Android enrollment session`)}
+                  </p>
+                  <MutedText>
+                    {getChannelLabel(latestSession.update_channel, _)}
+                  </MutedText>
+                  <MutedText>
+                    <Trans>Expires</Trans>:{" "}
+                    {formatDateTime(latestSession.bootstrap_token_expires_at)}
+                  </MutedText>
+                  <MutedText>
+                    {getStatusGuidance(latestSession.status, _)}
+                  </MutedText>
                 </div>
-              </LoadingRegion>
-            ) : null}
-          </CardContent>
-        </Card>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                <Trans>Enrollment Sessions</Trans>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {loading && sessions.length === 0 ? (
+                <EnrollmentSessionSkeletonList
+                  loadingLabel={sessionsLoadingLabel}
+                />
+              ) : null}
+              {!loading && sessions.length === 0 ? (
+                <MutedText>
+                  <Trans>
+                    No Android enrollment sessions have been created yet.
+                  </Trans>
+                </MutedText>
+              ) : null}
+
+              {sessions.length > 0 ? (
+                <LoadingRegion
+                  loading={loading}
+                  loadingLabel={sessionsLoadingLabel}
+                >
+                  <div className="space-y-3">
+                    {sessions.map((session) => (
+                      <div
+                        key={session.id}
+                        className="flex flex-col gap-3 rounded-md border border-border bg-card p-4 md:flex-row md:items-center md:justify-between"
+                      >
+                        <div className="space-y-1">
+                          <p className="text-foreground text-sm font-medium">
+                            {session.device_label ||
+                              _(msg`Unnamed Android enrollment session`)}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge
+                              className={getStatusBadgeClass(session.status)}
+                            >
+                              {getStatusLabel(session.status, _)}
+                            </Badge>
+                            <MutedText>
+                              {getChannelLabel(session.update_channel, _)}
+                            </MutedText>
+                            <MutedText>
+                              <Trans>Expires</Trans>:{" "}
+                              {formatDateTime(
+                                session.bootstrap_token_expires_at
+                              )}
+                            </MutedText>
+                          </div>
+                          <MutedText>
+                            {getStatusGuidance(session.status, _)}
+                          </MutedText>
+                          {session.revocation_reason ? (
+                            <MutedText>
+                              <Trans>Reason</Trans>: {session.revocation_reason}
+                            </MutedText>
+                          ) : null}
+                        </div>
+
+                        {canRevoke && session.status === "pending" ? (
+                          <Button
+                            variant="outline"
+                            onClick={() => openRevokeDialog(session)}
+                          >
+                            <RotateCcw className="size-4" aria-hidden="true" />
+                            <Trans>Revoke</Trans>
+                          </Button>
+                        ) : (
+                          <MutedText>
+                            {session.revoked_at ? (
+                              <Trans>Revoked</Trans>
+                            ) : (
+                              <Trans>No action available</Trans>
+                            )}
+                          </MutedText>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </LoadingRegion>
+              ) : null}
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

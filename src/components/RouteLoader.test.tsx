@@ -49,6 +49,9 @@ describe("RouteLoader", () => {
       "w-full",
       "flex-col"
     );
+    expect(outerDiv).toHaveClass("bg-background");
+    expect(outerDiv.className).not.toContain("bg-white");
+    expect(outerDiv.className).not.toContain("lg:bg-zinc-100");
   });
 
   it("keeps the loading header below the iOS top safe area", () => {
@@ -64,7 +67,20 @@ describe("RouteLoader", () => {
 
     expect(container.querySelector(".animate-spin")).not.toBeInTheDocument();
     expect(
-      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+      container.querySelectorAll('[data-slot="skeleton"]').length
     ).toBeGreaterThan(0);
+  });
+
+  it("keeps header and content surfaces on canonical tokens", () => {
+    const { container } = renderWithI18n(<RouteLoader />);
+
+    const headerRow = container.querySelector("header > div");
+    const main = container.querySelector("main");
+
+    expect(headerRow).toHaveClass("border-border");
+    expect(main).toHaveClass("bg-background");
+
+    expect(headerRow?.className).not.toContain("border-zinc-950/10");
+    expect(main?.className).not.toContain("bg-white");
   });
 });

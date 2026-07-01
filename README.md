@@ -134,14 +134,23 @@ import { Trans } from "@lingui/react/macro";
 
 ## 🎨 UI Components & Design System
 
-This project uses a SecPal-owned **shadcn/Radix UI layer** for application UI components.
+This project uses `src/ui` as the canonical shadcn/Radix/Lucide layer for
+application UI components.
 
-**Components:** Shared primitives in `src/ui` plus route-scoped compatibility barrels
+**shadcn metadata:** `components.json` pins the `new-york` style, TypeScript
+React output, Tailwind v4 CSS entry at `src/index.css`, the `zinc` base color,
+Lucide icons, and the canonical aliases (`@/ui`, `@/components`, `@/lib`,
+`@/hooks`, `@/lib/utils`).
+**Components:** Shared primitives, shell composition, route-specific prefixed
+helpers, and canonical `cn` live in `src/ui`. Production code must not import
+deprecated `src/components` UI wrappers, route-local UI barrels, or shared
+compatibility aliases; `tests/legacy-ui-guardrails.test.ts` keeps that
+inventory at zero.
 **Routing:** React Router v7 with client-side navigation
 **Typography:** Inter font family
 **Icons:** Lucide React
 **License:** AGPL-3.0-or-later
-**Documentation:** [`src/ui/MIGRATION.md`](src/ui/MIGRATION.md)
+**Architecture Notes:** [`src/ui/MIGRATION.md`](src/ui/MIGRATION.md)
 
 ## 📋 Prerequisites
 

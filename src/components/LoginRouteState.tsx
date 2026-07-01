@@ -9,6 +9,8 @@ import { useState } from "react";
 import { Logo } from "./Logo";
 import { LegalFooterLinks } from "./LegalFooterLinks";
 import {
+  Alert,
+  AlertDescription,
   LoginButton,
   LoginCard,
   LoginCardHeader,
@@ -19,7 +21,7 @@ import {
   LoginFieldSeparator,
   LoginInput,
   LoginShell,
-} from "../pages/Auth/ui";
+} from "@/ui";
 
 interface LoginRouteVaultLockedStateProps {
   onUnlock: () => Promise<boolean>;
@@ -34,10 +36,10 @@ export function LoginRouteLoadingState() {
       <div className="absolute top-[calc(1rem+var(--app-safe-area-inset-top))] right-4 sm:top-[calc(1.5rem+var(--app-safe-area-inset-top))] sm:right-6">
         <div
           aria-hidden="true"
-          className="flex h-10 min-w-[7rem] items-center gap-2 rounded-md border border-zinc-300 bg-zinc-100 px-3 dark:border-zinc-700 dark:bg-zinc-900"
+          className="border-input bg-muted flex h-10 min-w-[7rem] items-center gap-2 rounded-md border px-3"
         >
-          <span className="h-3 flex-1 rounded-full bg-zinc-200 dark:bg-zinc-800" />
-          <span className="h-3 w-3 rounded-full bg-zinc-200 dark:bg-zinc-800" />
+          <span className="bg-border h-3 flex-1 rounded-full" />
+          <span className="bg-border h-3 w-3 rounded-full" />
         </div>
       </div>
 
@@ -117,8 +119,8 @@ export function LoginRouteLoadingState() {
       </div>
 
       <footer className="mt-4 w-full max-w-sm pb-[env(safe-area-inset-bottom,0px)] text-center text-[11px]">
-        <div className="flex flex-col items-center gap-2 text-zinc-500 dark:text-zinc-400">
-          <span className="font-semibold text-zinc-700 dark:text-zinc-300">
+        <div className="text-muted-foreground flex flex-col items-center gap-2">
+          <span className="text-foreground font-semibold">
             <Trans>Powered by SecPal – A guard's best friend</Trans>
           </span>
           <LegalFooterLinks className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2" />
@@ -168,7 +170,7 @@ export function LoginRouteVaultLockedState({
                 <Trans>Unlock your secure offline data</Trans>
               </LoginCardTitle>
             </LoginCardHeader>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-muted-foreground text-sm">
               <Trans>
                 SecPal locked the local encrypted vault on this device. Unlock
                 to restore previously cached offline-safe data, or sign out to
@@ -176,13 +178,16 @@ export function LoginRouteVaultLockedState({
               </Trans>
             </p>
             {errorMessage ? (
-              <p
+              <Alert
                 role="status"
                 aria-live="polite"
-                className="text-sm text-red-600 dark:text-red-400"
+                aria-atomic="true"
+                className="border-destructive/30 bg-destructive/10 text-foreground"
               >
-                {errorMessage}
-              </p>
+                <AlertDescription className="text-destructive">
+                  {errorMessage}
+                </AlertDescription>
+              </Alert>
             ) : null}
             <div className="flex justify-center gap-3">
               <LoginButton

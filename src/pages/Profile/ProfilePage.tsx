@@ -19,15 +19,15 @@ export function ProfilePage() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+        <h1 className="text-foreground text-2xl font-semibold tracking-normal">
           <Trans>My profile</Trans>
         </h1>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+        <p className="text-muted-foreground mt-2 text-sm">
           <Trans>View your account information.</Trans>
         </p>
       </div>
 
-      <div className="border-t border-zinc-200 dark:border-zinc-800" />
+      <div className="border-t border-border" />
 
       <Card aria-labelledby="profile-information-heading">
         <CardContent className="space-y-6 pt-6">
@@ -35,35 +35,35 @@ export function ProfilePage() {
             <Trans>Account information</Trans>
           </h2>
           <div className="flex items-center gap-4">
-            <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-zinc-950 text-xl font-semibold text-white dark:bg-zinc-50 dark:text-zinc-950">
+            <span className="bg-muted text-foreground flex size-16 shrink-0 items-center justify-center rounded-full text-xl font-semibold">
               {initials}
             </span>
             <div>
-              <p className="text-lg font-semibold text-zinc-900 dark:text-white">
+              <p className="text-foreground text-lg font-semibold">
                 {user?.name ?? "-"}
               </p>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="text-muted-foreground text-sm">
                 {user?.email ?? "-"}
               </p>
             </div>
           </div>
 
-          <div className="border-t border-zinc-100 dark:border-zinc-800" />
+          <div className="border-t border-border" />
 
           <dl>
-            <div className="grid grid-cols-1 gap-1 border-t border-zinc-100 py-3 first:border-t-0 sm:grid-cols-3 sm:gap-4 dark:border-zinc-800">
-              <dt className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+            <div className="grid grid-cols-1 gap-1 border-t border-border py-3 first:border-t-0 sm:grid-cols-3 sm:gap-4">
+              <dt className="text-muted-foreground text-sm font-medium">
                 <Trans>Name</Trans>
               </dt>
-              <dd className="text-sm text-zinc-950 sm:col-span-2 dark:text-zinc-50">
+              <dd className="text-foreground text-sm sm:col-span-2">
                 {user?.name ?? "-"}
               </dd>
             </div>
-            <div className="grid grid-cols-1 gap-1 border-t border-zinc-100 py-3 first:border-t-0 sm:grid-cols-3 sm:gap-4 dark:border-zinc-800">
-              <dt className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+            <div className="grid grid-cols-1 gap-1 border-t border-border py-3 first:border-t-0 sm:grid-cols-3 sm:gap-4">
+              <dt className="text-muted-foreground text-sm font-medium">
                 <Trans>Email</Trans>
               </dt>
-              <dd className="text-sm text-zinc-950 sm:col-span-2 dark:text-zinc-50">
+              <dd className="text-foreground text-sm sm:col-span-2">
                 {user?.email ?? "-"}
               </dd>
             </div>

@@ -12,6 +12,7 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
 import { fileURLToPath } from "url";
+import type { ProxyOptions } from "vite";
 import { resolveLinguiVitePluginExports } from "./linguiVitePluginInterop";
 import { applyInjectManifestCodeSplittingFix } from "./src/lib/pwaInjectManifestBuildConfig";
 import { buildPwaRuntimeCaching } from "./src/lib/pwaRuntimeCaching";
@@ -34,6 +35,70 @@ const linguiMacroBabelPreset = defineRolldownBabelPreset({
     },
   },
 });
+
+const ddevProxyHeaders = {
+  Origin: "http://localhost:5173",
+  Referer: "http://localhost:5173/",
+} as const;
+
+const defaultDevProxyTarget = "https://secpal-api.ddev.site";
+
+function normalizeAbsoluteProxyTarget(
+  value: string | undefined
+): string | null {
+  const trimmedValue = value?.trim() ?? "";
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  try {
+    const normalizedUrl = new URL(trimmedValue);
+
+    if (
+      normalizedUrl.protocol !== "http:" &&
+      normalizedUrl.protocol !== "https:"
+    ) {
+      return null;
+    }
+
+    return normalizedUrl.origin;
+  } catch {
+    return null;
+  }
+}
+
+export function buildDevServerProxyConfig(configuredApiBaseUrl?: string): {
+  clientApiBaseUrl: string;
+  proxy: Record<string, ProxyOptions>;
+} {
+  const resolvedProxyTarget =
+    normalizeAbsoluteProxyTarget(configuredApiBaseUrl) ?? defaultDevProxyTarget;
+  const useDdevHeaders = resolvedProxyTarget === defaultDevProxyTarget;
+
+  return {
+    clientApiBaseUrl: "",
+    proxy: {
+      "/v1": {
+        target: resolvedProxyTarget,
+        changeOrigin: true,
+        secure: false,
+        ...(useDdevHeaders ? { headers: ddevProxyHeaders } : {}),
+      },
+      "/sanctum": {
+        target: resolvedProxyTarget,
+        changeOrigin: true,
+        secure: false,
+        ...(useDdevHeaders ? { headers: ddevProxyHeaders } : {}),
+      },
+      "/health": {
+        target: resolvedProxyTarget,
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  };
+}
 
 const vendorChunkPackages: Record<string, string[]> = {
   "vendor-react": ["react", "react-dom", "react-router-dom"],
@@ -80,11 +145,20 @@ function getManualChunk(moduleId: string): string | undefined {
 }
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   // Load env file based on `mode` in the current working directory.
   const env = loadEnv(mode, process.cwd(), "");
   const isCi = Boolean(process.env.CI);
+  const devServerProxyConfig =
+    command === "serve" ? buildDevServerProxyConfig(env.VITE_API_URL) : null;
   return {
+    define: devServerProxyConfig
+      ? {
+          "import.meta.env.VITE_API_URL": JSON.stringify(
+            devServerProxyConfig.clientApiBaseUrl
+          ),
+        }
+      : undefined,
     plugins: [
       {
         name: "strip-vite-csp-meta-carrier",
@@ -242,38 +316,9 @@ export default defineConfig(({ mode }) => {
     server: {
       // Allow DDEV hostnames for local development
       allowedHosts: [".ddev.site"],
-      // Proxy API requests to DDEV backend to avoid CORS issues in local development
-      // This allows frontend on localhost:5173 to communicate with backend on secpal-api.ddev.site
-      // without cross-origin restrictions.
-      // Only active when VITE_API_URL is not explicitly set.
-      proxy: !env.VITE_API_URL
-        ? {
-            "/v1": {
-              target: "https://secpal-api.ddev.site",
-              changeOrigin: true,
-              secure: false, // Accept self-signed DDEV certificates
-              // Add headers to help Sanctum recognize the request origin
-              headers: {
-                Origin: "http://localhost:5173",
-                Referer: "http://localhost:5173/",
-              },
-            },
-            "/sanctum": {
-              target: "https://secpal-api.ddev.site",
-              changeOrigin: true,
-              secure: false,
-              headers: {
-                Origin: "http://localhost:5173",
-                Referer: "http://localhost:5173/",
-              },
-            },
-            "/health": {
-              target: "https://secpal-api.ddev.site",
-              changeOrigin: true,
-              secure: false,
-            },
-          }
-        : undefined,
+      // Local Vite serve mode always proxies API traffic so the browser stays
+      // same-origin and never talks cross-origin to preview/customer APIs.
+      proxy: devServerProxyConfig?.proxy,
     },
     test: {
       globals: true,

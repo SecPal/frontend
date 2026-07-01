@@ -99,6 +99,21 @@ describe("OnboardingLayout", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps the onboarding shell on canonical theme tokens", () => {
+    const { container } = renderLayout();
+
+    const shell = container.querySelector("main");
+    const header = container.querySelector("header");
+
+    expect(shell).toHaveClass("bg-background");
+    expect(shell).toHaveClass("text-foreground");
+    expect(header).toHaveClass("border-border");
+
+    expect(shell?.className).not.toContain("bg-white");
+    expect(shell?.className).not.toContain("lg:bg-zinc-50");
+    expect(header?.className).not.toContain("border-zinc-200");
+  });
+
   it("logs out and navigates to login when sign out succeeds", async () => {
     const user = userEvent.setup();
     const logout = vi.fn();

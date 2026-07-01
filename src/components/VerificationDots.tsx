@@ -39,26 +39,12 @@ export function VerificationDots({
   const dotSize = size === "sm" ? "w-2 h-2" : "w-3 h-3";
 
   // Helper to render a dot
-  const renderDot = (
-    status: boolean | null | undefined,
-    label: string,
-    notApplicable = false
-  ) => {
-    // Not applicable for this security level -> grey
-    if (notApplicable) {
-      return (
-        <span
-          className={`inline-block ${dotSize} rounded-full bg-zinc-300 dark:bg-zinc-600`}
-          title={_(msg`${label}: N/A`)}
-        />
-      );
-    }
-
+  const renderDot = (status: boolean | null | undefined, label: string) => {
     // Valid -> green
     if (status === true) {
       return (
         <span
-          className={`inline-block ${dotSize} rounded-full bg-lime-500`}
+          className={`bg-primary inline-block ${dotSize} rounded-full`}
           title={_(msg`${label}: Valid`)}
         />
       );
@@ -68,7 +54,7 @@ export function VerificationDots({
     if (status === false) {
       return (
         <span
-          className={`inline-block ${dotSize} rounded-full bg-red-500`}
+          className={`bg-destructive inline-block ${dotSize} rounded-full`}
           title={_(msg`${label}: Invalid`)}
         />
       );
@@ -77,7 +63,7 @@ export function VerificationDots({
     // null or undefined = pending -> yellow
     return (
       <span
-        className={`inline-block ${dotSize} rounded-full bg-yellow-500`}
+        className={`bg-muted-foreground inline-block ${dotSize} rounded-full`}
         title={_(msg`${label}: Pending`)}
       />
     );

@@ -42,7 +42,7 @@ vi.mock("@/ui", async () => {
 
   return {
     ...actual,
-    Dropdown: ({ children }: { children: React.ReactNode }) => {
+    DropdownMenu: ({ children }: { children: React.ReactNode }) => {
       const [open, setOpen] = React.useState(false);
       return (
         <DropdownContext.Provider value={{ open, setOpen }}>
@@ -50,35 +50,46 @@ vi.mock("@/ui", async () => {
         </DropdownContext.Provider>
       );
     },
-    DropdownButton: ({
+    DropdownMenuTrigger: ({
       children,
       onClick,
-      plain: plainProp,
+      asChild: asChildProp,
       ...props
     }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
       children: React.ReactNode;
-      plain?: boolean;
+      asChild?: boolean;
     }) => {
-      void plainProp;
+      void asChildProp;
       const context = React.useContext(DropdownContext);
+      const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(event);
+        context?.setOpen((current) => !current);
+      };
+
+      if (React.isValidElement(children)) {
+        const child = children as React.ReactElement<
+          React.ButtonHTMLAttributes<HTMLButtonElement>
+        >;
+
+        return React.cloneElement(child, {
+          onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
+            child.props.onClick?.(event);
+            handleClick(event);
+          },
+        });
+      }
+
       return (
-        <button
-          type="button"
-          {...props}
-          onClick={(event) => {
-            onClick?.(event);
-            context?.setOpen((current) => !current);
-          }}
-        >
+        <button type="button" {...props} onClick={handleClick}>
           {children}
         </button>
       );
     },
-    DropdownMenu: ({ children }: { children: React.ReactNode }) => {
+    DropdownMenuContent: ({ children }: { children: React.ReactNode }) => {
       const context = React.useContext(DropdownContext);
       return context?.open ? <div role="menu">{children}</div> : null;
     },
-    DropdownItem: ({
+    DropdownMenuItem: ({
       children,
       onClick,
     }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -301,6 +312,70 @@ describe("OrganizationalUnitTree", () => {
     });
 
     expect(screen.getByText("North Region")).toBeInTheDocument();
+  });
+
+  it("keeps tree rows, empty state, and error state on canonical theme tokens", async () => {
+    const { rerender, container } = renderWithI18n(<OrganizationalUnitTree />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Test Company")).toBeInTheDocument();
+    });
+
+    const tree = screen.getByRole("tree");
+    const selectedCandidate = screen
+      .getByText("Test Company")
+      .closest('[role="treeitem"]');
+    const typeBadge = screen.getByText("Company");
+
+    expect(tree).toHaveClass("border-border", "divide-border");
+    expect(selectedCandidate).toHaveClass("hover:bg-muted");
+    expect(typeBadge).toHaveClass("bg-primary/10", "text-primary");
+
+    expect(tree.className).not.toContain("border-gray-200");
+    expect(tree.className).not.toContain("divide-gray-100");
+    expect(selectedCandidate?.className).not.toContain("hover:bg-gray-50");
+    expect(typeBadge.className).not.toContain("bg-blue-50");
+
+    vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+      ...mockHookResponse,
+      units: [],
+      rootUnitIds: [],
+      lastSynced: null,
+    });
+    rerender(
+      <I18nProvider i18n={i18n}>
+        <OrganizationalUnitTree />
+      </I18nProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("No Organizational Units")).toBeInTheDocument();
+    });
+
+    const emptyState = screen.getByText("No Organizational Units");
+    const emptyDescription = screen.getByText(
+      /get started by creating your first organizational unit/i
+    );
+    expect(emptyState).toHaveClass("text-foreground");
+    expect(emptyDescription).toHaveClass("text-muted-foreground");
+
+    vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+      ...mockHookResponse,
+      error: "Network error",
+    });
+    rerender(
+      <I18nProvider i18n={i18n}>
+        <OrganizationalUnitTree />
+      </I18nProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Network error")).toBeInTheDocument();
+    });
+
+    const errorCard = container.querySelector('[data-slot="card"]');
+    expect(errorCard).toHaveClass("border-destructive/30", "bg-destructive/10");
+    expect(errorCard?.className).not.toContain("border-red-200");
   });
 
   it("renders empty state when no units", async () => {

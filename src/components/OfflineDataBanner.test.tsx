@@ -109,4 +109,41 @@ describe("OfflineDataBanner", () => {
     const banner = screen.getByRole("status");
     expect(banner).toHaveAttribute("aria-live", "polite");
   });
+
+  it("keeps offline and stale banners on canonical theme tokens", () => {
+    const { rerender } = render(
+      <OfflineDataBanner isOffline={true} isStale={true} lastSynced={null} />,
+      { wrapper }
+    );
+
+    const offlineBanner = screen.getByRole("status");
+    const offlineText = screen.getByText(/you're offline/i);
+
+    expect(offlineBanner).toHaveClass("border-amber-500/30", "bg-amber-500/10");
+    expect(offlineBanner).toHaveAttribute("data-slot", "alert");
+    expect(offlineText).toHaveClass("text-foreground");
+    expect(offlineBanner.className).not.toMatch(/\bbg-amber-50\b/);
+    expect(offlineText.className).not.toContain("text-amber-700");
+
+    rerender(
+      <I18nProvider i18n={i18n}>
+        <OfflineDataBanner
+          isOffline={false}
+          isStale={true}
+          lastSynced={new Date()}
+          onRefresh={vi.fn()}
+        />
+      </I18nProvider>
+    );
+
+    const staleBanner = screen.getByRole("status");
+    const staleText = screen.getByText(/showing cached data/i);
+    const refresh = screen.getByRole("button", { name: /refresh/i });
+
+    expect(staleBanner).toHaveClass("border-primary/30", "bg-primary/10");
+    expect(staleBanner).toHaveAttribute("data-slot", "alert");
+    expect(staleText).toHaveClass("text-primary");
+    expect(refresh).toHaveClass("hover:bg-accent");
+    expect(staleBanner.className).not.toMatch(/\bbg-blue-50\b/);
+  });
 });

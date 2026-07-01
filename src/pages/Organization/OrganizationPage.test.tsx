@@ -94,6 +94,51 @@ describe("OrganizationPage", () => {
     });
   });
 
+  it("keeps the organization page shell, detail panel, and success surfaces on canonical theme tokens", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<OrganizationPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText("SecPal Holding"));
+
+    const pageHeading = screen.getByRole("heading", {
+      name: /organization structure/i,
+    });
+    const pageDescription = screen.getByText(
+      /manage your internal organizational units/i
+    );
+    const detailHeading = screen.getAllByText("SecPal Holding")[1];
+    const closeButton = screen.getByRole("button", {
+      name: /close detail panel/i,
+    });
+    const typeTerm = screen.getByText("Type");
+    const typeValue = screen.getAllByText("Holding")[1];
+    const actionArea = screen.getByRole("button", {
+      name: /add child unit/i,
+    }).parentElement;
+    expect(detailHeading).toBeDefined();
+    expect(typeValue).toBeDefined();
+
+    expect(pageHeading).toHaveClass("text-foreground");
+    expect(pageDescription).toHaveClass("text-muted-foreground");
+    expect(detailHeading!).toHaveClass("text-foreground");
+    expect(closeButton).toHaveClass("text-muted-foreground");
+    expect(typeTerm).toHaveClass("text-muted-foreground");
+    expect(typeValue!).toHaveClass("bg-primary/10", "text-primary");
+    expect(actionArea).toHaveClass("border-border");
+
+    expect(pageHeading.className).not.toContain("text-zinc-950");
+    expect(pageDescription.className).not.toContain("text-zinc-600");
+    expect(detailHeading!.className).not.toContain("text-zinc-950");
+    expect(closeButton.className).not.toContain("text-zinc-500");
+    expect(typeTerm.className).not.toContain("text-zinc-500");
+    expect(typeValue!.className).not.toContain("bg-blue-50");
+    expect(actionArea?.className).not.toContain("border-zinc-200");
+  });
+
   it("keeps the page frame and tree controls visible while units initially load", () => {
     vi.mocked(
       organizationalUnitsHook.useOrganizationalUnitsWithOffline
@@ -359,6 +404,10 @@ describe("OrganizationPage", () => {
           }
         )
       ).toBeInTheDocument();
+      const success = screen.getByRole("status");
+      expect(success).toHaveAttribute("data-slot", "alert");
+      expect(success).toHaveClass("border-emerald-500/30", "bg-emerald-500/10");
+      expect(success).toHaveClass("text-foreground");
     },
     SLOW_TEST_TIMEOUT
   );
@@ -563,6 +612,10 @@ describe("OrganizationPage", () => {
         ).toBeInTheDocument();
         expect(screen.getAllByText(updatedUnit.name).length).toBeGreaterThan(0);
       });
+      const success = screen.getByRole("status");
+      expect(success).toHaveAttribute("data-slot", "alert");
+      expect(success).toHaveClass("border-emerald-500/30", "bg-emerald-500/10");
+      expect(success).toHaveClass("text-foreground");
     },
     SLOW_TEST_TIMEOUT
   );

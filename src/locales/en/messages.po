@@ -225,6 +225,10 @@ msgstr "A valid residence title without employment authorization cannot be accep
 msgid "No"
 msgstr "No"
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "City is required."
+msgstr "City is required."
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Verification method"
 msgstr "Verification method"
@@ -310,6 +314,13 @@ msgstr "Creating organizational units is not possible while offline. Please reco
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Site Number:"
 msgstr "Site Number:"
+
+#. placeholder {0}: customer.name
+#. placeholder {0}: employee.full_name
+#: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Employees/EmployeeList.tsx
+msgid "View {0}"
+msgstr "View {0}"
 
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
@@ -648,6 +659,7 @@ msgstr "No passkeys enrolled yet."
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Billing Address"
 msgstr "Billing Address"
@@ -919,6 +931,10 @@ msgstr "Emergency Contact Name"
 msgid "House Number"
 msgstr "House Number"
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Country must use a 2-letter code."
+msgstr "Country must use a 2-letter code."
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Unnamed Android enrollment session"
 msgstr "Unnamed Android enrollment session"
@@ -961,10 +977,9 @@ msgstr "Failed to change language. Please try again."
 msgid "Would you like to upload your identity document now?"
 msgstr "Would you like to upload your identity document now?"
 
-#: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
-#: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Employees/EmployeeList.tsx
+#: src/pages/Employees/EmployeeManagementLevelField.tsx
 msgid "ML"
 msgstr "ML"
 
@@ -1138,6 +1153,7 @@ msgstr "Thank you for submitting your onboarding information. Our HR team will r
 #: src/components/MoveOrganizationalUnitDialog.tsx
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
@@ -1169,10 +1185,12 @@ msgid "Please use the required format."
 msgstr "Please use the required format."
 
 #: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Postal Code"
 msgstr "Postal Code"
@@ -1247,10 +1265,6 @@ msgstr "Address"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Missing email address. Please use the link from your email."
 msgstr "Missing email address. Please use the link from your email."
-
-#: src/components/VerificationDots.tsx
-msgid "{label}: N/A"
-msgstr "{label}: N/A"
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
@@ -1864,6 +1878,10 @@ msgstr "Authenticator app QR code"
 msgid "Get started by creating your first organizational unit."
 msgstr "Get started by creating your first organizational unit."
 
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
+msgid "Provide a short reason before this Android enrollment session is revoked."
+msgstr "Provide a short reason before this Android enrollment session is revoked."
+
 #: src/pages/Login.tsx
 msgid "Select language"
 msgstr "Select language"
@@ -1880,6 +1898,10 @@ msgstr "All logs"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Processing..."
 msgstr "Processing..."
+
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "{sitesCount, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
+msgstr "{sitesCount, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Last Updated"
@@ -1918,6 +1940,10 @@ msgstr "Browser notifications are enabled for this signed-in browser on this dep
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to update contact field."
 msgstr "Failed to update contact field."
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Postal code is required."
+msgstr "Postal code is required."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Generating BWR Export..."
@@ -2465,6 +2491,10 @@ msgstr "I stored these recovery codes securely and understand they will not be s
 msgid "Store your recovery codes now"
 msgstr "Store your recovery codes now"
 
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
+msgid "Revoke enrollment session"
+msgstr "Revoke enrollment session"
+
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "Create Customer"
 msgstr "Create Customer"
@@ -2473,8 +2503,7 @@ msgstr "Create Customer"
 msgid "Revocation reason"
 msgstr "Revocation reason"
 
-#: src/pages/Employees/EmployeeCreate.tsx
-#: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Employees/EmployeeManagementLevelField.tsx
 msgid "Leadership Position"
 msgstr "Leadership Position"
 
@@ -2485,6 +2514,10 @@ msgstr "Obtainium"
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Organization Structure"
 msgstr "Organization Structure"
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Customer name is required."
+msgstr "Customer name is required."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -2630,6 +2663,10 @@ msgstr "Management level is required when leadership position is enabled"
 msgid "Description must be at most 1000 characters"
 msgstr "Description must be at most 1000 characters"
 
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
+msgid "Revocation reason is required."
+msgstr "Revocation reason is required."
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Failed to validate onboarding link"
 msgstr "Failed to validate onboarding link"
@@ -2658,6 +2695,10 @@ msgstr "You do not have permission to perform this action."
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Failed to delete passkey."
 msgstr "Failed to delete passkey."
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Street is required."
+msgstr "Street is required."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No qualifications assigned"
@@ -2703,11 +2744,6 @@ msgstr "Causer"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Try Again"
 msgstr "Try Again"
-
-#. placeholder {0}: customer.sites_count || 0
-#: src/pages/Customers/CustomerDetail.tsx
-msgid "{0, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
-msgstr "{0, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
 
 #: src/pages/SourcePage.tsx
 msgid "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the repositories linked below."
@@ -3122,6 +3158,10 @@ msgstr "About SecPal"
 msgid "Update application now"
 msgstr "Update application now"
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "This customer's site count is unavailable."
+msgstr "This customer's site count is unavailable."
+
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
@@ -3337,6 +3377,10 @@ msgstr "Read the AGPL v3 license"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please select a file to upload."
 msgstr "Please select a file to upload."
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Please enter a valid email address."
+msgstr "Please enter a valid email address."
 
 #: src/pages/SourcePage.tsx
 msgid "Source code and license"
@@ -3682,3 +3726,7 @@ msgstr "Failed to update employee"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to activate employee"
 msgstr "Failed to activate employee"
+
+#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
+msgid "Revoking..."
+msgstr "Revoking..."

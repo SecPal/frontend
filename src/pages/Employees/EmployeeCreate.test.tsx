@@ -163,6 +163,50 @@ describe("EmployeeCreate", () => {
     );
   });
 
+  it("keeps create form error surfaces on canonical theme tokens", async () => {
+    vi.mocked(employeeApi.createEmployee).mockRejectedValueOnce(
+      new ApiError("Create failed", 500)
+    );
+
+    renderWithProviders(<EmployeeCreate />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("combobox", { name: /organizational unit/i })
+      ).not.toBeDisabled();
+    });
+
+    fireEvent.change(screen.getByLabelText(/first name/i), {
+      target: { value: "John" },
+    });
+    fireEvent.change(screen.getByLabelText(/last name/i), {
+      target: { value: "Doe" },
+    });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "john.doe@secpal.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/date of birth/i), {
+      target: { value: "01/01/1990" },
+    });
+    fireEvent.blur(screen.getByLabelText(/date of birth/i));
+    fireEvent.change(screen.getByLabelText("Position *"), {
+      target: { value: "Developer" },
+    });
+    fireEvent.change(screen.getByLabelText(/contract start date/i), {
+      target: { value: "01/01/2025" },
+    });
+    fireEvent.blur(screen.getByLabelText(/contract start date/i));
+    await selectRadixOption(/organizational unit/i, "Main Office");
+
+    submitEmployeeCreateForm();
+
+    const alert = await screen.findByText("Create failed");
+    expect(alert.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+  });
+
   it(
     "should create employee and navigate on success",
     async () => {
@@ -383,7 +427,7 @@ describe("EmployeeCreate", () => {
       screen.getByRole("status", { name: /loading unit options/i })
     ).toBeInTheDocument();
     expect(
-      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+      container.querySelectorAll('[data-slot="skeleton"]').length
     ).toBeGreaterThan(0);
   });
 
@@ -633,6 +677,31 @@ describe("EmployeeCreate", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps the invitation support panel on canonical border tokens", async () => {
+    renderWithProviders(<EmployeeCreate />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("combobox", {
+          name: /organizational unit|organisatorische einheit/i,
+        })
+      ).not.toBeDisabled();
+    });
+
+    const invitationPanel = screen
+      .getByLabelText(/send onboarding invitation/i)
+      .closest("div.rounded-lg");
+    const currentAddressHeading = screen.getByText("Current Address");
+
+    expect(invitationPanel).toHaveClass("border-border");
+    expect(currentAddressHeading).toHaveClass("text-foreground");
+    expect(invitationPanel).not.toHaveClass(
+      "border-zinc-950/10",
+      "dark:border-white/10"
+    );
+    expect(currentAddressHeading.className).not.toContain("text-zinc-800");
+  });
+
   it("should show send invitation validation errors inline when the API rejects the request", async () => {
     vi.mocked(employeeApi.createEmployee).mockRejectedValue(
       new ApiError("Validation failed", 422, {
@@ -864,6 +933,37 @@ describe("EmployeeCreate", () => {
       // Test middle value
       fireEvent.change(managementLevelInput, { target: { value: "50" } });
       expect(managementLevelInput).toHaveValue(50);
+    });
+
+    it("renders the leadership management level control with canonical shared input tokens", async () => {
+      renderWithProviders(<EmployeeCreate />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("combobox", {
+            name: /organizational unit|organisatorische einheit/i,
+          })
+        ).not.toBeDisabled();
+      });
+
+      fireEvent.click(
+        screen.getByRole("switch", {
+          name: /leadership/i,
+        })
+      );
+
+      const managementLevelInput = screen.getByRole("spinbutton");
+      const control = managementLevelInput.parentElement;
+      const prefix = screen.getByText(/^ML$/);
+
+      expect(managementLevelInput).toHaveClass(
+        "bg-background",
+        "text-foreground",
+        "placeholder:text-muted-foreground"
+      );
+      expect(control).toHaveClass("relative");
+      expect(prefix).toHaveClass("text-muted-foreground");
+      expect(control).not.toHaveClass("border-zinc-950/10", "dark:bg-white/5");
     });
 
     it(

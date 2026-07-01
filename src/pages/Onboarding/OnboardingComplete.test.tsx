@@ -121,4 +121,82 @@ describe("OnboardingComplete", () => {
       });
     });
   });
+
+  it("keeps welcome, invalid-link, and rate-limit states on canonical theme tokens", async () => {
+    const { unmount } = render(
+      <MemoryRouter
+        initialEntries={["/?token=test-token&email=new.guard%40example.com"]}
+      >
+        <I18nProvider i18n={i18n}>
+          <Routes>
+            <Route path="/" element={<OnboardingComplete />} />
+          </Routes>
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    const heading = await screen.findByRole("heading", {
+      name: /welcome to secpal/i,
+    });
+    const copy = screen.getByText(
+      /complete your account setup to get started/i
+    );
+    expect(heading).toHaveClass("text-foreground");
+    expect(copy).toHaveClass("text-muted-foreground");
+
+    unmount();
+    onboardingApiMocks.validateOnboardingToken.mockResolvedValueOnce({
+      data: { valid: false, message: "Link expired." },
+    });
+
+    const invalidView = render(
+      <MemoryRouter
+        initialEntries={["/?token=bad-token&email=bad%40example.com"]}
+      >
+        <I18nProvider i18n={i18n}>
+          <Routes>
+            <Route path="/" element={<OnboardingComplete />} />
+          </Routes>
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    const invalid = await screen.findByText(
+      "Invalid onboarding link. Please check your email and try again."
+    );
+    expect(invalid.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+
+    invalidView.unmount();
+    onboardingApiMocks.validateOnboardingToken.mockRejectedValueOnce({
+      response: {
+        status: 429,
+        data: {},
+        retryAfterSeconds: 120,
+      },
+    });
+
+    render(
+      <MemoryRouter
+        initialEntries={["/?token=slow-token&email=slow%40example.com"]}
+      >
+        <I18nProvider i18n={i18n}>
+          <Routes>
+            <Route path="/" element={<OnboardingComplete />} />
+          </Routes>
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    const rateLimitTitle = await screen.findByText(/too many attempts/i);
+    const rateLimitMessage = screen.getByText(
+      /too many onboarding attempts\. please try again later\./i
+    );
+    expect(rateLimitTitle).toHaveClass("text-foreground");
+    expect(rateLimitMessage).toHaveClass("text-foreground");
+    expect(rateLimitTitle.className).not.toContain("text-amber-700");
+    expect(rateLimitMessage.className).not.toContain("text-amber-700");
+  });
 });

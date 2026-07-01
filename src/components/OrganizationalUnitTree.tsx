@@ -15,25 +15,21 @@ import {
   Trash2,
 } from "lucide-react";
 import {
-  Badge,
   Button,
   Card,
   CardContent,
-  Dropdown,
-  DropdownButton,
-  DropdownItem,
   DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   LoadingRegion,
+  OrganizationalUnitTypeBadge,
   SectionSkeleton,
 } from "@/ui";
 import type {
   OrganizationalUnit,
   OrganizationalUnitType,
 } from "../types/organizational";
-import {
-  getTypeLabel,
-  getTypeBadgeColor,
-} from "../lib/organizationalUnitUtils";
 import { useOrganizationalUnitsWithOffline } from "../hooks/useOrganizationalUnitsWithOffline";
 import { OrganizationalUnitTypeIcon } from "./organizationalUnitIcons";
 
@@ -49,24 +45,10 @@ const MoveOrganizationalUnitDialog = lazy(() =>
   }))
 );
 
-const typeBadgeClassNames = {
-  blue: "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
-  green: "bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-300",
-  purple:
-    "bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300",
-  orange:
-    "bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300",
-  zinc: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-} as const;
-
-function getTypeBadgeClassName(type: OrganizationalUnitType) {
-  return typeBadgeClassNames[getTypeBadgeColor(type)];
-}
-
 /**
  * Get icon for organizational unit type
  */
-// Badge color is now provided by getTypeBadgeColor from organizationalUnitUtils
+// Badge rendering is provided by the shared ui primitive.
 
 interface TreeNodeProps {
   unit: OrganizationalUnit;
@@ -154,9 +136,7 @@ const TreeNode = memo(
       <div className="select-none">
         <div
           className={`group flex items-center gap-1.5 py-2 px-2 rounded-lg cursor-pointer transition-colors ${
-            isSelected
-              ? "bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800"
-              : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+            isSelected ? "border-primary/30 bg-primary/10" : "hover:bg-muted"
           }`}
           style={{ paddingLeft: `${Math.min(level * 16, 64) + 8}px` }}
           onClick={handleSelect}
@@ -175,17 +155,15 @@ const TreeNode = memo(
           <button
             type="button"
             className={`shrink-0 p-0.5 rounded transition-colors ${
-              hasChildren
-                ? "hover:bg-gray-200 dark:hover:bg-gray-700"
-                : "invisible"
+              hasChildren ? "hover:bg-accent" : "invisible"
             }`}
             onClick={handleToggle}
             aria-label={isExpanded ? t`Collapse` : t`Expand`}
           >
             {isExpanded ? (
-              <ChevronDown className="h-4 w-4 text-gray-500" />
+              <ChevronDown className="text-muted-foreground h-4 w-4" />
             ) : (
-              <ChevronRight className="h-4 w-4 text-gray-500" />
+              <ChevronRight className="text-muted-foreground h-4 w-4" />
             )}
           </button>
 
@@ -195,57 +173,57 @@ const TreeNode = memo(
           </span>
 
           {/* Name */}
-          <span className="flex-1 min-w-0 font-medium text-gray-900 dark:text-gray-100 truncate">
+          <span className="text-foreground flex-1 min-w-0 truncate font-medium">
             {unit.name}
           </span>
 
           {/* Type Badge - hidden on small screens */}
           <span className="hidden sm:inline-flex shrink-0">
-            <Badge className={getTypeBadgeClassName(unit.type)}>
-              {getTypeLabel(unit.type)}
-            </Badge>
+            <OrganizationalUnitTypeBadge type={unit.type} />
           </span>
 
           {/* Actions Menu */}
           {hasActions && (
-            <Dropdown>
-              <DropdownButton
-                plain
-                aria-label={t`Actions for ${unit.name}`}
-                className="shrink-0 p-1"
-                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              >
-                <EllipsisVertical className="h-5 w-5 text-gray-500" />
-              </DropdownButton>
-              <DropdownMenu anchor="bottom end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={t`Actions for ${unit.name}`}
+                  className="shrink-0 rounded-md p-1 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                >
+                  <EllipsisVertical className="text-muted-foreground h-5 w-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent anchor="bottom end">
                 {canCreateChild && (
-                  <DropdownItem onClick={handleCreateChild}>
+                  <DropdownMenuItem onClick={handleCreateChild}>
                     <Plus data-slot="icon" className="h-4 w-4" />
                     <Trans>Add child</Trans>
-                  </DropdownItem>
+                  </DropdownMenuItem>
                 )}
                 {canEdit && (
-                  <DropdownItem onClick={handleEdit}>
+                  <DropdownMenuItem onClick={handleEdit}>
                     <Pencil data-slot="icon" className="h-4 w-4" />
                     <Trans>Edit</Trans>
-                  </DropdownItem>
+                  </DropdownMenuItem>
                 )}
                 {canMove && (
-                  <DropdownItem onClick={handleMove}>
+                  <DropdownMenuItem onClick={handleMove}>
                     <MoveHorizontal data-slot="icon" className="h-4 w-4" />
                     <Trans>Move</Trans>
-                  </DropdownItem>
+                  </DropdownMenuItem>
                 )}
                 {canDelete && (
-                  <DropdownItem onClick={handleDelete}>
+                  <DropdownMenuItem onClick={handleDelete}>
                     <Trash2 data-slot="icon" className="h-4 w-4 text-red-500" />
-                    <span className="text-red-600 dark:text-red-400">
+                    <span className="text-destructive">
                       <Trans>Delete</Trans>
                     </span>
-                  </DropdownItem>
+                  </DropdownMenuItem>
                 )}
-              </DropdownMenu>
-            </Dropdown>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
 
@@ -704,7 +682,7 @@ export function OrganizationalUnitTree({
     return (
       <div className={className}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+          <h2 className="text-foreground text-lg font-semibold tracking-normal">
             {title || <Trans>My Organization</Trans>}
           </h2>
           {onCreate && (
@@ -714,7 +692,7 @@ export function OrganizationalUnitTree({
           )}
         </div>
 
-        <Card className="border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+        <Card className="border-destructive/30 bg-destructive/10 text-destructive">
           <CardContent className="p-4">
             <p className="text-sm">{error}</p>
             <Button variant="ghost" onClick={refresh} className="mt-2">
@@ -730,7 +708,7 @@ export function OrganizationalUnitTree({
     return (
       <div className={className}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+          <h2 className="text-foreground text-lg font-semibold tracking-normal">
             {title || <Trans>My Organization</Trans>}
           </h2>
           {onCreate && (
@@ -740,12 +718,12 @@ export function OrganizationalUnitTree({
           )}
         </div>
 
-        <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-          <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-          <h2 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">
+        <div className="text-muted-foreground py-8 text-center">
+          <Building2 className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+          <h2 className="text-foreground text-base font-semibold">
             <Trans>No Organizational Units</Trans>
           </h2>
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+          <p className="text-muted-foreground mt-2 text-sm">
             <Trans>
               Get started by creating your first organizational unit.
             </Trans>
@@ -763,7 +741,7 @@ export function OrganizationalUnitTree({
   return (
     <div className={className}>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+        <h2 className="text-foreground text-lg font-semibold tracking-normal">
           {title || <Trans>My Organization</Trans>}
         </h2>
         {onCreate && (
@@ -774,7 +752,7 @@ export function OrganizationalUnitTree({
       </div>
 
       {error ? (
-        <Card className="mb-4 border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+        <Card className="border-destructive/30 bg-destructive/10 text-destructive mb-4">
           <CardContent className="p-4">
             <p className="text-sm">{error}</p>
             <Button variant="ghost" onClick={refresh} className="mt-2">
@@ -793,13 +771,13 @@ export function OrganizationalUnitTree({
             loadingLabel={loadingLabel}
             rows={5}
             showHeader={false}
-            className="border-gray-200 dark:border-gray-700"
+            className="border-border"
           />
         ) : (
           <div
             role="tree"
             aria-label={t`Organizational structure`}
-            className="border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-100 dark:divide-gray-800"
+            className="border-border divide-border rounded-lg border divide-y"
           >
             {units.map((unit) => (
               <TreeNode

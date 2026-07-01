@@ -171,6 +171,17 @@ describe("SiteEdit", () => {
     expect(screen.queryByLabelText(/type/i)).not.toBeInTheDocument();
   });
 
+  it("keeps optional contact labels on canonical muted tokens", async () => {
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
+    });
+
+    const optionalLabel = screen.getByText(/\(optional\)/i);
+    expect(optionalLabel).toHaveClass("text-muted-foreground");
+  });
+
   it(
     "updates site with modified data",
     async () => {
@@ -242,9 +253,25 @@ describe("SiteEdit", () => {
 
     renderWithRouter();
 
-    await waitFor(() => {
-      expect(screen.getByText(/site not found/i)).toBeInTheDocument();
-    });
+    const loadError = await screen.findByText(/site not found/i);
+    expect(loadError).toBeInTheDocument();
+    expect(loadError.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+  });
+
+  it("keeps load and submit errors on canonical theme tokens", async () => {
+    vi.mocked(customersApi.getSite).mockRejectedValueOnce(
+      new Error("site not found")
+    );
+
+    renderWithRouter();
+
+    const loadError = await screen.findByText(/site not found/i);
+    expect(loadError.closest('[data-slot="alert"]')).toHaveClass(
+      "text-foreground"
+    );
   });
 
   it(

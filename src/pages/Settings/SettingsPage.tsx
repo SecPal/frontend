@@ -133,7 +133,7 @@ function SettingsDialog({
 }
 
 function SettingsDivider() {
-  return <div className="border-t border-zinc-200 dark:border-zinc-800" />;
+  return <div className="border-t border-border" />;
 }
 
 function DescriptionRow({
@@ -144,13 +144,9 @@ function DescriptionRow({
   children: ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-1 border-t border-zinc-100 py-3 first:border-t-0 sm:grid-cols-3 sm:gap-4 dark:border-zinc-800">
-      <dt className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-        {term}
-      </dt>
-      <dd className="text-sm text-zinc-950 sm:col-span-2 dark:text-zinc-50">
-        {children}
-      </dd>
+    <div className="border-border grid grid-cols-1 gap-1 border-t py-3 first:border-t-0 sm:grid-cols-3 sm:gap-4">
+      <dt className="text-muted-foreground text-sm font-medium">{term}</dt>
+      <dd className="text-foreground text-sm sm:col-span-2">{children}</dd>
     </div>
   );
 }
@@ -169,7 +165,7 @@ function PasskeyListSkeleton({ loadingLabel }: { loadingLabel: string }) {
         <div
           key={index}
           aria-hidden="true"
-          className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/60"
+          className="rounded-2xl border border-border bg-muted px-4 py-3"
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-2">
@@ -571,10 +567,10 @@ export function SettingsPage() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+        <h1 className="text-foreground text-2xl font-semibold tracking-normal">
           <Trans>Settings</Trans>
         </h1>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+        <p className="text-muted-foreground mt-2 text-sm">
           <Trans>Manage your application preferences.</Trans>
         </p>
       </div>
@@ -584,18 +580,18 @@ export function SettingsPage() {
       <section className="space-y-6">
         <div>
           <div>
-            <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+            <h2 className="text-foreground text-lg font-semibold tracking-normal">
               <Trans>Multi-factor authentication</Trans>
             </h2>
           </div>
         </div>
 
         {mfaStatusError ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
-            <p className="text-sm text-red-800 dark:text-red-200">
+          <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+            <AlertDescription className="text-destructive">
               {mfaStatusError}
-            </p>
-          </div>
+            </AlertDescription>
+          </Alert>
         ) : null}
 
         <Card className="p-6">
@@ -607,7 +603,7 @@ export function SettingsPage() {
               className="border-0 p-0"
             />
           ) : mfaStatusError ? (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="text-muted-foreground text-sm">
               <Trans>MFA status could not be loaded.</Trans>
             </p>
           ) : (
@@ -637,7 +633,7 @@ export function SettingsPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                  <p className="text-muted-foreground text-sm">
                     <Trans>
                       MFA is currently off for this account. Set up an
                       authenticator app now to require a second factor at sign
@@ -658,10 +654,10 @@ export function SettingsPage() {
 
       <section className="space-y-6">
         <div>
-          <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+          <h2 className="text-foreground text-lg font-semibold tracking-normal">
             <Trans>Passkeys</Trans>
           </h2>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
+          <p className="text-muted-foreground mt-1 text-sm">
             <Trans>
               Review the passkeys currently enrolled for this account.
             </Trans>
@@ -704,21 +700,23 @@ export function SettingsPage() {
                   </Button>
                 </form>
               ) : (
-                <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                <p className="text-muted-foreground text-sm">
                   <Trans>This browser does not support passkeys.</Trans>
                 </p>
               )}
               {passkeyError ? (
-                <p className="text-sm text-red-700 dark:text-red-300">
-                  {passkeyError}
-                </p>
+                <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+                  <AlertDescription className="text-destructive">
+                    {passkeyError}
+                  </AlertDescription>
+                </Alert>
               ) : null}
               {isLoadingPasskeys && passkeys.length === 0 ? (
                 <PasskeyListSkeleton loadingLabel={passkeysLoadingLabel} />
               ) : !passkeyError &&
                 passkeys.length === 0 &&
                 !isRegisteringPasskey ? (
-                <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                <p className="text-muted-foreground text-sm">
                   <Trans>No passkeys enrolled yet.</Trans>
                 </p>
               ) : (
@@ -730,14 +728,14 @@ export function SettingsPage() {
                     {passkeys.map((passkey) => (
                       <div
                         key={passkey.id}
-                        className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/60"
+                        className="rounded-2xl border border-border bg-muted px-4 py-3"
                       >
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div>
-                            <p className="text-sm font-medium text-zinc-950 dark:text-white">
+                            <p className="text-foreground text-sm font-medium">
                               {passkey.label}
                             </p>
-                            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                            <p className="text-muted-foreground text-sm">
                               <Trans>
                                 Added{" "}
                                 {formatDateTime(
@@ -777,10 +775,10 @@ export function SettingsPage() {
       {/* Language Settings Section */}
       <section className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+          <h2 className="text-foreground text-lg font-semibold tracking-normal">
             <Trans>Language</Trans>
           </h2>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
+          <p className="text-muted-foreground mt-1 text-sm">
             <Trans>Choose your preferred language for the application.</Trans>
           </p>
         </div>
@@ -808,8 +806,8 @@ export function SettingsPage() {
         <DialogBody>
           {revealedRecoveryCodes ? (
             <div className="space-y-6">
-              <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
-                <AlertDescription className="mt-0 text-amber-800 dark:text-amber-200">
+              <Alert className="border-amber-500/30 bg-amber-500/10">
+                <AlertDescription className="mt-0 text-foreground">
                   <Trans>
                     Anyone with one of these recovery codes can bypass your
                     authenticator app once. Do not store them in chat, email, or
@@ -822,7 +820,7 @@ export function SettingsPage() {
                 {revealedRecoveryCodes.codes.map((code) => (
                   <code
                     key={code}
-                    className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm tracking-[0.18em] text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-white"
+                    className="text-foreground rounded-xl border border-border bg-muted px-4 py-3 text-sm tracking-[0.18em]"
                   >
                     {code}
                   </code>
@@ -831,7 +829,7 @@ export function SettingsPage() {
 
               <FieldLabel
                 htmlFor="recovery-codes-acknowledgement"
-                className="flex items-start gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-normal text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-white"
+                className="bg-card text-card-foreground flex items-start gap-3 rounded-2xl border border-border px-4 py-3 text-sm font-normal"
               >
                 <Checkbox
                   id="recovery-codes-acknowledgement"
@@ -887,8 +885,8 @@ export function SettingsPage() {
             />
           ) : enrollmentPreparationError ? (
             <div className="space-y-6">
-              <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
-                <AlertDescription className="mt-0 text-red-800 dark:text-red-200">
+              <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+                <AlertDescription className="mt-0 text-destructive">
                   {enrollmentPreparationError}
                 </AlertDescription>
               </Alert>
@@ -916,17 +914,17 @@ export function SettingsPage() {
                 alt={_(msg`Authenticator app QR code`)}
               />
 
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-                <p className="text-sm text-zinc-700 dark:text-zinc-300">
+              <div className="rounded-2xl border border-border bg-muted p-4">
+                <p className="text-sm text-muted-foreground">
                   <Trans>Manual setup key</Trans>
                 </p>
-                <code className="mt-3 block break-all rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm tracking-[0.18em] text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-white">
+                <code className="mt-3 block break-all rounded-xl border border-border bg-background px-4 py-3 text-sm tracking-[0.18em] text-foreground">
                   {enrollmentPreparation.manual_entry_key}
                 </code>
               </div>
 
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
-                <p className="text-sm text-zinc-700 dark:text-zinc-300">
+              <div className="rounded-2xl border border-border bg-muted p-4">
+                <p className="text-sm text-muted-foreground">
                   <Trans>
                     This setup expires at{" "}
                     {formatDateTime(
@@ -1011,7 +1009,7 @@ export function SettingsPage() {
           {sensitiveAction ? (
             <form className="space-y-6" onSubmit={handleSensitiveActionSubmit}>
               <fieldset className="space-y-3">
-                <legend className="text-sm font-medium text-zinc-950 dark:text-white">
+                <legend className="text-foreground text-sm font-medium">
                   <Trans>Verification method</Trans>
                 </legend>
 
@@ -1034,7 +1032,7 @@ export function SettingsPage() {
                       <FieldLabel
                         key={method}
                         htmlFor={`sensitive-mfa-method-${method}`}
-                        className="flex cursor-default items-start gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-normal text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-white"
+                        className="bg-card text-card-foreground flex cursor-default items-start gap-3 rounded-2xl border border-border px-4 py-3 text-sm font-normal"
                       >
                         <RadioGroupItem
                           id={`sensitive-mfa-method-${method}`}

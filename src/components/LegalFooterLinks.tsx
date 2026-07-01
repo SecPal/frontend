@@ -19,18 +19,18 @@ export function LegalFooterLinks({ className }: LegalFooterLinksProps) {
         href="https://www.gnu.org/licenses/agpl-3.0.html"
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 hover:text-zinc-950 dark:hover:text-white"
+        className="inline-flex items-center gap-1.5 hover:text-foreground"
       >
         <Scale className="h-4 w-4" aria-hidden="true" />
         <Trans>AGPL v3+</Trans>
       </a>
-      <span className="text-zinc-300 dark:text-zinc-700" aria-hidden="true">
+      <span className="text-border" aria-hidden="true">
         |
       </span>
       <Link
         to="/source"
         state={{ sourceReturnTo }}
-        className="inline-flex items-center gap-1.5 hover:text-zinc-950 dark:hover:text-white"
+        className="inline-flex items-center gap-1.5 hover:text-foreground"
       >
         <Code2 className="h-4 w-4" aria-hidden="true" />
         <Trans>Source Code</Trans>

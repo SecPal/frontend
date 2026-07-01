@@ -22,6 +22,27 @@ interface SourceFile {
   path: string;
 }
 
+interface ShadcnComponentsConfig {
+  $schema: string;
+  style: string;
+  rsc: boolean;
+  tsx: boolean;
+  tailwind: {
+    config: string;
+    css: string;
+    baseColor: string;
+    cssVariables: boolean;
+  };
+  aliases: {
+    components: string;
+    ui: string;
+    lib: string;
+    hooks: string;
+    utils: string;
+  };
+  iconLibrary: string;
+}
+
 const projectRoot = cwd();
 
 const forbiddenHeadlessPackage = ["@headlessui", "react"].join("/");
@@ -73,6 +94,40 @@ const oldComponentWrapperPaths = new Set([
   "src/components/textarea",
 ]);
 
+const oldRouteLocalUiLayerPaths = new Set([
+  "src/pages/Auth/ui",
+  "src/pages/Auth/ui/index",
+  "src/pages/Auth/ui/primitives",
+  "src/pages/Auth/ui/utils",
+  "src/pages/CustomerSites/ui",
+  "src/pages/Employees/ui",
+  "src/pages/Onboarding/ui",
+  "src/pages/Onboarding/ui/index",
+  "src/pages/Onboarding/ui/primitives",
+  "src/pages/Onboarding/ui/utils",
+]);
+
+const deprecatedSharedUiCompatibilityExports = new Set([
+  "Dropdown",
+  "DropdownButton",
+  "DropdownDescription",
+  "DropdownDivider",
+  "DropdownHeader",
+  "DropdownHeading",
+  "DropdownItem",
+  "DropdownLabel",
+  "DropdownSection",
+  "DropdownShortcut",
+  "SidebarBody",
+  "SidebarHeading",
+  "SidebarItem",
+  "SidebarLabel",
+  "SidebarSection",
+  "SidebarSpacer",
+]);
+
+const remainingNonCanonicalUiLayerAllowlist = [] as const;
+
 function toProjectPath(filePath: string) {
   return path.relative(projectRoot, filePath).replaceAll(path.sep, "/");
 }
@@ -106,6 +161,25 @@ function readProductionSources(): SourceFile[] {
       path: toProjectPath(filePath),
     }))
   );
+}
+
+function listProductionSourceFiles(entryPath: string) {
+  return listFiles(entryPath).map(toProjectPath);
+}
+
+function collectRemainingNonCanonicalUiLayers() {
+  const legacyComponentWrapperFiles = listProductionSourceFiles(
+    "src/components"
+  ).filter((filePath) =>
+    oldComponentWrapperPaths.has(filePath.replace(/\.(?:ts|tsx)$/, ""))
+  );
+
+  const pageUiLayerFiles = listProductionSourceFiles("src/pages").filter(
+    (filePath) =>
+      /^src\/pages\/[^/]+\/ui(?:\.[tj]sx?|\/.+\.[tj]sx?)$/.test(filePath)
+  );
+
+  return [...legacyComponentWrapperFiles, ...pageUiLayerFiles].sort();
 }
 
 function collectSourceMarkerViolations(sources: SourceFile[]) {
@@ -157,11 +231,14 @@ function resolveProjectModulePath(sourcePath: string, moduleSpecifier: string) {
   return toProjectPath(absoluteImportPath).replace(/\.(?:ts|tsx)$/, "");
 }
 
-function collectOldWrapperImportViolations(sources: SourceFile[]) {
+function collectUiImportBoundaryViolations(sources: SourceFile[]) {
   return sources.flatMap((source) => {
     const sourceModulePath = source.path.replace(/\.(?:ts|tsx)$/, "");
 
-    if (oldComponentWrapperPaths.has(sourceModulePath)) {
+    if (
+      oldComponentWrapperPaths.has(sourceModulePath) ||
+      oldRouteLocalUiLayerPaths.has(sourceModulePath)
+    ) {
       return [];
     }
 
@@ -177,9 +254,88 @@ function collectOldWrapperImportViolations(sources: SourceFile[]) {
         ];
       }
 
+      if (
+        resolvedImport &&
+        [...oldRouteLocalUiLayerPaths].some(
+          (uiLayerPath) =>
+            resolvedImport === uiLayerPath ||
+            resolvedImport.startsWith(`${uiLayerPath}/`)
+        )
+      ) {
+        return [
+          `${source.path}: imports old route-local UI layer ${moduleSpecifier}`,
+        ];
+      }
+
       return [];
     });
   });
+}
+
+function getExportedNames(source: SourceFile): string[] {
+  const sourceFile = ts.createSourceFile(
+    source.path,
+    source.content,
+    ts.ScriptTarget.Latest,
+    false,
+    source.path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS
+  );
+
+  return sourceFile.statements.flatMap((statement) => {
+    const modifiers = ts.canHaveModifiers(statement)
+      ? ts.getModifiers(statement)
+      : undefined;
+    const isExported = modifiers?.some(
+      (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
+    );
+
+    if (!isExported) {
+      return [];
+    }
+
+    if (
+      (ts.isFunctionDeclaration(statement) ||
+        ts.isClassDeclaration(statement) ||
+        ts.isInterfaceDeclaration(statement) ||
+        ts.isTypeAliasDeclaration(statement)) &&
+      statement.name
+    ) {
+      return [statement.name.text];
+    }
+
+    if (ts.isVariableStatement(statement)) {
+      return statement.declarationList.declarations.flatMap((declaration) =>
+        ts.isIdentifier(declaration.name) ? [declaration.name.text] : []
+      );
+    }
+
+    if (ts.isExportDeclaration(statement) && statement.exportClause) {
+      if (ts.isNamedExports(statement.exportClause)) {
+        return statement.exportClause.elements.map(
+          (element) => element.name.text
+        );
+      }
+
+      return [];
+    }
+
+    return [];
+  });
+}
+
+function collectSharedUiCompatibilityExportViolations(sources: SourceFile[]) {
+  return sources
+    .filter((source) => /^src\/ui\/.+\.[tj]sx?$/.test(source.path))
+    .flatMap((source) =>
+      getExportedNames(source)
+        .filter((exportName) =>
+          deprecatedSharedUiCompatibilityExports.has(exportName)
+        )
+        .map(
+          (exportName) =>
+            `${source.path}: exports deprecated compatibility surface ${exportName}`
+        )
+    );
 }
 
 function readJsonFile<T>(filePath: string): T {
@@ -187,6 +343,35 @@ function readJsonFile<T>(filePath: string): T {
 }
 
 describe("legacy UI guardrails", () => {
+  it("inventories the remaining non-canonical UI compatibility layers", () => {
+    expect(collectRemainingNonCanonicalUiLayers()).toEqual([
+      ...remainingNonCanonicalUiLayerAllowlist,
+    ]);
+  });
+
+  it("keeps shadcn project metadata aligned with the canonical UI layer", () => {
+    expect(readJsonFile<ShadcnComponentsConfig>("components.json")).toEqual({
+      $schema: "https://ui.shadcn.com/schema.json",
+      style: "new-york",
+      rsc: false,
+      tsx: true,
+      tailwind: {
+        config: "",
+        css: "src/index.css",
+        baseColor: "zinc",
+        cssVariables: true,
+      },
+      aliases: {
+        components: "@/components",
+        ui: "@/ui",
+        lib: "@/lib",
+        hooks: "@/hooks",
+        utils: "@/lib/utils",
+      },
+      iconLibrary: "lucide",
+    });
+  });
+
   it("keeps production source and project metadata free of legacy UI markers", () => {
     expect(collectSourceMarkerViolations(readProductionSources())).toEqual([]);
     expect(
@@ -203,10 +388,16 @@ describe("legacy UI guardrails", () => {
     ).toBe(false);
   });
 
-  it("prevents production code from importing old generic component wrappers", () => {
-    expect(collectOldWrapperImportViolations(readProductionSources())).toEqual(
+  it("prevents production code from importing old UI compatibility layers", () => {
+    expect(collectUiImportBoundaryViolations(readProductionSources())).toEqual(
       []
     );
+  });
+
+  it("keeps shared UI exports free of deprecated compatibility aliases", () => {
+    expect(
+      collectSharedUiCompatibilityExportViolations(readProductionSources())
+    ).toEqual([]);
   });
 
   it("keeps legacy UI packages out of the manifest and lockfile", () => {

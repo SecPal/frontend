@@ -10,29 +10,29 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  AutocompleteListbox,
-  AutocompleteOption,
   Badge,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  Checkbox,
-  CommandPopover,
   Field,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
   Input,
+  OnboardingAutocompleteListbox as AutocompleteListbox,
+  OnboardingAutocompleteOption as AutocompleteOption,
   OnboardingAuthCard,
   OnboardingAuthHeader,
   OnboardingAuthShell,
-  Progress,
-  RadioGroup,
-  RadioGroupItem,
-  Select,
+  OnboardingCheckbox as Checkbox,
+  OnboardingCommandPopover as CommandPopover,
+  OnboardingProgress as Progress,
+  OnboardingRadioGroup as RadioGroup,
+  OnboardingRadioGroupItem as RadioGroupItem,
+  OnboardingSelect as Select,
   Textarea,
 } from ".";
 
@@ -293,7 +293,7 @@ describe("onboarding shadcn primitives", () => {
           <CardTitle id="required-information">Required information</CardTitle>
         </CardHeader>
         <CardContent>
-          <Alert>
+          <Alert role="alert">
             <AlertTitle>Missing fields</AlertTitle>
             <AlertDescription>Complete the required fields.</AlertDescription>
           </Alert>
@@ -310,7 +310,7 @@ describe("onboarding shadcn primitives", () => {
   });
 
   it("provides auth shell primitives with stable light and dark mode classes", () => {
-    render(
+    const { container } = render(
       <OnboardingAuthShell>
         <OnboardingAuthCard aria-label="Complete account setup">
           <OnboardingAuthHeader>
@@ -323,31 +323,105 @@ describe("onboarding shadcn primitives", () => {
     );
 
     const shell = document.querySelector('[data-slot="onboarding-auth-shell"]');
-    const card = screen.getByRole("region", {
-      name: "Complete account setup",
-    });
+    const card = document.querySelector('[data-slot="onboarding-auth-card"]');
     const header = document.querySelector(
       '[data-slot="onboarding-auth-header"]'
     );
 
     expect(shell).toHaveClass(
       "min-h-[var(--app-shell-min-height)]",
-      "bg-white",
+      "bg-background",
       "pt-[calc(1.5rem+var(--app-safe-area-inset-top))]",
-      "text-zinc-950",
-      "dark:bg-zinc-950",
-      "dark:text-zinc-50"
+      "text-foreground"
     );
     expect(card).toHaveAttribute("data-slot", "onboarding-auth-card");
     expect(card).toHaveClass(
       "min-h-[var(--app-auth-card-min-height)]",
       "rounded-md",
-      "border-zinc-200",
-      "bg-white",
-      "dark:border-zinc-800",
-      "dark:bg-zinc-900"
+      "border-border",
+      "bg-card",
+      "text-card-foreground"
     );
     expect(header).toHaveClass("flex", "items-center", "justify-between");
+    expect(shell?.className).not.toContain("bg-white");
+    expect(shell?.className).not.toContain("text-zinc-950");
+    expect(card?.className).not.toContain("border-zinc-200");
+    expect(card?.className).not.toContain("bg-white");
+    expect(card?.className).not.toContain("dark:bg-zinc-900");
+
+    const select = container.querySelector(
+      '[data-slot="onboarding-select-content"]'
+    );
+    const option = container.querySelector(
+      '[data-slot="onboarding-select-item"]'
+    );
+    expect(select).toBeNull();
+    expect(option).toBeNull();
+  });
+
+  it("keeps onboarding shared shells and select surfaces on canonical theme tokens", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <>
+        <OnboardingAuthShell>
+          <OnboardingAuthCard aria-label="Complete account setup">
+            <OnboardingAuthHeader>
+              <span>SecPal</span>
+              <button type="button">Language</button>
+            </OnboardingAuthHeader>
+            <Field>
+              <FieldLabel htmlFor="contract-type-theme">
+                Contract type
+              </FieldLabel>
+              <Select id="contract-type-theme" defaultValue="">
+                <option value="">Select an option</option>
+                <option value="contractor">Contractor</option>
+              </Select>
+            </Field>
+          </OnboardingAuthCard>
+        </OnboardingAuthShell>
+      </>
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Contract type" }));
+
+    const shell = document.querySelector('[data-slot="onboarding-auth-shell"]');
+    const card = document.querySelector('[data-slot="onboarding-auth-card"]');
+    const selectContent = document.querySelector(
+      '[data-slot="onboarding-select-content"]'
+    );
+    const selectItem = document.querySelector(
+      '[data-slot="onboarding-select-item"]'
+    );
+
+    expect(shell).toHaveClass("bg-background", "text-foreground");
+    expect(card).toHaveClass(
+      "border-border",
+      "bg-card",
+      "text-card-foreground"
+    );
+    expect(selectContent).toHaveClass(
+      "border-border",
+      "bg-popover",
+      "text-popover-foreground"
+    );
+    expect(selectItem).toHaveClass(
+      "text-foreground",
+      "data-[highlighted]:bg-accent",
+      "data-[highlighted]:text-accent-foreground"
+    );
+
+    expect(shell?.className).not.toContain("bg-white");
+    expect(shell?.className).not.toContain("text-zinc-950");
+    expect(card?.className).not.toContain("border-zinc-200");
+    expect(card?.className).not.toContain("dark:bg-zinc-900");
+    expect(selectContent?.className).not.toContain("border-zinc-200");
+    expect(selectContent?.className).not.toContain("bg-white");
+    expect(selectItem?.className).not.toContain("text-zinc-950");
+    expect(selectItem?.className).not.toContain(
+      "data-[highlighted]:bg-zinc-100"
+    );
   });
 
   it("renders badge and progress primitives with accessible state", () => {
@@ -401,6 +475,10 @@ describe("onboarding shadcn primitives", () => {
       "data-highlighted",
       ""
     );
+    expect(screen.getByRole("option", { name: "Main Street" })).toHaveAttribute(
+      "id",
+      "street-option-0"
+    );
   });
 
   it("supports a keyboard-searchable command popover select", async () => {
@@ -425,6 +503,37 @@ describe("onboarding shadcn primitives", () => {
     await user.keyboard("{Enter}");
 
     expect(handleValueChange).toHaveBeenCalledWith("fr");
+  });
+
+  it("renders searchable select content with canonical shadcn command slots", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <TestCommandPopover
+        label="Nationality"
+        value="de"
+        onValueChange={vi.fn()}
+        options={[
+          { value: "de", label: "Germany", keywords: ["Deutschland"] },
+          { value: "fr", label: "France" },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Nationality" }));
+
+    expect(document.querySelector('[data-slot="command"]')).toBeInTheDocument();
+    expect(
+      screen.getByRole("searchbox", { name: "Search options" })
+    ).toHaveAttribute("data-slot", "command-input");
+    expect(screen.getByRole("listbox")).toHaveAttribute(
+      "data-slot",
+      "command-list"
+    );
+    expect(screen.getByRole("option", { name: "Germany" })).toHaveAttribute(
+      "data-slot",
+      "command-item"
+    );
   });
 
   it("opens the popover and highlights the first option when ArrowDown is pressed on the closed trigger", async () => {
@@ -452,8 +561,7 @@ describe("onboarding shadcn primitives", () => {
     const options = screen.getAllByRole("option");
     // First ArrowDown opens the popover and highlights the first option,
     // matching the visual list order. It must not skip past the first item.
-    const searchbox = screen.getByRole("searchbox");
-    expect(searchbox).toHaveAttribute("aria-activedescendant", options[0]!.id);
+    expect(options[0]).toHaveAttribute("aria-selected", "true");
   });
 
   it("navigates options with ArrowDown/ArrowUp inside the search box and selects with Enter", async () => {
@@ -473,14 +581,13 @@ describe("onboarding shadcn primitives", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
-    const searchbox = screen.getByRole("searchbox");
 
     await user.keyboard("{ArrowDown}");
     await user.keyboard("{ArrowDown}");
     await user.keyboard("{ArrowUp}");
-    expect(searchbox).toHaveAttribute(
-      "aria-activedescendant",
-      screen.getAllByRole("option")[1]!.id
+    expect(screen.getAllByRole("option")[1]).toHaveAttribute(
+      "aria-selected",
+      "true"
     );
 
     await user.keyboard("{Enter}");
@@ -509,14 +616,16 @@ describe("onboarding shadcn primitives", () => {
     const germany = screen.getByRole("option", { name: "Germany" });
     const france = screen.getByRole("option", { name: "France" });
 
+    expect(germany).toHaveAttribute("data-current", "");
     expect(germany).toHaveAttribute("aria-selected", "true");
     expect(france).toHaveAttribute("aria-selected", "false");
 
     await user.keyboard("{ArrowDown}");
 
-    expect(searchbox).toHaveAttribute("aria-activedescendant", france.id);
-    expect(germany).toHaveAttribute("aria-selected", "true");
-    expect(france).toHaveAttribute("aria-selected", "false");
+    expect(searchbox).toHaveFocus();
+    expect(germany).toHaveAttribute("data-current", "");
+    expect(germany).toHaveAttribute("aria-selected", "false");
+    expect(france).toHaveAttribute("aria-selected", "true");
   });
 
   it("closes the popover when Escape is pressed and clears stale query/active index for the next open", async () => {
@@ -553,10 +662,7 @@ describe("onboarding shadcn primitives", () => {
     expect(screen.getByRole("searchbox")).toHaveValue("");
     const options = screen.getAllByRole("option");
     expect(options).toHaveLength(3);
-    expect(screen.getByRole("searchbox")).toHaveAttribute(
-      "aria-activedescendant",
-      options[0]!.id
-    );
+    expect(options[0]).toHaveAttribute("aria-selected", "true");
   });
 
   it("clears stale query/active index when the trigger closes the popover", async () => {
@@ -587,10 +693,7 @@ describe("onboarding shadcn primitives", () => {
     expect(screen.getByRole("searchbox")).toHaveValue("");
     const options = screen.getAllByRole("option");
     expect(options).toHaveLength(3);
-    expect(screen.getByRole("searchbox")).toHaveAttribute(
-      "aria-activedescendant",
-      options[0]!.id
-    );
+    expect(options[0]).toHaveAttribute("aria-selected", "true");
   });
 
   it("renders the empty message when no options match the query", async () => {
@@ -634,10 +737,7 @@ describe("onboarding shadcn primitives", () => {
     const options = screen.getAllByRole("option");
 
     await user.hover(options[1]!);
-    expect(screen.getByRole("searchbox")).toHaveAttribute(
-      "aria-activedescendant",
-      options[1]!.id
-    );
+    expect(options[1]).toHaveAttribute("aria-selected", "true");
 
     await user.click(options[1]!);
     expect(handleValueChange).toHaveBeenCalledWith("fr");
@@ -698,7 +798,7 @@ describe("onboarding shadcn primitives", () => {
     expect(trigger).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("keeps command popover tab flow predictable before focus leaves", async () => {
+  it("closes the command popover when tab leaves the search field", async () => {
     const user = userEvent.setup();
 
     render(
@@ -720,15 +820,8 @@ describe("onboarding shadcn primitives", () => {
     const searchbox = screen.getByRole("searchbox", {
       name: "Search options",
     });
-    const options = screen.getAllByRole("option");
 
     expect(searchbox).toHaveFocus();
-
-    await user.tab();
-    expect(options[0]).toHaveFocus();
-
-    await user.tab();
-    expect(options[1]).toHaveFocus();
 
     await user.tab();
     await waitFor(() => {
@@ -756,11 +849,10 @@ describe("onboarding shadcn primitives", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
-    const searchbox = screen.getByRole("searchbox");
     const options = screen.getAllByRole("option");
 
     await user.keyboard("{ArrowDown}");
-    expect(searchbox).toHaveAttribute("aria-activedescendant", options[2]!.id);
+    expect(options[2]).toHaveAttribute("aria-selected", "true");
 
     await user.keyboard("{Enter}");
     expect(handleValueChange).toHaveBeenCalledWith("es");
@@ -838,7 +930,7 @@ describe("onboarding shadcn primitives", () => {
     await user.type(searchbox, "zzzzz");
 
     await user.keyboard("{ArrowDown}");
-    expect(searchbox).not.toHaveAttribute("aria-activedescendant");
+    expect(screen.queryAllByRole("option")).toHaveLength(0);
   });
 
   it("keeps the active index stable when ArrowDown only finds disabled options", async () => {
@@ -892,5 +984,29 @@ describe("onboarding shadcn primitives", () => {
     );
 
     expect(screen.getByRole("combobox", { name: "Country" })).toBeDisabled();
+  });
+
+  it("selects an empty command value without leaking the internal sentinel", async () => {
+    const user = userEvent.setup();
+    const handleValueChange = vi.fn();
+
+    render(
+      <TestCommandPopover
+        label="Country"
+        value="de"
+        onValueChange={handleValueChange}
+        options={[
+          { value: "", label: "No country selected" },
+          { value: "de", label: "Germany" },
+        ]}
+      />
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Country" }));
+    await user.click(
+      screen.getByRole("option", { name: "No country selected" })
+    );
+
+    expect(handleValueChange).toHaveBeenCalledWith("");
   });
 });

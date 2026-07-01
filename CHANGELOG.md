@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added the canonical shadcn `components.json` baseline for the frontend
+  (`new-york`, Tailwind v4 `src/index.css`, `zinc`, Lucide, and repo aliases)
+  plus a guardrail inventory test for the remaining non-canonical UI
+  compatibility layers.
 - Standardized the authenticated app's loading experience around a shared `src/ui` skeleton layer (`Skeleton`, `PageSkeleton`, `SectionSkeleton`, `TableSkeleton`, `FormSkeleton`, `LoadingRegion`) and documented the contract in `src/ui/MIGRATION.md`. List pages (customers, sites, employees, activity logs, Android provisioning) now keep their table/header chrome mounted during the first load with skeleton rows, switch to row-level skeletons only when no rows are cached, and wrap subsequent refresh/pagination/filter cycles in `LoadingRegion` so previously rendered rows stay visible while the request is in flight. Detail/edit screens (customer, site, employee, employee contacts, employee create) keep page titles and action regions visible during initial entity loads and render `SectionSkeleton`/`FormSkeleton` only in the data region; `SiteDetail` renders the site record as soon as it loads and falls back to inline placeholders for customer and organizational-unit lookups (US-001..US-006).
 - Replaced the global route loader spinner with a shell-shaped `PageSkeleton` fallback, kept authenticated shell chrome mounted during persisted-session bootstrap revalidation, and routed authenticated route chunk loading through layout-owned `Suspense` boundaries that render `RouteContentFallback` instead of a full-screen guard loader. Route guards now share a single `routeGuardAuth` bootstrap check so `ProtectedRoute`, `FeatureRoute`, `PermissionRoute`, `OrganizationalRoute`, and `LoginRoute` no longer flash a guard-specific `Loading…` screen when a session snapshot exists (US-002, US-003).
 - Converted operational modules (`OrganizationalUnitTree`, `ActivityLogList`, `AndroidProvisioningPage`, `SettingsPage`) to keep their headers, filters, forms, and action controls mounted on first load. Loading-heavy panes now render `SectionSkeleton`/row skeletons inside the existing card/table chrome and fall back to `LoadingRegion` or inline busy indicators for safe refreshes such as activity-log manual refresh, organizational unit cache refreshes, Android revoke errors, and passkey post-registration list refreshes (US-007).
@@ -30,6 +34,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Completed the shadcn/Radix/Lucide UI migration proof by tightening the
+  repo-wide legacy UI guardrail to a zero allowlist, removing the final shared
+  shell compatibility aliases, and documenting `src/ui` as the complete
+  canonical production UI layer (US-007).
+- Removed the remaining UI-surface holdouts that still only imitated the
+  canonical shared primitives: destructive load/error states now render through
+  shared `Alert*` slots instead of ad-hoc text blocks or route-local alert
+  shells, shared auth status messaging now composes the canonical `Alert`
+  primitive directly, and the repository documentation now describes the final
+  `src/ui` architecture instead of an in-progress migration state (US-007).
+- Moved the remaining Customers, Sites, Employees, and admin/domain surface UI
+  consumers onto direct `@/ui` imports, promoted the still-needed customer/site
+  and employee compositions to prefixed shared exports, and deleted the
+  route-local `CustomerSites` / `Employees` UI barrels plus obsolete generic
+  `src/components/*` wrapper files from the compatibility inventory (US-006).
+- Moved the auth and onboarding route-local primitive layers into the canonical
+  shared `@/ui` surface, updated login, MFA, onboarding wizard, completion, and
+  submitted screens to import shared primitives directly, and deleted
+  `src/pages/Auth/ui` plus `src/pages/Onboarding/ui` from the remaining
+  compatibility inventory while preserving command-popover Tab focus handoff
+  through the shared primitive (US-005).
+- Replaced the shared searchable/selectable control compatibility layer with
+  canonical shadcn `Command*` primitives backed by `cmdk`, migrated the
+  onboarding and employee command-popover adapters onto that pattern, and
+  removed the obsolete generic `combobox`, `listbox`, `select`, and
+  `src/ui/searchableControls.tsx` wrappers from the remaining legacy UI
+  inventory (US-004).
+- Migrated the authenticated application shell navigation from bespoke
+  app-shell sidebar, mobile drawer, and dropdown approximations to shadcn/Radix
+  `Sidebar`, `Sheet`, and `DropdownMenu` composition. The global user menu,
+  mobile navigation overlay, sidebar links, and shell layout now expose
+  canonical shadcn slot names with regression coverage for focusable menu and
+  sheet behavior (US-003).
+- Migrated the shared `src/ui` core primitives to canonical shadcn slot names,
+  CSS-variable theme tokens, and Radix-backed avatar structure. Buttons,
+  inputs, textareas, fields, selects, checkboxes, switches, radios, dialogs,
+  alerts, cards, badges, progress, avatars, tables, skeletons, and loading
+  states now share the shadcn token layer from `src/index.css`, and affected
+  primitive tests assert the canonical structure directly (US-002).
 - Replaced the repo-local `markdownlint-cli2` pre-commit and preflight path with pinned `markdownlint-cli@0.49.0` usage so markdown validation now matches the shared `.github` governance baseline
 - Included `.github/instructions/github-workflows.instructions.md` in the frontend AI-governance baseline so provider-neutral agents and Copilot-derived tooling load the same workflow-policy overlay when reviewing or editing GitHub automation.
 - Updated `docs/development/TDD_WORKFLOW.md` to keep the SPDX copyright year current after the 2026 governance-link refresh.
@@ -50,6 +93,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed shadcn/Radix migration regressions in dev proxy startup, mobile sheet
+  overlays, address autocomplete active-descendant IDs, login status message
+  markup, and passive advisory alert roles.
+- Restored the checked/unchecked icon state on shared `Switch` controls with
+  `showIcons`, corrected dropdown-menu item labels to render as inline content
+  instead of nested Radix menu-section labels, and split system color-scheme
+  bootstrap from listener installation so startup no longer registers a
+  duplicate media-query subscription.
 - Added the missing `SecPal/android` repository to the `/source` AGPL
   source-offer page so the frontend's corresponding-source list again
   reflects the Android wrapper that consumes the shared frontend build output.

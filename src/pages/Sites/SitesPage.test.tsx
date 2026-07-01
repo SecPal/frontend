@@ -191,7 +191,7 @@ describe("SitesPage", () => {
     ).toBeInTheDocument();
     expect(container.querySelectorAll("tbody tr td")).toHaveLength(40);
     expect(
-      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+      container.querySelectorAll('[data-slot="skeleton"]').length
     ).toBeGreaterThan(0);
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
@@ -226,6 +226,20 @@ describe("SitesPage", () => {
     expect(
       screen.getByRole("columnheader", { name: /site number/i })
     ).toBeInTheDocument();
+  });
+
+  it("keeps table feedback and pagination on canonical theme tokens", async () => {
+    vi.mocked(customersApi.listSites).mockRejectedValueOnce(
+      new Error("API Error")
+    );
+
+    renderWithProviders();
+
+    const alert = await screen.findByText("API Error");
+    expect(alert.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
   });
 
   it("should filter sites by search term", async () => {

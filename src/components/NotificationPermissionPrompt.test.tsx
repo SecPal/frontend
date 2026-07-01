@@ -367,4 +367,39 @@ describe("NotificationPermissionPrompt", () => {
       screen.queryByText(/enable browser notifications/i)
     ).not.toBeInTheDocument();
   });
+
+  it("keeps the prompt chrome on canonical theme tokens", () => {
+    const { container } = renderWithI18n(<NotificationPermissionPrompt />);
+
+    const prompt = screen.getByRole("alert");
+    const heading = screen.getByRole("heading", {
+      name: /enable browser notifications/i,
+    });
+    const body = screen.getByText(
+      /turn on notifications for this signed-in browser/i
+    );
+    const dismiss = screen.getByRole("button", {
+      name: /dismiss notification prompt/i,
+    });
+    const bell = container.querySelector("svg.lucide-bell");
+
+    expect(prompt).toHaveClass(
+      "border-border",
+      "bg-card",
+      "text-card-foreground"
+    );
+    expect(heading).toHaveClass("text-foreground");
+    expect(body).toHaveClass("text-muted-foreground");
+    expect(dismiss).toHaveClass(
+      "text-muted-foreground",
+      "hover:text-foreground"
+    );
+    expect(bell).toHaveClass("text-primary");
+
+    expect(prompt.className).not.toContain("border-gray-200");
+    expect(prompt.className).not.toContain("bg-white");
+    expect(heading.className).not.toContain("text-gray-900");
+    expect(body.className).not.toContain("text-gray-600");
+    expect(dismiss.className).not.toContain("text-gray-400");
+  });
 });

@@ -14,6 +14,7 @@ import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { SectionSkeleton, Skeleton } from "@/ui";
+import { cn } from "@/lib/utils";
 import type {
   Employee,
   EmployeeEmergencyContact,
@@ -22,6 +23,7 @@ import type {
 import {
   Alert,
   AlertDescription,
+  AlertTitle,
   Button,
   Card,
   CardContent,
@@ -39,11 +41,11 @@ import {
   FieldError,
   FieldLabel,
   Input,
-  LinkButton,
-  PageText,
-  PageTitle,
-  StatusBadge as EmployeeStatusBadge,
-} from "./ui";
+  EmployeeLinkButton as LinkButton,
+  EmployeePageText as PageText,
+  EmployeePageTitle as PageTitle,
+  EmployeeStatusBadge,
+} from "@/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { formatDate, formatDateTime } from "../../lib/dateUtils";
 import {
@@ -169,7 +171,7 @@ function ProfileTab({ employee }: { employee: Employee }) {
             <Trans>ML</Trans> {employee.management_level}
           </span>
         ) : (
-          <span className="text-zinc-500 dark:text-zinc-400">
+          <span className="text-muted-foreground">
             <Trans>No management position</Trans>
           </span>
         )}
@@ -230,7 +232,7 @@ function ProfileTab({ employee }: { employee: Employee }) {
             </div>
             {onboardingInvitation.available === false &&
               onboardingInvitation.rule_message && (
-                <PageText className="text-sm text-zinc-500 dark:text-zinc-400">
+                <PageText className="text-muted-foreground text-sm">
                   {onboardingInvitation.rule_message}
                 </PageText>
               )}
@@ -272,6 +274,15 @@ type EditableContactField =
   "email" | "phone" | "postal_address" | "emergency_contacts";
 type EmployeeDetailTab =
   "profile" | "contacts" | "qualifications" | "documents" | "bwr";
+
+function detailTabClass(active: boolean) {
+  return cn(
+    "border-b-2 py-4 text-sm font-medium transition-colors",
+    active
+      ? "border-primary text-foreground"
+      : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+  );
+}
 
 function formatPostalAddress(employee: Employee): string | null {
   const structured = employee.structured_address?.trim();
@@ -353,7 +364,7 @@ function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
             type="button"
             aria-label={_(msg`Edit email`)}
             onClick={() => onEditField("email")}
-            className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+            className="text-muted-foreground hover:text-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
           >
             <SquarePen className="size-4" />
           </button>
@@ -370,7 +381,7 @@ function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
             type="button"
             aria-label={_(msg`Edit phone`)}
             onClick={() => onEditField("phone")}
-            className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+            className="text-muted-foreground hover:text-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
           >
             <SquarePen className="size-4" />
           </button>
@@ -384,7 +395,7 @@ function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
         {postalAddress ? (
           <span>{postalAddress}</span>
         ) : (
-          <PageText className="text-zinc-500 dark:text-zinc-400">
+          <PageText className="text-muted-foreground">
             <Trans>No postal address stored yet.</Trans>
           </PageText>
         )}
@@ -393,7 +404,7 @@ function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
             type="button"
             aria-label={_(msg`Edit postal address`)}
             onClick={() => onEditField("postal_address")}
-            className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+            className="text-muted-foreground hover:text-foreground opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
           >
             <SquarePen className="size-4" />
           </button>
@@ -413,7 +424,7 @@ function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
             ))}
           </ul>
         ) : (
-          <PageText className="text-zinc-500 dark:text-zinc-400">
+          <PageText className="text-muted-foreground">
             <Trans>No emergency contacts stored yet.</Trans>
           </PageText>
         )}
@@ -422,7 +433,7 @@ function ContactsTab({ employee, canManage, onEditField }: ContactsTabProps) {
             type="button"
             aria-label={_(msg`Edit emergency contacts`)}
             onClick={() => onEditField("emergency_contacts")}
-            className="mt-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+            className="text-muted-foreground hover:text-foreground mt-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
           >
             <SquarePen className="size-4" />
           </button>
@@ -476,7 +487,7 @@ function QualificationsTab({ employeeId }: { employeeId: string }) {
 
   if (qualifications.length === 0) {
     return (
-      <PageText className="text-zinc-500 dark:text-zinc-400">
+      <PageText className="text-muted-foreground">
         <Trans>No qualifications assigned</Trans>
       </PageText>
     );
@@ -489,11 +500,11 @@ function QualificationsTab({ employeeId }: { employeeId: string }) {
           <CardContent className="p-4">
             <div className="flex items-start justify-between">
               <div>
-                <PageText className="font-medium text-zinc-950 dark:text-zinc-50">
+                <PageText className="font-medium text-foreground">
                   {eq.qualification.name}
                 </PageText>
                 {eq.certificate_number && (
-                  <PageText className="text-sm text-zinc-500 dark:text-zinc-400">
+                  <PageText className="text-sm text-muted-foreground">
                     <Trans>Certificate:</Trans> {eq.certificate_number}
                   </PageText>
                 )}
@@ -501,7 +512,7 @@ function QualificationsTab({ employeeId }: { employeeId: string }) {
               <StatusBadge status={eq.status} />
             </div>
             {eq.expiry_date && (
-              <PageText className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+              <PageText className="mt-2 text-sm text-muted-foreground">
                 <Trans>Expires:</Trans> {eq.expiry_date}
               </PageText>
             )}
@@ -554,7 +565,7 @@ function DocumentsTab({ employeeId }: { employeeId: string }) {
 
   if (documents.length === 0) {
     return (
-      <PageText className="text-zinc-500 dark:text-zinc-400">
+      <PageText className="text-muted-foreground">
         <Trans>No documents uploaded</Trans>
       </PageText>
     );
@@ -567,10 +578,10 @@ function DocumentsTab({ employeeId }: { employeeId: string }) {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <PageText className="font-medium text-zinc-950 dark:text-zinc-50">
+                <PageText className="font-medium text-foreground">
                   {doc.filename}
                 </PageText>
-                <PageText className="text-sm text-zinc-500 dark:text-zinc-400">
+                <PageText className="text-sm text-muted-foreground">
                   {doc.document_type}
                 </PageText>
               </div>
@@ -596,9 +607,7 @@ function EmployeeDetailLoadingState({
   loadingLabel: string;
 }) {
   function tabClass(tab: EmployeeDetailTab) {
-    return activeTab === tab
-      ? "border-b-2 border-zinc-950 py-4 text-sm font-medium text-zinc-950 dark:border-white dark:text-white"
-      : "border-b-2 border-transparent py-4 text-sm font-medium text-zinc-500 dark:text-zinc-400";
+    return detailTabClass(activeTab === tab);
   }
 
   return (
@@ -610,7 +619,7 @@ function EmployeeDetailLoadingState({
       </div>
 
       <Card>
-        <div className="border-b border-zinc-200 p-6 dark:border-zinc-800">
+        <div className="border-b border-border p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <PageTitle>
@@ -625,7 +634,7 @@ function EmployeeDetailLoadingState({
           </div>
         </div>
 
-        <div className="border-b border-zinc-200 dark:border-zinc-800">
+        <div className="border-b border-border">
           <nav className="flex gap-6 px-6" aria-label="Tabs">
             <button type="button" disabled className={tabClass("profile")}>
               <Trans>Profile</Trans>
@@ -1029,11 +1038,11 @@ export function EmployeeDetail() {
   if (error || !employee) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Alert className="max-w-md border-red-200 bg-red-50 text-center text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
-          <PageTitle level={3} className="text-red-900 dark:text-red-200">
+        <Alert className="max-w-md border-destructive/30 bg-destructive/10 text-center text-foreground">
+          <AlertTitle className="text-destructive">
             <Trans>Error Loading Employee</Trans>
-          </PageTitle>
-          <AlertDescription className="text-red-700 dark:text-red-300">
+          </AlertTitle>
+          <AlertDescription className="text-destructive">
             {error || i18n._(msg`Employee not found`)}
           </AlertDescription>
           <div className="mt-4">
@@ -1066,11 +1075,11 @@ export function EmployeeDetail() {
       </div>
 
       <Card>
-        <div className="border-b border-zinc-200 p-6 dark:border-zinc-800">
+        <div className="border-b border-border p-6">
           <div className="flex items-start justify-between">
             <div>
               <PageTitle>{employee.full_name}</PageTitle>
-              <PageText className="text-zinc-500 dark:text-zinc-400">
+              <PageText className="text-muted-foreground">
                 {employee.employee_number}
               </PageText>
             </div>
@@ -1115,60 +1124,40 @@ export function EmployeeDetail() {
           </div>
         </div>
 
-        <div className="border-b border-zinc-200 dark:border-zinc-800">
+        <div className="border-b border-border">
           <nav className="flex gap-6 px-6" aria-label="Tabs">
             <button
               type="button"
               onClick={() => setSelectedTab("profile")}
-              className={
-                activeTab === "profile"
-                  ? "border-b-2 border-zinc-950 py-4 text-sm font-medium text-zinc-950 dark:border-white dark:text-white"
-                  : "border-b-2 border-transparent py-4 text-sm font-medium text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
-              }
+              className={detailTabClass(activeTab === "profile")}
             >
               <Trans>Profile</Trans>
             </button>
             <button
               type="button"
               onClick={() => setSelectedTab("contacts")}
-              className={
-                activeTab === "contacts"
-                  ? "border-b-2 border-zinc-950 py-4 text-sm font-medium text-zinc-950 dark:border-white dark:text-white"
-                  : "border-b-2 border-transparent py-4 text-sm font-medium text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
-              }
+              className={detailTabClass(activeTab === "contacts")}
             >
               <Trans>Contact</Trans>
             </button>
             <button
               type="button"
               onClick={() => setSelectedTab("qualifications")}
-              className={
-                activeTab === "qualifications"
-                  ? "border-b-2 border-zinc-950 py-4 text-sm font-medium text-zinc-950 dark:border-white dark:text-white"
-                  : "border-b-2 border-transparent py-4 text-sm font-medium text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
-              }
+              className={detailTabClass(activeTab === "qualifications")}
             >
               <Trans>Qualifications</Trans>
             </button>
             <button
               type="button"
               onClick={() => setSelectedTab("documents")}
-              className={
-                activeTab === "documents"
-                  ? "border-b-2 border-zinc-950 py-4 text-sm font-medium text-zinc-950 dark:border-white dark:text-white"
-                  : "border-b-2 border-transparent py-4 text-sm font-medium text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
-              }
+              className={detailTabClass(activeTab === "documents")}
             >
               <Trans>Documents</Trans>
             </button>
             <button
               type="button"
               onClick={() => setSelectedTab("bwr")}
-              className={
-                activeTab === "bwr"
-                  ? "border-b-2 border-zinc-950 py-4 text-sm font-medium text-zinc-950 dark:border-white dark:text-white"
-                  : "border-b-2 border-transparent py-4 text-sm font-medium text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
-              }
+              className={detailTabClass(activeTab === "bwr")}
             >
               <Trans>Bewacherregister</Trans>
             </button>
@@ -1283,7 +1272,7 @@ export function EmployeeDetail() {
                       return (
                         <div
                           key={`row-emergency-${index}`}
-                          className="space-y-2 rounded-md border border-zinc-200 p-3 dark:border-zinc-800"
+                          className="space-y-2 rounded-md border border-border p-3"
                         >
                           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                             <Field>

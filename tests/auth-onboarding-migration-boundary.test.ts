@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { cwd } from "node:process";
 import ts from "typescript";
@@ -18,6 +18,7 @@ const scopedEntries = [
   "src/ui",
   "src/pages/Auth",
   "src/pages/Login.tsx",
+  "src/pages/LoginMfaDialog.tsx",
   "src/pages/Onboarding",
   "src/components/onboarding-layout.tsx",
   "src/components/auth-layout.tsx",
@@ -27,9 +28,10 @@ const requiredCoveredPaths = [
   "src/ui/index.ts",
   "src/ui/primitives.tsx",
   "src/ui/styles.ts",
-  "src/pages/Auth/ui/index.ts",
   "src/pages/Login.tsx",
+  "src/pages/LoginMfaDialog.tsx",
   "src/pages/Onboarding/OnboardingComplete.tsx",
+  "src/pages/Onboarding/OnboardingSubmitted.tsx",
   "src/pages/Onboarding/OnboardingWizard.tsx",
   "src/components/onboarding-layout.tsx",
   "src/components/auth-layout.tsx",
@@ -75,12 +77,27 @@ const oldComponentWrapperPaths = new Set([
   "src/components/textarea",
 ]);
 
+const routeLocalPrimitivePaths = new Set([
+  "src/pages/Auth/ui",
+  "src/pages/Auth/ui/index",
+  "src/pages/Auth/ui/primitives",
+  "src/pages/Auth/ui/utils",
+  "src/pages/Onboarding/ui",
+  "src/pages/Onboarding/ui/index",
+  "src/pages/Onboarding/ui/primitives",
+  "src/pages/Onboarding/ui/utils",
+]);
+
 function toProjectPath(filePath: string) {
   return path.relative(projectRoot, filePath).replaceAll(path.sep, "/");
 }
 
 function listSourceFiles(entryPath: string): string[] {
   const absolutePath = path.resolve(projectRoot, entryPath);
+  if (!existsSync(absolutePath)) {
+    return [];
+  }
+
   const stat = statSync(absolutePath);
 
   if (stat.isFile()) {
@@ -167,6 +184,19 @@ function collectMigrationBoundaryViolations(sources: ScopedSource[]) {
           ];
         }
 
+        if (
+          resolvedImport &&
+          [...routeLocalPrimitivePaths].some(
+            (primitivePath) =>
+              resolvedImport === primitivePath ||
+              resolvedImport.startsWith(`${primitivePath}/`)
+          )
+        ) {
+          return [
+            `${source.path}: imports route-local primitive barrel ${moduleSpecifier}`,
+          ];
+        }
+
         return [];
       }
     );
@@ -199,6 +229,10 @@ describe("auth/onboarding migration boundary", () => {
         path: "src/pages/Onboarding/OnboardingComplete.tsx",
         content: "export { Input } from '../../components/input';",
       },
+      {
+        path: "src/pages/LoginMfaDialog.tsx",
+        content: "import { LoginDialog } from './Auth/ui';",
+      },
     ]);
 
     expect(violations).toEqual([
@@ -207,6 +241,7 @@ describe("auth/onboarding migration boundary", () => {
       "src/pages/Login.tsx: imports old component wrapper ../components/button",
       `src/pages/Login.tsx: imports forbidden package ${forbiddenHeadlessPackage}`,
       "src/pages/Onboarding/OnboardingComplete.tsx: imports old component wrapper ../../components/input",
+      "src/pages/LoginMfaDialog.tsx: imports route-local primitive barrel ./Auth/ui",
     ]);
     // REUSE-IgnoreEnd
   });

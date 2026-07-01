@@ -215,7 +215,12 @@ describe("EmployeeBwrPanel", () => {
       );
     });
     expect(onRefresh).toHaveBeenCalled();
-    expect(screen.getByRole("status")).toHaveTextContent("BWR status updated.");
+    const success = screen.getByRole("status");
+    expect(success).toHaveTextContent("BWR status updated.");
+    expect(success).toHaveAttribute("data-slot", "alert");
+    expect(success).toHaveClass("border-emerald-500/30", "bg-emerald-500/10");
+    expect(success).toHaveClass("text-foreground");
+    expect(success.className).not.toContain("text-emerald-700");
   });
 
   it("shows API validation errors on BWR fields with accessible invalid state", async () => {
@@ -270,11 +275,36 @@ describe("EmployeeBwrPanel", () => {
     ).toBeInTheDocument();
     expect(
       document.querySelector('[data-slot="employee-status-badge"]')
-    ).toHaveClass("dark:text-zinc-400");
-    expect(document.querySelector('[data-slot="ui-card"]')).toHaveClass(
-      "dark:bg-zinc-950"
+    ).toHaveClass("bg-muted", "text-muted-foreground");
+    expect(document.querySelector('[data-slot="card"]')).toHaveClass(
+      "bg-card",
+      "text-card-foreground"
     );
 
     i18n.activate("en");
+  });
+
+  it("keeps the BWR panel shell and feedback surfaces on canonical theme tokens", async () => {
+    renderPanel();
+
+    const heading = screen.getByRole("heading", { name: /bewacherregister/i });
+    const copy = screen.getByText(/manage the employee's bwr export/i);
+    expect(heading.closest("section")).toHaveClass("border-border");
+    expect(copy).toHaveClass("text-muted-foreground");
+
+    vi.mocked(employeeApi.exportEmployeeBwr).mockRejectedValueOnce(
+      new ApiError("Export failed", 500)
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /generate bwr export/i })
+    );
+
+    const error = await screen.findByText("Export failed");
+    expect(error.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+    expect(error.closest('[data-slot="alert"]')).toHaveClass("text-foreground");
   });
 });

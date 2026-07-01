@@ -27,12 +27,12 @@ import {
   Field,
   FieldGroup,
   FieldLabel,
-  FormCheckboxField,
+  CustomerSiteFormCheckboxField as FormCheckboxField,
   Input,
-  PageText,
-  PageTitle,
+  CustomerSitePageText as PageText,
+  CustomerSitePageTitle as PageTitle,
   Textarea,
-} from "../CustomerSites/ui";
+} from "@/ui";
 
 export default function CustomerEdit() {
   const { _ } = useLingui();
@@ -151,9 +151,11 @@ export default function CustomerEdit() {
       {isInitialLoading ? (
         <FormSkeleton loadingLabel={_(msg`Loading customer form`)} fields={8} />
       ) : error && !customer ? (
-        <PageText className="py-12 text-center text-red-600 dark:text-red-400">
-          {error}
-        </PageText>
+        <Alert className="mx-auto max-w-md border-destructive/30 bg-destructive/10 text-foreground">
+          <AlertDescription className="text-destructive">
+            {error}
+          </AlertDescription>
+        </Alert>
       ) : !customer ? (
         <PageText className="py-12 text-center">
           <Trans>Customer not found</Trans>
@@ -161,8 +163,10 @@ export default function CustomerEdit() {
       ) : (
         <>
           {error && (
-            <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
-              <AlertDescription>{error}</AlertDescription>
+            <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+              <AlertDescription className="text-destructive">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
 

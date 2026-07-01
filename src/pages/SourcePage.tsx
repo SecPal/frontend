@@ -86,13 +86,13 @@ export function SourcePage() {
   );
 
   return (
-    <main className="min-h-[var(--app-shell-min-height)] bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
+    <main className="min-h-[var(--app-shell-min-height)] bg-background text-foreground">
       <div className="mx-auto max-w-5xl px-4 pt-[calc(1.5rem+var(--app-safe-area-inset-top))] pb-10 sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-start justify-between gap-4 border-b border-zinc-200 pb-4 dark:border-zinc-800">
+        <div className="mb-6 flex items-start justify-between gap-4 border-b border-border pb-4">
           <div className="flex items-center gap-3">
             <Logo size="32" className="shrink-0" />
             <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
+              <p className="text-muted-foreground text-xs font-semibold uppercase tracking-[0.14em]">
                 SecPal
               </p>
               <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -116,7 +116,7 @@ export function SourcePage() {
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.85fr)]">
           <section className="space-y-6">
-            <Card className="rounded-2xl border-zinc-200 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <Card className="rounded-2xl border-border shadow-sm">
               <CardHeader className="space-y-3">
                 <CardTitle className="text-xl tracking-tight">
                   <Trans>Source code and license</Trans>
@@ -129,7 +129,7 @@ export function SourcePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
-                <p className="max-w-3xl text-sm leading-7 text-zinc-600 dark:text-zinc-300 sm:text-base">
+                <p className="text-muted-foreground max-w-3xl text-sm leading-7 sm:text-base">
                   <Trans>
                     SecPal is licensed under the GNU Affero General Public
                     License, version 3 or any later version. If you use this
@@ -161,7 +161,7 @@ export function SourcePage() {
 
             <Card
               aria-labelledby="source-repositories-heading"
-              className="rounded-2xl border-zinc-200 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+              className="rounded-2xl border-border bg-card shadow-sm"
             >
               <CardHeader>
                 <CardTitle
@@ -182,19 +182,19 @@ export function SourcePage() {
                 {SOURCE_REPOSITORIES.map((repository) => (
                   <article
                     key={repository.href}
-                    className="rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-950"
+                    className="rounded-xl border border-border bg-muted p-5"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-2">
-                        <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">
+                        <h3 className="text-foreground text-base font-semibold">
                           {repository.name}
                         </h3>
-                        <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                        <p className="text-muted-foreground text-sm leading-6">
                           {_(repository.description)}
                         </p>
                       </div>
                       <FolderGit2
-                        className="mt-0.5 size-5 shrink-0 text-zinc-400 dark:text-zinc-500"
+                        className="text-muted-foreground mt-0.5 size-5 shrink-0"
                         aria-hidden="true"
                       />
                     </div>
@@ -202,7 +202,7 @@ export function SourcePage() {
                       href={repository.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-zinc-950 underline decoration-zinc-300 underline-offset-4 hover:text-zinc-700 dark:text-zinc-50 dark:decoration-zinc-700 dark:hover:text-zinc-200"
+                      className="text-primary decoration-border mt-4 inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-primary/80"
                     >
                       <FileCode2 className="size-4" aria-hidden="true" />
                       <span>{repository.href}</span>
@@ -216,7 +216,7 @@ export function SourcePage() {
           <aside className="space-y-6">
             <Card
               aria-labelledby="source-notices-heading"
-              className="rounded-2xl shadow-sm dark:bg-zinc-900"
+              className="rounded-2xl border-border shadow-sm"
             >
               <CardHeader>
                 <CardTitle
@@ -227,10 +227,10 @@ export function SourcePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                <p className="text-muted-foreground text-sm leading-6">
                   <Trans>Copyright SecPal and contributors.</Trans>
                 </p>
-                <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                <p className="text-muted-foreground text-sm leading-6">
                   <Trans>
                     This program is free software: you can redistribute it
                     and/or modify it under the terms of the GNU Affero General
@@ -239,7 +239,7 @@ export function SourcePage() {
                     later version.
                   </Trans>
                 </p>
-                <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                <p className="text-muted-foreground text-sm leading-6">
                   <Trans>
                     This program is distributed without any warranty; without
                     even the implied warranty of merchantability or fitness for
@@ -251,7 +251,7 @@ export function SourcePage() {
 
             <Card
               aria-labelledby="source-links-heading"
-              className="rounded-2xl shadow-sm dark:bg-zinc-900"
+              className="rounded-2xl border-border shadow-sm"
             >
               <CardHeader>
                 <CardTitle
@@ -263,7 +263,7 @@ export function SourcePage() {
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="space-y-3">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-400">
+                  <h3 className="text-muted-foreground text-sm font-semibold uppercase tracking-[0.12em]">
                     <Trans>Project license files</Trans>
                   </h3>
                   <div className="space-y-2">
@@ -273,7 +273,7 @@ export function SourcePage() {
                         href={`${repository.href}/blob/main/LICENSE`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-between rounded-xl border border-zinc-200 px-4 py-3 text-sm font-medium text-zinc-950 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-950"
+                        className="border-border text-foreground hover:bg-muted flex items-center justify-between rounded-xl border px-4 py-3 text-sm font-medium"
                       >
                         <span>{repository.name} LICENSE</span>
                         <ExternalLink className="size-4" aria-hidden="true" />
@@ -283,14 +283,14 @@ export function SourcePage() {
                 </div>
 
                 <div className="space-y-3">
-                  <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-400">
+                  <h3 className="text-muted-foreground text-sm font-semibold uppercase tracking-[0.12em]">
                     <Trans>Issue tracker</Trans>
                   </h3>
                   <a
                     href="https://github.com/SecPal/frontend/issues"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between rounded-xl border border-zinc-200 px-4 py-3 text-sm font-medium text-zinc-950 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-950"
+                    className="border-border text-foreground hover:bg-muted flex items-center justify-between rounded-xl border px-4 py-3 text-sm font-medium"
                   >
                     <span>
                       <Trans>SecPal/frontend issues</Trans>

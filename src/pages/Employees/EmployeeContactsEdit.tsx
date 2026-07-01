@@ -22,14 +22,14 @@ import {
   Card,
   CardContent,
   Field,
-  Fieldset,
+  EmployeeFieldset as Fieldset,
   FieldGroup,
   FieldError,
   FieldLabel,
-  Legend,
+  EmployeeLegend as Legend,
   Input,
-  PageTitle,
-} from "./ui";
+  EmployeePageTitle as PageTitle,
+} from "@/ui";
 import { EmployeeAddressFields } from "./EmployeeAddressFields";
 import {
   employeeAddressToDraft,
@@ -228,7 +228,7 @@ export function EmployeeContactsEdit() {
           </Button>
         </div>
 
-        <Card className="dark:bg-zinc-900">
+        <Card>
           <CardContent className="p-6">
             <PageTitle className="mb-6">
               <Trans>Edit Contact Details</Trans>
@@ -258,8 +258,8 @@ export function EmployeeContactsEdit() {
         >
           <Trans>← Back to Employee</Trans>
         </Button>
-        <Alert className="border-red-200 bg-red-50 text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200">
-          <AlertDescription className="text-red-700 dark:text-red-200">
+        <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+          <AlertDescription className="text-destructive">
             {error ?? i18n._(msg`Failed to load employee`)}
           </AlertDescription>
         </Alert>
@@ -278,7 +278,7 @@ export function EmployeeContactsEdit() {
         </Button>
       </div>
 
-      <Card className="dark:bg-zinc-900">
+      <Card>
         <CardContent className="p-6">
           <PageTitle className="mb-6">
             <Trans>Edit Contact Details</Trans>
@@ -288,7 +288,7 @@ export function EmployeeContactsEdit() {
               <button
                 type="button"
                 onClick={() => navigate(`/employees/${id}`)}
-                className="block w-fit cursor-pointer border-0 bg-transparent p-0 text-left font-medium text-base/6 text-zinc-950 hover:text-zinc-950 sm:text-sm/6 dark:text-white dark:hover:text-white"
+                className="text-foreground block w-fit cursor-pointer border-0 bg-transparent p-0 text-left font-medium text-base/6 hover:text-foreground sm:text-sm/6"
               >
                 {employeeName}
               </button>
@@ -296,7 +296,7 @@ export function EmployeeContactsEdit() {
                 <button
                   type="button"
                   onClick={() => navigate(`/employees/${id}`)}
-                  className="block w-fit cursor-pointer border-0 bg-transparent p-0 text-left text-base/6 text-zinc-500 hover:text-zinc-500 sm:text-sm/6 dark:text-zinc-400 dark:hover:text-zinc-400"
+                  className="text-muted-foreground block w-fit cursor-pointer border-0 bg-transparent p-0 text-left text-base/6 hover:text-muted-foreground sm:text-sm/6"
                 >
                   {employeeNumber}
                 </button>
@@ -368,7 +368,7 @@ export function EmployeeContactsEdit() {
                   {emergencyContacts.map((contact, index) => (
                     <div
                       key={`edit-emergency-${index}`}
-                      className="space-y-3 rounded-lg border border-zinc-950/10 p-4 dark:border-white/10"
+                      className="space-y-3 rounded-lg border border-border p-4"
                     >
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div className="space-y-1">
@@ -575,8 +575,8 @@ export function EmployeeContactsEdit() {
             </Fieldset>
 
             {error && (
-              <Alert className="border-red-200 bg-red-50 text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-200">
-                <AlertDescription className="text-red-700 dark:text-red-200">
+              <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+                <AlertDescription className="text-destructive">
                   {error}
                 </AlertDescription>
               </Alert>

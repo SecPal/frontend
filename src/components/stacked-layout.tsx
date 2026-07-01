@@ -5,7 +5,7 @@
 
 import { Menu } from "lucide-react";
 import React, { useState } from "react";
-import { NavbarItem } from "@/ui";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/ui";
 import { Footer } from "./Footer";
 import { MobileSidebarDialog } from "./mobile-sidebar-dialog";
 
@@ -20,9 +20,11 @@ export function StackedLayout({
   const [showSidebar, setShowSidebar] = useState(false);
 
   return (
-    <div
-      data-slot="app-stacked-layout"
-      className="relative isolate flex min-h-[var(--app-shell-min-height)] w-full flex-col bg-white lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950"
+    <SidebarProvider
+      open={showSidebar}
+      onOpenChange={setShowSidebar}
+      data-layout="stacked"
+      className="bg-background relative isolate flex min-h-[var(--app-shell-min-height)] w-full flex-col"
     >
       <MobileSidebarDialog
         open={showSidebar}
@@ -33,18 +35,18 @@ export function StackedLayout({
 
       <header className="flex items-center px-4 pt-[var(--app-safe-area-inset-top)]">
         <div className="py-2.5 lg:hidden">
-          <NavbarItem
+          <SidebarTrigger
             onClick={() => setShowSidebar(true)}
             aria-label="Open navigation"
           >
             <Menu data-slot="icon" aria-hidden="true" />
-          </NavbarItem>
+          </SidebarTrigger>
         </div>
         <div className="min-w-0 flex-1">{navbar}</div>
       </header>
 
-      <main className="flex flex-1 flex-col">
-        <div className="flex flex-1 flex-col bg-white dark:bg-zinc-900">
+      <SidebarInset className="flex flex-1 flex-col">
+        <div className="bg-background flex flex-1 flex-col">
           <div className="grow p-6 lg:p-10">
             <div className="mx-auto max-w-6xl">{children}</div>
           </div>
@@ -53,7 +55,7 @@ export function StackedLayout({
 
           <Footer />
         </div>
-      </main>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

@@ -38,7 +38,7 @@ import {
   LoginShell,
   LoginSpinner,
   LoginStatusMessage,
-} from "./Auth/ui";
+} from "@/ui";
 
 const HEALTH_CHECK_RETRY_DELAYS_MS = [0, 1500, 5000];
 const TEMPORARY_LOGIN_UNAVAILABLE_MESSAGE =
@@ -178,13 +178,13 @@ function LoginMfaDialogLoader({
     }
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 p-4 backdrop-blur-sm">
-        <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-950">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+        <div className="bg-card text-card-foreground w-full max-w-md rounded-xl border border-border p-6 shadow-xl">
           <div className="space-y-4 text-center">
-            <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
+            <h2 className="text-foreground text-lg font-semibold">
               <Trans>Second factor required</Trans>
             </h2>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-muted-foreground text-sm">
               <Trans>
                 SecPal could not load the secure verification prompt. Retry to
                 continue your sign-in, or return to the login form.
@@ -211,11 +211,11 @@ function LoginMfaDialogLoader({
 
   if (isLoading || !Component) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/40 p-4 backdrop-blur-sm">
-        <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-zinc-950">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+        <div className="bg-card text-card-foreground w-full max-w-md rounded-xl border border-border p-6 shadow-xl">
           <div className="flex flex-col items-center gap-4 text-center">
             <LoginSpinner aria-label="Loading" />
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-muted-foreground text-sm">
               <Trans>Loading second factor prompt…</Trans>
             </p>
           </div>
@@ -807,7 +807,7 @@ export function Login() {
                   {!isLocked &&
                     remainingAttempts > 0 &&
                     remainingAttempts <= 3 && (
-                      <p className="mt-2 text-amber-700 dark:text-amber-400">
+                      <p className="mt-2 text-foreground">
                         <Trans id="login.remainingAttempts">
                           {remainingAttempts} attempt(s) remaining before
                           temporary lockout.
@@ -940,17 +940,17 @@ export function Login() {
           {isCompletingLogin ? (
             <div
               data-testid="login-completing"
-              className="absolute inset-0 flex items-center justify-center rounded-md bg-white/80 p-6 text-center backdrop-blur-sm dark:bg-zinc-950/80"
+              className="bg-background/80 absolute inset-0 flex items-center justify-center rounded-md p-6 text-center backdrop-blur-sm"
             >
               <div className="flex max-w-xs flex-col items-center gap-3">
                 {/* role="status" on LoginSpinner is the scoped live region for AT
                   announcements. aria-live must not be placed on the wider
                   container, which also holds static heading text. */}
                 <LoginSpinner aria-label={_(msg`Loading`)} />
-                <p className="text-sm font-bold text-zinc-950 dark:text-zinc-50">
+                <p className="text-foreground text-sm font-bold">
                   <Trans id="login.completing.title">Completing sign-in</Trans>
                 </p>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="text-muted-foreground text-sm">
                   <Trans id="login.completing.description">Please wait…</Trans>
                 </p>
               </div>
@@ -1009,7 +1009,7 @@ function LoginLanguageSwitcher() {
           void handleValueChange(event.target.value);
         }}
         aria-label={_(msg`Select language`)}
-        className="h-10 min-w-[7rem] rounded-md border border-zinc-300 bg-white px-3 text-sm text-zinc-950 shadow-xs outline-none transition focus-visible:border-blue-600 focus-visible:ring-2 focus-visible:ring-blue-600/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:focus-visible:border-blue-500 dark:focus-visible:ring-blue-500/20"
+        className="border-input bg-background text-foreground shadow-xs focus-visible:ring-ring/50 h-10 min-w-[7rem] rounded-md border px-3 text-sm outline-none transition focus-visible:border-ring focus-visible:ring-2"
       >
         {Object.entries(locales).map(([code, name]) => (
           <option key={code} value={code}>
@@ -1033,12 +1033,12 @@ function LoginLegalFooter() {
     // positioning so it cannot overlap the credential card on short landscape
     // viewports (≈320px tall) where the card itself fills most of the height.
     <footer className="mt-4 w-full max-w-sm pb-[env(safe-area-inset-bottom,0px)] text-center text-[11px]">
-      <div className="flex flex-col items-center gap-2 text-zinc-500 dark:text-zinc-400">
+      <div className="text-muted-foreground flex flex-col items-center gap-2">
         <a
           href="https://secpal.app"
           target="_blank"
           rel="noopener noreferrer"
-          className="font-semibold text-zinc-700 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white"
+          className="text-foreground hover:text-foreground/80 font-semibold"
         >
           <Trans>Powered by SecPal – A guard's best friend</Trans>
         </a>

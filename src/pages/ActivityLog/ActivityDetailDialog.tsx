@@ -5,6 +5,7 @@ import { useState, useEffect, type ComponentPropsWithoutRef } from "react";
 import { Trans } from "@lingui/react/macro";
 import {
   Alert,
+  AlertDescription,
   Badge,
   Button,
   Dialog,
@@ -76,7 +77,7 @@ function SectionHeading({
   return (
     <h3
       className={cn(
-        "mb-4 text-base font-semibold tracking-normal text-zinc-950 dark:text-zinc-50",
+        "text-foreground mb-4 text-base font-semibold tracking-normal",
         className
       )}
       {...props}
@@ -95,29 +96,18 @@ function DescriptionList(props: ComponentPropsWithoutRef<"dl">) {
 
 function DescriptionTerm(props: ComponentPropsWithoutRef<"dt">) {
   return (
-    <dt
-      className="text-sm font-medium text-zinc-600 dark:text-zinc-300"
-      {...props}
-    />
+    <dt className="text-muted-foreground text-sm font-medium" {...props} />
   );
 }
 
 function DescriptionDetails(props: ComponentPropsWithoutRef<"dd">) {
-  return (
-    <dd
-      className="min-w-0 text-sm text-zinc-950 dark:text-zinc-50"
-      {...props}
-    />
-  );
+  return <dd className="text-foreground min-w-0 text-sm" {...props} />;
 }
 
 function LogBadge({ className, ...props }: ComponentPropsWithoutRef<"span">) {
   return (
     <Badge
-      className={cn(
-        "bg-zinc-600/10 text-zinc-700 dark:bg-white/5 dark:text-zinc-400",
-        className
-      )}
+      className={cn("bg-muted text-muted-foreground", className)}
       {...props}
     />
   );
@@ -208,7 +198,7 @@ function ActivityDetailDialogContent({
                   <DescriptionDetails>
                     {activity.causer.name}{" "}
                     {activity.causer.email && (
-                      <span className="inline text-zinc-500 dark:text-zinc-400">
+                      <span className="text-muted-foreground inline">
                         ({activity.causer.email})
                       </span>
                     )}
@@ -223,7 +213,7 @@ function ActivityDetailDialogContent({
                   </DescriptionTerm>
                   <DescriptionDetails>
                     {activity.subject.name || activity.subject_type}
-                    <span className="ml-2 inline text-zinc-500 dark:text-zinc-400">
+                    <span className="text-muted-foreground ml-2 inline">
                       (ID: {activity.subject.id})
                     </span>
                   </DescriptionDetails>
@@ -250,14 +240,16 @@ function ActivityDetailDialogContent({
             </SectionHeading>
 
             {verifying && (
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="text-muted-foreground text-sm">
                 <Trans>Verifying...</Trans>
               </p>
             )}
 
             {verificationError && (
-              <Alert className="border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
-                {verificationError}
+              <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+                <AlertDescription className="text-destructive">
+                  {verificationError}
+                </AlertDescription>
               </Alert>
             )}
 
@@ -334,11 +326,11 @@ function ActivityDetailDialogContent({
                         <Trans>Orphaned Genesis</Trans>
                       </DescriptionTerm>
                       <DescriptionDetails>
-                        <Badge className="bg-yellow-400/20 text-yellow-700 dark:bg-yellow-400/10 dark:text-yellow-300">
+                        <Badge className="bg-muted text-muted-foreground">
                           <Trans>Yes</Trans>
                         </Badge>
                         {verification.details.orphaned_reason && (
-                          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                          <p className="text-muted-foreground mt-1 text-sm">
                             {verification.details.orphaned_reason}
                           </p>
                         )}
@@ -347,8 +339,8 @@ function ActivityDetailDialogContent({
                   )}
                 </DescriptionList>
 
-                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-md">
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                <div className="border-border bg-muted rounded-md border p-4">
+                  <p className="text-muted-foreground text-sm">
                     <Trans>
                       <strong>Hash Chain:</strong> Verifies the sequential
                       integrity of activity logs. "Pending" indicates the hash
@@ -374,7 +366,7 @@ function ActivityDetailDialogContent({
                 <SectionHeading>
                   <Trans>Additional Properties</Trans>
                 </SectionHeading>
-                <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-md">
+                <div className="border-border bg-muted rounded-md border p-4">
                   <pre className="text-xs overflow-auto">
                     {JSON.stringify(activity.properties, null, 2)}
                   </pre>

@@ -101,8 +101,25 @@ describe("CustomerDetail", () => {
     expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
     expect(screen.getByText("CUST-2025-001")).toBeInTheDocument();
     expect(screen.getByText("Teststrasse 42")).toBeInTheDocument();
-    expect(screen.getByText("80331 München")).toBeInTheDocument();
+    expect(screen.getByText("80331")).toBeInTheDocument();
+    expect(screen.getByText("München")).toBeInTheDocument();
     expect(screen.getByText("DE")).toBeInTheDocument();
+  });
+
+  it("renders postal code and city on separate billing-address lines", async () => {
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Postal Code")).toBeInTheDocument();
+    expect(screen.getByText("City")).toBeInTheDocument();
+    expect(screen.getByText("80331")).toBeInTheDocument();
+    expect(screen.getByText("München")).toBeInTheDocument();
+    expect(screen.queryByText("80331 München")).not.toBeInTheDocument();
   });
 
   it("displays contact information", async () => {
@@ -170,6 +187,49 @@ describe("CustomerDetail", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/This customer has 5 site/)).toBeInTheDocument();
+    });
+  });
+
+  it("prefers the loaded sites list over a stale zero sites_count", async () => {
+    vi.mocked(customersApi.getCustomer).mockResolvedValue({
+      ...mockCustomer,
+      sites_count: 0,
+      sites: [
+        {
+          id: "site-1",
+          customer_id: mockCustomer.id,
+          organizational_unit_id: "ou-1",
+          site_number: "OBJ-2025-0001",
+          name: "Alpha",
+          type: "permanent",
+          address: mockCustomer.billing_address,
+          is_active: true,
+          is_expired: false,
+          full_address: "Teststrasse 42, 80331 München, DE",
+          created_at: "2025-01-15T10:00:00Z",
+          updated_at: "2025-01-20T15:30:00Z",
+        },
+        {
+          id: "site-2",
+          customer_id: mockCustomer.id,
+          organizational_unit_id: "ou-1",
+          site_number: "OBJ-2025-0002",
+          name: "Beta",
+          type: "permanent",
+          address: mockCustomer.billing_address,
+          is_active: true,
+          is_expired: false,
+          full_address: "Teststrasse 42, 80331 München, DE",
+          created_at: "2025-01-15T10:00:00Z",
+          updated_at: "2025-01-20T15:30:00Z",
+        },
+      ],
+    });
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByText(/This customer has 2 site/)).toBeInTheDocument();
     });
   });
 
@@ -284,9 +344,21 @@ describe("CustomerDetail", () => {
 
     renderWithRouter();
 
-    await waitFor(() => {
-      expect(screen.getByText(/customer not found/i)).toBeInTheDocument();
-    });
+    const loadError = await screen.findByText(/customer not found/i);
+    expect(loadError).toBeInTheDocument();
+    expect(loadError.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+  });
+
+  it("keeps detail heading secondary text and destructive states on canonical theme tokens", async () => {
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+
+    renderWithRouter();
+
+    const customerNumber = await screen.findByText("CUST-2025-001");
+    expect(customerNumber).toHaveClass("text-muted-foreground");
   });
 
   it("displays error message on delete failure", async () => {

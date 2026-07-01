@@ -154,6 +154,24 @@ describe("EmployeeEdit", () => {
     );
   });
 
+  it("keeps edit load errors on canonical theme tokens", async () => {
+    vi.mocked(employeeApi.fetchEmployee).mockRejectedValueOnce(
+      new Error("Load failed")
+    );
+
+    renderWithProviders("emp-1");
+
+    const alert = await screen.findByText("Load failed");
+    const alertTitle = screen.getByText(/error loading employee/i);
+    expect(alert.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+    expect(alert.closest('[data-slot="alert"]')).toHaveClass("text-foreground");
+    expect(alertTitle).toHaveAttribute("data-slot", "alert-title");
+    expect(screen.queryByText("❌")).not.toBeInTheDocument();
+  });
+
   it("should prefill and update the current address", async () => {
     const mockUpdateEmployee = vi.mocked(employeeApi.updateEmployee);
     vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
@@ -745,6 +763,32 @@ describe("EmployeeEdit", () => {
           })
         );
       });
+    });
+
+    it("renders the leadership management level control with canonical shared input tokens", async () => {
+      renderWithProviders("emp-1");
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
+      });
+
+      fireEvent.click(screen.getByRole("switch"));
+
+      const managementLevelInput = screen.getByRole("spinbutton");
+      const control = managementLevelInput.parentElement;
+      const prefix = screen.getByText(/^ML$/);
+      const currentAddressHeading = screen.getByText("Current Address");
+
+      expect(managementLevelInput).toHaveClass(
+        "bg-background",
+        "text-foreground",
+        "placeholder:text-muted-foreground"
+      );
+      expect(control).toHaveClass("relative");
+      expect(prefix).toHaveClass("text-muted-foreground");
+      expect(currentAddressHeading).toHaveClass("text-foreground");
+      expect(control).not.toHaveClass("border-zinc-950/10", "dark:bg-white/5");
+      expect(currentAddressHeading.className).not.toContain("text-zinc-800");
     });
 
     it("should update employee to remove management level", async () => {

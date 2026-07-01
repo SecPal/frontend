@@ -13,16 +13,16 @@ import {
   type KeyboardEvent,
 } from "react";
 import {
-  AutocompleteListbox,
-  AutocompleteOption,
+  EmployeeAutocompleteListbox as AutocompleteListbox,
+  EmployeeAutocompleteOption as AutocompleteOption,
   Field,
   FieldDescription as Description,
   FieldError as ErrorMessage,
   FieldLabel as Label,
   Input,
-  CommandPopover,
+  EmployeeCommandPopover as CommandPopover,
   type CommandOption,
-} from "./ui";
+} from "@/ui";
 import type { PostalAddressDraft } from "../../lib/employeeAddresses";
 import {
   getCountrySelectOptions,
@@ -617,7 +617,7 @@ export function EmployeeAddressFields({
                   <span className="block font-medium">
                     {suggestion.postal_code}
                   </span>
-                  <span className="block text-zinc-500 dark:text-zinc-400">
+                  <span className="text-muted-foreground block">
                     {suggestion.locality}
                   </span>
                 </AutocompleteOption>
@@ -696,7 +696,7 @@ export function EmployeeAddressFields({
                   <span className="block font-medium">
                     {suggestion.locality}
                   </span>
-                  <span className="block text-zinc-500 dark:text-zinc-400">
+                  <span className="text-muted-foreground block">
                     {suggestion.postal_code}
                   </span>
                 </AutocompleteOption>
@@ -771,7 +771,7 @@ export function EmployeeAddressFields({
                   }}
                 >
                   <span className="block font-medium">{suggestion.name}</span>
-                  <span className="block text-zinc-500 dark:text-zinc-400">
+                  <span className="text-muted-foreground block">
                     {suggestion.postal_code} {suggestion.locality}
                   </span>
                 </AutocompleteOption>

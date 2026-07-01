@@ -1024,4 +1024,65 @@ describe("OnboardingResidentialAddressHistoryFields — user interactions", () =
       typeof lastArg === "function" ? lastArg(initialValue) : lastArg;
     expect(applied.previous_addresses[0]!.street).toBe("New Street");
   });
+
+  it("keeps the residential address helper sections on canonical theme tokens", () => {
+    const recent = localIsoDateWithDayOffset(-120);
+    const value = getResidentialAddressHistoryValue({
+      has_current_bewacher_id: "no",
+      current_address: {
+        street: "Example Street",
+        house_number: "1",
+        postal_code: "10115",
+        city: "Berlin",
+        supplement: "",
+        country: "DE",
+        resided_from: recent,
+        resided_until: "",
+      },
+      previous_addresses: [
+        {
+          street: "Old Street",
+          house_number: "2",
+          postal_code: "12345",
+          city: "Berlin",
+          supplement: "",
+          country: "DE",
+          resided_from: "2021-01-01",
+          resided_until: addCalendarDaysToIsoDate(recent, -1),
+        },
+      ],
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={value}
+          errors={{}}
+          readOnly={false}
+          onChange={() => {}}
+        />
+      </I18nProvider>
+    );
+
+    const currentAddressHeading = screen.getByRole("heading", {
+      name: /current residential address/i,
+    });
+    const bewacherQuestion = screen.getByText(
+      /do you currently have a bewacher id/i
+    );
+    const bewacherHeading = screen.getByRole("heading", {
+      name: /bewacher id/i,
+    });
+
+    expect(currentAddressHeading.closest("section")).toHaveClass(
+      "border-border",
+      "bg-muted"
+    );
+    expect(currentAddressHeading).toHaveClass("text-foreground");
+    expect(bewacherHeading.closest("section")).toHaveClass(
+      "border-border",
+      "bg-muted"
+    );
+    expect(bewacherQuestion).toHaveClass("text-foreground");
+  });
 });

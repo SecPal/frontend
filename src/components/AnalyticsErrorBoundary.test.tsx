@@ -113,6 +113,35 @@ describe("AnalyticsErrorBoundary", () => {
         screen.getByRole("button", { name: /refresh page/i })
       ).toBeInTheDocument();
     });
+
+    it("keeps the fallback shell on canonical theme tokens", () => {
+      render(
+        <AnalyticsErrorBoundary>
+          <ThrowError shouldThrow={true} />
+        </AnalyticsErrorBoundary>
+      );
+
+      const shell = screen.getByText("Something went wrong").closest("div")
+        ?.parentElement?.parentElement;
+      const panel = screen
+        .getByText("Something went wrong")
+        .closest("div")?.parentElement;
+      const heading = screen.getByText("Something went wrong");
+      const copy = screen.getByText(/we encountered an unexpected error/i);
+      const refresh = screen.getByRole("button", { name: /refresh page/i });
+
+      expect(shell).toHaveClass("bg-background");
+      expect(panel).toHaveClass("bg-card", "text-card-foreground");
+      expect(heading).toHaveClass("text-foreground");
+      expect(copy).toHaveClass("text-muted-foreground");
+      expect(refresh).toHaveClass("bg-primary", "text-primary-foreground");
+
+      expect(shell?.className).not.toContain("bg-gray-50");
+      expect(panel?.className).not.toContain("bg-white");
+      expect(heading.className).not.toContain("text-gray-900");
+      expect(copy.className).not.toContain("text-gray-600");
+      expect(refresh.className).not.toContain("bg-blue-600");
+    });
   });
 
   describe("error recovery", () => {

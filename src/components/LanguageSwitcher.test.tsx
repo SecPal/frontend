@@ -70,7 +70,7 @@ describe("LanguageSwitcher", () => {
     const select = screen.getByRole("combobox", { name: /select language/i });
     expect(select).toBeInTheDocument();
     expect(select).toHaveTextContent("English");
-    expect(select).toHaveAttribute("data-slot", "ui-select-trigger");
+    expect(select).toHaveAttribute("data-slot", "select-trigger");
   });
 
   it("changes locale when selection changes", async () => {
@@ -108,6 +108,12 @@ describe("LanguageSwitcher", () => {
     const errorMessage = await screen.findByRole("alert");
     expect(errorMessage).toBeInTheDocument();
     expect(errorMessage).toHaveTextContent(/failed to load locale/i);
+    expect(errorMessage).toHaveAttribute("data-slot", "alert");
+    expect(errorMessage).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+    expect(errorMessage.className).not.toContain("text-red-600");
   });
 
   it("displays generic error message for unknown errors", async () => {

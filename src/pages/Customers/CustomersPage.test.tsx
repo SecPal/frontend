@@ -32,6 +32,22 @@ const renderWithProviders = () => {
   );
 };
 
+function setViewportMatchesDesktop(matches: boolean) {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: vi.fn().mockImplementation(() => ({
+      matches,
+      media: "(min-width: 40rem)",
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+}
+
 const mockCustomers: Customer[] = [
   {
     id: "cust-1",
@@ -84,6 +100,7 @@ async function selectRadixOption(label: RegExp, optionName: RegExp) {
 describe("CustomersPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setViewportMatchesDesktop(true);
     vi.mocked(customersApi.listCustomers).mockResolvedValue(mockResponse);
     mockUseUserCapabilities.mockReturnValue({
       actions: {
@@ -101,6 +118,30 @@ describe("CustomersPage", () => {
       })
     ).toBeInTheDocument();
     expect(screen.getByText("C001")).toBeInTheDocument();
+  });
+
+  it("renders customers as mobile cards on narrow viewports", async () => {
+    setViewportMatchesDesktop(false);
+
+    renderWithProviders();
+
+    expect(await screen.findByText("Acme Corp")).toBeInTheDocument();
+    expect(screen.getByText("C001")).toBeInTheDocument();
+    expect(screen.getByText(/12345 Berlin/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /view acme corp/i })
+    ).toHaveAttribute("href", "/customers/cust-1");
+    expect(
+      screen.queryByRole("columnheader", { name: /customer number/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not claim zero sites when the list response has no reliable count", async () => {
+    renderWithProviders();
+
+    expect(await screen.findByText("Acme Corp")).toBeInTheDocument();
+    expect(screen.getAllByText("—")).not.toHaveLength(0);
+    expect(screen.queryByText(/^0$/)).not.toBeInTheDocument();
   });
 
   it("renders page chrome and table skeleton rows while initially loading", () => {
@@ -124,7 +165,7 @@ describe("CustomersPage", () => {
       screen.getByRole("status", { name: /loading customers table/i })
     ).toBeInTheDocument();
     expect(
-      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+      container.querySelectorAll('[data-slot="skeleton"]').length
     ).toBeGreaterThan(0);
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
@@ -256,6 +297,29 @@ describe("CustomersPage", () => {
 
     const newButton = screen.getByText(/new customer/i);
     expect(newButton.closest("a")).toHaveAttribute("href", "/customers/new");
+  });
+
+  it("keeps table feedback and pagination on canonical theme tokens", async () => {
+    vi.mocked(customersApi.listCustomers).mockRejectedValue(
+      new Error("API Error")
+    );
+
+    renderWithProviders();
+
+    const alert = await screen.findByText("API Error");
+    expect(alert).toHaveAttribute("data-slot", "alert-description");
+    expect(alert.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+    expect(alert.closest('[data-slot="alert"]')?.className).not.toContain(
+      "bg-red-50"
+    );
+
+    vi.mocked(customersApi.listCustomers).mockResolvedValueOnce({
+      data: mockCustomers,
+      meta: { current_page: 1, last_page: 2, per_page: 15, total: 16 },
+    });
   });
 
   it("hides the new customer CTA without create capability", async () => {

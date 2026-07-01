@@ -207,6 +207,60 @@ describe("ActivityLogList", () => {
     expect(screen.getByText("Engineering")).toBeInTheDocument();
   });
 
+  it("keeps activity log tables, cards, and badges on canonical theme tokens", async () => {
+    const media = mockMatchMedia(true);
+    const { container } = renderWithProviders();
+
+    await waitFor(() => {
+      expect(screen.getByText("User logged in")).toBeInTheDocument();
+    });
+
+    const heading = screen.getByRole("heading", { name: /activity logs/i });
+    const summary = screen.getByText(/showing 1 to 1 of 1 logs/i);
+    const autoRefreshLabel = screen.getByText(/auto-refresh \(30s\)/i);
+    const tableChrome = container.querySelector(
+      '[data-slot="activity-log-table-container"]'
+    );
+    const tableHead = container.querySelector("thead");
+    const descriptionHeader = screen.getByRole("columnheader", {
+      name: /description/i,
+    });
+    const row = screen.getByText("User logged in").closest("tr");
+    const badge = screen.getByText("default");
+    const systemlessCell = screen.getByText("John Doe");
+
+    expect(heading).toHaveClass("text-foreground");
+    expect(summary).toHaveClass("text-muted-foreground");
+    expect(autoRefreshLabel).toHaveClass("text-foreground");
+    expect(tableChrome).toHaveClass("border-border");
+    expect(tableHead).toHaveClass("bg-muted");
+    expect(descriptionHeader).toHaveClass("text-muted-foreground");
+    expect(row).toHaveClass("hover:bg-muted/50");
+    expect(systemlessCell).toHaveClass("text-foreground");
+    expect(badge).toHaveClass("bg-muted", "text-muted-foreground");
+
+    expect(heading.className).not.toContain("text-zinc-950");
+    expect(summary.className).not.toContain("text-zinc-600");
+    expect(autoRefreshLabel.className).not.toContain("text-zinc-700");
+    expect(tableChrome?.className).not.toContain("border-zinc-200");
+    expect(tableHead?.className).not.toContain("bg-zinc-50");
+    expect(descriptionHeader.className).not.toContain("text-zinc-600");
+    expect(row?.className).not.toContain("hover:bg-zinc-50");
+    expect(systemlessCell.className).not.toContain("text-zinc-950");
+    expect(badge.className).not.toContain("bg-zinc-600/10");
+
+    media.setMatches(false);
+    const mobileCard = await screen.findByRole("button", {
+      name: /user logged in/i,
+    });
+    expect(mobileCard).toHaveClass(
+      "border-border",
+      "bg-card",
+      "hover:bg-muted"
+    );
+    expect(mobileCard.className).not.toContain("bg-white");
+  });
+
   it("keeps filters and table headers visible during the initial load", () => {
     vi.mocked(activityLogApi.fetchActivityLogs).mockImplementation(
       () => new Promise(() => {}) // Never resolves
@@ -259,10 +313,16 @@ describe("ActivityLogList", () => {
 
     renderWithProviders();
 
-    await waitFor(() => {
-      // Component displays error.message directly
-      expect(screen.getByText(/network error/i)).toBeInTheDocument();
-    });
+    const fetchError = await screen.findByText(/network error/i);
+    expect(fetchError).toBeInTheDocument();
+    expect(fetchError).toHaveAttribute("data-slot", "alert-description");
+    expect(fetchError.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+    expect(fetchError.closest('[data-slot="alert"]')).toHaveClass(
+      "text-foreground"
+    );
   });
 
   it("should have search input with correct placeholder", async () => {

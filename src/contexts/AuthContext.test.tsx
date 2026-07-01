@@ -411,7 +411,9 @@ describe("AuthContext", () => {
         await new Promise((r) => setTimeout(r, 0));
       });
 
-      expect(resetPrefetchCache).toHaveBeenCalled();
+      await waitFor(() => {
+        expect(resetPrefetchCache).toHaveBeenCalled();
+      });
     });
 
     it("clears the prefetch cache when session:expired tears down the session", async () => {

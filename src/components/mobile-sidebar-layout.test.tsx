@@ -61,15 +61,25 @@ describe("mobile sidebar layouts", () => {
       expect(
         await screen.findByRole("dialog", { name: "Navigationsmenü" })
       ).toBeInTheDocument();
-      expect(
-        document.querySelector('[data-slot="app-mobile-sidebar-content"]')
-      ).toHaveClass("pt-[calc(0.5rem+var(--app-safe-area-inset-top))]");
+      expect(document.querySelector('[data-slot="sheet-content"]')).toHaveClass(
+        "pt-[calc(0.5rem+var(--app-safe-area-inset-top))]"
+      );
+      const mobilePanel = document.querySelector(
+        '[data-slot="sheet-content"] > div'
+      );
+      expect(mobilePanel).not.toBeNull();
+      expect(mobilePanel).toHaveClass("bg-background");
+      expect(mobilePanel?.className).not.toContain("bg-white");
+      expect(mobilePanel?.className).not.toContain("dark:bg-zinc-900");
       expect(
         screen.getByText("Hauptnavigation der Anwendung")
       ).toBeInTheDocument();
       expect(
         screen.getByRole("button", { name: "Navigation schließen" })
       ).toBeInTheDocument();
+      expect(document.querySelector('[data-slot="sheet-overlay"]')).toHaveClass(
+        "lg:hidden"
+      );
     }
   );
 });

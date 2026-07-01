@@ -22,24 +22,49 @@ import {
   Field,
   FieldLabel,
   Input,
-  LinkButton,
-  PageLink,
-  PageText,
-  PageTitle,
+  CustomerSiteLinkButton as LinkButton,
+  CustomerSitePageLink as PageLink,
+  CustomerSitePageText as PageText,
+  CustomerSitePageTitle as PageTitle,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  StatusBadge,
+  CustomerSiteStatusBadge as StatusBadge,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "../CustomerSites/ui";
+} from "@/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
+
+const CUSTOMERS_DESKTOP_MEDIA_QUERY = "(min-width: 40rem)";
+
+function readUseDesktopTable(): boolean {
+  if (
+    typeof window === "undefined" ||
+    typeof window.matchMedia !== "function"
+  ) {
+    return true;
+  }
+
+  return window.matchMedia(CUSTOMERS_DESKTOP_MEDIA_QUERY).matches;
+}
+
+function getCustomerSitesSummary(customer: Customer): string {
+  if (Array.isArray(customer.sites)) {
+    return String(customer.sites.length);
+  }
+
+  if (typeof customer.sites_count === "number" && customer.sites_count > 0) {
+    return String(customer.sites_count);
+  }
+
+  return "—";
+}
 
 function CustomerTableSkeletonRows({
   columns,
@@ -81,6 +106,28 @@ export default function CustomersPage() {
     per_page: 15,
     total: 0,
   });
+  const [useDesktopTable, setUseDesktopTable] = useState(readUseDesktopTable);
+
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      typeof window.matchMedia !== "function"
+    ) {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia(CUSTOMERS_DESKTOP_MEDIA_QUERY);
+    const updateLayout = () => {
+      setUseDesktopTable(mediaQuery.matches);
+    };
+
+    updateLayout();
+    mediaQuery.addEventListener("change", updateLayout);
+
+    return () => {
+      mediaQuery.removeEventListener("change", updateLayout);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -193,8 +240,10 @@ export default function CustomersPage() {
 
       {/* Error State */}
       {error && (
-        <Alert className="border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
-          <AlertDescription>{error}</AlertDescription>
+        <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+          <AlertDescription className="text-destructive">
+            {error}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -203,82 +252,173 @@ export default function CustomersPage() {
         loading={loading}
         loadingLabel={_(msg`Loading customers table`)}
       >
-        <DataTable>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableHeader>
-                  <Trans>Customer Number</Trans>
-                </TableHeader>
-                <TableHeader>
-                  <Trans>Name</Trans>
-                </TableHeader>
-                <TableHeader>
-                  <Trans>Contact</Trans>
-                </TableHeader>
-                <TableHeader>
-                  <Trans>Sites</Trans>
-                </TableHeader>
-                <TableHeader>
-                  <Trans>Status</Trans>
-                </TableHeader>
-                <TableHeader>
-                  <Trans>Actions</Trans>
-                </TableHeader>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading && customers.length === 0 ? (
-                <CustomerTableSkeletonRows columns={6} rows={5} />
-              ) : null}
-
-              {customers.map((customer) => (
-                <TableRow key={customer.id}>
-                  <TableCell className="font-medium">
-                    {customer.customer_number}
-                  </TableCell>
-                  <TableCell>{customer.name}</TableCell>
-                  <TableCell className="text-zinc-500 dark:text-zinc-400">
-                    {customer.contact?.email || "-"}
-                  </TableCell>
-                  <TableCell className="text-zinc-500 dark:text-zinc-400">
-                    {customer.sites_count || 0}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge color={customer.is_active ? "lime" : "zinc"}>
-                      {customer.is_active ? (
-                        <Trans>Active</Trans>
-                      ) : (
-                        <Trans>Inactive</Trans>
-                      )}
-                    </StatusBadge>
-                  </TableCell>
-                  <TableCell>
-                    <PageLink to={`/customers/${customer.id}`}>
-                      <Eye className="inline size-4" aria-hidden="true" />{" "}
-                      <Trans>View</Trans>
-                    </PageLink>
-                  </TableCell>
-                </TableRow>
-              ))}
-
-              {!loading && customers.length === 0 ? (
+        {useDesktopTable ? (
+          <DataTable>
+            <Table>
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={6} className="py-12 text-center">
-                    <PageText className="text-zinc-500 dark:text-zinc-400">
-                      <Trans>No customers found</Trans>
-                    </PageText>
-                  </TableCell>
+                  <TableHeader>
+                    <Trans>Customer Number</Trans>
+                  </TableHeader>
+                  <TableHeader>
+                    <Trans>Name</Trans>
+                  </TableHeader>
+                  <TableHeader>
+                    <Trans>Contact</Trans>
+                  </TableHeader>
+                  <TableHeader>
+                    <Trans>Sites</Trans>
+                  </TableHeader>
+                  <TableHeader>
+                    <Trans>Status</Trans>
+                  </TableHeader>
+                  <TableHeader>
+                    <Trans>Actions</Trans>
+                  </TableHeader>
                 </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
-        </DataTable>
+              </TableHead>
+              <TableBody>
+                {loading && customers.length === 0 ? (
+                  <CustomerTableSkeletonRows columns={6} rows={5} />
+                ) : null}
+
+                {customers.map((customer) => (
+                  <TableRow key={customer.id}>
+                    <TableCell className="font-medium">
+                      {customer.customer_number}
+                    </TableCell>
+                    <TableCell>{customer.name}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {customer.contact?.email || "-"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {getCustomerSitesSummary(customer)}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge color={customer.is_active ? "lime" : "zinc"}>
+                        {customer.is_active ? (
+                          <Trans>Active</Trans>
+                        ) : (
+                          <Trans>Inactive</Trans>
+                        )}
+                      </StatusBadge>
+                    </TableCell>
+                    <TableCell>
+                      <PageLink to={`/customers/${customer.id}`}>
+                        <Eye className="inline size-4" aria-hidden="true" />{" "}
+                        <Trans>View</Trans>
+                      </PageLink>
+                    </TableCell>
+                  </TableRow>
+                ))}
+
+                {!loading && customers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-12 text-center">
+                      <PageText className="text-muted-foreground">
+                        <Trans>No customers found</Trans>
+                      </PageText>
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
+          </DataTable>
+        ) : (
+          <div className="space-y-3">
+            {loading && customers.length === 0
+              ? Array.from({ length: 5 }, (_, index) => (
+                  <div
+                    key={index}
+                    className="rounded-md border border-border bg-card p-4"
+                    aria-hidden="true"
+                  >
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="mt-3 h-5 w-40" />
+                    <Skeleton className="mt-2 h-4 w-32" />
+                    <Skeleton className="mt-4 h-9 w-24" />
+                  </div>
+                ))
+              : null}
+
+            {customers.map((customer) => (
+              <div
+                key={customer.id}
+                className="rounded-md border border-border bg-card p-4"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                      {customer.customer_number}
+                    </p>
+                    <p className="text-foreground mt-1 text-sm font-semibold">
+                      {customer.name}
+                    </p>
+                  </div>
+                  <StatusBadge color={customer.is_active ? "lime" : "zinc"}>
+                    {customer.is_active ? (
+                      <Trans>Active</Trans>
+                    ) : (
+                      <Trans>Inactive</Trans>
+                    )}
+                  </StatusBadge>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">
+                      <Trans>Contact</Trans>
+                    </p>
+                    <p className="text-foreground break-words">
+                      {customer.contact?.email || "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">
+                      <Trans>Sites</Trans>
+                    </p>
+                    <p className="text-foreground">
+                      {getCustomerSitesSummary(customer)}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">
+                      <Trans>Billing Address</Trans>
+                    </p>
+                    <p className="text-foreground break-words">
+                      {customer.billing_address.postal_code}{" "}
+                      {customer.billing_address.city}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <LinkButton
+                    to={`/customers/${customer.id}`}
+                    variant="outline"
+                    aria-label={_(msg`View ${customer.name}`)}
+                  >
+                    <Eye className="size-4" aria-hidden="true" />
+                    <Trans>View</Trans>
+                  </LinkButton>
+                </div>
+              </div>
+            ))}
+
+            {!loading && customers.length === 0 ? (
+              <div className="rounded-md border border-border bg-card px-4 py-12 text-center">
+                <PageText className="text-muted-foreground">
+                  <Trans>No customers found</Trans>
+                </PageText>
+              </div>
+            ) : null}
+          </div>
+        )}
       </LoadingRegion>
 
       {/* Pagination */}
       {pagination.last_page > 1 && (
-        <div className="mt-6 flex items-center justify-between rounded-md border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 sm:px-6">
+        <div className="bg-card mt-6 flex items-center justify-between rounded-md border border-border px-4 py-3 sm:px-6">
           <div className="flex-1 flex justify-between sm:hidden">
             <Button
               onClick={() => handlePageChange(pagination.current_page - 1)}

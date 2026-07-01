@@ -125,6 +125,57 @@ describe("ActivityDetailDialog", () => {
     expect(screen.getByText("Engineering")).toBeInTheDocument();
   });
 
+  it("keeps detail descriptions, badges, and verification callouts on canonical theme tokens", async () => {
+    const onClose = vi.fn();
+    renderWithProviders({ activity: mockActivity, open: true, onClose });
+
+    await waitFor(() => {
+      expect(screen.getByText("User logged in")).toBeInTheDocument();
+    });
+
+    const sectionHeading = screen.getByRole("heading", {
+      name: /activity information/i,
+    });
+    const logBadge = screen.getByText("default");
+    const causerEmail = screen.getByText(/\(john@secpal\.dev\)/i);
+    const helpCallout = screen.getByText(/hash chain:/i).closest("div");
+    const propertiesCallout = screen
+      .getByText(/"ip": "192\.168\.1\.1"/i)
+      .closest("div");
+
+    expect(sectionHeading).toHaveClass("text-foreground");
+    expect(logBadge).toHaveClass("bg-muted", "text-muted-foreground");
+    expect(causerEmail).toHaveClass("text-muted-foreground");
+    expect(helpCallout).toHaveClass("border-border", "bg-muted");
+    expect(propertiesCallout).toHaveClass("border-border", "bg-muted");
+
+    expect(sectionHeading.className).not.toContain("text-zinc-950");
+    expect(logBadge.className).not.toContain("bg-zinc-600/10");
+    expect(causerEmail.className).not.toContain("text-zinc-500");
+    expect(helpCallout?.className).not.toContain("bg-zinc-50");
+    expect(propertiesCallout?.className).not.toContain("bg-zinc-50");
+  });
+
+  it("keeps orphaned-genesis badges on canonical theme tokens", async () => {
+    vi.mocked(activityLogApi.verifyActivityLog).mockResolvedValue({
+      data: {
+        ...mockVerification,
+        details: {
+          ...mockVerification.details,
+          is_orphaned_genesis: true,
+          orphaned_reason: "Merkle proof no longer matches canonical batch.",
+        },
+      },
+    });
+
+    const onClose = vi.fn();
+    renderWithProviders({ activity: mockActivity, open: true, onClose });
+
+    const orphanedBadge = await screen.findByText(/^yes$/i);
+    expect(orphanedBadge).toHaveClass("bg-muted", "text-muted-foreground");
+    expect(orphanedBadge.className).not.toContain("bg-amber-500/10");
+  });
+
   it("should fetch verification on open", async () => {
     const onClose = vi.fn();
     renderWithProviders({ activity: mockActivity, open: true, onClose });
@@ -208,9 +259,16 @@ describe("ActivityDetailDialog", () => {
     const onClose = vi.fn();
     renderWithProviders({ activity: mockActivity, open: true, onClose });
 
-    await waitFor(() => {
-      expect(screen.getByText(/verification failed/i)).toBeInTheDocument();
-    });
+    const verificationError = await screen.findByText(/verification failed/i);
+    expect(verificationError).toBeInTheDocument();
+    expect(verificationError).toHaveAttribute("data-slot", "alert-description");
+    expect(verificationError.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+    expect(verificationError.closest('[data-slot="alert"]')).toHaveClass(
+      "text-foreground"
+    );
   });
 
   it("should display event hash", async () => {

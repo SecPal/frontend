@@ -9,7 +9,7 @@ import {
   NotificationDeploymentUnavailableError,
   useNotifications,
 } from "@/hooks/useNotifications";
-import { Button } from "@/ui";
+import { Alert, AlertDescription, Button } from "@/ui";
 import { getNotificationInstallationsErrorMessage } from "./notificationInstallationsErrorMessage";
 
 type NotificationStatusTone = "blue" | "green" | "yellow" | "red";
@@ -19,33 +19,29 @@ interface NotificationStatusCopy {
   message: string;
 }
 
-function getStatusClasses(tone: NotificationStatusTone): string {
-  switch (tone) {
-    case "green":
-      return "rounded-lg bg-green-50 p-4 dark:bg-green-950/10";
-    case "yellow":
-      return "rounded-lg bg-yellow-50 p-4 dark:bg-yellow-950/10";
-    case "red":
-      return "rounded-lg bg-red-50 p-4 dark:bg-red-950/10";
-    case "blue":
-    default:
-      return "rounded-lg bg-blue-50 p-4 dark:bg-blue-950/10";
-  }
-}
-
-function getStatusTextClasses(tone: NotificationStatusTone): string {
-  switch (tone) {
-    case "green":
-      return "text-green-800 dark:text-green-200";
-    case "yellow":
-      return "text-yellow-800 dark:text-yellow-200";
-    case "red":
-      return "text-red-800 dark:text-red-200";
-    case "blue":
-    default:
-      return "text-blue-800 dark:text-blue-200";
-  }
-}
+const notificationStatusStyles: Record<
+  NotificationStatusTone,
+  { alertClassName: string; descriptionClassName: string }
+> = {
+  blue: {
+    alertClassName: "rounded-lg border border-primary/30 bg-primary/10 p-4",
+    descriptionClassName: "text-primary",
+  },
+  green: {
+    alertClassName:
+      "rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4",
+    descriptionClassName: "text-foreground",
+  },
+  yellow: {
+    alertClassName: "rounded-lg border border-amber-500/30 bg-amber-500/10 p-4",
+    descriptionClassName: "text-foreground",
+  },
+  red: {
+    alertClassName:
+      "rounded-lg border border-destructive/30 bg-destructive/10 p-4",
+    descriptionClassName: "text-destructive",
+  },
+};
 
 function getNotificationStatusCopy(
   permission: "default" | "granted" | "denied",
@@ -137,6 +133,7 @@ export function NotificationPreferences() {
   const [isEnabling, setIsEnabling] = useState(false);
 
   const status = getNotificationStatusCopy(permission, isSupported, error, _);
+  const statusStyles = notificationStatusStyles[status.tone];
   const rolloutExpectations = [
     _(
       msg`Category-specific notification preferences are not available yet. SecPal currently manages browser notifications at the browser and deployment level.`
@@ -195,10 +192,10 @@ export function NotificationPreferences() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div className="space-y-2">
-          <h3 className="text-xl/7 font-semibold tracking-normal text-zinc-950 dark:text-white">
+          <h3 className="text-foreground text-xl/7 font-semibold tracking-normal">
             <Trans>Browser Notifications</Trans>
           </h3>
-          <p className="text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
+          <p className="text-muted-foreground text-base/6 sm:text-sm/6">
             <Trans>
               SecPal only exposes backend-backed browser delivery state here. It
               does not offer category-by-category notification controls yet.
@@ -212,19 +209,22 @@ export function NotificationPreferences() {
         ) : null}
       </div>
 
-      <div className={getStatusClasses(status.tone)}>
-        <p
-          className={`text-base/6 sm:text-sm/6 ${getStatusTextClasses(status.tone)}`}
+      <Alert
+        role={status.tone === "red" ? "alert" : "status"}
+        className={statusStyles.alertClassName}
+      >
+        <AlertDescription
+          className={`mt-0 text-base/6 sm:text-sm/6 ${statusStyles.descriptionClassName}`}
         >
           {status.message}
-        </p>
-      </div>
+        </AlertDescription>
+      </Alert>
 
       {permission === "default" && isSupported ? (
         <Button
           onClick={handleEnableNotifications}
           disabled={isEnabling}
-          className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700"
+          className="bg-primary text-primary-foreground hover:bg-primary/90"
         >
           {isEnabling ? (
             <Trans>Enabling...</Trans>
@@ -234,11 +234,11 @@ export function NotificationPreferences() {
         </Button>
       ) : null}
 
-      <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
-        <h4 className="text-lg/7 font-semibold tracking-normal text-zinc-950 dark:text-white">
+      <div className="rounded-lg border border-border p-4">
+        <h4 className="text-foreground text-lg/7 font-semibold tracking-normal">
           <Trans>Rollout Expectations</Trans>
         </h4>
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-zinc-600 dark:text-zinc-300">
+        <ul className="text-muted-foreground mt-3 list-disc space-y-2 pl-5 text-sm">
           {rolloutExpectations.map((item, index) => (
             <li key={index}>{item}</li>
           ))}

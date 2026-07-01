@@ -46,7 +46,6 @@ import {
   getOnboardingStepState,
   isOnboardingAwaitingHrReview,
 } from "./onboardingWizardState";
-import { FormSkeleton, Skeleton } from "@/ui";
 import {
   OnboardingResidentialAddressHistoryFields,
   type ResidentialAddressHistoryChange,
@@ -58,6 +57,7 @@ import {
 import {
   Alert,
   AlertDescription,
+  AlertTitle,
   Badge,
   Button,
   Card,
@@ -66,20 +66,22 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  Checkbox as UiCheckbox,
-  CommandPopover,
   Field as UiField,
   FieldDescription as UiFieldDescription,
   FieldError as UiFieldError,
   FieldGroup as UiFieldGroup,
   FieldLabel as UiFieldLabel,
+  FormSkeleton,
   Input as UiInput,
-  Progress,
-  RadioGroup as UiRadioGroup,
-  RadioGroupItem as UiRadioGroupItem,
-  Select as UiSelect,
+  OnboardingCheckbox as UiCheckbox,
+  OnboardingCommandPopover as CommandPopover,
+  OnboardingProgress as Progress,
+  OnboardingRadioGroup as UiRadioGroup,
+  OnboardingRadioGroupItem as UiRadioGroupItem,
+  OnboardingSelect as UiSelect,
+  Skeleton,
   Textarea as UiTextarea,
-} from "./ui";
+} from "@/ui";
 
 interface OnboardingSchemaArrayItems {
   enum?: Array<string | number>;
@@ -1181,7 +1183,7 @@ function ProgressIndicator({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-4 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+      <div className="flex items-center justify-between gap-4 text-sm font-medium text-muted-foreground">
         <span>
           <Trans>
             Step {currentStep} of {totalSteps}
@@ -1208,7 +1210,7 @@ function OnboardingWizardFrame({
 }) {
   return (
     <div className="mx-auto max-w-4xl">
-      <section className="rounded-md border border-zinc-200 bg-white text-zinc-950 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50">
+      <section className="rounded-md border border-border bg-card text-card-foreground shadow-sm">
         <CardHeader>
           <CardTitle>
             <Trans>Welcome to SecPal Onboarding</Trans>
@@ -1515,7 +1517,7 @@ function SchemaFieldRenderer({
               <div>
                 <span
                   id={`${fieldId}-label`}
-                  className="text-sm font-medium text-zinc-950 dark:text-zinc-50"
+                  className="text-sm font-medium text-foreground"
                 >
                   {title}
                   <RequiredMarker show={showRequiredMarker} />
@@ -1605,7 +1607,7 @@ function OnboardingStepsOverview({ steps }: { steps: OnboardingStep[] }) {
   const optionalSteps = steps.filter((step) => !step.is_required);
 
   return (
-    <Card className="mb-8 bg-zinc-50 shadow-none dark:bg-zinc-950/40">
+    <Card className="mb-8 bg-muted shadow-none">
       <CardHeader>
         <CardTitle>
           <Trans>Before you begin</Trans>
@@ -1625,7 +1627,7 @@ function OnboardingStepsOverview({ steps }: { steps: OnboardingStep[] }) {
                 <Trans>Required information</Trans>
               </Badge>
             </div>
-            <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-700 dark:text-zinc-300">
+            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
               {requiredSteps.map((step) => (
                 <li key={step.template_id}>
                   {_(msg`Step ${step.step_number}: ${step.title}`)}
@@ -1638,11 +1640,11 @@ function OnboardingStepsOverview({ steps }: { steps: OnboardingStep[] }) {
         {optionalSteps.length > 0 ? (
           <section aria-label={_(msg`Optional sections`)}>
             <div className="mb-2 flex items-center gap-2">
-              <Badge className="bg-white dark:bg-zinc-900">
+              <Badge className="bg-background">
                 <Trans>Optional sections</Trans>
               </Badge>
             </div>
-            <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-700 dark:text-zinc-300">
+            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
               {optionalSteps.map((step) => (
                 <li key={step.template_id}>
                   {_(msg`Step ${step.step_number}: ${step.title}`)}
@@ -1652,11 +1654,11 @@ function OnboardingStepsOverview({ steps }: { steps: OnboardingStep[] }) {
           </section>
         ) : null}
 
-        <section className="border-t border-zinc-200 pt-4 dark:border-zinc-700">
-          <div className="mb-1 text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+        <section className="border-t border-border pt-4">
+          <div className="mb-1 text-sm font-semibold text-foreground">
             <Trans>Supporting documents</Trans>
           </div>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-muted-foreground">
             <Trans>
               Document uploads are only shown where a specific document is
               required for the current onboarding step.
@@ -1701,7 +1703,7 @@ function StepNavigation({
     <CardFooter
       role="navigation"
       aria-label={_(msg`Onboarding step navigation`)}
-      className="mt-8 flex-col items-stretch justify-between gap-3 border-t border-zinc-200 p-0 pt-6 sm:flex-row sm:items-center dark:border-zinc-800"
+      className="mt-8 flex-col items-stretch justify-between gap-3 border-t border-border p-0 pt-6 sm:flex-row sm:items-center"
     >
       <div>
         {!isFirstStep && (
@@ -3456,15 +3458,15 @@ export function OnboardingWizard() {
         role={entryFeedback.tone === "error" ? "alert" : "status"}
         className={
           entryFeedback.tone === "error"
-            ? "mb-6 border-red-200 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30"
-            : "mb-6 border-emerald-200 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+            ? "mb-6 border-destructive/30 bg-destructive/10"
+            : "mb-6 border-emerald-500/30 bg-emerald-500/10"
         }
       >
         <AlertDescription
           className={
             entryFeedback.tone === "error"
-              ? "text-red-800 dark:text-red-200"
-              : "text-emerald-800 dark:text-emerald-200"
+              ? "text-destructive"
+              : "text-foreground"
           }
         >
           {entryFeedback.message}
@@ -3491,9 +3493,9 @@ export function OnboardingWizard() {
           tabIndex={-1}
           role="alert"
           aria-live="assertive"
-          className="border-red-200 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30"
+          className="border-destructive/30 bg-destructive/10"
         >
-          <AlertDescription className="text-red-800 dark:text-red-200">
+          <AlertDescription className="text-destructive">
             {error}
           </AlertDescription>
         </Alert>
@@ -3504,7 +3506,7 @@ export function OnboardingWizard() {
   if (!template && steps.length === 0) {
     return (
       <Card className="mx-auto max-w-4xl">
-        <CardContent className="p-6 text-sm text-zinc-600 dark:text-zinc-300">
+        <CardContent className="p-6 text-sm text-muted-foreground">
           <Trans>No onboarding steps are available right now.</Trans>
         </CardContent>
       </Card>
@@ -3513,7 +3515,7 @@ export function OnboardingWizard() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <section className="rounded-md border border-zinc-200 bg-white text-zinc-950 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50">
+      <section className="rounded-md border border-border bg-card text-card-foreground shadow-sm">
         <CardHeader>
           <CardTitle>
             <Trans>Welcome to SecPal Onboarding</Trans>
@@ -3535,15 +3537,15 @@ export function OnboardingWizard() {
               aria-atomic="true"
               className={
                 feedback.tone === "error"
-                  ? "mb-6 border-red-200 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30"
-                  : "mb-6 border-emerald-200 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+                  ? "mb-6 border-destructive/30 bg-destructive/10"
+                  : "mb-6 border-emerald-500/30 bg-emerald-500/10"
               }
             >
               <AlertDescription
                 className={
                   feedback.tone === "error"
-                    ? "text-red-800 dark:text-red-200"
-                    : "text-emerald-800 dark:text-emerald-200"
+                    ? "text-destructive"
+                    : "text-foreground"
                 }
               >
                 {feedback.message}
@@ -3556,9 +3558,9 @@ export function OnboardingWizard() {
               tabIndex={-1}
               role="alert"
               aria-live="assertive"
-              className="mb-6 border-red-200 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30"
+              className="mb-6 border-destructive/30 bg-destructive/10"
             >
-              <AlertDescription className="text-red-800 dark:text-red-200">
+              <AlertDescription className="text-destructive">
                 {error}
               </AlertDescription>
             </Alert>
@@ -3569,12 +3571,12 @@ export function OnboardingWizard() {
               aria-label={_(
                 msg`Additional validation messages from the server`
               )}
-              className="mb-6 border-zinc-300 bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900/40"
+              className="mb-6 border-border bg-muted"
             >
-              <div className="mb-2 font-medium text-zinc-900 dark:text-zinc-100">
+              <AlertTitle className="text-foreground">
                 <Trans>Additional validation messages from the server</Trans>
-              </div>
-              <ul className="list-disc space-y-2 pl-5 text-sm text-zinc-800 dark:text-zinc-200">
+              </AlertTitle>
+              <ul className="list-disc space-y-2 pl-5 text-sm text-foreground">
                 {apiValidationDetailMessages.map((message, index) => (
                   <li key={`${index}-${message.slice(0, 48)}`}>{message}</li>
                 ))}
@@ -3589,7 +3591,7 @@ export function OnboardingWizard() {
               ) : null}
 
               <div className="mb-4 flex flex-wrap items-center gap-3">
-                <h2 className="mb-0 text-xl font-semibold text-zinc-950 dark:text-zinc-50">
+                <h2 className="mb-0 text-xl font-semibold text-foreground">
                   {template.title ?? template.name}
                 </h2>
                 {template.is_required === false ? (
@@ -3600,7 +3602,7 @@ export function OnboardingWizard() {
               </div>
 
               {template.description ? (
-                <p className="mb-6 text-zinc-600 dark:text-zinc-400">
+                <p className="mb-6 text-muted-foreground">
                   {template.description}
                 </p>
               ) : null}
@@ -3649,10 +3651,10 @@ export function OnboardingWizard() {
                         {fieldName === "nationalities" &&
                         stepUploadDocumentType &&
                         isCurrentStepEditable ? (
-                          <div className="mt-6 rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
+                          <div className="mt-6 rounded-md border border-border bg-muted p-4">
                             <UiFieldGroup>
                               <UiField>
-                                <div className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
+                                <div className="text-sm font-medium text-foreground">
                                   <Trans>
                                     Would you like to upload your identity
                                     document now?
@@ -3788,13 +3790,13 @@ export function OnboardingWizard() {
                             ) : null}
 
                             {uploadNowSelection === "no" ? (
-                              <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+                              <p className="mt-4 text-sm text-muted-foreground">
                                 <Trans>
                                   You can continue now and upload your documents
                                   later.
                                 </Trans>
                                 <br />
-                                <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+                                <span className="font-semibold text-foreground">
                                   <Trans>
                                     HR will still require these documents for
                                     the Bewacherregister registration.
@@ -3810,11 +3812,11 @@ export function OnboardingWizard() {
                   uploadNowSelection === "yes" &&
                   (!shouldAskIdentityDocumentKind ||
                     identityDocumentKind !== null) ? (
-                    <div className="mt-6 rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
-                      <h3 className="mb-3 text-base font-semibold text-zinc-950 dark:text-zinc-50">
+                    <div className="mt-6 rounded-md border border-border bg-muted p-4">
+                      <h3 className="mb-3 text-base font-semibold text-foreground">
                         <Trans>Identity Document Upload</Trans>
                       </h3>
-                      <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                      <p className="mb-4 text-sm text-muted-foreground">
                         {identityDocumentKind === "id_card" ? (
                           <Trans>
                             Please upload your identity card (PDF, JPG, JPEG,
@@ -3833,11 +3835,11 @@ export function OnboardingWizard() {
                           </Trans>
                         )}
                       </p>
-                      <div className="mb-4 rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900/50">
-                        <p className="mb-2 text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                      <div className="mb-4 rounded-md border border-border bg-background p-3">
+                        <p className="mb-2 text-sm font-medium text-foreground">
                           <Trans>Required documents for this step</Trans>
                         </p>
-                        <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-600 dark:text-zinc-400">
+                        <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
                           <li>
                             {identityDocumentKind === "id_card" ? (
                               <Trans>Identity card</Trans>
@@ -3865,7 +3867,7 @@ export function OnboardingWizard() {
                       </div>
 
                       {!submission ? (
-                        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                        <p className="mb-4 text-sm text-muted-foreground">
                           <Trans>
                             Your current answers will be saved as a draft before
                             the first file upload.
@@ -3874,7 +3876,7 @@ export function OnboardingWizard() {
                       ) : null}
 
                       {uploadFeedback ? (
-                        <div
+                        <Alert
                           role={
                             uploadFeedback.tone === "error" ? "alert" : "status"
                           }
@@ -3886,20 +3888,20 @@ export function OnboardingWizard() {
                           aria-atomic="true"
                           className={
                             uploadFeedback.tone === "error"
-                              ? "mb-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/60 dark:bg-red-950/30"
-                              : "mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/30"
+                              ? "mb-4 border-destructive/30 bg-destructive/10"
+                              : "mb-4 border-emerald-500/30 bg-emerald-500/10"
                           }
                         >
-                          <p
+                          <AlertDescription
                             className={
                               uploadFeedback.tone === "error"
-                                ? "text-red-800 dark:text-red-200"
-                                : "text-emerald-800 dark:text-emerald-200"
+                                ? "text-destructive"
+                                : "text-foreground"
                             }
                           >
                             {uploadFeedback.message}
-                          </p>
-                        </div>
+                          </AlertDescription>
+                        </Alert>
                       ) : null}
 
                       {isCurrentStepEditable ? (
@@ -3920,7 +3922,7 @@ export function OnboardingWizard() {
                                 aria-label={_(msg`Attachment`)}
                                 aria-describedby="onboarding-identity-upload-attachment-description"
                                 accept={ONBOARDING_UPLOAD_ACCEPT}
-                                className="file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-white/10 dark:file:text-white"
+                                className="file:mr-4 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium file:text-foreground"
                                 type="file"
                                 onChange={(event) => {
                                   const nextPrimaryFile =
@@ -3962,7 +3964,7 @@ export function OnboardingWizard() {
                                   )}
                                   aria-describedby="onboarding-identity-upload-attachment-extra-description"
                                   accept={ONBOARDING_UPLOAD_ACCEPT}
-                                  className="file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-white/10 dark:file:text-white"
+                                  className="file:mr-4 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium file:text-foreground"
                                   type="file"
                                   onChange={(event) => {
                                     const nextSecondaryFile =
@@ -3999,7 +4001,7 @@ export function OnboardingWizard() {
                               )}
                             </Button>
                             {uploadFiles.length > 0 ? (
-                              <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                              <p className="text-sm text-muted-foreground">
                                 {uploadFiles
                                   .map((file) => file.name)
                                   .join(", ")}
@@ -4008,7 +4010,7 @@ export function OnboardingWizard() {
                           </div>
                         </>
                       ) : (
-                        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                        <p className="text-sm text-muted-foreground">
                           <Trans>
                             Files can only be uploaded while this onboarding
                             step is still editable.
@@ -4140,7 +4142,7 @@ export function OnboardingWizard() {
                     schema
                   ) ? (
                     <UiField>
-                      <div className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
+                      <div className="text-sm font-medium text-foreground">
                         <Trans>Employment permitted</Trans> *
                       </div>
                       <UiFieldDescription>
@@ -4211,10 +4213,10 @@ export function OnboardingWizard() {
                   ) : null}
                   {isIdentityUploadSectionCompleted &&
                   shouldAskResidenceTitleUploadNow ? (
-                    <div className="mt-6 rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
+                    <div className="mt-6 rounded-md border border-border bg-muted p-4">
                       <UiFieldGroup>
                         <UiField>
-                          <div className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
+                          <div className="text-sm font-medium text-foreground">
                             <Trans>
                               Would you like to upload your residence title now?
                             </Trans>
@@ -4298,16 +4300,16 @@ export function OnboardingWizard() {
 
                       {residenceTitleUploadNowSelection === "yes" ? (
                         <div className="mt-6">
-                          <h3 className="mb-3 text-base font-semibold text-zinc-950 dark:text-zinc-50">
+                          <h3 className="mb-3 text-base font-semibold text-foreground">
                             <Trans>Residence Title Upload</Trans>
                           </h3>
-                          <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                          <p className="mb-4 text-sm text-muted-foreground">
                             <Trans>
                               Please upload your residence title (PDF, JPG,
                               JPEG, PNG; max. 10 MB).
                             </Trans>
                           </p>
-                          <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                          <p className="mb-4 text-sm text-muted-foreground">
                             <Trans>
                               Upload front and back as separate files if
                               available.
@@ -4331,7 +4333,7 @@ export function OnboardingWizard() {
                                     aria-label={_(msg`Attachment`)}
                                     aria-describedby="onboarding-residence-title-upload-attachment-description"
                                     accept={ONBOARDING_UPLOAD_ACCEPT}
-                                    className="file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-white/10 dark:file:text-white"
+                                    className="file:mr-4 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium file:text-foreground"
                                     type="file"
                                     onChange={(event) => {
                                       const nextPrimaryFile =
@@ -4375,7 +4377,7 @@ export function OnboardingWizard() {
                                       )}
                                       aria-describedby="onboarding-residence-title-upload-attachment-extra-description"
                                       accept={ONBOARDING_UPLOAD_ACCEPT}
-                                      className="file:mr-4 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-2 file:text-sm file:font-medium dark:file:bg-white/10 dark:file:text-white"
+                                      className="file:mr-4 file:rounded-md file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium file:text-foreground"
                                       type="file"
                                       onChange={(event) => {
                                         const nextSecondaryFile =
@@ -4413,7 +4415,7 @@ export function OnboardingWizard() {
                                   )}
                                 </Button>
                                 {uploadFiles.length > 0 ? (
-                                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                                  <p className="text-sm text-muted-foreground">
                                     {uploadFiles
                                       .map((file) => file.name)
                                       .join(", ")}
@@ -4422,7 +4424,7 @@ export function OnboardingWizard() {
                               </div>
                             </>
                           ) : (
-                            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                            <p className="text-sm text-muted-foreground">
                               <Trans>
                                 Files can only be uploaded while this onboarding
                                 step is still editable.
@@ -4435,25 +4437,25 @@ export function OnboardingWizard() {
                   ) : null}
                 </UiFieldGroup>
               ) : (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/60 dark:bg-amber-950/30">
-                  <p className="text-amber-800 dark:text-amber-200">
+                <Alert className="border-amber-500/30 bg-amber-500/10 text-foreground">
+                  <AlertDescription className="mt-0 text-foreground">
                     <Trans>
                       This onboarding step uses a schema we cannot render yet.
                     </Trans>
-                  </p>
-                </div>
+                  </AlertDescription>
+                </Alert>
               )}
 
               {stepUploadDocumentType && uploadedFiles.length > 0 ? (
-                <div className="mt-4 rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
-                  <p className="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                <div className="mt-4 rounded-md border border-border bg-muted p-4">
+                  <p className="mb-2 text-sm font-medium text-foreground">
                     <Trans>Uploaded in this session</Trans>
                   </p>
                   <ul className="space-y-2">
                     {uploadedFiles.map((uploadedFile) => (
                       <li
                         key={uploadedFile.id}
-                        className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
+                        className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
                       >
                         <span className="font-medium">
                           {uploadedFile.documentType === "contract"
@@ -4469,7 +4471,7 @@ export function OnboardingWizard() {
                                 : _(msg`Identity Document`)
                               : _(msg`Banking Details`)}
                         </span>
-                        <span className="ml-2 text-zinc-500 dark:text-zinc-400">
+                        <span className="ml-2 text-muted-foreground">
                           {uploadedFile.filename}
                         </span>
                         <div className="mt-2">

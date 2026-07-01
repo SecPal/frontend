@@ -3,7 +3,7 @@
 
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { SelectItem } from "./ui";
+import { SelectItem } from "@/ui";
 
 export function EmployeeStatusSelectItems() {
   const { _ } = useLingui();

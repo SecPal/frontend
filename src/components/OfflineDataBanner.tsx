@@ -5,6 +5,7 @@ import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { Clock, RefreshCw, WifiOff } from "lucide-react";
+import { Alert, AlertDescription } from "@/ui";
 
 export interface OfflineDataBannerProps {
   /** Whether the device is currently offline */
@@ -78,44 +79,38 @@ export function OfflineDataBanner({
 
   const Icon = isOffline ? WifiOff : Clock;
   const bgColor = isOffline
-    ? "bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800"
-    : "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800";
-  const textColor = isOffline
-    ? "text-amber-800 dark:text-amber-200"
-    : "text-blue-800 dark:text-blue-200";
-  const iconColor = isOffline
-    ? "text-amber-600 dark:text-amber-400"
-    : "text-blue-600 dark:text-blue-400";
+    ? "bg-amber-500/10 border-amber-500/30"
+    : "bg-primary/10 border-primary/30";
+  const textColor = isOffline ? "text-foreground" : "text-primary";
+  const iconColor = isOffline ? "text-foreground" : "text-primary";
 
   return (
-    <div
-      className={`mb-4 rounded-lg border px-4 py-3 ${bgColor}`}
-      role="status"
-      aria-live="polite"
-    >
-      <div className="flex items-center gap-3">
-        <Icon className={`h-5 w-5 shrink-0 ${iconColor}`} aria-hidden="true" />
+    <Alert className={`mb-4 ${bgColor}`} role="status" aria-live="polite">
+      <Icon className={`h-5 w-5 shrink-0 ${iconColor}`} aria-hidden="true" />
+      <div className="flex w-full items-center gap-3">
         <div className="flex-1">
-          <p className={`text-sm font-medium ${textColor}`}>
+          <AlertDescription className={`mt-0 text-sm font-medium ${textColor}`}>
             {isOffline ? (
               <Trans>You're offline - showing cached data</Trans>
             ) : (
               <Trans>Showing cached data</Trans>
             )}
-          </p>
+          </AlertDescription>
           {lastSynced && (
-            <p className={`mt-0.5 text-xs ${textColor} opacity-75`}>
+            <AlertDescription
+              className={`mt-0.5 text-xs ${textColor} opacity-75`}
+            >
               <Trans>
                 Last synced: {formatRelativeTime(lastSynced, i18n.locale)}
               </Trans>
-            </p>
+            </AlertDescription>
           )}
         </div>
         {onRefresh && !isOffline && (
           <button
             type="button"
             onClick={onRefresh}
-            className={`flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/10 ${textColor}`}
+            className={`flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium transition-colors hover:bg-accent ${textColor}`}
             aria-label={_(msg`Refresh data`)}
           >
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -123,6 +118,6 @@ export function OfflineDataBanner({
           </button>
         )}
       </div>
-    </div>
+    </Alert>
   );
 }

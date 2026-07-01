@@ -11,12 +11,12 @@ import {
   FieldDescription,
   FieldError,
   FieldLabel,
-  FormSection,
   Input,
-  Checkbox,
-  RadioGroup,
-  RadioGroupItem,
-} from "./ui";
+  OnboardingCheckbox as Checkbox,
+  OnboardingFormSection as FormSection,
+  OnboardingRadioGroup as RadioGroup,
+  OnboardingRadioGroupItem as RadioGroupItem,
+} from "@/ui";
 import type { PostalAddressDraft } from "../../lib/employeeAddresses";
 import { EmployeeAddressFields } from "../Employees/EmployeeAddressFields";
 import {
@@ -178,8 +178,8 @@ export function OnboardingResidentialAddressHistoryFields({
   return (
     <FormSection>
       <FieldGroup>
-        <section className="rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
-          <h3 className="mb-4 text-base font-semibold text-zinc-950 dark:text-zinc-50">
+        <section className="rounded-md border border-border bg-muted p-4">
+          <h3 className="mb-4 text-base font-semibold text-foreground">
             <Trans>Current Residential Address</Trans>
           </h3>
           <EmployeeAddressFields
@@ -225,12 +225,12 @@ export function OnboardingResidentialAddressHistoryFields({
           ) : null}
         </section>
 
-        <section className="rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
-          <h3 className="mb-4 text-base font-semibold text-zinc-950 dark:text-zinc-50">
+        <section className="rounded-md border border-border bg-muted p-4">
+          <h3 className="mb-4 text-base font-semibold text-foreground">
             <Trans>Bewacher ID</Trans>
           </h3>
           <Field>
-            <span className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
+            <span className="text-sm font-medium text-foreground">
               <Trans>Do you currently have a Bewacher ID?</Trans>
             </span>
             <FieldDescription className="mb-3">
@@ -268,7 +268,7 @@ export function OnboardingResidentialAddressHistoryFields({
                 <FieldLabel
                   key={choice}
                   htmlFor={`has_current_bewacher_id_${choice}`}
-                  className="flex items-center gap-3 text-sm text-zinc-950 dark:text-zinc-50"
+                  className="flex items-center gap-3 text-sm text-foreground"
                 >
                   <RadioGroupItem
                     id={`has_current_bewacher_id_${choice}`}
@@ -330,7 +330,7 @@ export function OnboardingResidentialAddressHistoryFields({
 
           {value.has_current_bewacher_id === "yes" &&
           value.bewacher_id.trim().length === 0 ? (
-            <label className="mt-4 flex items-center gap-3 text-sm text-zinc-950 dark:text-zinc-50">
+            <label className="mt-4 flex items-center gap-3 text-sm text-foreground">
               <Checkbox
                 checked={value.bewacher_id_unknown}
                 disabled={readOnly}
@@ -350,9 +350,9 @@ export function OnboardingResidentialAddressHistoryFields({
         </section>
 
         {showPreviousResidencesSection ? (
-          <section className="rounded-md border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-950/40">
+          <section className="rounded-md border border-border bg-muted p-4">
             <div className="mb-4">
-              <h3 className="mb-1 text-base font-semibold text-zinc-950 dark:text-zinc-50">
+              <h3 className="mb-1 text-base font-semibold text-foreground">
                 <Trans>Previous Residences</Trans>
               </h3>
             </div>
@@ -379,10 +379,10 @@ export function OnboardingResidentialAddressHistoryFields({
                 return (
                   <section
                     key={fieldIdPrefix}
-                    className="rounded-md border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/50"
+                    className="rounded-md border border-border bg-background p-4"
                   >
                     <div className="mb-4">
-                      <h4 className="mb-0 text-sm font-semibold text-zinc-950 dark:text-zinc-50">
+                      <h4 className="mb-0 text-sm font-semibold text-foreground">
                         {_(msg`Previous residence ${index + 1}`)}
                       </h4>
                     </div>

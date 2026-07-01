@@ -45,10 +45,10 @@ import {
   SearchableCommandPopover,
   Textarea as AppTextarea,
   type CommandOption,
-  uiControlBase,
-} from "@/ui";
+} from "./primitives";
 import { getCspNonce } from "@/lib/cspNonce";
-import { cn } from "./utils";
+import { cn } from "@/lib/utils";
+import { uiControlBase } from "./styles";
 
 export const Button = AppButton;
 
@@ -232,7 +232,7 @@ export const Select = forwardRef(function Select(
         <SelectPrimitive.Content
           data-slot="onboarding-select-content"
           position="popper"
-          className="relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-zinc-200 bg-white text-zinc-950 shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
+          className="relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1"
         >
           <SelectPrimitive.ScrollUpButton
             data-slot="onboarding-select-scroll-up"
@@ -252,7 +252,7 @@ export const Select = forwardRef(function Select(
                 disabled={option.disabled}
                 data-slot="onboarding-select-item"
                 data-value={option.value}
-                className="relative flex w-full cursor-default items-center rounded-sm py-1.5 pr-8 pl-2 text-sm text-zinc-950 outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-zinc-100 data-[disabled]:opacity-50 dark:text-zinc-50 dark:data-[highlighted]:bg-zinc-800"
+                className="relative flex w-full cursor-default items-center rounded-sm py-1.5 pr-8 pl-2 text-sm text-foreground outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
               >
                 <span className="absolute right-2 flex size-3.5 items-center justify-center">
                   <SelectPrimitive.ItemIndicator>
@@ -418,7 +418,7 @@ export function OnboardingAuthShell({
     <main
       data-slot="onboarding-auth-shell"
       className={cn(
-        "min-h-[var(--app-shell-min-height)] bg-white px-4 pt-[calc(1.5rem+var(--app-safe-area-inset-top))] pb-6 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 sm:px-6 lg:px-8",
+        "min-h-[var(--app-shell-min-height)] bg-background px-4 pt-[calc(1.5rem+var(--app-safe-area-inset-top))] pb-6 text-foreground sm:px-6 lg:px-8",
         className
       )}
       {...props}
@@ -434,7 +434,7 @@ export function OnboardingAuthCard({
     <section
       data-slot="onboarding-auth-card"
       className={cn(
-        "mx-auto flex min-h-[var(--app-auth-card-min-height)] w-full max-w-2xl flex-col justify-center rounded-md border border-zinc-200 bg-white p-6 text-zinc-950 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 sm:p-8 lg:p-10",
+        "mx-auto flex min-h-[var(--app-auth-card-min-height)] w-full max-w-2xl flex-col justify-center rounded-md border border-border bg-card p-6 text-card-foreground shadow-sm sm:p-8 lg:p-10",
         className
       )}
       {...props}

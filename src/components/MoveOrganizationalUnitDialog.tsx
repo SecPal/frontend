@@ -6,6 +6,9 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { MoveHorizontal } from "lucide-react";
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
   Dialog,
   DialogActions,
   DialogBody,
@@ -218,8 +221,8 @@ function MoveOrganizationalUnitDialogContent({
   return (
     <>
       <div className="flex min-w-0 items-center gap-4">
-        <div className="shrink-0 rounded-full bg-blue-100 p-2 dark:bg-blue-900/50">
-          <MoveHorizontal className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+        <div className="bg-primary/10 shrink-0 rounded-full p-2">
+          <MoveHorizontal className="text-primary h-6 w-6" />
         </div>
         <div className="min-w-0 flex-1">
           <DialogTitle>
@@ -235,30 +238,37 @@ function MoveOrganizationalUnitDialogContent({
       <DialogBody className="min-w-0">
         {/* Offline warning banner - mutations not possible */}
         {isOffline && (
-          <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
-            <div className="font-semibold mb-1">
+          <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+            <AlertTitle>
               <Trans>You're offline</Trans>
-            </div>
-            <Trans>
-              Moving organizational units is not possible while offline. Please
-              reconnect to make changes.
-            </Trans>
-          </div>
+            </AlertTitle>
+            <AlertDescription className="text-destructive">
+              <Trans>
+                Moving organizational units is not possible while offline.
+                Please reconnect to make changes.
+              </Trans>
+            </AlertDescription>
+          </Alert>
         )}
 
         {/* Stale data indicator banner */}
         {!isOffline && isStale && (
-          <div className="mb-4 rounded-lg bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
-            <Trans>Viewing cached data. Some units may be outdated.</Trans>
-          </div>
+          <Alert
+            role="status"
+            className="mb-4 border-primary/30 bg-primary/10 text-primary"
+          >
+            <AlertDescription className="mt-0 text-primary">
+              <Trans>Viewing cached data. Some units may be outdated.</Trans>
+            </AlertDescription>
+          </Alert>
         )}
 
         {/* Current parent info */}
-        <div className="mb-4 rounded-lg bg-gray-50 p-4 dark:bg-gray-800/50">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="border-border bg-muted mb-4 rounded-lg border p-4">
+          <p className="text-muted-foreground text-sm">
             <Trans>Current parent:</Trans>
           </p>
-          <p className="font-medium text-zinc-950 dark:text-zinc-50">
+          <p className="text-foreground font-medium">
             {unit.parent ? (
               unit.parent.name
             ) : (
@@ -269,11 +279,11 @@ function MoveOrganizationalUnitDialogContent({
 
         {/* Load error */}
         {loadError && (
-          <div className="mb-4 rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
-            <p className="text-sm text-red-800 dark:text-red-200">
+          <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+            <AlertDescription className="text-destructive">
               {loadError}
-            </p>
-          </div>
+            </AlertDescription>
+          </Alert>
         )}
 
         {/* Parent selection */}
@@ -318,7 +328,7 @@ function MoveOrganizationalUnitDialogContent({
                         className="h-4 w-4 shrink-0"
                       />
                       <span className="truncate">{u.name}</span>
-                      <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                      <span className="text-muted-foreground text-xs">
                         ({getTypeLabel(u.type)})
                       </span>
                     </span>
@@ -331,9 +341,11 @@ function MoveOrganizationalUnitDialogContent({
 
         {/* Move error */}
         {error && (
-          <div className="mt-4 rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
-            <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
-          </div>
+          <Alert className="mt-4 border-destructive/30 bg-destructive/10 text-foreground">
+            <AlertDescription className="text-destructive">
+              {error}
+            </AlertDescription>
+          </Alert>
         )}
       </DialogBody>
 
@@ -369,7 +381,7 @@ export function MoveOrganizationalUnitDialog({
                 <Trans>Select an organizational unit before moving it.</Trans>
               </DialogDescription>
               <DialogBody>
-                <p className="text-sm text-zinc-600 dark:text-zinc-300">
+                <p className="text-muted-foreground text-sm">
                   <Trans>No unit selected</Trans>
                 </p>
               </DialogBody>

@@ -218,6 +218,43 @@ describe("EmployeeAddressFields", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps suggestion meta text on canonical muted tokens", async () => {
+    const onChange = vi.fn();
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
+      {
+        name: "Grabstraße",
+        postal_code: "13156",
+        locality: "Berlin",
+      },
+    ]);
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <EmployeeAddressFields
+          draft={{
+            street: "Gr",
+            houseNumber: "",
+            postalCode: "",
+            city: "",
+            supplement: "",
+            country: "DE",
+          }}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+
+    fireEvent.focus(screen.getByLabelText(/street/i));
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
+
+    const meta = screen.getByText(/13156 berlin/i);
+    expect(meta).toHaveClass("text-muted-foreground");
+  });
+
   it("shows a visible API error for street autocomplete failures", async () => {
     const onChange = vi.fn();
     vi.mocked(fetchAddressStreetSuggestions).mockRejectedValue(

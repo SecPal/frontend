@@ -36,6 +36,22 @@ const renderWithProviders = () => {
   );
 };
 
+function setViewportMatchesDesktop(matches: boolean) {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: vi.fn().mockImplementation(() => ({
+      matches,
+      media: "(min-width: 40rem)",
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+}
+
 async function selectRadixOption(
   triggerName: RegExp,
   optionName: RegExp | string
@@ -140,6 +156,7 @@ const mockResponse: EmployeeListResponse = {
 describe("EmployeeList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setViewportMatchesDesktop(true);
     mockUseUserCapabilities.mockReturnValue({
       actions: {
         employees: {
@@ -208,6 +225,22 @@ describe("EmployeeList", () => {
     expect(screen.getByText("Design")).toBeInTheDocument();
   });
 
+  it("renders employees as mobile cards on narrow viewports", async () => {
+    setViewportMatchesDesktop(false);
+
+    renderWithProviders();
+
+    expect(await screen.findByText("John Doe")).toBeInTheDocument();
+    expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
+    expect(screen.getByText("Engineering")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /view john doe/i })
+    ).toHaveAttribute("href", "/employees/emp-1");
+    expect(
+      screen.queryByRole("columnheader", { name: /employee/i })
+    ).not.toBeInTheDocument();
+  });
+
   it("renders the migrated shadcn/Radix list surface with light and dark classes", async () => {
     renderWithProviders();
 
@@ -215,12 +248,12 @@ describe("EmployeeList", () => {
       expect(screen.getByText("John Doe")).toBeInTheDocument();
     });
 
-    const filterCard = document.querySelector('[data-slot="ui-card"]');
-    expect(filterCard).toHaveClass("bg-white", "dark:bg-zinc-950");
+    const filterCard = document.querySelector('[data-slot="card"]');
+    expect(filterCard).toHaveClass("bg-card", "text-card-foreground");
 
     const statusTrigger = screen.getByRole("combobox", { name: /^status$/i });
-    expect(statusTrigger).toHaveAttribute("data-slot", "ui-select-trigger");
-    expect(statusTrigger).toHaveClass("dark:bg-zinc-950");
+    expect(statusTrigger).toHaveAttribute("data-slot", "select-trigger");
+    expect(statusTrigger).toHaveClass("bg-background", "border-input");
 
     expect(
       document.querySelector('[data-slot="employee-table-shell"]')
@@ -319,6 +352,23 @@ describe("EmployeeList", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("keeps list feedback and pagination on canonical theme tokens", async () => {
+    vi.mocked(employeeApi.fetchEmployees).mockRejectedValueOnce(
+      new Error("API Error")
+    );
+
+    renderWithProviders();
+
+    const alert = await screen.findByText("API Error");
+    const alertTitle = screen.getByText(/error loading employees/i);
+    expect(alert.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+    expect(alert.closest('[data-slot="alert"]')).toHaveClass("text-foreground");
+    expect(alertTitle).toHaveAttribute("data-slot", "alert-title");
+  });
+
   it("renders filters and table skeleton rows while initially loading", () => {
     vi.mocked(employeeApi.fetchEmployees).mockImplementation(
       () => new Promise(() => {})
@@ -340,7 +390,7 @@ describe("EmployeeList", () => {
       screen.getByRole("status", { name: /loading employees table/i })
     ).toBeInTheDocument();
     expect(
-      container.querySelectorAll('[data-slot="ui-skeleton"]').length
+      container.querySelectorAll('[data-slot="skeleton"]').length
     ).toBeGreaterThan(0);
     expect(
       screen.queryByText(/^Loading employees\.\.\.$/i)

@@ -696,6 +696,65 @@ describe("OrganizationalUnitFormDialog", () => {
       ).toBeInTheDocument();
     });
 
+    it("keeps offline alerts, general API errors, and parent-unit surfaces on canonical theme tokens", async () => {
+      vi.mocked(createOrganizationalUnit).mockRejectedValueOnce(
+        new ApiError("Server error", 500)
+      );
+
+      const user = userEvent.setup();
+      const { unmount } = renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          parentId="parent-1"
+          parentName="Parent Company"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const offlineAlert = screen
+        .getByText(
+          /creating organizational units is not possible while offline/i
+        )
+        .closest('[data-slot="alert"]');
+      const parentBox = screen.getByText("Parent Company");
+      expect(offlineAlert).toHaveClass(
+        "border-destructive/30",
+        "bg-destructive/10"
+      );
+      expect(screen.getByText(/you're offline/i)).toHaveAttribute(
+        "data-slot",
+        "alert-title"
+      );
+      expect(parentBox).toHaveClass("border-border", "bg-muted");
+      expect(parentBox.className).not.toContain("border-zinc-200");
+
+      unmount();
+      vi.mocked(useOnlineStatus).mockReturnValue(true);
+
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      await user.type(
+        screen.getByPlaceholderText(/e\.g\., Berlin Branch/i),
+        "Test Name"
+      );
+      await user.click(screen.getByRole("button", { name: /create/i }));
+
+      const generalError = await screen.findByText("Server error");
+      expect(generalError.closest('[data-slot="alert"]')).toHaveClass(
+        "border-destructive/30",
+        "bg-destructive/10"
+      );
+    });
+
     it("shows offline warning in edit mode", () => {
       renderWithI18n(
         <OrganizationalUnitFormDialog

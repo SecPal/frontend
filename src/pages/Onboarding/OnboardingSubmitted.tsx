@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { Trans } from "@lingui/react/macro";
-import { Card, CardContent, CardHeader } from "./ui";
+import { Card, CardContent, CardHeader } from "@/ui";
 
 /**
  * Shown after the employee submits the final onboarding step (and when reopening
@@ -15,12 +15,12 @@ export function OnboardingSubmitted() {
         <CardHeader>
           <h1
             id="onboarding-submitted-heading"
-            className="text-2xl font-semibold text-zinc-950 dark:text-zinc-50"
+            className="text-2xl font-semibold text-foreground"
           >
             <Trans>You're all set</Trans>
           </h1>
         </CardHeader>
-        <CardContent className="space-y-4 text-sm text-zinc-600 dark:text-zinc-300">
+        <CardContent className="space-y-4 text-sm text-muted-foreground">
           <p>
             <Trans>
               Thank you for submitting your onboarding information. Our HR team

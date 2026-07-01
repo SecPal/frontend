@@ -22,6 +22,7 @@ import type { OrganizationalUnit } from "../../types/organizational";
 import { OrganizationalUnitPicker } from "../../components/OrganizationalUnitPicker";
 import {
   Alert,
+  AlertDescription,
   Badge,
   Button,
   Checkbox,
@@ -61,10 +62,7 @@ function formatDate(dateString: string): string {
 function LogBadge({ className, ...props }: ComponentPropsWithoutRef<"span">) {
   return (
     <Badge
-      className={cn(
-        "bg-zinc-600/10 text-zinc-700 dark:bg-white/5 dark:text-zinc-400",
-        className
-      )}
+      className={cn("bg-muted text-muted-foreground", className)}
       {...props}
     />
   );
@@ -132,10 +130,7 @@ function ActivityMobileSkeletonCards({
   return (
     <>
       {Array.from({ length: rows }, (_, rowIndex) => (
-        <div
-          key={rowIndex}
-          className="rounded-md border border-zinc-200 p-4 dark:border-zinc-800"
-        >
+        <div key={rowIndex} className="rounded-md border border-border p-4">
           <Skeleton className="h-4 w-28" />
           <Skeleton className="mt-3 h-5 w-full" />
           <Skeleton className="mt-2 h-4 w-5/6" />
@@ -154,38 +149,38 @@ function ActivityTableChrome({ children }: ActivityTableChromeProps) {
   return (
     <div
       data-slot="activity-log-table-container"
-      className="overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800"
+      className="overflow-x-auto rounded-md border border-border"
     >
-      <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
-        <thead className="bg-zinc-50 dark:bg-zinc-900/60">
+      <table className="min-w-full divide-y divide-border text-sm">
+        <thead className="bg-muted">
           <tr>
             <th
               scope="col"
-              className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
+              className="text-muted-foreground px-4 py-3 text-left font-medium"
             >
               <Trans>Date/Time</Trans>
             </th>
             <th
               scope="col"
-              className="px-4 py-3 text-left font-medium text-zinc-600 dark:text-zinc-300"
+              className="text-muted-foreground px-4 py-3 text-left font-medium"
             >
               <Trans>Description</Trans>
             </th>
             <th
               scope="col"
-              className="hidden px-4 py-3 text-left font-medium text-zinc-600 md:table-cell dark:text-zinc-300"
+              className="text-muted-foreground hidden px-4 py-3 text-left font-medium md:table-cell"
             >
               <Trans>Log Name</Trans>
             </th>
             <th
               scope="col"
-              className="hidden px-4 py-3 text-left font-medium text-zinc-600 lg:table-cell dark:text-zinc-300"
+              className="text-muted-foreground hidden px-4 py-3 text-left font-medium lg:table-cell"
             >
               <Trans>Causer</Trans>
             </th>
             <th
               scope="col"
-              className="hidden px-4 py-3 text-left font-medium text-zinc-600 xl:table-cell dark:text-zinc-300"
+              className="text-muted-foreground hidden px-4 py-3 text-left font-medium xl:table-cell"
             >
               <Trans>Organizational Unit</Trans>
             </th>
@@ -196,9 +191,7 @@ function ActivityTableChrome({ children }: ActivityTableChromeProps) {
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-zinc-200 bg-white dark:divide-zinc-800 dark:bg-zinc-950">
-          {children}
-        </tbody>
+        <tbody className="divide-y divide-border bg-card">{children}</tbody>
       </table>
     </div>
   );
@@ -463,12 +456,12 @@ export function ActivityLogList() {
     <div>
       {/* Header with responsive controls */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+        <h1 className="text-foreground text-2xl font-semibold tracking-normal">
           <Trans>Activity Logs</Trans>
         </h1>
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           {pagination.total > 0 && (
-            <p className="hidden text-sm text-zinc-600 md:block dark:text-zinc-300">
+            <p className="text-muted-foreground hidden text-sm md:block">
               <Trans>
                 Showing {pagination.from} to {pagination.to} of{" "}
                 {pagination.total} logs
@@ -498,7 +491,7 @@ export function ActivityLogList() {
                 checked={autoRefresh}
                 onCheckedChange={(checked) => setAutoRefresh(checked === true)}
               />
-              <span className="text-zinc-700 dark:text-zinc-300">
+              <span className="text-foreground">
                 <Trans>Auto-refresh (30s)</Trans>
               </span>
             </label>
@@ -629,8 +622,10 @@ export function ActivityLogList() {
 
       {/* Error State */}
       {error && (
-        <Alert className="mb-6 border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
-          {error}
+        <Alert className="mb-6 border-destructive/30 bg-destructive/10 text-foreground">
+          <AlertDescription className="text-destructive">
+            {error}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -647,8 +642,8 @@ export function ActivityLogList() {
             </div>
           )
         ) : !showActivityRows ? (
-          <div className="rounded-md border border-zinc-200 px-4 py-12 text-center dark:border-zinc-800">
-            <p className="text-sm text-zinc-600 dark:text-zinc-300">
+          <div className="rounded-md border border-border px-4 py-12 text-center">
+            <p className="text-muted-foreground text-sm">
               <Trans>No activity logs found.</Trans>
             </p>
           </div>
@@ -657,28 +652,28 @@ export function ActivityLogList() {
             {activities.map((activity) => (
               <tr
                 key={activity.id}
-                className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900/60"
+                className="cursor-pointer hover:bg-muted/50"
                 onClick={() => handleRowClick(activity)}
               >
-                <td className="whitespace-nowrap px-4 py-3 font-medium text-zinc-950 dark:text-zinc-50">
+                <td className="text-foreground whitespace-nowrap px-4 py-3 font-medium">
                   {formatDate(activity.created_at)}
                 </td>
-                <td className="max-w-[200px] truncate px-4 py-3 text-zinc-950 dark:text-zinc-50">
+                <td className="text-foreground max-w-[200px] truncate px-4 py-3">
                   {activity.description}
                 </td>
                 <td className="hidden px-4 py-3 md:table-cell">
                   <LogBadge>{activity.log_name}</LogBadge>
                 </td>
-                <td className="hidden px-4 py-3 text-zinc-950 lg:table-cell dark:text-zinc-50">
+                <td className="text-foreground hidden px-4 py-3 lg:table-cell">
                   {activity.causer?.name || (
-                    <span className="text-zinc-500 dark:text-zinc-400">
+                    <span className="text-muted-foreground">
                       <Trans>System</Trans>
                     </span>
                   )}
                 </td>
-                <td className="hidden px-4 py-3 text-zinc-950 xl:table-cell dark:text-zinc-50">
+                <td className="text-foreground hidden px-4 py-3 xl:table-cell">
                   {activity.organizational_unit?.name || (
-                    <span className="text-zinc-500 dark:text-zinc-400">
+                    <span className="text-muted-foreground">
                       <Trans>Global</Trans>
                     </span>
                   )}
@@ -699,11 +694,11 @@ export function ActivityLogList() {
               <button
                 key={activity.id}
                 type="button"
-                className="min-w-0 rounded-md border border-zinc-200 bg-white p-4 text-left hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900/60"
+                className="bg-card hover:bg-muted min-w-0 rounded-md border border-border p-4 text-left"
                 onClick={() => handleRowClick(activity)}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-sm leading-5 font-medium text-zinc-950 dark:text-zinc-50">
+                  <p className="text-foreground text-sm leading-5 font-medium">
                     {formatDate(activity.created_at)}
                   </p>
                   <VerificationDots
@@ -712,10 +707,10 @@ export function ActivityLogList() {
                     showLabels={false}
                   />
                 </div>
-                <p className="mt-3 break-words text-sm text-zinc-950 dark:text-zinc-50">
+                <p className="text-foreground mt-3 break-words text-sm">
                   {activity.description}
                 </p>
-                <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                <div className="text-muted-foreground mt-3 flex min-w-0 flex-wrap items-center gap-2 text-xs">
                   <LogBadge
                     className="max-w-full min-w-0 truncate"
                     title={activity.log_name}
@@ -742,7 +737,7 @@ export function ActivityLogList() {
             >
               <Trans>Previous</Trans>
             </Button>
-            <p className="text-center text-sm text-zinc-600 dark:text-zinc-300">
+            <p className="text-muted-foreground text-center text-sm">
               <Trans>
                 Page {pagination.current_page} of {pagination.last_page}
               </Trans>

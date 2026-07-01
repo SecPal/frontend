@@ -16,11 +16,13 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
+  FormSkeleton,
   Input,
   OnboardingAuthCard,
   OnboardingAuthHeader,
   OnboardingAuthShell,
-} from "./ui";
+  Skeleton,
+} from "@/ui";
 import {
   getErrorRetryAfterSeconds,
   getErrorValidationErrors,
@@ -28,7 +30,6 @@ import {
 } from "../../lib/errorUtils";
 import { Logo } from "../../components/Logo";
 import { LanguageSwitcher } from "../../components/LanguageSwitcher";
-import { FormSkeleton, Skeleton } from "@/ui";
 import { useAuth } from "../../hooks/useAuth";
 import {
   completeOnboarding,
@@ -493,16 +494,12 @@ export function OnboardingComplete() {
         <Alert
           className={
             isRateLimited
-              ? "mt-8 border-amber-200 bg-amber-50 text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100"
-              : "mt-8 border-red-200 bg-red-50 text-red-950 dark:border-red-800 dark:bg-red-950/30 dark:text-red-100"
+              ? "mt-8 border-amber-500/30 bg-amber-500/10 text-foreground"
+              : "mt-8 border-destructive/30 bg-destructive/10 text-foreground"
           }
         >
           <AlertTitle
-            className={
-              isRateLimited
-                ? "text-amber-800 dark:text-amber-200"
-                : "text-red-800 dark:text-red-200"
-            }
+            className={isRateLimited ? "text-foreground" : "text-destructive"}
           >
             {isRateLimited ? (
               <Trans>Too Many Attempts</Trans>
@@ -512,15 +509,13 @@ export function OnboardingComplete() {
           </AlertTitle>
           <AlertDescription
             className={
-              isRateLimited
-                ? "mt-2 text-amber-700 dark:text-amber-300"
-                : "mt-2 text-red-700 dark:text-red-300"
+              isRateLimited ? "mt-2 text-foreground" : "mt-2 text-destructive"
             }
           >
             {tokenValidationState.message}
           </AlertDescription>
           {isRateLimited && retryHint && (
-            <AlertDescription className="mt-2 text-amber-700 dark:text-amber-300">
+            <AlertDescription className="mt-2 text-foreground">
               {retryHint}
             </AlertDescription>
           )}
@@ -562,10 +557,10 @@ export function OnboardingComplete() {
   return (
     <OnboardingCompleteFrame>
       <div className="mt-8">
-        <h2 className="text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+        <h2 className="text-2xl font-semibold tracking-normal text-foreground">
           <Trans>Welcome to SecPal!</Trans>
         </h2>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mt-2 text-sm text-muted-foreground">
           <Trans>Complete your account setup to get started</Trans>
         </p>
       </div>
@@ -576,8 +571,8 @@ export function OnboardingComplete() {
         data-onboarding-form="true"
       >
         {errors.general && (
-          <Alert className="mb-6 border-red-200 bg-red-50 text-red-950 dark:border-red-800 dark:bg-red-950/30 dark:text-red-100">
-            <AlertDescription className="text-red-800 dark:text-red-200">
+          <Alert className="mb-6 border-destructive/30 bg-destructive/10 text-foreground">
+            <AlertDescription className="text-destructive">
               {errors.general}
             </AlertDescription>
           </Alert>

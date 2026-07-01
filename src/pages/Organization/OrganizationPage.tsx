@@ -13,7 +13,15 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { X } from "lucide-react";
-import { Badge, Button, Card, CardContent, Spinner } from "@/ui";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  Card,
+  CardContent,
+  OrganizationalUnitTypeBadge,
+  Spinner,
+} from "@/ui";
 import { OrganizationalUnitTree } from "../../components/OrganizationalUnitTree";
 import { OfflineDataBanner } from "../../components/OfflineDataBanner";
 
@@ -23,27 +31,10 @@ const OrganizationalUnitFormDialog = lazy(() =>
     default: m.OrganizationalUnitFormDialog,
   }))
 );
-import {
-  getTypeLabel,
-  getTypeBadgeColor,
-} from "../../lib/organizationalUnitUtils";
+import { getTypeLabel } from "../../lib/organizationalUnitUtils";
 import { formatDate } from "../../lib/dateUtils";
 import type { OrganizationalUnit } from "../../types/organizational";
 import { useOrganizationalUnitsWithOffline } from "../../hooks/useOrganizationalUnitsWithOffline";
-
-const typeBadgeClassNames = {
-  blue: "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
-  green: "bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-300",
-  purple:
-    "bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300",
-  orange:
-    "bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300",
-  zinc: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-} as const;
-
-function getTypeBadgeClassName(type: OrganizationalUnit["type"]) {
-  return typeBadgeClassNames[getTypeBadgeColor(type)];
-}
 
 /**
  * Optimistic UI state for tree updates without reloading
@@ -269,10 +260,10 @@ export function OrganizationPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+        <h1 className="text-foreground text-2xl font-semibold tracking-normal">
           <Trans>Organization Structure</Trans>
         </h1>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+        <p className="text-muted-foreground mt-2 text-sm">
           <Trans>
             Manage your internal organizational units including departments,
             branches, and teams.
@@ -289,11 +280,18 @@ export function OrganizationPage() {
       />
 
       {/* Success toast */}
-      {successMessage && (
-        <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-400">
-          {successMessage}
-        </div>
-      )}
+      {successMessage ? (
+        <Alert
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="border-emerald-500/30 bg-emerald-500/10 text-foreground"
+        >
+          <AlertDescription className="text-foreground">
+            {successMessage}
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       <div
         ref={gridContainerRef}
@@ -320,18 +318,16 @@ export function OrganizationPage() {
             {selectedUnit ? (
               <div className="space-y-4">
                 <div className="flex items-start justify-between gap-2">
-                  <h2 className="text-lg font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+                  <h2 className="text-foreground text-lg font-semibold tracking-normal">
                     {selectedUnit.name}
                   </h2>
                   <div className="flex items-center gap-2">
-                    <Badge className={getTypeBadgeClassName(selectedUnit.type)}>
-                      {getTypeLabel(selectedUnit.type)}
-                    </Badge>
+                    <OrganizationalUnitTypeBadge type={selectedUnit.type} />
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={handleCloseDetail}
-                      className="min-h-8 px-2 py-1 text-zinc-500"
+                      className="text-muted-foreground min-h-8 px-2 py-1"
                       aria-label={t`Close detail panel`}
                     >
                       <X className="h-5 w-5" aria-hidden="true" />
@@ -341,45 +337,45 @@ export function OrganizationPage() {
 
                 <dl className="space-y-3 text-sm">
                   <div>
-                    <dt className="font-medium text-zinc-500 dark:text-zinc-400">
+                    <dt className="text-muted-foreground font-medium">
                       <Trans>Type</Trans>
                     </dt>
-                    <dd className="text-zinc-900 dark:text-white">
+                    <dd className="text-foreground">
                       {getTypeLabel(selectedUnit.type)}
                     </dd>
                   </div>
                   {selectedUnit.description && (
                     <div>
-                      <dt className="font-medium text-zinc-500 dark:text-zinc-400">
+                      <dt className="text-muted-foreground font-medium">
                         <Trans>Description</Trans>
                       </dt>
-                      <dd className="text-zinc-900 dark:text-white">
+                      <dd className="text-foreground">
                         {selectedUnit.description}
                       </dd>
                     </div>
                   )}
                   {selectedUnit.parent && (
                     <div>
-                      <dt className="font-medium text-zinc-500 dark:text-zinc-400">
+                      <dt className="text-muted-foreground font-medium">
                         <Trans>Parent</Trans>
                       </dt>
-                      <dd className="text-zinc-900 dark:text-white">
+                      <dd className="text-foreground">
                         {selectedUnit.parent.name}
                       </dd>
                     </div>
                   )}
                   <div>
-                    <dt className="font-medium text-zinc-500 dark:text-zinc-400">
+                    <dt className="text-muted-foreground font-medium">
                       <Trans>Created</Trans>
                     </dt>
-                    <dd className="text-zinc-900 dark:text-white">
+                    <dd className="text-foreground">
                       {formatDate(selectedUnit.created_at, i18n.locale)}
                     </dd>
                   </div>
                 </dl>
 
                 {/* Action buttons */}
-                <div className="flex flex-col gap-2 border-t border-zinc-200 pt-4 dark:border-zinc-700">
+                <div className="border-border flex flex-col gap-2 border-t pt-4">
                   <Button onClick={() => handleEdit(selectedUnit)}>
                     <Trans>Edit</Trans>
                   </Button>
@@ -393,7 +389,7 @@ export function OrganizationPage() {
               </div>
             ) : (
               <div className="flex h-full min-h-[200px] items-center justify-center text-center">
-                <p className="text-sm text-zinc-500">
+                <p className="text-muted-foreground text-sm">
                   <Trans>Select an organizational unit to view details</Trans>
                 </p>
               </div>
@@ -405,8 +401,11 @@ export function OrganizationPage() {
       {/* Create/Edit Dialog - Lazy loaded for better performance */}
       <Suspense
         fallback={
-          <div className="fixed inset-0 flex items-center justify-center bg-zinc-950/25 dark:bg-zinc-950/50">
-            <Spinner aria-label={t`Loading`} className="size-6 text-white" />
+          <div className="bg-background/80 fixed inset-0 flex items-center justify-center backdrop-blur-sm">
+            <Spinner
+              aria-label={t`Loading`}
+              className="text-foreground size-6"
+            />
           </div>
         }
       >
