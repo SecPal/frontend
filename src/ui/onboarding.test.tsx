@@ -310,7 +310,7 @@ describe("onboarding shadcn primitives", () => {
   });
 
   it("provides auth shell primitives with stable light and dark mode classes", () => {
-    render(
+    const { container } = render(
       <OnboardingAuthShell>
         <OnboardingAuthCard aria-label="Complete account setup">
           <OnboardingAuthHeader>
@@ -323,31 +323,105 @@ describe("onboarding shadcn primitives", () => {
     );
 
     const shell = document.querySelector('[data-slot="onboarding-auth-shell"]');
-    const card = screen.getByRole("region", {
-      name: "Complete account setup",
-    });
+    const card = document.querySelector('[data-slot="onboarding-auth-card"]');
     const header = document.querySelector(
       '[data-slot="onboarding-auth-header"]'
     );
 
     expect(shell).toHaveClass(
       "min-h-[var(--app-shell-min-height)]",
-      "bg-white",
+      "bg-background",
       "pt-[calc(1.5rem+var(--app-safe-area-inset-top))]",
-      "text-zinc-950",
-      "dark:bg-zinc-950",
-      "dark:text-zinc-50"
+      "text-foreground"
     );
     expect(card).toHaveAttribute("data-slot", "onboarding-auth-card");
     expect(card).toHaveClass(
       "min-h-[var(--app-auth-card-min-height)]",
       "rounded-md",
-      "border-zinc-200",
-      "bg-white",
-      "dark:border-zinc-800",
-      "dark:bg-zinc-900"
+      "border-border",
+      "bg-card",
+      "text-card-foreground"
     );
     expect(header).toHaveClass("flex", "items-center", "justify-between");
+    expect(shell?.className).not.toContain("bg-white");
+    expect(shell?.className).not.toContain("text-zinc-950");
+    expect(card?.className).not.toContain("border-zinc-200");
+    expect(card?.className).not.toContain("bg-white");
+    expect(card?.className).not.toContain("dark:bg-zinc-900");
+
+    const select = container.querySelector(
+      '[data-slot="onboarding-select-content"]'
+    );
+    const option = container.querySelector(
+      '[data-slot="onboarding-select-item"]'
+    );
+    expect(select).toBeNull();
+    expect(option).toBeNull();
+  });
+
+  it("keeps onboarding shared shells and select surfaces on canonical theme tokens", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <>
+        <OnboardingAuthShell>
+          <OnboardingAuthCard aria-label="Complete account setup">
+            <OnboardingAuthHeader>
+              <span>SecPal</span>
+              <button type="button">Language</button>
+            </OnboardingAuthHeader>
+            <Field>
+              <FieldLabel htmlFor="contract-type-theme">
+                Contract type
+              </FieldLabel>
+              <Select id="contract-type-theme" defaultValue="">
+                <option value="">Select an option</option>
+                <option value="contractor">Contractor</option>
+              </Select>
+            </Field>
+          </OnboardingAuthCard>
+        </OnboardingAuthShell>
+      </>
+    );
+
+    await user.click(screen.getByRole("combobox", { name: "Contract type" }));
+
+    const shell = document.querySelector('[data-slot="onboarding-auth-shell"]');
+    const card = document.querySelector('[data-slot="onboarding-auth-card"]');
+    const selectContent = document.querySelector(
+      '[data-slot="onboarding-select-content"]'
+    );
+    const selectItem = document.querySelector(
+      '[data-slot="onboarding-select-item"]'
+    );
+
+    expect(shell).toHaveClass("bg-background", "text-foreground");
+    expect(card).toHaveClass(
+      "border-border",
+      "bg-card",
+      "text-card-foreground"
+    );
+    expect(selectContent).toHaveClass(
+      "border-border",
+      "bg-popover",
+      "text-popover-foreground"
+    );
+    expect(selectItem).toHaveClass(
+      "text-foreground",
+      "data-[highlighted]:bg-accent",
+      "data-[highlighted]:text-accent-foreground"
+    );
+
+    expect(shell?.className).not.toContain("bg-white");
+    expect(shell?.className).not.toContain("text-zinc-950");
+    expect(card?.className).not.toContain("border-zinc-200");
+    expect(card?.className).not.toContain("dark:bg-zinc-900");
+    expect(selectContent?.className).not.toContain("border-zinc-200");
+    expect(selectContent?.className).not.toContain("bg-white");
+    expect(selectItem?.className).not.toContain("text-zinc-950");
+    expect(selectItem?.className).not.toContain(
+      "data-[highlighted]:bg-zinc-100"
+    );
   });
 
   it("renders badge and progress primitives with accessible state", () => {

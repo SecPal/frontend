@@ -240,7 +240,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
                 <NavbarItem aria-label="User menu">
                   <Avatar
                     initials={user?.name?.trim() ? getInitials(user.name) : "U"}
-                    className="size-8 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+                    className="size-8 bg-primary text-primary-foreground"
                   />
                 </NavbarItem>
               </DropdownMenuTrigger>

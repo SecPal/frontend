@@ -47,6 +47,7 @@ import {
   GERMAN_CONTRACT_START_DATE_HINT,
   parseEmployeeDateToISO,
 } from "./employeeDateUtils";
+import { EmployeeManagementLevelField } from "./EmployeeManagementLevelField";
 
 type EmployeeFormField = keyof EmployeeFormData;
 type EmployeeFormErrors = Partial<Record<EmployeeFormField, string>>;
@@ -411,7 +412,7 @@ export function EmployeeCreate() {
         </Button>
       </div>
 
-      <Card className="dark:bg-zinc-900">
+      <Card>
         <CardContent className="p-6">
           <PageTitle className="mb-6">
             <Trans>Create New Employee</Trans>
@@ -420,10 +421,10 @@ export function EmployeeCreate() {
           <form onSubmit={handleSubmit} className="space-y-8" noValidate>
             {submitFeedback && (
               <Alert
-                className="border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200"
+                className="border-destructive/30 bg-destructive/10 text-destructive"
                 aria-live="assertive"
               >
-                <AlertDescription className="text-red-800 dark:text-red-200">
+                <AlertDescription className="text-destructive">
                   {submitFeedback}
                 </AlertDescription>
               </Alert>
@@ -576,7 +577,7 @@ export function EmployeeCreate() {
                   </Field>
 
                   <div className="sm:col-span-2">
-                    <PageText className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                    <PageText className="text-foreground text-sm font-semibold">
                       <Trans>Current Address</Trans>
                     </PageText>
                   </div>
@@ -752,82 +753,29 @@ export function EmployeeCreate() {
                     )}
                   </Field>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <FieldLabel htmlFor="is_leadership">
-                        <Trans>Leadership Position</Trans>
-                      </FieldLabel>
-                      <Switch
-                        id="is_leadership"
-                        name="is_leadership"
-                        checked={isLeadership}
-                        showIcons
-                        onChange={(checked) => {
-                          setIsLeadership(checked);
-                          clearSubmitMessages();
-                          if (!checked) {
-                            handleChange("management_level", 0);
-                            clearFieldError("management_level");
-                          }
-                        }}
-                      />
-                    </div>
-
-                    <Field>
-                      <span
-                        data-slot="control"
-                        className="relative block w-full before:absolute before:inset-px before:rounded-[calc(var(--radius-lg)-1px)] before:bg-white before:shadow-sm dark:before:hidden after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:ring-transparent after:ring-inset sm:focus-within:after:ring-2 sm:focus-within:after:ring-blue-500"
-                      >
-                        <div className="relative flex items-center rounded-lg border border-zinc-950/10 bg-transparent dark:border-white/10 dark:bg-white/5">
-                          {isLeadership && (
-                            <div className="shrink-0 pl-3.5 pr-2 py-2.5 text-base/6 text-gray-500 select-none sm:pl-3 sm:pr-2 sm:py-1.5 sm:text-sm/6 dark:text-gray-400">
-                              <Trans>ML</Trans>
-                            </div>
-                          )}
-                          <input
-                            id="management_level"
-                            type="number"
-                            name="management_level"
-                            min="1"
-                            max="255"
-                            placeholder={
-                              isLeadership
-                                ? "?"
-                                : i18n._(msg`No management position`)
-                            }
-                            disabled={!isLeadership}
-                            required={isLeadership}
-                            ref={(element) =>
-                              setFieldRef("management_level", element)
-                            }
-                            aria-invalid={
-                              fieldErrors.management_level ? true : undefined
-                            }
-                            aria-describedby={getAriaDescribedBy(
-                              "management_level"
-                            )}
-                            value={
-                              isLeadership && formData.management_level > 0
-                                ? formData.management_level
-                                : ""
-                            }
-                            onChange={(e) =>
-                              handleChange(
-                                "management_level",
-                                e.target.value ? Number(e.target.value) : 0
-                              )
-                            }
-                            className={`relative block w-full appearance-none rounded-lg py-2.5 pr-3.5 text-base/6 text-zinc-950 placeholder:text-zinc-500 bg-transparent focus:outline-hidden sm:py-1.5 sm:pr-3 sm:text-sm/6 dark:text-white dark:placeholder:text-zinc-500 disabled:opacity-50 border-0 ${isLeadership ? "pl-0" : "pl-3.5 sm:pl-3"}`}
-                          />
-                        </div>
-                      </span>
-                      {fieldErrors.management_level && (
-                        <FieldError id={getFieldErrorId("management_level")}>
-                          {fieldErrors.management_level}
-                        </FieldError>
-                      )}
-                    </Field>
-                  </div>
+                  <EmployeeManagementLevelField
+                    checked={isLeadership}
+                    describedBy={getAriaDescribedBy("management_level")}
+                    error={fieldErrors.management_level}
+                    inputRef={(element) =>
+                      setFieldRef("management_level", element)
+                    }
+                    noManagementPlaceholder={i18n._(
+                      msg`No management position`
+                    )}
+                    onCheckedChange={(checked) => {
+                      setIsLeadership(checked);
+                      clearSubmitMessages();
+                      if (!checked) {
+                        handleChange("management_level", 0);
+                        clearFieldError("management_level");
+                      }
+                    }}
+                    onValueChange={(value) =>
+                      handleChange("management_level", value)
+                    }
+                    value={formData.management_level}
+                  />
 
                   <Field>
                     <FieldLabel htmlFor="status">
@@ -924,7 +872,7 @@ export function EmployeeCreate() {
                   </Field>
 
                   <Field>
-                    <div className="flex items-center justify-between gap-4 rounded-lg border border-zinc-950/10 px-4 py-3 dark:border-white/10">
+                    <div className="flex items-center justify-between gap-4 rounded-lg border border-border px-4 py-3">
                       <div className="space-y-1">
                         <FieldLabel htmlFor="send_invitation">
                           <Trans>Send Onboarding Invitation</Trans>
@@ -974,10 +922,10 @@ export function EmployeeCreate() {
 
             {error && (
               <Alert
-                className="border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
+                className="border-destructive/30 bg-destructive/10 text-destructive"
                 aria-live="assertive"
               >
-                <AlertDescription className="text-red-800 dark:text-red-400">
+                <AlertDescription className="text-destructive">
                   {error}
                 </AlertDescription>
               </Alert>

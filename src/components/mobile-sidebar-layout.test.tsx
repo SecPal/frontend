@@ -64,6 +64,13 @@ describe("mobile sidebar layouts", () => {
       expect(document.querySelector('[data-slot="sheet-content"]')).toHaveClass(
         "pt-[calc(0.5rem+var(--app-safe-area-inset-top))]"
       );
+      const mobilePanel = document.querySelector(
+        '[data-slot="sheet-content"] > div'
+      );
+      expect(mobilePanel).not.toBeNull();
+      expect(mobilePanel).toHaveClass("bg-background");
+      expect(mobilePanel?.className).not.toContain("bg-white");
+      expect(mobilePanel?.className).not.toContain("dark:bg-zinc-900");
       expect(
         screen.getByText("Hauptnavigation der Anwendung")
       ).toBeInTheDocument();

@@ -373,6 +373,90 @@ describe("DeleteOrganizationalUnitDialog", () => {
       ).toBeInTheDocument();
     });
 
+    it("keeps offline, child-warning, and delete-error states on canonical theme tokens", async () => {
+      const user = userEvent.setup();
+      vi.mocked(deleteOrganizationalUnit).mockRejectedValueOnce(
+        new Error("Network error")
+      );
+
+      const { unmount } = renderWithI18n(
+        <DeleteOrganizationalUnitDialog
+          open={true}
+          unit={mockUnitWithoutChildren}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const offlineAlert = screen
+        .getByText(
+          /deleting organizational units is not possible while offline/i
+        )
+        .closest('[data-slot="alert"]');
+      expect(offlineAlert).toHaveClass(
+        "border-destructive/30",
+        "bg-destructive/10"
+      );
+      expect(screen.getByText(/you're offline/i)).toHaveAttribute(
+        "data-slot",
+        "alert-title"
+      );
+      expect(offlineAlert?.className).not.toContain("border-red-200");
+
+      unmount();
+      vi.mocked(useOnlineStatus).mockReturnValue(true);
+
+      renderWithI18n(
+        <DeleteOrganizationalUnitDialog
+          open={true}
+          unit={mockUnitWithChildren}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const childWarning = screen
+        .getByText(/child units must be deleted or reassigned/i)
+        .closest('[data-slot="alert"]');
+      const childWarningText = screen.getByText(
+        /child units must be deleted or reassigned/i
+      );
+      expect(childWarning).toHaveClass(
+        "border-amber-500/30",
+        "bg-amber-500/10"
+      );
+      expect(childWarningText).toHaveClass("text-foreground");
+      expect(childWarning?.className).not.toContain("border-amber-200");
+      expect(childWarningText.className).not.toContain("text-amber-700");
+      const iconShell = screen
+        .getByText(/cannot delete/i)
+        .closest("div")?.previousElementSibling;
+      const warningIcon = iconShell?.querySelector("svg");
+      expect(iconShell).toHaveClass("bg-amber-500/10");
+      expect(warningIcon).toHaveClass("text-foreground");
+      expect(iconShell?.className).not.toContain("bg-amber-100");
+      expect(warningIcon?.className).not.toContain("text-amber-600");
+
+      unmount();
+
+      renderWithI18n(
+        <DeleteOrganizationalUnitDialog
+          open={true}
+          unit={mockUnitWithoutChildren}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      await user.click(screen.getByRole("button", { name: /delete/i }));
+
+      const deleteError = await screen.findByText(/network error/i);
+      expect(deleteError.closest('[data-slot="alert"]')).toHaveClass(
+        "border-destructive/30",
+        "bg-destructive/10"
+      );
+    });
+
     it("disables delete button when offline", () => {
       renderWithI18n(
         <DeleteOrganizationalUnitDialog

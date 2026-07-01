@@ -41,6 +41,11 @@ import {
 } from "lucide-react";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import { getCspNonce } from "@/lib/cspNonce";
+import {
+  getTypeBadgeColor,
+  getTypeLabel,
+  type OrganizationalUnitBadgeColor,
+} from "@/lib/organizationalUnitUtils";
 import { cn } from "@/lib/utils";
 import {
   buttonVariants,
@@ -210,7 +215,7 @@ export const CommandInput = forwardRef<
   return (
     <div
       data-slot="command-input-wrapper"
-      className="flex h-9 items-center gap-2 border-b px-3"
+      className="flex h-9 items-center gap-2 border-b border-border px-3"
     >
       <Search className="size-4 shrink-0 opacity-50" aria-hidden="true" />
       <CommandPrimitive.Input
@@ -407,7 +412,7 @@ export function SearchableAutocompleteListbox({
           sideOffset={4}
           data-slot={`${slotPrefix}-autocomplete-popover-content`}
           className={cn(
-            "z-50 w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-lg outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+            "z-50 w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-lg outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
             className
           )}
           onOpenAutoFocus={(event) => event.preventDefault()}
@@ -577,7 +582,7 @@ export function SearchableCommandPopover({
             align="start"
             sideOffset={4}
             data-slot={`${slotPrefix}-command-popover-content`}
-            className="z-50 w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-lg outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+            className="z-50 w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-lg outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
             onOpenAutoFocus={(event) => {
               event.preventDefault();
               inputRef.current?.focus();
@@ -767,7 +772,7 @@ export const SelectContent = forwardRef<
         data-slot="select-content"
         position={position}
         className={cn(
-          "bg-popover text-popover-foreground relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          "bg-popover text-popover-foreground relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-border shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           position === "popper" &&
             "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
           className
@@ -992,7 +997,7 @@ export const DialogContent = forwardRef<
       ref={ref}
       data-slot="dialog-content"
       className={cn(
-        "bg-background text-foreground fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 overflow-x-hidden overflow-y-auto rounded-lg border p-6 shadow-lg duration-200 overscroll-contain data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+        "bg-background text-foreground fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 overflow-x-hidden overflow-y-auto rounded-lg border border-border p-6 shadow-lg duration-200 overscroll-contain data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         dialogSizes[size],
         className
       )}
@@ -1072,7 +1077,7 @@ export const Alert = forwardRef(function Alert(
       role={role}
       data-slot="alert"
       className={cn(
-        "relative grid w-full grid-cols-[0_1fr] rounded-lg border px-4 py-3 text-sm text-card-foreground [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:top-4 [&>svg]:left-4 [&>svg~*]:pl-7",
+        "relative grid w-full grid-cols-[0_1fr] rounded-lg border border-border px-4 py-3 text-sm text-card-foreground [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:top-4 [&>svg]:left-4 [&>svg~*]:pl-7",
         className
       )}
       {...props}
@@ -1120,7 +1125,7 @@ export function Card({
     <section
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-lg border py-6 shadow-sm",
+        "bg-card text-card-foreground flex flex-col gap-6 rounded-lg border border-border py-6 shadow-sm",
         className
       )}
       {...props}
@@ -1219,7 +1224,7 @@ export function Avatar({
       data-slot="avatar"
       {...props}
       className={cn(
-        "relative flex size-8 shrink-0 overflow-hidden text-sm font-medium uppercase",
+        "bg-muted text-muted-foreground relative flex size-8 shrink-0 overflow-hidden text-sm font-medium uppercase",
         square ? "rounded-[20%]" : "rounded-full",
         className
       )}
@@ -1240,7 +1245,7 @@ export function Avatar({
           aria-hidden={alt ? undefined : "true"}
           title={alt || undefined}
           className={cn(
-            "bg-muted flex size-full items-center justify-center",
+            "bg-inherit text-inherit flex size-full items-center justify-center",
             square ? "rounded-[20%]" : "rounded-full"
           )}
         >
@@ -1335,7 +1340,7 @@ export function TableHead({
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b", className)}
+      className={cn("[&_tr]:border-b [&_tr]:border-border", className)}
       {...props}
     />
   );
@@ -1362,7 +1367,7 @@ export function TableRow({
     <tr
       data-slot="table-row"
       className={cn(
-        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors",
+        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b border-border transition-colors",
         className
       )}
       {...props}
@@ -1426,7 +1431,7 @@ export function DescriptionTerm({
     <dt
       data-slot="description-term"
       className={cn(
-        "border-t py-3 font-medium text-muted-foreground first:border-t-0 sm:first:border-t",
+        "border-t border-border py-3 font-medium text-muted-foreground first:border-t-0 sm:first:border-t",
         className
       )}
       {...props}
@@ -1442,7 +1447,7 @@ export function DescriptionDetails({
     <dd
       data-slot="description-details"
       className={cn(
-        "border-t pt-0 pb-3 text-foreground first:border-t-0 sm:py-3 sm:first:border-t",
+        "border-t border-border pt-0 pb-3 text-foreground first:border-t-0 sm:py-3 sm:first:border-t",
         className
       )}
       {...props}
@@ -1453,13 +1458,20 @@ export function DescriptionDetails({
 type CustomerSiteBadgeColor = "red" | "amber" | "lime" | "blue" | "zinc";
 
 const customerSiteBadgeColors = {
-  red: "bg-red-500/15 text-red-700 dark:bg-red-500/10 dark:text-red-400",
-  amber:
-    "bg-amber-400/20 text-amber-700 dark:bg-amber-400/10 dark:text-amber-400",
-  lime: "bg-lime-400/20 text-lime-700 dark:bg-lime-400/10 dark:text-lime-300",
-  blue: "bg-blue-500/15 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400",
-  zinc: "bg-zinc-600/10 text-zinc-700 dark:bg-white/5 dark:text-zinc-400",
+  red: "bg-red-500/15 text-foreground dark:bg-red-500/10",
+  amber: "bg-amber-400/20 text-foreground dark:bg-amber-400/10",
+  lime: "bg-lime-400/20 text-foreground dark:bg-lime-400/10",
+  blue: "bg-blue-500/15 text-foreground dark:bg-blue-500/10",
+  zinc: "bg-muted text-muted-foreground",
 } satisfies Record<CustomerSiteBadgeColor, string>;
+
+const organizationalUnitBadgeColors = {
+  blue: "bg-primary/10 text-primary",
+  green: "bg-emerald-500/10 text-foreground",
+  purple: "bg-purple-500/10 text-foreground",
+  orange: "bg-orange-500/10 text-foreground",
+  zinc: "bg-muted text-muted-foreground",
+} satisfies Record<OrganizationalUnitBadgeColor, string>;
 
 export function CustomerSitePageTitle({
   level = 1,
@@ -1473,8 +1485,8 @@ export function CustomerSitePageTitle({
       data-slot="customer-site-heading"
       className={cn(
         level === 1
-          ? "text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50"
-          : "text-base font-semibold tracking-normal text-zinc-950 dark:text-zinc-50",
+          ? "text-foreground text-2xl font-semibold tracking-normal"
+          : "text-foreground text-base font-semibold tracking-normal",
         className
       )}
       {...props}
@@ -1489,7 +1501,7 @@ export function CustomerSitePageText({
   return (
     <p
       data-slot="customer-site-text"
-      className={cn("text-sm text-zinc-600 dark:text-zinc-300", className)}
+      className={cn("text-muted-foreground text-sm", className)}
       {...props}
     />
   );
@@ -1504,7 +1516,7 @@ export const CustomerSitePageLink = forwardRef<
       ref={ref}
       data-slot="customer-site-link"
       className={cn(
-        "font-medium text-blue-600 underline-offset-4 hover:underline dark:text-blue-400",
+        "text-primary font-medium underline-offset-4 hover:underline",
         uiFocusRing,
         className
       )}
@@ -1541,6 +1553,24 @@ export function CustomerSiteStatusBadge({
   );
 }
 
+export function OrganizationalUnitTypeBadge({
+  type,
+  className,
+  ...props
+}: ComponentPropsWithoutRef<"span"> & { type: string }) {
+  return (
+    <Badge
+      className={cn(
+        organizationalUnitBadgeColors[getTypeBadgeColor(type)],
+        className
+      )}
+      {...props}
+    >
+      {getTypeLabel(type)}
+    </Badge>
+  );
+}
+
 export function CustomerSiteFormCheckboxField({
   className,
   ...props
@@ -1566,19 +1596,15 @@ type EmployeeBadgeColor =
   | "zinc";
 
 const employeeBadgeColors = {
-  red: "bg-red-500/15 text-red-700 dark:bg-red-500/10 dark:text-red-400",
-  orange:
-    "bg-orange-500/15 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400",
-  amber:
-    "bg-amber-400/20 text-amber-700 dark:bg-amber-400/10 dark:text-amber-400",
-  yellow:
-    "bg-yellow-400/20 text-yellow-700 dark:bg-yellow-400/10 dark:text-yellow-300",
-  lime: "bg-lime-400/20 text-lime-700 dark:bg-lime-400/10 dark:text-lime-300",
-  green:
-    "bg-green-500/15 text-green-700 dark:bg-green-500/10 dark:text-green-400",
-  rose: "bg-rose-400/15 text-rose-700 dark:bg-rose-400/10 dark:text-rose-400",
-  sky: "bg-sky-500/15 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300",
-  zinc: "bg-zinc-600/10 text-zinc-700 dark:bg-white/5 dark:text-zinc-400",
+  red: "bg-red-500/15 text-foreground dark:bg-red-500/10",
+  orange: "bg-orange-500/15 text-foreground dark:bg-orange-500/10",
+  amber: "bg-amber-400/20 text-foreground dark:bg-amber-400/10",
+  yellow: "bg-yellow-400/20 text-foreground dark:bg-yellow-400/10",
+  lime: "bg-lime-400/20 text-foreground dark:bg-lime-400/10",
+  green: "bg-green-500/15 text-foreground dark:bg-green-500/10",
+  rose: "bg-rose-400/15 text-foreground dark:bg-rose-400/10",
+  sky: "bg-sky-500/15 text-foreground dark:bg-sky-500/10",
+  zinc: "bg-muted text-muted-foreground",
 } satisfies Record<EmployeeBadgeColor, string>;
 
 export function EmployeeFieldset({
@@ -1602,7 +1628,7 @@ export function EmployeeLegend({
     <legend
       data-slot="employee-legend"
       className={cn(
-        "text-base font-semibold tracking-normal text-zinc-950 dark:text-zinc-50",
+        "text-foreground text-base font-semibold tracking-normal",
         className
       )}
       {...props}
@@ -1706,8 +1732,8 @@ export function EmployeePageTitle({
       data-slot="employee-heading"
       className={cn(
         level === 1
-          ? "text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50"
-          : "text-base font-semibold tracking-normal text-zinc-950 dark:text-zinc-50",
+          ? "text-foreground text-2xl font-semibold tracking-normal"
+          : "text-foreground text-base font-semibold tracking-normal",
         className
       )}
       {...props}
@@ -1722,7 +1748,7 @@ export function EmployeePageText({
   return (
     <p
       data-slot="employee-text"
-      className={cn("text-sm text-zinc-600 dark:text-zinc-300", className)}
+      className={cn("text-muted-foreground text-sm", className)}
       {...props}
     />
   );
@@ -1737,7 +1763,7 @@ export const EmployeePageLink = forwardRef<
       ref={ref}
       data-slot="employee-link"
       className={cn(
-        "font-medium text-blue-600 underline-offset-4 hover:underline dark:text-blue-400",
+        "text-primary font-medium underline-offset-4 hover:underline",
         uiFocusRing,
         className
       )}
@@ -1782,7 +1808,7 @@ export function EmployeeDataTable({
     <div
       data-slot="employee-table-shell"
       className={cn(
-        "overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800",
+        "overflow-x-auto rounded-md border border-border",
         className
       )}
       {...props}
@@ -1798,7 +1824,7 @@ export function EmployeeTable({
     <table
       data-slot="employee-table"
       className={cn(
-        "min-w-full divide-y divide-zinc-200 text-left text-sm text-zinc-950 dark:divide-zinc-800 dark:text-zinc-50",
+        "min-w-full divide-y divide-border text-left text-sm text-foreground",
         className
       )}
       {...props}
@@ -1817,7 +1843,7 @@ export function EmployeeTableBody({
   return (
     <tbody
       data-slot="employee-table-body"
-      className={cn("divide-y divide-zinc-100 dark:divide-zinc-800", className)}
+      className={cn("divide-y divide-border", className)}
       {...props}
     />
   );
@@ -1839,9 +1865,9 @@ export function EmployeeTableRow({
       <tr
         data-slot="employee-table-row"
         className={cn(
-          "bg-white dark:bg-zinc-950",
+          "bg-background",
           to &&
-            "hover:bg-zinc-50 has-[[data-row-link]:focus-visible]:outline-2 has-[[data-row-link]:focus-visible]:-outline-offset-2 has-[[data-row-link]:focus-visible]:outline-blue-600 dark:hover:bg-zinc-900",
+            "hover:bg-muted/50 has-[[data-row-link]:focus-visible]:outline-ring has-[[data-row-link]:focus-visible]:outline-2 has-[[data-row-link]:focus-visible]:-outline-offset-2",
           className
         )}
         {...props}
@@ -1858,7 +1884,7 @@ export function EmployeeTableHeader({
     <th
       data-slot="employee-table-header"
       className={cn(
-        "px-4 py-3 text-xs font-medium uppercase tracking-normal text-zinc-500 dark:text-zinc-400",
+        "text-muted-foreground px-4 py-3 text-xs font-medium uppercase tracking-normal",
         className
       )}
       {...props}
@@ -1986,7 +2012,7 @@ export function PageSkeleton({
         {Array.from({ length: sectionCount }, (_, index) => (
           <div
             key={index}
-            className="rounded-lg border bg-card p-6 text-card-foreground"
+            className="rounded-lg border border-border bg-card p-6 text-card-foreground"
           >
             <SectionSkeletonContent rows={4} showHeader />
           </div>
@@ -2024,7 +2050,7 @@ export function SectionSkeleton({
         aria-hidden="true"
         data-slot="section-skeleton"
         className={cn(
-          "rounded-lg border bg-card p-6 text-card-foreground",
+          "rounded-lg border border-border bg-card p-6 text-card-foreground",
           className
         )}
       >
@@ -2045,7 +2071,7 @@ export function SectionSkeleton({
       aria-live="polite"
       data-slot="section-skeleton"
       className={cn(
-        "rounded-lg border bg-card p-6 text-card-foreground",
+        "rounded-lg border border-border bg-card p-6 text-card-foreground",
         className
       )}
     >
@@ -2090,7 +2116,11 @@ export function TableSkeleton({
         <thead className="text-muted-foreground">
           <tr>
             {Array.from({ length: columnCount }, (_, index) => (
-              <th key={index} scope="col" className="border-b px-2 py-2">
+              <th
+                key={index}
+                scope="col"
+                className="border-b border-border px-2 py-2"
+              >
                 <Skeleton className="h-4 w-24" />
               </th>
             ))}
@@ -2100,7 +2130,10 @@ export function TableSkeleton({
           {Array.from({ length: rowCount }, (_, rowIndex) => (
             <tr key={rowIndex}>
               {Array.from({ length: columnCount }, (_, columnIndex) => (
-                <td key={columnIndex} className="border-b px-2 py-4">
+                <td
+                  key={columnIndex}
+                  className="border-b border-border px-2 py-4"
+                >
                   <Skeleton
                     className={cn("h-4", columnIndex === 0 ? "w-32" : "w-24")}
                   />

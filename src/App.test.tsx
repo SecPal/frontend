@@ -324,6 +324,56 @@ describe("App", () => {
     );
   });
 
+  it("keeps the authenticated home surface on canonical theme tokens", async () => {
+    await seedPersistedAuthUser({
+      id: "42",
+      name: "Home User",
+      email: "home.user@secpal.dev",
+      emailVerified: true,
+    });
+    window.history.replaceState({}, "", "/");
+
+    await renderWithI18n(<App />);
+
+    const heading = await screen.findByRole("heading", {
+      name: /welcome to secpal/i,
+    });
+    const copy = screen.getByText(
+      (_, element) =>
+        element?.tagName === "P" &&
+        (element.textContent?.includes("A guard") ?? false)
+    );
+
+    expect(heading).toHaveClass("text-foreground");
+    expect(copy).toHaveClass("text-muted-foreground");
+    expect(heading.className).not.toContain("text-zinc-950");
+    expect(copy.className).not.toContain("text-zinc-500");
+  });
+
+  it("keeps the authenticated about surface on canonical theme tokens", async () => {
+    await seedPersistedAuthUser({
+      id: "42",
+      name: "About User",
+      email: "about.user@secpal.dev",
+      emailVerified: true,
+    });
+    window.history.replaceState({}, "", "/about");
+
+    await renderWithI18n(<App />);
+
+    const heading = await screen.findByRole("heading", {
+      name: /about secpal/i,
+    });
+    const copy = screen.getByText(
+      /operations software for german private security services/i
+    );
+
+    expect(heading).toHaveClass("text-foreground");
+    expect(copy).toHaveClass("text-muted-foreground");
+    expect(heading.className).not.toContain("text-zinc-950");
+    expect(copy.className).not.toContain("text-zinc-500");
+  });
+
   it("preserves the authenticated return route when opening source from app content", async () => {
     window.history.replaceState(
       { usr: { sourceReturnTo: "/customers/new?draft=1#notes" } },

@@ -38,11 +38,11 @@ export function EncryptionProgress({
 
   return (
     <div
-      className="mb-4 p-3 bg-blue-100 rounded"
+      className="border-border bg-muted mb-4 rounded-lg border p-3"
       role="status"
       aria-live="polite"
     >
-      <p className="mb-2 text-base/6 font-semibold text-blue-900 sm:text-sm/6">
+      <p className="text-foreground mb-2 text-base/6 font-semibold sm:text-sm/6">
         <Trans>Encrypting files...</Trans>
       </p>
 
@@ -50,17 +50,17 @@ export function EncryptionProgress({
         <div className="space-y-2">
           {files.map(([filename, percentage]) => (
             <div key={filename}>
-              <div className="flex justify-between items-center mb-1">
-                <p className="flex-1 truncate text-sm text-blue-800">
+              <div className="mb-1 flex items-center justify-between">
+                <p className="text-muted-foreground flex-1 truncate text-sm">
                   {filename}
                 </p>
-                <p className="ml-2 text-sm font-semibold text-blue-800">
+                <p className="text-foreground ml-2 text-sm font-semibold">
                   {percentage}%
                 </p>
               </div>
-              <div className="w-full bg-blue-200 rounded-full h-2">
+              <div className="bg-accent h-2 w-full rounded-full">
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-primary h-2 rounded-full transition-all duration-300"
                   style={{ width: `${percentage}%` }}
                   role="progressbar"
                   aria-valuenow={percentage}
@@ -74,8 +74,8 @@ export function EncryptionProgress({
       )}
 
       {files.length === 0 && (
-        <div className="w-full bg-blue-200 rounded-full h-2">
-          <div className="bg-blue-600 h-2 rounded-full animate-pulse w-full" />
+        <div className="bg-accent h-2 w-full rounded-full">
+          <div className="bg-primary h-2 w-full animate-pulse rounded-full" />
         </div>
       )}
     </div>

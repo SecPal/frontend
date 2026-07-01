@@ -8,7 +8,13 @@ import type { OrganizationalUnitType } from "../types/organizational";
  * Badge color type for organizational unit type badges
  * Matches the color prop accepted by the Badge component
  */
-export type BadgeColor = "blue" | "green" | "purple" | "orange" | "zinc";
+export type OrganizationalUnitBadgeColor =
+  | "blue"
+  | "green"
+  | "purple"
+  | "orange"
+  | "zinc";
+export type BadgeColor = OrganizationalUnitBadgeColor;
 
 /**
  * Hierarchy ranking for organizational unit types
@@ -43,7 +49,7 @@ export const TYPE_HIERARCHY: Record<OrganizationalUnitType, number> = {
  */
 export function getTypeBadgeColor(
   type: OrganizationalUnitType | string
-): BadgeColor {
+): OrganizationalUnitBadgeColor {
   switch (type) {
     case "holding":
     case "company":

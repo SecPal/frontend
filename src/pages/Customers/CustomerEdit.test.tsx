@@ -236,9 +236,25 @@ describe("CustomerEdit", () => {
 
     renderWithRouter();
 
-    await waitFor(() => {
-      expect(screen.getByText(/customer not found/i)).toBeInTheDocument();
-    });
+    const loadError = await screen.findByText(/customer not found/i);
+    expect(loadError).toBeInTheDocument();
+    expect(loadError.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+  });
+
+  it("keeps load and submit errors on canonical theme tokens", async () => {
+    vi.mocked(customersApi.getCustomer).mockRejectedValueOnce(
+      new Error("Customer not found")
+    );
+
+    renderWithRouter();
+
+    const loadError = await screen.findByText(/customer not found/i);
+    expect(loadError.closest('[data-slot="alert"]')).toHaveClass("text-foreground");
+
+    vi.clearAllMocks();
   });
 
   it("displays error message on update failure", async () => {

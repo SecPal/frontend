@@ -24,7 +24,7 @@ export function StackedLayout({
       open={showSidebar}
       onOpenChange={setShowSidebar}
       data-layout="stacked"
-      className="relative isolate flex min-h-[var(--app-shell-min-height)] w-full flex-col bg-white lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950"
+      className="bg-background relative isolate flex min-h-[var(--app-shell-min-height)] w-full flex-col"
     >
       <MobileSidebarDialog
         open={showSidebar}
@@ -46,7 +46,7 @@ export function StackedLayout({
       </header>
 
       <SidebarInset className="flex flex-1 flex-col">
-        <div className="flex flex-1 flex-col bg-white dark:bg-zinc-900">
+        <div className="bg-background flex flex-1 flex-col">
           <div className="grow p-6 lg:p-10">
             <div className="mx-auto max-w-6xl">{children}</div>
           </div>

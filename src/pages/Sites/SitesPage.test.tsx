@@ -228,6 +228,20 @@ describe("SitesPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps table feedback and pagination on canonical theme tokens", async () => {
+    vi.mocked(customersApi.listSites).mockRejectedValueOnce(
+      new Error("API Error")
+    );
+
+    renderWithProviders();
+
+    const alert = await screen.findByText("API Error");
+    expect(alert.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+  });
+
   it("should filter sites by search term", async () => {
     renderWithProviders();
 

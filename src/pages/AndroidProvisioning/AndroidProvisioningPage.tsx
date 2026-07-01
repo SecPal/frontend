@@ -19,6 +19,7 @@ import { ApiError } from "../../services/ApiError";
 import { apiFetch } from "../../services/csrf";
 import {
   Alert,
+  AlertDescription,
   Badge,
   Button,
   Card,
@@ -85,22 +86,19 @@ function formatDateTime(value: string | null): string {
 function getStatusBadgeClass(status: AndroidEnrollmentStatus) {
   switch (status) {
     case "pending":
-      return "bg-sky-500/15 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300";
+      return "bg-sky-500/15 text-foreground dark:bg-sky-500/10";
     case "exchanged":
-      return "bg-lime-400/20 text-lime-700 dark:bg-lime-400/10 dark:text-lime-300";
+      return "bg-lime-400/20 text-foreground dark:bg-lime-400/10";
     case "revoked":
-      return "bg-rose-400/15 text-rose-700 dark:bg-rose-400/10 dark:text-rose-400";
+      return "bg-rose-400/15 text-foreground dark:bg-rose-400/10";
     case "expired":
-      return "bg-amber-400/20 text-amber-700 dark:bg-amber-400/10 dark:text-amber-400";
+      return "bg-amber-400/20 text-foreground dark:bg-amber-400/10";
   }
 }
 
 function MutedText({ className, ...props }: ComponentPropsWithoutRef<"p">) {
   return (
-    <p
-      className={cn("text-sm text-zinc-500 dark:text-zinc-400", className)}
-      {...props}
-    />
+    <p className={cn("text-sm text-muted-foreground", className)} {...props} />
   );
 }
 
@@ -121,7 +119,7 @@ function EnrollmentSessionSkeletonList({
       {Array.from({ length: 3 }, (_, index) => (
         <div
           key={index}
-          className="rounded-md border border-zinc-200 p-4 dark:border-zinc-800"
+          className="rounded-md border border-border bg-card p-4"
           aria-hidden="true"
         >
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -367,13 +365,15 @@ export default function AndroidProvisioningPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+      <h1 className="text-foreground text-2xl font-semibold tracking-normal">
         <Trans>Android Provisioning</Trans>
       </h1>
 
       {loadError ? (
-        <Alert className="border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
-          {loadError}
+        <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+          <AlertDescription className="text-destructive">
+            {loadError}
+          </AlertDescription>
         </Alert>
       ) : null}
 
@@ -435,8 +435,10 @@ export default function AndroidProvisioningPage() {
                 </Field>
 
                 {submitError ? (
-                  <Alert className="border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200">
-                    {submitError}
+                  <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+                    <AlertDescription className="text-destructive">
+                      {submitError}
+                    </AlertDescription>
                   </Alert>
                 ) : null}
 
@@ -450,17 +452,17 @@ export default function AndroidProvisioningPage() {
                 </Button>
               </form>
             ) : (
-              <p className="text-sm text-zinc-600 dark:text-zinc-300">
+              <MutedText>
                 <Trans>
                   You can inspect Android enrollment status, but write
                   permission is required to create or revoke sessions.
                 </Trans>
-              </p>
+              </MutedText>
             )}
 
             {latestQrPayload && latestSession ? (
-              <div className="space-y-3 rounded-md border border-sky-200 bg-sky-50 p-5 dark:border-sky-900/60 dark:bg-sky-950/30">
-                <h2 className="flex items-center gap-2 text-base font-semibold tracking-normal text-zinc-950 dark:text-zinc-50">
+              <div className="space-y-3 rounded-md border border-border bg-muted p-5">
+                <h2 className="text-foreground flex items-center gap-2 text-base font-semibold tracking-normal">
                   <QrCode className="size-4" aria-hidden="true" />
                   <Trans>Provisioning QR code</Trans>
                 </h2>
@@ -468,7 +470,7 @@ export default function AndroidProvisioningPage() {
                   value={latestQrPayload}
                   alt={_(msg`Android provisioning QR code`)}
                 />
-                <p className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
+                <p className="text-foreground text-sm font-medium">
                   {latestSession.device_label ||
                     _(msg`Unnamed Android enrollment session`)}
                 </p>
@@ -500,11 +502,11 @@ export default function AndroidProvisioningPage() {
               />
             ) : null}
             {!loading && sessions.length === 0 ? (
-              <p className="text-sm text-zinc-600 dark:text-zinc-300">
+              <MutedText>
                 <Trans>
                   No Android enrollment sessions have been created yet.
                 </Trans>
-              </p>
+              </MutedText>
             ) : null}
 
             {sessions.length > 0 ? (
@@ -516,10 +518,10 @@ export default function AndroidProvisioningPage() {
                   {sessions.map((session) => (
                     <div
                       key={session.id}
-                      className="flex flex-col gap-3 rounded-md border border-zinc-200 p-4 dark:border-zinc-800 md:flex-row md:items-center md:justify-between"
+                      className="flex flex-col gap-3 rounded-md border border-border bg-card p-4 md:flex-row md:items-center md:justify-between"
                     >
                       <div className="space-y-1">
-                        <p className="text-sm font-medium text-zinc-950 dark:text-zinc-50">
+                        <p className="text-foreground text-sm font-medium">
                           {session.device_label ||
                             _(msg`Unnamed Android enrollment session`)}
                         </p>

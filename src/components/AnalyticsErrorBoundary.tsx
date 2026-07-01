@@ -69,27 +69,27 @@ export class AnalyticsErrorBoundary extends Component<Props, State> {
 
       // Default error UI
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
-          <div className="max-w-md w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
+        <div className="bg-background min-h-screen flex items-center justify-center px-4">
+          <div className="bg-card text-card-foreground max-w-md w-full rounded-lg p-6 shadow-lg">
             <div className="flex items-center gap-3 mb-4">
               <TriangleAlert
-                className="h-6 w-6 text-red-500"
+                className="text-destructive h-6 w-6"
                 aria-hidden="true"
               />
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <h2 className="text-foreground text-lg font-semibold">
                 Something went wrong
               </h2>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-muted-foreground mb-4 text-sm">
               We encountered an unexpected error. Please try refreshing the
               page.
             </p>
             {import.meta.env.DEV && this.state.error && (
               <details className="mt-4 text-xs">
-                <summary className="cursor-pointer text-gray-500 dark:text-gray-400 mb-2">
+                <summary className="text-muted-foreground mb-2 cursor-pointer">
                   Error Details (Development Only)
                 </summary>
-                <pre className="bg-gray-100 dark:bg-gray-900 p-3 rounded overflow-x-auto text-red-600 dark:text-red-400">
+                <pre className="bg-muted text-destructive overflow-x-auto rounded p-3">
                   {this.state.error.message}
                   {"\n\n"}
                   {this.state.error.stack}
@@ -98,7 +98,7 @@ export class AnalyticsErrorBoundary extends Component<Props, State> {
             )}
             <button
               onClick={() => window.location.reload()}
-              className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 w-full rounded-lg px-4 py-2 font-medium transition-colors"
             >
               Refresh Page
             </button>

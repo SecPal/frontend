@@ -66,6 +66,18 @@ describe("NotificationPreferences", () => {
     expect(
       screen.getByText(/chrome, edge, firefox, or safari/i)
     ).toBeInTheDocument();
+    const unsupportedStatus = screen
+      .getByText(/browser cannot receive secpal web push notifications/i)
+      .closest("div");
+    const unsupportedText = screen.getByText(
+      /browser cannot receive secpal web push notifications/i
+    );
+    expect(unsupportedStatus).toHaveClass(
+      "border-amber-500/30",
+      "bg-amber-500/10"
+    );
+    expect(unsupportedText).toHaveClass("text-foreground");
+    expect(unsupportedText.className).not.toContain("text-amber-700");
   });
 
   it("shows a truthful browser-scoped status instead of category toggles", async () => {
@@ -107,9 +119,14 @@ describe("NotificationPreferences", () => {
 
     await renderWithI18n(<NotificationPreferences />);
 
-    expect(
-      screen.getByText(/browser notifications are blocked for this site/i)
-    ).toBeInTheDocument();
+    const blockedMessage = screen.getByText(
+      /browser notifications are blocked for this site/i
+    );
+    expect(blockedMessage).toBeInTheDocument();
+    expect(blockedMessage.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
   });
 
   it("shows the auth error message instead of blocked-browser guidance when permission is denied but a 401 error is present", async () => {
@@ -144,11 +161,14 @@ describe("NotificationPreferences", () => {
 
     await renderWithI18n(<NotificationPreferences />);
 
-    expect(
-      screen.getByText(
-        /turn on notifications for this signed-in browser on the current secpal deployment/i
-      )
-    ).toBeInTheDocument();
+    const pendingMessage = screen.getByText(
+      /turn on notifications for this signed-in browser on the current secpal deployment/i
+    );
+    expect(pendingMessage).toBeInTheDocument();
+    expect(pendingMessage.closest('[data-slot="alert"]')).toHaveClass(
+      "border-primary/30",
+      "bg-primary/10"
+    );
     expect(
       screen.getByRole("button", { name: /enable notifications/i })
     ).toBeInTheDocument();
@@ -320,5 +340,44 @@ describe("NotificationPreferences", () => {
         })
       );
     });
+  });
+
+  it("keeps notification preference surfaces on canonical theme tokens", async () => {
+    await renderWithI18n(<NotificationPreferences />);
+
+    const heading = screen.getByRole("heading", {
+      name: /browser notifications/i,
+    });
+    const description = screen.getByText(
+      /secpal only exposes backend-backed browser delivery state here/i
+    );
+    const sendTest = screen.getByRole("button", { name: /send test/i });
+    const statusBox = screen
+      .getByText(
+        /browser notifications are enabled for this signed-in browser/i
+      )
+      .closest('[data-slot="alert"]');
+    const rolloutBox = screen.getByRole("heading", {
+      name: /rollout expectations/i,
+    }).parentElement;
+    const rolloutText = screen
+      .getByText(/notifications are tied to this signed-in browser profile/i)
+      .closest("ul");
+
+    expect(rolloutText).not.toBeNull();
+    expect(heading).toHaveClass("text-foreground");
+    expect(description).toHaveClass("text-muted-foreground");
+    expect(sendTest).toHaveClass("bg-background");
+    expect(statusBox).toHaveClass("border-emerald-500/30", "bg-emerald-500/10");
+    expect(statusBox).toHaveAttribute("data-slot", "alert");
+    expect(rolloutBox).toHaveClass("border-border");
+    expect(rolloutText).toHaveClass("text-muted-foreground");
+
+    expect(heading.className).not.toContain("text-zinc-950");
+    expect(description.className).not.toContain("text-zinc-500");
+    expect(sendTest.className).not.toContain("bg-blue-600");
+    expect(statusBox?.className).not.toContain("bg-green-50");
+    expect(rolloutBox?.className).not.toContain("border-zinc-200");
+    expect(rolloutText?.className).not.toContain("text-zinc-600");
   });
 });

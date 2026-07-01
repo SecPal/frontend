@@ -276,4 +276,44 @@ describe("OfflineIndicator", () => {
       expect(screen.getByText(/You're offline/i)).toBeInTheDocument();
     });
   });
+
+  describe("Theme tokens", () => {
+    beforeEach(() => {
+      vi.mocked(useOnlineStatus).mockReturnValue(false);
+    });
+
+    it("keeps the expanded and minimized offline indicator on canonical theme tokens", () => {
+      renderWithI18n(<OfflineIndicator />);
+
+      const banner = screen.getByRole("status")
+        .firstElementChild as HTMLElement;
+      const title = screen.getByText(/you're offline/i);
+      const detail = screen.getByText(/some features may be limited/i);
+      const minimize = screen.getByRole("button", {
+        name: /minimize offline notice/i,
+      });
+
+      expect(banner).toHaveClass("border-amber-500/30", "bg-amber-500/10");
+      expect(banner).toHaveAttribute("data-slot", "alert");
+      expect(title).toHaveClass("text-foreground");
+      expect(detail).toHaveClass("text-muted-foreground");
+      expect(minimize).toHaveClass("text-foreground", "hover:bg-accent");
+      expect(banner.className).not.toContain("bg-amber-600");
+      expect(title.className).not.toContain("text-amber-700");
+      expect(detail.className).not.toContain("text-amber-700/80");
+      expect(minimize.className).not.toContain("text-amber-700");
+
+      act(() => {
+        vi.advanceTimersByTime(5000);
+      });
+
+      const collapsed = screen.getByRole("button", {
+        name: /you're offline\. click for details\./i,
+      });
+      expect(collapsed).toHaveClass("border-amber-500/30", "bg-background");
+      expect(collapsed).toHaveClass("text-foreground");
+      expect(collapsed.className).not.toContain("bg-amber-600");
+      expect(collapsed.className).not.toContain("text-amber-700");
+    });
+  });
 });

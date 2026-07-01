@@ -1553,14 +1553,20 @@ describe("Login", () => {
     const completing = await screen.findByTestId("login-completing");
     expect(completing).not.toHaveAttribute("aria-busy");
     expect(completing).not.toHaveAttribute("aria-live");
+    expect(completing).toHaveClass("bg-background/80");
+    expect(completing.className).not.toContain("bg-white/80");
 
     // AT announcements are scoped to the LoginSpinner's role="status", not the
     // wider container (which also holds static heading text).
     expect(
       screen.getByRole("status", { name: /loading/i })
     ).toBeInTheDocument();
-    expect(screen.getByText(/completing sign-in/i)).toBeInTheDocument();
-    expect(screen.getByText(/please wait/i)).toBeInTheDocument();
+    expect(screen.getByText(/completing sign-in/i)).toHaveClass(
+      "text-foreground"
+    );
+    expect(screen.getByText(/please wait/i)).toHaveClass(
+      "text-muted-foreground"
+    );
 
     expect(screen.getByRole("button", { name: /log in/i })).toBeDisabled();
     expect(screen.getByRole("textbox", { name: /email/i })).toBeDisabled();
@@ -1833,6 +1839,16 @@ describe("Login", () => {
 
   it("switches to the recovery code input when the user clicks the lost-device toggle", async () => {
     await openMfaDialog();
+
+    const methodSwitch = screen.getByRole("button", {
+      name: /authenticator app/i,
+    });
+    expect(methodSwitch).toHaveClass(
+      "text-muted-foreground",
+      "focus-visible:ring-ring/50"
+    );
+    expect(methodSwitch.className).not.toContain("text-zinc-600");
+    expect(methodSwitch.className).not.toContain("focus-visible:ring-blue-600");
 
     switchToRecoveryCodeMode();
 
@@ -2683,11 +2699,13 @@ describe("Login", () => {
       // Third failed attempt - should show warning
       fireEvent.change(emailInput, { target: { value: "test@secpal.dev" } });
       fireEvent.change(passwordInput, { target: { value: "wrong" } });
-      fireEvent.click(submitButton);
+    fireEvent.click(submitButton);
 
-      await waitFor(() => {
-        expect(screen.getByText(/attempt\(s\) remaining/i)).toBeInTheDocument();
-      });
+      const remainingAttemptsWarning = await screen.findByText(
+        /attempt\(s\) remaining/i
+      );
+      expect(remainingAttemptsWarning).toHaveClass("text-foreground");
+      expect(remainingAttemptsWarning.className).not.toContain("text-amber-700");
     });
 
     it("locks user out after 5 failed attempts", async () => {
@@ -3274,14 +3292,32 @@ describe("Login", () => {
       );
       expect(shell).not.toHaveClass("justify-center");
 
-      expect(
-        screen.getByRole("combobox", { name: /select language/i }).parentElement
-          ?.parentElement
-      ).toHaveClass("top-[calc(1rem+var(--app-safe-area-inset-top))]");
+      const languageSelect = screen.getByRole("combobox", {
+        name: /select language/i,
+      });
+      expect(languageSelect.parentElement?.parentElement).toHaveClass(
+        "top-[calc(1rem+var(--app-safe-area-inset-top))]"
+      );
+      expect(languageSelect).toHaveClass(
+        "border-input",
+        "bg-background",
+        "text-foreground",
+        "focus-visible:ring-ring/50"
+      );
+      expect(languageSelect.className).not.toContain("border-zinc-300");
+      expect(languageSelect.className).not.toContain(
+        "focus-visible:ring-blue-600/20"
+      );
 
       const footer = screen.getByRole("contentinfo");
       expect(footer).not.toHaveClass("absolute");
       expect(footer).toHaveClass("pb-[env(safe-area-inset-bottom,0px)]");
+      expect(footer.querySelector("div")).toHaveClass("text-muted-foreground");
+      expect(
+        screen.getByRole("link", {
+          name: "Powered by SecPal – A guard's best friend",
+        })
+      ).toHaveClass("text-foreground");
 
       const card = screen
         .getByRole("button", { name: /log in/i })

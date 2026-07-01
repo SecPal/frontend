@@ -44,10 +44,10 @@ const AndroidProvisioningPage = lazy(routeModuleLoaders.androidProvisioning);
 function Home() {
   return (
     <>
-      <h1 className="text-2xl/8 font-semibold tracking-normal text-zinc-950 sm:text-xl/8 dark:text-white">
+      <h1 className="text-foreground text-2xl/8 font-semibold tracking-normal sm:text-xl/8">
         <Trans>Welcome to SecPal</Trans>
       </h1>
-      <p className="mt-2 text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
+      <p className="text-muted-foreground mt-2 text-base/6 sm:text-sm/6">
         <Trans>SecPal – A guard’s best friend</Trans>
       </p>
       <div className="mt-8 flex gap-4">
@@ -65,10 +65,10 @@ function Home() {
 function About() {
   return (
     <>
-      <h1 className="text-2xl/8 font-semibold tracking-normal text-zinc-950 sm:text-xl/8 dark:text-white">
+      <h1 className="text-foreground text-2xl/8 font-semibold tracking-normal sm:text-xl/8">
         <Trans>About SecPal</Trans>
       </h1>
-      <p className="mt-4 text-base/6 text-zinc-500 sm:text-sm/6 dark:text-zinc-400">
+      <p className="text-muted-foreground mt-4 text-base/6 sm:text-sm/6">
         <Trans>
           SecPal – operations software for German private security services.
         </Trans>

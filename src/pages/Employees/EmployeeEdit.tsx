@@ -14,6 +14,7 @@ import type { OrganizationalUnit } from "../../types/organizational";
 import {
   Alert,
   AlertDescription,
+  AlertTitle,
   Button,
   Card,
   CardContent,
@@ -33,7 +34,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Switch,
 } from "@/ui";
 import { EmployeeStatusSelectItems } from "./EmployeeStatusOptions";
 import { EmployeeAddressFields } from "./EmployeeAddressFields";
@@ -54,6 +54,7 @@ import {
   GERMAN_CONTRACT_START_DATE_HINT,
   parseEmployeeDateToISO,
 } from "./employeeDateUtils";
+import { EmployeeManagementLevelField } from "./EmployeeManagementLevelField";
 
 /**
  * Employee Edit Form
@@ -321,12 +322,11 @@ export function EmployeeEdit() {
   if (error) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Alert className="max-w-md border-red-200 bg-red-50 p-6 text-center text-red-700 dark:border-red-900 dark:bg-red-900/20 dark:text-red-500">
-          <div className="mb-4 text-4xl">❌</div>
-          <PageTitle level={3} className="text-red-900 dark:text-red-400">
+        <Alert className="max-w-md border-destructive/30 bg-destructive/10 p-6 text-center text-foreground">
+          <AlertTitle className="text-destructive">
             <Trans>Error Loading Employee</Trans>
-          </PageTitle>
-          <AlertDescription className="mt-2 text-red-700 dark:text-red-500">
+          </AlertTitle>
+          <AlertDescription className="text-destructive mt-2">
             {error}
           </AlertDescription>
           <div className="mt-4">
@@ -347,7 +347,7 @@ export function EmployeeEdit() {
         </Button>
       </div>
 
-      <Card className="dark:bg-zinc-900">
+      <Card>
         <CardContent className="p-6">
           <PageTitle className="mb-6">
             <Trans>Edit Employee</Trans>
@@ -479,7 +479,7 @@ export function EmployeeEdit() {
                     </Field>
 
                     <div className="sm:col-span-2">
-                      <PageText className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                      <PageText className="text-foreground text-sm font-semibold">
                         <Trans>Current Address</Trans>
                       </PageText>
                     </div>
@@ -622,65 +622,22 @@ export function EmployeeEdit() {
                       </LoadingRegion>
                     </Field>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <FieldLabel htmlFor="is_leadership">
-                          <Trans>Leadership Position</Trans>
-                        </FieldLabel>
-                        <Switch
-                          id="is_leadership"
-                          name="is_leadership"
-                          checked={isLeadership}
-                          showIcons
-                          onChange={(checked) => {
-                            setIsLeadership(checked);
-                            if (!checked) {
-                              handleChange("management_level", 0);
-                            }
-                          }}
-                        />
-                      </div>
-
-                      <Field>
-                        <span
-                          data-slot="control"
-                          className="relative block w-full before:absolute before:inset-px before:rounded-[calc(var(--radius-lg)-1px)] before:bg-white before:shadow-sm dark:before:hidden after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:ring-transparent after:ring-inset sm:focus-within:after:ring-2 sm:focus-within:after:ring-blue-500"
-                        >
-                          <div className="relative flex items-center rounded-lg border border-zinc-950/10 bg-transparent dark:border-white/10 dark:bg-white/5">
-                            {isLeadership && (
-                              <div className="shrink-0 pl-3.5 pr-2 py-2.5 text-base/6 text-gray-500 select-none sm:pl-3 sm:pr-2 sm:py-1.5 sm:text-sm/6 dark:text-gray-400">
-                                <Trans>ML</Trans>
-                              </div>
-                            )}
-                            <input
-                              type="number"
-                              name="management_level"
-                              min="1"
-                              max="255"
-                              placeholder={
-                                isLeadership
-                                  ? "?"
-                                  : i18n._(msg`No management position`)
-                              }
-                              disabled={!isLeadership}
-                              required={isLeadership}
-                              value={
-                                isLeadership && formData.management_level > 0
-                                  ? formData.management_level
-                                  : ""
-                              }
-                              onChange={(e) =>
-                                handleChange(
-                                  "management_level",
-                                  e.target.value ? Number(e.target.value) : 0
-                                )
-                              }
-                              className={`relative block w-full appearance-none rounded-lg py-2.5 pr-3.5 text-base/6 text-zinc-950 placeholder:text-zinc-500 bg-transparent focus:outline-hidden sm:py-1.5 sm:pr-3 sm:text-sm/6 dark:text-white dark:placeholder:text-zinc-500 disabled:opacity-50 border-0 ${isLeadership ? "pl-0" : "pl-3.5 sm:pl-3"}`}
-                            />
-                          </div>
-                        </span>
-                      </Field>
-                    </div>
+                    <EmployeeManagementLevelField
+                      checked={isLeadership}
+                      noManagementPlaceholder={i18n._(
+                        msg`No management position`
+                      )}
+                      onCheckedChange={(checked) => {
+                        setIsLeadership(checked);
+                        if (!checked) {
+                          handleChange("management_level", 0);
+                        }
+                      }}
+                      onValueChange={(value) =>
+                        handleChange("management_level", value)
+                      }
+                      value={formData.management_level}
+                    />
 
                     <Field>
                       <FieldLabel htmlFor="status">

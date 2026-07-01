@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useLingui } from "@lingui/react";
 import { activateLocale, locales, setLocalePreference } from "../i18n";
 import {
+  Alert,
+  AlertDescription,
   Select,
   SelectContent,
   SelectGroup,
@@ -55,13 +57,11 @@ export function LanguageSwitcher() {
         </SelectContent>
       </Select>
       {error && (
-        <p
-          role="alert"
-          aria-live="assertive"
-          className="mt-2 text-base/6 text-red-600 sm:text-sm/6 dark:text-red-500"
-        >
-          {error}
-        </p>
+        <Alert className="mt-2 border-destructive/30 bg-destructive/10 text-foreground">
+          <AlertDescription className="text-destructive">
+            {error}
+          </AlertDescription>
+        </Alert>
       )}
     </div>
   );

@@ -102,33 +102,31 @@ export function NotificationPermissionPrompt() {
 
   return (
     <div
-      className="fixed bottom-4 left-4 right-4 z-50 rounded-lg border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800 md:left-auto md:right-4 md:w-96"
+      className="bg-card text-card-foreground border-border fixed bottom-4 left-4 right-4 z-50 rounded-lg border p-4 shadow-lg md:left-auto md:right-4 md:w-96"
       role="alert"
       aria-live="polite"
     >
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0">
-          <Bell className="h-6 w-6 text-blue-500" aria-hidden="true" />
+          <Bell className="text-primary h-6 w-6" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <h3 className="text-foreground text-sm font-semibold">
             <Trans>Enable browser notifications</Trans>
           </h3>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-muted-foreground mt-1 text-sm">
             <Trans>
               Turn on notifications for this signed-in browser on the current
               SecPal deployment.
             </Trans>
           </p>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-muted-foreground mt-1 text-sm">
             <Trans>
               Category-specific notification controls are not available yet.
             </Trans>
           </p>
           {error ? (
-            <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-              {error}
-            </p>
+            <p className="text-destructive mt-2 text-sm">{error}</p>
           ) : null}
           <div className="mt-3 flex gap-2">
             <Button
@@ -150,7 +148,7 @@ export function NotificationPermissionPrompt() {
         </div>
         <button
           onClick={handleDismiss}
-          className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          className="text-muted-foreground hover:text-foreground flex-shrink-0"
           aria-label={_(msg`Dismiss notification prompt`)}
         >
           <X className="h-5 w-5" aria-hidden="true" />

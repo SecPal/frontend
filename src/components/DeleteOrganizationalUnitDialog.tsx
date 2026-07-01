@@ -9,6 +9,7 @@ import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import {
   Alert,
   AlertDescription,
+  AlertTitle,
   Button,
   Dialog,
   DialogActions,
@@ -99,16 +100,14 @@ export function DeleteOrganizationalUnitDialog({
           <div className="flex items-center gap-4">
             <div
               className={`shrink-0 rounded-full p-2 ${
-                hasChildren
-                  ? "bg-amber-100 dark:bg-amber-900/50"
-                  : "bg-red-100 dark:bg-red-900/50"
+                hasChildren ? "bg-amber-500/10" : "bg-destructive/10"
               }`}
             >
               <TriangleAlert
                 className={`h-6 w-6 ${
                   hasChildren
-                    ? "text-amber-600 dark:text-amber-400"
-                    : "text-red-600 dark:text-red-400"
+                    ? "text-foreground"
+                    : "text-destructive"
                 }`}
               />
             </div>
@@ -126,11 +125,11 @@ export function DeleteOrganizationalUnitDialog({
           </div>
 
           {!isOnline && (
-            <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
-              <div className="mb-1 font-semibold">
+            <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+              <AlertTitle className="text-destructive">
                 <Trans>You're offline</Trans>
-              </div>
-              <AlertDescription className="mt-0 text-red-800 dark:text-red-400">
+              </AlertTitle>
+              <AlertDescription className="mt-0 text-destructive">
                 <Trans>
                   Deleting organizational units is not possible while offline.
                   Please reconnect to make changes.
@@ -148,8 +147,8 @@ export function DeleteOrganizationalUnitDialog({
                 </Trans>
               </DialogDescription>
               <DialogBody>
-                <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
-                  <AlertDescription className="mt-0 text-amber-800 dark:text-amber-200">
+                <Alert className="border-amber-500/30 bg-amber-500/10 text-foreground">
+                  <AlertDescription className="mt-0 text-foreground">
                     <Trans>
                       Child units must be deleted or reassigned to a different
                       parent before this organizational unit can be removed.
@@ -173,8 +172,8 @@ export function DeleteOrganizationalUnitDialog({
               </DialogDescription>
               {error && (
                 <DialogBody>
-                  <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
-                    <AlertDescription className="mt-0 text-red-800 dark:text-red-200">
+                  <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+                    <AlertDescription className="mt-0 text-destructive">
                       {error}
                     </AlertDescription>
                   </Alert>

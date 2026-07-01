@@ -154,4 +154,29 @@ describe("ProfilePage", () => {
     // Should show fallback initial for whitespace-only name
     expect(screen.getByText("U")).toBeInTheDocument();
   });
+
+  it("keeps the profile surface on canonical theme tokens", () => {
+    renderWithProviders(<ProfilePage />);
+
+    const heading = screen.getByRole("heading", { name: /my profile/i });
+    const description = screen.getByText(/view your account information/i);
+    const divider =
+      heading.parentElement?.parentElement?.querySelector("div.border-t");
+    const avatar = screen.getByText("JD");
+    const email = screen.getAllByText("john.doe@secpal.dev")[0];
+
+    if (!email) {
+      throw new Error("Expected profile email to be rendered");
+    }
+    expect(heading).toHaveClass("text-foreground");
+    expect(description).toHaveClass("text-muted-foreground");
+    expect(divider).toHaveClass("border-border");
+    expect(avatar).toHaveClass("bg-muted", "text-foreground");
+    expect(email).toHaveClass("text-muted-foreground");
+
+    expect(heading.className).not.toContain("text-zinc-950");
+    expect(description.className).not.toContain("text-zinc-600");
+    expect(avatar.className).not.toContain("bg-zinc-950");
+    expect(email.className).not.toContain("text-zinc-500");
+  });
 });

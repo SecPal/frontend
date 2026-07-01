@@ -193,9 +193,11 @@ export default function SiteEdit() {
       {isInitialLoading ? (
         <FormSkeleton loadingLabel={_(msg`Loading site form`)} fields={7} />
       ) : error && !site ? (
-        <PageText className="py-12 text-center text-red-600 dark:text-red-400">
-          {error}
-        </PageText>
+        <Alert className="mx-auto max-w-md border-destructive/30 bg-destructive/10 text-foreground">
+          <AlertDescription className="text-destructive">
+            {error}
+          </AlertDescription>
+        </Alert>
       ) : !site ? (
         <PageText className="py-12 text-center">
           <Trans>Site not found</Trans>
@@ -203,8 +205,10 @@ export default function SiteEdit() {
       ) : (
         <>
           {error && (
-            <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
-              <AlertDescription>{error}</AlertDescription>
+            <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+              <AlertDescription className="text-destructive">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
 
@@ -405,7 +409,7 @@ export default function SiteEdit() {
             <div>
               <PageTitle level={2} className="mb-4">
                 <Trans>Contact Person</Trans>{" "}
-                <span className="text-zinc-500">
+                <span className="text-muted-foreground">
                   <Trans>(Optional)</Trans>
                 </span>
               </PageTitle>

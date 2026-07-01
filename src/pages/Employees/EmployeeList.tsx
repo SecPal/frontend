@@ -14,6 +14,7 @@ import { OrganizationalUnitPicker } from "../../components/OrganizationalUnitPic
 import {
   Alert,
   AlertDescription,
+  AlertTitle,
   Button,
   Card,
   CardContent,
@@ -296,11 +297,11 @@ export function EmployeeList() {
 
       {/* Error Message */}
       {error && (
-        <Alert className="border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
-          <PageTitle level={3} className="text-red-900 dark:text-red-200">
+        <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+          <AlertTitle className="text-destructive">
             <Trans>Error Loading Employees</Trans>
-          </PageTitle>
-          <AlertDescription className="text-red-700 dark:text-red-300">
+          </AlertTitle>
+          <AlertDescription className="text-destructive">
             {error}
           </AlertDescription>
         </Alert>
@@ -351,12 +352,12 @@ export function EmployeeList() {
                   <TableCell>
                     <div>
                       <div className="font-medium">{employee.full_name}</div>
-                      <div className="text-zinc-500 dark:text-zinc-400">
+                      <div className="text-muted-foreground">
                         {employee.email}
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-zinc-500 dark:text-zinc-400">
+                  <TableCell className="text-muted-foreground">
                     {employee.employee_number}
                   </TableCell>
                   <TableCell>
@@ -375,7 +376,7 @@ export function EmployeeList() {
                   <TableCell>
                     <StatusBadge status={employee.status} />
                   </TableCell>
-                  <TableCell className="text-zinc-500 dark:text-zinc-400">
+                  <TableCell className="text-muted-foreground">
                     {employee.organizational_unit?.name || "-"}
                   </TableCell>
                   <TableCell>
@@ -393,7 +394,7 @@ export function EmployeeList() {
               {!loading && !error && employees.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="py-12 text-center">
-                    <PageText className="text-zinc-500 dark:text-zinc-400">
+                    <PageText className="text-muted-foreground">
                       <Trans>No employees found</Trans>
                     </PageText>
                   </TableCell>
@@ -406,7 +407,7 @@ export function EmployeeList() {
 
       {/* Pagination */}
       {pagination.last_page > 1 && (
-        <div className="flex items-center justify-between rounded-md border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 sm:px-6">
+        <div className="bg-card flex items-center justify-between rounded-md border border-border px-4 py-3 sm:px-6">
           <div className="flex-1 flex justify-between sm:hidden">
             <Button
               onClick={() => handlePageChange(pagination.current_page - 1)}

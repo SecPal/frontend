@@ -20,6 +20,9 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Minus } from "lucide-react";
 import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from "input-otp";
 import {
+  Alert as AppAlert,
+  AlertDescription as AppAlertDescription,
+  AlertTitle as AppAlertTitle,
   Button as AppButton,
   Dialog as AppDialog,
   DialogContent as AppDialogContent,
@@ -45,14 +48,34 @@ export type LoginButtonVariant = NonNullable<
 >;
 
 const statusMessageVariants = {
-  error:
-    "border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-200",
-  warning:
-    "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200",
-  info: "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200",
-  neutral:
-    "border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900/60 dark:text-zinc-300",
-} satisfies Record<string, string>;
+  error: {
+    alertClassName: "border-destructive/30 bg-destructive/10 text-foreground",
+    titleClassName: "text-destructive",
+    descriptionClassName: "text-destructive",
+  },
+  warning: {
+    alertClassName: "border-amber-500/30 bg-amber-500/10 text-foreground",
+    titleClassName: "text-foreground",
+    descriptionClassName: "text-foreground",
+  },
+  info: {
+    alertClassName: "border-primary/30 bg-primary/10 text-primary",
+    titleClassName: "text-primary",
+    descriptionClassName: "text-primary",
+  },
+  neutral: {
+    alertClassName: "border-border bg-muted text-muted-foreground",
+    titleClassName: "text-muted-foreground",
+    descriptionClassName: "text-muted-foreground",
+  },
+} satisfies Record<
+  string,
+  {
+    alertClassName: string;
+    titleClassName: string;
+    descriptionClassName: string;
+  }
+>;
 
 export function LoginShell({
   className,
@@ -76,7 +99,7 @@ export function LoginShell({
         // on short landscape viewports (≈320px) because absolute positioning
         // leaves the flex flow and `pb-*` padding only buys a fixed amount
         // of breathing room.
-        "relative flex min-h-[var(--app-shell-min-height)] flex-col items-center overflow-x-clip bg-white px-6 pt-[calc(1.5rem+var(--app-safe-area-inset-top))] pb-6 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 md:px-10 md:pt-[calc(2.5rem+var(--app-safe-area-inset-top))] md:pb-10",
+        "relative flex min-h-[var(--app-shell-min-height)] flex-col items-center overflow-x-clip bg-background px-6 pt-[calc(1.5rem+var(--app-safe-area-inset-top))] pb-6 text-foreground md:px-10 md:pt-[calc(2.5rem+var(--app-safe-area-inset-top))] md:pb-10",
         className
       )}
       {...props}
@@ -90,10 +113,7 @@ export function LoginCard({
 }: ComponentPropsWithoutRef<"section">) {
   return (
     <section
-      className={cn(
-        "w-full max-w-sm text-zinc-950 dark:text-zinc-50",
-        className
-      )}
+      className={cn("w-full max-w-sm text-foreground", className)}
       {...props}
     />
   );
@@ -106,7 +126,7 @@ export function LoginBrandPanel({
   return (
     <aside
       className={cn(
-        "relative hidden min-h-svh overflow-hidden bg-zinc-950 text-white lg:flex lg:flex-col lg:justify-between",
+        "relative hidden min-h-svh overflow-hidden bg-primary text-primary-foreground lg:flex lg:flex-col lg:justify-between",
         className
       )}
       {...props}
@@ -132,10 +152,7 @@ export function LoginCardTitle({
 }: ComponentPropsWithoutRef<"h1">) {
   return (
     <h1
-      className={cn(
-        "text-xl font-bold text-zinc-950 dark:text-zinc-50",
-        className
-      )}
+      className={cn("text-xl font-bold text-foreground", className)}
       {...props}
     />
   );
@@ -158,17 +175,17 @@ export function LoginFieldSeparator({
       data-slot="login-field-separator"
       role="separator"
       className={cn(
-        "relative my-2 h-5 text-center text-sm text-zinc-500 dark:text-zinc-400",
+        "relative my-2 h-5 text-center text-sm text-muted-foreground",
         className
       )}
       {...props}
     >
       <div
         aria-hidden="true"
-        className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-zinc-200 dark:bg-zinc-800"
+        className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border"
       />
       {children ? (
-        <span className="relative mx-auto inline-block bg-white px-2 dark:bg-zinc-950">
+        <span className="relative mx-auto inline-block bg-background px-2">
           {children}
         </span>
       ) : null}
@@ -243,10 +260,7 @@ export function LoginFieldDescription({
   // (small mobile viewports, narrow dialogs).
   return (
     <p
-      className={cn(
-        "text-sm break-words text-zinc-600 dark:text-zinc-300",
-        className
-      )}
+      className={cn("text-sm break-words text-muted-foreground", className)}
       {...props}
     />
   );
@@ -262,7 +276,7 @@ export function LoginFieldError({
   return (
     <p
       className={cn(
-        "text-sm font-medium break-words text-red-600 dark:text-red-500",
+        "text-sm font-medium break-words text-destructive",
         className
       )}
       {...props}
@@ -290,20 +304,33 @@ export function LoginStatusMessage({
   // announcements. Derive the role from `live` so the two attributes are
   // always consistent: assertive → `role="alert"`, polite/off → `role="status"`.
   const role = live === "assertive" ? "alert" : "status";
+  const variantStyles = statusMessageVariants[variant];
   return (
-    <div
+    <AppAlert
       role={role}
       aria-live={live}
       className={cn(
-        "rounded-md border p-4 text-sm break-words",
-        statusMessageVariants[variant],
+        "rounded-md p-4 text-sm break-words",
+        variantStyles.alertClassName,
         className
       )}
       {...props}
     >
-      {title ? <p className="font-medium">{title}</p> : null}
-      <div className={cn(title && "mt-1")}>{children}</div>
-    </div>
+      {title ? (
+        <AppAlertTitle className={variantStyles.titleClassName}>
+          {title}
+        </AppAlertTitle>
+      ) : null}
+      <AppAlertDescription
+        className={cn(
+          "break-words",
+          variantStyles.descriptionClassName,
+          title && "mt-1"
+        )}
+      >
+        {children}
+      </AppAlertDescription>
+    </AppAlert>
   );
 }
 
@@ -369,7 +396,7 @@ export const LoginDialogDescription = forwardRef<
       ref={ref}
       data-slot="login-dialog-description"
       className={cn(
-        "mt-2 text-sm break-words text-zinc-600 dark:text-zinc-300",
+        "mt-2 text-sm break-words text-muted-foreground",
         className
       )}
       {...props}
@@ -469,7 +496,7 @@ export function LoginInputOtpSlot({
       data-slot="login-input-otp-slot"
       data-active={isActive || undefined}
       className={cn(
-        "relative flex h-12 w-10 items-center justify-center border border-zinc-300 bg-white text-base font-semibold text-zinc-950 shadow-sm transition-all outline-none first:rounded-l-md last:rounded-r-md [&:not(:first-child)]:border-l-0 aria-invalid:border-red-600 data-[active]:z-10 data-[active]:border-blue-600 data-[active]:ring-2 data-[active]:ring-blue-600 data-[active]:ring-offset-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:data-[active]:ring-offset-zinc-950",
+        "relative flex h-12 w-10 items-center justify-center border border-input bg-background text-base font-semibold text-foreground shadow-sm transition-all outline-none first:rounded-l-md last:rounded-r-md [&:not(:first-child)]:border-l-0 aria-invalid:border-destructive data-[active]:z-10 data-[active]:border-ring data-[active]:ring-2 data-[active]:ring-ring/50 data-[active]:ring-offset-2 data-[active]:ring-offset-background",
         className
       )}
       {...props}
@@ -477,7 +504,7 @@ export function LoginInputOtpSlot({
       {char}
       {hasFakeCaret ? (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-4 w-px animate-pulse bg-zinc-950 dark:bg-zinc-50" />
+          <div className="h-4 w-px animate-pulse bg-foreground" />
         </div>
       ) : null}
     </div>
@@ -493,10 +520,7 @@ export function LoginInputOtpSeparator({
       data-slot="login-input-otp-separator"
       role="separator"
       aria-hidden="true"
-      className={cn(
-        "flex items-center text-zinc-400 dark:text-zinc-500",
-        className
-      )}
+      className={cn("flex items-center text-muted-foreground", className)}
       {...props}
     >
       <Minus className="h-4 w-4" />
@@ -663,7 +687,7 @@ export function LoginEmpty({
     <div
       data-slot="login-empty"
       className={cn(
-        "flex min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-lg border border-dashed border-zinc-200 p-6 text-center text-balance md:p-12 dark:border-zinc-800",
+        "flex min-w-0 flex-1 flex-col items-center justify-center gap-6 rounded-lg border border-dashed border-border p-6 text-center text-balance md:p-12",
         className
       )}
       {...props}
@@ -693,7 +717,7 @@ const loginEmptyMediaVariants = cva(
     variants: {
       variant: {
         default: "bg-transparent",
-        icon: "flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-950 dark:bg-zinc-800 dark:text-zinc-50 [&_svg:not([class*='size-'])]:size-6",
+        icon: "flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground [&_svg:not([class*='size-'])]:size-6",
       },
     },
     defaultVariants: {
@@ -726,7 +750,7 @@ export function LoginEmptyTitle({
     <div
       data-slot="login-empty-title"
       className={cn(
-        "text-lg font-medium tracking-tight break-words text-zinc-950 dark:text-zinc-50",
+        "text-lg font-medium tracking-tight break-words text-foreground",
         className
       )}
       {...props}
@@ -742,7 +766,7 @@ export function LoginEmptyDescription({
     <p
       data-slot="login-empty-description"
       className={cn(
-        "text-sm/relaxed break-words text-zinc-500 dark:text-zinc-400 [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-zinc-950 dark:[&>a:hover]:text-zinc-50",
+        "text-sm/relaxed break-words text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-foreground",
         className
       )}
       {...props}

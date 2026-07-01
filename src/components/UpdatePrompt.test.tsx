@@ -137,7 +137,7 @@ describe("UpdatePrompt", () => {
       const spinner = document.querySelector(".animate-spin");
       expect(spinner).toBeInTheDocument();
       expect(spinner).toHaveClass("h-4", "w-4"); // size="sm"
-      expect(spinner).toHaveClass("text-white"); // white color
+      expect(spinner).toHaveClass("text-primary-foreground");
 
       deferredUpdate.resolve();
     });
@@ -229,6 +229,33 @@ describe("UpdatePrompt", () => {
     });
   });
 
+  describe("Theme tokens", () => {
+    beforeEach(() => {
+      vi.mocked(useServiceWorkerUpdate).mockReturnValue({
+        needRefresh: true,
+        offlineReady: false,
+        updateServiceWorker: mockUpdateServiceWorker,
+      });
+    });
+
+    it("keeps the browser update prompt on canonical theme tokens", () => {
+      renderWithI18n(<UpdatePrompt />);
+
+      const banner = screen.getByRole("status");
+      const message = screen.getByText(/a new version of secpal is available/i);
+      const action = screen.getByRole("button", {
+        name: /update application now/i,
+      });
+
+      expect(banner).toHaveClass("bg-primary", "text-primary-foreground");
+      expect(message).toHaveClass("text-primary-foreground");
+      expect(action).toHaveClass("bg-background", "text-foreground");
+
+      expect(banner.className).not.toContain("bg-blue-600");
+      expect(action.className).not.toContain("bg-white");
+    });
+  });
+
   describe("Styling", () => {
     beforeEach(() => {
       vi.mocked(useServiceWorkerUpdate).mockReturnValue({
@@ -251,8 +278,8 @@ describe("UpdatePrompt", () => {
       const { container } = renderWithI18n(<UpdatePrompt />);
       const wrapper = container.firstChild as HTMLElement;
 
-      expect(wrapper).toHaveClass("bg-blue-600");
-      expect(wrapper).toHaveClass("text-white");
+      expect(wrapper).toHaveClass("bg-primary");
+      expect(wrapper).toHaveClass("text-primary-foreground");
     });
 
     it("should use the shared Button with white color variant", () => {

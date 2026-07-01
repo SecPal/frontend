@@ -8,7 +8,7 @@ export function Footer() {
   return (
     <footer
       data-slot="app-footer"
-      className="bg-white pt-4 pb-[var(--app-footer-padding-bottom)] text-[11px] dark:bg-zinc-900"
+      className="bg-background text-muted-foreground pt-4 pb-[var(--app-footer-padding-bottom)] text-[11px]"
     >
       <div className="mx-auto max-w-6xl px-6 text-center">
         <div className="mb-2">
@@ -16,12 +16,12 @@ export function Footer() {
             href="https://secpal.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-zinc-700 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white"
+            className="text-foreground hover:text-foreground/80 font-semibold"
           >
             <Trans>Powered by SecPal – A guard's best friend</Trans>
           </a>
         </div>
-        <LegalFooterLinks className="flex items-center justify-center gap-3 text-zinc-500 dark:text-zinc-400" />
+        <LegalFooterLinks className="text-muted-foreground flex items-center justify-center gap-3" />
       </div>
     </footer>
   );

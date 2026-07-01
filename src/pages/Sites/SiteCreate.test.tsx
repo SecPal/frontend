@@ -186,6 +186,15 @@ describe("SiteCreate", () => {
     expect(screen.getByLabelText(/phone/i)).toBeInTheDocument();
   });
 
+  it("keeps optional contact labels on canonical muted tokens", async () => {
+    renderWithRouter();
+
+    await screen.findByLabelText(/customer/i);
+
+    const optionalLabel = screen.getByText(/\(optional\)/i);
+    expect(optionalLabel).toHaveClass("text-muted-foreground");
+  });
+
   it("pre-selects customer when customerId is in URL", async () => {
     renderWithRouter("/sites/new/customer/customer-1");
 
@@ -194,6 +203,39 @@ describe("SiteCreate", () => {
         screen.getByRole("combobox", { name: /customer/i })
       ).toHaveTextContent("C001 - Customer One");
     });
+  });
+
+  it("keeps the create error alert on canonical theme tokens", async () => {
+    vi.mocked(customersApi.createSite).mockRejectedValue(
+      new Error("Create failed")
+    );
+
+    renderWithRouter();
+
+    await screen.findByLabelText(/customer/i);
+    await selectRadixOption(/customer/i, /C001 - Customer One/i);
+    await selectRadixOption(/organizational unit/i, /IT Department/i);
+    fireEvent.change(screen.getByLabelText(/site name/i), {
+      target: { value: "new site" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Test Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "Test City" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /create site/i }));
+
+    const alert = await screen.findByText(/create failed/i);
+    expect(alert).toHaveAttribute("data-slot", "alert-description");
+    expect(alert.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
   });
 
   it(

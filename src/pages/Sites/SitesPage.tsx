@@ -252,8 +252,10 @@ function SitesPageContent({ customerId }: { customerId?: string }) {
       </div>
 
       {error && (
-        <Alert className="border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
-          <AlertDescription>{error}</AlertDescription>
+        <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+          <AlertDescription className="text-destructive">
+            {error}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -325,10 +327,10 @@ function SitesPageContent({ customerId }: { customerId?: string }) {
                       )}
                     </StatusBadge>
                   </TableCell>
-                  <TableCell className="text-zinc-500 dark:text-zinc-400">
+                  <TableCell className="text-muted-foreground">
                     {formatSiteAddress(site)}
                   </TableCell>
-                  <TableCell className="text-zinc-500 dark:text-zinc-400">
+                  <TableCell className="text-muted-foreground">
                     {site.contact?.name || "-"}
                   </TableCell>
                   <TableCell>
@@ -355,7 +357,7 @@ function SitesPageContent({ customerId }: { customerId?: string }) {
                     colSpan={SITE_TABLE_COLUMN_COUNT}
                     className="py-12 text-center"
                   >
-                    <PageText className="text-zinc-500 dark:text-zinc-400">
+                    <PageText className="text-muted-foreground">
                       <Trans>No sites found</Trans>
                     </PageText>
                   </TableCell>
@@ -367,7 +369,7 @@ function SitesPageContent({ customerId }: { customerId?: string }) {
       </LoadingRegion>
 
       {pagination.last_page > 1 && (
-        <div className="mt-6 flex items-center justify-between rounded-md border border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 sm:px-6">
+        <div className="bg-card mt-6 flex items-center justify-between rounded-md border border-border px-4 py-3 sm:px-6">
           <div className="flex-1 flex justify-between sm:hidden">
             <Button
               onClick={() => handlePageChange(pagination.current_page - 1)}

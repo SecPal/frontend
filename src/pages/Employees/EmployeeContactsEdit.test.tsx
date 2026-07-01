@@ -147,6 +147,19 @@ describe("EmployeeContactsEdit", () => {
     expect(employeeApi.updateEmployee).not.toHaveBeenCalled();
   });
 
+  it("keeps contact edit headings and load errors on canonical theme tokens", async () => {
+    renderWithProviders("emp-1");
+
+    await waitForLoadedForm();
+
+    expect(screen.getByRole("button", { name: "Max Mustermann" })).toHaveClass(
+      "text-foreground"
+    );
+    expect(screen.getByRole("button", { name: "E001" })).toHaveClass(
+      "text-muted-foreground"
+    );
+  });
+
   it("should show fallback error for non-Error load failures", async () => {
     vi.mocked(employeeApi.fetchEmployee).mockRejectedValueOnce("broken");
 
@@ -308,6 +321,21 @@ describe("EmployeeContactsEdit", () => {
     );
   });
 
+  it("keeps emergency contact editor cards on canonical border tokens", async () => {
+    renderWithProviders("emp-1");
+    await waitForLoadedForm();
+
+    const emergencyCard = screen
+      .getByLabelText(/^Emergency Contact Name$/i)
+      .closest("div.rounded-lg");
+
+    expect(emergencyCard).toHaveClass("border-border");
+    expect(emergencyCard).not.toHaveClass(
+      "border-zinc-950/10",
+      "dark:border-white/10"
+    );
+  });
+
   it("should not submit the form when adding or removing emergency contacts", async () => {
     renderWithProviders("emp-1");
     await waitForLoadedForm();
@@ -414,6 +442,11 @@ describe("EmployeeContactsEdit", () => {
     await waitFor(() => {
       expect(screen.getByRole("alert")).toHaveTextContent("Update failed");
     });
+    expect(screen.getByRole("alert")).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+    expect(screen.getByRole("alert")).toHaveClass("text-foreground");
     expect(mockNavigate).not.toHaveBeenCalledWith("/employees/emp-1#contacts");
 
     vi.mocked(employeeApi.updateEmployee).mockRejectedValueOnce("failed");
@@ -423,5 +456,10 @@ describe("EmployeeContactsEdit", () => {
         "Failed to update employee"
       );
     });
+    expect(screen.getByRole("alert")).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+    expect(screen.getByRole("alert")).toHaveClass("text-foreground");
   });
 });

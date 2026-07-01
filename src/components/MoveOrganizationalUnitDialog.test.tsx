@@ -247,6 +247,77 @@ describe("MoveOrganizationalUnitDialog", () => {
         ).toBeInTheDocument();
       });
     });
+
+    it("keeps move dialog banners and context blocks on canonical theme tokens", async () => {
+      vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+        ...mockHookResponse,
+        isOffline: true,
+        isStale: false,
+      });
+
+      renderWithI18n(
+        <MoveOrganizationalUnitDialog
+          open={true}
+          unit={mockUnit}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByText(/you're offline/i)).toBeInTheDocument();
+      });
+
+      const iconShell = screen
+        .getByText(/move "berlin mitte"/i)
+        .closest("div")?.previousElementSibling;
+      const offlineBanner = screen
+        .getByText(/you're offline/i)
+        .closest('[data-slot="alert"]');
+      const currentParentBox = screen
+        .getByText("Current parent:")
+        .closest("div");
+      const currentParentLabel = screen.getByText("Current parent:");
+      const currentParentValue = screen.getByText(/no parent \(root unit\)/i);
+
+      expect(iconShell).toHaveClass("bg-primary/10");
+      expect(offlineBanner).toHaveClass(
+        "border-destructive/30",
+        "bg-destructive/10"
+      );
+      expect(offlineBanner).toHaveAttribute("data-slot", "alert");
+      expect(currentParentBox).toHaveClass("border-border", "bg-muted");
+      expect(currentParentLabel).toHaveClass("text-muted-foreground");
+      expect(currentParentValue).toHaveClass("text-foreground");
+
+      expect(iconShell?.className).not.toContain("bg-blue-100");
+      expect(offlineBanner?.className).not.toContain("bg-red-50");
+      expect(currentParentBox?.className).not.toContain("bg-gray-50");
+      expect(currentParentLabel.className).not.toContain("text-gray-500");
+      expect(currentParentValue.className).not.toContain("text-zinc-950");
+
+      vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+        ...mockHookResponse,
+        isOffline: false,
+        isStale: true,
+      });
+
+      renderWithI18n(
+        <MoveOrganizationalUnitDialog
+          open={true}
+          unit={mockUnit}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const staleBanner = await screen.findByText(/viewing cached data/i);
+      expect(staleBanner.closest('[data-slot="alert"]')).toHaveClass(
+        "border-primary/30",
+        "bg-primary/10"
+      );
+      expect(staleBanner).toHaveClass("text-primary");
+    });
   });
 
   describe("Parent selection", () => {
@@ -629,6 +700,13 @@ describe("MoveOrganizationalUnitDialog", () => {
         expect(screen.getByText(/Move failed/i)).toBeInTheDocument();
       });
 
+      const moveError = screen.getByText(/Move failed/i).closest(
+        '[data-slot="alert"]'
+      );
+      expect(moveError).toHaveClass("border-destructive/30", "bg-destructive/10");
+      expect(moveError).toHaveClass("text-foreground");
+      expect(moveError).toHaveAttribute("data-slot", "alert");
+
       // Should not close dialog on error
       expect(mockOnClose).not.toHaveBeenCalled();
     });
@@ -651,6 +729,13 @@ describe("MoveOrganizationalUnitDialog", () => {
       await waitFor(() => {
         expect(screen.getByText(/Failed to load units/i)).toBeInTheDocument();
       });
+
+      const loadError = screen.getByText(/Failed to load units/i).closest(
+        '[data-slot="alert"]'
+      );
+      expect(loadError).toHaveClass("border-destructive/30", "bg-destructive/10");
+      expect(loadError).toHaveClass("text-foreground");
+      expect(loadError).toHaveAttribute("data-slot", "alert");
     });
 
     it("handles 409 Conflict error for circular reference", async () => {

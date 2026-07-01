@@ -6,6 +6,7 @@ import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { ChevronDown, WifiOff } from "lucide-react";
+import { Alert, AlertDescription } from "@/ui";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 /** Time in milliseconds before the banner auto-minimizes */
@@ -70,7 +71,7 @@ export function OfflineIndicator() {
         <button
           type="button"
           onClick={() => setIsMinimized(false)}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-600 text-white shadow-lg transition-transform hover:scale-110 hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 dark:bg-amber-700 dark:hover:bg-amber-600"
+          className="border-amber-500/30 bg-background text-foreground hover:bg-accent focus:ring-ring/50 focus:ring-offset-background flex h-10 w-10 items-center justify-center rounded-full border shadow-lg transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
           aria-label={_(msg`You're offline. Click for details.`)}
         >
           <WifiOff className="h-5 w-5" aria-hidden="true" />
@@ -87,28 +88,33 @@ export function OfflineIndicator() {
       aria-live="polite"
       aria-atomic="true"
     >
-      <div className="flex items-center gap-3 rounded-lg bg-amber-600 px-4 py-3 text-white shadow-lg dark:bg-amber-700">
-        <WifiOff className="h-5 w-5 shrink-0" aria-hidden="true" />
-        <div className="flex-1">
-          <p className="text-sm font-semibold">
-            <Trans>You're offline</Trans>
-          </p>
-          <p className="text-xs text-amber-100">
-            <Trans>
-              Some features may be limited. Your changes will sync when you're
-              back online.
-            </Trans>
-          </p>
+      <Alert
+        role="presentation"
+        className="border-amber-500/30 bg-amber-500/10 shadow-lg"
+      >
+        <WifiOff className="text-foreground h-5 w-5 shrink-0" aria-hidden="true" />
+        <div className="flex w-full items-center gap-3">
+          <div className="flex-1">
+            <AlertDescription className="mt-0 text-foreground text-sm font-semibold">
+              <Trans>You're offline</Trans>
+            </AlertDescription>
+            <AlertDescription className="text-muted-foreground mt-0 text-xs">
+              <Trans>
+                Some features may be limited. Your changes will sync when you're
+                back online.
+              </Trans>
+            </AlertDescription>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsMinimized(true)}
+            className="text-foreground hover:bg-accent focus:ring-ring/50 ml-2 rounded p-1 transition-colors focus:outline-none focus:ring-2"
+            aria-label={_(msg`Minimize offline notice`)}
+          >
+            <ChevronDown className="h-4 w-4" aria-hidden="true" />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsMinimized(true)}
-          className="ml-2 rounded p-1 text-amber-200 transition-colors hover:bg-amber-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-          aria-label={_(msg`Minimize offline notice`)}
-        >
-          <ChevronDown className="h-4 w-4" aria-hidden="true" />
-        </button>
-      </div>
+      </Alert>
     </div>
   );
 }

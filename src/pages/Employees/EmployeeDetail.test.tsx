@@ -240,6 +240,28 @@ describe("EmployeeDetail", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps detail secondary text and muted contact empty states on canonical theme tokens", async () => {
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: "John Doe" })
+      ).toBeInTheDocument();
+    });
+
+    const employeeNumber = screen.getAllByText("E001")[0];
+    expect(employeeNumber).toHaveClass("text-muted-foreground");
+
+    fireEvent.click(screen.getByRole("button", { name: /^contact$/i }));
+
+    expect(screen.getByText("No postal address stored yet.")).toHaveClass(
+      "text-muted-foreground"
+    );
+    expect(screen.getByText("No emergency contacts stored yet.")).toHaveClass(
+      "text-muted-foreground"
+    );
+  });
+
   it("renders a subsection skeleton while qualifications load", async () => {
     vi.mocked(qualificationApi.fetchEmployeeQualifications).mockImplementation(
       () => new Promise(() => {})
@@ -393,6 +415,11 @@ describe("EmployeeDetail", () => {
     });
 
     fireEvent.click(screen.getByRole("button", { name: /^contact$/i }));
+
+    const editPhoneButton = screen.getByRole("button", { name: /edit phone/i });
+    expect(editPhoneButton).toHaveClass("text-muted-foreground");
+    expect(editPhoneButton.className).not.toContain("text-zinc-500");
+
     fireEvent.click(
       screen.getByRole("button", { name: /edit emergency contacts/i })
     );
@@ -940,6 +967,16 @@ describe("EmployeeDetail", () => {
       ).toBeInTheDocument();
       expect(screen.getByText(/not found/i)).toBeInTheDocument();
     });
+
+    expect(screen.getByRole("alert")).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+    expect(screen.getByRole("alert")).toHaveClass("text-foreground");
+    expect(screen.getByText(/error loading employee/i)).toHaveAttribute(
+      "data-slot",
+      "alert-title"
+    );
   });
 
   it("should have back to employees link", async () => {
@@ -1278,9 +1315,9 @@ describe("EmployeeDetail", () => {
     });
 
     // Initially on Profile tab
-    expect(screen.getByRole("button", { name: /^profile$/i })).toHaveAttribute(
-      "class",
-      expect.stringContaining("border-zinc-950")
+    expect(screen.getByRole("button", { name: /^profile$/i })).toHaveClass(
+      "border-primary",
+      "text-foreground"
     );
 
     // Click Qualifications tab
@@ -1294,9 +1331,14 @@ describe("EmployeeDetail", () => {
         "emp-1"
       );
     });
+
+    expect(qualificationsTab).toHaveClass("border-primary", "text-foreground");
+    expect(screen.getByRole("button", { name: /^profile$/i })).toHaveClass(
+      "text-muted-foreground"
+    );
   });
 
-  it("should display no qualifications message", async () => {
+  it("should display no qualifications message on canonical muted tokens", async () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
@@ -1316,9 +1358,13 @@ describe("EmployeeDetail", () => {
         screen.getByText(/no qualifications assigned/i)
       ).toBeInTheDocument();
     });
+
+    expect(screen.getByText(/no qualifications assigned/i)).toHaveClass(
+      "text-muted-foreground"
+    );
   });
 
-  it("should display no documents message on Documents tab", async () => {
+  it("should display no documents message on Documents tab with canonical muted tokens", async () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
@@ -1334,6 +1380,39 @@ describe("EmployeeDetail", () => {
     await waitFor(() => {
       expect(screen.getByText(/no documents uploaded/i)).toBeInTheDocument();
     });
+
+    expect(screen.getByText(/no documents uploaded/i)).toHaveClass(
+      "text-muted-foreground"
+    );
+  });
+
+  it("keeps emergency contact editor cards on canonical border tokens", async () => {
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /^contact$/i })
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /^contact$/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /edit emergency contacts/i })
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Edit Emergency Contacts")).toBeInTheDocument();
+    });
+
+    const editorCard = screen
+      .getByLabelText(/^Emergency Contact Name$/i)
+      .closest("div.rounded-md");
+
+    expect(editorCard).toHaveClass("border-border");
+    expect(editorCard).not.toHaveClass(
+      "border-zinc-200",
+      "dark:border-zinc-800"
+    );
   });
 
   it("should handle non-Error object errors on activate", async () => {

@@ -51,7 +51,7 @@ function BrowserUpdatePrompt() {
 
   return (
     <div
-      className="bg-blue-600 px-4 py-2 text-white shadow-md dark:bg-blue-700"
+      className="bg-primary text-primary-foreground px-4 py-2 shadow-md"
       role="status"
       aria-live="polite"
       aria-atomic="true"
@@ -61,20 +61,20 @@ function BrowserUpdatePrompt() {
           <>
             <Spinner
               aria-label={_(msg`Updating application`)}
-              className="h-4 w-4 text-white"
+              className="text-primary-foreground h-4 w-4"
             />
-            <p className="text-sm font-medium">
+            <p className="text-primary-foreground text-sm font-medium">
               <Trans>Updating...</Trans>
             </p>
           </>
         ) : (
           <>
-            <p className="text-sm font-medium">
+            <p className="text-primary-foreground text-sm font-medium">
               <Trans>A new version of SecPal is available.</Trans>
             </p>
             <Button
               onClick={handleUpdate}
-              className="bg-white py-1! text-zinc-950 hover:bg-zinc-100 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
+              className="bg-background text-foreground hover:bg-muted py-1!"
               aria-label={_(msg`Update application now`)}
             >
               <Trans>Update now</Trans>

@@ -38,6 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   repo-wide legacy UI guardrail to a zero allowlist, removing the final shared
   shell compatibility aliases, and documenting `src/ui` as the complete
   canonical production UI layer (US-007).
+- Removed the remaining UI-surface holdouts that still only imitated the
+  canonical shared primitives: destructive load/error states now render through
+  shared `Alert*` slots instead of ad-hoc text blocks or route-local alert
+  shells, shared auth status messaging now composes the canonical `Alert`
+  primitive directly, and the repository documentation now describes the final
+  `src/ui` architecture instead of an in-progress migration state (US-007).
 - Moved the remaining Customers, Sites, Employees, and admin/domain surface UI
   consumers onto direct `@/ui` imports, promoted the still-needed customer/site
   and employee compositions to prefixed shared exports, and deleted the

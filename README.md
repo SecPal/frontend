@@ -150,7 +150,7 @@ inventory at zero.
 **Typography:** Inter font family
 **Icons:** Lucide React
 **License:** AGPL-3.0-or-later
-**Documentation:** [`src/ui/MIGRATION.md`](src/ui/MIGRATION.md)
+**Architecture Notes:** [`src/ui/MIGRATION.md`](src/ui/MIGRATION.md)
 
 ## 📋 Prerequisites
 

@@ -67,6 +67,37 @@ describe("CustomerCreate", () => {
     expect(screen.getByLabelText(/active/i)).toBeInTheDocument();
   });
 
+  it("keeps the create error alert on canonical theme tokens", async () => {
+    vi.mocked(customersApi.createCustomer).mockRejectedValue(
+      new Error("Create failed")
+    );
+
+    const user = userEvent.setup();
+    renderWithRouter(<CustomerCreate />);
+
+    fireEvent.change(screen.getByLabelText(/customer name/i), {
+      target: { value: "Test Customer" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Test Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "Test City" },
+    });
+
+    await user.click(screen.getByRole("button", { name: /create customer/i }));
+
+    const alert = await screen.findByText(/create failed/i);
+    expect(alert).toHaveAttribute("data-slot", "alert-description");
+    expect(alert.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+  });
+
   it("submits form with valid data", async () => {
     const user = userEvent.setup();
     const mockCustomer = {

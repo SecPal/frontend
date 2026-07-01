@@ -7,6 +7,7 @@ import { Trans } from "@lingui/react/macro";
 import {
   Alert,
   AlertDescription,
+  AlertTitle,
   Button,
   Checkbox,
   Dialog,
@@ -336,11 +337,11 @@ function ScopeAssignmentFormContent({
       <form onSubmit={handleSubmit}>
         <DialogBody className="space-y-6">
           {errors.general && (
-            <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
-              <h4 className="text-sm font-semibold text-red-800 dark:text-red-200">
+            <Alert className="border-destructive/30 bg-destructive/10">
+              <AlertTitle className="text-destructive">
                 <Trans>Error</Trans>
-              </h4>
-              <AlertDescription className="text-red-700 dark:text-red-300">
+              </AlertTitle>
+              <AlertDescription className="text-destructive">
                 {errors.general}
               </AlertDescription>
             </Alert>
@@ -350,10 +351,10 @@ function ScopeAssignmentFormContent({
           {step === 1 && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-base font-semibold text-zinc-950 dark:text-white mb-2">
+                <h3 className="text-foreground mb-2 text-base font-semibold">
                   <Trans>Who can this user VIEW?</Trans>
                 </h3>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                <p className="text-muted-foreground text-sm">
                   <Trans>
                     Configure which rank range this user can view. Leave empty
                     or set to 0 to see only non-leadership employees (Guards).
@@ -418,26 +419,23 @@ function ScopeAssignmentFormContent({
               </Field>
 
               {errors.viewing && (
-                <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
-                  <h4 className="text-sm font-semibold text-red-800 dark:text-red-200">
+                <Alert className="border-destructive/30 bg-destructive/10">
+                  <AlertTitle className="text-destructive">
                     <Trans>Validation Error</Trans>
-                  </h4>
-                  <AlertDescription className="text-red-700 dark:text-red-300">
+                  </AlertTitle>
+                  <AlertDescription className="text-destructive">
                     {errors.viewing}
                   </AlertDescription>
                 </Alert>
               )}
 
               {getViewingWarnings().length > 0 && (
-                <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
-                  <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                <Alert className="border-amber-500/30 bg-amber-500/10">
+                  <AlertTitle className="text-foreground">
                     <Trans>Warning</Trans>
-                  </h4>
+                  </AlertTitle>
                   {getViewingWarnings().map((warning, i) => (
-                    <AlertDescription
-                      key={i}
-                      className="text-amber-700 dark:text-amber-300"
-                    >
+                    <AlertDescription key={i} className="text-foreground">
                       {warning}
                     </AlertDescription>
                   ))}
@@ -450,12 +448,12 @@ function ScopeAssignmentFormContent({
           {step === 2 && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-base font-semibold text-zinc-950 dark:text-white mb-2">
+                <h3 className="text-foreground mb-2 text-base font-semibold">
                   <Trans>
                     Which rank range can this user ASSIGN or REMOVE?
                   </Trans>
                 </h3>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                <p className="text-muted-foreground text-sm">
                   <Trans>
                     To remove rank from employee, user must have permission to
                     assign that rank. This prevents privilege escalation.
@@ -520,26 +518,23 @@ function ScopeAssignmentFormContent({
               </Field>
 
               {errors.assignment && (
-                <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
-                  <h4 className="text-sm font-semibold text-red-800 dark:text-red-200">
+                <Alert className="border-destructive/30 bg-destructive/10">
+                  <AlertTitle className="text-destructive">
                     <Trans>Validation Error</Trans>
-                  </h4>
-                  <AlertDescription className="text-red-700 dark:text-red-300">
+                  </AlertTitle>
+                  <AlertDescription className="text-destructive">
                     {errors.assignment}
                   </AlertDescription>
                 </Alert>
               )}
 
               {getAssignmentWarnings().length > 0 && (
-                <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
-                  <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                <Alert className="border-amber-500/30 bg-amber-500/10">
+                  <AlertTitle className="text-foreground">
                     <Trans>Warning</Trans>
-                  </h4>
+                  </AlertTitle>
                   {getAssignmentWarnings().map((warning, i) => (
-                    <AlertDescription
-                      key={i}
-                      className="text-amber-700 dark:text-amber-300"
-                    >
+                    <AlertDescription key={i} className="text-foreground">
                       {warning}
                     </AlertDescription>
                   ))}
@@ -551,11 +546,11 @@ function ScopeAssignmentFormContent({
           {/* Step 3: Self-Access Control (Conditional) */}
           {step === 3 && showSelfAccessStep && (
             <div className="space-y-6">
-              <Alert className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
-                <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+              <Alert className="border-amber-500/30 bg-amber-500/10">
+                <AlertTitle className="text-foreground">
                   <Trans>Self-Access Control Required</Trans>
-                </h4>
-                <AlertDescription className="text-amber-700 dark:text-amber-300">
+                </AlertTitle>
+                <AlertDescription className="text-foreground">
                   <Trans>
                     User's own rank (FE{userRank}) is within viewable range.
                     Should this user be able to view/edit their own HR data?
@@ -563,7 +558,7 @@ function ScopeAssignmentFormContent({
                 </AlertDescription>
               </Alert>
 
-              <Field className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+              <Field className="rounded-lg border border-border bg-background p-4">
                 <div className="flex items-start gap-3">
                   <Checkbox
                     id="allow-self-access"

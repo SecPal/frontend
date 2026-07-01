@@ -139,7 +139,7 @@ export default function LoginMfaDialog({
                   type="button"
                   onClick={() => onMethodChange(otherMfaMethod)}
                   disabled={isVerifyingMfa}
-                  className="mx-auto block max-w-full text-center text-sm text-balance text-zinc-600 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:text-zinc-400 dark:focus-visible:ring-offset-zinc-950"
+                  className="text-muted-foreground focus-visible:ring-ring/50 focus-visible:ring-offset-background mx-auto block max-w-full text-center text-sm text-balance underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {mfaMethod === "totp" ? (
                     <Trans id="login.mfa.switchToRecovery">

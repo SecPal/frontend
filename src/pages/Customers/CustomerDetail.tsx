@@ -126,10 +126,12 @@ export default function CustomerDetail() {
 
   if (!isInitialLoading && (loadError || !customer)) {
     return (
-      <div className="text-center py-12">
-        <PageText className="text-red-600 dark:text-red-400">
-          {loadError || <Trans>Customer not found</Trans>}
-        </PageText>
+      <div className="py-12 text-center">
+        <Alert className="mx-auto max-w-md border-destructive/30 bg-destructive/10 text-foreground">
+          <AlertDescription className="text-destructive">
+            {loadError || <Trans>Customer not found</Trans>}
+          </AlertDescription>
+        </Alert>
         <LinkButton to="/customers" variant="outline" className="mt-4">
           <ArrowLeft className="size-4" aria-hidden="true" />
           <Trans>Back to Customers</Trans>
@@ -146,7 +148,7 @@ export default function CustomerDetail() {
             {customer ? customer.name : <Trans>Customer</Trans>}
           </PageTitle>
           {customer ? (
-            <PageText className="mt-1 text-zinc-500">
+            <PageText className="text-muted-foreground mt-1">
               {customer.customer_number}
             </PageText>
           ) : (
@@ -349,8 +351,10 @@ export default function CustomerDetail() {
               </DialogDescription>
               <DialogBody>
                 {deleteError && (
-                  <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
-                    <AlertDescription>{deleteError}</AlertDescription>
+                  <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+                    <AlertDescription className="text-destructive">
+                      {deleteError}
+                    </AlertDescription>
                   </Alert>
                 )}
               </DialogBody>

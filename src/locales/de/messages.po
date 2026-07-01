@@ -961,10 +961,9 @@ msgstr "Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut."
 msgid "Would you like to upload your identity document now?"
 msgstr "Möchten Sie Ihr Ausweisdokument jetzt hochladen?"
 
-#: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
-#: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Employees/EmployeeList.tsx
+#: src/pages/Employees/EmployeeManagementLevelField.tsx
 msgid "ML"
 msgstr "FE"
 
@@ -1247,10 +1246,6 @@ msgstr "Adresse"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Missing email address. Please use the link from your email."
 msgstr "Fehlende E-Mail-Adresse. Bitte verwenden Sie den Link in Ihrer E-Mail."
-
-#: src/components/VerificationDots.tsx
-msgid "{label}: N/A"
-msgstr "{label}: N/A"
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
@@ -2473,8 +2468,7 @@ msgstr "Kunde anlegen"
 msgid "Revocation reason"
 msgstr "Widerrufsgrund"
 
-#: src/pages/Employees/EmployeeCreate.tsx
-#: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Employees/EmployeeManagementLevelField.tsx
 msgid "Leadership Position"
 msgstr "Führungskraft"
 

@@ -258,6 +258,29 @@ describe("CustomersPage", () => {
     expect(newButton.closest("a")).toHaveAttribute("href", "/customers/new");
   });
 
+  it("keeps table feedback and pagination on canonical theme tokens", async () => {
+    vi.mocked(customersApi.listCustomers).mockRejectedValue(
+      new Error("API Error")
+    );
+
+    renderWithProviders();
+
+    const alert = await screen.findByText("API Error");
+    expect(alert).toHaveAttribute("data-slot", "alert-description");
+    expect(alert.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+    expect(alert.closest('[data-slot="alert"]')?.className).not.toContain(
+      "bg-red-50"
+    );
+
+    vi.mocked(customersApi.listCustomers).mockResolvedValueOnce({
+      data: mockCustomers,
+      meta: { current_page: 1, last_page: 2, per_page: 15, total: 16 },
+    });
+  });
+
   it("hides the new customer CTA without create capability", async () => {
     mockUseUserCapabilities.mockReturnValue({
       actions: {

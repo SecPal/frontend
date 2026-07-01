@@ -24,6 +24,7 @@ import {
   LoginFieldDescription,
   LoginFieldError,
   LoginFieldLabel,
+  LoginFieldSeparator,
   LoginForm,
   LoginFormActions,
   LoginInput,
@@ -56,6 +57,139 @@ describe("auth login shadcn primitives", () => {
     expect(
       screen.getByRole("complementary", { name: "Brand panel" })
     ).toHaveTextContent("Brand promise");
+  });
+
+  it("keeps shared auth surfaces on canonical theme tokens instead of bespoke zinc and white shells", () => {
+    const { container } = render(
+      <LoginShell>
+        <LoginCard aria-labelledby="auth-card-title">
+          <LoginCardHeader>
+            <LoginCardTitle id="auth-card-title">SecPal</LoginCardTitle>
+          </LoginCardHeader>
+          <LoginFieldSeparator>or</LoginFieldSeparator>
+          <LoginFieldDescription>Use your work account.</LoginFieldDescription>
+          <LoginFieldError>Email is required.</LoginFieldError>
+          <LoginStatusMessage variant="neutral" title="Info">
+            Continue below.
+          </LoginStatusMessage>
+          <LoginOtpInput
+            idPrefix="auth-otp-theme"
+            value="12"
+            onChange={() => undefined}
+            groups={[3, 3]}
+            aria-label="Authenticator code"
+          />
+          <LoginEmpty>
+            <LoginEmptyHeader>
+              <LoginEmptyMedia variant="icon">
+                <LoginSpinner aria-label="Loading" />
+              </LoginEmptyMedia>
+              <LoginEmptyTitle>Working on it</LoginEmptyTitle>
+              <LoginEmptyDescription>Hang tight.</LoginEmptyDescription>
+            </LoginEmptyHeader>
+            <LoginEmptyContent>
+              <button type="button">Cancel</button>
+            </LoginEmptyContent>
+          </LoginEmpty>
+        </LoginCard>
+        <LoginBrandPanel aria-label="Brand panel">
+          Brand promise
+        </LoginBrandPanel>
+      </LoginShell>
+    );
+
+    const shell = screen.getByRole("main");
+    const card = screen.getByRole("region", { name: "SecPal" });
+    const brandPanel = screen.getByRole("complementary", {
+      name: "Brand panel",
+    });
+    const title = screen.getByRole("heading", { name: "SecPal" });
+    const separator = container.querySelector(
+      '[data-slot="login-field-separator"]'
+    );
+    const separatorRule = separator?.querySelector("div");
+    const separatorLabel = separator?.querySelector("span");
+    const description = screen.getByText("Use your work account.");
+    const error = screen.getByText("Email is required.");
+    const status = screen
+      .getByText("Continue below.")
+      .closest('[role="status"]');
+    const otpSlot = container.querySelector(
+      '[data-slot="login-input-otp-slot"]'
+    );
+    const otpSeparator = container.querySelector(
+      '[data-slot="login-input-otp-separator"]'
+    );
+    const empty = container.querySelector('[data-slot="login-empty"]');
+    const emptyMedia = container.querySelector(
+      '[data-slot="login-empty-media"]'
+    );
+    const emptyTitle = screen.getByText("Working on it");
+    const emptyDescription = screen.getByText("Hang tight.");
+
+    expect(status).not.toBeNull();
+    const statusElement = status!;
+
+    expect(shell).toHaveClass("bg-background", "text-foreground");
+    expect(card).toHaveClass("text-foreground");
+    expect(brandPanel).toHaveClass("bg-primary", "text-primary-foreground");
+    expect(title).toHaveClass("text-foreground");
+    expect(separator).toHaveClass("text-muted-foreground");
+    expect(separatorRule).toHaveClass("bg-border");
+    expect(separatorLabel).toHaveClass("bg-background");
+    expect(description).toHaveClass("text-muted-foreground");
+    expect(error).toHaveClass("text-destructive");
+    expect(statusElement).toHaveClass(
+      "border-border",
+      "bg-muted",
+      "text-muted-foreground"
+    );
+    expect(statusElement).toHaveAttribute("data-slot", "alert");
+    expect(otpSlot).toHaveClass(
+      "border-input",
+      "bg-background",
+      "text-foreground",
+      "data-[active]:border-ring",
+      "data-[active]:ring-ring/50"
+    );
+    expect(otpSeparator).toHaveClass("text-muted-foreground");
+    expect(empty).toHaveClass("border-border");
+    expect(emptyMedia).toHaveClass("bg-muted", "text-foreground");
+    expect(emptyTitle).toHaveClass("text-foreground");
+    expect(emptyDescription).toHaveClass("text-muted-foreground");
+
+    expect(shell.className).not.toContain("bg-white");
+    expect(shell.className).not.toContain("text-zinc-950");
+    expect(card.className).not.toContain("text-zinc-950");
+    expect(brandPanel.className).not.toContain("bg-zinc-950");
+    expect(title.className).not.toContain("text-zinc-950");
+    expect(separator?.className).not.toContain("text-zinc-500");
+    expect(separatorRule?.className).not.toContain("bg-zinc-200");
+    expect(separatorLabel?.className).not.toContain("bg-white");
+    expect(description.className).not.toContain("text-zinc-600");
+    expect(error.className).not.toContain("text-red-600");
+    expect(statusElement.className).not.toContain("bg-zinc-50");
+    expect(otpSlot?.className).not.toContain("border-zinc-300");
+    expect(otpSlot?.className).not.toContain("data-[active]:border-blue-600");
+    expect(otpSeparator?.className).not.toContain("text-zinc-400");
+    expect(empty?.className).not.toContain("border-zinc-200");
+    expect(emptyMedia?.className).not.toContain("bg-zinc-100");
+    expect(emptyTitle.className).not.toContain("text-zinc-950");
+    expect(emptyDescription.className).not.toContain("text-zinc-500");
+  });
+
+  it("keeps warning status messages on canonical text tokens", () => {
+    render(
+      <LoginStatusMessage variant="warning" title="Warning">
+        Check your recovery method.
+      </LoginStatusMessage>
+    );
+
+    const status = screen.getByRole("status");
+    expect(status).toHaveClass("border-amber-500/30", "bg-amber-500/10");
+    expect(status).toHaveClass("text-foreground");
+    expect(screen.getByText("Warning")).toHaveAttribute("data-slot", "alert-title");
+    expect(status.className).not.toContain("text-amber-700");
   });
 
   it("wires auth form labels, descriptions, and errors explicitly", () => {
@@ -478,12 +612,7 @@ describe("auth login shadcn primitives", () => {
     // The shadcn Empty container ships a dashed border. `border-dashed`
     // alone is a no-op without an explicit border-width — pin both classes
     // and the light/dark border colors so the dashed chrome actually paints.
-    expect(empty).toHaveClass(
-      "border",
-      "border-dashed",
-      "border-zinc-200",
-      "dark:border-zinc-800"
-    );
+    expect(empty).toHaveClass("border", "border-dashed", "border-border");
 
     expect(
       container.querySelector('[data-slot="login-empty-header"]')

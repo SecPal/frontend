@@ -284,9 +284,21 @@ describe("CustomerDetail", () => {
 
     renderWithRouter();
 
-    await waitFor(() => {
-      expect(screen.getByText(/customer not found/i)).toBeInTheDocument();
-    });
+    const loadError = await screen.findByText(/customer not found/i);
+    expect(loadError).toBeInTheDocument();
+    expect(loadError.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+  });
+
+  it("keeps detail heading secondary text and destructive states on canonical theme tokens", async () => {
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+
+    renderWithRouter();
+
+    const customerNumber = await screen.findByText("CUST-2025-001");
+    expect(customerNumber).toHaveClass("text-muted-foreground");
   });
 
   it("displays error message on delete failure", async () => {

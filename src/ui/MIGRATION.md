@@ -16,19 +16,19 @@ style, TypeScript React output, Tailwind v4 CSS entry at `src/index.css`, the
 ported primitives to `@/ui`, `@/components`, `@/lib`, `@/hooks`, and
 `@/lib/utils`.
 
-Migration rules:
+Usage rules:
 
 - Prefer `src/ui` for new shared primitive work: `Button`, `Input`, `Textarea`,
   `Select*`, `Command*`, `Checkbox`, `RadioGroup*`, `Dialog*`, `Alert*`,
   `Card*`, `Badge`, `Progress`, and `Field*`.
 - Keep route-specific composition helpers in `src/ui` behind explicit names
   such as `Login*`, `Onboarding*`, `CustomerSite*`, and `Employee*` when a
-  migrated route still needs prefixed slots, route-specific helpers, or
-  legacy-compatible event shapes.
-- Do not import old shared UI wrappers from `src/components/*` in migrated
-  code, and do not reintroduce route-local primitive barrels or shared
-  compatibility aliases. The migration boundary tests cover production source
-  imports, migrated route scopes, and the shared UI layer.
+  route needs explicit feature composition or names that must stay distinct
+  from canonical shared primitives.
+- Do not import old shared UI wrappers from `src/components/*`, and do not
+  reintroduce route-local primitive barrels or shared compatibility aliases.
+  The boundary tests cover production source imports, route scopes, and the
+  shared UI layer.
 - Primitives must not provide English user-facing fallback copy for labels,
   placeholders, loading labels, empty states, or error messages. Pass localized
   route-owned copy at the call site.
@@ -48,7 +48,7 @@ shared primitives.
 
 ## Loading Contract
 
-Use shared loading primitives from `src/ui` for all new or migrated surfaces:
+Use shared loading primitives from `src/ui` for all production surfaces:
 
 - Use `Skeleton` for decorative placeholder shapes. It is hidden from assistive
   technology by default, so pair it with a labeled status container when it is

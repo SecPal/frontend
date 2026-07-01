@@ -252,6 +252,50 @@ describe("SiteDetail", () => {
     });
   });
 
+  it("keeps detail heading secondary text and destructive states on canonical theme tokens", async () => {
+    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
+      mockOrgUnit
+    );
+
+    renderWithRouter();
+
+    const siteNumber = await screen.findByText("SITE-2025-001");
+    expect(siteNumber).toHaveClass("text-muted-foreground");
+  });
+
+  it("keeps delete-site errors on canonical destructive tokens", async () => {
+    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
+      mockOrgUnit
+    );
+    vi.mocked(customersApi.deleteSite).mockRejectedValueOnce(
+      new Error("Delete failed")
+    );
+
+    renderWithRouter();
+
+    const user = userEvent.setup();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /delete/i })
+      ).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: /delete/i }));
+    await user.click(screen.getByRole("button", { name: /^delete$/i }));
+
+    const deleteError = await screen.findByText("Delete failed");
+    expect(deleteError).toHaveAttribute("data-slot", "alert-description");
+    expect(deleteError.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+  });
+
   it("displays contact information", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
@@ -385,9 +429,12 @@ describe("SiteDetail", () => {
 
     renderWithRouter();
 
-    await waitFor(() => {
-      expect(screen.getByText(/failed to load site/i)).toBeInTheDocument();
-    });
+    const loadError = await screen.findByText(/failed to load site/i);
+    expect(loadError).toBeInTheDocument();
+    expect(loadError.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
   });
 
   it("falls back to IDs when customer or org unit loading fails", async () => {

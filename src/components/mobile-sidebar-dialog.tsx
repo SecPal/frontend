@@ -51,7 +51,7 @@ export function MobileSidebarDialog({
             message: "Main application navigation",
           })}
         </SheetDescription>
-        <div className="flex h-full flex-col rounded-md bg-white shadow-lg ring-1 ring-zinc-950/5 dark:bg-zinc-900 dark:ring-white/10">
+        <div className="bg-background ring-border/50 flex h-full flex-col rounded-md shadow-lg ring-1">
           <div className="-mb-3 px-4 pt-3">
             <SheetClose asChild>
               <NavbarItem

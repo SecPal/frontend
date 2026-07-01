@@ -134,6 +134,38 @@ describe("AndroidProvisioningPage", () => {
     expect((init!.headers as Headers).get("Accept")).toBe("application/json");
   });
 
+  it("keeps the provisioning surfaces on canonical theme tokens", async () => {
+    renderPage();
+
+    const heading = await screen.findByRole("heading", {
+      name: /android provisioning/i,
+    });
+
+    expect(heading).toHaveClass("text-foreground");
+    expect(screen.getByText("Front desk tablet")).toHaveClass(
+      "text-foreground"
+    );
+    expect(
+      screen.getByText(
+        "Use this QR code during Android setup before it expires."
+      )
+    ).toHaveClass("text-muted-foreground");
+
+    const sessionsCard = screen
+      .getByRole("heading", { name: /enrollment sessions/i })
+      .closest('[data-slot="card"]');
+    const sessionRow = screen
+      .getByText("Front desk tablet")
+      .closest("div.rounded-md");
+
+    expect(sessionsCard).toHaveClass("bg-card", "text-card-foreground");
+    expect(sessionRow).toHaveClass("border-border");
+    expect(sessionRow).not.toHaveClass(
+      "border-zinc-200",
+      "dark:border-zinc-800"
+    );
+  });
+
   it("keeps the form and sessions heading visible while sessions initially load", () => {
     vi.mocked(apiFetch).mockImplementation(() => new Promise(() => {}));
 
@@ -149,6 +181,72 @@ describe("AndroidProvisioningPage", () => {
     expect(
       screen.getByRole("status", { name: /loading enrollment sessions/i })
     ).toBeInTheDocument();
+  });
+
+  it("keeps enrollment session status badges on canonical text tokens", async () => {
+    vi.mocked(apiFetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        data: [
+          {
+            id: "session-pending",
+            device_label: "Pending device",
+            status: "pending",
+            update_channel: "managed_device",
+            bootstrap_token_expires_at: "2026-04-07T12:00:00Z",
+            revoked_at: null,
+            revocation_reason: null,
+          },
+          {
+            id: "session-exchanged",
+            device_label: "Exchanged device",
+            status: "exchanged",
+            update_channel: "managed_device",
+            bootstrap_token_expires_at: "2026-04-07T12:00:00Z",
+            revoked_at: null,
+            revocation_reason: null,
+          },
+          {
+            id: "session-revoked",
+            device_label: "Revoked device",
+            status: "revoked",
+            update_channel: "managed_device",
+            bootstrap_token_expires_at: "2026-04-07T12:00:00Z",
+            revoked_at: "2026-04-06T09:00:00Z",
+            revocation_reason: "Security review",
+          },
+          {
+            id: "session-expired",
+            device_label: "Expired device",
+            status: "expired",
+            update_channel: "managed_device",
+            bootstrap_token_expires_at: "2026-04-05T12:00:00Z",
+            revoked_at: null,
+            revocation_reason: null,
+          },
+        ],
+      }),
+    } as Response);
+
+    renderPage();
+
+    const pending = await screen.findByText("Ready for setup");
+    const exchanged = screen.getByText("Bootstrap completed");
+    const revoked = screen
+      .getAllByText("Revoked")
+      .find((element) => element.className.includes("bg-rose-400/15"));
+    const expired = screen.getByText("Expired");
+
+    expect(revoked).toBeDefined();
+    expect(pending).toHaveClass("bg-sky-500/15", "text-foreground");
+    expect(exchanged).toHaveClass("bg-lime-400/20", "text-foreground");
+    expect(revoked!).toHaveClass("bg-rose-400/15", "text-foreground");
+    expect(expired).toHaveClass("bg-amber-400/20", "text-foreground");
+
+    expect(pending.className).not.toContain("text-sky-700");
+    expect(exchanged.className).not.toContain("text-lime-700");
+    expect(revoked!.className).not.toContain("text-rose-700");
+    expect(expired.className).not.toContain("text-amber-700");
   });
 
   it("renders human-readable session state and rollout guidance", async () => {
@@ -253,7 +351,16 @@ describe("AndroidProvisioningPage", () => {
 
     renderPage();
 
-    expect(await screen.findByText("network down")).toBeInTheDocument();
+    const loadError = await screen.findByText("network down");
+    expect(loadError).toBeInTheDocument();
+    expect(loadError).toHaveAttribute("data-slot", "alert-description");
+    expect(loadError.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+    expect(loadError.closest('[data-slot="alert"]')).toHaveClass(
+      "text-foreground"
+    );
   });
 
   it("creates a session and renders the provisioning QR state", async () => {
@@ -346,7 +453,16 @@ describe("AndroidProvisioningPage", () => {
       screen.getByRole("button", { name: /create enrollment session/i })
     );
 
-    expect(await screen.findByText("create failed")).toBeInTheDocument();
+    const submitError = await screen.findByText("create failed");
+    expect(submitError).toBeInTheDocument();
+    expect(submitError).toHaveAttribute("data-slot", "alert-description");
+    expect(submitError.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+    expect(submitError.closest('[data-slot="alert"]')).toHaveClass(
+      "text-foreground"
+    );
   });
 
   it("revokes a pending session when the user confirms a reason", async () => {

@@ -236,6 +236,90 @@ describe("SettingsPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps the settings shell, status rows, and recovery code surfaces on canonical theme tokens", async () => {
+    vi.mocked(authAccountApi.getMfaStatus).mockResolvedValueOnce(
+      createEnabledMfaStatusResponse()
+    );
+    vi.mocked(authAccountApi.regenerateRecoveryCodes).mockResolvedValueOnce(
+      createRecoveryRevealResponse()
+    );
+
+    const { container } = renderWithProviders(<SettingsPage />);
+
+    await screen.findByText(/authenticator app/i);
+
+    const pageHeading = screen.getByRole("heading", { name: /settings/i });
+    const pageDescription = screen.getByText(
+      /manage your application preferences/i
+    );
+    const divider = container.querySelector("div.border-t");
+    const statusTerm = screen.getByText("Status");
+    const statusValue = screen.getByText("Authenticator app");
+    const passkeyCard = screen
+      .getByText(/work macbook touch id/i)
+      .closest("div.rounded-2xl");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /regenerate recovery codes/i })
+    );
+    await screen.findByRole("heading", {
+      name: /regenerate recovery codes/i,
+    });
+    fireEvent.change(
+      screen.getByRole("textbox", { name: /^authenticator code$/i }),
+      {
+        target: { value: "123456" },
+      }
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: /^regenerate codes$/i })
+    );
+    await screen.findByRole("heading", {
+      name: /store your recovery codes now/i,
+    });
+
+    const recoveryAlert = screen
+      .getByText(/anyone with one of these recovery codes/i)
+      .closest('[data-slot="alert"]');
+    const recoveryAlertText = screen.getByText(
+      /anyone with one of these recovery codes/i
+    );
+    const recoveryCode = screen.getByText("B6F42Q8P");
+    const recoveryAcknowledgement = screen
+      .getByText(/i stored these recovery codes securely/i)
+      .closest("label");
+
+    expect(pageHeading).toHaveClass("text-foreground");
+    expect(pageDescription).toHaveClass("text-muted-foreground");
+    expect(divider).toHaveClass("border-border");
+    expect(statusTerm).toHaveClass("text-muted-foreground");
+    expect(statusValue).toHaveClass("text-foreground");
+    expect(passkeyCard).toHaveClass("border-border", "bg-muted");
+    expect(recoveryAlert).toHaveClass("border-amber-500/30", "bg-amber-500/10");
+    expect(recoveryAlertText).toHaveClass("text-foreground");
+    expect(recoveryCode).toHaveClass(
+      "border-border",
+      "bg-muted",
+      "text-foreground"
+    );
+    expect(recoveryAcknowledgement).toHaveClass(
+      "border-border",
+      "bg-card",
+      "text-card-foreground"
+    );
+
+    expect(pageHeading.className).not.toContain("text-zinc-950");
+    expect(pageDescription.className).not.toContain("text-zinc-600");
+    expect(divider?.className).not.toContain("border-zinc-200");
+    expect(statusTerm.className).not.toContain("text-zinc-500");
+    expect(statusValue.className).not.toContain("text-zinc-950");
+    expect(passkeyCard?.className).not.toContain("bg-zinc-50");
+    expect(recoveryAlert?.className).not.toContain("border-amber-200");
+    expect(recoveryAlertText.className).not.toContain("text-amber-700");
+    expect(recoveryCode.className).not.toContain("bg-zinc-50");
+    expect(recoveryAcknowledgement?.className).not.toContain("bg-white");
+  });
+
   it("keeps settings sections and controls visible during initial MFA and passkey loads", () => {
     vi.mocked(authAccountApi.getMfaStatus).mockImplementation(
       () => new Promise(() => {})
@@ -262,6 +346,21 @@ describe("SettingsPage", () => {
     expect(
       screen.getByRole("status", { name: /loading passkeys/i })
     ).toBeInTheDocument();
+  });
+
+  it("renders the MFA status fetch failure through the canonical alert surface", async () => {
+    vi.mocked(authAccountApi.getMfaStatus).mockRejectedValueOnce(
+      new Error("Service unavailable")
+    );
+
+    renderWithProviders(<SettingsPage />);
+
+    const statusError = await screen.findByText(/service unavailable/i);
+    const statusAlert = statusError.closest('[data-slot="alert"]');
+
+    expect(statusAlert).toHaveClass("border-destructive/30", "bg-destructive/10");
+    expect(statusAlert).toHaveAttribute("data-slot", "alert");
+    expect(statusError).toHaveClass("text-destructive");
   });
 
   it("loads the generated locale catalogs used by the passkey settings flow", () => {
@@ -297,9 +396,11 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    expect(
-      await screen.findByText(/failed to load passkeys/i)
-    ).toBeInTheDocument();
+    const passkeyError = await screen.findByText(/failed to load passkeys/i);
+    const passkeyAlert = passkeyError.closest('[data-slot="alert"]');
+    expect(passkeyError).toBeInTheDocument();
+    expect(passkeyAlert).toHaveClass("border-destructive/30", "bg-destructive/10");
+    expect(passkeyAlert).toHaveAttribute("data-slot", "alert");
   });
 
   it("shows a fallback passkey loading error for unexpected failures", async () => {
@@ -519,9 +620,11 @@ describe("SettingsPage", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
 
-    expect(
-      await screen.findByText(/passkey registration failed/i)
-    ).toBeInTheDocument();
+    const passkeyError = await screen.findByText(/passkey registration failed/i);
+    const passkeyAlert = passkeyError.closest('[data-slot="alert"]');
+    expect(passkeyError).toBeInTheDocument();
+    expect(passkeyAlert).toHaveClass("border-destructive/30", "bg-destructive/10");
+    expect(passkeyAlert).toHaveAttribute("data-slot", "alert");
   });
 
   it("shows cancellation message when user dismisses the browser passkey dialog", async () => {
@@ -832,9 +935,11 @@ describe("SettingsPage", () => {
 
     fireEvent.click(await screen.findByRole("button", { name: /remove/i }));
 
-    expect(
-      await screen.findByText(/passkey deletion failed/i)
-    ).toBeInTheDocument();
+    const passkeyError = await screen.findByText(/passkey deletion failed/i);
+    const passkeyAlert = passkeyError.closest('[data-slot="alert"]');
+    expect(passkeyError).toBeInTheDocument();
+    expect(passkeyAlert).toHaveClass("border-destructive/30", "bg-destructive/10");
+    expect(passkeyAlert).toHaveAttribute("data-slot", "alert");
     expect(screen.getByText(/work macbook touch id/i)).toBeInTheDocument();
   });
 
@@ -1045,6 +1150,66 @@ describe("SettingsPage", () => {
       await screen.findByRole("heading", { name: /set up mfa/i })
     ).toBeInTheDocument();
     expect(screen.getByTestId("mfa-qr-code")).toBeInTheDocument();
+  });
+
+  it("keeps MFA enrollment alerts, setup key cards, and sensitive-action choices on canonical theme tokens", async () => {
+    vi.mocked(authAccountApi.startTotpEnrollment)
+      .mockRejectedValueOnce(new Error("Service unavailable"))
+      .mockResolvedValueOnce(createTotpEnrollmentPreparationResponse());
+
+    const { unmount } = renderWithProviders(<SettingsPage />);
+
+    await screen.findByText(/not enabled/i);
+    fireEvent.click(screen.getByRole("button", { name: /set up mfa/i }));
+
+    const enrollmentError = await screen.findByText(/service unavailable/i);
+    expect(enrollmentError.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /try again/i }));
+
+    await screen.findByRole("heading", { name: /set up mfa/i });
+    const manualSetupCard = screen
+      .getByText(/manual setup key/i)
+      .closest("div");
+    const setupKey = screen.getAllByText(/jbswy3dpehpk3pxp/i)[1];
+    const expiryCard = screen
+      .getByText(/this setup expires at/i)
+      .closest("div.rounded-2xl");
+
+    expect(manualSetupCard).toHaveClass("border-border", "bg-muted");
+    expect(setupKey).toHaveClass(
+      "border-border",
+      "bg-background",
+      "text-foreground"
+    );
+    expect(expiryCard).toHaveClass("border-border", "bg-muted");
+
+    unmount();
+    vi.mocked(authAccountApi.getMfaStatus).mockResolvedValueOnce(
+      createEnabledMfaStatusResponse()
+    );
+
+    renderWithProviders(<SettingsPage />);
+    await screen.findByText(/authenticator app/i);
+    fireEvent.click(
+      screen.getByRole("button", { name: /regenerate recovery codes/i })
+    );
+    await screen.findByRole("heading", { name: /regenerate recovery codes/i });
+
+    const verificationLegend = screen.getByText(/verification method/i);
+    const recoveryChoice = screen
+      .getByRole("radio", { name: /^recovery code$/i })
+      .closest("label");
+
+    expect(verificationLegend).toHaveClass("text-foreground");
+    expect(recoveryChoice).toHaveClass(
+      "border-border",
+      "bg-card",
+      "text-card-foreground"
+    );
   });
 
   it("cancels the enrollment dialog without submitting", async () => {

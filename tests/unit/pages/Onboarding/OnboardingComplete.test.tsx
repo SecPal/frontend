@@ -57,9 +57,9 @@ function expectOnboardingAuthFrame() {
   const header = document.querySelector('[data-slot="onboarding-auth-header"]');
 
   expect(shell).toBeInTheDocument();
-  expect(shell).toHaveClass("bg-white", "dark:bg-zinc-950");
+  expect(shell).toHaveClass("bg-background", "text-foreground");
   expect(card).toBeInTheDocument();
-  expect(card).toHaveClass("bg-white", "dark:bg-zinc-900");
+  expect(card).toHaveClass("border-border", "bg-card", "text-card-foreground");
   expect(header).toBeInTheDocument();
   expect(screen.getByRole("heading", { name: "SecPal" })).toBeInTheDocument();
   expect(

@@ -319,6 +319,23 @@ describe("EmployeeList", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("keeps list feedback and pagination on canonical theme tokens", async () => {
+    vi.mocked(employeeApi.fetchEmployees).mockRejectedValueOnce(
+      new Error("API Error")
+    );
+
+    renderWithProviders();
+
+    const alert = await screen.findByText("API Error");
+    const alertTitle = screen.getByText(/error loading employees/i);
+    expect(alert.closest('[data-slot="alert"]')).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
+    expect(alert.closest('[data-slot="alert"]')).toHaveClass("text-foreground");
+    expect(alertTitle).toHaveAttribute("data-slot", "alert-title");
+  });
+
   it("renders filters and table skeleton rows while initially loading", () => {
     vi.mocked(employeeApi.fetchEmployees).mockImplementation(
       () => new Promise(() => {})

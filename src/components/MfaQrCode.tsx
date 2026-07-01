@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import QRCode from "qrcode";
+import { Alert, AlertDescription } from "@/ui";
 
 interface MfaQrCodeProps {
   value: string;
@@ -62,11 +63,11 @@ export function MfaQrCode({ value, alt }: MfaQrCodeProps) {
 
   if (qrState.value === value && qrState.hasError) {
     return (
-      <div className="flex min-h-48 items-center justify-center rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
-        <p className="text-sm text-amber-800 dark:text-amber-200">
+      <Alert className="border-amber-500/30 bg-amber-500/10 min-h-48 place-items-center p-4 text-center text-foreground">
+        <AlertDescription className="mt-0 text-foreground">
           <Trans>Unable to generate QR code.</Trans>
-        </p>
-      </div>
+        </AlertDescription>
+      </Alert>
     );
   }
 
@@ -75,9 +76,9 @@ export function MfaQrCode({ value, alt }: MfaQrCodeProps) {
       <div
         role="status"
         aria-live="polite"
-        className="flex min-h-48 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/60"
+        className="border-border bg-muted flex min-h-48 items-center justify-center rounded-2xl border p-4"
       >
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-muted-foreground text-sm">
           <Trans>Generating QR code...</Trans>
         </p>
       </div>
@@ -85,7 +86,7 @@ export function MfaQrCode({ value, alt }: MfaQrCodeProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900/60">
+    <div className="border-border bg-card rounded-2xl border p-4">
       <img
         src={qrState.dataUrl}
         alt={alt}

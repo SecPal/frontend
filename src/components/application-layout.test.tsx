@@ -255,13 +255,70 @@ describe("ApplicationLayout", () => {
       const shell = container.querySelector('[data-slot="sidebar-wrapper"]');
       const contentSurface = screen.getByRole("main").firstElementChild;
 
+      expect(shell).not.toBeNull();
+      if (!shell) {
+        throw new Error("Expected sidebar wrapper shell to exist");
+      }
+
       expect(shell).toHaveClass(
         "min-h-[var(--app-shell-min-height)]",
-        "bg-white",
-        "dark:bg-zinc-900"
+        "bg-background"
       );
-      expect(shell).toHaveClass("lg:bg-zinc-100", "dark:lg:bg-zinc-950");
-      expect(contentSurface).toHaveClass("bg-white", "dark:bg-zinc-900");
+      expect(shell.className).not.toContain("dark:bg-zinc-900");
+      expect(shell.className).not.toContain("dark:lg:bg-zinc-950");
+      expect(contentSurface).toHaveClass("bg-background");
+      expect(contentSurface?.className).not.toContain("dark:bg-zinc-900");
+    });
+
+    it("renders sidebar menus without browser list markers", async () => {
+      const user = userEvent.setup();
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      await user.click(screen.getByRole("button", { name: "Open navigation" }));
+
+      const sidebarMenus = document.querySelectorAll(
+        '[data-slot="sidebar-menu"]'
+      );
+      expect(sidebarMenus.length).toBeGreaterThan(0);
+
+      for (const sidebarMenu of sidebarMenus) {
+        expect(sidebarMenu).toHaveClass("list-none", "m-0", "p-0");
+      }
+
+      const spacer = document.querySelector(
+        '[data-slot="sidebar-menu-spacer"]'
+      );
+      expect(spacer).toHaveClass("list-none");
+    });
+
+    it("keeps the active mobile sidebar item in a block wrapper so its current indicator renders as a full bar", async () => {
+      const user = userEvent.setup();
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>,
+        { route: "/settings" }
+      );
+
+      await user.click(screen.getByRole("button", { name: "Open navigation" }));
+
+      const settingsButton = screen
+        .getAllByText("Settings")
+        .find((node) => node.closest('[data-slot="sidebar-menu-button"]'));
+
+      expect(settingsButton).toBeDefined();
+
+      const activeButton = settingsButton?.closest(
+        '[data-slot="sidebar-menu-button"]'
+      );
+      expect(activeButton).toHaveAttribute("data-active", "true");
+      expect(activeButton?.parentElement).toHaveClass("block");
     });
 
     it("renders navigation links", () => {
@@ -284,6 +341,10 @@ describe("ApplicationLayout", () => {
       // In stacked layout, user info is accessible via avatar and dropdown menu
       const userMenuButton = screen.getByRole("button", { name: /user menu/i });
       expect(userMenuButton).toBeInTheDocument();
+      const avatar = userMenuButton.querySelector('[data-slot="avatar"]');
+      expect(avatar).toHaveClass("bg-primary", "text-primary-foreground");
+      expect(avatar?.className).not.toContain("bg-zinc-900");
+      expect(avatar?.className).not.toContain("dark:bg-white");
     });
 
     it("opens and closes the mobile sidebar with Radix dialog semantics", async () => {
@@ -871,8 +932,11 @@ describe("ApplicationLayout", () => {
       expect(footer).toBeInTheDocument();
       expect(footer).toHaveClass(
         "pb-[var(--app-footer-padding-bottom)]",
-        "dark:bg-zinc-900"
+        "bg-background",
+        "text-muted-foreground"
       );
+      expect(footer?.className).not.toContain("bg-white");
+      expect(footer?.className).not.toContain("dark:bg-zinc-900");
       expect(footer).toHaveTextContent(
         "Powered by SecPal – A guard's best friend"
       );

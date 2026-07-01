@@ -170,7 +170,7 @@ export function OrganizationalUnitPicker({
                 className="h-4 w-4 shrink-0"
               />
               <span className="truncate">{u.name}</span>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+              <span className="text-muted-foreground text-xs">
                 ({getTypeLabel(u.type)})
               </span>
             </span>

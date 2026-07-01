@@ -8,6 +8,7 @@ import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import {
   Alert,
   AlertDescription,
+  AlertTitle,
   Button,
   Dialog,
   DialogActions,
@@ -232,11 +233,11 @@ function OrganizationalUnitFormDialogContent({
       <form onSubmit={handleSubmit}>
         <DialogBody>
           {!isOnline && (
-            <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
-              <div className="mb-1 font-semibold">
+            <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+              <AlertTitle className="text-destructive">
                 <Trans>You're offline</Trans>
-              </div>
-              <AlertDescription className="mt-0 text-red-800 dark:text-red-400">
+              </AlertTitle>
+              <AlertDescription className="mt-0 text-destructive">
                 {mode === "create" ? (
                   <Trans>
                     Creating organizational units is not possible while offline.
@@ -253,8 +254,8 @@ function OrganizationalUnitFormDialogContent({
           )}
 
           {errors.general && (
-            <Alert className="mb-4 border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
-              <AlertDescription className="mt-0 text-red-600 dark:text-red-400">
+            <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+              <AlertDescription className="mt-0 text-destructive">
                 {errors.general}
               </AlertDescription>
             </Alert>
@@ -371,7 +372,7 @@ function OrganizationalUnitFormDialogContent({
                 <FieldLabel>
                   <Trans>Parent Unit</Trans>
                 </FieldLabel>
-                <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                <div className="rounded-lg border border-border bg-muted px-3 py-2 text-sm text-foreground">
                   {parentName}
                 </div>
                 <FieldDescription>

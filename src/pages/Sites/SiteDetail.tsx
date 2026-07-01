@@ -191,10 +191,12 @@ export default function SiteDetail() {
 
   if (loadError || !site) {
     return (
-      <div className="text-center py-12">
-        <PageText className="text-red-600 dark:text-red-400">
-          {loadError || <Trans>Site not found</Trans>}
-        </PageText>
+      <div className="py-12 text-center">
+        <Alert className="mx-auto max-w-md border-destructive/30 bg-destructive/10 text-foreground">
+          <AlertDescription className="text-destructive">
+            {loadError || <Trans>Site not found</Trans>}
+          </AlertDescription>
+        </Alert>
         <LinkButton to="/sites" variant="outline" className="mt-4">
           <ArrowLeft className="size-4" aria-hidden="true" />
           <Trans>Back to Sites</Trans>
@@ -208,7 +210,7 @@ export default function SiteDetail() {
       <div className="flex items-start justify-between mb-6">
         <div>
           <PageTitle>{site.name}</PageTitle>
-          <PageText className="mt-1 text-zinc-500 dark:text-zinc-400">
+          <PageText className="text-muted-foreground mt-1">
             {site.site_number}
           </PageText>
         </div>
@@ -511,8 +513,10 @@ export default function SiteDetail() {
               </DialogDescription>
               <DialogBody>
                 {deleteError !== null && (
-                  <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
-                    <AlertDescription>{deleteError}</AlertDescription>
+                  <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+                    <AlertDescription className="text-destructive">
+                      {deleteError}
+                    </AlertDescription>
                   </Alert>
                 )}
                 <PageText>

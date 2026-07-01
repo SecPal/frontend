@@ -11,11 +11,11 @@ export function RouteLoader() {
 
   return (
     <div
-      className="relative isolate flex min-h-[var(--app-shell-min-height)] w-full flex-col bg-white lg:bg-zinc-100 dark:bg-zinc-900 dark:lg:bg-zinc-950"
+      className="relative isolate flex min-h-[var(--app-shell-min-height)] w-full flex-col bg-background"
       data-slot="app-shell-loader"
     >
       <header className="flex items-center px-4 pt-[var(--app-safe-area-inset-top)]">
-        <div className="flex min-h-14 min-w-0 flex-1 items-center gap-4 border-b border-zinc-950/10 dark:border-white/10">
+        <div className="flex min-h-14 min-w-0 flex-1 items-center gap-4 border-b border-border">
           <Logo size="32" />
           <div className="hidden gap-3 lg:flex" aria-hidden="true">
             <Skeleton className="h-5 w-16" />
@@ -27,7 +27,7 @@ export function RouteLoader() {
           </div>
         </div>
       </header>
-      <main className="flex flex-1 flex-col bg-white dark:bg-zinc-900">
+      <main className="flex flex-1 flex-col bg-background">
         <div className="grow p-6 lg:p-10">
           <div className="mx-auto max-w-6xl">
             <PageSkeleton

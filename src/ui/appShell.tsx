@@ -99,7 +99,7 @@ export function SidebarProvider({
           } as React.CSSProperties
         }
         className={cn(
-          "group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full",
+          "group/sidebar-wrapper has-data-[variant=inset]:bg-background flex min-h-svh w-full",
           className
         )}
         {...props}
@@ -119,7 +119,7 @@ export function Sidebar({
       data-slot="sidebar"
       data-sidebar="sidebar"
       className={cn(
-        "flex h-full min-h-0 flex-col bg-sidebar text-sidebar-foreground",
+        "bg-background text-foreground flex h-full min-h-0 flex-col",
         className
       )}
       {...props}
@@ -136,7 +136,7 @@ export function SidebarHeader({
       data-slot="sidebar-header"
       data-sidebar="header"
       className={cn(
-        "flex flex-col border-b border-sidebar-border p-4 [&>[data-sidebar=group]+[data-sidebar=group]]:mt-2.5",
+        "flex flex-col border-b border-border p-4 [&>[data-sidebar=group]+[data-sidebar=group]]:mt-2.5",
         className
       )}
       {...props}
@@ -170,7 +170,7 @@ export function SidebarFooter({
       data-slot="sidebar-footer"
       data-sidebar="footer"
       className={cn(
-        "flex flex-col border-t border-sidebar-border p-4 [&>[data-sidebar=group]+[data-sidebar=group]]:mt-2.5",
+        "flex flex-col border-t border-border p-4 [&>[data-sidebar=group]+[data-sidebar=group]]:mt-2.5",
         className
       )}
       {...props}
@@ -215,7 +215,7 @@ export function SidebarGroupLabel({
       data-slot="sidebar-group-label"
       data-sidebar="group-label"
       className={cn(
-        "mb-1 px-2 text-xs/6 font-medium text-sidebar-foreground/70",
+        "text-muted-foreground mb-1 px-2 text-xs/6 font-medium",
         className
       )}
       {...props}
@@ -231,7 +231,10 @@ export function SidebarMenu({
     <ul
       data-slot="sidebar-menu"
       data-sidebar="menu"
-      className={cn("flex w-full min-w-0 flex-col gap-0.5", className)}
+      className={cn(
+        "m-0 flex w-full min-w-0 list-none flex-col gap-0.5 p-0",
+        className
+      )}
       {...props}
     />
   );
@@ -245,7 +248,7 @@ export function SidebarMenuItem({
     <li
       data-slot="sidebar-menu-item"
       data-sidebar="menu-item"
-      className={cn("group/menu-item relative", className)}
+      className={cn("group/menu-item relative list-none", className)}
       {...props}
     />
   );
@@ -283,23 +286,23 @@ export const SidebarMenuButton = forwardRef<
 >(function SidebarMenuButton({ current, className, children, ...props }, ref) {
   const closeSidebar = useContext(SidebarCloseContext);
   const classes = cn(
-    "peer/menu-button relative flex w-full items-center gap-3 overflow-hidden rounded-md px-2 py-2.5 text-left text-base/6 font-medium text-sidebar-foreground transition-colors sm:py-2 sm:text-sm/5",
-    "*:data-[slot=icon]:size-6 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-sidebar-foreground/60 sm:*:data-[slot=icon]:size-5",
+    "text-foreground peer/menu-button relative flex w-full items-center gap-3 overflow-hidden rounded-md px-2 py-2.5 text-left text-base/6 font-medium transition-colors sm:py-2 sm:text-sm/5",
+    "*:data-[slot=icon]:size-6 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-muted-foreground sm:*:data-[slot=icon]:size-5",
     "*:last:data-[slot=icon]:ml-auto *:last:data-[slot=icon]:size-5 sm:*:last:data-[slot=icon]:size-4",
     "*:data-[slot=avatar]:-m-0.5 *:data-[slot=avatar]:size-7 sm:*:data-[slot=avatar]:size-6",
-    "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:*:data-[slot=icon]:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-    "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:*:data-[slot=icon]:text-sidebar-accent-foreground",
+    "hover:bg-accent hover:text-accent-foreground hover:*:data-[slot=icon]:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+    "data-[active=true]:bg-accent data-[active=true]:text-accent-foreground data-[active=true]:*:data-[slot=icon]:text-accent-foreground",
     className
   );
 
   const indicator = current ? (
-    <span className="absolute inset-y-2 -left-4 w-0.5 rounded-full bg-sidebar-primary" />
+    <span className="bg-primary absolute inset-y-2 -left-4 w-0.5 rounded-full" />
   ) : null;
 
   if ("href" in props && typeof props.href === "string") {
     const { href, onClick: linkOnClick, ...linkProps } = props;
     return (
-      <span className="relative">
+      <span className="relative block">
         {indicator}
         <PrefetchLink
           {...linkProps}
@@ -324,7 +327,7 @@ export const SidebarMenuButton = forwardRef<
   }
 
   return (
-    <span className="relative">
+    <span className="relative block">
       {indicator}
       <button
         {...props}
@@ -363,7 +366,7 @@ export function SidebarMenuSpacer({
     <li
       aria-hidden="true"
       data-slot="sidebar-menu-spacer"
-      className={cn("mt-8 flex-1", className)}
+      className={cn("mt-8 flex-1 list-none", className)}
       {...props}
     />
   );

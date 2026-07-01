@@ -11,16 +11,14 @@ function getOrganizationalUnitIconClassName(
   switch (type) {
     case "holding":
     case "company":
-      return `${className} text-blue-500`;
     case "department":
     case "division":
-      return `${className} text-green-500`;
+      return `${className} text-foreground`;
     case "branch":
-      return `${className} text-purple-500`;
     case "region":
-      return `${className} text-orange-500`;
+      return `${className} text-muted-foreground`;
     default:
-      return `${className} text-gray-500`;
+      return `${className} text-muted-foreground`;
   }
 }
 
@@ -70,7 +68,7 @@ export function OrganizationalUnitRootIcon({
   return (
     <Home
       aria-hidden="true"
-      className={`${className} text-gray-400`}
+      className={`${className} text-muted-foreground`}
       data-slot={slot}
     />
   );
