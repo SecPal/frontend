@@ -118,6 +118,10 @@ describe("CustomerCreate", () => {
       target: { value: "invalid-email" },
     });
 
+    const emailInput = screen.getByRole("textbox", { name: /email/i });
+    expect(emailInput).toHaveAttribute("type", "text");
+    expect(emailInput).toHaveAttribute("inputmode", "email");
+
     const submitButton = screen.getByRole("button", { name: /create customer/i });
     expect(submitButton.closest("form")).toHaveAttribute("novalidate");
 

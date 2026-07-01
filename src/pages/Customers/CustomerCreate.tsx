@@ -406,7 +406,8 @@ export default function CustomerCreate() {
               <Input
                 id="customer-contact-email"
                 name="contact_email"
-                type="email"
+                type="text"
+                inputMode="email"
                 autoComplete="email"
                 value={formData.contact?.email || ""}
                 aria-invalid={fieldErrors["contact.email"] ? true : undefined}

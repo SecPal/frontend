@@ -137,6 +137,14 @@ describe("CustomersPage", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("does not claim zero sites when the list response has no reliable count", async () => {
+    renderWithProviders();
+
+    expect(await screen.findByText("Acme Corp")).toBeInTheDocument();
+    expect(screen.getAllByText("—")).not.toHaveLength(0);
+    expect(screen.queryByText(/^0$/)).not.toBeInTheDocument();
+  });
+
   it("renders page chrome and table skeleton rows while initially loading", () => {
     vi.mocked(customersApi.listCustomers).mockImplementation(
       () =>

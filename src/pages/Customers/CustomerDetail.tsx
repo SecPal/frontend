@@ -39,6 +39,14 @@ import {
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
 
+function getCustomerSitesCount(customer: Customer): number | null {
+  if (Array.isArray(customer.sites)) {
+    return customer.sites.length;
+  }
+
+  return typeof customer.sites_count === "number" ? customer.sites_count : null;
+}
+
 function CustomerDetailSkeleton({ loadingLabel }: { loadingLabel: string }) {
   return (
     <div className="space-y-8">
@@ -123,6 +131,7 @@ export default function CustomerDetail() {
   }
 
   const isInitialLoading = loading && customer === null;
+  const sitesCount = customer ? getCustomerSitesCount(customer) : null;
 
   if (!isInitialLoading && (loadError || !customer)) {
     return (
@@ -278,14 +287,20 @@ export default function CustomerDetail() {
             <PageTitle level={2} className="mb-4">
               <Trans>Sites</Trans>
             </PageTitle>
-            <PageText className="mb-4">
-              <Plural
-                value={customer.sites_count || 0}
-                zero="This customer has no sites."
-                one="This customer has # site."
-                other="This customer has # sites."
-              />
-            </PageText>
+            {sitesCount === null ? (
+              <PageText className="mb-4">
+                <Trans>This customer's site count is unavailable.</Trans>
+              </PageText>
+            ) : (
+              <PageText className="mb-4">
+                <Plural
+                  value={sitesCount}
+                  zero="This customer has no sites."
+                  one="This customer has # site."
+                  other="This customer has # sites."
+                />
+              </PageText>
+            )}
             <LinkButton to={`/sites/customer/${customer.id}`} variant="outline">
               <MapPinned className="size-4" aria-hidden="true" />
               <Trans>View Sites</Trans>

@@ -40,6 +40,7 @@ export interface Customer {
   notes?: string | null;
   metadata?: Record<string, unknown> | null;
   sites_count?: number;
+  sites?: Site[] | null;
   created_at: string;
   updated_at: string;
   deleted_at?: string | null;

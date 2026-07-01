@@ -54,6 +54,21 @@ function readUseDesktopTable(): boolean {
   return window.matchMedia(CUSTOMERS_DESKTOP_MEDIA_QUERY).matches;
 }
 
+function getCustomerSitesSummary(customer: Customer): string {
+  if (Array.isArray(customer.sites)) {
+    return String(customer.sites.length);
+  }
+
+  if (
+    typeof customer.sites_count === "number" &&
+    customer.sites_count > 0
+  ) {
+    return String(customer.sites_count);
+  }
+
+  return "—";
+}
+
 function CustomerTableSkeletonRows({
   columns,
   rows,
@@ -280,7 +295,7 @@ export default function CustomersPage() {
                       {customer.contact?.email || "-"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {customer.sites_count || 0}
+                      {getCustomerSitesSummary(customer)}
                     </TableCell>
                     <TableCell>
                       <StatusBadge color={customer.is_active ? "lime" : "zinc"}>
@@ -365,7 +380,9 @@ export default function CustomersPage() {
                     <p className="text-muted-foreground">
                       <Trans>Sites</Trans>
                     </p>
-                    <p className="text-foreground">{customer.sites_count || 0}</p>
+                    <p className="text-foreground">
+                      {getCustomerSitesSummary(customer)}
+                    </p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-muted-foreground">
