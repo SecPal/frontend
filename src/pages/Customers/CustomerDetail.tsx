@@ -204,7 +204,9 @@ export default function CustomerDetail() {
               <DescriptionTerm>
                 <Trans>City</Trans>
               </DescriptionTerm>
-              <DescriptionDetails>{customer.billing_address.city}</DescriptionDetails>
+              <DescriptionDetails>
+                {customer.billing_address.city}
+              </DescriptionDetails>
 
               <DescriptionTerm>
                 <Trans>Country</Trans>

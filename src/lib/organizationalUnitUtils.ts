@@ -9,11 +9,7 @@ import type { OrganizationalUnitType } from "../types/organizational";
  * Matches the color prop accepted by the Badge component
  */
 export type OrganizationalUnitBadgeColor =
-  | "blue"
-  | "green"
-  | "purple"
-  | "orange"
-  | "zinc";
+  "blue" | "green" | "purple" | "orange" | "zinc";
 export type BadgeColor = OrganizationalUnitBadgeColor;
 
 /**

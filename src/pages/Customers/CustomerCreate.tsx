@@ -244,11 +244,15 @@ export default function CustomerCreate() {
               autoComplete="organization"
               value={formData.name}
               aria-invalid={fieldErrors.name ? true : undefined}
-              aria-describedby={fieldErrors.name ? "customer-name-error" : undefined}
+              aria-describedby={
+                fieldErrors.name ? "customer-name-error" : undefined
+              }
               onChange={(e) => updateField("name", e.target.value)}
             />
             {fieldErrors.name ? (
-              <FieldError id="customer-name-error">{fieldErrors.name}</FieldError>
+              <FieldError id="customer-name-error">
+                {fieldErrors.name}
+              </FieldError>
             ) : null}
           </Field>
         </FieldGroup>
@@ -300,7 +304,9 @@ export default function CustomerCreate() {
                   autoComplete="postal-code"
                   value={formData.billing_address.postal_code}
                   aria-invalid={
-                    fieldErrors["billing_address.postal_code"] ? true : undefined
+                    fieldErrors["billing_address.postal_code"]
+                      ? true
+                      : undefined
                   }
                   aria-describedby={
                     fieldErrors["billing_address.postal_code"]

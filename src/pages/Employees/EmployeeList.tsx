@@ -478,7 +478,9 @@ export function EmployeeList() {
                     <p className="text-muted-foreground">
                       <Trans>Employee #</Trans>
                     </p>
-                    <p className="text-foreground">{employee.employee_number}</p>
+                    <p className="text-foreground">
+                      {employee.employee_number}
+                    </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">

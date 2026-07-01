@@ -105,9 +105,7 @@ export function DeleteOrganizationalUnitDialog({
             >
               <TriangleAlert
                 className={`h-6 w-6 ${
-                  hasChildren
-                    ? "text-foreground"
-                    : "text-destructive"
+                  hasChildren ? "text-foreground" : "text-destructive"
                 }`}
               />
             </div>

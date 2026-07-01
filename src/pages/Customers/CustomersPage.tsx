@@ -59,10 +59,7 @@ function getCustomerSitesSummary(customer: Customer): string {
     return String(customer.sites.length);
   }
 
-  if (
-    typeof customer.sites_count === "number" &&
-    customer.sites_count > 0
-  ) {
+  if (typeof customer.sites_count === "number" && customer.sites_count > 0) {
     return String(customer.sites_count);
   }
 

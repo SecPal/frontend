@@ -43,7 +43,9 @@ const ddevProxyHeaders = {
 
 const defaultDevProxyTarget = "https://secpal-api.ddev.site";
 
-function normalizeAbsoluteProxyTarget(value: string | undefined): string | null {
+function normalizeAbsoluteProxyTarget(
+  value: string | undefined
+): string | null {
   const trimmedValue = value?.trim() ?? "";
 
   if (!trimmedValue) {

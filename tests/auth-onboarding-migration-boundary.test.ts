@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { cwd } from "node:process";
 import ts from "typescript";
@@ -94,6 +94,10 @@ function toProjectPath(filePath: string) {
 
 function listSourceFiles(entryPath: string): string[] {
   const absolutePath = path.resolve(projectRoot, entryPath);
+  if (!existsSync(absolutePath)) {
+    return [];
+  }
+
   const stat = statSync(absolutePath);
 
   if (stat.isFile()) {

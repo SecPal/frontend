@@ -233,10 +233,9 @@ describe("EmployeeList", () => {
     expect(await screen.findByText("John Doe")).toBeInTheDocument();
     expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
     expect(screen.getByText("Engineering")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /view john doe/i })).toHaveAttribute(
-      "href",
-      "/employees/emp-1"
-    );
+    expect(
+      screen.getByRole("link", { name: /view john doe/i })
+    ).toHaveAttribute("href", "/employees/emp-1");
     expect(
       screen.queryByRole("columnheader", { name: /employee/i })
     ).not.toBeInTheDocument();

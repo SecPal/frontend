@@ -92,7 +92,10 @@ export function OfflineIndicator() {
         role="presentation"
         className="grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 border-amber-500/30 bg-amber-500/10 shadow-lg [&>svg+div]:translate-y-0 [&>svg]:static [&>svg]:mt-0.5 [&>svg~*]:pl-0"
       >
-        <WifiOff className="text-foreground h-5 w-5 shrink-0" aria-hidden="true" />
+        <WifiOff
+          className="text-foreground h-5 w-5 shrink-0"
+          aria-hidden="true"
+        />
         <div className="min-w-0">
           <AlertTitle className="text-foreground text-sm font-semibold">
             <Trans>You're offline</Trans>

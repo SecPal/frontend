@@ -122,7 +122,9 @@ describe("CustomerCreate", () => {
     expect(emailInput).toHaveAttribute("type", "text");
     expect(emailInput).toHaveAttribute("inputmode", "email");
 
-    const submitButton = screen.getByRole("button", { name: /create customer/i });
+    const submitButton = screen.getByRole("button", {
+      name: /create customer/i,
+    });
     expect(submitButton.closest("form")).toHaveAttribute("novalidate");
 
     await user.click(submitButton);

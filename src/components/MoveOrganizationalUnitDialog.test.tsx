@@ -704,10 +704,13 @@ describe("MoveOrganizationalUnitDialog", () => {
         expect(screen.getByText(/Move failed/i)).toBeInTheDocument();
       });
 
-      const moveError = screen.getByText(/Move failed/i).closest(
-        '[data-slot="alert"]'
+      const moveError = screen
+        .getByText(/Move failed/i)
+        .closest('[data-slot="alert"]');
+      expect(moveError).toHaveClass(
+        "border-destructive/30",
+        "bg-destructive/10"
       );
-      expect(moveError).toHaveClass("border-destructive/30", "bg-destructive/10");
       expect(moveError).toHaveClass("text-foreground");
       expect(moveError).toHaveAttribute("data-slot", "alert");
 
@@ -734,10 +737,13 @@ describe("MoveOrganizationalUnitDialog", () => {
         expect(screen.getByText(/Failed to load units/i)).toBeInTheDocument();
       });
 
-      const loadError = screen.getByText(/Failed to load units/i).closest(
-        '[data-slot="alert"]'
+      const loadError = screen
+        .getByText(/Failed to load units/i)
+        .closest('[data-slot="alert"]');
+      expect(loadError).toHaveClass(
+        "border-destructive/30",
+        "bg-destructive/10"
       );
-      expect(loadError).toHaveClass("border-destructive/30", "bg-destructive/10");
       expect(loadError).toHaveClass("text-foreground");
       expect(loadError).toHaveAttribute("data-slot", "alert");
     });

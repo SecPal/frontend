@@ -128,10 +128,9 @@ describe("CustomersPage", () => {
     expect(await screen.findByText("Acme Corp")).toBeInTheDocument();
     expect(screen.getByText("C001")).toBeInTheDocument();
     expect(screen.getByText(/12345 Berlin/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /view acme corp/i })).toHaveAttribute(
-      "href",
-      "/customers/cust-1"
-    );
+    expect(
+      screen.getByRole("link", { name: /view acme corp/i })
+    ).toHaveAttribute("href", "/customers/cust-1");
     expect(
       screen.queryByRole("columnheader", { name: /customer number/i })
     ).not.toBeInTheDocument();

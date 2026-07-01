@@ -2699,13 +2699,15 @@ describe("Login", () => {
       // Third failed attempt - should show warning
       fireEvent.change(emailInput, { target: { value: "test@secpal.dev" } });
       fireEvent.change(passwordInput, { target: { value: "wrong" } });
-    fireEvent.click(submitButton);
+      fireEvent.click(submitButton);
 
       const remainingAttemptsWarning = await screen.findByText(
         /attempt\(s\) remaining/i
       );
       expect(remainingAttemptsWarning).toHaveClass("text-foreground");
-      expect(remainingAttemptsWarning.className).not.toContain("text-amber-700");
+      expect(remainingAttemptsWarning.className).not.toContain(
+        "text-amber-700"
+      );
     });
 
     it("locks user out after 5 failed attempts", async () => {

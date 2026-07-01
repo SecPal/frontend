@@ -81,19 +81,11 @@ export function OfflineDataBanner({
   const bgColor = isOffline
     ? "bg-amber-500/10 border-amber-500/30"
     : "bg-primary/10 border-primary/30";
-  const textColor = isOffline
-    ? "text-foreground"
-    : "text-primary";
-  const iconColor = isOffline
-    ? "text-foreground"
-    : "text-primary";
+  const textColor = isOffline ? "text-foreground" : "text-primary";
+  const iconColor = isOffline ? "text-foreground" : "text-primary";
 
   return (
-    <Alert
-      className={`mb-4 ${bgColor}`}
-      role="status"
-      aria-live="polite"
-    >
+    <Alert className={`mb-4 ${bgColor}`} role="status" aria-live="polite">
       <Icon className={`h-5 w-5 shrink-0 ${iconColor}`} aria-hidden="true" />
       <div className="flex w-full items-center gap-3">
         <div className="flex-1">
@@ -105,7 +97,9 @@ export function OfflineDataBanner({
             )}
           </AlertDescription>
           {lastSynced && (
-            <AlertDescription className={`mt-0.5 text-xs ${textColor} opacity-75`}>
+            <AlertDescription
+              className={`mt-0.5 text-xs ${textColor} opacity-75`}
+            >
               <Trans>
                 Last synced: {formatRelativeTime(lastSynced, i18n.locale)}
               </Trans>

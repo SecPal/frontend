@@ -499,11 +499,7 @@ export function OnboardingComplete() {
           }
         >
           <AlertTitle
-            className={
-              isRateLimited
-                ? "text-foreground"
-                : "text-destructive"
-            }
+            className={isRateLimited ? "text-foreground" : "text-destructive"}
           >
             {isRateLimited ? (
               <Trans>Too Many Attempts</Trans>
@@ -513,9 +509,7 @@ export function OnboardingComplete() {
           </AlertTitle>
           <AlertDescription
             className={
-              isRateLimited
-                ? "mt-2 text-foreground"
-                : "mt-2 text-destructive"
+              isRateLimited ? "mt-2 text-foreground" : "mt-2 text-destructive"
             }
           >
             {tokenValidationState.message}

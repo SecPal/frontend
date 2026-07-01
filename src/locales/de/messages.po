@@ -1899,6 +1899,10 @@ msgstr "Alle Protokolle"
 msgid "Processing..."
 msgstr "Verarbeitung..."
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "{sitesCount, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
+msgstr ""
+
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Last Updated"
 msgstr "Zuletzt aktualisiert"
@@ -2741,11 +2745,6 @@ msgstr "Verursacher"
 msgid "Try Again"
 msgstr "Erneut versuchen"
 
-#. placeholder {0}: customer.sites_count || 0
-#: src/pages/Customers/CustomerDetail.tsx
-msgid "{0, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
-msgstr "{0, plural, zero {Dieser Kunde hat keine Objekte.} one {Dieser Kunde hat # Objekt.} other {Dieser Kunde hat # Objekte.}}"
-
 #: src/pages/SourcePage.tsx
 msgid "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the repositories linked below."
 msgstr "SecPal ist unter der GNU Affero General Public License, Version 3 oder jeder späteren Version, lizenziert. Wenn Sie diesen Dienst über ein Netzwerk nutzen, können Sie den entsprechenden Quelltext für die über diesen Dienst bereitgestellten SecPal-Komponenten kostenlos aus den unten verlinkten Repositories beziehen."
@@ -3158,6 +3157,10 @@ msgstr "Über SecPal"
 #: src/components/UpdatePrompt.tsx
 msgid "Update application now"
 msgstr "Anwendung jetzt aktualisieren"
+
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "This customer's site count is unavailable."
+msgstr ""
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx

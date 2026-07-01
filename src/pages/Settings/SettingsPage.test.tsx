@@ -358,7 +358,10 @@ describe("SettingsPage", () => {
     const statusError = await screen.findByText(/service unavailable/i);
     const statusAlert = statusError.closest('[data-slot="alert"]');
 
-    expect(statusAlert).toHaveClass("border-destructive/30", "bg-destructive/10");
+    expect(statusAlert).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
     expect(statusAlert).toHaveAttribute("data-slot", "alert");
     expect(statusError).toHaveClass("text-destructive");
   });
@@ -399,7 +402,10 @@ describe("SettingsPage", () => {
     const passkeyError = await screen.findByText(/failed to load passkeys/i);
     const passkeyAlert = passkeyError.closest('[data-slot="alert"]');
     expect(passkeyError).toBeInTheDocument();
-    expect(passkeyAlert).toHaveClass("border-destructive/30", "bg-destructive/10");
+    expect(passkeyAlert).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
     expect(passkeyAlert).toHaveAttribute("data-slot", "alert");
   });
 
@@ -620,10 +626,15 @@ describe("SettingsPage", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
 
-    const passkeyError = await screen.findByText(/passkey registration failed/i);
+    const passkeyError = await screen.findByText(
+      /passkey registration failed/i
+    );
     const passkeyAlert = passkeyError.closest('[data-slot="alert"]');
     expect(passkeyError).toBeInTheDocument();
-    expect(passkeyAlert).toHaveClass("border-destructive/30", "bg-destructive/10");
+    expect(passkeyAlert).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
     expect(passkeyAlert).toHaveAttribute("data-slot", "alert");
   });
 
@@ -938,7 +949,10 @@ describe("SettingsPage", () => {
     const passkeyError = await screen.findByText(/passkey deletion failed/i);
     const passkeyAlert = passkeyError.closest('[data-slot="alert"]');
     expect(passkeyError).toBeInTheDocument();
-    expect(passkeyAlert).toHaveClass("border-destructive/30", "bg-destructive/10");
+    expect(passkeyAlert).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
     expect(passkeyAlert).toHaveAttribute("data-slot", "alert");
     expect(screen.getByText(/work macbook touch id/i)).toBeInTheDocument();
   });

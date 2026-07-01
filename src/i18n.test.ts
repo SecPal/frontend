@@ -9,7 +9,10 @@ import { activateLocale, defaultLocale } from "./i18n";
 
 describe("i18n catalog loading", () => {
   it("keeps locale catalog loading on a single static path", async () => {
-    const source = await readFile(resolve(process.cwd(), "src/i18n.ts"), "utf8");
+    const source = await readFile(
+      resolve(process.cwd(), "src/i18n.ts"),
+      "utf8"
+    );
 
     expect(source).not.toContain("await import(");
   });

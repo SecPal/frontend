@@ -207,7 +207,10 @@ describe("auth login shadcn primitives", () => {
     const status = screen.getByRole("status");
     expect(status).toHaveClass("border-amber-500/30", "bg-amber-500/10");
     expect(status).toHaveClass("text-foreground");
-    expect(screen.getByText("Warning")).toHaveAttribute("data-slot", "alert-title");
+    expect(screen.getByText("Warning")).toHaveAttribute(
+      "data-slot",
+      "alert-title"
+    );
     expect(status.className).not.toContain("text-amber-700");
   });
 

@@ -507,7 +507,10 @@ describe("AndroidProvisioningPage", () => {
       screen.getByRole("heading", { name: /revoke enrollment session/i })
     ).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText(/revocation reason/i), "Device retired");
+    await user.type(
+      screen.getByLabelText(/revocation reason/i),
+      "Device retired"
+    );
     await user.click(screen.getByRole("button", { name: /^revoke$/i }));
 
     await waitFor(() => {
@@ -559,7 +562,10 @@ describe("AndroidProvisioningPage", () => {
     renderPage();
 
     await user.click(await screen.findByRole("button", { name: "Revoke" }));
-    await user.type(screen.getByLabelText(/revocation reason/i), "Device retired");
+    await user.type(
+      screen.getByLabelText(/revocation reason/i),
+      "Device retired"
+    );
     await user.click(screen.getByRole("button", { name: /^revoke$/i }));
 
     expect(

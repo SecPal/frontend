@@ -403,7 +403,9 @@ describe("shared shadcn/radix UI basis", () => {
         <CustomerSiteStatusBadge color="blue">
           Customer info
         </CustomerSiteStatusBadge>
-        <EmployeeStatusBadge color="amber">Employee warning</EmployeeStatusBadge>
+        <EmployeeStatusBadge color="amber">
+          Employee warning
+        </EmployeeStatusBadge>
         <EmployeeStatusBadge color="green">Employee active</EmployeeStatusBadge>
       </div>
     );
@@ -441,10 +443,7 @@ describe("shared shadcn/radix UI basis", () => {
 
     expect(holding).toHaveAttribute("data-slot", "badge");
     expect(holding).toHaveClass("bg-primary/10", "text-primary");
-    expect(department).toHaveClass(
-      "bg-emerald-500/10",
-      "text-foreground"
-    );
+    expect(department).toHaveClass("bg-emerald-500/10", "text-foreground");
     expect(branch).toHaveClass("bg-purple-500/10", "text-foreground");
     expect(custom).toHaveClass("bg-muted", "text-muted-foreground");
 

@@ -322,7 +322,7 @@ export function OrganizationPage() {
                     {selectedUnit.name}
                   </h2>
                   <div className="flex items-center gap-2">
-                  <OrganizationalUnitTypeBadge type={selectedUnit.type} />
+                    <OrganizationalUnitTypeBadge type={selectedUnit.type} />
                     <Button
                       type="button"
                       variant="ghost"

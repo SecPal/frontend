@@ -252,7 +252,9 @@ describe("CustomerEdit", () => {
     renderWithRouter();
 
     const loadError = await screen.findByText(/customer not found/i);
-    expect(loadError.closest('[data-slot="alert"]')).toHaveClass("text-foreground");
+    expect(loadError.closest('[data-slot="alert"]')).toHaveClass(
+      "text-foreground"
+    );
 
     vi.clearAllMocks();
   });

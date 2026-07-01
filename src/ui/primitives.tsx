@@ -1490,8 +1490,7 @@ const organizationalUnitBadgeColors = {
   zinc: "bg-muted text-muted-foreground",
 } satisfies Record<OrganizationalUnitBadgeColor, string>;
 
-export interface CustomerSitePageTitleProps
-  extends ComponentPropsWithoutRef<"h1"> {
+export interface CustomerSitePageTitleProps extends ComponentPropsWithoutRef<"h1"> {
   level?: 1 | 2;
 }
 
@@ -1516,8 +1515,7 @@ export function CustomerSitePageTitle({
   );
 }
 
-export interface CustomerSitePageTextProps
-  extends ComponentPropsWithoutRef<"p"> {
+export interface CustomerSitePageTextProps extends ComponentPropsWithoutRef<"p"> {
   className?: string;
 }
 
@@ -1552,13 +1550,15 @@ export const CustomerSitePageLink = forwardRef<
   );
 });
 
-export interface CustomerSitePageLinkProps
-  extends ComponentPropsWithoutRef<typeof PrefetchLink> {
+export interface CustomerSitePageLinkProps extends ComponentPropsWithoutRef<
+  typeof PrefetchLink
+> {
   className?: string;
 }
 
-export interface CustomerSiteLinkButtonProps
-  extends ComponentPropsWithoutRef<typeof PrefetchLink> {
+export interface CustomerSiteLinkButtonProps extends ComponentPropsWithoutRef<
+  typeof PrefetchLink
+> {
   variant?: ButtonVariant;
 }
 
@@ -1576,8 +1576,7 @@ export const CustomerSiteLinkButton = forwardRef<
   );
 });
 
-export interface CustomerSiteStatusBadgeProps
-  extends ComponentPropsWithoutRef<"span"> {
+export interface CustomerSiteStatusBadgeProps extends ComponentPropsWithoutRef<"span"> {
   color?: CustomerSiteBadgeColor;
 }
 
@@ -1595,8 +1594,7 @@ export function CustomerSiteStatusBadge({
   );
 }
 
-export interface OrganizationalUnitTypeBadgeProps
-  extends ComponentPropsWithoutRef<"span"> {
+export interface OrganizationalUnitTypeBadgeProps extends ComponentPropsWithoutRef<"span"> {
   type: string;
 }
 
@@ -1618,8 +1616,7 @@ export function OrganizationalUnitTypeBadge({
   );
 }
 
-export interface CustomerSiteFormCheckboxFieldProps
-  extends ComponentPropsWithoutRef<"div"> {
+export interface CustomerSiteFormCheckboxFieldProps extends ComponentPropsWithoutRef<"div"> {
   className?: string;
 }
 
@@ -1659,8 +1656,7 @@ const employeeBadgeColors = {
   zinc: "bg-muted text-muted-foreground",
 } satisfies Record<EmployeeBadgeColor, string>;
 
-export interface EmployeeFieldsetProps
-  extends ComponentPropsWithoutRef<"fieldset"> {
+export interface EmployeeFieldsetProps extends ComponentPropsWithoutRef<"fieldset"> {
   className?: string;
 }
 
@@ -1677,15 +1673,11 @@ export function EmployeeFieldset({
   );
 }
 
-export interface EmployeeLegendProps
-  extends ComponentPropsWithoutRef<"legend"> {
+export interface EmployeeLegendProps extends ComponentPropsWithoutRef<"legend"> {
   className?: string;
 }
 
-export function EmployeeLegend({
-  className,
-  ...props
-}: EmployeeLegendProps) {
+export function EmployeeLegend({ className, ...props }: EmployeeLegendProps) {
   return (
     <legend
       data-slot="employee-legend"
@@ -1726,8 +1718,7 @@ export interface EmployeeAutocompleteListboxProps {
   children: ReactNode;
 }
 
-export interface EmployeeAutocompleteOptionProps
-  extends ComponentPropsWithoutRef<"button"> {
+export interface EmployeeAutocompleteOptionProps extends ComponentPropsWithoutRef<"button"> {
   highlighted?: boolean;
 }
 
@@ -1789,8 +1780,7 @@ export interface EmployeeCommandPopoverProps {
   errorMessage?: string;
 }
 
-export interface EmployeePageTitleProps
-  extends ComponentPropsWithoutRef<"h1"> {
+export interface EmployeePageTitleProps extends ComponentPropsWithoutRef<"h1"> {
   level?: 1 | 2 | 3;
 }
 
@@ -1850,13 +1840,15 @@ export const EmployeePageLink = forwardRef<
   );
 });
 
-export interface EmployeePageLinkProps
-  extends ComponentPropsWithoutRef<typeof PrefetchLink> {
+export interface EmployeePageLinkProps extends ComponentPropsWithoutRef<
+  typeof PrefetchLink
+> {
   className?: string;
 }
 
-export interface EmployeeLinkButtonProps
-  extends ComponentPropsWithoutRef<typeof PrefetchLink> {
+export interface EmployeeLinkButtonProps extends ComponentPropsWithoutRef<
+  typeof PrefetchLink
+> {
   variant?: ButtonVariant;
 }
 
@@ -1874,8 +1866,7 @@ export const EmployeeLinkButton = forwardRef<
   );
 });
 
-export interface EmployeeStatusBadgeProps
-  extends ComponentPropsWithoutRef<"span"> {
+export interface EmployeeStatusBadgeProps extends ComponentPropsWithoutRef<"span"> {
   color?: EmployeeBadgeColor;
 }
 
@@ -1893,8 +1884,7 @@ export function EmployeeStatusBadge({
   );
 }
 
-export interface EmployeeDataTableProps
-  extends ComponentPropsWithoutRef<"div"> {
+export interface EmployeeDataTableProps extends ComponentPropsWithoutRef<"div"> {
   className?: string;
 }
 
@@ -1914,15 +1904,11 @@ export function EmployeeDataTable({
   );
 }
 
-export interface EmployeeTableProps
-  extends ComponentPropsWithoutRef<"table"> {
+export interface EmployeeTableProps extends ComponentPropsWithoutRef<"table"> {
   className?: string;
 }
 
-export function EmployeeTable({
-  className,
-  ...props
-}: EmployeeTableProps) {
+export function EmployeeTable({ className, ...props }: EmployeeTableProps) {
   return (
     <table
       data-slot="employee-table"
@@ -1935,8 +1921,7 @@ export function EmployeeTable({
   );
 }
 
-export interface EmployeeTableHeadProps
-  extends ComponentPropsWithoutRef<"thead"> {
+export interface EmployeeTableHeadProps extends ComponentPropsWithoutRef<"thead"> {
   className?: string;
 }
 
@@ -1944,8 +1929,7 @@ export function EmployeeTableHead(props: EmployeeTableHeadProps) {
   return <thead data-slot="employee-table-head" {...props} />;
 }
 
-export interface EmployeeTableBodyProps
-  extends ComponentPropsWithoutRef<"tbody"> {
+export interface EmployeeTableBodyProps extends ComponentPropsWithoutRef<"tbody"> {
   className?: string;
 }
 
@@ -1994,8 +1978,7 @@ export function EmployeeTableRow({
   );
 }
 
-export interface EmployeeTableHeaderProps
-  extends ComponentPropsWithoutRef<"th"> {
+export interface EmployeeTableHeaderProps extends ComponentPropsWithoutRef<"th"> {
   className?: string;
 }
 
@@ -2015,8 +1998,7 @@ export function EmployeeTableHeader({
   );
 }
 
-export interface EmployeeTableCellProps
-  extends ComponentPropsWithoutRef<"td"> {
+export interface EmployeeTableCellProps extends ComponentPropsWithoutRef<"td"> {
   className?: string;
 }
 

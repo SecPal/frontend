@@ -109,7 +109,10 @@ describe("LanguageSwitcher", () => {
     expect(errorMessage).toBeInTheDocument();
     expect(errorMessage).toHaveTextContent(/failed to load locale/i);
     expect(errorMessage).toHaveAttribute("data-slot", "alert");
-    expect(errorMessage).toHaveClass("border-destructive/30", "bg-destructive/10");
+    expect(errorMessage).toHaveClass(
+      "border-destructive/30",
+      "bg-destructive/10"
+    );
     expect(errorMessage.className).not.toContain("text-red-600");
   });
 
