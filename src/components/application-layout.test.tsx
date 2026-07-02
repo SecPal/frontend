@@ -482,7 +482,7 @@ describe("ApplicationLayout", () => {
         );
 
         const dialog = await screen.findByRole("dialog", {
-          name: /sidebar/i,
+          name: /navigation/i,
         });
         const mobileSidebar = document.querySelector(
           '[data-slot="sidebar"][data-mobile="true"]'
@@ -498,7 +498,7 @@ describe("ApplicationLayout", () => {
 
         await waitFor(() => {
           expect(
-            screen.queryByRole("dialog", { name: /sidebar/i })
+            screen.queryByRole("dialog", { name: /navigation/i })
           ).not.toBeInTheDocument();
         });
       } finally {
@@ -583,7 +583,7 @@ describe("ApplicationLayout", () => {
         );
 
         await screen.findByRole("dialog", {
-          name: /sidebar/i,
+          name: /navigation/i,
         });
 
         await user.click(screen.getByRole("link", { name: /customers/i }));
@@ -593,7 +593,7 @@ describe("ApplicationLayout", () => {
             "/customers"
           );
           expect(
-            screen.queryByRole("dialog", { name: /sidebar/i })
+            screen.queryByRole("dialog", { name: /navigation/i })
           ).not.toBeInTheDocument();
         });
       } finally {
@@ -626,7 +626,7 @@ describe("ApplicationLayout", () => {
         );
 
         await screen.findByRole("dialog", {
-          name: /sidebar/i,
+          name: /navigation/i,
         });
 
         await openUserMenu();
@@ -635,7 +635,7 @@ describe("ApplicationLayout", () => {
         await waitFor(() => {
           expect(screen.getByTestId("pathname")).toHaveTextContent("/settings");
           expect(
-            screen.queryByRole("dialog", { name: /sidebar/i })
+            screen.queryByRole("dialog", { name: /navigation/i })
           ).not.toBeInTheDocument();
         });
       } finally {

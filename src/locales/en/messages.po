@@ -509,6 +509,10 @@ msgstr "Personal Information"
 msgid "Parent Unit"
 msgstr "Parent Unit"
 
+#: src/ui/sidebar.tsx
+msgid "Toggle Sidebar"
+msgstr "Toggle Sidebar"
+
 #: src/pages/Customers/CustomersPage.tsx
 msgid "Search customers..."
 msgstr "Search customers..."
@@ -2049,11 +2053,13 @@ msgstr "Close navigation"
 
 #. js-lingui-explicit-id
 #: src/components/mobile-sidebar-dialog.tsx
+#: src/ui/sidebar.tsx
 msgid "layout.mobileNavigation.description"
 msgstr "Main application navigation"
 
 #. js-lingui-explicit-id
 #: src/components/mobile-sidebar-dialog.tsx
+#: src/ui/sidebar.tsx
 msgid "layout.mobileNavigation.title"
 msgstr "Navigation"
 
