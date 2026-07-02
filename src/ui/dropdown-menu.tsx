@@ -57,6 +57,12 @@ export function DropdownMenuContent({
             markKeyboardInteraction();
           }
         }}
+        onPointerDownOutside={(event) => {
+          props.onPointerDownOutside?.(event);
+          if (!event.defaultPrevented) {
+            markPointerInteraction();
+          }
+        }}
         onCloseAutoFocus={(event) => {
           props.onCloseAutoFocus?.(event);
           if (!event.defaultPrevented && blurActiveElementAfterPointerClose()) {

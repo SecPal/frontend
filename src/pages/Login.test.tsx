@@ -3410,9 +3410,17 @@ describe("Login", () => {
         "text-foreground",
         "focus-visible:ring-ring/50"
       );
-      expect(
-        screen.getByRole("button", { name: /legal|rechtliches/i })
-      ).toBeInTheDocument();
+      const legalButton = screen.getByRole("button", {
+        name: /legal|rechtliches/i,
+      });
+      expect(legalButton).toBeInTheDocument();
+      expect(legalButton).toHaveClass(
+        "border-input",
+        "bg-background",
+        "text-foreground",
+        "focus-visible:ring-ring/50"
+      );
+      expect(legalButton.className).not.toContain("dark:bg-input/30");
       expect(languageSelect.className).not.toContain("border-zinc-300");
       expect(languageSelect.className).not.toContain(
         "focus-visible:ring-blue-600/20"

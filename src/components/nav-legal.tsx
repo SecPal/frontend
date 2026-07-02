@@ -8,6 +8,15 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/ui/dropdown-menu";
+import {
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
@@ -21,19 +30,12 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/ui/collap
 
 export function NavLegal() {
   const location = useLocation();
-  const { isMobile, setOpen, setOpenMobile, state } = useSidebar();
+  const { isMobile, setOpenMobile, state } = useSidebar();
   const sourceReturnTo = `${location.pathname}${location.search}${location.hash}`;
   const isSourceRoute = location.pathname.startsWith("/source");
   const [isLegalOpen, setIsLegalOpen] = useState(isSourceRoute);
   const effectiveIsLegalOpen = isLegalOpen || isSourceRoute;
-
-  function handleTriggerClick(event: MouseEvent<HTMLButtonElement>) {
-    if (!isMobile && state === "collapsed") {
-      event.preventDefault();
-      setOpen(true);
-      setIsLegalOpen(true);
-    }
-  }
+  const isDesktopCollapsed = !isMobile && state === "collapsed";
 
   function handleItemClick(event: MouseEvent<HTMLAnchorElement>) {
     if (
@@ -51,6 +53,76 @@ export function NavLegal() {
     setOpenMobile(false);
   }
 
+  if (isDesktopCollapsed) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <DropdownMenu modal>
+            <DropdownMenuTrigger asChild>
+              <SidebarMenuButton tooltip={t`Legal`}>
+                <Scale />
+                <span>
+                  <Trans>Legal</Trans>
+                </span>
+              </SidebarMenuButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-fit min-w-fit rounded-lg"
+              side="right"
+              align="end"
+              sideOffset={4}
+            >
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>
+                  <Trans>Legal pages</Trans>
+                </DropdownMenuLabel>
+                <DropdownMenuItem disabled>
+                  <FileText />
+                  <Trans>Imprint</Trans>
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled>
+                  <Shield />
+                  <Trans>Privacy</Trans>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>
+                  <Trans>Open Source</Trans>
+                </DropdownMenuLabel>
+                <DropdownMenuItem asChild>
+                  <a
+                    href="https://www.gnu.org/licenses/agpl-3.0.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={handleItemClick}
+                  >
+                    <Scale />
+                    <span>
+                      <Trans>AGPL v3+</Trans>
+                    </span>
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <PrefetchLink
+                    to="/source"
+                    state={{ sourceReturnTo }}
+                    onClick={handleItemClick}
+                  >
+                    <Code2 />
+                    <span>
+                      <Trans>Source Code</Trans>
+                    </span>
+                  </PrefetchLink>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
+
   return (
     <SidebarMenu>
       <Collapsible
@@ -61,7 +133,7 @@ export function NavLegal() {
       >
         <SidebarMenuItem>
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton tooltip={t`Legal`} onClick={handleTriggerClick}>
+            <SidebarMenuButton tooltip={t`Legal`}>
               <Scale />
               <span>
                 <Trans>Legal</Trans>

@@ -27,7 +27,7 @@ export function LoginLegalMenu() {
           type="button"
           variant="outline"
           size="lg"
-          className="w-auto justify-start gap-2 px-3 text-base font-normal whitespace-nowrap md:text-sm"
+          className="border-input bg-background text-foreground w-auto justify-start gap-2 px-3 text-base font-normal whitespace-nowrap shadow-xs hover:bg-accent hover:text-accent-foreground md:text-sm dark:bg-background dark:hover:bg-accent"
         >
           <Scale
             className="h-4 w-4 text-muted-foreground"

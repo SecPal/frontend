@@ -73,6 +73,31 @@ describe("DropdownMenuItem", () => {
     });
   });
 
+  it("blurs the trigger after pointer dismissal outside the menu", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <DropdownMenu>
+          <DropdownMenuTrigger>Open</DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem>Lock app</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </MemoryRouter>
+    );
+
+    const trigger = screen.getByRole("button", { name: "Open" });
+    await user.click(trigger);
+    fireEvent.pointerDown(document.body);
+    fireEvent.mouseDown(document.body);
+    fireEvent.click(document.body);
+
+    await waitFor(() => {
+      expect(document.activeElement).not.toBe(trigger);
+    });
+  });
+
   it("renders dropdown content without the legacy border frame", () => {
     renderOpenDropdown(<DropdownMenuItem>Settings</DropdownMenuItem>);
 

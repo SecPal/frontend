@@ -3,7 +3,7 @@
 
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -170,7 +170,7 @@ describe("NavLegal", () => {
     expect(setOpenMobile).toHaveBeenCalledWith(false);
   });
 
-  it("expands the collapsed desktop sidebar before opening the legal submenu", async () => {
+  it("shows the legal links in a separate dropdown when the desktop sidebar is collapsed", async () => {
     const user = userEvent.setup();
 
     vi.mocked(useSidebar).mockReturnValue({
@@ -193,11 +193,12 @@ describe("NavLegal", () => {
 
     await user.click(screen.getByRole("button", { name: /legal/i }));
 
-    expect(setOpen).toHaveBeenCalledWith(true);
+    expect(setOpen).not.toHaveBeenCalled();
     expect(await screen.findByText(/legal pages/i)).toBeInTheDocument();
+    expect(screen.getByText(/open source/i)).toBeInTheDocument();
   });
 
-  it("keeps an already open legal submenu open when the collapsed desktop sidebar is expanded", async () => {
+  it("keeps the source code link available in the collapsed desktop dropdown on source routes", async () => {
     const user = userEvent.setup();
 
     vi.mocked(useSidebar).mockReturnValue({
@@ -218,12 +219,45 @@ describe("NavLegal", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText(/legal pages/i)).toBeInTheDocument();
-
     await user.click(screen.getByRole("button", { name: /legal/i }));
 
-    expect(setOpen).toHaveBeenCalledWith(true);
-    expect(screen.getByText(/legal pages/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /source code/i })).toBeInTheDocument();
+    expect(setOpen).not.toHaveBeenCalled();
+    expect(await screen.findByText(/legal pages/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: /source code/i })
+    ).toHaveAttribute("href", "/source");
+  });
+
+  it("blurs the collapsed legal trigger after pointer dismissal outside the dropdown", async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(useSidebar).mockReturnValue({
+      isMobile: false,
+      open: false,
+      openMobile: false,
+      setOpen,
+      setOpenMobile,
+      state: "collapsed",
+      toggleSidebar: vi.fn(),
+    });
+
+    render(
+      <MemoryRouter>
+        <I18nProvider i18n={i18n}>
+          <NavLegal />
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    const trigger = screen.getByRole("button", { name: /legal/i });
+
+    await user.click(trigger);
+    fireEvent.pointerDown(document.body);
+    fireEvent.mouseDown(document.body);
+    fireEvent.click(document.body);
+
+    await waitFor(() => {
+      expect(document.activeElement).not.toBe(trigger);
+    });
   });
 });
