@@ -2048,6 +2048,7 @@ msgstr "Legal notices"
 
 #. js-lingui-explicit-id
 #: src/components/mobile-sidebar-dialog.tsx
+#: src/ui/sidebar.tsx
 msgid "layout.mobileNavigation.close"
 msgstr "Close navigation"
 
@@ -2661,7 +2662,6 @@ msgstr "Workspace"
 
 #: src/components/application-layout.tsx
 #: src/components/LegalFooterLinks.tsx
-#: src/components/nav-user.tsx
 msgid "Source Code"
 msgstr "Source Code"
 
@@ -3666,6 +3666,7 @@ msgstr "This deployment's notification configuration changed. Refresh SecPal and
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
+#: src/ui/sheet.tsx
 msgid "Close"
 msgstr "Close"
 

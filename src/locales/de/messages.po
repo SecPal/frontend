@@ -2048,6 +2048,7 @@ msgstr "Rechtliche Hinweise"
 
 #. js-lingui-explicit-id
 #: src/components/mobile-sidebar-dialog.tsx
+#: src/ui/sidebar.tsx
 msgid "layout.mobileNavigation.close"
 msgstr "Navigation schließen"
 
@@ -2661,7 +2662,6 @@ msgstr "Arbeitsbereich"
 
 #: src/components/application-layout.tsx
 #: src/components/LegalFooterLinks.tsx
-#: src/components/nav-user.tsx
 msgid "Source Code"
 msgstr "Quelltext"
 
@@ -3666,6 +3666,7 @@ msgstr "Die Benachrichtigungskonfiguration dieses Deployments hat sich geändert
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
+#: src/ui/sheet.tsx
 msgid "Close"
 msgstr "Schließen"
 
