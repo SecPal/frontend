@@ -46,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   user menu with dedicated `AGPL v3+` and `Source Code` entries, and the
   source entry preserves the current route in navigation state for the return
   flow.
+- Refined the new legal-menu follow-up so the collapsed desktop sidebar opens
+  `Legal` in a separate dropdown instead of expanding the whole sidebar, the
+  login `Legal` trigger keeps the same neutral surface styling as the language
+  picker in dark mode, and pointer dismissal now clears trigger focus for the
+  shared dropdown primitives used by both flows.
 - Aligned the remaining footer slogan with the standard `text-xs` type scale
   and tightened the surrounding vertical spacing now that the legal-link row is
   gone.
