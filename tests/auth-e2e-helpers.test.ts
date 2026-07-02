@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { runInNewContext } from "node:vm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildTestUser,
@@ -25,16 +26,26 @@ function mockNonPolyscopeCwd() {
 }
 
 function createDomBackedPage() {
+  const revivePageFunction = <TArg, TResult>(
+    pageFunction: (arg: TArg) => TResult
+  ) =>
+    runInNewContext(`(${pageFunction.toString()})`, {
+      Array,
+      Boolean,
+      document,
+      window,
+    }) as (arg: TArg) => TResult;
+
   return {
     evaluate: async <TArg, TResult>(
       pageFunction: (arg: TArg) => TResult,
       arg: TArg
-    ) => pageFunction(arg),
+    ) => revivePageFunction(pageFunction)(arg),
     waitForFunction: async <TArg>(
       pageFunction: (arg: TArg) => boolean,
       arg: TArg
     ) => {
-      if (!pageFunction(arg)) {
+      if (!revivePageFunction(pageFunction)(arg)) {
         throw new Error("Condition was not met");
       }
     },
