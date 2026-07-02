@@ -1633,6 +1633,7 @@ describe("useAuth", () => {
     vi.mocked(clearSensitiveClientState).mockRejectedValueOnce(
       sensitiveCleanupError
     );
+    vi.mocked(clearBrowserPushClientState).mockClear();
 
     try {
       const { result } = renderHook(() => useAuth(), {
@@ -1651,6 +1652,7 @@ describe("useAuth", () => {
         "Failed to clear sensitive client state during logout:",
         sensitiveCleanupError
       );
+      expect(clearBrowserPushClientState).toHaveBeenCalledTimes(1);
     } finally {
       consoleErrorSpy.mockRestore();
     }

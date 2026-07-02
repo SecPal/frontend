@@ -554,7 +554,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         sensitiveLogoutCleanupPromise =
-          runDestructiveSensitiveLogoutCleanup().then(async () => {
+          runDestructiveSensitiveLogoutCleanup().finally(async () => {
             await clearBrowserPushClientState();
           });
 
