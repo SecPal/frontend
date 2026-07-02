@@ -12,6 +12,7 @@ import {
   AUTH_VAULT_STORAGE_KEY,
   clearOfflineVaultSession,
 } from "../lib/offlineVault";
+import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import { authStorage } from "../services/storage";
 import { resetPrefetchCache } from "../hooks/usePrefetch";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
@@ -33,6 +34,10 @@ vi.mock("../hooks/usePrefetch", async () => {
 
 vi.mock("../lib/serviceWorkerSession", () => ({
   syncOfflineSessionAccess: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("../lib/clientStateCleanup", () => ({
+  clearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
 }));
 
 type SessionEventName = "session:expired" | "session:invalid";
@@ -337,6 +342,91 @@ describe("AuthContext", () => {
       await waitFor(() => {
         expect(screen.getByTestId("hasOrgAccess")).toHaveTextContent("true");
       });
+    });
+  });
+
+  describe("login handoff after timed-out logout cleanup", () => {
+    function SessionSwitchComponent() {
+      const auth = useAuth();
+
+      return (
+        <div>
+          <span data-testid="userEmail">{auth.user?.email ?? "none"}</span>
+          <button type="button" onClick={() => void auth.logout()}>
+            Logout
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              void auth.login({
+                id: "2",
+                name: "Next User",
+                email: "next@secpal.dev",
+              })
+            }
+          >
+            Login Next User
+          </button>
+        </div>
+      );
+    }
+
+    it("finishes sensitive cleanup before persisting the next user when logout cleanup times out", async () => {
+      await seedStoredUser({
+        id: "1",
+        name: "Current User",
+        email: "current@secpal.dev",
+      });
+
+      render(
+        <AuthProvider>
+          <SessionSwitchComponent />
+        </AuthProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("userEmail")).toHaveTextContent(
+          "current@secpal.dev"
+        );
+      });
+
+      const clearStoragePromise = new Promise<void>(() => {});
+      const clearStorageSpy = vi
+        .spyOn(authStorage, "clear")
+        .mockReturnValueOnce(clearStoragePromise);
+      const setUserSpy = vi.spyOn(authStorage, "setUser");
+
+      vi.mocked(clearSensitiveClientState).mockClear();
+      vi.useFakeTimers();
+
+      try {
+        await act(async () => {
+          screen.getByRole("button", { name: /logout/i }).click();
+        });
+
+        expect(screen.getByTestId("userEmail")).toHaveTextContent("none");
+
+        await act(async () => {
+          screen.getByRole("button", { name: /login next user/i }).click();
+        });
+
+        await act(async () => {
+          vi.advanceTimersByTime(5_000);
+          await Promise.resolve();
+        });
+
+        const cleanupCallOrder =
+          vi.mocked(clearSensitiveClientState).mock.invocationCallOrder[0]!;
+        const setUserCallOrder = setUserSpy.mock.invocationCallOrder[0]!;
+
+        expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+        expect(setUserSpy).toHaveBeenCalledTimes(1);
+        expect(cleanupCallOrder).toBeLessThan(setUserCallOrder);
+      } finally {
+        vi.useRealTimers();
+        clearStorageSpy.mockRestore();
+        setUserSpy.mockRestore();
+      }
     });
   });
 

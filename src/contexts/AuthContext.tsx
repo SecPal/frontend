@@ -272,6 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearAuthenticatedStateCompletionPromiseRef = useRef<Promise<void>>(
     Promise.resolve()
   );
+  const sensitiveLogoutCleanupPromiseRef = useRef<Promise<void> | null>(null);
   const shouldClearSensitiveStateRef = useRef(false);
   const shouldResetPrefetchCacheAfterStorageMismatchRef = useRef(false);
   const shouldRedirectOpenClientsRef = useRef(false);
@@ -354,6 +355,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     authStorage.endSensitiveLogoutBarrierCleanup(ownerToken);
     sensitiveLogoutBarrierCleanupOwnerTokenRef.current = null;
   }, []);
+
+  const runSensitiveLogoutCleanup = useCallback(() => {
+    if (sensitiveLogoutCleanupPromiseRef.current !== null) {
+      return sensitiveLogoutCleanupPromiseRef.current;
+    }
+
+    const sensitiveCleanupPromise = (async () => {
+      try {
+        await authStorage.waitForInFlightVaultTableCleanup();
+      } catch (error: unknown) {
+        console.warn(
+          "Failed while waiting for in-flight vault cleanup during logout:",
+          error
+        );
+      }
+
+      await clearSensitiveClientState();
+    })().finally(() => {
+      endSensitiveLogoutBarrierCleanup();
+
+      if (sensitiveLogoutCleanupPromiseRef.current === sensitiveCleanupPromise) {
+        sensitiveLogoutCleanupPromiseRef.current = null;
+      }
+    });
+
+    sensitiveLogoutCleanupPromiseRef.current = sensitiveCleanupPromise;
+    return sensitiveCleanupPromise;
+  }, [endSensitiveLogoutBarrierCleanup]);
 
   const syncBarrierStateFromStorage = useCallback(() => {
     if (!authStorage.hasLogoutBarrier()) {
@@ -501,30 +530,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearAuthStoragePromise,
         resetAnalyticsStatePromise,
       ]);
-      let sensitiveLogoutCleanupPromise: Promise<void> | null = null;
-
-      const runSensitiveLogoutCleanup = () => {
-        if (sensitiveLogoutCleanupPromise !== null) {
-          return sensitiveLogoutCleanupPromise;
-        }
-
-        sensitiveLogoutCleanupPromise = (async () => {
-          try {
-            await authStorage.waitForInFlightVaultTableCleanup();
-          } catch (error: unknown) {
-            console.warn(
-              "Failed while waiting for in-flight vault cleanup during logout:",
-              error
-            );
-          }
-
-          await clearSensitiveClientState();
-        })().finally(() => {
-          endSensitiveLogoutBarrierCleanup();
-        });
-
-        return sensitiveLogoutCleanupPromise;
-      };
 
       clearAuthenticatedStateCompletionPromiseRef.current =
         cleanupSettledPromise
@@ -578,9 +583,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     [
       beginSensitiveLogoutBarrierCleanup,
-      endSensitiveLogoutBarrierCleanup,
       invalidateBootstrapRevalidation,
       resetAnalyticsState,
+      runSensitiveLogoutCleanup,
       syncOfflineAuthState,
     ]
   );
@@ -609,6 +614,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (isClearingSessionRef.current) {
         clearSessionCycleRef.current += 1;
+
+        if (shouldClearSensitiveStateRef.current) {
+          try {
+            await runSensitiveLogoutCleanup();
+          } catch (error: unknown) {
+            console.error(
+              "Failed to clear sensitive client state during login handoff:",
+              error
+            );
+          }
+        }
+
         isClearingSessionRef.current = false;
         shouldClearSensitiveStateRef.current = false;
         shouldRedirectOpenClientsRef.current = false;
@@ -632,6 +649,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearAuthenticatedState,
       invalidateBootstrapRevalidation,
       persistAuthenticatedUser,
+      runSensitiveLogoutCleanup,
       syncOfflineAuthState,
     ]
   );
