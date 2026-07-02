@@ -3,6 +3,11 @@
 
 import * as React from "react";
 
+const POINTER_BLUR_TRIGGER_SLOTS = new Set([
+  "dropdown-menu-trigger",
+  "select-trigger",
+]);
+
 export function usePointerAwareCloseAutoFocus() {
   const closeTriggeredByPointerRef = React.useRef(false);
 
@@ -22,7 +27,12 @@ export function usePointerAwareCloseAutoFocus() {
     closeTriggeredByPointerRef.current = false;
 
     queueMicrotask(() => {
-      if (document.activeElement instanceof HTMLElement) {
+      if (
+        document.activeElement instanceof HTMLElement &&
+        POINTER_BLUR_TRIGGER_SLOTS.has(
+          document.activeElement.getAttribute("data-slot") ?? ""
+        )
+      ) {
         document.activeElement.blur();
       }
     });

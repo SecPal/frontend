@@ -98,6 +98,35 @@ describe("DropdownMenuItem", () => {
     });
   });
 
+  it("keeps focus on the next control when a pointer close targets another button", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger>Open</DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem>Lock app</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <button type="button">Next action</button>
+      </MemoryRouter>
+    );
+
+    const trigger = screen.getByRole("button", { name: "Open" });
+    const nextButton = screen.getByRole("button", { name: "Next action" });
+
+    await user.click(trigger);
+    fireEvent.pointerDown(nextButton);
+    nextButton.focus();
+    fireEvent.mouseDown(nextButton);
+    fireEvent.click(nextButton);
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(nextButton);
+    });
+  });
+
   it("renders dropdown content without the legacy border frame", () => {
     renderOpenDropdown(<DropdownMenuItem>Settings</DropdownMenuItem>);
 
