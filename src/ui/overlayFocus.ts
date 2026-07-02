@@ -8,6 +8,13 @@ const POINTER_BLUR_TRIGGER_SLOTS = new Set([
   "select-trigger",
 ]);
 
+function isPointerBlurTrigger(element: HTMLElement) {
+  return (
+    POINTER_BLUR_TRIGGER_SLOTS.has(element.getAttribute("data-slot") ?? "") ||
+    element.getAttribute("aria-haspopup") === "menu"
+  );
+}
+
 export function usePointerAwareCloseAutoFocus() {
   const closeTriggeredByPointerRef = React.useRef(false);
 
@@ -29,9 +36,7 @@ export function usePointerAwareCloseAutoFocus() {
     queueMicrotask(() => {
       if (
         document.activeElement instanceof HTMLElement &&
-        POINTER_BLUR_TRIGGER_SLOTS.has(
-          document.activeElement.getAttribute("data-slot") ?? ""
-        )
+        isPointerBlurTrigger(document.activeElement)
       ) {
         document.activeElement.blur();
       }

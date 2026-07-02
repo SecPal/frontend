@@ -51,6 +51,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   login `Legal` trigger keeps the same neutral surface styling as the language
   picker in dark mode, and pointer dismissal now clears trigger focus for the
   shared dropdown primitives used by both flows.
+- Fixed pointer-dismissed dropdown menus that use trigger-child composition so
+  Radix menu triggers rendered through shared `Button` and
+  `SidebarMenuButton` children still blur their restored focus ring instead of
+  staying visibly focused after pointer-driven close.
 - Aligned the remaining footer slogan with the standard `text-xs` type scale
   and tightened the surrounding vertical spacing now that the legal-link row is
   gone.
