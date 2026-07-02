@@ -509,6 +509,53 @@ describe("ApplicationLayout", () => {
       }
     });
 
+    it("localizes the mobile sidebar dialog name in German", async () => {
+      const user = userEvent.setup();
+      const originalInnerWidth = window.innerWidth;
+
+      try {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: 480,
+        });
+
+        act(() => {
+          i18n.load("de", deMessages);
+          i18n.activate("de");
+        });
+
+        renderWithProviders(
+          <ApplicationLayout>
+            <div>Content</div>
+          </ApplicationLayout>
+        );
+
+        const sidebarTrigger = document.querySelector(
+          '[data-slot="sidebar-trigger"]'
+        );
+
+        if (!(sidebarTrigger instanceof HTMLButtonElement)) {
+          throw new Error(
+            "Expected the shared sidebar trigger button to render"
+          );
+        }
+
+        await user.click(sidebarTrigger);
+
+        expect(
+          await screen.findByRole("dialog", { name: "Navigationsmenü" })
+        ).toBeInTheDocument();
+      } finally {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: originalInnerWidth,
+        });
+        act(() => {
+          i18n.activate("en");
+        });
+      }
+    });
+
     it("closes the mobile sidebar after primary navigation", async () => {
       const user = userEvent.setup();
       const originalInnerWidth = window.innerWidth;

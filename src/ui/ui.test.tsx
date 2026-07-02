@@ -58,6 +58,7 @@ import {
   EmployeeTableRow,
   Sidebar,
   SidebarHeader,
+  SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -287,15 +288,18 @@ describe("shared shadcn/radix UI basis", () => {
   it("keeps shared shell primitives on the canonical sidebar theme tokens", () => {
     const { container } = render(
       <SidebarProvider>
-        <Sidebar collapsible="none">
-          <SidebarHeader>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton isActive>Settings</SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarHeader>
-        </Sidebar>
+        <>
+          <Sidebar collapsible="none">
+            <SidebarHeader>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton isActive>Settings</SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarHeader>
+          </Sidebar>
+          <SidebarInset />
+        </>
       </SidebarProvider>
     );
 
@@ -307,8 +311,10 @@ describe("shared shadcn/radix UI basis", () => {
     const sidebarButton = container.querySelector(
       '[data-slot="sidebar-menu-button"]'
     );
+    const sidebarInset = container.querySelector('[data-slot="sidebar-inset"]');
 
     expect(sidebar).toHaveClass("bg-sidebar", "text-sidebar-foreground");
+    expect(sidebarInset).toHaveClass("min-w-0");
     expect(sidebarHeader).toHaveClass("p-2");
     expect(sidebarMenu).toHaveClass("flex", "w-full", "min-w-0", "flex-col");
     expect(sidebarButton).toHaveClass(
