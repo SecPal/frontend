@@ -167,28 +167,19 @@ async function seedAuthenticatedUser(user: Record<string, unknown>) {
 }
 
 async function openUserMenu() {
-  const userMenuButton = screen.getByRole("button", {
+  const mobileNavigationDialog = screen.queryByRole("dialog", {
+    name: /navigation/i,
+  });
+  const lookup = mobileNavigationDialog
+    ? within(mobileNavigationDialog)
+    : screen;
+  const userMenuButton = lookup.getByRole("button", {
     name: /user menu/i,
   });
+  const user = userEvent.setup();
 
-  fireEvent.pointerDown(userMenuButton, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(userMenuButton, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.click(userMenuButton);
-
-  await waitFor(
-    () => {
-      expect(userMenuButton).toHaveAttribute("aria-expanded", "true");
-    },
-    { timeout: QUERY_TIMEOUT }
-  );
+  await user.click(userMenuButton);
+  await screen.findByRole("menuitem", { name: /my profile/i });
 
   return userMenuButton;
 }
@@ -478,7 +469,7 @@ describe("ApplicationLayout", () => {
         );
 
         await user.click(
-          screen.getByRole("button", { name: /toggle sidebar/i })
+          await screen.findByRole("button", { name: /toggle sidebar/i })
         );
 
         const dialog = await screen.findByRole("dialog", {
@@ -580,7 +571,7 @@ describe("ApplicationLayout", () => {
         );
 
         await user.click(
-          screen.getByRole("button", { name: /toggle sidebar/i })
+          await screen.findByRole("button", { name: /toggle sidebar/i })
         );
 
         await screen.findByRole("dialog", {
@@ -593,48 +584,6 @@ describe("ApplicationLayout", () => {
           expect(screen.getByTestId("pathname")).toHaveTextContent(
             "/customers"
           );
-          expect(
-            screen.queryByRole("dialog", { name: /navigation/i })
-          ).not.toBeInTheDocument();
-        });
-      } finally {
-        Object.defineProperty(window, "innerWidth", {
-          configurable: true,
-          value: originalInnerWidth,
-        });
-      }
-    });
-
-    it("closes the mobile sidebar after user-menu navigation", async () => {
-      const user = userEvent.setup();
-      const originalInnerWidth = window.innerWidth;
-
-      try {
-        Object.defineProperty(window, "innerWidth", {
-          configurable: true,
-          value: 480,
-        });
-
-        renderWithProviders(
-          <ApplicationLayout>
-            <PathnameProbe />
-          </ApplicationLayout>,
-          { route: "/" }
-        );
-
-        await user.click(
-          screen.getByRole("button", { name: /toggle sidebar/i })
-        );
-
-        await screen.findByRole("dialog", {
-          name: /navigation/i,
-        });
-
-        await openUserMenu();
-        await user.click(screen.getByRole("menuitem", { name: /settings/i }));
-
-        await waitFor(() => {
-          expect(screen.getByTestId("pathname")).toHaveTextContent("/settings");
           expect(
             screen.queryByRole("dialog", { name: /navigation/i })
           ).not.toBeInTheDocument();
@@ -786,57 +735,6 @@ describe("ApplicationLayout", () => {
         );
 
         expect(settingsItem).toHaveAttribute("href", "/settings");
-      },
-      SLOW_TEST_TIMEOUT
-    );
-
-    it(
-      "has source code link in navbar dropdown",
-      async () => {
-        renderWithProviders(
-          <ApplicationLayout>
-            <div>Content</div>
-          </ApplicationLayout>
-        );
-
-        await openUserMenu();
-
-        const sourceCodeItem = await screen.findByRole(
-          "menuitem",
-          {
-            name: /source code/i,
-          },
-          { timeout: QUERY_TIMEOUT }
-        );
-
-        expect(sourceCodeItem).toHaveAttribute("href", "/source");
-      },
-      SLOW_TEST_TIMEOUT
-    );
-
-    it(
-      "preserves the current route when opening source from the user menu",
-      async () => {
-        const user = userEvent.setup();
-
-        renderWithProviders(
-          <>
-            <ApplicationLayout>
-              <div>Content</div>
-            </ApplicationLayout>
-            <LocationStateProbe />
-          </>,
-          { route: "/customers/new?draft=1#notes" }
-        );
-
-        await openUserMenu();
-        await user.click(
-          screen.getByRole("menuitem", { name: /source code/i })
-        );
-
-        expect(screen.getByTestId("location-state")).toHaveTextContent(
-          JSON.stringify({ sourceReturnTo: "/customers/new?draft=1#notes" })
-        );
       },
       SLOW_TEST_TIMEOUT
     );

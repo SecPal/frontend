@@ -26,6 +26,7 @@ export interface LoginSubmitState {
 export interface AuthResolutionState {
   pathname: string;
   hasUserMenu: boolean;
+  hasSidebarTrigger: boolean;
   /** Pre-contract users use `OnboardingLayout` (Sign out) instead of the main nav user menu. */
   hasOnboardingShell: boolean;
   hasBootstrapRecoveryScreen: boolean;
@@ -197,7 +198,11 @@ export function describeLoginBlockingState(
 export function describeAuthResolutionState(
   state: AuthResolutionState
 ): AuthResolution {
-  if (state.hasUserMenu || state.hasOnboardingShell) {
+  if (
+    state.hasUserMenu ||
+    state.hasSidebarTrigger ||
+    state.hasOnboardingShell
+  ) {
     return "authenticated";
   }
 
@@ -279,6 +284,8 @@ export async function readAuthResolutionState(
       pathname,
       hasUserMenu:
         document.querySelector('button[aria-label="User menu"]') !== null,
+      hasSidebarTrigger:
+        document.querySelector('button[aria-label="Toggle Sidebar"]') !== null,
       hasOnboardingShell,
       hasBootstrapRecoveryScreen:
         document.querySelector(bootstrapRecoverySelector) !== null,
@@ -303,6 +310,8 @@ export async function waitForAuthResolution(
         return (
           path.includes("/login") ||
           document.querySelector('button[aria-label="User menu"]') !== null ||
+          document.querySelector('button[aria-label="Toggle Sidebar"]') !==
+            null ||
           document.querySelector(bootstrapRecoverySelector) !== null ||
           onboardingShell
         );

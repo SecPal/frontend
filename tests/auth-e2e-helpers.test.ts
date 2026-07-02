@@ -9,6 +9,7 @@ import {
   getConfiguredTestUserOrThrow,
   getAuthStateCachePath,
   isRemoteE2ETarget,
+  type AuthResolutionState,
   type LoginSubmitState,
 } from "./e2e/auth-helpers";
 
@@ -225,6 +226,32 @@ describe("auth E2E helpers", () => {
       };
 
       expect(describeLoginBlockingState(state)).toBeNull();
+    });
+  });
+
+  describe("describeAuthResolutionState", () => {
+    it("treats the mobile authenticated shell as authenticated when only the sidebar trigger is visible", () => {
+      const state: AuthResolutionState = {
+        pathname: "/",
+        hasBootstrapRecoveryScreen: false,
+        hasOnboardingShell: false,
+        hasSidebarTrigger: true,
+        hasUserMenu: false,
+      };
+
+      expect(describeAuthResolutionState(state)).toBe("authenticated");
+    });
+
+    it("does not treat the login route as authenticated when no shell marker is present", () => {
+      const state: AuthResolutionState = {
+        pathname: "/login",
+        hasBootstrapRecoveryScreen: false,
+        hasOnboardingShell: false,
+        hasSidebarTrigger: false,
+        hasUserMenu: false,
+      };
+
+      expect(describeAuthResolutionState(state)).toBe("login");
     });
   });
 

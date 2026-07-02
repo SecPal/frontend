@@ -111,14 +111,39 @@ export const test = base.extend<{ authenticatedPage: Page }>({
       }
     }
 
-    // Full app shell (user menu) or pre-contract onboarding shell (Sign out only).
-    await expect(
-      page
-        .getByRole("button", { name: /user menu/i })
-        .or(page.getByRole("button", { name: /sign out|abmelden|ausloggen/i }))
-    ).toBeVisible({
-      timeout: 15_000,
-    });
+    // Full app shell (desktop user menu or mobile sidebar trigger) or
+    // pre-contract onboarding shell (Sign out only).
+    await expect
+      .poll(
+        async () => {
+          if (
+            await page.getByRole("button", { name: /user menu/i }).isVisible()
+          ) {
+            return "user-menu";
+          }
+
+          if (
+            await page
+              .getByRole("button", { name: /toggle sidebar/i })
+              .first()
+              .isVisible()
+          ) {
+            return "sidebar-trigger";
+          }
+
+          if (
+            await page
+              .getByRole("button", { name: /sign out|abmelden|ausloggen/i })
+              .isVisible()
+          ) {
+            return "sign-out";
+          }
+
+          return "pending";
+        },
+        { timeout: 15_000 }
+      )
+      .not.toBe("pending");
     expect(page.url()).not.toContain("/login");
 
     if (shouldRefreshAuthState) {

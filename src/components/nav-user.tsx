@@ -3,15 +3,9 @@
 
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import type { MouseEvent } from "react";
-import {
-  CircleUserRound,
-  LockKeyhole,
-  LogOut,
-  Settings,
-  ShieldCheck,
-} from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useState, type MouseEvent } from "react";
+import { CircleUserRound, LockKeyhole, LogOut, Settings } from "lucide-react";
+import { flushSync } from "react-dom";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import { getInitials } from "@/lib/stringUtils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/ui/avatar";
@@ -47,9 +41,18 @@ export function NavUser({
   onLogout: () => void;
 }) {
   const { isMobile, setOpenMobile } = useSidebar();
-  const location = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const initials = user.name.trim() ? getInitials(user.name) : "U";
-  const sourceReturnTo = `${location.pathname}${location.search}${location.hash}`;
+
+  function closeMobileNavigationOverlays() {
+    flushSync(() => {
+      setIsMenuOpen(false);
+
+      if (isMobile) {
+        setOpenMobile(false);
+      }
+    });
+  }
 
   function handleMenuLinkClick(event: MouseEvent<HTMLAnchorElement>) {
     if (
@@ -64,15 +67,18 @@ export function NavUser({
       return;
     }
 
-    queueMicrotask(() => {
-      setOpenMobile(false);
-    });
+    closeMobileNavigationOverlays();
+  }
+
+  function handleMenuAction(action?: () => void) {
+    closeMobileNavigationOverlays();
+    action?.();
   }
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               aria-label={t`User menu`}
@@ -129,25 +135,15 @@ export function NavUser({
                   <Trans>Settings</Trans>
                 </PrefetchLink>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <PrefetchLink
-                  to="/source"
-                  state={{ sourceReturnTo }}
-                  onClick={handleMenuLinkClick}
-                >
-                  <ShieldCheck />
-                  <Trans>Source Code</Trans>
-                </PrefetchLink>
-              </DropdownMenuItem>
               {onLock ? (
-                <DropdownMenuItem onClick={onLock}>
+                <DropdownMenuItem onClick={() => handleMenuAction(onLock)}>
                   <LockKeyhole />
                   <Trans>Lock app</Trans>
                 </DropdownMenuItem>
               ) : null}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onLogout}>
+            <DropdownMenuItem onClick={() => handleMenuAction(onLogout)}>
               <LogOut />
               <Trans>Sign out</Trans>
             </DropdownMenuItem>
