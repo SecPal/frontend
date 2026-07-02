@@ -266,6 +266,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearAuthenticatedStatePromiseRef = useRef<Promise<void>>(
     Promise.resolve()
   );
+  const clearAuthenticatedStateCompletionPromiseRef = useRef<Promise<void>>(
+    Promise.resolve()
+  );
   const shouldClearSensitiveStateRef = useRef(false);
   const shouldResetPrefetchCacheAfterStorageMismatchRef = useRef(false);
   const shouldRedirectOpenClientsRef = useRef(false);
@@ -489,16 +492,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         resetAnalyticsState(),
         "Timed out waiting for analytics reset during logout; continuing with best-effort sensitive cleanup."
       );
-
-      clearAuthenticatedStatePromiseRef.current = Promise.allSettled([
+      const cleanupSettledPromise = Promise.allSettled([
         clearAuthStoragePromise,
         resetAnalyticsStatePromise,
-      ])
-        .then(async () => {
-          if (!shouldClearSensitiveStateRef.current) {
-            return;
-          }
+      ]);
+      let sensitiveLogoutCleanupPromise: Promise<void> | null = null;
 
+      const runSensitiveLogoutCleanup = () => {
+        if (sensitiveLogoutCleanupPromise !== null) {
+          return sensitiveLogoutCleanupPromise;
+        }
+
+        sensitiveLogoutCleanupPromise = (async () => {
           try {
             await authStorage.waitForInFlightVaultTableCleanup();
           } catch (error: unknown) {
@@ -508,27 +513,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             );
           }
 
-          try {
-            await waitForLogoutCleanupWithTimeout(
-              clearSensitiveClientState(),
-              "Timed out waiting for sensitive client cleanup during logout; continuing with best-effort barrier teardown."
-            );
-          } catch (error: unknown) {
-            console.error(
-              "Failed to clear sensitive client state during logout:",
-              error
-            );
-          } finally {
-            endSensitiveLogoutBarrierCleanup();
-          }
-        })
-        .finally(() => {
-          shouldSkipBarrierVaultTableCleanupRef.current = false;
-          shouldClearSensitiveStateRef.current = false;
-          shouldRedirectOpenClientsRef.current = false;
-          isClearingSessionRef.current = false;
-          clearAuthenticatedStatePromiseRef.current = Promise.resolve();
+          await clearSensitiveClientState();
+        })().finally(() => {
+          endSensitiveLogoutBarrierCleanup();
         });
+
+        return sensitiveLogoutCleanupPromise;
+      };
+
+      clearAuthenticatedStateCompletionPromiseRef.current =
+        cleanupSettledPromise
+          .then(async () => {
+            if (!shouldClearSensitiveStateRef.current) {
+              return;
+            }
+
+            try {
+              await runSensitiveLogoutCleanup();
+            } catch (error: unknown) {
+              console.error(
+                "Failed to clear sensitive client state during logout:",
+                error
+              );
+            }
+          })
+          .finally(() => {
+            shouldSkipBarrierVaultTableCleanupRef.current = false;
+            shouldClearSensitiveStateRef.current = false;
+            shouldRedirectOpenClientsRef.current = false;
+            isClearingSessionRef.current = false;
+            clearAuthenticatedStatePromiseRef.current = Promise.resolve();
+            clearAuthenticatedStateCompletionPromiseRef.current =
+              Promise.resolve();
+          });
+
+      clearAuthenticatedStatePromiseRef.current = cleanupSettledPromise.then(
+        async () => {
+          if (!shouldClearSensitiveStateRef.current) {
+            return;
+          }
+
+          await waitForLogoutCleanupWithTimeout(
+            runSensitiveLogoutCleanup(),
+            "Timed out waiting for sensitive client cleanup during logout; continuing with best-effort barrier teardown."
+          );
+        }
+      );
     },
     [
       beginSensitiveLogoutBarrierCleanup,
@@ -548,6 +578,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      await clearAuthenticatedStateCompletionPromiseRef.current;
       invalidateBootstrapRevalidation();
       await persistAuthenticatedUser(sanitizedUser);
       hasLogoutBarrierRef.current = false;

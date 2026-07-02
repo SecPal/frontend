@@ -40,6 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `AuthContext` now keeps new logins behind the full sensitive logout cleanup
+  completion path, so the five-second best-effort logout timeout no longer lets
+  a replacement session race the previous session's IndexedDB and cache
+  teardown.
 - Rebuilt the authenticated application shell navigation on the canonical shadcn
   `sidebar-07` composition: the old bespoke menu shell is replaced by shared
   shadcn/Radix/Lucide `Sidebar`, `Collapsible`, `DropdownMenu`, `Sheet`,

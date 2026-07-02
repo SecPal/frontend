@@ -1611,6 +1611,103 @@ describe("useAuth", () => {
     }
   });
 
+  it("waits for timed-out sensitive logout cleanup before allowing a new login", async () => {
+    const firstUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
+    const secondUser = {
+      id: "2",
+      name: "Next User",
+      email: "next@secpal.dev",
+    };
+
+    await persistAuthUser(firstUser);
+
+    const cleanupDeferred = createDeferredPromise<void>();
+    vi.mocked(clearSensitiveClientState).mockImplementationOnce(
+      () => cleanupDeferred.promise
+    );
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    const setUserSpy = vi.spyOn(authStorage, "setUser").mockResolvedValue();
+
+    vi.useFakeTimers();
+
+    let loginSettled = false;
+    let logoutSettled = false;
+    let logoutPromise!: Promise<void>;
+    let loginPromise!: Promise<void>;
+
+    try {
+      act(() => {
+        logoutPromise = Promise.resolve(result.current.logout());
+        void logoutPromise.then(() => {
+          logoutSettled = true;
+        });
+      });
+
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000);
+        await Promise.resolve();
+      });
+
+      expect(logoutSettled).toBe(true);
+
+      act(() => {
+        loginPromise = Promise.resolve(result.current.login(secondUser));
+        void loginPromise.then(() => {
+          loginSettled = true;
+        });
+      });
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(loginSettled).toBe(false);
+      expect(result.current.user).toBeNull();
+      expect(setUserSpy).not.toHaveBeenCalled();
+
+      cleanupDeferred.resolve();
+      vi.useRealTimers();
+
+      await act(async () => {
+        await loginPromise;
+      });
+
+      expect(loginSettled).toBe(true);
+      expect(setUserSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "2",
+          name: "Next User",
+          email: "next@secpal.dev",
+        })
+      );
+      expect(result.current.user).toEqual(
+        expect.objectContaining({
+          id: "2",
+          name: "Next User",
+          email: "next@secpal.dev",
+        })
+      );
+    } finally {
+      setUserSpy.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
   it("upgrades an in-flight non-sensitive auth clear when logout is requested", async () => {
     const storageClear = createDeferredPromise<void>();
     const restoreError = new Error("restore failed");
