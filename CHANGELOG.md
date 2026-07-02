@@ -68,6 +68,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   mobile trigger keeps the canonical touch target sizing, and logout cleanup
   continues after bounded analytics or vault-cleanup waits instead of leaving
   the authenticated shell trapped behind stale overlay or cleanup barriers.
+- Tightened the logout cleanup barrier follow-up so pre-timeout sensitive
+  cleanup failures are logged again instead of being swallowed by the timeout
+  wrapper, and stale barrier-owner reconciliation now runs before the current
+  logout cleanup owner token is removed from storage-backed barrier state.
 - Completed the shadcn/Radix/Lucide UI migration proof by tightening the
   repo-wide legacy UI guardrail to a zero allowlist, removing the final shared
   shell compatibility aliases, and documenting `src/ui` as the complete

@@ -1611,6 +1611,79 @@ describe("useAuth", () => {
     }
   });
 
+  it("logs sensitive cleanup failures when logout cleanup rejects before the timeout", async () => {
+    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
+    const sensitiveCleanupError = new Error("cleanup failed");
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    await persistAuthUser(mockUser);
+    vi.mocked(clearSensitiveClientState).mockRejectedValueOnce(
+      sensitiveCleanupError
+    );
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.logout();
+      });
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Failed to clear sensitive client state during logout:",
+        sensitiveCleanupError
+      );
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
+  it("reconciles stale logout owners before removing the current cleanup owner", async () => {
+    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
+    const callOrder: string[] = [];
+    const completeSpy = vi
+      .spyOn(authStorage, "completeStaleSensitiveLogoutBarrierCleanup")
+      .mockImplementation((ownerToken: string) => {
+        callOrder.push(`complete:${ownerToken}`);
+      });
+    const endSpy = vi
+      .spyOn(authStorage, "endSensitiveLogoutBarrierCleanup")
+      .mockImplementation((ownerToken: string) => {
+        callOrder.push(`end:${ownerToken}`);
+      });
+
+    await persistAuthUser(mockUser);
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.logout();
+      });
+
+      expect(callOrder).toHaveLength(2);
+      expect(callOrder[0]?.split(":")[0]).toBe("complete");
+      expect(callOrder[1]?.split(":")[0]).toBe("end");
+      expect(callOrder[0]?.split(":")[1]).toBe(callOrder[1]?.split(":")[1]);
+    } finally {
+      completeSpy.mockRestore();
+      endSpy.mockRestore();
+    }
+  });
+
   it("waits for timed-out sensitive logout cleanup before allowing a new login", async () => {
     const firstUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
     const secondUser = {

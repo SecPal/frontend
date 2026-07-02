@@ -48,7 +48,7 @@ async function waitForLogoutCleanupWithTimeout(
 
   try {
     const result = await Promise.race([
-      operation.then(() => "completed" as const).catch(() => "failed" as const),
+      operation.then(() => "completed" as const),
       new Promise<"timed-out">((resolve) => {
         timeoutId = globalThis.setTimeout(() => {
           resolve("timed-out");
@@ -347,8 +347,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const ownerToken = sensitiveLogoutBarrierCleanupOwnerTokenRef.current;
-    authStorage.endSensitiveLogoutBarrierCleanup(ownerToken);
     authStorage.completeStaleSensitiveLogoutBarrierCleanup(ownerToken);
+    authStorage.endSensitiveLogoutBarrierCleanup(ownerToken);
     sensitiveLogoutBarrierCleanupOwnerTokenRef.current = null;
   }, []);
 
@@ -553,10 +553,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           }
 
-          await waitForLogoutCleanupWithTimeout(
-            runSensitiveLogoutCleanup(),
-            "Timed out waiting for sensitive client cleanup during logout; continuing with best-effort barrier teardown."
-          );
+          try {
+            await waitForLogoutCleanupWithTimeout(
+              runSensitiveLogoutCleanup(),
+              "Timed out waiting for sensitive client cleanup during logout; continuing with best-effort barrier teardown."
+            );
+          } catch (error: unknown) {
+            console.error(
+              "Failed to clear sensitive client state during logout:",
+              error
+            );
+          }
         }
       );
     },
