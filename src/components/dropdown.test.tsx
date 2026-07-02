@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import {
@@ -24,7 +25,66 @@ function renderOpenDropdown(children: React.ReactNode) {
   );
 }
 
+function renderInteractiveDropdown(children: React.ReactNode) {
+  return render(
+    <MemoryRouter>
+      <DropdownMenu>
+        <DropdownMenuTrigger>Open</DropdownMenuTrigger>
+        <DropdownMenuContent>{children}</DropdownMenuContent>
+      </DropdownMenu>
+    </MemoryRouter>
+  );
+}
+
 describe("DropdownMenuItem", () => {
+  it("blurs the trigger after pointer selection without changing keyboard focus behavior", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+
+    renderInteractiveDropdown(
+      <DropdownMenuItem onClick={onClick}>Lock app</DropdownMenuItem>
+    );
+
+    const trigger = screen.getByRole("button", { name: "Open" });
+    await user.click(trigger);
+    await user.click(await screen.findByRole("menuitem", { name: "Lock app" }));
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(document.activeElement).not.toBe(trigger);
+    });
+  });
+
+  it("returns focus to the trigger after keyboard selection", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+
+    renderInteractiveDropdown(
+      <DropdownMenuItem onClick={onClick}>Lock app</DropdownMenuItem>
+    );
+
+    const trigger = screen.getByRole("button", { name: "Open" });
+    trigger.focus();
+    await user.keyboard("{Enter}{ArrowDown}{Enter}");
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(document.activeElement).toBe(trigger);
+    });
+  });
+
+  it("renders dropdown content without the legacy border frame", () => {
+    renderOpenDropdown(<DropdownMenuItem>Settings</DropdownMenuItem>);
+
+    const content = screen
+      .getByRole("menuitem", { name: "Settings" })
+      .closest('[data-slot="dropdown-menu-content"]');
+
+    expect(content).not.toBeNull();
+    expect(content!.className).not.toContain(" border ");
+    expect(content!.className).not.toContain("border bg-popover");
+  });
+
   it("supports `asChild` link composition", () => {
     renderOpenDropdown(
       <DropdownMenuItem asChild>

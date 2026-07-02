@@ -23,22 +23,44 @@ describe("LoginRouteState", () => {
   it("keeps the route-loading skeleton and footer on canonical theme tokens", () => {
     const { container } = renderWithI18n(<LoginRouteLoadingState />);
 
+    const shell = screen.getByRole("main");
     const skeletonShell = container.querySelector('[aria-hidden="true"]');
     const skeletonBars = skeletonShell?.querySelectorAll("span");
     const footer = container.querySelector("footer div");
+    const footerElement = container.querySelector("footer");
     const footerBrand = screen.getByText(/powered by secpal/i);
 
+    expect(shell.className).not.toContain("pb-6");
+    expect(shell.className).not.toContain("md:pb-10");
     expect(skeletonShell).toHaveClass("border-input", "bg-muted");
     expect(skeletonBars?.[0]).toHaveClass("bg-border");
     expect(skeletonBars?.[1]).toHaveClass("bg-border");
     expect(footer).toHaveClass("text-muted-foreground");
-    expect(footerBrand).toHaveClass("text-foreground");
+    expect(footerElement).toHaveClass(
+      "mt-auto",
+      "pt-3",
+      "pb-[var(--app-footer-padding-bottom)]"
+    );
+    expect(footerBrand).toHaveClass("text-foreground", "text-xs");
 
     expect(skeletonShell?.className).not.toContain("border-zinc-300");
     expect(skeletonShell?.className).not.toContain("bg-zinc-100");
     expect(skeletonBars?.[0]?.className).not.toContain("bg-zinc-200");
     expect(footer?.className).not.toContain("text-zinc-500");
     expect(footerBrand.className).not.toContain("text-zinc-700");
+  });
+
+  it("does not render the legal menu in the vault-locked state", () => {
+    renderWithI18n(
+      <LoginRouteVaultLockedState
+        onUnlock={vi.fn().mockResolvedValue(true)}
+        onSignInAgain={() => undefined}
+      />
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /legal|rechtliches/i })
+    ).not.toBeInTheDocument();
   });
 
   it("keeps the vault-locked explanation and error states on canonical tokens", async () => {

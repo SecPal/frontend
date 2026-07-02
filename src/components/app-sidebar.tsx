@@ -3,6 +3,7 @@
 
 import { t } from "@lingui/core/macro";
 import { NavMain, type NavMainItem } from "@/components/nav-main";
+import { NavLegal } from "@/components/nav-legal";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
 import { Logo } from "@/components/Logo";
@@ -49,6 +50,7 @@ export function AppSidebar({
         <NavMain items={navMain} />
       </SidebarContent>
       <SidebarFooter>
+        <NavLegal />
         <NavUser user={user} onLock={onLock} onLogout={onLogout} />
       </SidebarFooter>
       <SidebarRail />

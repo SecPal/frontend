@@ -40,6 +40,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Moved the AGPL/license and source-code notices out of the authenticated and
+  login footers so those footers keep only the "Powered by SecPal" slogan; the
+  authenticated sidebar now exposes a collapsible `Legal` section above the
+  user menu with dedicated `AGPL v3+` and `Source Code` entries, and the
+  source entry preserves the current route in navigation state for the return
+  flow.
+- Aligned the remaining footer slogan with the standard `text-xs` type scale
+  and tightened the surrounding vertical spacing now that the legal-link row is
+  gone.
 - `AuthContext` now keeps new logins behind the full sensitive logout cleanup
   completion path, so the five-second best-effort logout timeout no longer lets
   a replacement session race the previous session's IndexedDB and cache

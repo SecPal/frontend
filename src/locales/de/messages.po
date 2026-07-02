@@ -448,6 +448,11 @@ msgstr "Standardmäßig (nicht aktiviert) können Benutzer ihre eigen Personalak
 msgid "Failed to complete MFA action."
 msgstr "MFA-Aktion konnte nicht abgeschlossen werden."
 
+#: src/components/LoginLegalMenu.tsx
+#: src/components/nav-legal.tsx
+msgid "Imprint"
+msgstr "Impressum"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Invalid onboarding link. Please check your email and try again."
 msgstr "Ungültiger Onboarding-Link. Bitte prüfen Sie Ihre E-Mail und versuchen Sie es erneut."
@@ -2068,6 +2073,11 @@ msgstr "Navigationsmenü"
 msgid "Auto-refresh (30s)"
 msgstr "Automatisches Aktualisieren (30s)"
 
+#: src/components/LoginLegalMenu.tsx
+#: src/components/nav-legal.tsx
+#~ msgid "Privacy Policy"
+#~ msgstr "Datenschutzerklärung"
+
 #: src/components/OfflineDataBanner.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Refresh"
@@ -2411,6 +2421,11 @@ msgstr "Einladungsmail verschickt"
 msgid "Shared OpenAPI contracts and interface definitions used across SecPal components."
 msgstr "Gemeinsame OpenAPI-Verträge und Schnittstellendefinitionen für alle SecPal-Komponenten."
 
+#: src/components/LoginLegalMenu.tsx
+#: src/components/nav-legal.tsx
+msgid "Legal pages"
+msgstr "Rechtliches"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Step {currentStep} of {totalSteps}"
 msgstr "Schritt {currentStep} von {totalSteps}"
@@ -2463,6 +2478,11 @@ msgstr "Zuletzt synchronisiert: {0}"
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Date/Time"
 msgstr "Datum/Uhrzeit"
+
+#: src/components/LoginLegalMenu.tsx
+#: src/components/nav-legal.tsx
+msgid "Open Source"
+msgstr "Open Source"
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
@@ -2546,6 +2566,8 @@ msgid "Back to Login"
 msgstr ""
 
 #: src/components/LegalFooterLinks.tsx
+#: src/components/LoginLegalMenu.tsx
+#: src/components/nav-legal.tsx
 #: src/pages/SourcePage.tsx
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
@@ -2662,6 +2684,8 @@ msgstr "Arbeitsbereich"
 
 #: src/components/application-layout.tsx
 #: src/components/LegalFooterLinks.tsx
+#: src/components/LoginLegalMenu.tsx
+#: src/components/nav-legal.tsx
 msgid "Source Code"
 msgstr "Quelltext"
 
@@ -2834,6 +2858,11 @@ msgstr "Dateien erfolgreich hochgeladen."
 #: src/components/NotificationPermissionPrompt.tsx
 msgid "Category-specific notification controls are not available yet."
 msgstr "Kategoriespezifische Benachrichtigungssteuerungen sind noch nicht verfügbar."
+
+#: src/components/LoginLegalMenu.tsx
+#: src/components/nav-legal.tsx
+msgid "Privacy"
+msgstr "Datenschutz"
 
 #: src/components/RouteGuardState.tsx
 msgid "The page you requested does not exist or is no longer available."
@@ -3290,6 +3319,11 @@ msgstr "Legen Sie eine neue Organisationseinheit unter \"{parentName}\" an."
 msgid "Passkey sign-in was cancelled or not permitted by the browser."
 msgstr "Die Passkey-Anmeldung wurde abgebrochen oder vom Browser nicht zugelassen."
 
+#: src/components/LoginLegalMenu.tsx
+#: src/components/nav-legal.tsx
+msgid "Legal"
+msgstr "Rechtliches"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Android provisioning QR code"
 msgstr "QR-Code zur Android-Provisionierung"
@@ -3332,6 +3366,7 @@ msgstr "Benutzermenü"
 msgid "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Bitte laden Sie Ihren Personalausweis hoch (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
+#: src/pages/Login.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Language"
 msgstr "Sprache"

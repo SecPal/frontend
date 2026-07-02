@@ -205,79 +205,79 @@ export default defineConfig(({ mode, command }) => {
         ],
       }),
       VitePWA({
-        registerType: "prompt",
-        strategies: "injectManifest",
-        integration: {
-          configureCustomSWViteBuild: applyInjectManifestCodeSplittingFix,
-        },
-        injectManifest: {
-          globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"],
-          globIgnores: ["**/*.html"],
-          manifestTransforms: [
-            async (entries) => ({
-              manifest: entries.filter(
-                (entry) => !nonceBearingHtmlShellPattern.test(entry.url)
-              ),
-              warnings: [],
-            }),
+          registerType: "prompt",
+          strategies: "injectManifest",
+          integration: {
+            configureCustomSWViteBuild: applyInjectManifestCodeSplittingFix,
+          },
+          injectManifest: {
+            globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"],
+            globIgnores: ["**/*.html"],
+            manifestTransforms: [
+              async (entries) => ({
+                manifest: entries.filter(
+                  (entry) => !nonceBearingHtmlShellPattern.test(entry.url)
+                ),
+                warnings: [],
+              }),
+            ],
+          },
+          srcDir: "src",
+          filename: "sw.ts",
+          injectRegister: "auto",
+          includeAssets: [
+            "favicon.ico",
+            "apple-touch-icon-v7.png",
+            "mask-icon.svg",
           ],
-        },
-        srcDir: "src",
-        filename: "sw.ts",
-        injectRegister: "auto",
-        includeAssets: [
-          "favicon.ico",
-          "apple-touch-icon-v7.png",
-          "mask-icon.svg",
-        ],
-        manifest: {
-          name: "SecPal",
-          short_name: "SecPal",
-          description:
-            "Operations software for German private security services.",
-          theme_color: "#ffffff",
-          background_color: "#52525b",
-          display: "standalone",
-          scope: "/",
-          start_url: "/",
-          icons: [
-            {
-              src: "pwa-192x192-maskable.png",
-              sizes: "192x192",
-              type: "image/png",
-              purpose: "any maskable",
-            },
-            {
-              src: "pwa-512x512-maskable.png",
-              sizes: "512x512",
-              type: "image/png",
-              purpose: "any maskable",
-            },
-          ],
-          shortcuts: [
-            {
-              name: "My Profile",
-              short_name: "Profile",
-              description: "View and edit your profile",
-              url: "/profile",
-              icons: [
-                {
-                  src: "pwa-192x192.png",
-                  sizes: "192x192",
-                  type: "image/png",
-                },
-              ],
-            },
-          ],
-        },
-        workbox: {
-          globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"],
-          globIgnores: ["**/*.html"],
-          navigateFallback: null,
-          cleanupOutdatedCaches: true,
-          runtimeCaching: buildPwaRuntimeCaching(),
-        },
-      }),
+          manifest: {
+            name: "SecPal",
+            short_name: "SecPal",
+            description:
+              "Operations software for German private security services.",
+            theme_color: "#ffffff",
+            background_color: "#52525b",
+            display: "standalone",
+            scope: "/",
+            start_url: "/",
+            icons: [
+              {
+                src: "pwa-192x192-maskable.png",
+                sizes: "192x192",
+                type: "image/png",
+                purpose: "any maskable",
+              },
+              {
+                src: "pwa-512x512-maskable.png",
+                sizes: "512x512",
+                type: "image/png",
+                purpose: "any maskable",
+              },
+            ],
+            shortcuts: [
+              {
+                name: "My Profile",
+                short_name: "Profile",
+                description: "View and edit your profile",
+                url: "/profile",
+                icons: [
+                  {
+                    src: "pwa-192x192.png",
+                    sizes: "192x192",
+                    type: "image/png",
+                  },
+                ],
+              },
+            ],
+          },
+          workbox: {
+            globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"],
+            globIgnores: ["**/*.html"],
+            navigateFallback: null,
+            cleanupOutdatedCaches: true,
+            runtimeCaching: buildPwaRuntimeCaching(),
+          },
+        }),
       // Bundle size visualizer (only in analyze mode)
       mode === "analyze" &&
         visualizer({

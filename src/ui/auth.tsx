@@ -99,7 +99,7 @@ export function LoginShell({
         // on short landscape viewports (≈320px) because absolute positioning
         // leaves the flex flow and `pb-*` padding only buys a fixed amount
         // of breathing room.
-        "relative flex min-h-[var(--app-shell-min-height)] flex-col items-center overflow-x-clip bg-background px-6 pt-[calc(1.5rem+var(--app-safe-area-inset-top))] pb-6 text-foreground md:px-10 md:pt-[calc(2.5rem+var(--app-safe-area-inset-top))] md:pb-10",
+        "relative flex min-h-[var(--app-shell-min-height)] flex-col items-center overflow-x-clip bg-background px-6 pt-[calc(1.5rem+var(--app-safe-area-inset-top))] text-foreground md:px-10 md:pt-[calc(2.5rem+var(--app-safe-area-inset-top))]",
         className
       )}
       {...props}

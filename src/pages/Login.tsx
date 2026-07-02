@@ -6,10 +6,13 @@ import { useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { KeyRound } from "lucide-react";
+import { KeyRound, Languages } from "lucide-react";
 
 import type { MfaChallenge, MfaVerificationMethod } from "@/types/api";
-import { LegalFooterLinks } from "@/components/LegalFooterLinks";
+import {
+  LoginLegalMenu,
+  LoginTopControls,
+} from "@/components/LoginLegalMenu";
 import { useAuth } from "../hooks/useAuth";
 import { useRecoverableLazyComponent } from "../hooks/useRecoverableLazyComponent";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
@@ -38,6 +41,13 @@ import {
   LoginShell,
   LoginSpinner,
   LoginStatusMessage,
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
 } from "@/ui";
 
 const HEALTH_CHECK_RETRY_DELAYS_MS = [0, 1500, 5000];
@@ -704,9 +714,10 @@ export function Login() {
   return (
     <LoginShell>
       {!isCompletingLogin && (
-        <div className="absolute top-[calc(1rem+var(--app-safe-area-inset-top))] right-4 sm:top-[calc(1.5rem+var(--app-safe-area-inset-top))] sm:right-6">
+        <LoginTopControls>
+          <LoginLegalMenu />
           <LoginLanguageSwitcher />
-        </div>
+        </LoginTopControls>
       )}
 
       {/*
@@ -999,24 +1010,33 @@ function LoginLanguageSwitcher() {
 
   return (
     <div>
-      <label className="sr-only" htmlFor="login-language-select">
-        {_(msg`Select language`)}
-      </label>
-      <select
-        id="login-language-select"
+      <Select
         value={i18n.locale}
-        onChange={(event) => {
-          void handleValueChange(event.target.value);
+        onValueChange={(locale) => {
+          void handleValueChange(locale);
         }}
-        aria-label={_(msg`Select language`)}
-        className="border-input bg-background text-foreground shadow-xs focus-visible:ring-ring/50 h-10 min-w-[7rem] rounded-md border px-3 text-sm outline-none transition focus-visible:border-ring focus-visible:ring-2"
       >
-        {Object.entries(locales).map(([code, name]) => (
-          <option key={code} value={code}>
-            {name}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger
+          aria-label={_(msg`Select language`)}
+          className="w-auto justify-start [&>[data-slot='select-trigger-icon']]:hidden"
+        >
+          <Languages aria-hidden="true" />
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent
+          className="w-fit min-w-fit"
+          viewportClassName="h-auto w-fit min-w-0"
+        >
+          <SelectGroup>
+            <SelectLabel>{_(msg`Language`)}</SelectLabel>
+            {Object.entries(locales).map(([code, name]) => (
+              <SelectItem key={code} value={code} hideIndicator>
+                {name}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
       {error ? (
         <LoginFieldError role="alert" aria-live="assertive" className="mt-2">
           {error}
@@ -1032,17 +1052,16 @@ function LoginLegalFooter() {
     // pushed there by the centered-card wrapper above (`flex-1`). No absolute
     // positioning so it cannot overlap the credential card on short landscape
     // viewports (≈320px tall) where the card itself fills most of the height.
-    <footer className="mt-4 w-full max-w-sm pb-[env(safe-area-inset-bottom,0px)] text-center text-[11px]">
-      <div className="text-muted-foreground flex flex-col items-center gap-2">
+    <footer className="mt-auto w-full max-w-sm pt-3 pb-[var(--app-footer-padding-bottom)] text-center text-xs">
+      <div className="text-muted-foreground">
         <a
           href="https://secpal.app"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-foreground hover:text-foreground/80 font-semibold"
+          className="text-foreground hover:text-foreground/80 inline-block text-xs font-semibold"
         >
           <Trans>Powered by SecPal – A guard's best friend</Trans>
         </a>
-        <LegalFooterLinks className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2" />
       </div>
     </footer>
   );

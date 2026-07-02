@@ -6,8 +6,10 @@ import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { KeyRound } from "lucide-react";
 import { useState } from "react";
+import {
+  LoginTopControlsSkeleton,
+} from "./LoginLegalMenu";
 import { Logo } from "./Logo";
-import { LegalFooterLinks } from "./LegalFooterLinks";
 import {
   Alert,
   AlertDescription,
@@ -33,15 +35,7 @@ export function LoginRouteLoadingState() {
 
   return (
     <LoginShell data-route-guard-state="login-bootstrap-loading">
-      <div className="absolute top-[calc(1rem+var(--app-safe-area-inset-top))] right-4 sm:top-[calc(1.5rem+var(--app-safe-area-inset-top))] sm:right-6">
-        <div
-          aria-hidden="true"
-          className="border-input bg-muted flex h-10 min-w-[7rem] items-center gap-2 rounded-md border px-3"
-        >
-          <span className="bg-border h-3 flex-1 rounded-full" />
-          <span className="bg-border h-3 w-3 rounded-full" />
-        </div>
-      </div>
+      <LoginTopControlsSkeleton />
 
       <div className="flex w-full flex-1 items-center justify-center">
         <LoginCard aria-labelledby="login-loading-title" className="relative">
@@ -118,12 +112,11 @@ export function LoginRouteLoadingState() {
         </LoginCard>
       </div>
 
-      <footer className="mt-4 w-full max-w-sm pb-[env(safe-area-inset-bottom,0px)] text-center text-[11px]">
-        <div className="text-muted-foreground flex flex-col items-center gap-2">
-          <span className="text-foreground font-semibold">
+      <footer className="mt-auto w-full max-w-sm pt-3 pb-[var(--app-footer-padding-bottom)] text-center text-xs">
+        <div className="text-muted-foreground">
+          <span className="text-foreground inline-block text-xs font-semibold">
             <Trans>Powered by SecPal – A guard's best friend</Trans>
           </span>
-          <LegalFooterLinks className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2" />
         </div>
       </footer>
     </LoginShell>

@@ -93,6 +93,23 @@ describe("NavUser", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps the user menu dropdown at its natural content width", async () => {
+    const user = userEvent.setup();
+
+    renderNavUser();
+
+    await user.click(screen.getByRole("button", { name: /user menu/i }));
+
+    const dropdown = screen
+      .getByRole("menuitem", { name: /my profile/i })
+      .closest('[data-slot="dropdown-menu-content"]');
+
+    expect(dropdown).not.toBeNull();
+    expect(dropdown).toHaveClass("w-fit", "min-w-fit");
+    expect(dropdown!.className).not.toContain("w-(--radix-dropdown-menu-trigger-width)");
+    expect(dropdown!.className).not.toContain("min-w-56");
+  });
+
   it("disables dropdown modality inside the mobile sidebar", () => {
     vi.mocked(useSidebar).mockReturnValue({
       isMobile: true,
