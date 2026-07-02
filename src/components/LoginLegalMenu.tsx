@@ -29,10 +29,7 @@ export function LoginLegalMenu() {
           size="lg"
           className="border-input bg-background text-foreground w-auto justify-start gap-2 px-3 text-base font-normal whitespace-nowrap shadow-xs hover:bg-accent hover:text-accent-foreground md:text-sm dark:bg-background dark:hover:bg-accent"
         >
-          <Scale
-            className="h-4 w-4 text-muted-foreground"
-            aria-hidden="true"
-          />
+          <Scale className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <Trans>Legal</Trans>
         </Button>
       </DropdownMenuTrigger>
@@ -77,11 +74,7 @@ export function LoginLegalMenu() {
   );
 }
 
-export function LoginTopControls({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function LoginTopControls({ children }: { children: React.ReactNode }) {
   return (
     <div className="absolute top-[calc(1rem+var(--app-safe-area-inset-top))] inset-x-4 flex items-start justify-between gap-2 sm:top-[calc(1.5rem+var(--app-safe-area-inset-top))] sm:inset-x-6">
       {children}

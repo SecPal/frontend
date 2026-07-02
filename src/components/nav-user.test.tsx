@@ -106,7 +106,9 @@ describe("NavUser", () => {
 
     expect(dropdown).not.toBeNull();
     expect(dropdown).toHaveClass("w-fit", "min-w-fit");
-    expect(dropdown!.className).not.toContain("w-(--radix-dropdown-menu-trigger-width)");
+    expect(dropdown!.className).not.toContain(
+      "w-(--radix-dropdown-menu-trigger-width)"
+    );
     expect(dropdown!.className).not.toContain("min-w-56");
   });
 

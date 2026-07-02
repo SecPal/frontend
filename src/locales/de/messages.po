@@ -2073,11 +2073,6 @@ msgstr "Navigationsmenü"
 msgid "Auto-refresh (30s)"
 msgstr "Automatisches Aktualisieren (30s)"
 
-#: src/components/LoginLegalMenu.tsx
-#: src/components/nav-legal.tsx
-#~ msgid "Privacy Policy"
-#~ msgstr "Datenschutzerklärung"
-
 #: src/components/OfflineDataBanner.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Refresh"

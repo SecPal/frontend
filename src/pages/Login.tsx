@@ -9,10 +9,7 @@ import { useLingui } from "@lingui/react";
 import { KeyRound, Languages } from "lucide-react";
 
 import type { MfaChallenge, MfaVerificationMethod } from "@/types/api";
-import {
-  LoginLegalMenu,
-  LoginTopControls,
-} from "@/components/LoginLegalMenu";
+import { LoginLegalMenu, LoginTopControls } from "@/components/LoginLegalMenu";
 import { useAuth } from "../hooks/useAuth";
 import { useRecoverableLazyComponent } from "../hooks/useRecoverableLazyComponent";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";

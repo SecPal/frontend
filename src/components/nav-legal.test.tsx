@@ -17,7 +17,9 @@ vi.mock("@/ui/sidebar", async (importOriginal) => {
 
   return {
     ...actual,
-    SidebarGroup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+    SidebarGroup: ({ children }: { children: ReactNode }) => (
+      <div>{children}</div>
+    ),
     SidebarGroupLabel: ({ children }: { children: ReactNode }) => (
       <div>{children}</div>
     ),
@@ -34,7 +36,9 @@ vi.mock("@/ui/sidebar", async (importOriginal) => {
     SidebarMenuItem: ({ children }: { children: ReactNode }) => (
       <li>{children}</li>
     ),
-    SidebarMenuSub: ({ children }: { children: ReactNode }) => <ul>{children}</ul>,
+    SidebarMenuSub: ({ children }: { children: ReactNode }) => (
+      <ul>{children}</ul>
+    ),
     SidebarMenuSubButton: ({
       children,
       asChild,

@@ -26,7 +26,11 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@/ui/sidebar";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/ui/collapsible";
 
 export function NavLegal() {
   const location = useLocation();
@@ -151,10 +155,7 @@ export function NavLegal() {
                 </SidebarGroupLabel>
               </SidebarMenuSubItem>
               <SidebarMenuSubItem>
-                <SidebarMenuSubButton
-                  asChild
-                  className="pointer-events-none"
-                >
+                <SidebarMenuSubButton asChild className="pointer-events-none">
                   <span aria-disabled="true">
                     <FileText />
                     <span>
@@ -164,10 +165,7 @@ export function NavLegal() {
                 </SidebarMenuSubButton>
               </SidebarMenuSubItem>
               <SidebarMenuSubItem>
-                <SidebarMenuSubButton
-                  asChild
-                  className="pointer-events-none"
-                >
+                <SidebarMenuSubButton asChild className="pointer-events-none">
                   <span aria-disabled="true">
                     <Shield />
                     <span>

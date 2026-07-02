@@ -3291,9 +3291,11 @@ describe("Login", () => {
     });
 
     it("blurs the language trigger after pointer selection", async () => {
-      vi.mocked(i18nModule.activateLocale).mockImplementation(async (locale) => {
-        i18n.activate(locale);
-      });
+      vi.mocked(i18nModule.activateLocale).mockImplementation(
+        async (locale) => {
+          i18n.activate(locale);
+        }
+      );
 
       renderLogin();
 
@@ -3317,9 +3319,11 @@ describe("Login", () => {
     it("renders a localized group label in the login language dropdown", async () => {
       const user = userEvent.setup();
 
-      vi.mocked(i18nModule.activateLocale).mockImplementation(async (locale) => {
-        i18n.activate(locale);
-      });
+      vi.mocked(i18nModule.activateLocale).mockImplementation(
+        async (locale) => {
+          i18n.activate(locale);
+        }
+      );
 
       renderLogin();
 
@@ -3487,14 +3491,12 @@ describe("Login", () => {
       await openLoginLegalMenu();
 
       expect(screen.getByText(/legal pages/i)).toBeInTheDocument();
-      expect(screen.getByRole("menuitem", { name: /imprint/i })).toHaveAttribute(
-        "data-disabled",
-        ""
-      );
-      expect(screen.getByRole("menuitem", { name: /privacy/i })).toHaveAttribute(
-        "data-disabled",
-        ""
-      );
+      expect(
+        screen.getByRole("menuitem", { name: /imprint/i })
+      ).toHaveAttribute("data-disabled", "");
+      expect(
+        screen.getByRole("menuitem", { name: /privacy/i })
+      ).toHaveAttribute("data-disabled", "");
       expect(screen.getByText(/open source/i)).toBeInTheDocument();
 
       const licenseLink = screen.getByRole("menuitem", { name: /agpl v3\+/i });

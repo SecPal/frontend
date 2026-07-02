@@ -461,16 +461,15 @@ describe("ApplicationLayout", () => {
       expect(
         await screen.findByRole("link", { name: /agpl v3\+/i })
       ).toHaveAttribute("href", "https://www.gnu.org/licenses/agpl-3.0.html");
-      expect(screen.getByRole("link", { name: /source code/i })).toHaveAttribute(
-        "href",
-        "/source"
-      );
+      expect(
+        screen.getByRole("link", { name: /source code/i })
+      ).toHaveAttribute("href", "/source");
 
       const legalTrigger = screen.getByRole("button", { name: /legal/i });
       const userMenuButton = screen.getByRole("button", { name: /user menu/i });
-      expect(
-        legalTrigger.compareDocumentPosition(userMenuButton)
-      ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(legalTrigger.compareDocumentPosition(userMenuButton)).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING
+      );
     });
 
     it("renders user information in the sidebar footer avatar", () => {

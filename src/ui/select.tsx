@@ -165,10 +165,7 @@ export const SelectContent = React.forwardRef<
         )}
         onCloseAutoFocus={(event) => {
           onCloseAutoFocus?.(event);
-          if (
-            !event.defaultPrevented &&
-            blurActiveElementAfterPointerClose()
-          ) {
+          if (!event.defaultPrevented && blurActiveElementAfterPointerClose()) {
             event.preventDefault();
             return;
           }
