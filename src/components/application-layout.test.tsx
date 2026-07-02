@@ -490,6 +490,9 @@ describe("ApplicationLayout", () => {
         ).toBeInTheDocument();
         expect(mobileSidebar).toBeInTheDocument();
         expect(mobileSidebar).toHaveClass("border-r-0");
+        expect(mobileSidebar).toHaveClass(
+          "pt-[var(--app-safe-area-inset-top)]"
+        );
         expect(mobileSidebar?.className).not.toContain("[&>button]:hidden");
 
         await user.click(screen.getByRole("button", { name: /close/i }));

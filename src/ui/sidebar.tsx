@@ -222,7 +222,7 @@ export function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) border-r-0 bg-sidebar p-0 text-sidebar-foreground"
+          className="w-(--sidebar-width) border-r-0 bg-sidebar p-0 pt-[var(--app-safe-area-inset-top)] text-sidebar-foreground"
           closeLabel={t({
             id: "layout.mobileNavigation.close",
             message: "Close navigation",

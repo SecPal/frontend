@@ -48,7 +48,7 @@ export function TeamSwitcher({ workspaces }: { workspaces: Workspace[] }) {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu modal={!isMobile}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
