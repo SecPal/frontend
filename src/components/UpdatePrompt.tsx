@@ -9,6 +9,7 @@ import { Spinner } from "@/ui/loading";
 import { Button } from "@/ui/button";
 import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 import { isCapacitorNativeRuntime } from "../lib/nativeRuntime";
+import { APP_SHELL_MAX_WIDTH_CLASS } from "./app-shell-width";
 
 /**
  * UpdatePrompt Component
@@ -57,7 +58,9 @@ function BrowserUpdatePrompt() {
       aria-live="polite"
       aria-atomic="true"
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-center gap-4">
+      <div
+        className={`${APP_SHELL_MAX_WIDTH_CLASS} flex items-center justify-center gap-4`}
+      >
         {isUpdating ? (
           <>
             <Spinner

@@ -151,6 +151,35 @@ describe("OrganizationPage", () => {
     expect(actionArea?.className).not.toContain("border-zinc-200");
   });
 
+  it("uses a wider desktop split layout and a sticky detail rail", async () => {
+    const user = userEvent.setup();
+    const { container } = renderWithProviders(<OrganizationPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("SecPal Holding")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText("SecPal Holding"));
+
+    const layoutGrid = container.querySelector(".grid.grid-cols-1.gap-6");
+    const detailCard = screen
+      .getByRole("button", { name: /close detail panel/i })
+      .closest('[data-slot="card"]');
+    const detailContent = detailCard?.querySelector(
+      '[data-slot="card-content"]'
+    );
+
+    expect(layoutGrid).toHaveClass(
+      "xl:grid-cols-[minmax(0,1fr)_22rem]",
+      "2xl:grid-cols-[minmax(0,1fr)_24rem]"
+    );
+    expect(detailCard).toHaveClass("xl:sticky", "xl:top-6", "xl:self-start");
+    expect(detailContent).toHaveClass(
+      "xl:max-h-[calc(100svh-var(--app-safe-area-inset-top)-8rem)]",
+      "xl:overflow-y-auto"
+    );
+  });
+
   it("keeps the page frame and tree controls visible while units initially load", () => {
     vi.mocked(
       organizationalUnitsHook.useOrganizationalUnitsWithOffline

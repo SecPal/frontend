@@ -6,6 +6,7 @@ import { render, screen } from "@testing-library/react";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { RouteLoader } from "./RouteLoader";
+import { APP_SHELL_MAX_WIDTH_CLASS } from "./app-shell-width";
 
 function renderWithI18n(ui: React.ReactElement) {
   return render(<I18nProvider i18n={i18n}>{ui}</I18nProvider>);
@@ -82,5 +83,15 @@ describe("RouteLoader", () => {
 
     expect(headerRow?.className).not.toContain("border-zinc-950/10");
     expect(main?.className).not.toContain("bg-white");
+  });
+
+  it("uses the shared wide desktop content container", () => {
+    const { container } = renderWithI18n(<RouteLoader />);
+
+    const contentContainer = container.querySelector("main > div > div");
+
+    expect(contentContainer).toHaveClass(
+      ...APP_SHELL_MAX_WIDTH_CLASS.split(" ")
+    );
   });
 });

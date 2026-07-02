@@ -25,6 +25,7 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { ApplicationLayout } from "./application-layout";
+import { APP_SHELL_MAX_WIDTH_CLASS } from "./app-shell-width";
 import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
 import { sanitizePersistedAuthUser } from "../services/authState";
@@ -689,6 +690,22 @@ describe("ApplicationLayout", () => {
       const avatars = await screen.findAllByText("JD");
       expect(avatars.length).toBeGreaterThanOrEqual(1);
     });
+
+    it("uses the shared wide shell container for desktop content", () => {
+      const { container } = renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const contentContainer = container.querySelector(
+        '[data-slot="sidebar-inset"] .grow > div'
+      );
+
+      expect(contentContainer).toHaveClass(
+        ...APP_SHELL_MAX_WIDTH_CLASS.split(" ")
+      );
+    });
   });
 
   describe("navigation highlighting", () => {
@@ -1282,6 +1299,9 @@ describe("ApplicationLayout", () => {
       );
       expect(footer).toHaveTextContent("AGPL v3+");
       expect(footer).toHaveTextContent("Source Code");
+      expect(footer?.firstElementChild).toHaveClass(
+        ...APP_SHELL_MAX_WIDTH_CLASS.split(" ")
+      );
     });
 
     it("renders license link in main content footer", () => {

@@ -36,6 +36,7 @@ import { getAuthTransport } from "../services/authTransport";
 import { Footer } from "./Footer";
 import { PrefetchLink } from "./PrefetchLink";
 import { RouteContentFallback } from "./RouteContentFallback";
+import { APP_SHELL_MAX_WIDTH_CLASS } from "./app-shell-width";
 
 const LOGOUT_TIMEOUT_MS = 8000;
 
@@ -289,7 +290,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
         </header>
         <div className="bg-background flex flex-1 flex-col">
           <div className="grow p-6 lg:p-10">
-            <div className="mx-auto max-w-6xl">
+            <div className={APP_SHELL_MAX_WIDTH_CLASS}>
               <Suspense fallback={<RouteContentFallback />}>
                 {children}
               </Suspense>

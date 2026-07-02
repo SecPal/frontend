@@ -6,6 +6,7 @@ import { useLingui } from "@lingui/react";
 import { PageSkeleton } from "@/ui/loading";
 import { Skeleton } from "@/ui/skeleton";
 import { Logo } from "./Logo";
+import { APP_SHELL_MAX_WIDTH_CLASS } from "./app-shell-width";
 
 export function RouteLoader() {
   const { i18n } = useLingui();
@@ -30,7 +31,7 @@ export function RouteLoader() {
       </header>
       <main className="flex flex-1 flex-col bg-background">
         <div className="grow p-6 lg:p-10">
-          <div className="mx-auto max-w-6xl">
+          <div className={APP_SHELL_MAX_WIDTH_CLASS}>
             <PageSkeleton
               loadingLabel={i18n._(msg`Loading application`)}
               sections={2}

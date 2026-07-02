@@ -44,6 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   completion path, so the five-second best-effort logout timeout no longer lets
   a replacement session race the previous session's IndexedDB and cache
   teardown.
+- Widened the shared authenticated shell content stage to a 1600px desktop cap
+  and aligned the shell footer, route loader, and update banner with the same
+  container so large desktop screens can use materially more horizontal space
+  while page-local form and detail views keep their narrower limits.
 - Rebuilt the authenticated application shell navigation on the canonical shadcn
   `sidebar-07` composition: the old bespoke menu shell is replaced by shared
   shadcn/Radix/Lucide `Sidebar`, `Collapsible`, `DropdownMenu`, `Sheet`,
