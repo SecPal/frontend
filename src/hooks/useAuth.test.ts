@@ -17,7 +17,10 @@ import { AuthApiError } from "../services/authApi";
 import { sanitizePersistedAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
 import { sessionEvents } from "../services/sessionEvents";
-import { clearSensitiveClientState } from "../lib/clientStateCleanup";
+import {
+  clearBrowserPushClientState,
+  clearSensitiveClientState,
+} from "../lib/clientStateCleanup";
 import { createRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
 import * as prefetch from "./usePrefetch";
 import {
@@ -35,11 +38,15 @@ const {
   mockAnalyticsResetForLogout,
   mockAnalyticsResumeAuthenticatedSession,
   mockFetchCsrfToken,
+  mockClearSensitiveClientState,
+  mockClearBrowserPushClientState,
 } = vi.hoisted(() => ({
   mockGetCurrentUser: vi.fn(),
   mockAnalyticsResetForLogout: vi.fn(),
   mockAnalyticsResumeAuthenticatedSession: vi.fn(),
   mockFetchCsrfToken: vi.fn(),
+  mockClearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
+  mockClearBrowserPushClientState: vi.fn().mockResolvedValue(undefined),
 }));
 
 const AUTH_BOOTSTRAP_TIMEOUT_MS = 20_000;
@@ -61,7 +68,9 @@ vi.mock("../services/csrf", async () => {
 });
 
 vi.mock("../lib/clientStateCleanup", () => ({
-  clearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
+  clearSensitiveClientState: mockClearSensitiveClientState,
+  clearDestructiveSensitiveClientState: mockClearSensitiveClientState,
+  clearBrowserPushClientState: mockClearBrowserPushClientState,
 }));
 
 vi.mock("../lib/analytics", () => ({
@@ -160,6 +169,7 @@ describe("useAuth", () => {
     mockGetCurrentUser.mockReset();
     vi.mocked(syncOfflineSessionAccess).mockReset();
     vi.mocked(clearSensitiveClientState).mockReset();
+    vi.mocked(clearBrowserPushClientState).mockReset();
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.spyOn(console, "log").mockImplementation(() => {});
     sessionEvents.reset();
@@ -176,6 +186,7 @@ describe("useAuth", () => {
     mockAnalyticsResetForLogout.mockResolvedValue(undefined);
     mockAnalyticsResumeAuthenticatedSession.mockReset();
     vi.mocked(clearSensitiveClientState).mockResolvedValue(undefined);
+    vi.mocked(clearBrowserPushClientState).mockResolvedValue(undefined);
     vi.mocked(syncOfflineSessionAccess).mockResolvedValue(undefined);
   });
 
@@ -1684,7 +1695,7 @@ describe("useAuth", () => {
     }
   });
 
-  it("bounds login waiting when timed-out sensitive logout cleanup never settles", async () => {
+  it("does not accept login until destructive logout cleanup settles", async () => {
     const firstUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
     const secondUser = {
       id: "2",
@@ -1761,6 +1772,20 @@ describe("useAuth", () => {
         await Promise.resolve();
       });
 
+      expect(loginSettled).toBe(false);
+      expect(result.current.user).toBeNull();
+      expect(setUserSpy).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "Timed out waiting for trailing logout cleanup during logout; continuing with best-effort barrier teardown."
+      );
+
+      cleanupDeferred.resolve();
+
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
       expect(loginSettled).toBe(true);
       expect(setUserSpy).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -1776,9 +1801,6 @@ describe("useAuth", () => {
           email: "next@secpal.dev",
         })
       );
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        "Timed out waiting for logout cleanup before login; continuing with best-effort session handoff."
-      );
     } finally {
       cleanupDeferred.resolve();
       consoleWarnSpy.mockRestore();
@@ -1787,7 +1809,7 @@ describe("useAuth", () => {
     }
   });
 
-  it("runs a real second logout after login resumes from a timed-out cleanup handoff", async () => {
+  it("runs a real second logout after login resumes from a timed-out trailing cleanup handoff", async () => {
     const firstUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
     const secondUser = {
       id: "2",
@@ -1797,11 +1819,15 @@ describe("useAuth", () => {
 
     await persistAuthUser(firstUser);
 
-    const cleanupDeferred = createDeferredPromise<void>();
-    vi.mocked(clearSensitiveClientState).mockImplementationOnce(
-      () => cleanupDeferred.promise
+    const pushCleanupDeferred = createDeferredPromise<void>();
+    vi.mocked(clearBrowserPushClientState).mockImplementationOnce(
+      () => pushCleanupDeferred.promise
     );
     const clearSpy = vi.spyOn(authStorage, "clear");
+    const beginBarrierSpy = vi.spyOn(
+      authStorage,
+      "beginSensitiveLogoutBarrierCleanup"
+    );
     const consoleWarnSpy = vi
       .spyOn(console, "warn")
       .mockImplementation(() => undefined);
@@ -1854,12 +1880,14 @@ describe("useAuth", () => {
           clearOfflineVaultTables: false,
         })
       );
+      expect(beginBarrierSpy).toHaveBeenCalledTimes(2);
       expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        "Timed out waiting for logout cleanup before login; continuing with best-effort session handoff."
+        "Timed out waiting for trailing logout cleanup during logout; continuing with best-effort barrier teardown."
       );
     } finally {
-      cleanupDeferred.resolve();
+      pushCleanupDeferred.resolve();
+      beginBarrierSpy.mockRestore();
       clearSpy.mockRestore();
       consoleWarnSpy.mockRestore();
       vi.useRealTimers();

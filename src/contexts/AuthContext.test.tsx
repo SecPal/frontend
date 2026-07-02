@@ -12,7 +12,10 @@ import {
   AUTH_VAULT_STORAGE_KEY,
   clearOfflineVaultSession,
 } from "../lib/offlineVault";
-import { clearSensitiveClientState } from "../lib/clientStateCleanup";
+import {
+  clearBrowserPushClientState,
+  clearSensitiveClientState,
+} from "../lib/clientStateCleanup";
 import { authStorage } from "../services/storage";
 import { resetPrefetchCache } from "../hooks/usePrefetch";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
@@ -37,7 +40,9 @@ vi.mock("../lib/serviceWorkerSession", () => ({
 }));
 
 vi.mock("../lib/clientStateCleanup", () => ({
-  clearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
+  clearSensitiveClientState: mockClearSensitiveClientState,
+  clearDestructiveSensitiveClientState: mockClearSensitiveClientState,
+  clearBrowserPushClientState: mockClearBrowserPushClientState,
 }));
 
 type SessionEventName = "session:expired" | "session:invalid";
@@ -371,7 +376,7 @@ describe("AuthContext", () => {
       );
     }
 
-    it("finishes sensitive cleanup before persisting the next user when logout cleanup times out", async () => {
+    it("finishes destructive cleanup before persisting the next user when trailing logout cleanup times out", async () => {
       await seedStoredUser({
         id: "1",
         name: "Current User",
@@ -390,13 +395,14 @@ describe("AuthContext", () => {
         );
       });
 
-      const clearStoragePromise = new Promise<void>(() => {});
-      const clearStorageSpy = vi
-        .spyOn(authStorage, "clear")
-        .mockReturnValueOnce(clearStoragePromise);
+      const pushCleanupPromise = new Promise<void>(() => {});
       const setUserSpy = vi.spyOn(authStorage, "setUser");
 
       vi.mocked(clearSensitiveClientState).mockClear();
+      vi.mocked(clearBrowserPushClientState).mockClear();
+      vi.mocked(clearBrowserPushClientState).mockImplementationOnce(
+        () => pushCleanupPromise
+      );
       vi.useFakeTimers();
 
       try {
@@ -407,7 +413,13 @@ describe("AuthContext", () => {
         expect(screen.getByTestId("userEmail")).toHaveTextContent("none");
 
         await act(async () => {
+          vi.advanceTimersByTime(5_000);
+          await Promise.resolve();
+        });
+
+        await act(async () => {
           screen.getByRole("button", { name: /login next user/i }).click();
+          await Promise.resolve();
         });
 
         await act(async () => {
@@ -415,16 +427,16 @@ describe("AuthContext", () => {
           await Promise.resolve();
         });
 
-        const cleanupCallOrder =
-          vi.mocked(clearSensitiveClientState).mock.invocationCallOrder[0]!;
+        expect(setUserSpy).toHaveBeenCalledTimes(1);
+
+        const cleanupCallOrder = vi.mocked(clearSensitiveClientState).mock
+          .invocationCallOrder[0]!;
         const setUserCallOrder = setUserSpy.mock.invocationCallOrder[0]!;
 
         expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
-        expect(setUserSpy).toHaveBeenCalledTimes(1);
         expect(cleanupCallOrder).toBeLessThan(setUserCallOrder);
       } finally {
         vi.useRealTimers();
-        clearStorageSpy.mockRestore();
         setUserSpy.mockRestore();
       }
     });
@@ -722,3 +734,9 @@ describe("AuthContext", () => {
     });
   });
 });
+const mockClearSensitiveClientState = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(undefined)
+);
+const mockClearBrowserPushClientState = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(undefined)
+);

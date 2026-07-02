@@ -38,13 +38,21 @@ import {
 import { messages as deMessages } from "../locales/de/messages.mjs";
 
 type AuthenticatedUser = Awaited<ReturnType<typeof authApi.getCurrentUser>>;
+const mockClearSensitiveClientState = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(undefined)
+);
+const mockClearBrowserPushClientState = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(undefined)
+);
 
 vi.mock("../services/authApi");
 vi.mock("@/components/UpdatePrompt", () => ({
   UpdatePrompt: () => <div data-testid="layout-update-prompt" />,
 }));
 vi.mock("../lib/clientStateCleanup", () => ({
-  clearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
+  clearSensitiveClientState: mockClearSensitiveClientState,
+  clearDestructiveSensitiveClientState: mockClearSensitiveClientState,
+  clearBrowserPushClientState: mockClearBrowserPushClientState,
 }));
 vi.mock("../lib/analytics", () => ({
   analytics: {

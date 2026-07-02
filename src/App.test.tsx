@@ -93,6 +93,9 @@ const {
         skipVaultTableCleanup = true;
         return "test-logout-barrier-owner";
       }),
+      completeStaleSensitiveLogoutBarrierCleanup: vi.fn(() => {
+        skipVaultTableCleanup = false;
+      }),
       endSensitiveLogoutBarrierCleanup: vi.fn(() => {
         skipVaultTableCleanup = false;
       }),
