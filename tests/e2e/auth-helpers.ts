@@ -26,6 +26,7 @@ export interface LoginSubmitState {
 export interface AuthResolutionState {
   pathname: string;
   hasUserMenu: boolean;
+  hasSidebarTrigger: boolean;
   /** Pre-contract users use `OnboardingLayout` (Sign out) instead of the main nav user menu. */
   hasOnboardingShell: boolean;
   hasBootstrapRecoveryScreen: boolean;
@@ -49,6 +50,7 @@ const LOGIN_READY_TIMEOUT_MS = 15_000;
 const AUTH_RESOLUTION_TIMEOUT_MS = 15_000;
 const BOOTSTRAP_RECOVERY_SELECTOR =
   '[data-route-guard-state="bootstrap-recovery"]';
+export const AUTH_SIDEBAR_TRIGGER_SELECTOR = '[data-slot="sidebar-trigger"]';
 
 function isLocalPlaywrightHost(hostname: string): boolean {
   return (
@@ -197,7 +199,11 @@ export function describeLoginBlockingState(
 export function describeAuthResolutionState(
   state: AuthResolutionState
 ): AuthResolution {
-  if (state.hasUserMenu || state.hasOnboardingShell) {
+  if (
+    state.hasUserMenu ||
+    state.hasSidebarTrigger ||
+    state.hasOnboardingShell
+  ) {
     return "authenticated";
   }
 
@@ -267,23 +273,30 @@ export async function waitForLoginFormReady(
 export async function readAuthResolutionState(
   page: Page
 ): Promise<AuthResolutionState> {
-  return page.evaluate((bootstrapRecoverySelector) => {
-    const pathname = window.location.pathname;
-    const hasOnboardingShell =
-      /^\/onboarding(\/|$)/.test(pathname) &&
-      Array.from(document.querySelectorAll("button")).some((btn) =>
-        /sign out|abmelden|ausloggen/i.test((btn.textContent ?? "").trim())
-      );
-
-    return {
-      pathname,
-      hasUserMenu:
-        document.querySelector('button[aria-label="User menu"]') !== null,
-      hasOnboardingShell,
-      hasBootstrapRecoveryScreen:
-        document.querySelector(bootstrapRecoverySelector) !== null,
-    };
-  }, BOOTSTRAP_RECOVERY_SELECTOR);
+  return page.evaluate(
+    ({ bootstrapRecoverySelector, sidebarTriggerSelector }) => {
+      const pathname = window.location.pathname;
+      const hasOnboardingShell =
+        /^\/onboarding(\/|$)/.test(pathname) &&
+        Array.from(document.querySelectorAll("button")).some((btn) =>
+          /sign out|abmelden|ausloggen/i.test((btn.textContent ?? "").trim())
+        );
+      return {
+        pathname,
+        hasUserMenu:
+          document.querySelector('button[aria-label="User menu"]') !== null,
+        hasSidebarTrigger:
+          document.querySelector(sidebarTriggerSelector) !== null,
+        hasOnboardingShell,
+        hasBootstrapRecoveryScreen:
+          document.querySelector(bootstrapRecoverySelector) !== null,
+      };
+    },
+    {
+      bootstrapRecoverySelector: BOOTSTRAP_RECOVERY_SELECTOR,
+      sidebarTriggerSelector: AUTH_SIDEBAR_TRIGGER_SELECTOR,
+    }
+  );
 }
 
 export async function waitForAuthResolution(
@@ -292,7 +305,7 @@ export async function waitForAuthResolution(
 ): Promise<AuthResolution> {
   await page
     .waitForFunction(
-      (bootstrapRecoverySelector) => {
+      ({ bootstrapRecoverySelector, sidebarTriggerSelector }) => {
         const path = window.location.pathname;
         const onboardingShell =
           /^\/onboarding(\/|$)/.test(path) &&
@@ -303,11 +316,15 @@ export async function waitForAuthResolution(
         return (
           path.includes("/login") ||
           document.querySelector('button[aria-label="User menu"]') !== null ||
+          document.querySelector(sidebarTriggerSelector) !== null ||
           document.querySelector(bootstrapRecoverySelector) !== null ||
           onboardingShell
         );
       },
-      BOOTSTRAP_RECOVERY_SELECTOR,
+      {
+        bootstrapRecoverySelector: BOOTSTRAP_RECOVERY_SELECTOR,
+        sidebarTriggerSelector: AUTH_SIDEBAR_TRIGGER_SELECTOR,
+      },
       { timeout }
     )
     .catch(() => undefined);

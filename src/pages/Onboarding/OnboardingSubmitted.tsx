@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { Trans } from "@lingui/react/macro";
-import { Card, CardContent, CardHeader } from "@/ui";
+import { Card, CardContent, CardHeader } from "@/ui/card";
 
 /**
  * Shown after the employee submits the final onboarding step (and when reopening

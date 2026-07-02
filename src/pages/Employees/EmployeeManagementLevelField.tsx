@@ -3,7 +3,9 @@
 
 import type { Ref } from "react";
 import { Trans } from "@lingui/react/macro";
-import { Field, FieldError, FieldLabel, Input, Switch } from "@/ui";
+import { Input } from "@/ui/input";
+import { Switch } from "@/ui/switch";
+import { Field, FieldError, FieldLabel } from "@/ui";
 
 interface EmployeeManagementLevelFieldProps {
   checked: boolean;

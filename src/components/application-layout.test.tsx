@@ -10,7 +10,7 @@ import {
   afterEach,
   beforeAll,
 } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   act,
@@ -18,12 +18,14 @@ import {
   screen,
   fireEvent,
   waitFor,
+  within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { ApplicationLayout } from "./application-layout";
+import { APP_SHELL_MAX_WIDTH_CLASS } from "./app-shell-width";
 import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
 import { sanitizePersistedAuthUser } from "../services/authState";
@@ -37,10 +39,21 @@ import {
 import { messages as deMessages } from "../locales/de/messages.mjs";
 
 type AuthenticatedUser = Awaited<ReturnType<typeof authApi.getCurrentUser>>;
+const mockClearSensitiveClientState = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(undefined)
+);
+const mockClearBrowserPushClientState = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(undefined)
+);
 
 vi.mock("../services/authApi");
+vi.mock("@/components/UpdatePrompt", () => ({
+  UpdatePrompt: () => <div data-testid="layout-update-prompt" />,
+}));
 vi.mock("../lib/clientStateCleanup", () => ({
-  clearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
+  clearSensitiveClientState: mockClearSensitiveClientState,
+  clearDestructiveSensitiveClientState: mockClearSensitiveClientState,
+  clearBrowserPushClientState: mockClearBrowserPushClientState,
 }));
 vi.mock("../lib/analytics", () => ({
   analytics: {
@@ -55,7 +68,9 @@ const migratedShellFiles = [
   "src/components/mobile-sidebar-dialog.tsx",
   "src/components/stacked-layout.tsx",
   "src/components/sidebar-layout.tsx",
-  "src/ui/appShell.tsx",
+  "src/ui/dropdown-menu.tsx",
+  "src/ui/sheet.tsx",
+  "src/ui/sidebar.tsx",
   "src/components/LanguageSwitcher.tsx",
   "src/components/Footer.tsx",
 ] as const;
@@ -69,10 +84,20 @@ const forbiddenHeroiconsPackagePattern = new RegExp(
 const forbiddenTailwindPlusLicenseMarkerPattern = new RegExp(
   ["LicenseRef", "TailwindPlus"].join("-")
 );
+const SIDEBAR_STATE_COOKIE_NAME = "sidebar_state";
 
 function setCsrfTokenCookie(value: string): void {
   document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
   document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
+}
+
+function clearSidebarStateCookie(): void {
+  document.cookie = `${SIDEBAR_STATE_COOKIE_NAME}=;expires=${new Date(0).toUTCString()};path=/`;
+}
+
+function setSidebarStateCookie(value: boolean): void {
+  clearSidebarStateCookie();
+  document.cookie = `${SIDEBAR_STATE_COOKIE_NAME}=${value};path=/`;
 }
 
 function getStoredAuthState(): string | null {
@@ -111,6 +136,12 @@ function LocationStateProbe() {
   return <output data-testid="location-state">{JSON.stringify(state)}</output>;
 }
 
+function PathnameProbe() {
+  const location = useLocation();
+
+  return <output data-testid="pathname">{location.pathname}</output>;
+}
+
 async function seedAuthenticatedUser(user: Record<string, unknown>) {
   const persistedUser = sanitizePersistedAuthUser({
     emailVerified: true,
@@ -145,28 +176,19 @@ async function seedAuthenticatedUser(user: Record<string, unknown>) {
 }
 
 async function openUserMenu() {
-  const userMenuButton = screen.getByRole("button", {
+  const mobileNavigationDialog = screen.queryByRole("dialog", {
+    name: /navigation/i,
+  });
+  const lookup = mobileNavigationDialog
+    ? within(mobileNavigationDialog)
+    : screen;
+  const userMenuButton = lookup.getByRole("button", {
     name: /user menu/i,
   });
+  const user = userEvent.setup();
 
-  fireEvent.pointerDown(userMenuButton, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(userMenuButton, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.click(userMenuButton);
-
-  await waitFor(
-    () => {
-      expect(userMenuButton).toHaveAttribute("aria-expanded", "true");
-    },
-    { timeout: QUERY_TIMEOUT }
-  );
+  await user.click(userMenuButton);
+  await screen.findByRole("menuitem", { name: /my profile/i });
 
   return userMenuButton;
 }
@@ -192,6 +214,11 @@ describe("ApplicationLayout", () => {
     localStorage.clear();
     clearOfflineVaultSession();
     setCsrfTokenCookie("test-csrf-token");
+    clearSidebarStateCookie();
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 1024,
+    });
     i18n.load("en", {});
     i18n.activate("en");
 
@@ -199,20 +226,133 @@ describe("ApplicationLayout", () => {
   });
 
   afterEach(() => {
+    clearSidebarStateCookie();
     clearOfflineVaultSession();
   });
 
   describe("rendering", () => {
-    it("renders navigation with Shield icon (branding)", () => {
+    it("renders the desktop sidebar with icon collapse and direct navigation links", async () => {
+      const user = userEvent.setup();
+
       renderWithProviders(
         <ApplicationLayout>
           <div>Content</div>
         </ApplicationLayout>
       );
 
-      // In stacked layout, SecPal branding is represented by Shield icon in navbar
-      // The text "SecPal" only appears in mobile sidebar
-      expect(screen.getByText("Home")).toBeInTheDocument();
+      const desktopSidebar = document.querySelector(
+        '[data-slot="sidebar"][data-side="left"]'
+      );
+
+      expect(desktopSidebar).toHaveAttribute("data-state", "expanded");
+      expect(desktopSidebar).toHaveAttribute("data-collapsible", "");
+      expect(
+        document.querySelector('[data-slot="sidebar-inner"]')?.tagName
+      ).toBe("NAV");
+      expect(
+        document.querySelector('[data-slot="sidebar-rail"]')
+      ).toBeInTheDocument();
+      expect(
+        document.querySelector('[data-slot="sidebar-menu-button"][href="/"]')
+      ).toBeInTheDocument();
+
+      const sidebarTrigger = document.querySelector(
+        '[data-slot="sidebar-trigger"]'
+      );
+
+      expect(sidebarTrigger).toBeInTheDocument();
+      if (!(sidebarTrigger instanceof HTMLButtonElement)) {
+        throw new Error("Expected the shared sidebar trigger button to render");
+      }
+
+      await user.click(sidebarTrigger);
+
+      expect(desktopSidebar).toHaveAttribute("data-state", "collapsed");
+      expect(desktopSidebar).toHaveAttribute("data-collapsible", "icon");
+    });
+
+    it("restores the desktop sidebar state from the persisted cookie", () => {
+      setSidebarStateCookie(false);
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const desktopSidebar = document.querySelector(
+        '[data-slot="sidebar"][data-side="left"]'
+      );
+
+      expect(desktopSidebar).toHaveAttribute("data-state", "collapsed");
+      expect(desktopSidebar).toHaveAttribute("data-collapsible", "icon");
+    });
+
+    it("renders the sidebar branding and header shell", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getAllByText("SecPal").length).toBeGreaterThan(0);
+      expect(
+        screen.getByRole("img", {
+          name: "SecPal",
+        })
+      ).toBeInTheDocument();
+      expect(document.querySelector(".bg-sidebar-primary")).toBeNull();
+      const brandTrigger = screen.getAllByText("SecPal")[0]?.closest("button");
+      expect(brandTrigger).not.toBeNull();
+      expect(brandTrigger?.className).toContain("hover:!bg-transparent");
+      expect(brandTrigger?.className).toContain(
+        "data-[state=open]:!bg-transparent"
+      );
+      expect(
+        document.querySelector('[data-slot="breadcrumb"]')
+      ).toBeInTheDocument();
+    });
+
+    it("renders the update prompt inside the authenticated shell inset", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const inset = document.querySelector('[data-slot="sidebar-inset"]');
+      const updatePrompt = screen.getByTestId("layout-update-prompt");
+
+      expect(inset).toContainElement(updatePrompt);
+      expect(inset?.firstElementChild).toBe(updatePrompt);
+    });
+
+    it("does not render the extra shell divider lines from the previous layout", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const header = document.querySelector("header");
+      const verticalSeparator = document.querySelector(
+        '[data-slot="separator"][data-orientation="vertical"]'
+      );
+      const sidebarContainer = document.querySelector(
+        '[data-slot="sidebar-container"]'
+      );
+
+      expect(header?.className).not.toContain("border-b");
+      expect(verticalSeparator).toBeNull();
+      expect(sidebarContainer?.className).not.toContain("border-r");
+      expect(sidebarContainer?.className).not.toContain("border-l");
+      expect(header).toHaveClass("pt-[var(--app-safe-area-inset-top)]");
+      expect(header).toHaveClass(
+        "min-h-[calc(4rem+var(--app-safe-area-inset-top))]"
+      );
+      expect(header).toHaveClass(
+        "group-has-data-[collapsible=icon]/sidebar-wrapper:min-h-[calc(3rem+var(--app-safe-area-inset-top))]"
+      );
     });
 
     it("renders children content", () => {
@@ -253,52 +393,41 @@ describe("ApplicationLayout", () => {
       );
 
       const shell = container.querySelector('[data-slot="sidebar-wrapper"]');
-      const contentSurface = screen.getByRole("main").firstElementChild;
+      const main = screen.getByRole("main");
 
       expect(shell).not.toBeNull();
       if (!shell) {
         throw new Error("Expected sidebar wrapper shell to exist");
       }
 
-      expect(shell).toHaveClass(
-        "min-h-[var(--app-shell-min-height)]",
-        "bg-background"
-      );
+      expect(shell).toHaveClass("min-h-[var(--app-shell-min-height)]");
+      expect(shell).toHaveClass("has-data-[variant=inset]:bg-sidebar");
       expect(shell.className).not.toContain("dark:bg-zinc-900");
       expect(shell.className).not.toContain("dark:lg:bg-zinc-950");
-      expect(contentSurface).toHaveClass("bg-background");
-      expect(contentSurface?.className).not.toContain("dark:bg-zinc-900");
+      expect(main).toHaveClass("bg-background");
+      expect(main.className).not.toContain("dark:bg-zinc-900");
     });
 
-    it("renders sidebar menus without browser list markers", async () => {
-      const user = userEvent.setup();
-
+    it("renders the sidebar menu slots without grouped collapsible sections", () => {
       renderWithProviders(
         <ApplicationLayout>
           <div>Content</div>
         </ApplicationLayout>
       );
 
-      await user.click(screen.getByRole("button", { name: "Open navigation" }));
-
       const sidebarMenus = document.querySelectorAll(
         '[data-slot="sidebar-menu"]'
       );
       expect(sidebarMenus.length).toBeGreaterThan(0);
-
-      for (const sidebarMenu of sidebarMenus) {
-        expect(sidebarMenu).toHaveClass("list-none", "m-0", "p-0");
-      }
-
-      const spacer = document.querySelector(
-        '[data-slot="sidebar-menu-spacer"]'
-      );
-      expect(spacer).toHaveClass("list-none");
+      expect(screen.getByText("Navigation")).toBeInTheDocument();
+      expect(screen.queryByText("Operations")).not.toBeInTheDocument();
+      expect(screen.queryByText("Administration")).not.toBeInTheDocument();
+      expect(
+        document.querySelector('[data-slot="sidebar-rail"]')
+      ).toBeInTheDocument();
     });
 
-    it("keeps the active mobile sidebar item in a block wrapper so its current indicator renders as a full bar", async () => {
-      const user = userEvent.setup();
-
+    it("does not render settings as a direct sidebar navigation item", () => {
       renderWithProviders(
         <ApplicationLayout>
           <div>Content</div>
@@ -306,19 +435,10 @@ describe("ApplicationLayout", () => {
         { route: "/settings" }
       );
 
-      await user.click(screen.getByRole("button", { name: "Open navigation" }));
-
-      const settingsButton = screen
-        .getAllByText("Settings")
-        .find((node) => node.closest('[data-slot="sidebar-menu-button"]'));
-
-      expect(settingsButton).toBeDefined();
-
-      const activeButton = settingsButton?.closest(
-        '[data-slot="sidebar-menu-button"]'
+      const settingsSidebarLink = document.querySelector(
+        '[data-slot="sidebar-menu-button"][href="/settings"]'
       );
-      expect(activeButton).toHaveAttribute("data-active", "true");
-      expect(activeButton?.parentElement).toHaveClass("block");
+      expect(settingsSidebarLink).toBeNull();
     });
 
     it("renders navigation links", () => {
@@ -328,57 +448,235 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("Home")).toBeInTheDocument();
+      expect(
+        document.querySelector('[data-slot="sidebar-menu-button"][href="/"]')
+      ).toBeInTheDocument();
     });
 
-    it("renders user information in navbar avatar", () => {
+    it("renders user information in the sidebar footer avatar", () => {
       renderWithProviders(
         <ApplicationLayout>
           <div>Content</div>
         </ApplicationLayout>
       );
 
-      // In stacked layout, user info is accessible via avatar and dropdown menu
       const userMenuButton = screen.getByRole("button", { name: /user menu/i });
       expect(userMenuButton).toBeInTheDocument();
       const avatar = userMenuButton.querySelector('[data-slot="avatar"]');
-      expect(avatar).toHaveClass("bg-primary", "text-primary-foreground");
+      expect(avatar).toHaveClass("rounded-lg");
       expect(avatar?.className).not.toContain("bg-zinc-900");
-      expect(avatar?.className).not.toContain("dark:bg-white");
     });
 
     it("opens and closes the mobile sidebar with Radix dialog semantics", async () => {
       const user = userEvent.setup();
+      const originalInnerWidth = window.innerWidth;
 
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
+      try {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: 480,
+        });
 
-      await user.click(
-        screen.getByRole("button", { name: /open navigation/i })
-      );
+        renderWithProviders(
+          <ApplicationLayout>
+            <div>Content</div>
+          </ApplicationLayout>
+        );
 
-      const dialog = await screen.findByRole("dialog", {
-        name: /navigation/i,
-      });
-      expect(dialog).toHaveAttribute("data-slot", "sheet-content");
-      expect(
-        document.querySelector('[data-slot="sheet-overlay"]')
-      ).toBeInTheDocument();
-      expect(dialog.querySelector('[data-slot="sidebar"]')).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: /home/i })).toBeInTheDocument();
+        const sidebarTrigger = await screen.findByRole("button", {
+          name: /toggle sidebar/i,
+        });
 
-      await user.click(
-        screen.getByRole("button", { name: /close navigation/i })
-      );
+        expect(sidebarTrigger).toHaveClass("size-11");
+        expect(sidebarTrigger).toHaveClass("md:size-7");
 
-      await waitFor(() => {
+        await user.click(sidebarTrigger);
+
+        const dialog = await screen.findByRole("dialog", {
+          name: /navigation/i,
+        });
+        const mobileSidebar = document.querySelector(
+          '[data-slot="sidebar"][data-mobile="true"]'
+        );
+        expect(dialog).toBeInTheDocument();
         expect(
-          screen.queryByRole("dialog", { name: /navigation/i })
-        ).not.toBeInTheDocument();
-      });
+          document.querySelector('[data-slot="sheet-overlay"]')
+        ).toBeInTheDocument();
+        expect(mobileSidebar).toBeInTheDocument();
+        expect(mobileSidebar).toHaveClass("border-r-0");
+        expect(mobileSidebar).toHaveClass(
+          "pt-[var(--app-safe-area-inset-top)]"
+        );
+        expect(mobileSidebar?.className).not.toContain("[&>button]:hidden");
+        const mobileSidebarRail = mobileSidebar?.querySelector(
+          '[data-slot="sidebar-rail"]'
+        );
+        expect(mobileSidebarRail).toBeInTheDocument();
+        expect(mobileSidebarRail).toHaveClass("hidden");
+        expect(mobileSidebarRail).toHaveClass("md:flex");
+        expect(mobileSidebarRail?.className).not.toContain("sm:flex");
+
+        await user.click(screen.getByRole("button", { name: /close/i }));
+
+        await waitFor(() => {
+          expect(
+            screen.queryByRole("dialog", { name: /navigation/i })
+          ).not.toBeInTheDocument();
+        });
+      } finally {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: originalInnerWidth,
+        });
+      }
+    });
+
+    it("localizes the mobile sidebar dialog name in German", async () => {
+      const user = userEvent.setup();
+      const originalInnerWidth = window.innerWidth;
+
+      try {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: 480,
+        });
+
+        act(() => {
+          i18n.load("de", deMessages);
+          i18n.activate("de");
+        });
+
+        renderWithProviders(
+          <ApplicationLayout>
+            <div>Content</div>
+          </ApplicationLayout>
+        );
+
+        const sidebarTrigger = document.querySelector(
+          '[data-slot="sidebar-trigger"]'
+        );
+
+        if (!(sidebarTrigger instanceof HTMLButtonElement)) {
+          throw new Error(
+            "Expected the shared sidebar trigger button to render"
+          );
+        }
+
+        await user.click(sidebarTrigger);
+
+        expect(
+          await screen.findByRole("dialog", { name: "Navigationsmenü" })
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: "Navigation schließen" })
+        ).toBeInTheDocument();
+      } finally {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: originalInnerWidth,
+        });
+        act(() => {
+          i18n.activate("en");
+        });
+      }
+    });
+
+    it("closes the mobile sidebar after primary navigation", async () => {
+      const user = userEvent.setup();
+      const originalInnerWidth = window.innerWidth;
+
+      try {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: 480,
+        });
+
+        await seedAuthenticatedUser({
+          ...authenticatedUser,
+          hasCustomerAccess: true,
+        });
+
+        renderWithProviders(
+          <ApplicationLayout>
+            <PathnameProbe />
+          </ApplicationLayout>,
+          { route: "/" }
+        );
+
+        await user.click(
+          await screen.findByRole("button", { name: /toggle sidebar/i })
+        );
+
+        await screen.findByRole("dialog", {
+          name: /navigation/i,
+        });
+
+        const customersLink = screen.getByRole("link", { name: /customers/i });
+        expect(customersLink).toHaveClass("min-h-11");
+
+        await user.click(customersLink);
+
+        await waitFor(() => {
+          expect(screen.getByTestId("pathname")).toHaveTextContent(
+            "/customers"
+          );
+          expect(
+            screen.queryByRole("dialog", { name: /navigation/i })
+          ).not.toBeInTheDocument();
+        });
+      } finally {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: originalInnerWidth,
+        });
+      }
+    });
+
+    it("opens the mobile user dropdown from the sidebar footer", async () => {
+      const user = userEvent.setup();
+      const originalInnerWidth = window.innerWidth;
+
+      try {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: 480,
+        });
+
+        renderWithProviders(
+          <ApplicationLayout>
+            <div>Content</div>
+          </ApplicationLayout>
+        );
+
+        await user.click(
+          await screen.findByRole("button", { name: /toggle sidebar/i })
+        );
+
+        const navigationDialog = await screen.findByRole("dialog", {
+          name: /navigation/i,
+        });
+        const userMenuButton = within(navigationDialog).getByRole("button", {
+          name: /user menu/i,
+        });
+
+        await user.click(userMenuButton);
+
+        expect(
+          await screen.findByRole(
+            "menuitem",
+            { name: /my profile/i },
+            { timeout: QUERY_TIMEOUT }
+          )
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("menuitem", { name: /sign out/i })
+        ).toBeInTheDocument();
+      } finally {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: originalInnerWidth,
+        });
+      }
     });
 
     it("renders user initials in avatar", async () => {
@@ -392,6 +690,22 @@ describe("ApplicationLayout", () => {
       const avatars = await screen.findAllByText("JD");
       expect(avatars.length).toBeGreaterThanOrEqual(1);
     });
+
+    it("uses the shared wide shell container for desktop content", () => {
+      const { container } = renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      const contentContainer = container.querySelector(
+        '[data-slot="sidebar-inset"] .grow > div'
+      );
+
+      expect(contentContainer).toHaveClass(
+        ...APP_SHELL_MAX_WIDTH_CLASS.split(" ")
+      );
+    });
   });
 
   describe("navigation highlighting", () => {
@@ -403,8 +717,47 @@ describe("ApplicationLayout", () => {
         { route: "/" }
       );
 
-      const homeLink = screen.getByRole("link", { name: /home/i });
-      expect(homeLink).toHaveAttribute("data-current", "true");
+      const homeLink = document.querySelector(
+        '[data-slot="sidebar-menu-button"][href="/"]'
+      );
+      expect(homeLink).toHaveAttribute("data-active", "true");
+    });
+
+    it("shows the current standalone page in the breadcrumb", () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>,
+        { route: "/about" }
+      );
+
+      expect(screen.getByRole("link", { current: "page" })).toHaveTextContent(
+        "About"
+      );
+    });
+
+    it("recomputes breadcrumb labels when the locale changes without navigation", async () => {
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>,
+        { route: "/settings" }
+      );
+
+      expect(screen.getByRole("link", { current: "page" })).toHaveTextContent(
+        "Settings"
+      );
+
+      act(() => {
+        i18n.load("de", deMessages);
+        i18n.activate("de");
+      });
+
+      await waitFor(() => {
+        expect(screen.getByRole("link", { current: "page" })).toHaveTextContent(
+          "Einstellungen"
+        );
+      });
     });
   });
 
@@ -857,7 +1210,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(await screen.findByText("Customers")).toBeInTheDocument();
+      expect(
+        await screen.findByRole("link", { name: /customers/i })
+      ).toBeInTheDocument();
       expect(screen.queryByText("Organization")).not.toBeInTheDocument();
       expect(screen.queryByText("Employees")).not.toBeInTheDocument();
     });
@@ -879,7 +1234,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(await screen.findByText("Customers")).toBeInTheDocument();
+      expect(
+        await screen.findByRole("link", { name: /customers/i })
+      ).toBeInTheDocument();
       expect(screen.queryByText("Organization")).not.toBeInTheDocument();
       expect(screen.queryByText("Employees")).not.toBeInTheDocument();
     });
@@ -898,7 +1255,7 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(screen.getByText("Home")).toBeInTheDocument();
+      expect(screen.getAllByText("Home").length).toBeGreaterThan(0);
     });
 
     it("treats undefined hasOrganizationalScopes as false", async () => {
@@ -942,6 +1299,9 @@ describe("ApplicationLayout", () => {
       );
       expect(footer).toHaveTextContent("AGPL v3+");
       expect(footer).toHaveTextContent("Source Code");
+      expect(footer?.firstElementChild).toHaveClass(
+        ...APP_SHELL_MAX_WIDTH_CLASS.split(" ")
+      );
     });
 
     it("renders license link in main content footer", () => {
@@ -968,11 +1328,14 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      const sourceLink = screen.getByRole("link", { name: /source code/i });
+      const footer = screen.getByRole("contentinfo");
+      const sourceLink = within(footer).getByRole("link", {
+        name: /source code/i,
+      });
       expect(sourceLink).toBeInTheDocument();
       expect(sourceLink).toHaveAttribute("href", "/source");
       expect(screen.getByText("AGPL v3+")).toBeInTheDocument();
-      expect(screen.getByText("Source Code")).toBeInTheDocument();
+      expect(within(footer).getByText("Source Code")).toBeInTheDocument();
     });
 
     it("stores the current app route when navigating to source from the footer", async () => {
@@ -988,7 +1351,10 @@ describe("ApplicationLayout", () => {
         { route: "/customers/new?draft=1#notes" }
       );
 
-      await user.click(screen.getByRole("link", { name: /source code/i }));
+      const footer = screen.getByRole("contentinfo");
+      await user.click(
+        within(footer).getByRole("link", { name: /source code/i })
+      );
 
       expect(screen.getByTestId("location-state")).toHaveTextContent(
         JSON.stringify({ sourceReturnTo: "/customers/new?draft=1#notes" })
@@ -1060,10 +1426,12 @@ describe("ApplicationLayout", () => {
         { route: "/activity-logs" }
       );
 
-      const activityLogsLink = (
-        await screen.findByText("Activity Logs")
-      ).closest("a");
-      expect(activityLogsLink).toHaveAttribute("href", "/activity-logs");
+      await waitFor(() => {
+        const activityLogsLink = document.querySelector(
+          '[data-slot="sidebar-menu-button"][href="/activity-logs"]'
+        );
+        expect(activityLogsLink).toHaveAttribute("data-active", "true");
+      });
     });
 
     it("links to /activity-logs route", async () => {
@@ -1080,9 +1448,9 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      const activityLogsLink = (
-        await screen.findByText("Activity Logs")
-      ).closest("a");
+      const activityLogsLink = await screen.findByRole("link", {
+        name: /activity logs/i,
+      });
       expect(activityLogsLink).toHaveAttribute("href", "/activity-logs");
     });
   });
@@ -1115,10 +1483,64 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      expect(
-        await screen.findByText("Android-Provisionierung")
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getAllByText("Android-Provisionierung").length).toBe(1);
+      });
       expect(screen.queryByText("62KQbc")).not.toBeInTheDocument();
+    });
+
+    it("renders localized sidebar section labels and quick actions in German", async () => {
+      act(() => {
+        i18n.load("de", deMessages);
+        i18n.activate("de");
+      });
+
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "Operations User",
+        email: "operations@secpal.dev",
+        hasOrganizationalScopes: true,
+        roles: [],
+        permissions: ["customers.read", "android_enrollment.read"],
+      });
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("Navigation")).toBeInTheDocument();
+      expect(screen.getByText("Arbeitsbereich")).toBeInTheDocument();
+      expect(screen.queryByText("Einstellungen")).not.toBeInTheDocument();
+    });
+
+    it("updates the active workspace subtitle when the locale changes after render", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "Operations User",
+        email: "operations@secpal.dev",
+        hasOrganizationalScopes: true,
+        roles: [],
+        permissions: ["customers.read"],
+      });
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("Workspace")).toBeInTheDocument();
+
+      act(() => {
+        i18n.load("de", deMessages);
+        i18n.activate("de");
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("Arbeitsbereich")).toBeInTheDocument();
+      });
     });
 
     it("hides the Android provisioning navigation entry without read access", async () => {
@@ -1144,6 +1566,12 @@ describe("ApplicationLayout", () => {
   });
 
   describe("migration boundary", () => {
+    it("removes the legacy app shell implementation from the active UI surface", () => {
+      expect(existsSync(join(process.cwd(), "src/ui/appShell.tsx"))).toBe(
+        false
+      );
+    });
+
     it("keeps the migrated shell free of Headless, Heroicons and inline UI icon sources", () => {
       const forbiddenPatterns = [
         forbiddenHeadlessPackagePattern,

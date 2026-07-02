@@ -13,8 +13,11 @@ import { SquarePen } from "lucide-react";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { SectionSkeleton, Skeleton } from "@/ui";
 import { cn } from "@/lib/utils";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
+import { SectionSkeleton } from "@/ui/loading";
+import { Skeleton } from "@/ui/skeleton";
 import type {
   Employee,
   EmployeeEmergencyContact,
@@ -24,7 +27,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Button,
   Card,
   CardContent,
   Dialog,
@@ -40,7 +42,6 @@ import {
   Field,
   FieldError,
   FieldLabel,
-  Input,
   EmployeeLinkButton as LinkButton,
   EmployeePageText as PageText,
   EmployeePageTitle as PageTitle,

@@ -17,7 +17,10 @@ import { AuthApiError } from "../services/authApi";
 import { sanitizePersistedAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
 import { sessionEvents } from "../services/sessionEvents";
-import { clearSensitiveClientState } from "../lib/clientStateCleanup";
+import {
+  clearBrowserPushClientState,
+  clearSensitiveClientState,
+} from "../lib/clientStateCleanup";
 import { createRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
 import * as prefetch from "./usePrefetch";
 import {
@@ -35,11 +38,15 @@ const {
   mockAnalyticsResetForLogout,
   mockAnalyticsResumeAuthenticatedSession,
   mockFetchCsrfToken,
+  mockClearSensitiveClientState,
+  mockClearBrowserPushClientState,
 } = vi.hoisted(() => ({
   mockGetCurrentUser: vi.fn(),
   mockAnalyticsResetForLogout: vi.fn(),
   mockAnalyticsResumeAuthenticatedSession: vi.fn(),
   mockFetchCsrfToken: vi.fn(),
+  mockClearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
+  mockClearBrowserPushClientState: vi.fn().mockResolvedValue(undefined),
 }));
 
 const AUTH_BOOTSTRAP_TIMEOUT_MS = 20_000;
@@ -61,7 +68,9 @@ vi.mock("../services/csrf", async () => {
 });
 
 vi.mock("../lib/clientStateCleanup", () => ({
-  clearSensitiveClientState: vi.fn().mockResolvedValue(undefined),
+  clearSensitiveClientState: mockClearSensitiveClientState,
+  clearDestructiveSensitiveClientState: mockClearSensitiveClientState,
+  clearBrowserPushClientState: mockClearBrowserPushClientState,
 }));
 
 vi.mock("../lib/analytics", () => ({
@@ -160,6 +169,7 @@ describe("useAuth", () => {
     mockGetCurrentUser.mockReset();
     vi.mocked(syncOfflineSessionAccess).mockReset();
     vi.mocked(clearSensitiveClientState).mockReset();
+    vi.mocked(clearBrowserPushClientState).mockReset();
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.spyOn(console, "log").mockImplementation(() => {});
     sessionEvents.reset();
@@ -176,6 +186,7 @@ describe("useAuth", () => {
     mockAnalyticsResetForLogout.mockResolvedValue(undefined);
     mockAnalyticsResumeAuthenticatedSession.mockReset();
     vi.mocked(clearSensitiveClientState).mockResolvedValue(undefined);
+    vi.mocked(clearBrowserPushClientState).mockResolvedValue(undefined);
     vi.mocked(syncOfflineSessionAccess).mockResolvedValue(undefined);
   });
 
@@ -1560,6 +1571,329 @@ describe("useAuth", () => {
     });
 
     expect(settled).toBe(true);
+  });
+
+  it("continues logout cleanup when analytics reset does not settle", async () => {
+    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
+
+    await persistAuthUser(mockUser);
+
+    mockAnalyticsResetForLogout.mockImplementationOnce(
+      () => new Promise<void>(() => undefined)
+    );
+
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      vi.useFakeTimers();
+
+      let logoutPromise!: Promise<void>;
+
+      act(() => {
+        logoutPromise = Promise.resolve(result.current.logout());
+      });
+
+      expect(clearSensitiveClientState).not.toHaveBeenCalled();
+
+      await vi.advanceTimersByTimeAsync(5_000);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+      await act(async () => {
+        await logoutPromise;
+      });
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "Timed out waiting for analytics reset during logout; continuing with best-effort sensitive cleanup."
+      );
+    } finally {
+      vi.useRealTimers();
+      consoleWarnSpy.mockRestore();
+    }
+  });
+
+  it("logs sensitive cleanup failures when logout cleanup rejects before the timeout", async () => {
+    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
+    const sensitiveCleanupError = new Error("cleanup failed");
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    await persistAuthUser(mockUser);
+    vi.mocked(clearSensitiveClientState).mockRejectedValueOnce(
+      sensitiveCleanupError
+    );
+    vi.mocked(clearBrowserPushClientState).mockClear();
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.logout();
+      });
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Failed to clear sensitive client state during logout:",
+        sensitiveCleanupError
+      );
+      expect(clearBrowserPushClientState).toHaveBeenCalledTimes(1);
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
+  it("reconciles stale logout owners before removing the current cleanup owner", async () => {
+    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
+    const callOrder: string[] = [];
+    const completeSpy = vi
+      .spyOn(authStorage, "completeStaleSensitiveLogoutBarrierCleanup")
+      .mockImplementation((ownerToken: string) => {
+        callOrder.push(`complete:${ownerToken}`);
+      });
+    const endSpy = vi
+      .spyOn(authStorage, "endSensitiveLogoutBarrierCleanup")
+      .mockImplementation((ownerToken: string) => {
+        callOrder.push(`end:${ownerToken}`);
+      });
+
+    await persistAuthUser(mockUser);
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.logout();
+      });
+
+      expect(callOrder).toHaveLength(2);
+      expect(callOrder[0]?.split(":")[0]).toBe("complete");
+      expect(callOrder[1]?.split(":")[0]).toBe("end");
+      expect(callOrder[0]?.split(":")[1]).toBe(callOrder[1]?.split(":")[1]);
+    } finally {
+      completeSpy.mockRestore();
+      endSpy.mockRestore();
+    }
+  });
+
+  it("does not accept login until destructive logout cleanup settles", async () => {
+    const firstUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
+    const secondUser = {
+      id: "2",
+      name: "Next User",
+      email: "next@secpal.dev",
+    };
+
+    await persistAuthUser(firstUser);
+
+    const cleanupDeferred = createDeferredPromise<void>();
+    vi.mocked(clearSensitiveClientState).mockImplementationOnce(
+      () => cleanupDeferred.promise
+    );
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    const setUserSpy = vi.spyOn(authStorage, "setUser").mockResolvedValue();
+
+    vi.useFakeTimers();
+
+    let loginSettled = false;
+    let logoutSettled = false;
+    let logoutPromise!: Promise<void>;
+    let loginPromise!: Promise<void>;
+
+    try {
+      act(() => {
+        logoutPromise = Promise.resolve(result.current.logout());
+        void logoutPromise.then(() => {
+          logoutSettled = true;
+        });
+      });
+
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000);
+        await Promise.resolve();
+      });
+
+      expect(logoutSettled).toBe(true);
+
+      act(() => {
+        loginPromise = Promise.resolve(result.current.login(secondUser));
+        void loginPromise.then(() => {
+          loginSettled = true;
+        });
+      });
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(loginSettled).toBe(false);
+      expect(result.current.user).toBeNull();
+      expect(setUserSpy).not.toHaveBeenCalled();
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000);
+        await Promise.resolve();
+      });
+
+      expect(loginSettled).toBe(false);
+      expect(result.current.user).toBeNull();
+      expect(setUserSpy).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "Timed out waiting for trailing logout cleanup during logout; continuing with best-effort barrier teardown."
+      );
+
+      cleanupDeferred.resolve();
+
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(loginSettled).toBe(true);
+      expect(setUserSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: "2",
+          name: "Next User",
+          email: "next@secpal.dev",
+        })
+      );
+      expect(result.current.user).toEqual(
+        expect.objectContaining({
+          id: "2",
+          name: "Next User",
+          email: "next@secpal.dev",
+        })
+      );
+    } finally {
+      cleanupDeferred.resolve();
+      consoleWarnSpy.mockRestore();
+      setUserSpy.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  it("runs a real second logout after login resumes from a timed-out trailing cleanup handoff", async () => {
+    const firstUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
+    const secondUser = {
+      id: "2",
+      name: "Next User",
+      email: "next@secpal.dev",
+    };
+
+    await persistAuthUser(firstUser);
+
+    const pushCleanupDeferred = createDeferredPromise<void>();
+    vi.mocked(clearBrowserPushClientState).mockImplementationOnce(
+      () => pushCleanupDeferred.promise
+    );
+    const clearSpy = vi.spyOn(authStorage, "clear");
+    const beginBarrierSpy = vi.spyOn(
+      authStorage,
+      "beginSensitiveLogoutBarrierCleanup"
+    );
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    vi.useFakeTimers();
+
+    try {
+      act(() => {
+        void result.current.logout();
+      });
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+        await vi.advanceTimersByTimeAsync(5_000);
+        await Promise.resolve();
+      });
+
+      act(() => {
+        void result.current.login(secondUser);
+      });
+      await act(async () => {
+        await Promise.resolve();
+        await vi.advanceTimersByTimeAsync(5_000);
+        await Promise.resolve();
+      });
+
+      const clearCallCountAfterFirstLogout = clearSpy.mock.calls.length;
+
+      act(() => {
+        void result.current.logout();
+      });
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(clearSpy.mock.calls.length).toBeGreaterThan(
+        clearCallCountAfterFirstLogout
+      );
+      expect(clearSpy).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          clearOfflineVaultTables: false,
+        })
+      );
+      expect(beginBarrierSpy).toHaveBeenCalledTimes(2);
+      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "Timed out waiting for trailing logout cleanup during logout; continuing with best-effort barrier teardown."
+      );
+    } finally {
+      pushCleanupDeferred.resolve();
+      beginBarrierSpy.mockRestore();
+      clearSpy.mockRestore();
+      consoleWarnSpy.mockRestore();
+      vi.useRealTimers();
+    }
   });
 
   it("upgrades an in-flight non-sensitive auth clear when logout is requested", async () => {

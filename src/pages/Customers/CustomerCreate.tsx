@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
@@ -11,6 +11,10 @@ import { useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
+import { Button } from "@/ui/button";
+import { Checkbox } from "@/ui/checkbox";
+import { Input } from "@/ui/input";
+import { Textarea } from "@/ui/textarea";
 import { createCustomer } from "../../services/customersApi";
 import type {
   CreateCustomerRequest,
@@ -20,16 +24,12 @@ import type {
 import {
   Alert,
   AlertDescription,
-  Button,
-  Checkbox,
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
   CustomerSiteFormCheckboxField as FormCheckboxField,
-  Input,
   CustomerSitePageTitle as PageTitle,
-  Textarea,
 } from "@/ui";
 
 type CustomerFormErrors = Partial<

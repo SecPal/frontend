@@ -1,15 +1,20 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { runInNewContext } from "node:vm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  AUTH_SIDEBAR_TRIGGER_SELECTOR,
   buildTestUser,
   describeAuthResolutionState,
   describeLoginBlockingState,
   getConfiguredTestUserOrThrow,
   getAuthStateCachePath,
   isRemoteE2ETarget,
+  readAuthResolutionState,
+  type AuthResolutionState,
   type LoginSubmitState,
+  waitForAuthResolution,
 } from "./e2e/auth-helpers";
 
 /**
@@ -21,8 +26,36 @@ function mockNonPolyscopeCwd() {
   return vi.spyOn(process, "cwd").mockReturnValue("/home/runner/work/frontend");
 }
 
+function createDomBackedPage() {
+  const revivePageFunction = <TArg, TResult>(
+    pageFunction: (arg: TArg) => TResult
+  ) =>
+    runInNewContext(`(${pageFunction.toString()})`, {
+      Array,
+      Boolean,
+      document,
+      window,
+    }) as (arg: TArg) => TResult;
+
+  return {
+    evaluate: async <TArg, TResult>(
+      pageFunction: (arg: TArg) => TResult,
+      arg: TArg
+    ) => revivePageFunction(pageFunction)(arg),
+    waitForFunction: async <TArg>(
+      pageFunction: (arg: TArg) => boolean,
+      arg: TArg
+    ) => {
+      if (!revivePageFunction(pageFunction)(arg)) {
+        throw new Error("Condition was not met");
+      }
+    },
+  };
+}
+
 describe("auth E2E helpers", () => {
   afterEach(() => {
+    document.body.innerHTML = "";
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
@@ -225,6 +258,62 @@ describe("auth E2E helpers", () => {
       };
 
       expect(describeLoginBlockingState(state)).toBeNull();
+    });
+  });
+
+  describe("describeAuthResolutionState", () => {
+    it("uses a locale-stable selector for the authenticated sidebar trigger", () => {
+      expect(AUTH_SIDEBAR_TRIGGER_SELECTOR).toBe(
+        '[data-slot="sidebar-trigger"]'
+      );
+    });
+
+    it("treats the mobile authenticated shell as authenticated when only the sidebar trigger is visible", () => {
+      const state: AuthResolutionState = {
+        pathname: "/",
+        hasBootstrapRecoveryScreen: false,
+        hasOnboardingShell: false,
+        hasSidebarTrigger: true,
+        hasUserMenu: false,
+      };
+
+      expect(describeAuthResolutionState(state)).toBe("authenticated");
+    });
+
+    it("does not treat the login route as authenticated when no shell marker is present", () => {
+      const state: AuthResolutionState = {
+        pathname: "/login",
+        hasBootstrapRecoveryScreen: false,
+        hasOnboardingShell: false,
+        hasSidebarTrigger: false,
+        hasUserMenu: false,
+      };
+
+      expect(describeAuthResolutionState(state)).toBe("login");
+    });
+  });
+
+  describe("localized authenticated shell detection", () => {
+    it("detects the sidebar trigger without relying on an English aria-label", async () => {
+      window.history.replaceState({}, "", "/");
+      document.body.innerHTML =
+        '<button data-slot="sidebar-trigger" aria-label="Seitenleiste umschalten"></button>';
+
+      await expect(
+        readAuthResolutionState(createDomBackedPage() as never)
+      ).resolves.toMatchObject({
+        hasSidebarTrigger: true,
+      });
+    });
+
+    it("treats a localized mobile sidebar trigger as an authenticated shell", async () => {
+      window.history.replaceState({}, "", "/");
+      document.body.innerHTML =
+        '<button data-slot="sidebar-trigger" aria-label="Seitenleiste umschalten"></button>';
+
+      await expect(
+        waitForAuthResolution(createDomBackedPage() as never)
+      ).resolves.toBe("authenticated");
     });
   });
 

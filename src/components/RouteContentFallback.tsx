@@ -3,7 +3,7 @@
 
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
-import { PageSkeleton } from "@/ui";
+import { PageSkeleton } from "@/ui/loading";
 
 export function RouteContentFallback() {
   const { i18n } = useLingui();

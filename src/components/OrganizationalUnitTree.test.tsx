@@ -33,15 +33,19 @@ vi.mock("../services/organizationalUnitApi", () => ({
 }));
 
 vi.mock("@/ui", async () => {
-  const React = await vi.importActual<typeof import("react")>("react");
   const actual = await vi.importActual<typeof import("@/ui")>("@/ui");
+
+  return actual;
+});
+
+vi.mock("@/ui/dropdown-menu", async () => {
+  const React = await vi.importActual<typeof import("react")>("react");
   const DropdownContext = React.createContext<{
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   } | null>(null);
 
   return {
-    ...actual,
     DropdownMenu: ({ children }: { children: React.ReactNode }) => {
       const [open, setOpen] = React.useState(false);
       return (

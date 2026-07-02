@@ -5,9 +5,11 @@ import { useState } from "react";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { Button, Spinner } from "@/ui";
+import { Spinner } from "@/ui/loading";
+import { Button } from "@/ui/button";
 import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 import { isCapacitorNativeRuntime } from "../lib/nativeRuntime";
+import { APP_SHELL_MAX_WIDTH_CLASS } from "./app-shell-width";
 
 /**
  * UpdatePrompt Component
@@ -56,7 +58,9 @@ function BrowserUpdatePrompt() {
       aria-live="polite"
       aria-atomic="true"
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-center gap-4">
+      <div
+        className={`${APP_SHELL_MAX_WIDTH_CLASS} flex items-center justify-center gap-4`}
+      >
         {isUpdating ? (
           <>
             <Spinner

@@ -61,7 +61,7 @@ async function clearSensitiveIndexedDbState(): Promise<void> {
   }
 }
 
-async function clearBrowserPushClientState(): Promise<void> {
+export async function clearBrowserPushClientState(): Promise<void> {
   clearBrowserPushInstallationId();
 
   if (
@@ -120,7 +120,7 @@ async function waitForSensitiveCleanupTasks(
   );
 }
 
-export async function clearSensitiveClientState(): Promise<void> {
+export async function clearDestructiveSensitiveClientState(): Promise<void> {
   for (const key of USER_SCOPED_LOCAL_STORAGE_KEYS) {
     localStorage.removeItem(key);
   }
@@ -141,8 +141,12 @@ export async function clearSensitiveClientState(): Promise<void> {
 
   await waitForSensitiveCleanupTasks([
     vaultCleanupTask,
-    clearBrowserPushClientState(),
     clearSensitiveCaches(),
     clearSensitiveIndexedDbState(),
   ]);
+}
+
+export async function clearSensitiveClientState(): Promise<void> {
+  await clearDestructiveSensitiveClientState();
+  await clearBrowserPushClientState();
 }

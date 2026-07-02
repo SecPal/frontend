@@ -3,7 +3,7 @@
 
 import { Trans } from "@lingui/react/macro";
 import { useAuth } from "../../hooks/useAuth";
-import { Card, CardContent } from "@/ui";
+import { Card, CardContent } from "@/ui/card";
 import { getInitials } from "../../lib/stringUtils";
 
 /**

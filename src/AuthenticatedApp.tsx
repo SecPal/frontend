@@ -5,6 +5,7 @@ import { lazy, Suspense } from "react";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { Trans } from "@lingui/react/macro";
 import { ApplicationLayout } from "./components/application-layout";
+import { UpdatePrompt } from "./components/UpdatePrompt";
 import {
   AppAccessRoute,
   OnboardingOnlyRoute,
@@ -14,7 +15,7 @@ import { FeatureRoute } from "./components/FeatureRoute";
 import { RouteLoader } from "./components/RouteLoader";
 import { RouteNotFoundState } from "./components/RouteGuardState";
 import { OnboardingLayout } from "./components/onboarding-layout";
-import { buttonVariants } from "./ui";
+import { buttonVariants } from "./ui/styles";
 import { RouteContentFallback } from "./components/RouteContentFallback";
 import { routeModuleLoaders } from "./routeModules";
 import { useNotifications } from "./hooks/useNotifications";
@@ -131,7 +132,14 @@ export default function AuthenticatedApp() {
   return (
     <>
       <NotificationLifecycleCoordinator />
-      <Suspense fallback={<RouteLoader />}>
+      <Suspense
+        fallback={
+          <>
+            <UpdatePrompt />
+            <RouteLoader />
+          </>
+        }
+      >
         <Routes>
           <Route
             path="/"

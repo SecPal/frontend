@@ -6,8 +6,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { FormSkeleton, Skeleton } from "@/ui";
 import type { Employee, EmployeeAddress } from "@/types/api";
+import { Button } from "@/ui/button";
+import { Input } from "@/ui/input";
+import { FormSkeleton } from "@/ui/loading";
+import { Skeleton } from "@/ui/skeleton";
 import {
   buildAddressesPayloadForCurrentEdit,
   getCurrentAddressFromList,
@@ -18,7 +21,6 @@ import { fetchEmployee, updateEmployee } from "../../services/employeeApi";
 import {
   Alert,
   AlertDescription,
-  Button,
   Card,
   CardContent,
   Field,
@@ -27,7 +29,6 @@ import {
   FieldError,
   FieldLabel,
   EmployeeLegend as Legend,
-  Input,
   EmployeePageTitle as PageTitle,
 } from "@/ui";
 import { EmployeeAddressFields } from "./EmployeeAddressFields";

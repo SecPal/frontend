@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`new-york`, Tailwind v4 `src/index.css`, `zinc`, Lucide, and repo aliases)
   plus a guardrail inventory test for the remaining non-canonical UI
   compatibility layers.
+- Added mobile Playwright regression coverage for the authenticated shell's
+  nested sidebar-sheet user menu: `tests/e2e/auth.spec.ts` now proves that the
+  `mobile-chrome` flow can lock the app, unlock it again, and sign out from the
+  locked state without a page reload, so Radix `Sheet` + `DropdownMenu`
+  interaction regressions surface in automated browser runs instead of only in
+  manual mobile testing.
 - Standardized the authenticated app's loading experience around a shared `src/ui` skeleton layer (`Skeleton`, `PageSkeleton`, `SectionSkeleton`, `TableSkeleton`, `FormSkeleton`, `LoadingRegion`) and documented the contract in `src/ui/MIGRATION.md`. List pages (customers, sites, employees, activity logs, Android provisioning) now keep their table/header chrome mounted during the first load with skeleton rows, switch to row-level skeletons only when no rows are cached, and wrap subsequent refresh/pagination/filter cycles in `LoadingRegion` so previously rendered rows stay visible while the request is in flight. Detail/edit screens (customer, site, employee, employee contacts, employee create) keep page titles and action regions visible during initial entity loads and render `SectionSkeleton`/`FormSkeleton` only in the data region; `SiteDetail` renders the site record as soon as it loads and falls back to inline placeholders for customer and organizational-unit lookups (US-001..US-006).
 - Replaced the global route loader spinner with a shell-shaped `PageSkeleton` fallback, kept authenticated shell chrome mounted during persisted-session bootstrap revalidation, and routed authenticated route chunk loading through layout-owned `Suspense` boundaries that render `RouteContentFallback` instead of a full-screen guard loader. Route guards now share a single `routeGuardAuth` bootstrap check so `ProtectedRoute`, `FeatureRoute`, `PermissionRoute`, `OrganizationalRoute`, and `LoginRoute` no longer flash a guard-specific `Loading…` screen when a session snapshot exists (US-002, US-003).
 - Converted operational modules (`OrganizationalUnitTree`, `ActivityLogList`, `AndroidProvisioningPage`, `SettingsPage`) to keep their headers, filters, forms, and action controls mounted on first load. Loading-heavy panes now render `SectionSkeleton`/row skeletons inside the existing card/table chrome and fall back to `LoadingRegion` or inline busy indicators for safe refreshes such as activity-log manual refresh, organizational unit cache refreshes, Android revoke errors, and passkey post-registration list refreshes (US-007).
@@ -34,6 +40,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `AuthContext` now keeps new logins behind the full sensitive logout cleanup
+  completion path, so the five-second best-effort logout timeout no longer lets
+  a replacement session race the previous session's IndexedDB and cache
+  teardown.
+- Widened the shared authenticated shell content stage to a 1600px desktop cap
+  and aligned the shell footer, route loader, and update banner with the same
+  container so large desktop screens can use materially more horizontal space
+  while page-local form and detail views keep their narrower limits.
+- Rebuilt the authenticated application shell navigation on the canonical shadcn
+  `sidebar-07` composition: the old bespoke menu shell is replaced by shared
+  shadcn/Radix/Lucide `Sidebar`, `Collapsible`, `DropdownMenu`, `Sheet`,
+  `Breadcrumb`, `Separator`, and avatar primitives, with the desktop sidebar
+  collapsing to icons, the mobile menu using the matching sheet pattern, and
+  regression coverage updated to assert the real `sidebar-07` structure instead
+  of the removed custom grouping model.
+- Fixed the mobile authenticated shell so nested user-menu actions close the
+  sidebar sheet before navigation, lock, and logout side effects run. The user
+  menu and workspace switcher now disable Radix dropdown modality while they
+  live inside the mobile sidebar `Sheet`, which prevents the stale
+  `pointer-events: none` / scroll-lock state that previously trapped the app
+  behind the lock screen until a manual reload.
+- Tightened the authenticated shell's mobile/accessibility follow-up fixes: the
+  top-level authenticated-route loader now keeps the update prompt mounted while
+  lazy route modules are still loading, the mobile sidebar close button uses
+  localized labels with a touch-sized hit area, primary mobile nav items keep a
+  larger tap target, and the shell header now grows by the top safe-area inset
+  instead of only padding inside a fixed height.
+- Hardened the nested mobile sidebar overlays and logout cleanup lifecycle so
+  the user menu and team switcher portal into the active shell container, the
+  mobile trigger keeps the canonical touch target sizing, and logout cleanup
+  continues after bounded analytics or vault-cleanup waits instead of leaving
+  the authenticated shell trapped behind stale overlay or cleanup barriers.
+- Tightened the logout cleanup barrier follow-up so pre-timeout sensitive
+  cleanup failures are logged again instead of being swallowed by the timeout
+  wrapper, and stale barrier-owner reconciliation now runs before the current
+  logout cleanup owner token is removed from storage-backed barrier state.
+- Followed up the shell/auth review findings again by keeping the sidebar rail
+  hidden through the mobile sheet breakpoints and bounding post-logout login
+  waits to a second five-second best-effort timeout so a hung sensitive cleanup
+  cannot block the next successful session forever.
+- Followed up the auth/app-shell edge cases again by normalizing public
+  trailing-slash routes before suppressing the root `UpdatePrompt`, by keeping
+  new logins blocked on destructive logout cleanup even when trailing browser
+  push teardown is still bounded by the five-second best-effort handoff wait,
+  and by releasing the logout barrier owner as soon as destructive cleanup
+  finishes so later logouts do not inherit stale owner state.
 - Completed the shadcn/Radix/Lucide UI migration proof by tightening the
   repo-wide legacy UI guardrail to a zero allowlist, removing the final shared
   shell compatibility aliases, and documenting `src/ui` as the complete
@@ -93,6 +145,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Localized the sidebar user-menu trigger label, corrected destructive
+  dropdown-menu icon tinting to use the canonical shadcn descendant selector,
+  and removed the unused quick-access sidebar section that was no longer part
+  of the approved static menu shell.
+- Restored the PWA update banner on authenticated onboarding routes, close the
+  mobile sidebar sheet after primary navigation, persist the desktop sidebar
+  collapse preference across reloads, and keep the authenticated breadcrumb
+  label aligned with standalone routes such as `/about`.
 - Fixed shadcn/Radix migration regressions in dev proxy startup, mobile sheet
   overlays, address autocomplete active-descendant IDs, login status message
   markup, and passive advisory alert roles.

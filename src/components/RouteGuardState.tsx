@@ -6,8 +6,10 @@ import { useState } from "react";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { Link } from "react-router-dom";
+import { Alert, AlertDescription } from "@/ui/alert";
+import { Button } from "@/ui/button";
+import { buttonVariants } from "@/ui/styles";
 import { AuthApiError } from "../services/AuthApiError";
-import { Alert, AlertDescription, Button, buttonVariants } from "@/ui";
 import { RouteLoader } from "./RouteLoader";
 
 interface RouteBootstrapRecoveryStateProps {

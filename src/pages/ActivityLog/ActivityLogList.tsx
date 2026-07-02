@@ -12,6 +12,17 @@ import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { useSearchParams } from "react-router-dom";
 import { RefreshCw, SlidersHorizontal } from "lucide-react";
+import { Button } from "@/ui/button";
+import { Checkbox } from "@/ui/checkbox";
+import { Input } from "@/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui/select";
+import { Skeleton } from "@/ui/skeleton";
 import {
   fetchActivityLogs,
   type Activity,
@@ -24,18 +35,9 @@ import {
   Alert,
   AlertDescription,
   Badge,
-  Button,
-  Checkbox,
   Field,
   FieldLabel,
-  Input,
   LoadingRegion,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Skeleton,
   cn,
 } from "@/ui";
 import { ActivityDetailDialog } from "./ActivityDetailDialog";

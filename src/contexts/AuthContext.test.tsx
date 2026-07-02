@@ -12,6 +12,10 @@ import {
   AUTH_VAULT_STORAGE_KEY,
   clearOfflineVaultSession,
 } from "../lib/offlineVault";
+import {
+  clearBrowserPushClientState,
+  clearSensitiveClientState,
+} from "../lib/clientStateCleanup";
 import { authStorage } from "../services/storage";
 import { resetPrefetchCache } from "../hooks/usePrefetch";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
@@ -33,6 +37,12 @@ vi.mock("../hooks/usePrefetch", async () => {
 
 vi.mock("../lib/serviceWorkerSession", () => ({
   syncOfflineSessionAccess: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("../lib/clientStateCleanup", () => ({
+  clearSensitiveClientState: mockClearSensitiveClientState,
+  clearDestructiveSensitiveClientState: mockClearSensitiveClientState,
+  clearBrowserPushClientState: mockClearBrowserPushClientState,
 }));
 
 type SessionEventName = "session:expired" | "session:invalid";
@@ -340,6 +350,98 @@ describe("AuthContext", () => {
     });
   });
 
+  describe("login handoff after timed-out logout cleanup", () => {
+    function SessionSwitchComponent() {
+      const auth = useAuth();
+
+      return (
+        <div>
+          <span data-testid="userEmail">{auth.user?.email ?? "none"}</span>
+          <button type="button" onClick={() => void auth.logout()}>
+            Logout
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              void auth.login({
+                id: "2",
+                name: "Next User",
+                email: "next@secpal.dev",
+              })
+            }
+          >
+            Login Next User
+          </button>
+        </div>
+      );
+    }
+
+    it("finishes destructive cleanup before persisting the next user when trailing logout cleanup times out", async () => {
+      await seedStoredUser({
+        id: "1",
+        name: "Current User",
+        email: "current@secpal.dev",
+      });
+
+      render(
+        <AuthProvider>
+          <SessionSwitchComponent />
+        </AuthProvider>
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId("userEmail")).toHaveTextContent(
+          "current@secpal.dev"
+        );
+      });
+
+      const pushCleanupPromise = new Promise<void>(() => {});
+      const setUserSpy = vi.spyOn(authStorage, "setUser");
+
+      vi.mocked(clearSensitiveClientState).mockClear();
+      vi.mocked(clearBrowserPushClientState).mockClear();
+      vi.mocked(clearBrowserPushClientState).mockImplementationOnce(
+        () => pushCleanupPromise
+      );
+      vi.useFakeTimers();
+
+      try {
+        await act(async () => {
+          screen.getByRole("button", { name: /logout/i }).click();
+        });
+
+        expect(screen.getByTestId("userEmail")).toHaveTextContent("none");
+
+        await act(async () => {
+          vi.advanceTimersByTime(5_000);
+          await Promise.resolve();
+        });
+
+        await act(async () => {
+          screen.getByRole("button", { name: /login next user/i }).click();
+          await Promise.resolve();
+        });
+
+        await act(async () => {
+          vi.advanceTimersByTime(5_000);
+          await Promise.resolve();
+        });
+
+        expect(setUserSpy).toHaveBeenCalledTimes(1);
+
+        const cleanupCallOrder = vi.mocked(clearSensitiveClientState).mock
+          .invocationCallOrder[0]!;
+        const setUserCallOrder = setUserSpy.mock.invocationCallOrder[0]!;
+
+        expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+        expect(cleanupCallOrder).toBeLessThan(setUserCallOrder);
+      } finally {
+        vi.useRealTimers();
+        setUserSpy.mockRestore();
+      }
+    });
+  });
+
   describe("cross-tab storage event error path", () => {
     it("clears auth state when getUser throws during cross-tab storage event", async () => {
       const VaultStatusComponent = () => {
@@ -632,3 +734,9 @@ describe("AuthContext", () => {
     });
   });
 });
+const mockClearSensitiveClientState = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(undefined)
+);
+const mockClearBrowserPushClientState = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(undefined)
+);

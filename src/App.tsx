@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { lazy, Suspense, useEffect, useState } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import { NativeRuntimePwaGuard } from "./components/NativeRuntimePwaGuard";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -41,11 +47,14 @@ function AuthenticatedAppSlot({
   if (error) {
     if (isRecoverableLazyModuleError(error)) {
       return (
-        <RouteBootstrapRecoveryState
-          onRetry={retry}
-          onSignInAgain={onSignInAgain}
-          reason="network"
-        />
+        <>
+          <UpdatePrompt />
+          <RouteBootstrapRecoveryState
+            onRetry={retry}
+            onSignInAgain={onSignInAgain}
+            reason="network"
+          />
+        </>
       );
     }
 
@@ -53,7 +62,12 @@ function AuthenticatedAppSlot({
   }
 
   if (isLoading || !Component) {
-    return <PublicRouteLoader />;
+    return (
+      <>
+        <UpdatePrompt />
+        <PublicRouteLoader />
+      </>
+    );
   }
 
   return <Component />;
@@ -129,7 +143,12 @@ function AuthenticatedAppRoute() {
   } = auth;
 
   if (isRouteAuthBootstrapPending(auth)) {
-    return <PublicRouteLoader />;
+    return (
+      <>
+        <UpdatePrompt />
+        <PublicRouteLoader />
+      </>
+    );
   }
 
   if (isVaultLocked) {
@@ -138,17 +157,23 @@ function AuthenticatedAppRoute() {
     }
 
     return (
-      <LoginRouteVaultLockedState onUnlock={unlock} onSignInAgain={logout} />
+      <>
+        <UpdatePrompt />
+        <LoginRouteVaultLockedState onUnlock={unlock} onSignInAgain={logout} />
+      </>
     );
   }
 
   if (bootstrapRecoveryReason) {
     return (
-      <RouteBootstrapRecoveryState
-        onRetry={retryBootstrap}
-        onSignInAgain={logout}
-        reason={bootstrapRecoveryReason}
-      />
+      <>
+        <UpdatePrompt />
+        <RouteBootstrapRecoveryState
+          onRetry={retryBootstrap}
+          onSignInAgain={logout}
+          reason={bootstrapRecoveryReason}
+        />
+      </>
     );
   }
 
@@ -159,12 +184,30 @@ function AuthenticatedAppRoute() {
   return <AuthenticatedAppSlot onSignInAgain={logout} />;
 }
 
+function PublicRouteUpdatePrompt() {
+  const { pathname } = useLocation();
+  const normalizedPathname =
+    pathname !== "/" && pathname.endsWith("/")
+      ? pathname.slice(0, -1)
+      : pathname;
+  const isPublicRoute =
+    normalizedPathname === "/login" ||
+    normalizedPathname === "/source" ||
+    normalizedPathname === "/onboarding/complete";
+
+  if (!isPublicRoute) {
+    return null;
+  }
+
+  return <UpdatePrompt />;
+}
+
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <NativeRuntimePwaGuard />
-        <UpdatePrompt />
+        <PublicRouteUpdatePrompt />
         <Suspense fallback={<PublicRouteLoader />}>
           <Routes>
             <Route path="/login" element={<LoginRoute />} />

@@ -93,6 +93,9 @@ const {
         skipVaultTableCleanup = true;
         return "test-logout-barrier-owner";
       }),
+      completeStaleSensitiveLogoutBarrierCleanup: vi.fn(() => {
+        skipVaultTableCleanup = false;
+      }),
       endSensitiveLogoutBarrierCleanup: vi.fn(() => {
         skipVaultTableCleanup = false;
       }),
@@ -448,6 +451,60 @@ describe("App", () => {
     expect(screen.getByTestId("update-prompt")).toBeInTheDocument();
   });
 
+  it.each(["/login/", "/source/", "/onboarding/complete/"])(
+    "keeps the update prompt mounted on public trailing-slash route %s",
+    async (path) => {
+      window.history.replaceState({}, "", path);
+
+      if (path.startsWith("/source")) {
+        clearXsrfCookie();
+      }
+
+      await renderWithI18n(<App />);
+
+      expect(screen.getByTestId("update-prompt")).toBeInTheDocument();
+    }
+  );
+
+  it.each([
+    {
+      path: "/onboarding",
+      onboardingWorkflowStatus: "changes_requested" as const,
+    },
+    {
+      path: "/onboarding/submitted",
+      onboardingWorkflowStatus: "submitted_for_review" as const,
+    },
+  ])(
+    "keeps the update prompt mounted on authenticated onboarding route $path",
+    async ({ path, onboardingWorkflowStatus }) => {
+      window.history.replaceState({}, "", path);
+
+      await seedPersistedAuthUser({
+        id: 1,
+        name: "Pre-Contract User",
+        email: "new.hire@secpal.dev",
+        emailVerified: true,
+        employee: {
+          id: "employee-1",
+          status: "pre_contract",
+          onboarding_workflow: {
+            status: onboardingWorkflowStatus,
+          },
+        },
+      });
+
+      await renderWithI18n(<App />);
+
+      await waitFor(() => {
+        expect(window.location.pathname).toBe(path);
+      });
+
+      await screen.findByRole("button", { name: /sign out/i });
+      expect(screen.getByTestId("update-prompt")).toBeInTheDocument();
+    }
+  );
+
   it("uses a login-shaped bootstrap placeholder on the login route", async () => {
     mockGetCurrentUser.mockImplementationOnce(
       () =>
@@ -635,6 +692,7 @@ describe("App", () => {
         name: /still loading your secure session/i,
       })
     ).toBeInTheDocument();
+    expect(screen.getByTestId("update-prompt")).toBeInTheDocument();
 
     mockLoadAuthenticatedAppModule.mockImplementationOnce(
       () => import("./AuthenticatedApp")
@@ -762,6 +820,7 @@ describe("App", () => {
     expect(
       screen.getByRole("status", { name: /loading page/i })
     ).toBeInTheDocument();
+    expect(screen.getByTestId("update-prompt")).toBeInTheDocument();
     expect(
       screen.queryByRole("status", { name: /loading login/i })
     ).not.toBeInTheDocument();

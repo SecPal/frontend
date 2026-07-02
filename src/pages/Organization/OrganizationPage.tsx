@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
@@ -13,10 +13,10 @@ import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { X } from "lucide-react";
+import { Button } from "@/ui/button";
 import {
   Alert,
   AlertDescription,
-  Button,
   Card,
   CardContent,
   OrganizationalUnitTypeBadge,
@@ -295,10 +295,10 @@ export function OrganizationPage() {
 
       <div
         ref={gridContainerRef}
-        className="grid grid-cols-1 gap-6 lg:grid-cols-3"
+        className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_22rem] 2xl:grid-cols-[minmax(0,1fr)_24rem]"
       >
         {/* Tree View */}
-        <div className="lg:col-span-2">
+        <div className="min-w-0">
           <OrganizationalUnitTree
             onSelect={handleSelect}
             onEdit={handleEdit}
@@ -313,8 +313,8 @@ export function OrganizationPage() {
         </div>
 
         {/* Detail Panel */}
-        <Card>
-          <CardContent className="h-full p-4">
+        <Card className="xl:sticky xl:top-6 xl:self-start">
+          <CardContent className="h-full p-4 xl:max-h-[calc(100svh-var(--app-safe-area-inset-top)-8rem)] xl:overflow-y-auto">
             {selectedUnit ? (
               <div className="space-y-4">
                 <div className="flex items-start justify-between gap-2">

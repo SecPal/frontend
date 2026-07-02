@@ -1,15 +1,16 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useCallback } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
+import { Button } from "@/ui/button";
+import { Checkbox } from "@/ui/checkbox";
+import { Input } from "@/ui/input";
 import {
   Alert,
   AlertDescription,
   AlertTitle,
-  Button,
-  Checkbox,
   Dialog,
   DialogActions,
   DialogBody,
@@ -21,7 +22,6 @@ import {
   Field,
   FieldDescription,
   FieldLabel,
-  Input,
 } from "@/ui";
 import type { OrganizationalScope } from "../types/organizationalScope";
 import type { User } from "../contexts/auth-context";

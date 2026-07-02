@@ -5,9 +5,10 @@ import { useNavigate } from "react-router-dom";
 import { Trans } from "@lingui/react/macro";
 import { Suspense, type ReactNode } from "react";
 import { Logo } from "./Logo";
+import { UpdatePrompt } from "./UpdatePrompt";
 import { useAuth } from "../hooks/useAuth";
 import { getAuthTransport } from "../services/authTransport";
-import { Button } from "@/ui";
+import { Button } from "@/ui/button";
 import { RouteContentFallback } from "./RouteContentFallback";
 
 export const LOGOUT_TIMEOUT_MS = 8000;
@@ -50,6 +51,7 @@ export function OnboardingLayout({ children }: { children: ReactNode }) {
 
   return (
     <main className="flex min-h-svh flex-col bg-background p-4 text-foreground lg:items-center lg:justify-center lg:p-8">
+      <UpdatePrompt />
       <div className="flex w-full max-w-4xl flex-1 flex-col lg:flex-none">
         <header className="flex items-center justify-between gap-4 border-b border-border pb-6">
           <Logo size="32" />

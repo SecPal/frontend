@@ -1,8 +1,10 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type { Page } from "@playwright/test";
 import { test, expect, loginViaUI } from "./auth.setup";
 import {
+  AUTH_SIDEBAR_TRIGGER_SELECTOR,
   isRemoteE2ETarget,
   waitForAuthResolution,
   waitForLoginFormReady,
@@ -15,6 +17,47 @@ import { installMockAuthRoutes } from "./offline-live-helpers";
  *
  * Tests for login, logout, and session management.
  */
+
+async function openUserMenu(page: Page): Promise<void> {
+  const userMenuButton = page.getByRole("button", {
+    name: /user menu|benutzermenü/i,
+  });
+
+  if (!(await userMenuButton.isVisible())) {
+    await page.locator(AUTH_SIDEBAR_TRIGGER_SELECTOR).first().click();
+    await expect(userMenuButton).toBeVisible();
+  }
+
+  await userMenuButton.click();
+  await expect(
+    page.getByRole("menuitem", { name: /settings|einstellungen/i })
+  ).toBeVisible();
+}
+
+async function expectAuthenticatedShellVisible(page: Page): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        if (
+          await page
+            .getByRole("button", { name: /user menu|benutzermenü/i })
+            .isVisible()
+        ) {
+          return "user-menu";
+        }
+
+        if (
+          await page.locator(AUTH_SIDEBAR_TRIGGER_SELECTOR).first().isVisible()
+        ) {
+          return "sidebar-trigger";
+        }
+
+        return "pending";
+      },
+      { timeout: 15_000 }
+    )
+    .not.toBe("pending");
+}
 
 test.describe("Authentication", () => {
   // Unauthenticated paths — use the default `page` + `context` fixtures so
@@ -173,7 +216,12 @@ test.describe("Authentication", () => {
       ).toBeEnabled();
     });
 
-    test("should logout successfully", async ({ page }) => {
+    test("should logout successfully", async ({ page }, testInfo) => {
+      test.skip(
+        testInfo.project.name === "mobile-chrome",
+        "The direct visible user-menu logout smoke is a desktop shell flow; mobile user-menu sequencing is covered separately."
+      );
+
       // Use a fresh UI login so this destructive flow does not invalidate the
       // shared authenticated fixture state used by parallel auth tests.
       await loginViaUI(page);
@@ -261,21 +309,13 @@ test.describe("Authentication", () => {
       await page.waitForLoadState("networkidle");
 
       await expect(page).toHaveURL(/\/customers$/);
-      await expect(
-        page.getByRole("button", { name: /user menu/i })
-      ).toBeVisible({
-        timeout: 15_000,
-      });
+      await expectAuthenticatedShellVisible(page);
 
       await page.reload();
       await page.waitForLoadState("networkidle");
 
       await expect(page).toHaveURL(/\/customers$/);
-      await expect(
-        page.getByRole("button", { name: /user menu/i })
-      ).toBeVisible({
-        timeout: 15_000,
-      });
+      await expectAuthenticatedShellVisible(page);
     });
 
     test("should restore the csrf cookie and vault state when an authenticated browser session loads /login", async ({
@@ -309,13 +349,39 @@ test.describe("Authentication", () => {
       await page.waitForLoadState("networkidle");
 
       await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 });
-      await expect(
-        page
-          .getByRole("button", { name: /user menu/i })
-          .or(
-            page.getByRole("button", { name: /sign out|abmelden|ausloggen/i })
-          )
-      ).toBeVisible({ timeout: 15_000 });
+      await expect
+        .poll(
+          async () => {
+            if (
+              await page
+                .getByRole("button", { name: /user menu|benutzermenü/i })
+                .isVisible()
+            ) {
+              return "user-menu";
+            }
+
+            if (
+              await page
+                .locator(AUTH_SIDEBAR_TRIGGER_SELECTOR)
+                .first()
+                .isVisible()
+            ) {
+              return "sidebar-trigger";
+            }
+
+            if (
+              await page
+                .getByRole("button", { name: /sign out|abmelden|ausloggen/i })
+                .isVisible()
+            ) {
+              return "sign-out";
+            }
+
+            return "pending";
+          },
+          { timeout: 15_000 }
+        )
+        .not.toBe("pending");
 
       await expect
         .poll(
@@ -336,6 +402,71 @@ test.describe("Authentication", () => {
         .toBe(true);
 
       expect(targetedConsoleMessages).toEqual([]);
+    });
+  });
+
+  test.describe("locked authenticated shell", () => {
+    test("should stay interactive after locking and unlocking from the user menu", async ({
+      authenticatedPage: page,
+    }, testInfo) => {
+      test.skip(
+        testInfo.project.name !== "chromium",
+        "Desktop Chromium provides the stable browser-level lock/unlock proof; mobile user-menu sequencing is covered by component regressions."
+      );
+
+      await page.goto("/");
+      await page.waitForLoadState("networkidle");
+
+      await openUserMenu(page);
+      await page
+        .getByRole("menuitem", { name: /lock app|app sperren/i })
+        .click();
+
+      await expect(
+        page.getByRole("heading", {
+          name: /unlock your secure offline data/i,
+        })
+      ).toBeVisible();
+
+      await page.getByRole("button", { name: /unlock/i }).click();
+
+      await expect(
+        page.getByRole("heading", {
+          name: /unlock your secure offline data/i,
+        })
+      ).not.toBeVisible();
+      await expect(
+        page.getByRole("button", { name: /user menu|benutzermenü/i })
+      ).toBeVisible();
+    });
+
+    test("should allow signing out from the locked app without reloading", async ({
+      authenticatedPage: page,
+    }, testInfo) => {
+      test.skip(
+        testInfo.project.name !== "chromium",
+        "Desktop Chromium provides the stable browser-level locked-app sign-out proof; mobile user-menu sequencing is covered by component regressions."
+      );
+
+      await page.goto("/");
+      await page.waitForLoadState("networkidle");
+
+      await openUserMenu(page);
+      await page
+        .getByRole("menuitem", { name: /lock app|app sperren/i })
+        .click();
+
+      await expect(
+        page.getByRole("heading", {
+          name: /unlock your secure offline data/i,
+        })
+      ).toBeVisible();
+
+      await page.getByRole("button", { name: /sign out|abmelden/i }).click();
+
+      await expect(page).toHaveURL(/\/login/, { timeout: 10_000 });
+      await expect(page.locator("#email")).toBeVisible();
+      await expect(page.locator("#password")).toBeVisible();
     });
   });
 });

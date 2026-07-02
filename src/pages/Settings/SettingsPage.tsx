@@ -19,14 +19,16 @@ import type {
   TotpEnrollmentPreparation,
   MfaVerificationMethod,
 } from "@/types/api";
+import { Button } from "@/ui/button";
+import { Checkbox } from "@/ui/checkbox";
+import { Input } from "@/ui/input";
+import { Skeleton } from "@/ui/skeleton";
 import { LanguageSwitcher } from "../../components/LanguageSwitcher";
 import {
   Alert,
   AlertDescription,
-  Button,
   Card,
   CardContent,
-  Checkbox,
   Dialog,
   DialogActions,
   DialogBody,
@@ -38,12 +40,10 @@ import {
   Field,
   FieldError,
   FieldLabel,
-  Input,
   LoadingRegion,
   RadioGroup,
   RadioGroupItem,
   SectionSkeleton,
-  Skeleton,
 } from "@/ui";
 import {
   AuthApiError,

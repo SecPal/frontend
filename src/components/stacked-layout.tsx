@@ -5,9 +5,10 @@
 
 import { Menu } from "lucide-react";
 import React, { useState } from "react";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/ui";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/ui/sidebar";
 import { Footer } from "./Footer";
 import { MobileSidebarDialog } from "./mobile-sidebar-dialog";
+import { APP_SHELL_MAX_WIDTH_CLASS } from "./app-shell-width";
 
 export function StackedLayout({
   navbar,
@@ -48,7 +49,7 @@ export function StackedLayout({
       <SidebarInset className="flex flex-1 flex-col">
         <div className="bg-background flex flex-1 flex-col">
           <div className="grow p-6 lg:p-10">
-            <div className="mx-auto max-w-6xl">{children}</div>
+            <div className={APP_SHELL_MAX_WIDTH_CLASS}>{children}</div>
           </div>
 
           <div className="flex-1" />

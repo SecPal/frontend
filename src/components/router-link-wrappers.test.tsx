@@ -1,22 +1,6 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-/**
- * App-shell wrappers (`NavbarItem`, `SidebarMenuButton`, `DropdownMenuItem`) translate a
- * custom `href` prop into router navigation by
- * passing `to` to `react-router-dom`'s `<Link>`. Their wrapper API must not
- * also forward `href` as a separate prop into the underlying router `<Link>`:
- * the custom `href` is the wrapper-level API, not a prop the router consumes.
- *
- * react-router-dom v7's `Link` already overrides any spread `href` with its
- * own `useHref(to)`-derived value before rendering the `<a>`, so the leak is
- * silent at runtime today, but it couples the wrapper API to undocumented
- * router prop ordering and makes future router upgrades fragile.
- *
- * These tests assert that the wrapper destructures `href` out of its rest
- * props before spreading the rest onto `<Link>`.
- */
-
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render } from "@testing-library/react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
@@ -71,26 +55,39 @@ function findCapture(targetTo: string) {
   return matches[matches.length - 1];
 }
 
-describe("App-shell router-link wrappers do not leak `href` into Link", () => {
-  it("NavbarItem passes `to` and not `href` to react-router-dom Link", async () => {
-    const { NavbarItem } = await import("@/ui");
+describe("shadcn router-link composition keeps Link props clean", () => {
+  it("SidebarMenuButton composes with Link via `asChild` without leaking `href`", async () => {
+    const { Link } = await import("react-router-dom");
+    const { SidebarProvider, SidebarMenuButton } = await import("@/ui");
 
-    render(<NavbarItem href="/profile">Profile</NavbarItem>);
-
-    const capture = findCapture("/profile");
-    expect(capture).not.toHaveProperty("href");
-  });
-
-  it("SidebarMenuButton passes `to` and not `href` to react-router-dom Link", async () => {
-    const { SidebarMenuButton } = await import("@/ui");
-
-    render(<SidebarMenuButton href="/customers">Customers</SidebarMenuButton>);
+    render(
+      <SidebarProvider>
+        <SidebarMenuButton asChild>
+          <Link to="/customers">Customers</Link>
+        </SidebarMenuButton>
+      </SidebarProvider>
+    );
 
     const capture = findCapture("/customers");
     expect(capture).not.toHaveProperty("href");
   });
 
-  it("DropdownMenuItem passes `to` and not `href` to react-router-dom Link", async () => {
+  it("SidebarMenuSubButton composes with Link via `asChild` without leaking `href`", async () => {
+    const { Link } = await import("react-router-dom");
+    const { SidebarMenuSubButton } = await import("@/ui");
+
+    render(
+      <SidebarMenuSubButton asChild>
+        <Link to="/profile">Profile</Link>
+      </SidebarMenuSubButton>
+    );
+
+    const capture = findCapture("/profile");
+    expect(capture).not.toHaveProperty("href");
+  });
+
+  it("DropdownMenuItem composes with Link via `asChild` without leaking `href`", async () => {
+    const { Link } = await import("react-router-dom");
     const { DropdownMenuItem } = await import("@/ui");
 
     render(
@@ -98,7 +95,9 @@ describe("App-shell router-link wrappers do not leak `href` into Link", () => {
         <DropdownMenuPrimitive.Trigger>Open</DropdownMenuPrimitive.Trigger>
         <DropdownMenuPrimitive.Portal>
           <DropdownMenuPrimitive.Content>
-            <DropdownMenuItem href="/settings">Settings</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/settings">Settings</Link>
+            </DropdownMenuItem>
           </DropdownMenuPrimitive.Content>
         </DropdownMenuPrimitive.Portal>
       </DropdownMenuPrimitive.Root>
