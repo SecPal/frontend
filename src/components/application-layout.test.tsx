@@ -338,6 +338,12 @@ describe("ApplicationLayout", () => {
       expect(sidebarContainer?.className).not.toContain("border-r");
       expect(sidebarContainer?.className).not.toContain("border-l");
       expect(header).toHaveClass("pt-[var(--app-safe-area-inset-top)]");
+      expect(header).toHaveClass(
+        "min-h-[calc(4rem+var(--app-safe-area-inset-top))]"
+      );
+      expect(header).toHaveClass(
+        "group-has-data-[collapsible=icon]/sidebar-wrapper:min-h-[calc(3rem+var(--app-safe-area-inset-top))]"
+      );
     });
 
     it("renders children content", () => {
@@ -537,6 +543,9 @@ describe("ApplicationLayout", () => {
         expect(
           await screen.findByRole("dialog", { name: "Navigationsmenü" })
         ).toBeInTheDocument();
+        expect(
+          screen.getByRole("button", { name: "Navigation schließen" })
+        ).toBeInTheDocument();
       } finally {
         Object.defineProperty(window, "innerWidth", {
           configurable: true,
@@ -578,7 +587,10 @@ describe("ApplicationLayout", () => {
           name: /navigation/i,
         });
 
-        await user.click(screen.getByRole("link", { name: /customers/i }));
+        const customersLink = screen.getByRole("link", { name: /customers/i });
+        expect(customersLink).toHaveClass("min-h-11");
+
+        await user.click(customersLink);
 
         await waitFor(() => {
           expect(screen.getByTestId("pathname")).toHaveTextContent(

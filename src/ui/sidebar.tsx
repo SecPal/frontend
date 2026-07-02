@@ -223,6 +223,10 @@ export function Sidebar({
           data-slot="sidebar"
           data-mobile="true"
           className="w-(--sidebar-width) border-r-0 bg-sidebar p-0 text-sidebar-foreground"
+          closeLabel={t({
+            id: "layout.mobileNavigation.close",
+            message: "Close navigation",
+          })}
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -591,7 +595,11 @@ export function SidebarMenuButton({
       data-sidebar="menu-button"
       data-size={size}
       data-active={isActive}
-      className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+      className={cn(
+        sidebarMenuButtonVariants({ variant, size }),
+        isMobile && size === "default" ? "min-h-11 px-3 py-2" : null,
+        className
+      )}
       {...props}
     />
   );

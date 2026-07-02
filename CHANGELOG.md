@@ -53,6 +53,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   live inside the mobile sidebar `Sheet`, which prevents the stale
   `pointer-events: none` / scroll-lock state that previously trapped the app
   behind the lock screen until a manual reload.
+- Tightened the authenticated shell's mobile/accessibility follow-up fixes: the
+  top-level authenticated-route loader now keeps the update prompt mounted while
+  lazy route modules are still loading, the mobile sidebar close button uses
+  localized labels with a touch-sized hit area, primary mobile nav items keep a
+  larger tap target, and the shell header now grows by the top safe-area inset
+  instead of only padding inside a fixed height.
 - Completed the shadcn/Radix/Lucide UI migration proof by tightening the
   repo-wide legacy UI guardrail to a zero allowlist, removing the final shared
   shell compatibility aliases, and documenting `src/ui` as the complete

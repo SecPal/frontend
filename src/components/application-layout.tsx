@@ -267,7 +267,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
       />
       <SidebarInset>
         <UpdatePrompt />
-        <header className="flex h-16 shrink-0 items-center gap-2 pt-[var(--app-safe-area-inset-top)] transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header className="flex min-h-[calc(4rem+var(--app-safe-area-inset-top))] shrink-0 items-center gap-2 pt-[var(--app-safe-area-inset-top)] transition-[width,min-height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:min-h-[calc(3rem+var(--app-safe-area-inset-top))]">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Breadcrumb>

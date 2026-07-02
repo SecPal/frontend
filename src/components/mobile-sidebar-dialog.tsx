@@ -56,7 +56,7 @@ export function MobileSidebarDialog({
               <Button
                 type="button"
                 variant="ghost"
-                className="size-10 p-2"
+                className="size-11 p-2"
                 aria-label={t({
                   id: "layout.mobileNavigation.close",
                   message: "Close navigation",

@@ -4,6 +4,7 @@
 "use client";
 
 import * as React from "react";
+import { t } from "@lingui/core/macro";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -54,8 +55,10 @@ export function SheetContent({
   overlayClassName,
   side = "right",
   showCloseButton = true,
+  closeLabel = t`Close`,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  closeLabel?: string;
   overlayClassName?: string;
   side?: "top" | "right" | "bottom" | "left";
   showCloseButton?: boolean;
@@ -81,9 +84,9 @@ export function SheetContent({
       >
         {children}
         {showCloseButton ? (
-          <DialogPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary">
+          <DialogPrimitive.Close className="absolute top-2 right-2 inline-flex size-11 items-center justify-center rounded-md p-2 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary">
             <XIcon className="size-4" aria-hidden="true" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{closeLabel}</span>
           </DialogPrimitive.Close>
         ) : null}
       </DialogPrimitive.Content>

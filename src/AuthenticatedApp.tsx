@@ -5,6 +5,7 @@ import { lazy, Suspense } from "react";
 import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { Trans } from "@lingui/react/macro";
 import { ApplicationLayout } from "./components/application-layout";
+import { UpdatePrompt } from "./components/UpdatePrompt";
 import {
   AppAccessRoute,
   OnboardingOnlyRoute,
@@ -131,7 +132,14 @@ export default function AuthenticatedApp() {
   return (
     <>
       <NotificationLifecycleCoordinator />
-      <Suspense fallback={<RouteLoader />}>
+      <Suspense
+        fallback={
+          <>
+            <UpdatePrompt />
+            <RouteLoader />
+          </>
+        }
+      >
         <Routes>
           <Route
             path="/"
