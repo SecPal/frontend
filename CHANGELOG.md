@@ -55,6 +55,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Radix menu triggers rendered through shared `Button` and
   `SidebarMenuButton` children still blur their restored focus ring instead of
   staying visibly focused after pointer-driven close.
+- Limited pointer-dismiss blur handling to the dropdown or select trigger that
+  actually owns the closing overlay, so clicking a different menu trigger no
+  longer strips focus from the newly targeted control.
 - Aligned the remaining footer slogan with the standard `text-xs` type scale
   and tightened the surrounding vertical spacing now that the legal-link row is
   gone.

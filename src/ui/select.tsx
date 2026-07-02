@@ -6,7 +6,10 @@ import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { getCspNonce } from "@/lib/cspNonce";
 import { cn } from "@/lib/utils";
-import { usePointerAwareCloseAutoFocus } from "./overlayFocus";
+import {
+  getCloseAutoFocusTrigger,
+  usePointerAwareCloseAutoFocus,
+} from "./overlayFocus";
 import { uiControlBase } from "./styles";
 
 function isJsdomRuntime() {
@@ -171,7 +174,12 @@ export const SelectContent = React.forwardRef<
         )}
         onCloseAutoFocus={(event) => {
           onCloseAutoFocus?.(event);
-          if (!event.defaultPrevented && blurActiveElementAfterPointerClose()) {
+          if (
+            !event.defaultPrevented &&
+            blurActiveElementAfterPointerClose(
+              getCloseAutoFocusTrigger(event.currentTarget)
+            )
+          ) {
             event.preventDefault();
             return;
           }

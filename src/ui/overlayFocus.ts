@@ -8,10 +8,29 @@ const POINTER_BLUR_TRIGGER_SLOTS = new Set([
   "select-trigger",
 ]);
 
+function getAriaControlsSelector(id: string) {
+  return `[aria-controls="${id.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"]`;
+}
+
 function isPointerBlurTrigger(element: HTMLElement) {
   return (
     POINTER_BLUR_TRIGGER_SLOTS.has(element.getAttribute("data-slot") ?? "") ||
     element.getAttribute("aria-haspopup") === "menu"
+  );
+}
+
+export function getCloseAutoFocusTrigger(content: EventTarget | null) {
+  if (!(content instanceof HTMLElement)) {
+    return null;
+  }
+
+  const contentId = content.getAttribute("id");
+  if (!contentId) {
+    return null;
+  }
+
+  return content.ownerDocument.querySelector<HTMLElement>(
+    getAriaControlsSelector(contentId)
   );
 }
 
@@ -26,7 +45,7 @@ export function usePointerAwareCloseAutoFocus() {
     closeTriggeredByPointerRef.current = false;
   }
 
-  function blurActiveElementAfterPointerClose() {
+  function blurActiveElementAfterPointerClose(trigger?: HTMLElement | null) {
     if (!closeTriggeredByPointerRef.current) {
       return false;
     }
@@ -34,10 +53,22 @@ export function usePointerAwareCloseAutoFocus() {
     closeTriggeredByPointerRef.current = false;
 
     queueMicrotask(() => {
-      if (
-        document.activeElement instanceof HTMLElement &&
-        isPointerBlurTrigger(document.activeElement)
-      ) {
+      if (!(document.activeElement instanceof HTMLElement)) {
+        return;
+      }
+
+      if (trigger !== undefined) {
+        if (
+          trigger !== null &&
+          document.activeElement === trigger &&
+          isPointerBlurTrigger(trigger)
+        ) {
+          trigger.blur();
+        }
+        return;
+      }
+
+      if (isPointerBlurTrigger(document.activeElement)) {
         document.activeElement.blur();
       }
     });

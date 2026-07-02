@@ -7,7 +7,10 @@ import * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usePointerAwareCloseAutoFocus } from "./overlayFocus";
+import {
+  getCloseAutoFocusTrigger,
+  usePointerAwareCloseAutoFocus,
+} from "./overlayFocus";
 
 export function DropdownMenu(
   props: React.ComponentProps<typeof DropdownMenuPrimitive.Root>
@@ -65,7 +68,12 @@ export function DropdownMenuContent({
         }}
         onCloseAutoFocus={(event) => {
           props.onCloseAutoFocus?.(event);
-          if (!event.defaultPrevented && blurActiveElementAfterPointerClose()) {
+          if (
+            !event.defaultPrevented &&
+            blurActiveElementAfterPointerClose(
+              getCloseAutoFocusTrigger(event.currentTarget)
+            )
+          ) {
             event.preventDefault();
           }
         }}

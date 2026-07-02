@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import * as React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { usePointerAwareCloseAutoFocus } from "./overlayFocus";
@@ -14,11 +15,25 @@ function OverlayFocusHarness({
 } = {}) {
   const { blurActiveElementAfterPointerClose, markPointerInteraction } =
     usePointerAwareCloseAutoFocus();
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
 
   return (
     <div>
-      <button data-slot="dropdown-menu-trigger" type="button" {...triggerProps}>
+      <button
+        ref={triggerRef}
+        data-slot="dropdown-menu-trigger"
+        type="button"
+        {...triggerProps}
+      >
         Trigger
+      </button>
+      <button
+        aria-expanded="false"
+        aria-haspopup="menu"
+        data-slot="button"
+        type="button"
+      >
+        Other trigger
       </button>
       <button type="button">Next action</button>
       <button
@@ -28,7 +43,7 @@ function OverlayFocusHarness({
         }}
         onClick={() => {
           markPointerInteraction();
-          blurActiveElementAfterPointerClose();
+          blurActiveElementAfterPointerClose(triggerRef.current);
         }}
       >
         Close
@@ -53,6 +68,23 @@ describe("usePointerAwareCloseAutoFocus", () => {
     await Promise.resolve();
 
     expect(document.activeElement).toBe(nextButton);
+  });
+
+  it("does not blur a different menu trigger after a pointer close", async () => {
+    render(<OverlayFocusHarness />);
+
+    const trigger = screen.getByRole("button", { name: "Trigger" });
+    const otherTrigger = screen.getByRole("button", { name: "Other trigger" });
+    const closeButton = screen.getByRole("button", { name: "Close" });
+
+    trigger.focus();
+    expect(document.activeElement).toBe(trigger);
+
+    fireEvent.click(closeButton);
+    otherTrigger.focus();
+    await Promise.resolve();
+
+    expect(document.activeElement).toBe(otherTrigger);
   });
 
   it("blurs overlay triggers after pointer close when focus stays on the trigger", async () => {
