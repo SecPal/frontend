@@ -50,7 +50,7 @@ const LOGIN_READY_TIMEOUT_MS = 15_000;
 const AUTH_RESOLUTION_TIMEOUT_MS = 15_000;
 const BOOTSTRAP_RECOVERY_SELECTOR =
   '[data-route-guard-state="bootstrap-recovery"]';
-const SIDEBAR_TRIGGER_SELECTOR = 'button[data-sidebar="trigger"]';
+export const AUTH_SIDEBAR_TRIGGER_SELECTOR = '[data-slot="sidebar-trigger"]';
 
 function isLocalPlaywrightHost(hostname: string): boolean {
   return (
@@ -281,7 +281,6 @@ export async function readAuthResolutionState(
         Array.from(document.querySelectorAll("button")).some((btn) =>
           /sign out|abmelden|ausloggen/i.test((btn.textContent ?? "").trim())
         );
-
       return {
         pathname,
         hasUserMenu:
@@ -295,7 +294,7 @@ export async function readAuthResolutionState(
     },
     {
       bootstrapRecoverySelector: BOOTSTRAP_RECOVERY_SELECTOR,
-      sidebarTriggerSelector: SIDEBAR_TRIGGER_SELECTOR,
+      sidebarTriggerSelector: AUTH_SIDEBAR_TRIGGER_SELECTOR,
     }
   );
 }
@@ -324,7 +323,7 @@ export async function waitForAuthResolution(
       },
       {
         bootstrapRecoverySelector: BOOTSTRAP_RECOVERY_SELECTOR,
-        sidebarTriggerSelector: SIDEBAR_TRIGGER_SELECTOR,
+        sidebarTriggerSelector: AUTH_SIDEBAR_TRIGGER_SELECTOR,
       },
       { timeout }
     )

@@ -4,6 +4,7 @@
 import { runInNewContext } from "node:vm";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  AUTH_SIDEBAR_TRIGGER_SELECTOR,
   buildTestUser,
   describeAuthResolutionState,
   describeLoginBlockingState,
@@ -261,6 +262,12 @@ describe("auth E2E helpers", () => {
   });
 
   describe("describeAuthResolutionState", () => {
+    it("uses a locale-stable selector for the authenticated sidebar trigger", () => {
+      expect(AUTH_SIDEBAR_TRIGGER_SELECTOR).toBe(
+        '[data-slot="sidebar-trigger"]'
+      );
+    });
+
     it("treats the mobile authenticated shell as authenticated when only the sidebar trigger is visible", () => {
       const state: AuthResolutionState = {
         pathname: "/",
@@ -290,7 +297,7 @@ describe("auth E2E helpers", () => {
     it("detects the sidebar trigger without relying on an English aria-label", async () => {
       window.history.replaceState({}, "", "/");
       document.body.innerHTML =
-        '<button data-sidebar="trigger" aria-label="Seitenleiste umschalten"></button>';
+        '<button data-slot="sidebar-trigger" aria-label="Seitenleiste umschalten"></button>';
 
       await expect(
         readAuthResolutionState(createDomBackedPage() as never)
@@ -302,7 +309,7 @@ describe("auth E2E helpers", () => {
     it("treats a localized mobile sidebar trigger as an authenticated shell", async () => {
       window.history.replaceState({}, "", "/");
       document.body.innerHTML =
-        '<button data-sidebar="trigger" aria-label="Seitenleiste umschalten"></button>';
+        '<button data-slot="sidebar-trigger" aria-label="Seitenleiste umschalten"></button>';
 
       await expect(
         waitForAuthResolution(createDomBackedPage() as never)
