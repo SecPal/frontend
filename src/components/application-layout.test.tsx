@@ -492,6 +492,7 @@ describe("ApplicationLayout", () => {
           document.querySelector('[data-slot="sheet-overlay"]')
         ).toBeInTheDocument();
         expect(mobileSidebar).toBeInTheDocument();
+        expect(mobileSidebar).toHaveClass("border-r-0");
         expect(mobileSidebar?.className).not.toContain("[&>button]:hidden");
 
         await user.click(screen.getByRole("button", { name: /close/i }));
