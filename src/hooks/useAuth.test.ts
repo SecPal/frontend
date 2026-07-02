@@ -1787,6 +1787,85 @@ describe("useAuth", () => {
     }
   });
 
+  it("runs a real second logout after login resumes from a timed-out cleanup handoff", async () => {
+    const firstUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
+    const secondUser = {
+      id: "2",
+      name: "Next User",
+      email: "next@secpal.dev",
+    };
+
+    await persistAuthUser(firstUser);
+
+    const cleanupDeferred = createDeferredPromise<void>();
+    vi.mocked(clearSensitiveClientState).mockImplementationOnce(
+      () => cleanupDeferred.promise
+    );
+    const clearSpy = vi.spyOn(authStorage, "clear");
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    vi.useFakeTimers();
+
+    try {
+      act(() => {
+        void result.current.logout();
+      });
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+        await vi.advanceTimersByTimeAsync(5_000);
+        await Promise.resolve();
+      });
+
+      act(() => {
+        void result.current.login(secondUser);
+      });
+      await act(async () => {
+        await Promise.resolve();
+        await vi.advanceTimersByTimeAsync(5_000);
+        await Promise.resolve();
+      });
+
+      const clearCallCountAfterFirstLogout = clearSpy.mock.calls.length;
+
+      act(() => {
+        void result.current.logout();
+      });
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(clearSpy.mock.calls.length).toBeGreaterThan(
+        clearCallCountAfterFirstLogout
+      );
+      expect(clearSpy).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          clearOfflineVaultTables: false,
+        })
+      );
+      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "Timed out waiting for logout cleanup before login; continuing with best-effort session handoff."
+      );
+    } finally {
+      cleanupDeferred.resolve();
+      clearSpy.mockRestore();
+      consoleWarnSpy.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
   it("upgrades an in-flight non-sensitive auth clear when logout is requested", async () => {
     const storageClear = createDeferredPromise<void>();
     const restoreError = new Error("restore failed");

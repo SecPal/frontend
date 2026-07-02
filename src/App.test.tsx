@@ -448,6 +448,21 @@ describe("App", () => {
     expect(screen.getByTestId("update-prompt")).toBeInTheDocument();
   });
 
+  it.each(["/login/", "/source/", "/onboarding/complete/"])(
+    "keeps the update prompt mounted on public trailing-slash route %s",
+    async (path) => {
+      window.history.replaceState({}, "", path);
+
+      if (path.startsWith("/source")) {
+        clearXsrfCookie();
+      }
+
+      await renderWithI18n(<App />);
+
+      expect(screen.getByTestId("update-prompt")).toBeInTheDocument();
+    }
+  );
+
   it.each([
     {
       path: "/onboarding",

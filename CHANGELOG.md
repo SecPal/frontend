@@ -76,6 +76,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hidden through the mobile sheet breakpoints and bounding post-logout login
   waits to a second five-second best-effort timeout so a hung sensitive cleanup
   cannot block the next successful session forever.
+- Followed up the auth/app-shell edge cases again by normalizing public
+  trailing-slash routes before suppressing the root `UpdatePrompt`, and by
+  resetting stale in-flight logout-clearing state before accepting a new login
+  so a later logout still performs a full auth-storage clear after a timed-out
+  session handoff.
 - Completed the shadcn/Radix/Lucide UI migration proof by tightening the
   repo-wide legacy UI guardrail to a zero allowlist, removing the final shared
   shell compatibility aliases, and documenting `src/ui` as the complete

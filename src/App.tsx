@@ -186,11 +186,14 @@ function AuthenticatedAppRoute() {
 
 function PublicRouteUpdatePrompt() {
   const { pathname } = useLocation();
+  const normalizedPathname =
+    pathname !== "/" && pathname.endsWith("/")
+      ? pathname.slice(0, -1)
+      : pathname;
   const isPublicRoute =
-    pathname === "/login" ||
-    pathname === "/source" ||
-    pathname === "/source/" ||
-    pathname === "/onboarding/complete";
+    normalizedPathname === "/login" ||
+    normalizedPathname === "/source" ||
+    normalizedPathname === "/onboarding/complete";
 
   if (!isPublicRoute) {
     return null;

@@ -265,6 +265,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useState<AuthBootstrapRecoveryReason | null>(null);
   const [bootstrapRetryKey, setBootstrapRetryKey] = useState(0);
   const isClearingSessionRef = useRef(false);
+  const clearSessionCycleRef = useRef(0);
   const clearAuthenticatedStatePromiseRef = useRef<Promise<void>>(
     Promise.resolve()
   );
@@ -443,6 +444,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       invalidateBootstrapRevalidation();
+      const clearSessionCycle = clearSessionCycleRef.current + 1;
+      clearSessionCycleRef.current = clearSessionCycle;
       isClearingSessionRef.current = true;
       shouldClearSensitiveStateRef.current = clearSensitiveState;
       shouldResetPrefetchCacheAfterStorageMismatchRef.current = false;
@@ -540,6 +543,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           })
           .finally(() => {
+            if (clearSessionCycleRef.current !== clearSessionCycle) {
+              return;
+            }
+
             shouldSkipBarrierVaultTableCleanupRef.current = false;
             shouldClearSensitiveStateRef.current = false;
             shouldRedirectOpenClientsRef.current = false;
@@ -599,6 +606,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           error
         );
       }
+
+      if (isClearingSessionRef.current) {
+        clearSessionCycleRef.current += 1;
+        isClearingSessionRef.current = false;
+        shouldClearSensitiveStateRef.current = false;
+        shouldRedirectOpenClientsRef.current = false;
+        shouldSkipBarrierVaultTableCleanupRef.current = false;
+        clearAuthenticatedStatePromiseRef.current = Promise.resolve();
+        clearAuthenticatedStateCompletionPromiseRef.current =
+          Promise.resolve();
+      }
+
       invalidateBootstrapRevalidation();
       await persistAuthenticatedUser(sanitizedUser);
       hasLogoutBarrierRef.current = false;
