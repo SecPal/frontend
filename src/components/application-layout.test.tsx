@@ -474,9 +474,14 @@ describe("ApplicationLayout", () => {
           </ApplicationLayout>
         );
 
-        await user.click(
-          await screen.findByRole("button", { name: /toggle sidebar/i })
-        );
+        const sidebarTrigger = await screen.findByRole("button", {
+          name: /toggle sidebar/i,
+        });
+
+        expect(sidebarTrigger).toHaveClass("size-11");
+        expect(sidebarTrigger).toHaveClass("md:size-7");
+
+        await user.click(sidebarTrigger);
 
         const dialog = await screen.findByRole("dialog", {
           name: /navigation/i,
@@ -603,6 +608,53 @@ describe("ApplicationLayout", () => {
             screen.queryByRole("dialog", { name: /navigation/i })
           ).not.toBeInTheDocument();
         });
+      } finally {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: originalInnerWidth,
+        });
+      }
+    });
+
+    it("opens the mobile user dropdown from the sidebar footer", async () => {
+      const user = userEvent.setup();
+      const originalInnerWidth = window.innerWidth;
+
+      try {
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          value: 480,
+        });
+
+        renderWithProviders(
+          <ApplicationLayout>
+            <div>Content</div>
+          </ApplicationLayout>
+        );
+
+        await user.click(
+          await screen.findByRole("button", { name: /toggle sidebar/i })
+        );
+
+        const navigationDialog = await screen.findByRole("dialog", {
+          name: /navigation/i,
+        });
+        const userMenuButton = within(navigationDialog).getByRole("button", {
+          name: /user menu/i,
+        });
+
+        await user.click(userMenuButton);
+
+        expect(
+          await screen.findByRole(
+            "menuitem",
+            { name: /my profile/i },
+            { timeout: QUERY_TIMEOUT }
+          )
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole("menuitem", { name: /sign out/i })
+        ).toBeInTheDocument();
       } finally {
         Object.defineProperty(window, "innerWidth", {
           configurable: true,

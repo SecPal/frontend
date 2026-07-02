@@ -666,6 +666,32 @@ describe("authStorage", () => {
     );
   });
 
+  it("clears a stale single-tab sensitive logout cleanup owner", () => {
+    const ownerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
+
+    authStorage.completeStaleSensitiveLogoutBarrierCleanup(ownerToken);
+
+    expect(
+      localStorage.getItem("auth_logout_skip_vault_table_cleanup")
+    ).toBeNull();
+    expect(getSensitiveLogoutCleanupOwnerKeys()).toHaveLength(0);
+  });
+
+  it("preserves multi-tab sensitive logout cleanup owners during stale cleanup reconciliation", () => {
+    const ownerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
+    localStorage.setItem(
+      `${SENSITIVE_LOGOUT_CLEANUP_OWNER_KEY_PREFIX}other-tab`,
+      String(Date.now())
+    );
+
+    authStorage.completeStaleSensitiveLogoutBarrierCleanup(ownerToken);
+
+    expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+      "1"
+    );
+    expect(getSensitiveLogoutCleanupOwnerKeys()).toHaveLength(2);
+  });
+
   it("ignores stale owner markers when a new non-sensitive barrier starts", async () => {
     const user = {
       id: "1",
@@ -843,5 +869,46 @@ describe("authStorage", () => {
       secondRemoveUserPromise,
       waitForCleanupPromise,
     ]);
+  });
+
+  it("times out long-running vault-table cleanup waiters and continues", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    let resolveLongRunningCleanup!: () => void;
+    const cleanupDeferred = new Promise<void>((resolve) => {
+      resolveLongRunningCleanup = resolve;
+    });
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+      return undefined;
+    });
+    vi.spyOn(db.vaultProfile, "clear").mockImplementationOnce(
+      () => cleanupDeferred as ReturnType<typeof db.vaultProfile.clear>
+    );
+
+    try {
+      await authStorage.setUser(user);
+      vi.useFakeTimers();
+
+      const removeUserPromise = authStorage.removeUser();
+      const waitForCleanupPromise =
+        authStorage.waitForInFlightVaultTableCleanup();
+
+      await vi.advanceTimersByTimeAsync(5_000);
+
+      await expect(waitForCleanupPromise).resolves.toBeUndefined();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "Timed out waiting for in-flight vault cleanup during logout; continuing with best-effort sensitive cleanup."
+      );
+
+      resolveLongRunningCleanup();
+      await removeUserPromise;
+    } finally {
+      vi.useRealTimers();
+      consoleWarnSpy.mockRestore();
+    }
   });
 });

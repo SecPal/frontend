@@ -268,6 +268,7 @@ export interface AuthStorage {
   setSkipBarrierVaultTableCleanup(shouldSkip: boolean): void;
   beginSensitiveLogoutBarrierCleanup(): string;
   endSensitiveLogoutBarrierCleanup(ownerToken: string): void;
+  completeStaleSensitiveLogoutBarrierCleanup(ownerToken: string): void;
   waitForInFlightVaultTableCleanup(): Promise<void>;
 }
 
@@ -288,6 +289,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     "auth_logout_skip_vault_table_cleanup";
   private readonly SENSITIVE_LOGOUT_BARRIER_CLEANUP_OWNER_KEY_PREFIX =
     "auth_logout_skip_vault_table_cleanup_owner:";
+  private readonly VAULT_TABLE_CLEANUP_WAIT_TIMEOUT_MS = 5_000;
   private vaultTableCleanupQueuePromise: Promise<void> = Promise.resolve();
 
   /**
@@ -358,6 +360,18 @@ class LocalStorageAuthStorage implements AuthStorage {
     this.setSkipBarrierVaultTableCleanup(false);
   }
 
+  completeStaleSensitiveLogoutBarrierCleanup(ownerToken: string): void {
+    const ownerKeys = this.getSensitiveLogoutBarrierCleanupOwnerKeys();
+    const ownerKey = this.getSensitiveLogoutBarrierCleanupOwnerKey(ownerToken);
+
+    if (ownerKeys.length !== 1 || ownerKeys[0] !== ownerKey) {
+      return;
+    }
+
+    this.clearSensitiveLogoutBarrierCleanupOwners();
+    this.setSkipBarrierVaultTableCleanup(false);
+  }
+
   private clearSensitiveLogoutBarrierCleanupOwners(): void {
     const ownerKeys = this.getSensitiveLogoutBarrierCleanupOwnerKeys();
 
@@ -399,11 +413,32 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   async waitForInFlightVaultTableCleanup(): Promise<void> {
+    let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
+
     try {
-      await this.vaultTableCleanupQueuePromise;
+      const waitResult = await Promise.race([
+        this.vaultTableCleanupQueuePromise
+          .then(() => "completed" as const)
+          .catch(() => "failed" as const),
+        new Promise<"timed-out">((resolve) => {
+          timeoutId = globalThis.setTimeout(() => {
+            resolve("timed-out");
+          }, this.VAULT_TABLE_CLEANUP_WAIT_TIMEOUT_MS);
+        }),
+      ]);
+
+      if (waitResult === "timed-out") {
+        console.warn(
+          "Timed out waiting for in-flight vault cleanup during logout; continuing with best-effort sensitive cleanup."
+        );
+      }
     } catch {
       // The cleanup initiator handles the vault-table failure; waiters should
       // still continue with their own best-effort logout cleanup.
+    } finally {
+      if (timeoutId !== null) {
+        globalThis.clearTimeout(timeoutId);
+      }
     }
   }
 

@@ -4,6 +4,7 @@
 import type { Page } from "@playwright/test";
 import { test, expect, loginViaUI } from "./auth.setup";
 import {
+  AUTH_SIDEBAR_TRIGGER_SELECTOR,
   isRemoteE2ETarget,
   waitForAuthResolution,
   waitForLoginFormReady,
@@ -18,10 +19,44 @@ import { installMockAuthRoutes } from "./offline-live-helpers";
  */
 
 async function openUserMenu(page: Page): Promise<void> {
-  await page.getByRole("button", { name: /user menu|benutzermenü/i }).click();
+  const userMenuButton = page.getByRole("button", {
+    name: /user menu|benutzermenü/i,
+  });
+
+  if (!(await userMenuButton.isVisible())) {
+    await page.locator(AUTH_SIDEBAR_TRIGGER_SELECTOR).first().click();
+    await expect(userMenuButton).toBeVisible();
+  }
+
+  await userMenuButton.click();
   await expect(
     page.getByRole("menuitem", { name: /settings|einstellungen/i })
   ).toBeVisible();
+}
+
+async function expectAuthenticatedShellVisible(page: Page): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        if (
+          await page
+            .getByRole("button", { name: /user menu|benutzermenü/i })
+            .isVisible()
+        ) {
+          return "user-menu";
+        }
+
+        if (
+          await page.locator(AUTH_SIDEBAR_TRIGGER_SELECTOR).first().isVisible()
+        ) {
+          return "sidebar-trigger";
+        }
+
+        return "pending";
+      },
+      { timeout: 15_000 }
+    )
+    .not.toBe("pending");
 }
 
 test.describe("Authentication", () => {
@@ -274,21 +309,13 @@ test.describe("Authentication", () => {
       await page.waitForLoadState("networkidle");
 
       await expect(page).toHaveURL(/\/customers$/);
-      await expect(
-        page.getByRole("button", { name: /user menu/i })
-      ).toBeVisible({
-        timeout: 15_000,
-      });
+      await expectAuthenticatedShellVisible(page);
 
       await page.reload();
       await page.waitForLoadState("networkidle");
 
       await expect(page).toHaveURL(/\/customers$/);
-      await expect(
-        page.getByRole("button", { name: /user menu/i })
-      ).toBeVisible({
-        timeout: 15_000,
-      });
+      await expectAuthenticatedShellVisible(page);
     });
 
     test("should restore the csrf cookie and vault state when an authenticated browser session loads /login", async ({
@@ -322,13 +349,39 @@ test.describe("Authentication", () => {
       await page.waitForLoadState("networkidle");
 
       await expect(page).not.toHaveURL(/\/login/, { timeout: 15_000 });
-      await expect(
-        page
-          .getByRole("button", { name: /user menu/i })
-          .or(
-            page.getByRole("button", { name: /sign out|abmelden|ausloggen/i })
-          )
-      ).toBeVisible({ timeout: 15_000 });
+      await expect
+        .poll(
+          async () => {
+            if (
+              await page
+                .getByRole("button", { name: /user menu|benutzermenü/i })
+                .isVisible()
+            ) {
+              return "user-menu";
+            }
+
+            if (
+              await page
+                .locator(AUTH_SIDEBAR_TRIGGER_SELECTOR)
+                .first()
+                .isVisible()
+            ) {
+              return "sidebar-trigger";
+            }
+
+            if (
+              await page
+                .getByRole("button", { name: /sign out|abmelden|ausloggen/i })
+                .isVisible()
+            ) {
+              return "sign-out";
+            }
+
+            return "pending";
+          },
+          { timeout: 15_000 }
+        )
+        .not.toBe("pending");
 
       await expect
         .poll(

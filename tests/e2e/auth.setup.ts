@@ -1,10 +1,11 @@
-// SPDX-FileCopyrightText: 2025 SecPal
+// SPDX-FileCopyrightText: 2025-2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { mkdir } from "fs/promises";
 import { dirname } from "path";
 import { test as base, expect, type Page } from "@playwright/test";
 import {
+  AUTH_SIDEBAR_TRIGGER_SELECTOR,
   buildTestUser,
   getConfiguredTestUserOrThrow,
   getAuthStateCachePath,
@@ -124,7 +125,7 @@ export const test = base.extend<{ authenticatedPage: Page }>({
 
           if (
             await page
-              .getByRole("button", { name: /toggle sidebar/i })
+              .locator(AUTH_SIDEBAR_TRIGGER_SELECTOR)
               .first()
               .isVisible()
           ) {

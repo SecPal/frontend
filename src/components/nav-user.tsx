@@ -42,6 +42,8 @@ export function NavUser({
 }) {
   const { isMobile, setOpenMobile } = useSidebar();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [menuPortalContainer, setMenuPortalContainer] =
+    useState<HTMLDivElement | null>(null);
   const initials = user.name.trim() ? getInitials(user.name) : "U";
 
   function closeMobileNavigationOverlays() {
@@ -78,39 +80,18 @@ export function NavUser({
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu
-          modal={!isMobile}
-          open={isMenuOpen}
-          onOpenChange={setIsMenuOpen}
-        >
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              aria-label={t`User menu`}
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <Avatar className="h-8 w-8 rounded-lg">
-                {user.avatar ? (
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                ) : null}
-                <AvatarFallback className="rounded-lg">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
-              </div>
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
-            align="end"
-            sideOffset={4}
+        <div ref={setMenuPortalContainer}>
+          <DropdownMenu
+            modal={!isMobile}
+            open={isMenuOpen}
+            onOpenChange={setIsMenuOpen}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+            <DropdownMenuTrigger asChild>
+              <SidebarMenuButton
+                aria-label={t`User menu`}
+                size="lg"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              >
                 <Avatar className="h-8 w-8 rounded-lg">
                   {user.avatar ? (
                     <AvatarImage src={user.avatar} alt={user.name} />
@@ -123,36 +104,60 @@ export function NavUser({
                   <span className="truncate font-medium">{user.name}</span>
                   <span className="truncate text-xs">{user.email}</span>
                 </div>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
-                <PrefetchLink to="/profile" onClick={handleMenuLinkClick}>
-                  <CircleUserRound />
-                  <Trans>My profile</Trans>
-                </PrefetchLink>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <PrefetchLink to="/settings" onClick={handleMenuLinkClick}>
-                  <Settings />
-                  <Trans>Settings</Trans>
-                </PrefetchLink>
-              </DropdownMenuItem>
-              {onLock ? (
-                <DropdownMenuItem onClick={() => handleMenuAction(onLock)}>
-                  <LockKeyhole />
-                  <Trans>Lock app</Trans>
+              </SidebarMenuButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+              side={isMobile ? "bottom" : "right"}
+              align="end"
+              sideOffset={4}
+              portalContainer={isMobile ? menuPortalContainer : undefined}
+            >
+              <DropdownMenuLabel className="p-0 font-normal">
+                <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                  <Avatar className="h-8 w-8 rounded-lg">
+                    {user.avatar ? (
+                      <AvatarImage src={user.avatar} alt={user.name} />
+                    ) : null}
+                    <AvatarFallback className="rounded-lg">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-medium">{user.name}</span>
+                    <span className="truncate text-xs">{user.email}</span>
+                  </div>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                  <PrefetchLink to="/profile" onClick={handleMenuLinkClick}>
+                    <CircleUserRound />
+                    <Trans>My profile</Trans>
+                  </PrefetchLink>
                 </DropdownMenuItem>
-              ) : null}
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => handleMenuAction(onLogout)}>
-              <LogOut />
-              <Trans>Sign out</Trans>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                <DropdownMenuItem asChild>
+                  <PrefetchLink to="/settings" onClick={handleMenuLinkClick}>
+                    <Settings />
+                    <Trans>Settings</Trans>
+                  </PrefetchLink>
+                </DropdownMenuItem>
+                {onLock ? (
+                  <DropdownMenuItem onClick={() => handleMenuAction(onLock)}>
+                    <LockKeyhole />
+                    <Trans>Lock app</Trans>
+                  </DropdownMenuItem>
+                ) : null}
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleMenuAction(onLogout)}>
+                <LogOut />
+                <Trans>Sign out</Trans>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </SidebarMenuItem>
     </SidebarMenu>
   );

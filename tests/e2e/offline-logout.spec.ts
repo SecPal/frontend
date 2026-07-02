@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { expect, test, type Page } from "@playwright/test";
-import { isRemoteE2ETarget } from "./auth-helpers";
+import {
+  AUTH_SIDEBAR_TRIGGER_SELECTOR,
+  isRemoteE2ETarget,
+} from "./auth-helpers";
 import {
   installMockAuthRoutes,
   loginWithMockedBrowserSession,
@@ -15,6 +18,19 @@ const supportsServiceWorkerOfflineFlows =
 const OFFLINE_SESSION_STATE_PATH = "/__session-state__";
 const LOGOUT_STATE_TIMEOUT_MS = 15_000;
 const LOGOUT_STATE_POLL_INTERVAL_MS = 100;
+const USER_MENU_BUTTON_NAME = /user menu|benutzermenü/i;
+const SETTINGS_MENU_ITEM_NAME = /settings|einstellungen/i;
+const SIGN_OUT_MENU_ITEM_NAME = /sign out|abmelden|ausloggen/i;
+const REQUIRED_LOGOUT_BARRIER_KEY = "auth_logout_barrier";
+const OPTIONAL_PERSISTED_LOCAL_STORAGE_KEYS = [
+  REQUIRED_LOGOUT_BARRIER_KEY,
+  "secpal-locale",
+] as const;
+const REMOVED_LOGOUT_LOCAL_STORAGE_KEYS = [
+  "auth_user",
+  "auth_token",
+  "secpal-notification-preferences",
+] as const;
 
 interface PersistedLogoutState {
   cacheNames: string[];
@@ -67,14 +83,23 @@ async function waitForPersistedLogoutState(
   timeout = LOGOUT_STATE_TIMEOUT_MS
 ): Promise<PersistedLogoutState> {
   const deadline = Date.now() + timeout;
+  let lastPersistedState: PersistedLogoutState | null = null;
 
   while (Date.now() < deadline) {
     try {
       const persistedState = await readPersistedLogoutState(page);
+      lastPersistedState = persistedState;
+      const hasOnlyExpectedLocalStorageKeys =
+        persistedState.localStorageKeys.length >= 1 &&
+        persistedState.localStorageKeys.every((key) =>
+          OPTIONAL_PERSISTED_LOCAL_STORAGE_KEYS.includes(
+            key as (typeof OPTIONAL_PERSISTED_LOCAL_STORAGE_KEYS)[number]
+          )
+        );
 
       if (
-        persistedState.localStorageKeys.length === 1 &&
-        persistedState.localStorageKeys[0] === "auth_logout_barrier" &&
+        hasOnlyExpectedLocalStorageKeys &&
+        persistedState.localStorageKeys.includes(REQUIRED_LOGOUT_BARRIER_KEY) &&
         persistedState.sessionStorageKeys.length === 0 &&
         persistedState.cacheNames.includes("auth-session-state") &&
         JSON.stringify(persistedState.offlineSessionState) ===
@@ -91,7 +116,65 @@ async function waitForPersistedLogoutState(
     await page.waitForTimeout(LOGOUT_STATE_POLL_INTERVAL_MS);
   }
 
-  throw new Error("Timed out waiting for the final persisted logout state.");
+  throw new Error(
+    `Timed out waiting for the final persisted logout state. Last observed state: ${JSON.stringify(lastPersistedState)}`
+  );
+}
+
+async function openAuthenticatedUserMenu(page: Page): Promise<void> {
+  const userMenuButton = page.getByRole("button", {
+    name: USER_MENU_BUTTON_NAME,
+  });
+
+  if (!(await userMenuButton.isVisible())) {
+    await page.locator(AUTH_SIDEBAR_TRIGGER_SELECTOR).first().click();
+    await expect(
+      page.getByRole("dialog", { name: /navigation|navigationsmenü/i })
+    ).toBeVisible();
+  }
+
+  const navigationDialog = page.getByRole("dialog", {
+    name: /navigation|navigationsmenü/i,
+  });
+  const mobileUserMenuButton = navigationDialog.getByRole("button", {
+    name: USER_MENU_BUTTON_NAME,
+  });
+  const activeUserMenuButton =
+    (await navigationDialog.isVisible()) &&
+    (await mobileUserMenuButton.isVisible())
+      ? mobileUserMenuButton
+      : userMenuButton;
+
+  await activeUserMenuButton.click();
+
+  await expect
+    .poll(
+      async () => {
+        if (
+          await page
+            .getByRole("menuitem", { name: SETTINGS_MENU_ITEM_NAME })
+            .isVisible()
+        ) {
+          return "open";
+        }
+
+        if (
+          await page
+            .getByRole("menuitem", { name: SIGN_OUT_MENU_ITEM_NAME })
+            .isVisible()
+        ) {
+          return "open";
+        }
+
+        if (await activeUserMenuButton.isVisible()) {
+          await activeUserMenuButton.press("Enter");
+        }
+
+        return "pending";
+      },
+      { timeout: 10_000, intervals: [250, 500, 1_000] }
+    )
+    .toBe("open");
 }
 
 test.describe("Offline Logout Privacy", () => {
@@ -142,15 +225,23 @@ test.describe("Offline Logout Privacy", () => {
     });
 
     await context.setOffline(false);
-    await page.getByRole("button", { name: /user menu/i }).click();
-    await page.getByRole("menuitem", { name: /sign out|abmelden/i }).click();
+    await openAuthenticatedUserMenu(page);
+    await page.getByRole("menuitem", { name: SIGN_OUT_MENU_ITEM_NAME }).click();
 
     await expect(page).toHaveURL(/\/login/);
     await expect(page.locator("#email")).toBeVisible();
     await expect(page.locator("#password")).toBeVisible();
     const persistedState = await waitForPersistedLogoutState(page);
 
-    expect(persistedState.localStorageKeys).toEqual(["auth_logout_barrier"]);
+    expect(persistedState.localStorageKeys).toContain(
+      REQUIRED_LOGOUT_BARRIER_KEY
+    );
+    expect(persistedState.localStorageKeys).toEqual(
+      expect.arrayContaining([REQUIRED_LOGOUT_BARRIER_KEY])
+    );
+    for (const key of REMOVED_LOGOUT_LOCAL_STORAGE_KEYS) {
+      expect(persistedState.localStorageKeys).not.toContain(key);
+    }
     expect(persistedState.sessionStorageKeys).toEqual([]);
     expect(persistedState.offlineSessionState).toEqual({
       isAuthenticated: false,

@@ -1562,6 +1562,55 @@ describe("useAuth", () => {
     expect(settled).toBe(true);
   });
 
+  it("continues logout cleanup when analytics reset does not settle", async () => {
+    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
+
+    await persistAuthUser(mockUser);
+
+    mockAnalyticsResetForLogout.mockImplementationOnce(
+      () => new Promise<void>(() => undefined)
+    );
+
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      vi.useFakeTimers();
+
+      let logoutPromise!: Promise<void>;
+
+      act(() => {
+        logoutPromise = Promise.resolve(result.current.logout());
+      });
+
+      expect(clearSensitiveClientState).not.toHaveBeenCalled();
+
+      await vi.advanceTimersByTimeAsync(5_000);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+      await act(async () => {
+        await logoutPromise;
+      });
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "Timed out waiting for analytics reset during logout; continuing with best-effort sensitive cleanup."
+      );
+    } finally {
+      vi.useRealTimers();
+      consoleWarnSpy.mockRestore();
+    }
+  });
+
   it("upgrades an in-flight non-sensitive auth clear when logout is requested", async () => {
     const storageClear = createDeferredPromise<void>();
     const restoreError = new Error("restore failed");

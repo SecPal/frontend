@@ -3,6 +3,7 @@
 
 import type { Page } from "@playwright/test";
 import { test, expect } from "./auth.setup";
+import { AUTH_SIDEBAR_TRIGGER_SELECTOR } from "./auth-helpers";
 import { offlineLiveMockOrganizationUnit } from "./offline-live-helpers";
 import {
   isWorkspacePreviewTarget,
@@ -66,6 +67,31 @@ const WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN = new RegExp(
   escapeRegExp(WORKSPACE_PREVIEW_ROOT_UNIT_NAME),
   "i"
 );
+
+async function expectAuthenticatedShellVisible(page: Page): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        if (
+          await page
+            .getByRole("button", { name: /user menu|benutzermenü/i })
+            .isVisible()
+        ) {
+          return "user-menu";
+        }
+
+        if (
+          await page.locator(AUTH_SIDEBAR_TRIGGER_SELECTOR).first().isVisible()
+        ) {
+          return "sidebar-trigger";
+        }
+
+        return "pending";
+      },
+      { timeout: 15_000 }
+    )
+    .not.toBe("pending");
+}
 
 async function cleanupLiveOrganizationalUnit(
   page: Page,
@@ -239,9 +265,7 @@ test.describe("Organization Management", () => {
       await expect(
         page.getByText(offlineLiveMockOrganizationUnit.name).first()
       ).toBeVisible();
-      await expect(
-        page.getByRole("button", { name: /user menu/i })
-      ).toBeVisible();
+      await expectAuthenticatedShellVisible(page);
       await expect(
         page.getByText("Offline vault is not available.")
       ).toHaveCount(0);
@@ -255,9 +279,7 @@ test.describe("Organization Management", () => {
       await expect(
         page.getByText(offlineLiveMockOrganizationUnit.name).first()
       ).toBeVisible();
-      await expect(
-        page.getByRole("button", { name: /user menu/i })
-      ).toBeVisible();
+      await expectAuthenticatedShellVisible(page);
       await expect(
         page.getByText("Offline vault is not available.")
       ).toHaveCount(0);

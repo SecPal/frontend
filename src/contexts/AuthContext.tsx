@@ -30,6 +30,7 @@ import {
 } from "../lib/offlineVaultKeys";
 
 export const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
+const AUTH_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS = 5_000;
 
 async function loadOfflineVaultModule() {
   return await import("../lib/offlineVault");
@@ -37,6 +38,32 @@ async function loadOfflineVaultModule() {
 
 async function loadAnalyticsModule() {
   return await import("../lib/analytics");
+}
+
+async function waitForLogoutCleanupWithTimeout(
+  operation: Promise<void>,
+  warningMessage: string
+): Promise<void> {
+  let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
+
+  try {
+    const result = await Promise.race([
+      operation.then(() => "completed" as const).catch(() => "failed" as const),
+      new Promise<"timed-out">((resolve) => {
+        timeoutId = globalThis.setTimeout(() => {
+          resolve("timed-out");
+        }, AUTH_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS);
+      }),
+    ]);
+
+    if (result === "timed-out") {
+      console.warn(warningMessage);
+    }
+  } finally {
+    if (timeoutId !== null) {
+      globalThis.clearTimeout(timeoutId);
+    }
+  }
 }
 
 function isPublicUnauthenticatedRoute(pathname: string): boolean {
@@ -316,9 +343,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    authStorage.endSensitiveLogoutBarrierCleanup(
-      sensitiveLogoutBarrierCleanupOwnerTokenRef.current
-    );
+    const ownerToken = sensitiveLogoutBarrierCleanupOwnerTokenRef.current;
+    authStorage.endSensitiveLogoutBarrierCleanup(ownerToken);
+    authStorage.completeStaleSensitiveLogoutBarrierCleanup(ownerToken);
     sensitiveLogoutBarrierCleanupOwnerTokenRef.current = null;
   }, []);
 
@@ -458,7 +485,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearAuthStoragePromise = Promise.reject(error);
       }
 
-      const resetAnalyticsStatePromise = resetAnalyticsState();
+      const resetAnalyticsStatePromise = waitForLogoutCleanupWithTimeout(
+        resetAnalyticsState(),
+        "Timed out waiting for analytics reset during logout; continuing with best-effort sensitive cleanup."
+      );
 
       clearAuthenticatedStatePromiseRef.current = Promise.allSettled([
         clearAuthStoragePromise,
@@ -479,7 +509,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           try {
-            await clearSensitiveClientState();
+            await waitForLogoutCleanupWithTimeout(
+              clearSensitiveClientState(),
+              "Timed out waiting for sensitive client cleanup during logout; continuing with best-effort barrier teardown."
+            );
           } catch (error: unknown) {
             console.error(
               "Failed to clear sensitive client state during logout:",

@@ -319,7 +319,7 @@ export function SidebarTrigger({
       aria-label={t`Toggle Sidebar`}
       variant="ghost"
       size="icon"
-      className={cn("size-7", className)}
+      className={cn("size-11 md:size-7", className)}
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
@@ -573,24 +573,31 @@ const sidebarMenuButtonVariants = cva(
   }
 );
 
-export function SidebarMenuButton({
-  asChild = false,
-  isActive = false,
-  variant = "default",
-  size = "default",
-  tooltip,
-  className,
-  ...props
-}: React.ComponentProps<"button"> & {
-  asChild?: boolean;
-  isActive?: boolean;
-  tooltip?: string | React.ComponentProps<typeof TooltipContent>;
-} & VariantProps<typeof sidebarMenuButtonVariants>) {
+export const SidebarMenuButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<"button"> & {
+    asChild?: boolean;
+    isActive?: boolean;
+    tooltip?: string | React.ComponentProps<typeof TooltipContent>;
+  } & VariantProps<typeof sidebarMenuButtonVariants>
+>(function SidebarMenuButton(
+  {
+    asChild = false,
+    isActive = false,
+    variant = "default",
+    size = "default",
+    tooltip,
+    className,
+    ...props
+  },
+  ref
+) {
   const Comp = asChild ? Slot : "button";
   const { isMobile, state } = useSidebar();
 
   const button = (
     <Comp
+      ref={ref}
       data-slot="sidebar-menu-button"
       data-sidebar="menu-button"
       data-size={size}
@@ -622,7 +629,7 @@ export function SidebarMenuButton({
       />
     </Tooltip>
   );
-}
+});
 
 export function SidebarMenuAction({
   className,

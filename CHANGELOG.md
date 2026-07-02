@@ -59,6 +59,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   localized labels with a touch-sized hit area, primary mobile nav items keep a
   larger tap target, and the shell header now grows by the top safe-area inset
   instead of only padding inside a fixed height.
+- Hardened the nested mobile sidebar overlays and logout cleanup lifecycle so
+  the user menu and team switcher portal into the active shell container, the
+  mobile trigger keeps the canonical touch target sizing, and logout cleanup
+  continues after bounded analytics or vault-cleanup waits instead of leaving
+  the authenticated shell trapped behind stale overlay or cleanup barriers.
 - Completed the shadcn/Radix/Lucide UI migration proof by tightening the
   repo-wide legacy UI guardrail to a zero allowlist, removing the final shared
   shell compatibility aliases, and documenting `src/ui` as the complete
