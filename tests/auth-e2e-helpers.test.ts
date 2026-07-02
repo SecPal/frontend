@@ -9,8 +9,10 @@ import {
   getConfiguredTestUserOrThrow,
   getAuthStateCachePath,
   isRemoteE2ETarget,
+  readAuthResolutionState,
   type AuthResolutionState,
   type LoginSubmitState,
+  waitForAuthResolution,
 } from "./e2e/auth-helpers";
 
 /**
@@ -22,8 +24,26 @@ function mockNonPolyscopeCwd() {
   return vi.spyOn(process, "cwd").mockReturnValue("/home/runner/work/frontend");
 }
 
+function createDomBackedPage() {
+  return {
+    evaluate: async <TArg, TResult>(
+      pageFunction: (arg: TArg) => TResult,
+      arg: TArg
+    ) => pageFunction(arg),
+    waitForFunction: async <TArg>(
+      pageFunction: (arg: TArg) => boolean,
+      arg: TArg
+    ) => {
+      if (!pageFunction(arg)) {
+        throw new Error("Condition was not met");
+      }
+    },
+  };
+}
+
 describe("auth E2E helpers", () => {
   afterEach(() => {
+    document.body.innerHTML = "";
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
   });
@@ -252,6 +272,30 @@ describe("auth E2E helpers", () => {
       };
 
       expect(describeAuthResolutionState(state)).toBe("login");
+    });
+  });
+
+  describe("localized authenticated shell detection", () => {
+    it("detects the sidebar trigger without relying on an English aria-label", async () => {
+      window.history.replaceState({}, "", "/");
+      document.body.innerHTML =
+        '<button data-sidebar="trigger" aria-label="Seitenleiste umschalten"></button>';
+
+      await expect(
+        readAuthResolutionState(createDomBackedPage() as never)
+      ).resolves.toMatchObject({
+        hasSidebarTrigger: true,
+      });
+    });
+
+    it("treats a localized mobile sidebar trigger as an authenticated shell", async () => {
+      window.history.replaceState({}, "", "/");
+      document.body.innerHTML =
+        '<button data-sidebar="trigger" aria-label="Seitenleiste umschalten"></button>';
+
+      await expect(
+        waitForAuthResolution(createDomBackedPage() as never)
+      ).resolves.toBe("authenticated");
     });
   });
 

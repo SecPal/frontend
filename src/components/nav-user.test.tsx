@@ -11,7 +11,22 @@ import { MemoryRouter } from "react-router-dom";
 import { messages as deMessages } from "@/locales/de/messages.mjs";
 import { messages as enMessages } from "@/locales/en/messages.mjs";
 import { NavUser } from "./nav-user";
+import { DropdownMenu } from "@/ui/dropdown-menu";
 import { useSidebar } from "@/ui/sidebar";
+
+let lastDropdownMenuModal: ComponentProps<typeof DropdownMenu>["modal"];
+
+vi.mock("@/ui/dropdown-menu", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/ui/dropdown-menu")>();
+
+  return {
+    ...actual,
+    DropdownMenu: (props: ComponentProps<typeof actual.DropdownMenu>) => {
+      lastDropdownMenuModal = props.modal;
+      return <actual.DropdownMenu {...props} />;
+    },
+  };
+});
 
 vi.mock("@/ui/sidebar", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/ui/sidebar")>();
@@ -54,6 +69,7 @@ describe("NavUser", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    lastDropdownMenuModal = undefined;
     i18n.load("en", enMessages);
     i18n.load("de", deMessages);
     vi.mocked(useSidebar).mockReturnValue({
@@ -75,6 +91,22 @@ describe("NavUser", () => {
     expect(
       screen.getByRole("button", { name: "Benutzermenü" })
     ).toBeInTheDocument();
+  });
+
+  it("disables dropdown modality inside the mobile sidebar", () => {
+    vi.mocked(useSidebar).mockReturnValue({
+      isMobile: true,
+      open: true,
+      openMobile: true,
+      setOpen: vi.fn(),
+      setOpenMobile,
+      state: "expanded",
+      toggleSidebar: vi.fn(),
+    });
+
+    renderNavUser();
+
+    expect(lastDropdownMenuModal).toBe(false);
   });
 
   it("closes the mobile sidebar before navigating from the user menu", async () => {

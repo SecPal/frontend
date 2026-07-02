@@ -50,6 +50,7 @@ const LOGIN_READY_TIMEOUT_MS = 15_000;
 const AUTH_RESOLUTION_TIMEOUT_MS = 15_000;
 const BOOTSTRAP_RECOVERY_SELECTOR =
   '[data-route-guard-state="bootstrap-recovery"]';
+const SIDEBAR_TRIGGER_SELECTOR = 'button[data-sidebar="trigger"]';
 
 function isLocalPlaywrightHost(hostname: string): boolean {
   return (
@@ -285,7 +286,7 @@ export async function readAuthResolutionState(
       hasUserMenu:
         document.querySelector('button[aria-label="User menu"]') !== null,
       hasSidebarTrigger:
-        document.querySelector('button[aria-label="Toggle Sidebar"]') !== null,
+        document.querySelector(SIDEBAR_TRIGGER_SELECTOR) !== null,
       hasOnboardingShell,
       hasBootstrapRecoveryScreen:
         document.querySelector(bootstrapRecoverySelector) !== null,
@@ -310,8 +311,7 @@ export async function waitForAuthResolution(
         return (
           path.includes("/login") ||
           document.querySelector('button[aria-label="User menu"]') !== null ||
-          document.querySelector('button[aria-label="Toggle Sidebar"]') !==
-            null ||
+          document.querySelector(SIDEBAR_TRIGGER_SELECTOR) !== null ||
           document.querySelector(bootstrapRecoverySelector) !== null ||
           onboardingShell
         );

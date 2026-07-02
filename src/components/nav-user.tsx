@@ -78,7 +78,11 @@ export function NavUser({
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+        <DropdownMenu
+          modal={!isMobile}
+          open={isMenuOpen}
+          onOpenChange={setIsMenuOpen}
+        >
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               aria-label={t`User menu`}
