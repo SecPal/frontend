@@ -154,6 +154,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restored the login bootstrap screen's AGPL and source-code footer links so
+  legal notices stay reachable while auth bootstrap is still pending.
 - Localized the sidebar user-menu trigger label, corrected destructive
   dropdown-menu icon tinting to use the canonical shadcn descendant selector,
   and removed the unused quick-access sidebar section that was no longer part
