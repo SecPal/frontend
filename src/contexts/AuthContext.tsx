@@ -31,6 +31,7 @@ import {
 
 export const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
 const AUTH_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS = 5_000;
+const AUTH_LOGIN_AFTER_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS = 5_000;
 
 async function loadOfflineVaultModule() {
   return await import("../lib/offlineVault");
@@ -42,7 +43,8 @@ async function loadAnalyticsModule() {
 
 async function waitForLogoutCleanupWithTimeout(
   operation: Promise<void>,
-  warningMessage: string
+  warningMessage: string,
+  timeoutMs: number = AUTH_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS
 ): Promise<void> {
   let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
 
@@ -52,7 +54,7 @@ async function waitForLogoutCleanupWithTimeout(
       new Promise<"timed-out">((resolve) => {
         timeoutId = globalThis.setTimeout(() => {
           resolve("timed-out");
-        }, AUTH_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS);
+        }, timeoutMs);
       }),
     ]);
 
@@ -585,7 +587,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      await clearAuthenticatedStateCompletionPromiseRef.current;
+      try {
+        await waitForLogoutCleanupWithTimeout(
+          clearAuthenticatedStateCompletionPromiseRef.current,
+          "Timed out waiting for logout cleanup before login; continuing with best-effort session handoff.",
+          AUTH_LOGIN_AFTER_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS
+        );
+      } catch (error: unknown) {
+        console.warn(
+          "Failed while waiting for logout cleanup before login; continuing with best-effort session handoff:",
+          error
+        );
+      }
       invalidateBootstrapRevalidation();
       await persistAuthenticatedUser(sanitizedUser);
       hasLogoutBarrierRef.current = false;

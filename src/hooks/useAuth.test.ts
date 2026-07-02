@@ -1684,7 +1684,7 @@ describe("useAuth", () => {
     }
   });
 
-  it("waits for timed-out sensitive logout cleanup before allowing a new login", async () => {
+  it("bounds login waiting when timed-out sensitive logout cleanup never settles", async () => {
     const firstUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
     const secondUser = {
       id: "2",
@@ -1698,6 +1698,9 @@ describe("useAuth", () => {
     vi.mocked(clearSensitiveClientState).mockImplementationOnce(
       () => cleanupDeferred.promise
     );
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -1753,11 +1756,9 @@ describe("useAuth", () => {
       expect(result.current.user).toBeNull();
       expect(setUserSpy).not.toHaveBeenCalled();
 
-      cleanupDeferred.resolve();
-      vi.useRealTimers();
-
       await act(async () => {
-        await loginPromise;
+        await vi.advanceTimersByTimeAsync(5_000);
+        await Promise.resolve();
       });
 
       expect(loginSettled).toBe(true);
@@ -1775,7 +1776,12 @@ describe("useAuth", () => {
           email: "next@secpal.dev",
         })
       );
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "Timed out waiting for logout cleanup before login; continuing with best-effort session handoff."
+      );
     } finally {
+      cleanupDeferred.resolve();
+      consoleWarnSpy.mockRestore();
       setUserSpy.mockRestore();
       vi.useRealTimers();
     }

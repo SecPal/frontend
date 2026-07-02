@@ -72,6 +72,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cleanup failures are logged again instead of being swallowed by the timeout
   wrapper, and stale barrier-owner reconciliation now runs before the current
   logout cleanup owner token is removed from storage-backed barrier state.
+- Followed up the shell/auth review findings again by keeping the sidebar rail
+  hidden through the mobile sheet breakpoints and bounding post-logout login
+  waits to a second five-second best-effort timeout so a hung sensitive cleanup
+  cannot block the next successful session forever.
 - Completed the shadcn/Radix/Lucide UI migration proof by tightening the
   repo-wide legacy UI guardrail to a zero allowlist, removing the final shared
   shell compatibility aliases, and documenting `src/ui` as the complete
