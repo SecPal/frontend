@@ -12,6 +12,8 @@ import { messages as enMessages } from "@/locales/en/messages.mjs";
 import { NavLegal } from "./nav-legal";
 import { useSidebar } from "@/ui/sidebar";
 
+const capturedSidebarMenuButtonProps: Array<Record<string, unknown>> = [];
+
 vi.mock("@/ui/sidebar", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/ui/sidebar")>();
 
@@ -32,7 +34,10 @@ vi.mock("@/ui/sidebar", async (importOriginal) => {
       children: ReactNode;
       asChild?: boolean;
     } & Record<string, unknown>) =>
-      asChild ? <>{children}</> : <button {...props}>{children}</button>,
+      (() => {
+        capturedSidebarMenuButtonProps.push(props);
+        return asChild ? <>{children}</> : <button {...props}>{children}</button>;
+      })(),
     SidebarMenuItem: ({ children }: { children: ReactNode }) => (
       <li>{children}</li>
     ),
@@ -71,6 +76,7 @@ describe("NavLegal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    capturedSidebarMenuButtonProps.length = 0;
     i18n.load("en", enMessages);
     i18n.activate("en");
     vi.mocked(useSidebar).mockReturnValue({
@@ -116,6 +122,24 @@ describe("NavLegal", () => {
 
     const sourceCodeLink = screen.getByRole("link", { name: /source code/i });
     expect(sourceCodeLink).toHaveAttribute("href", "/source");
+  });
+
+  it("does not pass sidebar tooltips through externally wrapped legal triggers", () => {
+    render(
+      <MemoryRouter>
+        <I18nProvider i18n={i18n}>
+          <NavLegal />
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    expect(capturedSidebarMenuButtonProps).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          tooltip: expect.anything(),
+        }),
+      ])
+    );
   });
 
   it("preserves the current route when navigating to source code", async () => {

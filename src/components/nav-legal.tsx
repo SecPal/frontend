@@ -4,7 +4,6 @@
 import { useState, type MouseEvent } from "react";
 import { useLocation } from "react-router-dom";
 import { ChevronRight, Code2, FileText, Scale, Shield } from "lucide-react";
-import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import {
@@ -63,7 +62,7 @@ export function NavLegal() {
         <SidebarMenuItem>
           <DropdownMenu modal>
             <DropdownMenuTrigger asChild>
-              <SidebarMenuButton tooltip={t`Legal`}>
+              <SidebarMenuButton>
                 <Scale />
                 <span>
                   <Trans>Legal</Trans>
@@ -137,7 +136,7 @@ export function NavLegal() {
       >
         <SidebarMenuItem>
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton tooltip={t`Legal`}>
+            <SidebarMenuButton>
               <Scale />
               <span>
                 <Trans>Legal</Trans>

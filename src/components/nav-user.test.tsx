@@ -45,20 +45,18 @@ vi.mock("@/ui/sidebar", async (importOriginal) => {
 });
 
 function renderNavUser({
+  user = { name: "Max Mustermann", email: "max@example.com" },
   onLock,
   onLogout = () => {},
 }: {
+  user?: { name: string; email: string };
   onLock?: () => void;
   onLogout?: () => void;
 } = {}) {
   return render(
     <MemoryRouter>
       <I18nProvider i18n={i18n}>
-        <NavUser
-          user={{ name: "Max Mustermann", email: "max@example.com" }}
-          onLock={onLock}
-          onLogout={onLogout}
-        />
+        <NavUser user={user} onLock={onLock} onLogout={onLogout} />
       </I18nProvider>
     </MemoryRouter>
   );
@@ -105,11 +103,47 @@ describe("NavUser", () => {
       .closest('[data-slot="dropdown-menu-content"]');
 
     expect(dropdown).not.toBeNull();
-    expect(dropdown).toHaveClass("w-fit", "min-w-fit");
+    expect(dropdown).toHaveClass(
+      "w-fit",
+      "min-w-56",
+      "max-w-[min(20rem,var(--radix-dropdown-menu-content-available-width))]"
+    );
     expect(dropdown!.className).not.toContain(
       "w-(--radix-dropdown-menu-trigger-width)"
     );
-    expect(dropdown!.className).not.toContain("min-w-56");
+  });
+
+  it("keeps long user profile data truncatable inside the bounded dropdown width", async () => {
+    const user = userEvent.setup();
+
+    renderNavUser({
+      user: {
+        name: "Maximilian-Alexander von Beispielhausen-Suedwest",
+        email:
+          "maximilian-alexander.von.beispielhausen-suedwest@operations-secpal-example.invalid",
+      },
+    });
+
+    await user.click(screen.getByRole("button", { name: /user menu/i }));
+
+    const dropdown = screen
+      .getByRole("menuitem", { name: /my profile/i })
+      .closest('[data-slot="dropdown-menu-content"]');
+    const profileSummaries = screen
+      .getAllByText(
+        /maximilian-alexander\.von\.beispielhausen-suedwest@operations-secpal-example\.invalid/i
+      )
+      .map((node) => node.parentElement);
+
+    expect(dropdown).not.toBeNull();
+    expect(dropdown).toHaveClass(
+      "max-w-[min(20rem,var(--radix-dropdown-menu-content-available-width))]"
+    );
+    expect(profileSummaries).toContainEqual(
+      expect.objectContaining({
+        className: expect.stringContaining("min-w-0"),
+      })
+    );
   });
 
   it("disables dropdown modality inside the mobile sidebar", () => {
