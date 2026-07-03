@@ -1924,7 +1924,7 @@ msgstr "Verarbeitung..."
 
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "{sitesCount, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
-msgstr "{sitesCount, plural, zero {Dieser Kunde hat keine Standorte.} one {Dieser Kunde hat # Standort.} other {Dieser Kunde hat # Standorte.}}"
+msgstr "{sitesCount, plural, =0 {Dieser Kunde hat keine Objekte.} one {Dieser Kunde hat # Objekt.} other {Dieser Kunde hat # Objekte.}}"
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Last Updated"
