@@ -183,7 +183,8 @@ function resolveSourceOffer(options: {
 
     return {
       ...repository,
-      sourceUrl: options.manifest?.repositories[repository.id]?.sourceUrl ?? null,
+      sourceUrl:
+        options.manifest?.repositories[repository.id]?.sourceUrl ?? null,
     };
   });
 
@@ -191,9 +192,7 @@ function resolveSourceOffer(options: {
     (repository) => repository.sourceUrl !== null
   );
 
-  const mode = hasPublishedSourceRelease
-    ? "deployment"
-    : "fallback";
+  const mode = hasPublishedSourceRelease ? "deployment" : "fallback";
 
   return {
     mode,
@@ -223,13 +222,18 @@ export async function loadSourceOffer(
       },
     };
 
-    const [manifestResponse, apiReleaseResponse] = await Promise.all([
+    const [manifestResult, apiReleaseResult] = await Promise.allSettled([
       fetchImplementation(SOURCE_OFFER_URL, requestInit),
       fetchImplementation(API_RELEASE_URL, requestInit),
     ]);
 
+    const manifestResponse =
+      manifestResult.status === "fulfilled" ? manifestResult.value : null;
+    const apiReleaseResponse =
+      apiReleaseResult.status === "fulfilled" ? apiReleaseResult.value : null;
+
     let manifest: SourceOfferManifest | null = null;
-    if (manifestResponse.ok) {
+    if (manifestResponse?.ok) {
       try {
         manifest = parseSourceOfferManifest(await manifestResponse.json());
       } catch {
@@ -238,7 +242,7 @@ export async function loadSourceOffer(
     }
 
     let apiRelease: ApiReleaseResponse | null = null;
-    if (apiReleaseResponse.ok) {
+    if (apiReleaseResponse?.ok) {
       try {
         apiRelease = parseApiReleaseResponse(await apiReleaseResponse.json());
       } catch {

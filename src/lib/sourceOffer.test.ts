@@ -254,9 +254,9 @@ describe("loadSourceOffer", () => {
     const result = await loadSourceOffer(fetchMock);
 
     expect(result.mode).toBe("deployment");
-    expect(result.repositories.some((repository) => repository.id === "android")).toBe(
-      false
-    );
+    expect(
+      result.repositories.some((repository) => repository.id === "android")
+    ).toBe(false);
   });
 
   it("falls back to the project repositories when the deployment metadata is unavailable", async () => {
@@ -284,9 +284,9 @@ describe("loadSourceOffer", () => {
         }),
       ])
     );
-    expect(result.repositories.some((repository) => repository.id === "android")).toBe(
-      false
-    );
+    expect(
+      result.repositories.some((repository) => repository.id === "android")
+    ).toBe(false);
   });
 
   it("keeps the API source link immutable when the frontend manifest is unavailable", async () => {
@@ -558,6 +558,69 @@ describe("loadSourceOffer", () => {
           },
         }
       ),
+    });
+
+    const result = await loadSourceOffer(fetchMock);
+
+    expect(result.mode).toBe("deployment");
+    expect(result.repositories).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "frontend",
+          sourceUrl:
+            "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
+        }),
+        expect.objectContaining({
+          id: "api",
+          sourceUrl: null,
+        }),
+        expect.objectContaining({
+          id: "contracts",
+          sourceUrl:
+            "https://github.com/SecPal/contracts/releases/download/contracts-2026-06-26/source.tar.gz",
+        }),
+      ])
+    );
+  });
+
+  it("keeps manifest source links when the live release fetch throws", async () => {
+    const fetchMock = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url;
+
+      if (url === "/source-offer.json") {
+        return new Response(
+          JSON.stringify({
+            version: 1,
+            repositories: {
+              frontend: {
+                sourceUrl:
+                  "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
+              },
+              contracts: {
+                sourceUrl:
+                  "https://github.com/SecPal/contracts/releases/download/contracts-2026-06-26/source.tar.gz",
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json",
+            },
+          }
+        );
+      }
+
+      if (url === "/v1/release") {
+        throw new TypeError("Failed to fetch");
+      }
+
+      throw new Error(`unexpected fetch for ${url}`);
     });
 
     const result = await loadSourceOffer(fetchMock);

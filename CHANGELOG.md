@@ -58,6 +58,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   before rendering them and by waiting for the manifest request to settle
   before showing fallback repository guidance, so deployments do not flash
   mutable fallback links ahead of immutable release URLs.
+- Kept `/source` deployment manifests effective when the separate live API
+  release fetch fails before returning an HTTP response, so valid same-origin
+  immutable frontend and contracts source links no longer fall back to mutable
+  repository URLs on mixed deployment/API outages.
 - Restored the `/source` fallback repository links while the
   `/source-offer.json` request is still pending, so stalled manifest fetches
   do not leave the corresponding-source section empty on the public AGPL page.
