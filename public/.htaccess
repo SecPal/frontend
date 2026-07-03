@@ -11,6 +11,7 @@
   # handled by the canonical API host or fail clearly instead of returning HTML.
   RewriteRule ^(?:v1|sanctum)(?:/|$) - [R=404,L]
   RewriteRule ^health(?:/|$) - [R=404,L]
+  RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule ^source-offer\.json$ - [R=404,L]
 
   # Don't rewrite files or directories that actually exist

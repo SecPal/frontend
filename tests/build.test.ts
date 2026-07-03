@@ -323,7 +323,9 @@ describe("Build Configuration and Source Verification", () => {
     expect(htaccess).toContain("Service-Worker-Allowed");
     expect(htaccess).toContain("application/manifest+json");
     expect(htaccess).toContain("manifest.webmanifest");
-    expect(htaccess).toContain("RewriteRule ^source-offer\\.json$ - [R=404,L]");
+    expect(htaccess).toContain(
+      "RewriteCond %{REQUEST_FILENAME} !-f\n  RewriteRule ^source-offer\\.json$ - [R=404,L]"
+    );
     expect(htaccess).toContain('Files "source-offer.json"');
     expect(htaccess).toContain('Cache-Control "no-cache, must-revalidate"');
 

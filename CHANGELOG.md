@@ -69,6 +69,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fall back to a public repository link are no longer described as immutable
   deployment source, and added explicit short-cache delivery rules for
   `/source-offer.json` to the shipped Apache/Nginx deployment templates.
+- Fixed the shipped Apache rewrite rule for `/source-offer.json` so deployed
+  manifests are served when present while missing manifests still return HTTP
+  404 instead of the SPA shell.
 - Limited the `/source` Android repository block to deployments that publish an
   explicit Android release entry in `/source-offer.json`, so frontend-only
   deployments no longer advertise Android source links without a matching
