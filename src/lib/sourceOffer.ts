@@ -100,9 +100,10 @@ function isMutableGitHubArchiveUrl(
 ): boolean {
   const normalizedSourceUrl = new URL(sourceUrl);
   const normalizedRepositoryUrl = new URL(repositoryDefinition.repositoryUrl);
+  const normalizedSourceHostname = normalizedSourceUrl.hostname.toLowerCase();
 
   if (
-    normalizedSourceUrl.hostname.toLowerCase() !== "github.com" ||
+    !["github.com", "codeload.github.com"].includes(normalizedSourceHostname) ||
     normalizedRepositoryUrl.hostname.toLowerCase() !== "github.com"
   ) {
     return false;
@@ -114,6 +115,21 @@ function isMutableGitHubArchiveUrl(
   const normalizedSourcePath = normalizedSourceUrl.pathname
     .toLowerCase()
     .replace(/\/$/, "");
+
+  if (normalizedSourceHostname === "codeload.github.com") {
+    return (
+      normalizedSourcePath ===
+        `${normalizedRepositoryPath}/tar.gz/refs/heads/main` ||
+      normalizedSourcePath ===
+        `${normalizedRepositoryPath}/zip/refs/heads/main` ||
+      normalizedSourcePath.startsWith(
+        `${normalizedRepositoryPath}/tar.gz/refs/heads/`
+      ) ||
+      normalizedSourcePath.startsWith(
+        `${normalizedRepositoryPath}/zip/refs/heads/`
+      )
+    );
+  }
 
   if (!normalizedSourcePath.startsWith(`${normalizedRepositoryPath}/`)) {
     return false;
