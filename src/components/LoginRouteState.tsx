@@ -221,7 +221,7 @@ export function LoginRouteVaultLockedState({
         </LoginCard>
       </div>
 
-      <LoginRouteFooter showLegalLinks={false} />
+      <LoginRouteFooter />
     </LoginShell>
   );
 }
