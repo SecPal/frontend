@@ -68,7 +68,19 @@ type SourceOfferFetch = typeof fetch;
 type SourceOfferUpdateCallback = (result: LoadedSourceOffer) => void;
 
 function normalizeRepositoryUrl(url: string): string {
-  return new URL(url).href.replace(/\/$/, "");
+  const normalizedUrl = new URL(url);
+
+  return `${normalizedUrl.origin}${normalizedUrl.pathname}`.replace(/\/$/, "");
+}
+
+function isMutableRepositoryRootUrl(
+  sourceUrl: string,
+  repositoryDefinition: SourceRepositoryDefinition
+): boolean {
+  return (
+    normalizeRepositoryUrl(sourceUrl) ===
+    normalizeRepositoryUrl(repositoryDefinition.repositoryUrl)
+  );
 }
 
 function getFallbackSourceOffer(): LoadedSourceOffer {
@@ -104,10 +116,7 @@ function parseManifestRepository(
     return null;
   }
 
-  if (
-    normalizeRepositoryUrl(sourceUrl) ===
-    normalizeRepositoryUrl(repositoryDefinition.repositoryUrl)
-  ) {
+  if (isMutableRepositoryRootUrl(sourceUrl, repositoryDefinition)) {
     return null;
   }
 
@@ -173,6 +182,16 @@ function parseApiReleaseResponse(
   const sourceUrl = value.data.source_url.trim();
 
   if (version === "" || !isSafeHttpUrl(sourceUrl)) {
+    return null;
+  }
+
+  const apiRepositoryDefinition = SOURCE_REPOSITORY_DEFINITIONS.find(
+    (repository) => repository.id === "api"
+  );
+  if (
+    apiRepositoryDefinition &&
+    isMutableRepositoryRootUrl(sourceUrl, apiRepositoryDefinition)
+  ) {
     return null;
   }
 
