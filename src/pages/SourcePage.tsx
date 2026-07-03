@@ -233,6 +233,7 @@ export function SourcePage() {
                     }
 
                     const showsSeparateRepositoryLink =
+                      sourceOfferRepository.sourceUrl !== null &&
                       sourceOfferMode === "deployment" &&
                       sourceOfferRepository.sourceUrl !==
                         sourceOfferRepository.repositoryUrl;
@@ -257,16 +258,36 @@ export function SourcePage() {
                           />
                         </div>
                         <div className="mt-4 space-y-3">
-                          <a
-                            href={sourceOfferRepository.sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary decoration-border inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-primary/80"
-                          >
-                            <FileCode2 className="size-4" aria-hidden="true" />
-                            <span>{sourceOfferRepository.sourceUrl}</span>
-                          </a>
+                          {sourceOfferRepository.sourceUrl !== null ? (
+                            <a
+                              href={sourceOfferRepository.sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary decoration-border inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-primary/80"
+                            >
+                              <FileCode2
+                                className="size-4"
+                                aria-hidden="true"
+                              />
+                              <span>{sourceOfferRepository.sourceUrl}</span>
+                            </a>
+                          ) : null}
                           {showsSeparateRepositoryLink ? (
+                            <a
+                              href={sourceOfferRepository.repositoryUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-muted-foreground inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-foreground"
+                            >
+                              <span>
+                                <Trans>Open public repository</Trans>
+                              </span>
+                              <ExternalLink
+                                className="size-4"
+                                aria-hidden="true"
+                              />
+                            </a>
+                          ) : sourceOfferRepository.sourceUrl === null ? (
                             <a
                               href={sourceOfferRepository.repositoryUrl}
                               target="_blank"

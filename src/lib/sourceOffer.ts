@@ -14,7 +14,7 @@ interface SourceRepositoryDefinition {
 }
 
 export interface SourceOfferRepository extends SourceRepositoryDefinition {
-  sourceUrl: string;
+  sourceUrl: string | null;
 }
 
 export interface LoadedSourceOffer {
@@ -140,9 +140,7 @@ function resolveDeploymentSourceOffer(
     mode: "deployment",
     repositories: SOURCE_REPOSITORY_DEFINITIONS.map((repository) => ({
       ...repository,
-      sourceUrl:
-        manifest.repositories[repository.id]?.sourceUrl ??
-        repository.repositoryUrl,
+      sourceUrl: manifest.repositories[repository.id]?.sourceUrl ?? null,
     })),
   };
 }

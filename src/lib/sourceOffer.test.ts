@@ -108,6 +108,49 @@ describe("loadSourceOffer", () => {
     );
   });
 
+  it("keeps optional repositories separate when the deployment omits their immutable source URL", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          version: 1,
+          repositories: {
+            frontend: {
+              sourceUrl:
+                "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
+            },
+            api: {
+              sourceUrl:
+                "https://github.com/SecPal/api/releases/download/api-2026-06-26/source.tar.gz",
+            },
+            contracts: {
+              sourceUrl:
+                "https://github.com/SecPal/contracts/releases/download/contracts-2026-06-26/source.tar.gz",
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }
+      );
+    });
+
+    const result = await loadSourceOffer(fetchMock);
+
+    expect(result.mode).toBe("deployment");
+    expect(result.repositories).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "android",
+          sourceUrl: null,
+          repositoryUrl: "https://github.com/SecPal/android",
+        }),
+      ])
+    );
+  });
+
   it("falls back to the project repositories when the deployment metadata is unavailable", async () => {
     const fetchMock = vi.fn(async () => {
       return new Response("not found", { status: 404 });

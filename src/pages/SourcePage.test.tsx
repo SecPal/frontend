@@ -126,6 +126,54 @@ describe("SourcePage", () => {
     );
   });
 
+  it("does not present optional repositories as deployment-published source when the manifest omits them", async () => {
+    vi.mocked(globalThis.fetch).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          version: 1,
+          repositories: {
+            frontend: {
+              sourceUrl:
+                "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
+            },
+            api: {
+              sourceUrl:
+                "https://github.com/SecPal/api/releases/download/api-2026-06-26/source.tar.gz",
+            },
+            contracts: {
+              sourceUrl:
+                "https://github.com/SecPal/contracts/releases/download/contracts-2026-06-26/source.tar.gz",
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }
+      )
+    );
+
+    renderWithProviders();
+
+    const androidArticle = await screen.findByText("SecPal/android");
+    const androidLinks = within(androidArticle.closest("article") as HTMLElement)
+      .getAllByRole("link");
+
+    expect(androidLinks).toHaveLength(1);
+    expect(androidLinks[0]).toHaveAttribute(
+      "href",
+      "https://github.com/SecPal/android"
+    );
+    expect(androidLinks[0]).toHaveTextContent(/open public repository/i);
+    expect(
+      screen.queryByRole("link", {
+        name: "https://github.com/SecPal/android",
+      })
+    ).not.toBeInTheDocument();
+  });
+
   it("shows fallback source links while the manifest request is pending", async () => {
     let resolveFetch: ((value: Response) => void) | undefined;
 
