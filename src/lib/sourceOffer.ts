@@ -74,7 +74,9 @@ function normalizeRepositoryUrl(url: string): string {
     normalizedHostname === "github.com"
       ? normalizedUrl.pathname.toLowerCase()
       : normalizedUrl.pathname
-  ).replace(/\.git$/, "");
+  )
+    .replace(/\/$/, "")
+    .replace(/\.git$/, "");
 
   return `${normalizedUrl.protocol}//${normalizedHostname}${normalizedPathname}`.replace(
     /\/$/,
