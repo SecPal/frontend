@@ -1411,6 +1411,11 @@ msgstr "Abmelden"
 msgid "You signed in successfully, but your onboarding is not complete yet. Please complete onboarding to continue using SecPal."
 msgstr "Sie wurden erfolgreich angemeldet, aber Ihr Onboarding ist noch nicht abgeschlossen. Bitte schließen Sie das Onboarding ab, um SecPal weiter zu nutzen."
 
+#. placeholder {0}: repository.name
+#: src/pages/SourcePage.tsx
+msgid "Open public repository for {0}"
+msgstr ""
+
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
 msgid "You're all set"
 msgstr "Onboarding abgeschlossen"

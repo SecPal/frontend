@@ -304,6 +304,9 @@ export function SourcePage() {
                                 href={sourceOfferRepository.repositoryUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                aria-label={_(
+                                  msg`Open public repository for ${repository.name}`
+                                )}
                                 className="text-muted-foreground inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-foreground"
                               >
                                 <span>
@@ -319,6 +322,9 @@ export function SourcePage() {
                                 href={sourceOfferRepository.repositoryUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                aria-label={_(
+                                  msg`Open public repository for ${repository.name}`
+                                )}
                                 className="text-muted-foreground inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-foreground"
                               >
                                 <span>

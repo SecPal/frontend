@@ -174,6 +174,9 @@ describe("SourcePage", () => {
       "href",
       "https://github.com/SecPal/frontend"
     );
+    expect(frontendLinks[1]).toHaveAccessibleName(
+      "Open public repository for SecPal/frontend"
+    );
   });
 
   it("lists Android first when the deployment publishes an Android release", async () => {

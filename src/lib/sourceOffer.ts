@@ -3,6 +3,7 @@
 
 import { isSafeHttpUrl } from "@/utils/safeUrl";
 import { buildApiUrl } from "@/config";
+import type { PublicApiReleaseResponse } from "@/types/api";
 
 const SOURCE_OFFER_URL = "/source-offer.json";
 const API_RELEASE_URL = buildApiUrl("/v1/release");
@@ -63,13 +64,6 @@ interface SourceOfferManifest {
   >;
 }
 
-interface ApiReleaseResponse {
-  data: {
-    version: string;
-    source_url: string;
-  };
-}
-
 type SourceOfferFetch = typeof fetch;
 
 function getFallbackSourceOffer(): LoadedSourceOffer {
@@ -95,7 +89,11 @@ function parseManifestRepository(
     return null;
   }
 
-  const sourceUrl = String(value.sourceUrl ?? "").trim();
+  if (typeof value.sourceUrl !== "string") {
+    return null;
+  }
+
+  const sourceUrl = value.sourceUrl.trim();
   if (!isSafeHttpUrl(sourceUrl)) {
     return null;
   }
@@ -143,13 +141,22 @@ function parseSourceOfferManifest(value: unknown): SourceOfferManifest | null {
   };
 }
 
-function parseApiReleaseResponse(value: unknown): ApiReleaseResponse | null {
+function parseApiReleaseResponse(
+  value: unknown
+): PublicApiReleaseResponse | null {
   if (!isObjectRecord(value) || !isObjectRecord(value.data)) {
     return null;
   }
 
-  const version = String(value.data.version ?? "").trim();
-  const sourceUrl = String(value.data.source_url ?? "").trim();
+  if (
+    typeof value.data.version !== "string" ||
+    typeof value.data.source_url !== "string"
+  ) {
+    return null;
+  }
+
+  const version = value.data.version.trim();
+  const sourceUrl = value.data.source_url.trim();
 
   if (version === "" || !isSafeHttpUrl(sourceUrl)) {
     return null;
@@ -164,7 +171,7 @@ function parseApiReleaseResponse(value: unknown): ApiReleaseResponse | null {
 }
 
 function resolveSourceOffer(options: {
-  apiRelease: ApiReleaseResponse | null;
+  apiRelease: PublicApiReleaseResponse | null;
   manifest: SourceOfferManifest | null;
 }): LoadedSourceOffer {
   const repositories = SOURCE_REPOSITORY_DEFINITIONS.filter((repository) => {
@@ -235,18 +242,16 @@ export async function loadSourceOffer(
     let manifest: SourceOfferManifest | null = null;
     if (manifestResponse?.ok) {
       try {
-        manifest = parseSourceOfferManifest(await manifestResult.value.json());
+        manifest = parseSourceOfferManifest(await manifestResponse.json());
       } catch {
         manifest = null;
       }
     }
 
-    let apiRelease: ApiReleaseResponse | null = null;
+    let apiRelease: PublicApiReleaseResponse | null = null;
     if (apiReleaseResponse?.ok) {
       try {
-        apiRelease = parseApiReleaseResponse(
-          await apiReleaseResult.value.json()
-        );
+        apiRelease = parseApiReleaseResponse(await apiReleaseResponse.json());
       } catch {
         apiRelease = null;
       }
