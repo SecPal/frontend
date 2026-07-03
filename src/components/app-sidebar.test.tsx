@@ -52,12 +52,12 @@ describe("AppSidebar", () => {
       />
     );
 
-    const sidebarContent = screen.getByTestId("nav-main").closest(
-      '[data-slot="sidebar-content"]'
-    );
-    const sidebarFooter = screen.getByTestId("nav-user").closest(
-      '[data-slot="sidebar-footer"]'
-    );
+    const sidebarContent = screen
+      .getByTestId("nav-main")
+      .closest('[data-slot="sidebar-content"]');
+    const sidebarFooter = screen
+      .getByTestId("nav-user")
+      .closest('[data-slot="sidebar-footer"]');
 
     expect(sidebarContent).not.toBeNull();
     expect(sidebarFooter).not.toBeNull();

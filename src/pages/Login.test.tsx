@@ -3399,8 +3399,7 @@ describe("Login", () => {
         "pt-[calc(1.5rem+var(--app-safe-area-inset-top))]"
       );
       expect(shell).not.toHaveClass("justify-center");
-      expect(shell.className).not.toContain("pb-6");
-      expect(shell.className).not.toContain("md:pb-10");
+      expect(shell).toHaveClass("pb-6", "md:pb-10");
 
       const languageSelect = screen.getByRole("combobox", {
         name: /select language/i,
