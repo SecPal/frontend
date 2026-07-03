@@ -106,6 +106,21 @@ describe("SourcePage", () => {
     expect(issueLink?.className).not.toContain("border-zinc-200");
   });
 
+  it("shows the shared SecPal footer link on the source page", async () => {
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("link", {
+        name: "Powered by SecPal – A guard's best friend",
+      })
+    ).toHaveAttribute("href", "https://secpal.app");
+    expect(
+      screen.getByRole("link", {
+        name: "Powered by SecPal – A guard's best friend",
+      })
+    ).toHaveAttribute("rel", "noopener");
+  });
+
   it("renders deployment-specific immutable source references when the manifest is published", async () => {
     mockSourceOfferRequests({
       manifestResponse: new Response(

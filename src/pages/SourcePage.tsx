@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { Footer } from "@/components/Footer";
 import { Logo } from "@/components/Logo";
 import {
   getFallbackSourceRepositories,
@@ -422,6 +423,7 @@ export function SourcePage() {
           </aside>
         </div>
       </div>
+      <Footer />
     </main>
   );
 }

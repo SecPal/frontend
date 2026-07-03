@@ -69,8 +69,16 @@ type SourceOfferUpdateCallback = (result: LoadedSourceOffer) => void;
 
 function normalizeRepositoryUrl(url: string): string {
   const normalizedUrl = new URL(url);
+  const normalizedHostname = normalizedUrl.hostname.toLowerCase();
+  const normalizedPathname =
+    normalizedHostname === "github.com"
+      ? normalizedUrl.pathname.toLowerCase()
+      : normalizedUrl.pathname;
 
-  return `${normalizedUrl.origin}${normalizedUrl.pathname}`.replace(/\/$/, "");
+  return `${normalizedUrl.protocol}//${normalizedHostname}${normalizedPathname}`.replace(
+    /\/$/,
+    ""
+  );
 }
 
 function isMutableRepositoryRootUrl(

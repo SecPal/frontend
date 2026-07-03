@@ -14,7 +14,7 @@ export function Footer() {
         <a
           href="https://secpal.app"
           target="_blank"
-          rel="noopener noreferrer"
+          rel="noopener"
           className="text-foreground hover:text-foreground/80 inline-block text-xs font-semibold"
         >
           <Trans>Powered by SecPal – A guard's best friend</Trans>
