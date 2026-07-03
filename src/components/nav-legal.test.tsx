@@ -36,7 +36,11 @@ vi.mock("@/ui/sidebar", async (importOriginal) => {
     } & Record<string, unknown>) =>
       (() => {
         capturedSidebarMenuButtonProps.push(props);
-        return asChild ? <>{children}</> : <button {...props}>{children}</button>;
+        return asChild ? (
+          <>{children}</>
+        ) : (
+          <button {...props}>{children}</button>
+        );
       })(),
     SidebarMenuItem: ({ children }: { children: ReactNode }) => (
       <li>{children}</li>
