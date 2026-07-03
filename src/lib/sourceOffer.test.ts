@@ -644,6 +644,36 @@ describe("loadSourceOffer", () => {
     expect(result.mode).toBe("fallback");
   });
 
+  it("rejects manifest repositories that point to Git clone repository roots", async () => {
+    const fetchMock = createResponseRouter({
+      "/source-offer.json": new Response(
+        JSON.stringify({
+          version: 1,
+          repositories: {
+            frontend: {
+              sourceUrl: "https://github.com/SecPal/frontend.git",
+            },
+            contracts: {
+              sourceUrl:
+                "https://github.com/SecPal/contracts/releases/download/contracts-2026-06-26/source.tar.gz",
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }
+      ),
+      "/v1/release": new Response("not found", { status: 404 }),
+    });
+
+    const result = await loadSourceOffer(fetchMock);
+
+    expect(result.mode).toBe("fallback");
+  });
+
   it("falls back only the API repository when the live release response is invalid", async () => {
     const fetchMock = createResponseRouter({
       "/source-offer.json": new Response(
@@ -796,6 +826,58 @@ describe("loadSourceOffer", () => {
           data: {
             version: "api-2026-06-26",
             source_url: "https://github.com/secpal/api",
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }
+      ),
+    });
+
+    const result = await loadSourceOffer(fetchMock);
+
+    expect(result.mode).toBe("deployment");
+    expect(result.repositories).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "api",
+          sourceUrl: null,
+        }),
+      ])
+    );
+  });
+
+  it("rejects API release metadata that points to a Git clone repository root", async () => {
+    const fetchMock = createResponseRouter({
+      "/source-offer.json": new Response(
+        JSON.stringify({
+          version: 1,
+          repositories: {
+            frontend: {
+              sourceUrl:
+                "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
+            },
+            contracts: {
+              sourceUrl:
+                "https://github.com/SecPal/contracts/releases/download/contracts-2026-06-26/source.tar.gz",
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }
+      ),
+      "/v1/release": new Response(
+        JSON.stringify({
+          data: {
+            version: "api-2026-06-26",
+            source_url: "https://github.com/SecPal/api.git",
           },
         }),
         {
