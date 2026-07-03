@@ -94,6 +94,42 @@ function isMutableRepositoryRootUrl(
   );
 }
 
+function isMutableGitHubArchiveUrl(
+  sourceUrl: string,
+  repositoryDefinition: SourceRepositoryDefinition
+): boolean {
+  const normalizedSourceUrl = new URL(sourceUrl);
+  const normalizedRepositoryUrl = new URL(repositoryDefinition.repositoryUrl);
+
+  if (
+    normalizedSourceUrl.hostname.toLowerCase() !== "github.com" ||
+    normalizedRepositoryUrl.hostname.toLowerCase() !== "github.com"
+  ) {
+    return false;
+  }
+
+  const normalizedRepositoryPath = normalizedRepositoryUrl.pathname
+    .toLowerCase()
+    .replace(/\/$/, "");
+  const normalizedSourcePath = normalizedSourceUrl.pathname
+    .toLowerCase()
+    .replace(/\/$/, "");
+
+  if (!normalizedSourcePath.startsWith(`${normalizedRepositoryPath}/`)) {
+    return false;
+  }
+
+  const repositoryRelativePath = normalizedSourcePath.slice(
+    normalizedRepositoryPath.length
+  );
+
+  return (
+    repositoryRelativePath.startsWith("/archive/") ||
+    repositoryRelativePath.startsWith("/tarball/") ||
+    repositoryRelativePath.startsWith("/zipball/")
+  );
+}
+
 function getFallbackSourceOffer(): LoadedSourceOffer {
   return {
     mode: "fallback",
@@ -128,6 +164,10 @@ function parseManifestRepository(
   }
 
   if (isMutableRepositoryRootUrl(sourceUrl, repositoryDefinition)) {
+    return null;
+  }
+
+  if (isMutableGitHubArchiveUrl(sourceUrl, repositoryDefinition)) {
     return null;
   }
 
@@ -201,7 +241,8 @@ function parseApiReleaseResponse(
   );
   if (
     apiRepositoryDefinition &&
-    isMutableRepositoryRootUrl(sourceUrl, apiRepositoryDefinition)
+    (isMutableRepositoryRootUrl(sourceUrl, apiRepositoryDefinition) ||
+      isMutableGitHubArchiveUrl(sourceUrl, apiRepositoryDefinition))
   ) {
     return null;
   }
