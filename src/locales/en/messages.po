@@ -138,10 +138,6 @@ msgstr "Employment permitted"
 msgid "Source offer for users interacting with SecPal over a network."
 msgstr "Source offer for users interacting with SecPal over a network."
 
-#: src/pages/SourcePage.tsx
-#~ msgid "These repositories contain the preferred form for making modifications to the SecPal components made available through this service."
-#~ msgstr "These repositories contain the preferred form for making modifications to the SecPal components made available through this service."
-
 #: src/components/ScopeAssignmentForm.tsx
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
 msgstr "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
@@ -2793,10 +2789,6 @@ msgstr "Causer"
 msgid "Try Again"
 msgstr "Try Again"
 
-#: src/pages/SourcePage.tsx
-#~ msgid "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the repositories linked below."
-#~ msgstr "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the repositories linked below."
-
 #. placeholder {0}: formData.min_viewable_rank
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Invalid combination: min={0}, max=0 results in no visible employees!"
@@ -3412,10 +3404,6 @@ msgstr "When a deployment-specific source bundle is not published here, the proj
 #: src/components/ScopeAssignmentForm.tsx
 msgid "0 or empty for non-leadership only"
 msgstr "0 or empty for non-leadership only"
-
-#: src/pages/SourcePage.tsx
-#~ msgid "Project license files"
-#~ msgstr "Project license files"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "File removed successfully."

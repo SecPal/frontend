@@ -239,7 +239,7 @@ The public `/source` page now prefers a same-origin deployment manifest at
 source references for the exact frontend/API/contracts release set without
 turning the main UI into a generic build-info page.
 
-**Frontend responsibility**
+### Frontend Responsibility
 
 - Fetch `/source-offer.json` only when rendering `/source`
 - Accept only the narrow manifest below and render only the published source
@@ -247,7 +247,7 @@ turning the main UI into a generic build-info page.
 - Fall back to the public project repositories when the manifest is missing or
   invalid, so local development and preview environments stay usable
 
-**Deployment or API responsibility**
+### Deployment Or API Responsibility
 
 - Serve `/source-offer.json` from the same origin as the frontend deployment
 - Populate immutable `sourceUrl` values for at least `frontend`, `api`, and
@@ -260,7 +260,7 @@ turning the main UI into a generic build-info page.
 - Serve the manifest with `Cache-Control: no-cache, must-revalidate` (or
   stricter) so `/source` tracks the currently deployed release after rollouts
 
-**Manifest shape**
+### Manifest Shape
 
 ```json
 {

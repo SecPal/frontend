@@ -138,10 +138,6 @@ msgstr "Erwerbstätigkeit gestattet"
 msgid "Source offer for users interacting with SecPal over a network."
 msgstr "Quelltextangebot für Benutzer, die über ein Netzwerk mit SecPal interagieren."
 
-#: src/pages/SourcePage.tsx
-#~ msgid "These repositories contain the preferred form for making modifications to the SecPal components made available through this service."
-#~ msgstr "Diese Repositories enthalten die bevorzugte Form zum Bearbeiten der SecPal-Komponenten, die über diesen Dienst bereitgestellt werden."
-
 #: src/components/ScopeAssignmentForm.tsx
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
 msgstr "Um einem Mitarbeiter den Dienstgrad zu entziehen, muss der Benutzer die Berechtigung haben, diesen Dienstgrad zu vergeben. Dies verhindert eine Eskalation der Privilegien."
@@ -2793,10 +2789,6 @@ msgstr "Verursacher"
 msgid "Try Again"
 msgstr "Erneut versuchen"
 
-#: src/pages/SourcePage.tsx
-#~ msgid "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the repositories linked below."
-#~ msgstr "SecPal ist unter der GNU Affero General Public License, Version 3 oder jeder späteren Version, lizenziert. Wenn Sie diesen Dienst über ein Netzwerk nutzen, können Sie den entsprechenden Quelltext für die über diesen Dienst bereitgestellten SecPal-Komponenten kostenlos aus den unten verlinkten Repositories beziehen."
-
 #. placeholder {0}: formData.min_viewable_rank
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Invalid combination: min={0}, max=0 results in no visible employees!"
@@ -3412,10 +3404,6 @@ msgstr "Wenn hier kein bereitstellungsspezifisches Quelltext-Bündel veröffentl
 #: src/components/ScopeAssignmentForm.tsx
 msgid "0 or empty for non-leadership only"
 msgstr "0 oder leer nur für Nicht-Führungskräfte"
-
-#: src/pages/SourcePage.tsx
-#~ msgid "Project license files"
-#~ msgstr "Projektlizenzdateien"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "File removed successfully."
