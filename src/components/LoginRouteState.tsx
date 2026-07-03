@@ -6,7 +6,10 @@ import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { KeyRound } from "lucide-react";
 import { useState } from "react";
-import { LoginTopControlsSkeleton } from "./LoginLegalMenu";
+import {
+  LoginHeaderControls,
+  LoginTopControlsSkeleton,
+} from "./LoginLegalMenu";
 import { LegalFooterLinks } from "./LegalFooterLinks";
 import { Logo } from "./Logo";
 import {
@@ -27,6 +30,19 @@ import {
 interface LoginRouteVaultLockedStateProps {
   onUnlock: () => Promise<boolean>;
   onSignInAgain: () => void;
+}
+
+function LoginRouteFooter() {
+  return (
+    <footer className="mt-auto w-full max-w-sm pt-3 pb-[var(--app-footer-padding-bottom)] text-center text-xs">
+      <div className="text-muted-foreground flex flex-col items-center gap-2">
+        <LegalFooterLinks className="flex items-center justify-center gap-2" />
+        <span className="text-foreground inline-block text-xs font-semibold">
+          <Trans>Powered by SecPal – A guard's best friend</Trans>
+        </span>
+      </div>
+    </footer>
+  );
 }
 
 export function LoginRouteLoadingState() {
@@ -114,14 +130,7 @@ export function LoginRouteLoadingState() {
         </LoginCard>
       </div>
 
-      <footer className="mt-auto w-full max-w-sm pt-3 pb-[var(--app-footer-padding-bottom)] text-center text-xs">
-        <div className="text-muted-foreground flex flex-col items-center gap-2">
-          <LegalFooterLinks className="flex items-center justify-center gap-2" />
-          <span className="text-foreground inline-block text-xs font-semibold">
-            <Trans>Powered by SecPal – A guard's best friend</Trans>
-          </span>
-        </div>
-      </footer>
+      <LoginRouteFooter />
     </LoginShell>
   );
 }
@@ -155,6 +164,8 @@ export function LoginRouteVaultLockedState({
 
   return (
     <LoginShell data-route-guard-state="vault-locked">
+      <LoginHeaderControls />
+
       <div className="flex w-full flex-1 items-center justify-center">
         <LoginCard className="text-center">
           <LoginFieldGroup>
@@ -211,6 +222,8 @@ export function LoginRouteVaultLockedState({
           </LoginFieldGroup>
         </LoginCard>
       </div>
+
+      <LoginRouteFooter />
     </LoginShell>
   );
 }

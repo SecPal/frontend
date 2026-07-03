@@ -6,10 +6,10 @@ import { useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { KeyRound, Languages } from "lucide-react";
+import { KeyRound } from "lucide-react";
 
 import type { MfaChallenge, MfaVerificationMethod } from "@/types/api";
-import { LoginLegalMenu, LoginTopControls } from "@/components/LoginLegalMenu";
+import { LoginHeaderControls } from "@/components/LoginLegalMenu";
 import { useAuth } from "../hooks/useAuth";
 import { useRecoverableLazyComponent } from "../hooks/useRecoverableLazyComponent";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
@@ -17,7 +17,6 @@ import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { getAuthTransport, AuthApiError } from "../services/authTransport";
 import { sanitizeAuthUser } from "../services/authState";
 import { Logo } from "../components/Logo";
-import { activateLocale, locales, setLocalePreference } from "../i18n";
 import { loadLoginMfaDialogModule } from "../lib/lazyAppModules";
 import {
   isRecoverableLazyModuleError,
@@ -38,13 +37,6 @@ import {
   LoginShell,
   LoginSpinner,
   LoginStatusMessage,
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
 } from "@/ui";
 
 const HEALTH_CHECK_RETRY_DELAYS_MS = [0, 1500, 5000];
@@ -710,12 +702,7 @@ export function Login() {
 
   return (
     <LoginShell>
-      {!isCompletingLogin && (
-        <LoginTopControls>
-          <LoginLegalMenu />
-          <LoginLanguageSwitcher />
-        </LoginTopControls>
-      )}
+      {!isCompletingLogin && <LoginHeaderControls />}
 
       {/*
         Centered card region. `flex-1` lets it grow to fill the space between
@@ -987,59 +974,6 @@ export function Login() {
         />
       ) : null}
     </LoginShell>
-  );
-}
-
-function LoginLanguageSwitcher() {
-  const { _, i18n } = useLingui();
-  const [error, setError] = useState<string | null>(null);
-
-  const handleValueChange = async (locale: string) => {
-    setError(null);
-
-    try {
-      await activateLocale(locale);
-      setLocalePreference(locale);
-    } catch {
-      setError(_(msg`Failed to change language. Please try again.`));
-    }
-  };
-
-  return (
-    <div>
-      <Select
-        value={i18n.locale}
-        onValueChange={(locale) => {
-          void handleValueChange(locale);
-        }}
-      >
-        <SelectTrigger
-          aria-label={_(msg`Select language`)}
-          className="w-auto justify-start [&>[data-slot='select-trigger-icon']]:hidden"
-        >
-          <Languages aria-hidden="true" />
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent
-          className="w-fit min-w-fit"
-          viewportClassName="h-auto w-fit min-w-0"
-        >
-          <SelectGroup>
-            <SelectLabel>{_(msg`Language`)}</SelectLabel>
-            {Object.entries(locales).map(([code, name]) => (
-              <SelectItem key={code} value={code} hideIndicator>
-                {name}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-      {error ? (
-        <LoginFieldError role="alert" aria-live="assertive" className="mt-2">
-          {error}
-        </LoginFieldError>
-      ) : null}
-    </div>
   );
 }
 

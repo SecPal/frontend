@@ -983,7 +983,7 @@ msgstr "You'll now receive important updates from SecPal"
 msgid "Complete each earlier residence until your history reaches five years before today, or move your current residence start date back."
 msgstr "Complete each earlier residence until your history reaches five years before today, or move your current residence start date back."
 
-#: src/pages/Login.tsx
+#: src/components/LoginLegalMenu.tsx
 msgid "Failed to change language. Please try again."
 msgstr "Failed to change language. Please try again."
 
@@ -1896,7 +1896,7 @@ msgstr "Get started by creating your first organizational unit."
 msgid "Provide a short reason before this Android enrollment session is revoked."
 msgstr "Provide a short reason before this Android enrollment session is revoked."
 
-#: src/pages/Login.tsx
+#: src/components/LoginLegalMenu.tsx
 msgid "Select language"
 msgstr "Select language"
 
@@ -3361,7 +3361,7 @@ msgstr "User menu"
 msgid "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
-#: src/pages/Login.tsx
+#: src/components/LoginLegalMenu.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Language"
 msgstr "Language"

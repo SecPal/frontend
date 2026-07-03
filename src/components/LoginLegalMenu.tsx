@@ -1,11 +1,25 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { Code2, FileText, Scale, Shield } from "lucide-react";
+import { Code2, FileText, Languages, Scale, Shield } from "lucide-react";
+import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { PrefetchLink } from "@/components/PrefetchLink";
-import { Button } from "@/ui";
+import { activateLocale, locales, setLocalePreference } from "@/i18n";
+import {
+  Button,
+  LoginFieldError,
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -79,6 +93,68 @@ export function LoginTopControls({ children }: { children: React.ReactNode }) {
     <div className="absolute top-[calc(1rem+var(--app-safe-area-inset-top))] inset-x-4 flex items-start justify-between gap-2 sm:top-[calc(1.5rem+var(--app-safe-area-inset-top))] sm:inset-x-6">
       {children}
     </div>
+  );
+}
+
+export function LoginLanguageSwitcher() {
+  const { _, i18n } = useLingui();
+  const [error, setError] = useState<string | null>(null);
+
+  const handleValueChange = async (locale: string) => {
+    setError(null);
+
+    try {
+      await activateLocale(locale);
+      setLocalePreference(locale);
+    } catch {
+      setError(_(msg`Failed to change language. Please try again.`));
+    }
+  };
+
+  return (
+    <div>
+      <Select
+        value={i18n.locale}
+        onValueChange={(locale) => {
+          void handleValueChange(locale);
+        }}
+      >
+        <SelectTrigger
+          aria-label={_(msg`Select language`)}
+          className="w-auto justify-start [&>[data-slot='select-trigger-icon']]:hidden"
+        >
+          <Languages aria-hidden="true" />
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent
+          className="w-fit min-w-fit"
+          viewportClassName="h-auto w-fit min-w-0"
+        >
+          <SelectGroup>
+            <SelectLabel>{_(msg`Language`)}</SelectLabel>
+            {Object.entries(locales).map(([code, name]) => (
+              <SelectItem key={code} value={code} hideIndicator>
+                {name}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+      {error ? (
+        <LoginFieldError role="alert" aria-live="assertive" className="mt-2">
+          {error}
+        </LoginFieldError>
+      ) : null}
+    </div>
+  );
+}
+
+export function LoginHeaderControls() {
+  return (
+    <LoginTopControls>
+      <LoginLegalMenu />
+      <LoginLanguageSwitcher />
+    </LoginTopControls>
   );
 }
 

@@ -58,7 +58,7 @@ describe("LoginRouteState", () => {
     expect(footerBrand.className).not.toContain("text-zinc-700");
   });
 
-  it("does not render the legal menu in the vault-locked state", () => {
+  it("renders the login top controls in the vault-locked state", () => {
     renderWithI18n(
       <LoginRouteVaultLockedState
         onUnlock={vi.fn().mockResolvedValue(true)}
@@ -67,8 +67,13 @@ describe("LoginRouteState", () => {
     );
 
     expect(
-      screen.queryByRole("button", { name: /legal|rechtliches/i })
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: /legal|rechtliches/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", {
+        name: /select language|sprache auswählen/i,
+      })
+    ).toBeInTheDocument();
   });
 
   it("keeps the vault-locked explanation and error states on canonical tokens", async () => {
@@ -94,8 +99,17 @@ describe("LoginRouteState", () => {
     expect(error).toHaveClass("text-foreground");
 
     const shell = container.querySelector("main");
+    const footer = container.querySelector("footer");
+    const footerBrand = screen.getByText(/powered by secpal/i);
+
     expect(shell).toHaveClass("bg-background", "text-foreground");
     expect(shell?.className).not.toContain("pb-6");
     expect(shell?.className).not.toContain("md:pb-10");
+    expect(footer).toHaveClass(
+      "mt-auto",
+      "pt-3",
+      "pb-[var(--app-footer-padding-bottom)]"
+    );
+    expect(footerBrand).toHaveClass("text-foreground", "text-xs");
   });
 });
