@@ -170,14 +170,17 @@ export function resolveApiBaseUrl(options?: {
   const normalizedConfiguredBaseUrl =
     normalizeConfiguredApiBaseUrl(configuredBaseUrl);
 
-  if (
-    mode === "production" &&
-    runtimeHostname &&
-    isLoopbackApiHost(runtimeHostname) &&
-    isAbsoluteHttpUrl(normalizedConfiguredBaseUrl) &&
-    isPreviewHostname(new URL(normalizedConfiguredBaseUrl).hostname)
-  ) {
-    return "";
+  if (mode === "production" && runtimeHostname && isLoopbackApiHost(runtimeHostname)) {
+    if (!normalizedConfiguredBaseUrl) {
+      return "";
+    }
+
+    if (
+      isAbsoluteHttpUrl(normalizedConfiguredBaseUrl) &&
+      isPreviewHostname(new URL(normalizedConfiguredBaseUrl).hostname)
+    ) {
+      return "";
+    }
   }
 
   if (
