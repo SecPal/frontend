@@ -101,7 +101,13 @@ export function SourcePage() {
   useEffect(() => {
     let isActive = true;
 
-    void loadSourceOffer().then((result) => {
+    void loadSourceOffer(globalThis.fetch, (partialResult) => {
+      if (!isActive) {
+        return;
+      }
+
+      setSourceOffer(partialResult);
+    }).then((result) => {
       if (!isActive) {
         return;
       }
@@ -290,13 +296,15 @@ export function SourcePage() {
                                 href={sourceOfferRepository.sourceUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-primary decoration-border inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-primary/80"
+                                className="text-primary decoration-border inline-flex min-w-0 items-start gap-2 text-sm font-medium underline underline-offset-4 hover:text-primary/80"
                               >
                                 <FileCode2
-                                  className="size-4"
+                                  className="mt-0.5 size-4 shrink-0"
                                   aria-hidden="true"
                                 />
-                                <span>{sourceOfferRepository.sourceUrl}</span>
+                                <span className="min-w-0 break-all">
+                                  {sourceOfferRepository.sourceUrl}
+                                </span>
                               </a>
                             ) : null}
                             {showsSeparateRepositoryLink ? (

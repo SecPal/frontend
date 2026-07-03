@@ -170,7 +170,11 @@ export function resolveApiBaseUrl(options?: {
   const normalizedConfiguredBaseUrl =
     normalizeConfiguredApiBaseUrl(configuredBaseUrl);
 
-  if (mode === "production" && runtimeHostname && isLoopbackApiHost(runtimeHostname)) {
+  if (
+    mode === "production" &&
+    runtimeHostname &&
+    isLoopbackApiHost(runtimeHostname)
+  ) {
     if (!normalizedConfiguredBaseUrl) {
       return "";
     }

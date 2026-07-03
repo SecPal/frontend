@@ -65,6 +65,7 @@ interface SourceOfferManifest {
 }
 
 type SourceOfferFetch = typeof fetch;
+type SourceOfferUpdateCallback = (result: LoadedSourceOffer) => void;
 
 function getFallbackSourceOffer(): LoadedSourceOffer {
   return {
@@ -214,56 +215,70 @@ function resolveSourceOffer(options: {
 }
 
 export async function loadSourceOffer(
-  fetchImplementation: SourceOfferFetch = globalThis.fetch
+  fetchImplementation: SourceOfferFetch = globalThis.fetch,
+  onPartialLoad?: SourceOfferUpdateCallback
 ): Promise<LoadedSourceOffer> {
   if (typeof fetchImplementation !== "function") {
     return getFallbackSourceOffer();
   }
 
-  try {
-    const requestInit = {
-      cache: "no-store" as const,
-      credentials: "omit" as const,
-      headers: {
-        accept: "application/json",
-      },
-    };
+  const requestInit = {
+    cache: "no-store" as const,
+    credentials: "omit" as const,
+    headers: {
+      accept: "application/json",
+    },
+  };
 
-    const [manifestResult, apiReleaseResult] = await Promise.allSettled([
-      fetchImplementation(SOURCE_OFFER_URL, requestInit),
-      fetchImplementation(API_RELEASE_URL, requestInit),
-    ]);
+  const manifestResponsePromise = fetchImplementation(
+    SOURCE_OFFER_URL,
+    requestInit
+  ).catch(() => null);
+  const apiReleaseResponsePromise = fetchImplementation(
+    API_RELEASE_URL,
+    requestInit
+  ).catch(() => null);
 
-    const manifestResponse =
-      manifestResult.status === "fulfilled" ? manifestResult.value : null;
-    const apiReleaseResponse =
-      apiReleaseResult.status === "fulfilled" ? apiReleaseResult.value : null;
-
-    let manifest: SourceOfferManifest | null = null;
-    if (manifestResponse?.ok) {
-      try {
-        manifest = parseSourceOfferManifest(await manifestResponse.json());
-      } catch {
-        manifest = null;
-      }
+  const manifestResponse = await manifestResponsePromise;
+  let manifest: SourceOfferManifest | null = null;
+  if (manifestResponse?.ok) {
+    try {
+      manifest = parseSourceOfferManifest(await manifestResponse.json());
+    } catch {
+      manifest = null;
     }
-
-    let apiRelease: PublicApiReleaseResponse | null = null;
-    if (apiReleaseResponse?.ok) {
-      try {
-        apiRelease = parseApiReleaseResponse(await apiReleaseResponse.json());
-      } catch {
-        apiRelease = null;
-      }
-    }
-
-    return resolveSourceOffer({
-      apiRelease,
-      manifest,
-    });
-  } catch {
-    return getFallbackSourceOffer();
   }
+
+  const manifestOnlyOffer = resolveSourceOffer({
+    apiRelease: null,
+    manifest,
+  });
+  if (
+    onPartialLoad &&
+    manifestOnlyOffer.mode === "deployment" &&
+    manifestOnlyOffer.repositories.some(
+      (repository) =>
+        repository.id !== "api" &&
+        repository.sourceUrl !== repository.repositoryUrl
+    )
+  ) {
+    onPartialLoad(manifestOnlyOffer);
+  }
+
+  const apiReleaseResponse = await apiReleaseResponsePromise;
+  let apiRelease: PublicApiReleaseResponse | null = null;
+  if (apiReleaseResponse?.ok) {
+    try {
+      apiRelease = parseApiReleaseResponse(await apiReleaseResponse.json());
+    } catch {
+      apiRelease = null;
+    }
+  }
+
+  return resolveSourceOffer({
+    apiRelease,
+    manifest,
+  });
 }
 
 export function getFallbackSourceRepositories(): SourceOfferRepository[] {

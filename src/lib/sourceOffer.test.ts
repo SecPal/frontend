@@ -736,4 +736,111 @@ describe("loadSourceOffer", () => {
       ])
     );
   });
+
+  it("publishes manifest source links before the API release fetch settles", async () => {
+    let resolveApiFetch: ((value: Response) => void) | undefined;
+    const onPartialLoad = vi.fn();
+
+    const fetchMock = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url;
+
+      if (url === "/source-offer.json") {
+        return new Response(
+          JSON.stringify({
+            version: 1,
+            repositories: {
+              frontend: {
+                sourceUrl:
+                  "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
+              },
+              contracts: {
+                sourceUrl:
+                  "https://github.com/SecPal/contracts/releases/download/contracts-2026-06-26/source.tar.gz",
+              },
+            },
+          }),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json",
+            },
+          }
+        );
+      }
+
+      if (url === "/v1/release") {
+        return new Promise<Response>((resolve) => {
+          resolveApiFetch = resolve;
+        });
+      }
+
+      throw new Error(`unexpected fetch for ${url}`);
+    });
+
+    const resultPromise = loadSourceOffer(fetchMock, onPartialLoad);
+
+    await vi.waitFor(() => {
+      expect(onPartialLoad).toHaveBeenCalledWith({
+        mode: "deployment",
+        repositories: [
+          {
+            id: "frontend",
+            name: "SecPal/frontend",
+            repositoryUrl: "https://github.com/SecPal/frontend",
+            sourceUrl:
+              "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
+          },
+          {
+            id: "api",
+            name: "SecPal/api",
+            repositoryUrl: "https://github.com/SecPal/api",
+            sourceUrl: null,
+          },
+          {
+            id: "contracts",
+            name: "SecPal/contracts",
+            repositoryUrl: "https://github.com/SecPal/contracts",
+            sourceUrl:
+              "https://github.com/SecPal/contracts/releases/download/contracts-2026-06-26/source.tar.gz",
+          },
+        ],
+      });
+    });
+
+    resolveApiFetch?.(
+      new Response(
+        JSON.stringify({
+          data: {
+            version: "api-2026-07-03",
+            source_url:
+              "https://github.com/SecPal/api/releases/download/api-2026-07-03/source.tar.gz",
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }
+      )
+    );
+
+    const result = await resultPromise;
+
+    expect(result.mode).toBe("deployment");
+    expect(result.repositories).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "api",
+          sourceUrl:
+            "https://github.com/SecPal/api/releases/download/api-2026-07-03/source.tar.gz",
+        }),
+      ])
+    );
+  });
 });
