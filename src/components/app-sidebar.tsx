@@ -48,7 +48,9 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMain} />
-        <NavLegal />
+        <div className="mt-auto">
+          <NavLegal />
+        </div>
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} onLock={onLock} onLogout={onLogout} />

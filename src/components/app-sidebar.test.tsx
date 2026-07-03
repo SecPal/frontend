@@ -33,8 +33,16 @@ vi.mock("@/ui/sidebar", () => ({
   SidebarHeader: ({ children }: { children: ReactNode }) => (
     <div data-slot="sidebar-header">{children}</div>
   ),
-  SidebarContent: ({ children }: { children: ReactNode }) => (
-    <div data-slot="sidebar-content">{children}</div>
+  SidebarContent: ({
+    children,
+    className,
+  }: {
+    children: ReactNode;
+    className?: string;
+  }) => (
+    <div data-slot="sidebar-content" className={className}>
+      {children}
+    </div>
   ),
   SidebarFooter: ({ children }: { children: ReactNode }) => (
     <div data-slot="sidebar-footer">{children}</div>
@@ -43,7 +51,7 @@ vi.mock("@/ui/sidebar", () => ({
 }));
 
 describe("AppSidebar", () => {
-  it("keeps legal navigation inside the scrollable sidebar content and leaves the footer for the user menu", () => {
+  it("keeps legal navigation inside the scrollable sidebar content directly above the user footer", () => {
     render(
       <AppSidebar
         navMain={[]}
@@ -64,6 +72,9 @@ describe("AppSidebar", () => {
     expect(
       within(sidebarContent as HTMLElement).getByTestId("nav-legal")
     ).toBeInTheDocument();
+    expect(screen.getByTestId("nav-legal").parentElement).toHaveClass(
+      "mt-auto"
+    );
     expect(
       within(sidebarFooter as HTMLElement).queryByTestId("nav-legal")
     ).not.toBeInTheDocument();
