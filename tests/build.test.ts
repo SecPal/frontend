@@ -15,6 +15,14 @@ function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(repoRoot, relativePath), "utf8");
 }
 
+function expectWarningFreeShippedNginxConfigSyntax(nginxConfig: string): void {
+  expect(nginxConfig).toMatch(/^\s*http2\s+on;$/mu);
+  expect(nginxConfig).not.toMatch(
+    /^\s*listen\b[^#;\n]*\bhttp2\b[^;\n]*;$/mu
+  );
+  expect(nginxConfig).not.toMatch(/^\s*ssi_types\s+text\/html;$/mu);
+}
+
 /**
  * Build Configuration and Source Verification Tests
  *
@@ -342,10 +350,36 @@ describe("Build Configuration and Source Verification", () => {
   it("keeps the shipped nginx config free of known syntax warnings", () => {
     const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");
 
-    expect(nginxConfig).toContain("http2 on;");
-    expect(nginxConfig).not.toContain("listen 443 ssl http2;");
-    expect(nginxConfig).not.toContain("listen [::]:443 ssl http2;");
-    expect(nginxConfig).not.toContain("ssi_types text/html;");
+    expectWarningFreeShippedNginxConfigSyntax(nginxConfig);
+  });
+
+  it("rejects commented http2 toggles", () => {
+    expect(() =>
+      expectWarningFreeShippedNginxConfigSyntax(
+        ["server {", "  listen 443 ssl;", "  # http2 on;", "}"].join("\n")
+      )
+    ).toThrowError();
+  });
+
+  it("rejects deprecated http2 listen parameters with extra flags", () => {
+    expect(() =>
+      expectWarningFreeShippedNginxConfigSyntax(
+        [
+          "server {",
+          "  listen 443 ssl http2 reuseport;",
+          "  http2 on;",
+          "}",
+        ].join("\n")
+      )
+    ).toThrowError(/listen\\b.*http2/u);
+  });
+
+  it("rejects a live ssi_types text/html override", () => {
+    expect(() =>
+      expectWarningFreeShippedNginxConfigSyntax(
+        ["server {", "  http2 on;", "  ssi_types text/html;", "}"].join("\n")
+      )
+    ).toThrowError(/ssi_types/u);
   });
 
   it("ships a live smoke check for deployed PWA security headers", () => {
