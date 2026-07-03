@@ -35,9 +35,14 @@ function LoginRouteFooter() {
   return (
     <footer className="mt-auto w-full max-w-sm pt-3 pb-[var(--app-footer-padding-bottom)] text-center text-xs">
       <div className="text-muted-foreground">
-        <span className="text-foreground inline-block text-xs font-semibold">
+        <a
+          href="https://secpal.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-foreground hover:text-foreground/80 inline-block text-xs font-semibold"
+        >
           <Trans>Powered by SecPal – A guard's best friend</Trans>
-        </span>
+        </a>
       </div>
     </footer>
   );

@@ -29,7 +29,9 @@ describe("LoginRouteState", () => {
     const skeletonBars = skeletonShell?.querySelectorAll("span");
     const footer = container.querySelector("footer div");
     const footerElement = container.querySelector("footer");
-    const footerBrand = screen.getByText(/powered by secpal/i);
+    const footerBrand = screen.getByRole("link", {
+      name: /powered by secpal/i,
+    });
 
     expect(shell.className).not.toContain("pb-6");
     expect(shell.className).not.toContain("md:pb-10");
@@ -49,6 +51,7 @@ describe("LoginRouteState", () => {
       "pb-[var(--app-footer-padding-bottom)]"
     );
     expect(footerBrand).toHaveClass("text-foreground", "text-xs");
+    expect(footerBrand).toHaveAttribute("href", "https://secpal.app");
 
     expect(skeletonShell?.className).not.toContain("border-zinc-300");
     expect(skeletonShell?.className).not.toContain("bg-zinc-100");
@@ -103,7 +106,9 @@ describe("LoginRouteState", () => {
 
     const shell = container.querySelector("main");
     const footer = container.querySelector("footer");
-    const footerBrand = screen.getByText(/powered by secpal/i);
+    const footerBrand = screen.getByRole("link", {
+      name: /powered by secpal/i,
+    });
 
     expect(shell).toHaveClass("bg-background", "text-foreground");
     expect(shell?.className).not.toContain("pb-6");
@@ -114,5 +119,6 @@ describe("LoginRouteState", () => {
       "pb-[var(--app-footer-padding-bottom)]"
     );
     expect(footerBrand).toHaveClass("text-foreground", "text-xs");
+    expect(footerBrand).toHaveAttribute("href", "https://secpal.app");
   });
 });
