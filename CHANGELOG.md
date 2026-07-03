@@ -57,6 +57,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   before rendering them and by waiting for the manifest request to settle
   before showing fallback repository guidance, so deployments do not flash
   mutable fallback links ahead of immutable release URLs.
+- Restored the `/source` fallback repository links while the
+  `/source-offer.json` request is still pending, so stalled manifest fetches
+  do not leave the corresponding-source section empty on the public AGPL page.
 - Refined the new legal-menu follow-up so the collapsed desktop sidebar opens
   `Legal` in a separate dropdown instead of expanding the whole sidebar, the
   login `Legal` trigger keeps the same neutral surface styling as the language

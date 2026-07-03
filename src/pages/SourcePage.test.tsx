@@ -126,7 +126,7 @@ describe("SourcePage", () => {
     );
   });
 
-  it("does not show fallback source links before the manifest request settles", async () => {
+  it("shows fallback source links while the manifest request is pending", async () => {
     let resolveFetch: ((value: Response) => void) | undefined;
 
     vi.mocked(globalThis.fetch).mockImplementation(
@@ -144,10 +144,10 @@ describe("SourcePage", () => {
       )
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("link", {
+      screen.getByRole("link", {
         name: "https://github.com/SecPal/frontend",
       })
-    ).not.toBeInTheDocument();
+    ).toHaveAttribute("href", "https://github.com/SecPal/frontend");
 
     resolveFetch?.(
       new Response(

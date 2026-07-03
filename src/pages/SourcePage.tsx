@@ -16,6 +16,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
 import {
+  getFallbackSourceRepositories,
   loadSourceOffer,
   type LoadedSourceOffer,
   type SourceOfferRepository,
@@ -110,7 +111,8 @@ export function SourcePage() {
     };
   }, []);
 
-  const repositories: SourceOfferRepository[] = sourceOffer?.repositories ?? [];
+  const repositories: SourceOfferRepository[] =
+    sourceOffer?.repositories ?? getFallbackSourceRepositories();
   const sourceOfferMode = sourceOffer?.mode;
 
   return (
