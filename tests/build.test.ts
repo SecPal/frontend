@@ -17,9 +17,7 @@ function readRepoFile(relativePath: string): string {
 
 function expectWarningFreeShippedNginxConfigSyntax(nginxConfig: string): void {
   expect(nginxConfig).toMatch(/^\s*http2\s+on;$/mu);
-  expect(nginxConfig).not.toMatch(
-    /^\s*listen\b[^#;\n]*\bhttp2\b[^;\n]*;$/mu
-  );
+  expect(nginxConfig).not.toMatch(/^\s*listen\b[^#;\n]*\bhttp2\b[^;\n]*;$/mu);
   expect(nginxConfig).not.toMatch(/^\s*ssi_types\s+text\/html;$/mu);
 }
 
