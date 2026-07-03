@@ -276,8 +276,8 @@ describe("App", () => {
       screen.getByRole("link", { name: "https://github.com/SecPal/contracts" })
     ).toHaveAttribute("href", "https://github.com/SecPal/contracts");
     expect(
-      screen.getByRole("link", { name: "https://github.com/SecPal/android" })
-    ).toHaveAttribute("href", "https://github.com/SecPal/android");
+      screen.queryByRole("link", { name: "https://github.com/SecPal/android" })
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /read the agpl v3 license/i })
     ).toHaveAttribute("href", "https://www.gnu.org/licenses/agpl-3.0.html");
@@ -321,8 +321,8 @@ describe("App", () => {
       screen.getByRole("link", { name: "https://github.com/SecPal/contracts" })
     ).toHaveAttribute("href", "https://github.com/SecPal/contracts");
     expect(
-      screen.getByRole("link", { name: "https://github.com/SecPal/android" })
-    ).toHaveAttribute("href", "https://github.com/SecPal/android");
+      screen.queryByRole("link", { name: "https://github.com/SecPal/android" })
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByText(/project license files/i)
     ).not.toBeInTheDocument();

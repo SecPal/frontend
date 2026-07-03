@@ -284,9 +284,7 @@ describe("SourcePage", () => {
       /the source release links shown below point to the immutable corresponding source published for this deployment/i
     );
 
-    expect(
-      screen.queryByText("SecPal/android")
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("SecPal/android")).not.toBeInTheDocument();
   });
 
   it("shows fallback source links while the manifest request is pending", async () => {

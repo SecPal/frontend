@@ -235,7 +235,7 @@ export async function loadSourceOffer(
     let manifest: SourceOfferManifest | null = null;
     if (manifestResponse?.ok) {
       try {
-        manifest = parseSourceOfferManifest(await manifestResponse.json());
+        manifest = parseSourceOfferManifest(await manifestResult.value.json());
       } catch {
         manifest = null;
       }
@@ -244,7 +244,9 @@ export async function loadSourceOffer(
     let apiRelease: ApiReleaseResponse | null = null;
     if (apiReleaseResponse?.ok) {
       try {
-        apiRelease = parseApiReleaseResponse(await apiReleaseResponse.json());
+        apiRelease = parseApiReleaseResponse(
+          await apiReleaseResult.value.json()
+        );
       } catch {
         apiRelease = null;
       }

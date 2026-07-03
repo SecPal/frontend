@@ -179,8 +179,8 @@ export function SourcePage() {
                     deploymentHasFallbackRepositoryLinks ? (
                       <Trans>
                         Published source release links shown below are
-                        immutable. Components without a published source
-                        release remain linked to their public repositories.
+                        immutable. Components without a published source release
+                        remain linked to their public repositories.
                       </Trans>
                     ) : (
                       <Trans>
@@ -244,94 +244,96 @@ export function SourcePage() {
                     )
                   )
                     .filter(
-                      (repository): repository is (typeof SOURCE_REPOSITORIES)[number] =>
+                      (
+                        repository
+                      ): repository is (typeof SOURCE_REPOSITORIES)[number] =>
                         repository !== undefined &&
                         repositories.some((entry) => entry.id === repository.id)
                     )
                     .map((repository) => {
-                    const sourceOfferRepository = repositories.find(
-                      (entry) => entry.id === repository.id
-                    );
+                      const sourceOfferRepository = repositories.find(
+                        (entry) => entry.id === repository.id
+                      );
 
-                    if (!sourceOfferRepository) {
-                      return null;
-                    }
+                      if (!sourceOfferRepository) {
+                        return null;
+                      }
 
-                    const showsSeparateRepositoryLink =
-                      sourceOfferRepository.sourceUrl !== null &&
-                      sourceOfferMode === "deployment" &&
-                      sourceOfferRepository.sourceUrl !==
-                        sourceOfferRepository.repositoryUrl;
+                      const showsSeparateRepositoryLink =
+                        sourceOfferRepository.sourceUrl !== null &&
+                        sourceOfferMode === "deployment" &&
+                        sourceOfferRepository.sourceUrl !==
+                          sourceOfferRepository.repositoryUrl;
 
-                    return (
-                      <article
-                        key={repository.id}
-                        className="rounded-xl border border-border bg-muted p-5"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="space-y-2">
-                            <h3 className="text-foreground text-base font-semibold">
-                              {repository.name}
-                            </h3>
-                            <p className="text-muted-foreground text-sm leading-6">
-                              {_(repository.description)}
-                            </p>
+                      return (
+                        <article
+                          key={repository.id}
+                          className="rounded-xl border border-border bg-muted p-5"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-2">
+                              <h3 className="text-foreground text-base font-semibold">
+                                {repository.name}
+                              </h3>
+                              <p className="text-muted-foreground text-sm leading-6">
+                                {_(repository.description)}
+                              </p>
+                            </div>
+                            <FolderGit2
+                              className="text-muted-foreground mt-0.5 size-5 shrink-0"
+                              aria-hidden="true"
+                            />
                           </div>
-                          <FolderGit2
-                            className="text-muted-foreground mt-0.5 size-5 shrink-0"
-                            aria-hidden="true"
-                          />
-                        </div>
-                        <div className="mt-4 space-y-3">
-                          {sourceOfferRepository.sourceUrl !== null ? (
-                            <a
-                              href={sourceOfferRepository.sourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary decoration-border inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-primary/80"
-                            >
-                              <FileCode2
-                                className="size-4"
-                                aria-hidden="true"
-                              />
-                              <span>{sourceOfferRepository.sourceUrl}</span>
-                            </a>
-                          ) : null}
-                          {showsSeparateRepositoryLink ? (
-                            <a
-                              href={sourceOfferRepository.repositoryUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-muted-foreground inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-foreground"
-                            >
-                              <span>
-                                <Trans>Open public repository</Trans>
-                              </span>
-                              <ExternalLink
-                                className="size-4"
-                                aria-hidden="true"
-                              />
-                            </a>
-                          ) : sourceOfferRepository.sourceUrl === null ? (
-                            <a
-                              href={sourceOfferRepository.repositoryUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-muted-foreground inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-foreground"
-                            >
-                              <span>
-                                <Trans>Open public repository</Trans>
-                              </span>
-                              <ExternalLink
-                                className="size-4"
-                                aria-hidden="true"
-                              />
-                            </a>
-                          ) : null}
-                        </div>
-                      </article>
-                    );
-                  })}
+                          <div className="mt-4 space-y-3">
+                            {sourceOfferRepository.sourceUrl !== null ? (
+                              <a
+                                href={sourceOfferRepository.sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary decoration-border inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-primary/80"
+                              >
+                                <FileCode2
+                                  className="size-4"
+                                  aria-hidden="true"
+                                />
+                                <span>{sourceOfferRepository.sourceUrl}</span>
+                              </a>
+                            ) : null}
+                            {showsSeparateRepositoryLink ? (
+                              <a
+                                href={sourceOfferRepository.repositoryUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-muted-foreground inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-foreground"
+                              >
+                                <span>
+                                  <Trans>Open public repository</Trans>
+                                </span>
+                                <ExternalLink
+                                  className="size-4"
+                                  aria-hidden="true"
+                                />
+                              </a>
+                            ) : sourceOfferRepository.sourceUrl === null ? (
+                              <a
+                                href={sourceOfferRepository.repositoryUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-muted-foreground inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-foreground"
+                              >
+                                <span>
+                                  <Trans>Open public repository</Trans>
+                                </span>
+                                <ExternalLink
+                                  className="size-4"
+                                  aria-hidden="true"
+                                />
+                              </a>
+                            ) : null}
+                          </div>
+                        </article>
+                      );
+                    })}
               </CardContent>
             </Card>
           </section>
