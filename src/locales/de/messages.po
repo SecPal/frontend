@@ -28,7 +28,7 @@ msgstr "Aktiviere ..."
 
 #: src/pages/Login.tsx
 msgid "Second factor required"
-msgstr ""
+msgstr "Zweiter Faktor erforderlich"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Welcome to SecPal Onboarding"
@@ -49,7 +49,7 @@ msgstr "Mitarbeiter bearbeiten"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Loading employee qualifications"
-msgstr ""
+msgstr "Mitarbeiterqualifikationen werden geladen"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Activity Information"
@@ -156,7 +156,7 @@ msgstr "Gültig bis"
 
 #: src/components/RouteLoader.tsx
 msgid "Loading application"
-msgstr ""
+msgstr "Anwendung wird geladen"
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -227,7 +227,7 @@ msgstr "Nein"
 
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "City is required."
-msgstr ""
+msgstr "Ort ist erforderlich."
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Verification method"
@@ -320,7 +320,7 @@ msgstr "Objektnummer:"
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeList.tsx
 msgid "View {0}"
-msgstr ""
+msgstr "{0} anzeigen"
 
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
@@ -413,7 +413,7 @@ msgstr "Untergeordnete Einheit hinzufügen"
 
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Loading employee form"
-msgstr ""
+msgstr "Mitarbeiterformular wird geladen"
 
 #: src/components/NotificationPreferences.tsx
 msgid "Test Notification"
@@ -804,7 +804,7 @@ msgstr "Zur Stammeinheit machen (keine übergeordnete Einheit)"
 
 #: src/components/application-layout.tsx
 msgid "SecPal"
-msgstr ""
+msgstr "SecPal"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Supporting documents"
@@ -946,7 +946,7 @@ msgstr "Hausnummer"
 
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "Country must use a 2-letter code."
-msgstr ""
+msgstr "Das Land muss einen zweistelligen Ländercode verwenden."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Unnamed Android enrollment session"
@@ -972,7 +972,7 @@ msgstr "z.B. Niederlassung Berlin"
 
 #: src/pages/Employees/EmployeeList.tsx
 msgid "Loading employees table"
-msgstr ""
+msgstr "Mitarbeitertabelle wird geladen"
 
 #: src/components/NotificationPermissionPrompt.tsx
 #: src/components/NotificationPreferences.tsx
@@ -1004,7 +1004,7 @@ msgstr "Schweiz"
 
 #: src/components/PublicRouteLoader.tsx
 msgid "Loading page"
-msgstr ""
+msgstr "Seite wird geladen"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "This session expired before setup completed. Create a new session to continue."
@@ -1250,7 +1250,7 @@ msgstr "Optional: Laden Sie die Rückseite als zweite Datei hoch."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 msgid "Loading employee contact form"
-msgstr ""
+msgstr "Kontaktformular des Mitarbeiters wird geladen"
 
 #: src/pages/Sites/SitesPage.tsx
 msgid "Failed to load sites"
@@ -1372,7 +1372,7 @@ msgstr "Bootstrap abgeschlossen"
 
 #: src/components/LoginRouteState.tsx
 msgid "Loading login"
-msgstr ""
+msgstr "Anmeldung wird geladen"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Enter the expiry date if the residence title is limited."
@@ -1414,7 +1414,7 @@ msgstr "Sie wurden erfolgreich angemeldet, aber Ihr Onboarding ist noch nicht ab
 #. placeholder {0}: repository.name
 #: src/pages/SourcePage.tsx
 msgid "Open public repository for {0}"
-msgstr ""
+msgstr "Öffentliches Repository für {0} öffnen"
 
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
 msgid "You're all set"
@@ -1538,7 +1538,7 @@ msgstr "Früherer Wohnort {0}"
 
 #: src/pages/Login.tsx
 msgid "Loading second factor prompt…"
-msgstr ""
+msgstr "Abfrage für zweiten Faktor wird geladen…"
 
 #: src/components/application-layout.tsx
 msgid "Employees"
@@ -1903,7 +1903,7 @@ msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Provide a short reason before this Android enrollment session is revoked."
-msgstr ""
+msgstr "Geben Sie einen kurzen Grund an, bevor diese Android-Registrierungssitzung widerrufen wird."
 
 #: src/components/LoginLegalMenu.tsx
 msgid "Select language"
@@ -1924,7 +1924,7 @@ msgstr "Verarbeitung..."
 
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "{sitesCount, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
-msgstr ""
+msgstr "{sitesCount, plural, =0 {Dieser Kunde hat keine Objekte.} one {Dieser Kunde hat # Objekt.} other {Dieser Kunde hat # Objekte.}}"
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Last Updated"
@@ -1966,7 +1966,7 @@ msgstr "Kontaktfeld konnte nicht aktualisiert werden."
 
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "Postal code is required."
-msgstr ""
+msgstr "Postleitzahl ist erforderlich."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Generating BWR Export..."
@@ -2016,7 +2016,7 @@ msgstr "Überprüfen Sie Ihre E-Mail-Adresse"
 
 #: src/pages/Login.tsx
 msgid "SecPal could not load the secure verification prompt. Retry to continue your sign-in, or return to the login form."
-msgstr ""
+msgstr "SecPal konnte die sichere Verifizierungsabfrage nicht laden. Versuchen Sie es erneut, um mit der Anmeldung fortzufahren, oder kehren Sie zum Anmeldeformular zurück."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Please enter a valid date of birth"
@@ -2533,7 +2533,7 @@ msgstr "Speichern Sie jetzt Ihre Wiederherstellungscodes"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Revoke enrollment session"
-msgstr ""
+msgstr "Registrierungssitzung widerrufen"
 
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "Create Customer"
@@ -2557,7 +2557,7 @@ msgstr "Organisationsstruktur"
 
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "Customer name is required."
-msgstr ""
+msgstr "Kundenname ist erforderlich."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -2571,7 +2571,7 @@ msgstr "Standard"
 
 #: src/pages/Login.tsx
 msgid "Back to Login"
-msgstr ""
+msgstr "Zurück zur Anmeldung"
 
 #: src/components/LoginLegalMenu.tsx
 #: src/components/nav-legal.tsx
@@ -2642,7 +2642,7 @@ msgstr "Nationalitätsoptionen konnten derzeit nicht geladen werden. Bitte laden
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Select an organizational unit before moving it."
-msgstr ""
+msgstr "Wählen Sie eine Organisationseinheit aus, bevor Sie sie verschieben."
 
 #: src/pages/Sites/SiteCreate.tsx
 msgid "Failed to create site"
@@ -2660,7 +2660,7 @@ msgstr "Dauerhaft"
 
 #: src/pages/Employees/EmployeeList.tsx
 msgid "No employees found"
-msgstr ""
+msgstr "Keine Mitarbeiter gefunden"
 
 #: src/components/OfflineIndicator.tsx
 msgid "You're offline. Click for details."
@@ -2717,7 +2717,7 @@ msgstr "Die Beschreibung darf höchstens 1000 Zeichen lang sein"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Revocation reason is required."
-msgstr ""
+msgstr "Ein Widerrufsgrund ist erforderlich."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Failed to validate onboarding link"
@@ -2750,7 +2750,7 @@ msgstr "Passkey konnte nicht gelöscht werden."
 
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "Street is required."
-msgstr ""
+msgstr "Straße ist erforderlich."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No qualifications assigned"
@@ -3050,7 +3050,7 @@ msgstr "Zeige zwischengespeicherte Daten. Einige Einheiten können veraltet sein
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Loading employee details"
-msgstr ""
+msgstr "Mitarbeiterdetails werden geladen"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Residence title valid until"
@@ -3095,7 +3095,7 @@ msgstr "Mitarbeiter konnte nicht gekündigt werden"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Loading employee documents"
-msgstr ""
+msgstr "Mitarbeiterdokumente werden geladen"
 
 #: src/components/OfflineDataBanner.tsx
 msgid "Showing cached data"
@@ -3215,7 +3215,7 @@ msgstr "Anwendung jetzt aktualisieren"
 
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "This customer's site count is unavailable."
-msgstr ""
+msgstr "Die Anzahl der Standorte dieses Kunden ist nicht verfügbar."
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
@@ -3446,7 +3446,7 @@ msgstr "Bitte wählen Sie eine Datei zum Hochladen aus."
 
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "Please enter a valid email address."
-msgstr ""
+msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein."
 
 #: src/pages/SourcePage.tsx
 msgid "Source code and license"
@@ -3530,7 +3530,7 @@ msgstr "Passkey speichern …"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Validating onboarding link"
-msgstr ""
+msgstr "Onboarding-Link wird geprüft"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 #: src/pages/Employees/EmployeeBwrPanel.tsx
@@ -3598,7 +3598,7 @@ msgstr "Freiberuflich"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Loading onboarding"
-msgstr ""
+msgstr "Onboarding wird geladen"
 
 #: src/pages/SourcePage.tsx
 msgid "Open public repository"
@@ -3750,7 +3750,7 @@ msgstr "OK"
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Loading unit options"
-msgstr ""
+msgstr "Optionen für Organisationseinheiten werden geladen"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "Deleting organizational units is not possible while offline. Please reconnect to make changes."
@@ -3804,4 +3804,4 @@ msgstr "Mitarbeiter konnte nicht aktiviert werden"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Revoking..."
-msgstr ""
+msgstr "Wird widerrufen..."

@@ -9,6 +9,8 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import CustomerDetail from "./CustomerDetail";
 import * as customersApi from "../../services/customersApi";
+import { messages as deMessages } from "../../locales/de/messages.mjs";
+import { messages as enMessages } from "../../locales/en/messages.mjs";
 
 const { mockUseUserCapabilities } = vi.hoisted(() => ({
   mockUseUserCapabilities: vi.fn(),
@@ -80,6 +82,9 @@ describe("CustomerDetail", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    i18n.load("de", deMessages);
+    i18n.load("en", enMessages);
+    i18n.activate("en");
     window.history.pushState({}, "", "/customers/customer-123");
     mockUseUserCapabilities.mockReturnValue({
       actions: {
@@ -187,6 +192,35 @@ describe("CustomerDetail", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/This customer has 5 site/)).toBeInTheDocument();
+    });
+  });
+
+  it("uses Objekt wording for German site counts", async () => {
+    i18n.activate("de");
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Dieser Kunde hat 5 Objekte.")
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("uses the natural zero-state wording for German site counts", async () => {
+    i18n.activate("de");
+    vi.mocked(customersApi.getCustomer).mockResolvedValue({
+      ...mockCustomer,
+      sites_count: 0,
+    });
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Dieser Kunde hat keine Objekte.")
+      ).toBeInTheDocument();
     });
   });
 

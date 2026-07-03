@@ -48,6 +48,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Standardized the German customer site-count copy on `CustomerDetail` to use
+  `Objekt` / `Objekte`, matching the rest of the Sites UI and keeping the zero
+  state on the natural "keine Objekte" wording.
+- Completed the remaining German Lingui catalog coverage for the frontend's
+  supported UI copy, translating the previously missing `de` entries and
+  adding a regression test that fails whenever any checked-in German catalog
+  message is left untranslated.
 - Moved the AGPL/license and source-code notices out of the authenticated and
   login footers so those footers keep only the "Powered by SecPal" slogan; the
   authenticated sidebar now exposes a collapsible `Legal` section above the
