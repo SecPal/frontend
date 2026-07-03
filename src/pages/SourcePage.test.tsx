@@ -323,6 +323,97 @@ describe("SourcePage", () => {
     );
   });
 
+  it("renders the API release link before the manifest fetch settles", async () => {
+    let resolveManifestFetch: ((value: Response) => void) | undefined;
+
+    vi.mocked(globalThis.fetch).mockImplementation(
+      async (input: string | URL | Request) => {
+        const url =
+          typeof input === "string"
+            ? input
+            : input instanceof URL
+              ? input.toString()
+              : input.url;
+
+        if (url === "/source-offer.json") {
+          return new Promise((resolve) => {
+            resolveManifestFetch = resolve;
+          });
+        }
+
+        if (url === "/v1/release") {
+          return new Response(
+            JSON.stringify({
+              data: {
+                version: "api-2026-07-03",
+                source_url:
+                  "https://github.com/SecPal/api/releases/download/api-2026-07-03/source.tar.gz",
+              },
+            }),
+            {
+              status: 200,
+              headers: {
+                "content-type": "application/json",
+              },
+            }
+          );
+        }
+
+        throw new Error(`unexpected fetch for ${url}`);
+      }
+    );
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("link", {
+        name: "https://github.com/SecPal/api/releases/download/api-2026-07-03/source.tar.gz",
+      })
+    ).toHaveAttribute(
+      "href",
+      "https://github.com/SecPal/api/releases/download/api-2026-07-03/source.tar.gz"
+    );
+
+    expect(
+      screen.queryByRole("link", {
+        name: "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
+      })
+    ).not.toBeInTheDocument();
+
+    resolveManifestFetch?.(
+      new Response(
+        JSON.stringify({
+          version: 1,
+          repositories: {
+            frontend: {
+              sourceUrl:
+                "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
+            },
+            contracts: {
+              sourceUrl:
+                "https://github.com/SecPal/contracts/releases/download/contracts-2026-06-26/source.tar.gz",
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }
+      )
+    );
+
+    expect(
+      await screen.findByRole("link", {
+        name: "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
+      })
+    ).toHaveAttribute(
+      "href",
+      "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz"
+    );
+  });
+
   it("lists Android first when the deployment publishes an Android release", async () => {
     mockSourceOfferRequests({
       manifestResponse: new Response(

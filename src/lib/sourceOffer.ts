@@ -67,6 +67,10 @@ interface SourceOfferManifest {
 type SourceOfferFetch = typeof fetch;
 type SourceOfferUpdateCallback = (result: LoadedSourceOffer) => void;
 
+function normalizeRepositoryUrl(url: string): string {
+  return new URL(url).href.replace(/\/$/, "");
+}
+
 function getFallbackSourceOffer(): LoadedSourceOffer {
   return {
     mode: "fallback",
@@ -84,7 +88,8 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function parseManifestRepository(
-  value: unknown
+  value: unknown,
+  repositoryDefinition: SourceRepositoryDefinition
 ): SourceOfferManifestRepository | null {
   if (!isObjectRecord(value)) {
     return null;
@@ -96,6 +101,13 @@ function parseManifestRepository(
 
   const sourceUrl = value.sourceUrl.trim();
   if (!isSafeHttpUrl(sourceUrl)) {
+    return null;
+  }
+
+  if (
+    normalizeRepositoryUrl(sourceUrl) ===
+    normalizeRepositoryUrl(repositoryDefinition.repositoryUrl)
+  ) {
     return null;
   }
 
@@ -120,7 +132,8 @@ function parseSourceOfferManifest(value: unknown): SourceOfferManifest | null {
 
   for (const repository of SOURCE_REPOSITORY_DEFINITIONS) {
     const parsedRepository = parseManifestRepository(
-      repositoriesValue[repository.id]
+      repositoriesValue[repository.id],
+      repository
     );
 
     if (parsedRepository !== null) {
@@ -239,41 +252,68 @@ export async function loadSourceOffer(
     requestInit
   ).catch(() => null);
 
-  const manifestResponse = await manifestResponsePromise;
   let manifest: SourceOfferManifest | null = null;
-  if (manifestResponse?.ok) {
-    try {
-      manifest = parseSourceOfferManifest(await manifestResponse.json());
-    } catch {
-      manifest = null;
-    }
-  }
-
-  const manifestOnlyOffer = resolveSourceOffer({
-    apiRelease: null,
-    manifest,
-  });
-  if (
-    onPartialLoad &&
-    manifestOnlyOffer.mode === "deployment" &&
-    manifestOnlyOffer.repositories.some(
-      (repository) =>
-        repository.id !== "api" &&
-        repository.sourceUrl !== repository.repositoryUrl
-    )
-  ) {
-    onPartialLoad(manifestOnlyOffer);
-  }
-
-  const apiReleaseResponse = await apiReleaseResponsePromise;
   let apiRelease: PublicApiReleaseResponse | null = null;
-  if (apiReleaseResponse?.ok) {
-    try {
-      apiRelease = parseApiReleaseResponse(await apiReleaseResponse.json());
-    } catch {
-      apiRelease = null;
+  let lastPublishedState: string | null = null;
+
+  const publishPartialOffer = () => {
+    if (!onPartialLoad) {
+      return;
     }
-  }
+
+    const offer = resolveSourceOffer({
+      apiRelease,
+      manifest,
+    });
+
+    if (offer.mode !== "deployment") {
+      return;
+    }
+
+    const publicationState = JSON.stringify(offer.repositories);
+    if (publicationState === lastPublishedState) {
+      return;
+    }
+
+    lastPublishedState = publicationState;
+    onPartialLoad(offer);
+  };
+
+  const manifestTask = manifestResponsePromise.then(
+    async (manifestResponse) => {
+      if (!manifestResponse?.ok) {
+        publishPartialOffer();
+        return;
+      }
+
+      try {
+        manifest = parseSourceOfferManifest(await manifestResponse.json());
+      } catch {
+        manifest = null;
+      }
+
+      publishPartialOffer();
+    }
+  );
+
+  const apiReleaseTask = apiReleaseResponsePromise.then(
+    async (apiReleaseResponse) => {
+      if (!apiReleaseResponse?.ok) {
+        publishPartialOffer();
+        return;
+      }
+
+      try {
+        apiRelease = parseApiReleaseResponse(await apiReleaseResponse.json());
+      } catch {
+        apiRelease = null;
+      }
+
+      publishPartialOffer();
+    }
+  );
+
+  await Promise.all([manifestTask, apiReleaseTask]);
 
   return resolveSourceOffer({
     apiRelease,
