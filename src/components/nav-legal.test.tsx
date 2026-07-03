@@ -20,7 +20,7 @@ vi.mock("@/ui/sidebar", async (importOriginal) => {
   return {
     ...actual,
     SidebarGroup: ({ children }: { children: ReactNode }) => (
-      <div>{children}</div>
+      <div data-testid="sidebar-group">{children}</div>
     ),
     SidebarGroupLabel: ({ children }: { children: ReactNode }) => (
       <div>{children}</div>
@@ -143,6 +143,20 @@ describe("NavLegal", () => {
           tooltip: expect.anything(),
         }),
       ])
+    );
+  });
+
+  it("uses the canonical sidebar group wrapper so the legal trigger aligns with the main navigation", () => {
+    render(
+      <MemoryRouter>
+        <I18nProvider i18n={i18n}>
+          <NavLegal />
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByTestId("sidebar-group")).toContainElement(
+      screen.getByRole("button", { name: /legal/i })
     );
   });
 

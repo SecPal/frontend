@@ -93,8 +93,9 @@ describe("LoginRouteState", () => {
     expect(error).toHaveClass("border-destructive/30", "bg-destructive/10");
     expect(error).toHaveClass("text-foreground");
 
-    const footer = container.querySelector("main");
-    expect(footer).toHaveClass("bg-background", "text-foreground");
-    expect(footer).toHaveClass("pb-6", "md:pb-10");
+    const shell = container.querySelector("main");
+    expect(shell).toHaveClass("bg-background", "text-foreground");
+    expect(shell?.className).not.toContain("pb-6");
+    expect(shell?.className).not.toContain("md:pb-10");
   });
 });

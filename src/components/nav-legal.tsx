@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/ui/dropdown-menu";
 import {
+  SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
@@ -58,161 +59,165 @@ export function NavLegal() {
 
   if (isDesktopCollapsed) {
     return (
+      <SidebarGroup>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu modal>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton>
+                  <Scale />
+                  <span>
+                    <Trans>Legal</Trans>
+                  </span>
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-fit min-w-fit rounded-lg"
+                side="right"
+                align="end"
+                sideOffset={4}
+              >
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>
+                    <Trans>Legal pages</Trans>
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem disabled>
+                    <FileText />
+                    <Trans>Imprint</Trans>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled>
+                    <Shield />
+                    <Trans>Privacy</Trans>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>
+                    <Trans>Open Source</Trans>
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem asChild>
+                    <a
+                      href="https://www.gnu.org/licenses/agpl-3.0.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={handleItemClick}
+                    >
+                      <Scale />
+                      <span>
+                        <Trans>AGPL v3+</Trans>
+                      </span>
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <PrefetchLink
+                      to="/source"
+                      state={{ sourceReturnTo }}
+                      onClick={handleItemClick}
+                    >
+                      <Code2 />
+                      <span>
+                        <Trans>Source Code</Trans>
+                      </span>
+                    </PrefetchLink>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroup>
+    );
+  }
+
+  return (
+    <SidebarGroup>
       <SidebarMenu>
-        <SidebarMenuItem>
-          <DropdownMenu modal>
-            <DropdownMenuTrigger asChild>
+        <Collapsible
+          asChild
+          open={effectiveIsLegalOpen}
+          onOpenChange={setIsLegalOpen}
+          className="group/collapsible"
+        >
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
               <SidebarMenuButton>
                 <Scale />
                 <span>
                   <Trans>Legal</Trans>
                 </span>
+                <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
               </SidebarMenuButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              className="w-fit min-w-fit rounded-lg"
-              side="right"
-              align="end"
-              sideOffset={4}
-            >
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>
-                  <Trans>Legal pages</Trans>
-                </DropdownMenuLabel>
-                <DropdownMenuItem disabled>
-                  <FileText />
-                  <Trans>Imprint</Trans>
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled>
-                  <Shield />
-                  <Trans>Privacy</Trans>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>
-                  <Trans>Open Source</Trans>
-                </DropdownMenuLabel>
-                <DropdownMenuItem asChild>
-                  <a
-                    href="https://www.gnu.org/licenses/agpl-3.0.html"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={handleItemClick}
-                  >
-                    <Scale />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                <SidebarMenuSubItem>
+                  <SidebarGroupLabel asChild>
                     <span>
-                      <Trans>AGPL v3+</Trans>
+                      <Trans>Legal pages</Trans>
                     </span>
-                  </a>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <PrefetchLink
-                    to="/source"
-                    state={{ sourceReturnTo }}
-                    onClick={handleItemClick}
-                  >
-                    <Code2 />
+                  </SidebarGroupLabel>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton asChild className="pointer-events-none">
+                    <span aria-disabled="true">
+                      <FileText />
+                      <span>
+                        <Trans>Imprint</Trans>
+                      </span>
+                    </span>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton asChild className="pointer-events-none">
+                    <span aria-disabled="true">
+                      <Shield />
+                      <span>
+                        <Trans>Privacy</Trans>
+                      </span>
+                    </span>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem className="mt-1 border-t border-sidebar-border pt-2">
+                  <SidebarGroupLabel asChild>
                     <span>
-                      <Trans>Source Code</Trans>
+                      <Trans>Open Source</Trans>
                     </span>
-                  </PrefetchLink>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </SidebarMenuItem>
+                  </SidebarGroupLabel>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton asChild>
+                    <a
+                      href="https://www.gnu.org/licenses/agpl-3.0.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={handleItemClick}
+                    >
+                      <Scale />
+                      <span>
+                        <Trans>AGPL v3+</Trans>
+                      </span>
+                    </a>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton asChild isActive={isSourceRoute}>
+                    <PrefetchLink
+                      to="/source"
+                      state={{ sourceReturnTo }}
+                      onClick={handleItemClick}
+                    >
+                      <Code2 />
+                      <span>
+                        <Trans>Source Code</Trans>
+                      </span>
+                    </PrefetchLink>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuItem>
+        </Collapsible>
       </SidebarMenu>
-    );
-  }
-
-  return (
-    <SidebarMenu>
-      <Collapsible
-        asChild
-        open={effectiveIsLegalOpen}
-        onOpenChange={setIsLegalOpen}
-        className="group/collapsible"
-      >
-        <SidebarMenuItem>
-          <CollapsibleTrigger asChild>
-            <SidebarMenuButton>
-              <Scale />
-              <span>
-                <Trans>Legal</Trans>
-              </span>
-              <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-            </SidebarMenuButton>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <SidebarMenuSub>
-              <SidebarMenuSubItem>
-                <SidebarGroupLabel asChild>
-                  <span>
-                    <Trans>Legal pages</Trans>
-                  </span>
-                </SidebarGroupLabel>
-              </SidebarMenuSubItem>
-              <SidebarMenuSubItem>
-                <SidebarMenuSubButton asChild className="pointer-events-none">
-                  <span aria-disabled="true">
-                    <FileText />
-                    <span>
-                      <Trans>Imprint</Trans>
-                    </span>
-                  </span>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-              <SidebarMenuSubItem>
-                <SidebarMenuSubButton asChild className="pointer-events-none">
-                  <span aria-disabled="true">
-                    <Shield />
-                    <span>
-                      <Trans>Privacy</Trans>
-                    </span>
-                  </span>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-              <SidebarMenuSubItem className="mt-1 border-t border-sidebar-border pt-2">
-                <SidebarGroupLabel asChild>
-                  <span>
-                    <Trans>Open Source</Trans>
-                  </span>
-                </SidebarGroupLabel>
-              </SidebarMenuSubItem>
-              <SidebarMenuSubItem>
-                <SidebarMenuSubButton asChild>
-                  <a
-                    href="https://www.gnu.org/licenses/agpl-3.0.html"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={handleItemClick}
-                  >
-                    <Scale />
-                    <span>
-                      <Trans>AGPL v3+</Trans>
-                    </span>
-                  </a>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-              <SidebarMenuSubItem>
-                <SidebarMenuSubButton asChild isActive={isSourceRoute}>
-                  <PrefetchLink
-                    to="/source"
-                    state={{ sourceReturnTo }}
-                    onClick={handleItemClick}
-                  >
-                    <Code2 />
-                    <span>
-                      <Trans>Source Code</Trans>
-                    </span>
-                  </PrefetchLink>
-                </SidebarMenuSubButton>
-              </SidebarMenuSubItem>
-            </SidebarMenuSub>
-          </CollapsibleContent>
-        </SidebarMenuItem>
-      </Collapsible>
-    </SidebarMenu>
+    </SidebarGroup>
   );
 }
