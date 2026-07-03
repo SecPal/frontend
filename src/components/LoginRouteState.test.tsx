@@ -74,6 +74,10 @@ describe("LoginRouteState", () => {
         name: /select language|sprache auswählen/i,
       })
     ).toBeInTheDocument();
+    expect(screen.getByRole("contentinfo")).not.toHaveTextContent("AGPL v3+");
+    expect(screen.getByRole("contentinfo")).not.toHaveTextContent(
+      "Source Code"
+    );
   });
 
   it("keeps the vault-locked explanation and error states on canonical tokens", async () => {

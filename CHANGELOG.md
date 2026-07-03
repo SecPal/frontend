@@ -171,6 +171,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Removed the duplicate `AGPL v3+` and `Source Code` footer links from the
+  vault-locked login shell now that the interactive login `Legal` menu already
+  exposes those notices there.
 - Restored the login bootstrap screen's AGPL and source-code footer links so
   legal notices stay reachable while auth bootstrap is still pending.
 - Localized the sidebar user-menu trigger label, corrected destructive
