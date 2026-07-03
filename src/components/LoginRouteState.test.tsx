@@ -3,6 +3,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { MemoryRouter } from "react-router-dom";
@@ -72,6 +73,7 @@ describe("LoginRouteState", () => {
 
   it("keeps the vault-locked explanation and error states on canonical tokens", async () => {
     const unlock = vi.fn().mockResolvedValue(false);
+    const user = userEvent.setup();
 
     const { container } = renderWithI18n(
       <LoginRouteVaultLockedState
@@ -84,7 +86,7 @@ describe("LoginRouteState", () => {
       screen.getByText(/secpal locked the local encrypted vault/i)
     ).toHaveClass("text-muted-foreground");
 
-    screen.getByRole("button", { name: /unlock/i }).click();
+    await user.click(screen.getByRole("button", { name: /unlock/i }));
 
     const error = await screen.findByRole("status");
     expect(error).toHaveAttribute("data-slot", "alert");
@@ -93,5 +95,6 @@ describe("LoginRouteState", () => {
 
     const footer = container.querySelector("main");
     expect(footer).toHaveClass("bg-background", "text-foreground");
+    expect(footer).toHaveClass("pb-6", "md:pb-10");
   });
 });

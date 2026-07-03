@@ -33,7 +33,10 @@ export function LoginRouteLoadingState() {
   const { i18n } = useLingui();
 
   return (
-    <LoginShell data-route-guard-state="login-bootstrap-loading">
+    <LoginShell
+      data-route-guard-state="login-bootstrap-loading"
+      className="pb-0 md:pb-0"
+    >
       <LoginTopControlsSkeleton />
 
       <div className="flex w-full flex-1 items-center justify-center">

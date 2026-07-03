@@ -48,9 +48,9 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMain} />
+        <NavLegal />
       </SidebarContent>
       <SidebarFooter>
-        <NavLegal />
         <NavUser user={user} onLock={onLock} onLogout={onLogout} />
       </SidebarFooter>
       <SidebarRail />

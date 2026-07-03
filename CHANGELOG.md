@@ -50,9 +50,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Legal` in a separate dropdown instead of expanding the whole sidebar, the
   login `Legal` trigger keeps the same neutral surface styling as the language
   picker in dark mode, the authenticated `Legal` triggers no longer compose
-  sidebar tooltips through Radix `asChild` wrappers, the user menu stays
-  bounded for long profile names and email addresses, and pointer dismissal now
-  clears trigger focus for the shared dropdown primitives used by both flows.
+  sidebar tooltips through Radix `asChild` wrappers, the `Legal` section now
+  lives in the scrollable sidebar content instead of the fixed footer, the
+  vault-locked login shell keeps bottom safe-area breathing room when no footer
+  is present, the user menu stays bounded for long profile names and email
+  addresses, and pointer dismissal now clears trigger focus for the shared
+  dropdown primitives used by both flows.
 - Fixed pointer-dismissed dropdown menus that use trigger-child composition so
   Radix menu triggers rendered through shared `Button` and
   `SidebarMenuButton` children still blur their restored focus ring instead of
