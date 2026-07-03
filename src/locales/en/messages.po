@@ -39,6 +39,10 @@ msgstr "Welcome to SecPal Onboarding"
 msgid "Date of birth is required"
 msgstr "Date of birth is required"
 
+#: src/pages/SourcePage.tsx
+msgid "Published source release links shown below are immutable. Components without a published source release remain linked to their public repositories."
+msgstr "Published source release links shown below are immutable. Components without a published source release remain linked to their public repositories."
+
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Edit Employee"
 msgstr "Edit Employee"
@@ -1816,6 +1820,10 @@ msgstr "Loading customer details"
 msgid "Applicant / Pre-Contract / Active / On Leave / Terminated"
 msgstr "Applicant / Pre-Contract / Active / On Leave / Terminated"
 
+#: src/pages/SourcePage.tsx
+msgid "The source release links shown below point to the immutable corresponding source published for this deployment."
+msgstr "The source release links shown below point to the immutable corresponding source published for this deployment."
+
 #. placeholder {0}: step.step_number
 #. placeholder {1}: step.title
 #: src/pages/Onboarding/OnboardingWizard.tsx
@@ -2748,10 +2756,6 @@ msgstr "No qualifications assigned"
 msgid "← Back to Employee"
 msgstr "← Back to Employee"
 
-#: src/pages/SourcePage.tsx
-msgid "These links point to the immutable corresponding source published for this deployment."
-msgstr "These links point to the immutable corresponding source published for this deployment."
-
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Saving BWR Status..."
 msgstr "Saving BWR Status..."
@@ -3397,10 +3401,6 @@ msgstr "Add passkey"
 msgid "Emergency Contact Relationship"
 msgstr "Emergency Contact Relationship"
 
-#: src/pages/SourcePage.tsx
-msgid "When a deployment-specific source bundle is not published here, the project repositories below remain linked as the preferred form for making modifications."
-msgstr "When a deployment-specific source bundle is not published here, the project repositories below remain linked as the preferred form for making modifications."
-
 #: src/components/ScopeAssignmentForm.tsx
 msgid "0 or empty for non-leadership only"
 msgstr "0 or empty for non-leadership only"
@@ -3486,6 +3486,10 @@ msgstr "Living There Since"
 #: src/pages/Login.tsx
 msgid "Check your device…"
 msgstr "Check your device…"
+
+#: src/pages/SourcePage.tsx
+msgid "If this deployment does not publish source releases here, the project repositories below remain linked as the preferred form for making modifications."
+msgstr "If this deployment does not publish source releases here, the project repositories below remain linked as the preferred form for making modifications."
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Merkle Root"

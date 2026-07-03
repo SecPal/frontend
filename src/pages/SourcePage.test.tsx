@@ -15,6 +15,42 @@ vi.mock("@/hooks/useAuth", () => ({
   })),
 }));
 
+function mockSourceOfferRequests(options?: {
+  manifestResponse?: Response;
+  releaseResponse?: Response;
+}) {
+  vi.mocked(globalThis.fetch).mockImplementation(
+    async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url;
+
+      if (url === "/source-offer.json") {
+        return (
+          options?.manifestResponse ??
+          new Response("not found", {
+            status: 404,
+          })
+        );
+      }
+
+      if (url === "/v1/release") {
+        return (
+          options?.releaseResponse ??
+          new Response("not found", {
+            status: 404,
+          })
+        );
+      }
+
+      throw new Error(`unexpected fetch for ${url}`);
+    }
+  );
+}
+
 function renderWithProviders() {
   return render(
     <I18nProvider i18n={i18n}>
@@ -27,9 +63,8 @@ function renderWithProviders() {
 
 describe("SourcePage", () => {
   beforeEach(() => {
-    vi.spyOn(globalThis, "fetch").mockRejectedValue(
-      new TypeError("source offer metadata unavailable in SourcePage.test.tsx")
-    );
+    vi.spyOn(globalThis, "fetch");
+    mockSourceOfferRequests();
   });
 
   it("keeps the source page on canonical theme tokens", async () => {
@@ -72,8 +107,8 @@ describe("SourcePage", () => {
   });
 
   it("renders deployment-specific immutable source references when the manifest is published", async () => {
-    vi.mocked(globalThis.fetch).mockResolvedValue(
-      new Response(
+    mockSourceOfferRequests({
+      manifestResponse: new Response(
         JSON.stringify({
           version: 1,
           repositories: {
@@ -81,13 +116,13 @@ describe("SourcePage", () => {
               sourceUrl:
                 "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
             },
-            api: {
-              sourceUrl:
-                "https://github.com/SecPal/api/releases/download/api-2026-06-26/source.tar.gz",
-            },
             contracts: {
               sourceUrl:
                 "https://github.com/SecPal/contracts/releases/download/contracts-2026-06-26/source.tar.gz",
+            },
+            android: {
+              sourceUrl:
+                "https://github.com/SecPal/android/releases/download/android-2026-06-26/source.tar.gz",
             },
           },
         }),
@@ -97,14 +132,29 @@ describe("SourcePage", () => {
             "content-type": "application/json",
           },
         }
-      )
-    );
+      ),
+      releaseResponse: new Response(
+        JSON.stringify({
+          data: {
+            version: "api-2026-06-26",
+            source_url:
+              "https://github.com/SecPal/api/releases/download/api-2026-06-26/source.tar.gz",
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }
+      ),
+    });
 
     renderWithProviders();
 
     expect(
       await screen.findByText(
-        /immutable corresponding source published for this deployment/i
+        /the source release links shown below point to the immutable corresponding source published for this deployment/i
       )
     ).toBeInTheDocument();
 
@@ -126,9 +176,9 @@ describe("SourcePage", () => {
     );
   });
 
-  it("does not present optional repositories as deployment-published source when the manifest omits them", async () => {
-    vi.mocked(globalThis.fetch).mockResolvedValue(
-      new Response(
+  it("lists Android first when the deployment publishes an Android release", async () => {
+    mockSourceOfferRequests({
+      manifestResponse: new Response(
         JSON.stringify({
           version: 1,
           repositories: {
@@ -136,9 +186,67 @@ describe("SourcePage", () => {
               sourceUrl:
                 "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
             },
-            api: {
+            contracts: {
               sourceUrl:
-                "https://github.com/SecPal/api/releases/download/api-2026-06-26/source.tar.gz",
+                "https://github.com/SecPal/contracts/releases/download/contracts-2026-06-26/source.tar.gz",
+            },
+            android: {
+              sourceUrl:
+                "https://github.com/SecPal/android/releases/download/android-2026-06-26/source.tar.gz",
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }
+      ),
+      releaseResponse: new Response(
+        JSON.stringify({
+          data: {
+            version: "api-2026-06-26",
+            source_url:
+              "https://github.com/SecPal/api/releases/download/api-2026-06-26/source.tar.gz",
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }
+      ),
+    });
+
+    const { container } = renderWithProviders();
+
+    await screen.findByText(
+      /the source release links shown below point to the immutable corresponding source published for this deployment/i
+    );
+
+    const repositoryHeadings = Array.from(
+      container.querySelectorAll("article h3")
+    ).map((heading) => heading.textContent);
+
+    expect(repositoryHeadings[0]).toBe("SecPal/android");
+    expect(repositoryHeadings.slice(1)).toEqual([
+      "SecPal/frontend",
+      "SecPal/api",
+      "SecPal/contracts",
+    ]);
+  });
+
+  it("omits Android sources when the deployment manifest does not publish an Android release", async () => {
+    mockSourceOfferRequests({
+      manifestResponse: new Response(
+        JSON.stringify({
+          version: 1,
+          repositories: {
+            frontend: {
+              sourceUrl:
+                "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
             },
             contracts: {
               sourceUrl:
@@ -152,37 +260,73 @@ describe("SourcePage", () => {
             "content-type": "application/json",
           },
         }
-      )
-    );
+      ),
+      releaseResponse: new Response(
+        JSON.stringify({
+          data: {
+            version: "api-2026-06-26",
+            source_url:
+              "https://github.com/SecPal/api/releases/download/api-2026-06-26/source.tar.gz",
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }
+      ),
+    });
 
     renderWithProviders();
 
-    const androidArticle = await screen.findByText("SecPal/android");
-    const androidLinks = within(
-      androidArticle.closest("article") as HTMLElement
-    ).getAllByRole("link");
-
-    expect(androidLinks).toHaveLength(1);
-    expect(androidLinks[0]).toHaveAttribute(
-      "href",
-      "https://github.com/SecPal/android"
+    await screen.findByText(
+      /the source release links shown below point to the immutable corresponding source published for this deployment/i
     );
-    expect(androidLinks[0]).toHaveTextContent(/open public repository/i);
+
     expect(
-      screen.queryByRole("link", {
-        name: "https://github.com/SecPal/android",
-      })
+      screen.queryByText("SecPal/android")
     ).not.toBeInTheDocument();
   });
 
   it("shows fallback source links while the manifest request is pending", async () => {
-    let resolveFetch: ((value: Response) => void) | undefined;
+    let resolveManifestFetch: ((value: Response) => void) | undefined;
 
     vi.mocked(globalThis.fetch).mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          resolveFetch = resolve;
-        })
+      async (input: string | URL | Request) => {
+        const url =
+          typeof input === "string"
+            ? input
+            : input instanceof URL
+              ? input.toString()
+              : input.url;
+
+        if (url === "/source-offer.json") {
+          return new Promise((resolve) => {
+            resolveManifestFetch = resolve;
+          });
+        }
+
+        if (url === "/v1/release") {
+          return new Response(
+            JSON.stringify({
+              data: {
+                version: "api-2026-06-26",
+                source_url:
+                  "https://github.com/SecPal/api/releases/download/api-2026-06-26/source.tar.gz",
+              },
+            }),
+            {
+              status: 200,
+              headers: {
+                "content-type": "application/json",
+              },
+            }
+          );
+        }
+
+        throw new Error(`unexpected fetch for ${url}`);
+      }
     );
 
     renderWithProviders();
@@ -197,8 +341,9 @@ describe("SourcePage", () => {
         name: "https://github.com/SecPal/frontend",
       })
     ).toHaveAttribute("href", "https://github.com/SecPal/frontend");
+    expect(screen.queryByText("SecPal/android")).not.toBeInTheDocument();
 
-    resolveFetch?.(
+    resolveManifestFetch?.(
       new Response(
         JSON.stringify({
           version: 1,
@@ -207,13 +352,13 @@ describe("SourcePage", () => {
               sourceUrl:
                 "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
             },
-            api: {
-              sourceUrl:
-                "https://github.com/SecPal/api/releases/download/api-2026-06-26/source.tar.gz",
-            },
             contracts: {
               sourceUrl:
                 "https://github.com/SecPal/contracts/releases/download/contracts-2026-06-26/source.tar.gz",
+            },
+            android: {
+              sourceUrl:
+                "https://github.com/SecPal/android/releases/download/android-2026-06-26/source.tar.gz",
             },
           },
         }),
@@ -228,7 +373,7 @@ describe("SourcePage", () => {
 
     expect(
       await screen.findByText(
-        /immutable corresponding source published for this deployment/i
+        /the source release links shown below point to the immutable corresponding source published for this deployment/i
       )
     ).toBeInTheDocument();
     expect(
@@ -247,7 +392,7 @@ describe("SourcePage", () => {
     await waitFor(() => {
       expect(
         screen.getByText(
-          /the project repositories below remain linked as the preferred form for making modifications/i
+          /if this deployment does not publish source releases here, the project repositories below remain linked as the preferred form for making modifications/i
         )
       ).toBeInTheDocument();
     });
@@ -257,5 +402,43 @@ describe("SourcePage", () => {
         name: "https://github.com/SecPal/frontend",
       })
     ).toHaveAttribute("href", "https://github.com/SecPal/frontend");
+    expect(screen.queryByText("SecPal/android")).not.toBeInTheDocument();
+  });
+
+  it("keeps the API repository immutable when the frontend manifest is unavailable", async () => {
+    mockSourceOfferRequests({
+      releaseResponse: new Response(
+        JSON.stringify({
+          data: {
+            version: "api-2026-07-03",
+            source_url:
+              "https://github.com/SecPal/api/releases/download/api-2026-07-03/source.tar.gz",
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }
+      ),
+    });
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByText(
+        /published source release links shown below are immutable\. components without a published source release remain linked to their public repositories/i
+      )
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("link", {
+        name: "https://github.com/SecPal/api/releases/download/api-2026-07-03/source.tar.gz",
+      })
+    ).toHaveAttribute(
+      "href",
+      "https://github.com/SecPal/api/releases/download/api-2026-07-03/source.tar.gz"
+    );
   });
 });

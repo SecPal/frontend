@@ -74,6 +74,10 @@
   <Files "manifest.webmanifest">
     Header always set Cache-Control "no-cache, must-revalidate"
   </Files>
+
+  <Files "source-offer.json">
+    Header always set Cache-Control "no-cache, must-revalidate"
+  </Files>
 </IfModule>
 
 # Enable compression for better performance

@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { isSafeHttpUrl } from "@/utils/safeUrl";
+import { buildApiUrl } from "@/config";
 
 const SOURCE_OFFER_URL = "/source-offer.json";
+const API_RELEASE_URL = buildApiUrl("/v1/release");
 
 export type SourceRepositoryId = "frontend" | "api" | "contracts" | "android";
 
@@ -47,7 +49,6 @@ const SOURCE_REPOSITORY_DEFINITIONS: readonly SourceRepositoryDefinition[] = [
 
 const REQUIRED_DEPLOYMENT_SOURCE_IDS: readonly SourceRepositoryId[] = [
   "frontend",
-  "api",
   "contracts",
 ] as const;
 
@@ -62,12 +63,21 @@ interface SourceOfferManifest {
   >;
 }
 
+interface ApiReleaseResponse {
+  data: {
+    version: string;
+    source_url: string;
+  };
+}
+
 type SourceOfferFetch = typeof fetch;
 
 function getFallbackSourceOffer(): LoadedSourceOffer {
   return {
     mode: "fallback",
-    repositories: SOURCE_REPOSITORY_DEFINITIONS.map((repository) => ({
+    repositories: SOURCE_REPOSITORY_DEFINITIONS.filter(
+      (repository) => repository.id !== "android"
+    ).map((repository) => ({
       ...repository,
       sourceUrl: repository.repositoryUrl,
     })),
@@ -133,15 +143,67 @@ function parseSourceOfferManifest(value: unknown): SourceOfferManifest | null {
   };
 }
 
-function resolveDeploymentSourceOffer(
-  manifest: SourceOfferManifest
-): LoadedSourceOffer {
+function parseApiReleaseResponse(value: unknown): ApiReleaseResponse | null {
+  if (!isObjectRecord(value) || !isObjectRecord(value.data)) {
+    return null;
+  }
+
+  const version = String(value.data.version ?? "").trim();
+  const sourceUrl = String(value.data.source_url ?? "").trim();
+
+  if (version === "" || !isSafeHttpUrl(sourceUrl)) {
+    return null;
+  }
+
   return {
-    mode: "deployment",
-    repositories: SOURCE_REPOSITORY_DEFINITIONS.map((repository) => ({
+    data: {
+      version,
+      source_url: sourceUrl,
+    },
+  };
+}
+
+function resolveSourceOffer(options: {
+  apiRelease: ApiReleaseResponse | null;
+  manifest: SourceOfferManifest | null;
+}): LoadedSourceOffer {
+  const repositories = SOURCE_REPOSITORY_DEFINITIONS.filter((repository) => {
+    if (repository.id === "android") {
+      return options.manifest?.repositories.android !== undefined;
+    }
+
+    return true;
+  }).map((repository) => {
+    if (repository.id === "api") {
+      return {
+        ...repository,
+        sourceUrl: options.apiRelease?.data.source_url ?? null,
+      };
+    }
+
+    return {
       ...repository,
-      sourceUrl: manifest.repositories[repository.id]?.sourceUrl ?? null,
-    })),
+      sourceUrl: options.manifest?.repositories[repository.id]?.sourceUrl ?? null,
+    };
+  });
+
+  const hasPublishedSourceRelease = repositories.some(
+    (repository) => repository.sourceUrl !== null
+  );
+
+  const mode = hasPublishedSourceRelease
+    ? "deployment"
+    : "fallback";
+
+  return {
+    mode,
+    repositories:
+      mode === "deployment"
+        ? repositories
+        : repositories.map((repository) => ({
+            ...repository,
+            sourceUrl: repository.repositoryUrl,
+          })),
   };
 }
 
@@ -153,24 +215,41 @@ export async function loadSourceOffer(
   }
 
   try {
-    const response = await fetchImplementation(SOURCE_OFFER_URL, {
-      cache: "no-store",
-      credentials: "omit",
+    const requestInit = {
+      cache: "no-store" as const,
+      credentials: "omit" as const,
       headers: {
         accept: "application/json",
       },
+    };
+
+    const [manifestResponse, apiReleaseResponse] = await Promise.all([
+      fetchImplementation(SOURCE_OFFER_URL, requestInit),
+      fetchImplementation(API_RELEASE_URL, requestInit),
+    ]);
+
+    let manifest: SourceOfferManifest | null = null;
+    if (manifestResponse.ok) {
+      try {
+        manifest = parseSourceOfferManifest(await manifestResponse.json());
+      } catch {
+        manifest = null;
+      }
+    }
+
+    let apiRelease: ApiReleaseResponse | null = null;
+    if (apiReleaseResponse.ok) {
+      try {
+        apiRelease = parseApiReleaseResponse(await apiReleaseResponse.json());
+      } catch {
+        apiRelease = null;
+      }
+    }
+
+    return resolveSourceOffer({
+      apiRelease,
+      manifest,
     });
-
-    if (!response.ok) {
-      return getFallbackSourceOffer();
-    }
-
-    const manifest = parseSourceOfferManifest(await response.json());
-    if (manifest === null) {
-      return getFallbackSourceOffer();
-    }
-
-    return resolveDeploymentSourceOffer(manifest);
   } catch {
     return getFallbackSourceOffer();
   }

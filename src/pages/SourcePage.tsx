@@ -53,6 +53,9 @@ const SOURCE_REPOSITORIES = [
   },
 ] as const;
 
+const SOURCE_REPOSITORY_DISPLAY_ORDER: readonly (typeof SOURCE_REPOSITORIES)[number]["id"][] =
+  ["android", "frontend", "api", "contracts"] as const;
+
 function getSourceReturnTo(state: unknown): string | null {
   if (typeof state !== "object" || state === null) {
     return null;
@@ -114,6 +117,9 @@ export function SourcePage() {
   const repositories: SourceOfferRepository[] =
     sourceOffer?.repositories ?? getFallbackSourceRepositories();
   const sourceOfferMode = sourceOffer?.mode;
+  const deploymentHasFallbackRepositoryLinks =
+    sourceOfferMode === "deployment" &&
+    repositories.some((repository) => repository.sourceUrl === null);
 
   return (
     <main className="min-h-[var(--app-shell-min-height)] bg-background text-foreground">
@@ -170,14 +176,23 @@ export function SourcePage() {
                 </p>
                 <p className="text-muted-foreground max-w-3xl text-sm leading-6">
                   {sourceOfferMode === "deployment" ? (
-                    <Trans>
-                      These links point to the immutable corresponding source
-                      published for this deployment.
-                    </Trans>
+                    deploymentHasFallbackRepositoryLinks ? (
+                      <Trans>
+                        Published source release links shown below are
+                        immutable. Components without a published source
+                        release remain linked to their public repositories.
+                      </Trans>
+                    ) : (
+                      <Trans>
+                        The source release links shown below point to the
+                        immutable corresponding source published for this
+                        deployment.
+                      </Trans>
+                    )
                   ) : sourceOfferMode === "fallback" ? (
                     <Trans>
-                      When a deployment-specific source bundle is not published
-                      here, the project repositories below remain linked as the
+                      If this deployment does not publish source releases here,
+                      the project repositories below remain linked as the
                       preferred form for making modifications.
                     </Trans>
                   ) : null}
@@ -223,7 +238,17 @@ export function SourcePage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {repositories.length > 0 &&
-                  SOURCE_REPOSITORIES.map((repository) => {
+                  SOURCE_REPOSITORY_DISPLAY_ORDER.map((repositoryId) =>
+                    SOURCE_REPOSITORIES.find(
+                      (repository) => repository.id === repositoryId
+                    )
+                  )
+                    .filter(
+                      (repository): repository is (typeof SOURCE_REPOSITORIES)[number] =>
+                        repository !== undefined &&
+                        repositories.some((entry) => entry.id === repository.id)
+                    )
+                    .map((repository) => {
                     const sourceOfferRepository = repositories.find(
                       (entry) => entry.id === repository.id
                     );

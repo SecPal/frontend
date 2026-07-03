@@ -14,13 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added a deployment-backed `/source` manifest contract at `/source-offer.json`
-  so the public AGPL source-offer page can consume immutable corresponding
-  source URLs for the deployed frontend/API/contracts release set without
-  exposing broader runtime diagnostics; the frontend now falls back to the
-  public project repositories only when that narrow manifest is missing or
-  invalid, and `docs/deployment-spa-routing.md` documents the frontend versus
-  deployment/API responsibilities.
+- Added deployment-backed `/source` metadata contracts so the public AGPL
+  source-offer page can consume immutable corresponding source URLs for the
+  deployed release set without exposing broader runtime diagnostics:
+  `/source-offer.json` now covers `frontend` / `contracts` plus optional
+  `android`, `GET /v1/release` provides the live `api` source URL, the
+  frontend tolerates mixed valid/invalid metadata sources without discarding
+  still-valid release links, and `docs/deployment-spa-routing.md` documents the
+  frontend versus deployment/API responsibilities.
 - Added the canonical shadcn `components.json` baseline for the frontend
   (`new-york`, Tailwind v4 `src/index.css`, `zinc`, Lucide, and repo aliases)
   plus a guardrail inventory test for the remaining non-canonical UI
@@ -60,6 +61,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restored the `/source` fallback repository links while the
   `/source-offer.json` request is still pending, so stalled manifest fetches
   do not leave the corresponding-source section empty on the public AGPL page.
+- Narrowed the `/source` deployment notice so optional repositories that still
+  fall back to a public repository link are no longer described as immutable
+  deployment source, and added explicit short-cache delivery rules for
+  `/source-offer.json` to the shipped Apache/Nginx deployment templates.
+- Limited the `/source` Android repository block to deployments that publish an
+  explicit Android release entry in `/source-offer.json`, so frontend-only
+  deployments no longer advertise Android source links without a matching
+  released Android version.
+- Refined the `/source` explanatory copy in English and German so the
+  deployment and fallback notices read naturally while still describing the
+  source-offer behavior precisely.
 - Refined the new legal-menu follow-up so the collapsed desktop sidebar opens
   `Legal` in a separate dropdown instead of expanding the whole sidebar, the
   login `Legal` trigger keeps the same neutral surface styling as the language
