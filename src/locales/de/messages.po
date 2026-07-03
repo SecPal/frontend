@@ -2560,7 +2560,6 @@ msgstr "Standard"
 msgid "Back to Login"
 msgstr ""
 
-#: src/components/LegalFooterLinks.tsx
 #: src/components/LoginLegalMenu.tsx
 #: src/components/nav-legal.tsx
 #: src/pages/SourcePage.tsx
@@ -2678,7 +2677,6 @@ msgid "Workspace"
 msgstr "Arbeitsbereich"
 
 #: src/components/application-layout.tsx
-#: src/components/LegalFooterLinks.tsx
 #: src/components/LoginLegalMenu.tsx
 #: src/components/nav-legal.tsx
 msgid "Source Code"
