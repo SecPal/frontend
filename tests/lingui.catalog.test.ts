@@ -4,6 +4,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { checkLinguiCatalogs } from "../scripts/check-lingui-catalogs.mjs";
 
 function parseCatalogEntries(catalogSource: string): Map<string, string> {
   const entries = new Map<string, string>();
@@ -47,6 +48,24 @@ function parseCatalogEntries(catalogSource: string): Map<string, string> {
 }
 
 describe("Lingui German catalog", () => {
+  it("keeps checked-in Lingui catalogs in sync", async () => {
+    await expect(checkLinguiCatalogs()).resolves.toEqual([]);
+  });
+
+  it("keeps the German catalog fully translated", () => {
+    const catalogSource = readFileSync(
+      join(process.cwd(), "src/locales/de/messages.po"),
+      "utf8"
+    );
+    const entries = parseCatalogEntries(catalogSource);
+
+    const missingEntries = [...entries.entries()]
+      .filter(([, msgstr]) => msgstr === "")
+      .map(([msgid]) => msgid);
+
+    expect(missingEntries).toEqual([]);
+  });
+
   it("keeps passkey and Android provisioning strings translated", () => {
     const catalogSource = readFileSync(
       join(process.cwd(), "src/locales/de/messages.po"),
