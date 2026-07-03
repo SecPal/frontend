@@ -339,6 +339,15 @@ describe("Build Configuration and Source Verification", () => {
     expect(nginxConfig).toContain("default_type application/json");
   });
 
+  it("keeps the shipped nginx config free of known syntax warnings", () => {
+    const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");
+
+    expect(nginxConfig).toContain("http2 on;");
+    expect(nginxConfig).not.toContain("listen 443 ssl http2;");
+    expect(nginxConfig).not.toContain("listen [::]:443 ssl http2;");
+    expect(nginxConfig).not.toContain("ssi_types text/html;");
+  });
+
   it("ships a live smoke check for deployed PWA security headers", () => {
     expect(
       existsSync(path.join(repoRoot, "scripts/check-live-pwa-headers.sh"))

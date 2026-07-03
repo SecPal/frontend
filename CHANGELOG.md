@@ -79,6 +79,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Limited that localhost preview-origin guard to production mode so local
   development keeps honoring an explicit preview `VITE_API_URL` instead of
   falling back to same-origin routing.
+- Updated the shipped `app.secpal.dev` Nginx template to use the current
+  `http2 on;` syntax and to drop the redundant `ssi_types text/html;`
+  override, so production config validation no longer emits known warnings for
+  the frontend host template.
 - Limited the `/source` Android repository block to deployments that publish an
   explicit Android release entry in `/source-offer.json`, so frontend-only
   deployments no longer advertise Android source links without a matching
