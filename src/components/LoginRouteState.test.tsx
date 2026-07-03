@@ -24,8 +24,6 @@ describe("LoginRouteState", () => {
   it("keeps the route-loading skeleton and footer on canonical theme tokens", () => {
     const { container } = renderWithI18n(<LoginRouteLoadingState />);
 
-    const agplLink = screen.getByRole("link", { name: /agpl v3\+/i });
-    const sourceCodeLink = screen.getByRole("link", { name: /source code/i });
     const shell = screen.getByRole("main");
     const skeletonShell = container.querySelector('[aria-hidden="true"]');
     const skeletonBars = skeletonShell?.querySelectorAll("span");
@@ -35,11 +33,12 @@ describe("LoginRouteState", () => {
 
     expect(shell.className).not.toContain("pb-6");
     expect(shell.className).not.toContain("md:pb-10");
-    expect(agplLink).toHaveAttribute(
-      "href",
-      "https://www.gnu.org/licenses/agpl-3.0.html"
-    );
-    expect(sourceCodeLink).toHaveAttribute("href", "/source");
+    expect(
+      screen.queryByRole("link", { name: /agpl v3\+/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /source code/i })
+    ).not.toBeInTheDocument();
     expect(skeletonShell).toHaveClass("border-input", "bg-muted");
     expect(skeletonBars?.[0]).toHaveClass("bg-border");
     expect(skeletonBars?.[1]).toHaveClass("bg-border");

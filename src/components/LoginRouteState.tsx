@@ -10,7 +10,6 @@ import {
   LoginHeaderControls,
   LoginTopControlsSkeleton,
 } from "./LoginLegalMenu";
-import { LegalFooterLinks } from "./LegalFooterLinks";
 import { Logo } from "./Logo";
 import {
   Alert,
@@ -32,17 +31,10 @@ interface LoginRouteVaultLockedStateProps {
   onSignInAgain: () => void;
 }
 
-interface LoginRouteFooterProps {
-  showLegalLinks?: boolean;
-}
-
-function LoginRouteFooter({ showLegalLinks = true }: LoginRouteFooterProps) {
+function LoginRouteFooter() {
   return (
     <footer className="mt-auto w-full max-w-sm pt-3 pb-[var(--app-footer-padding-bottom)] text-center text-xs">
-      <div className="text-muted-foreground flex flex-col items-center gap-2">
-        {showLegalLinks ? (
-          <LegalFooterLinks className="flex items-center justify-center gap-2" />
-        ) : null}
+      <div className="text-muted-foreground">
         <span className="text-foreground inline-block text-xs font-semibold">
           <Trans>Powered by SecPal – A guard's best friend</Trans>
         </span>
