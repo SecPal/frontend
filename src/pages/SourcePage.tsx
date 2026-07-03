@@ -4,6 +4,7 @@
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   ExternalLink,
@@ -14,6 +15,11 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
+import {
+  getFallbackSourceRepositories,
+  loadSourceOffer,
+  type SourceOfferRepository,
+} from "@/lib/sourceOffer";
 import { buttonVariants } from "@/ui/styles";
 import {
   Card,
@@ -25,24 +31,24 @@ import {
 
 const SOURCE_REPOSITORIES = [
   {
+    id: "frontend",
     name: "SecPal/frontend",
     description: msg`React/TypeScript frontend for the running SecPal web application.`,
-    href: "https://github.com/SecPal/frontend",
   },
   {
+    id: "api",
     name: "SecPal/api",
     description: msg`Laravel backend used by SecPal deployments for API and business logic.`,
-    href: "https://github.com/SecPal/api",
   },
   {
+    id: "contracts",
     name: "SecPal/contracts",
     description: msg`Shared OpenAPI contracts and interface definitions used across SecPal components.`,
-    href: "https://github.com/SecPal/contracts",
   },
   {
+    id: "android",
     name: "SecPal/android",
     description: msg`Android Capacitor wrapper that reuses the shared frontend build and adds native Android-specific code.`,
-    href: "https://github.com/SecPal/android",
   },
 ] as const;
 
@@ -74,6 +80,12 @@ export function SourcePage() {
   const { isAuthenticated, isLoading } = useAuth();
   const { _ } = useLingui();
   const location = useLocation();
+  const [repositories, setRepositories] = useState<SourceOfferRepository[]>(
+    getFallbackSourceRepositories()
+  );
+  const [sourceOfferMode, setSourceOfferMode] = useState<
+    "deployment" | "fallback"
+  >("fallback");
   const sourceReturnTo = getSourceReturnTo(location.state);
   const showAuthenticatedReturn = isAuthenticated || isLoading;
   const secondaryActionHref = showAuthenticatedReturn
@@ -84,6 +96,23 @@ export function SourcePage() {
   ) : (
     <Trans>Back to login</Trans>
   );
+
+  useEffect(() => {
+    let isActive = true;
+
+    void loadSourceOffer().then((result) => {
+      if (!isActive) {
+        return;
+      }
+
+      setRepositories(result.repositories);
+      setSourceOfferMode(result.mode);
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   return (
     <main className="min-h-[var(--app-shell-min-height)] bg-background text-foreground">
@@ -135,9 +164,22 @@ export function SourcePage() {
                     License, version 3 or any later version. If you use this
                     service over a network, you may obtain the corresponding
                     source code for the SecPal components made available through
-                    this service at no charge from the repositories linked
-                    below.
+                    this service at no charge from the links below.
                   </Trans>
+                </p>
+                <p className="text-muted-foreground max-w-3xl text-sm leading-6">
+                  {sourceOfferMode === "deployment" ? (
+                    <Trans>
+                      These links point to the immutable corresponding source
+                      published for this deployment.
+                    </Trans>
+                  ) : (
+                    <Trans>
+                      When a deployment-specific source bundle is not published
+                      here, the project repositories below remain linked as the
+                      preferred form for making modifications.
+                    </Trans>
+                  )}
                 </p>
 
                 <div className="flex flex-wrap gap-3">
@@ -172,43 +214,76 @@ export function SourcePage() {
                 </CardTitle>
                 <CardDescription className="max-w-2xl leading-6">
                   <Trans>
-                    These repositories contain the preferred form for making
+                    These links identify the preferred form for making
                     modifications to the SecPal components made available
                     through this service.
                   </Trans>
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {SOURCE_REPOSITORIES.map((repository) => (
-                  <article
-                    key={repository.href}
-                    className="rounded-xl border border-border bg-muted p-5"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-2">
-                        <h3 className="text-foreground text-base font-semibold">
-                          {repository.name}
-                        </h3>
-                        <p className="text-muted-foreground text-sm leading-6">
-                          {_(repository.description)}
-                        </p>
-                      </div>
-                      <FolderGit2
-                        className="text-muted-foreground mt-0.5 size-5 shrink-0"
-                        aria-hidden="true"
-                      />
-                    </div>
-                    <a
-                      href={repository.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary decoration-border mt-4 inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-primary/80"
+                {SOURCE_REPOSITORIES.map((repository) => {
+                  const sourceOfferRepository = repositories.find(
+                    (entry) => entry.id === repository.id
+                  );
+
+                  if (!sourceOfferRepository) {
+                    return null;
+                  }
+
+                  const showsSeparateRepositoryLink =
+                    sourceOfferMode === "deployment" &&
+                    sourceOfferRepository.sourceUrl !==
+                      sourceOfferRepository.repositoryUrl;
+
+                  return (
+                    <article
+                      key={repository.id}
+                      className="rounded-xl border border-border bg-muted p-5"
                     >
-                      <FileCode2 className="size-4" aria-hidden="true" />
-                      <span>{repository.href}</span>
-                    </a>
-                  </article>
-                ))}
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-2">
+                          <h3 className="text-foreground text-base font-semibold">
+                            {repository.name}
+                          </h3>
+                          <p className="text-muted-foreground text-sm leading-6">
+                            {_(repository.description)}
+                          </p>
+                        </div>
+                        <FolderGit2
+                          className="text-muted-foreground mt-0.5 size-5 shrink-0"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <div className="mt-4 space-y-3">
+                        <a
+                          href={sourceOfferRepository.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary decoration-border inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-primary/80"
+                        >
+                          <FileCode2 className="size-4" aria-hidden="true" />
+                          <span>{sourceOfferRepository.sourceUrl}</span>
+                        </a>
+                        {showsSeparateRepositoryLink ? (
+                          <a
+                            href={sourceOfferRepository.repositoryUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-foreground"
+                          >
+                            <span>
+                              <Trans>Open public repository</Trans>
+                            </span>
+                            <ExternalLink
+                              className="size-4"
+                              aria-hidden="true"
+                            />
+                          </a>
+                        ) : null}
+                      </div>
+                    </article>
+                  );
+                })}
               </CardContent>
             </Card>
           </section>
@@ -262,26 +337,6 @@ export function SourcePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
-                <div className="space-y-3">
-                  <h3 className="text-muted-foreground text-sm font-semibold uppercase tracking-[0.12em]">
-                    <Trans>Project license files</Trans>
-                  </h3>
-                  <div className="space-y-2">
-                    {SOURCE_REPOSITORIES.map((repository) => (
-                      <a
-                        key={`${repository.href}/blob/main/LICENSE`}
-                        href={`${repository.href}/blob/main/LICENSE`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="border-border text-foreground hover:bg-muted flex items-center justify-between rounded-xl border px-4 py-3 text-sm font-medium"
-                      >
-                        <span>{repository.name} LICENSE</span>
-                        <ExternalLink className="size-4" aria-hidden="true" />
-                      </a>
-                    ))}
-                  </div>
-                </div>
-
                 <div className="space-y-3">
                   <h3 className="text-muted-foreground text-sm font-semibold uppercase tracking-[0.12em]">
                     <Trans>Issue tracker</Trans>

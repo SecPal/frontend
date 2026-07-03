@@ -232,6 +232,57 @@ VITE_API_URL=https://api.secpal.dev npm run build
 npm run build
 ```
 
+## Immutable `/source` Manifest
+
+The public `/source` page now prefers a same-origin deployment manifest at
+`/source-offer.json`. This lets a deployment publish immutable corresponding
+source references for the exact frontend/API/contracts release set without
+turning the main UI into a generic build-info page.
+
+**Frontend responsibility**
+
+- Fetch `/source-offer.json` only when rendering `/source`
+- Accept only the narrow manifest below and render only the published source
+  URLs
+- Fall back to the public project repositories when the manifest is missing or
+  invalid, so local development and preview environments stay usable
+
+**Deployment or API responsibility**
+
+- Serve `/source-offer.json` from the same origin as the frontend deployment
+- Populate immutable `sourceUrl` values for at least `frontend`, `api`, and
+  `contracts`; `android` is optional
+- Keep the manifest narrow: publish only the corresponding-source URLs needed
+  for AGPL compliance, not commit SHAs, build timestamps, dependency versions,
+  or wider diagnostic metadata
+- If the release refs come from backend or CI metadata, resolve them
+  server-side and emit only the final immutable URLs
+- Serve the manifest with `Cache-Control: no-cache, must-revalidate` (or
+  stricter) so `/source` tracks the currently deployed release after rollouts
+
+**Manifest shape**
+
+```json
+{
+  "version": 1,
+  "repositories": {
+    "frontend": {
+      "sourceUrl": "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz"
+    },
+    "api": {
+      "sourceUrl": "https://github.com/SecPal/api/releases/download/api-2026-06-26/source.tar.gz"
+    },
+    "contracts": {
+      "sourceUrl": "https://github.com/SecPal/contracts/releases/download/contracts-2026-06-26/source.tar.gz"
+    }
+  }
+}
+```
+
+The frontend currently treats missing required entries, malformed JSON, and
+non-HTTP(S) URLs as invalid and falls back to the mutable project repository
+roots. That fallback is a safety net, not the production target.
+
 ---
 
 ## Security Checklist
@@ -244,6 +295,7 @@ Before deploying to production:
 - ✅ `VITE_API_URL` is an absolute API origin for the current deployment (never a relative path)
 - ✅ No `.env` files committed to Git
 - ✅ Service Worker registered (PWA functionality)
+- ✅ `/source-offer.json` publishes immutable corresponding-source URLs for the deployed `frontend` / `api` / `contracts` set
 - ✅ CSP, permissions, and modern cross-origin headers enabled
 - ✅ `index.html`, `sw.js`, and `manifest.webmanifest` use short cache rules
 
@@ -278,6 +330,11 @@ After deployment, test these scenarios:
 
 6. **API connectivity:**
    - Login should work ✅
+
+7. **Source offer:**
+   - Visit `/source` directly ✅
+   - Confirm the component links use the immutable URLs from `/source-offer.json` ✅
+   - Confirm `/source-offer.json` does not expose extra runtime or diagnostic metadata ✅
    - API requests should succeed ✅
    - Check CORS headers in Network tab ✅
    - Check `https://app.secpal.dev/v1/me` no longer returns `200 text/html`; it must fail clearly on the app host and succeed only on `https://api.secpal.dev/v1/me` ✅

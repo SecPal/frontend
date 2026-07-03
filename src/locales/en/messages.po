@@ -139,8 +139,8 @@ msgid "Source offer for users interacting with SecPal over a network."
 msgstr "Source offer for users interacting with SecPal over a network."
 
 #: src/pages/SourcePage.tsx
-msgid "These repositories contain the preferred form for making modifications to the SecPal components made available through this service."
-msgstr "These repositories contain the preferred form for making modifications to the SecPal components made available through this service."
+#~ msgid "These repositories contain the preferred form for making modifications to the SecPal components made available through this service."
+#~ msgstr "These repositories contain the preferred form for making modifications to the SecPal components made available through this service."
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
@@ -2102,6 +2102,10 @@ msgstr "Based on the selected nationality, please specify which valid German res
 msgid "Notifications are tied to this signed-in browser profile and the selected deployment domain."
 msgstr "Notifications are tied to this signed-in browser profile and the selected deployment domain."
 
+#: src/pages/SourcePage.tsx
+msgid "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the links below."
+msgstr "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the links below."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Optional"
 msgstr "Optional"
@@ -2566,6 +2570,10 @@ msgstr "Back to Login"
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
+#: src/pages/SourcePage.tsx
+msgid "These links identify the preferred form for making modifications to the SecPal components made available through this service."
+msgstr "These links identify the preferred form for making modifications to the SecPal components made available through this service."
+
 #: src/components/VerificationDots.tsx
 msgid "Hash Chain (Data)"
 msgstr "Hash Chain (Data)"
@@ -2744,6 +2752,10 @@ msgstr "No qualifications assigned"
 msgid "← Back to Employee"
 msgstr "← Back to Employee"
 
+#: src/pages/SourcePage.tsx
+msgid "These links point to the immutable corresponding source published for this deployment."
+msgstr "These links point to the immutable corresponding source published for this deployment."
+
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Saving BWR Status..."
 msgstr "Saving BWR Status..."
@@ -2782,8 +2794,8 @@ msgid "Try Again"
 msgstr "Try Again"
 
 #: src/pages/SourcePage.tsx
-msgid "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the repositories linked below."
-msgstr "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the repositories linked below."
+#~ msgid "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the repositories linked below."
+#~ msgstr "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the repositories linked below."
 
 #. placeholder {0}: formData.min_viewable_rank
 #: src/components/ScopeAssignmentForm.tsx
@@ -3393,13 +3405,17 @@ msgstr "Add passkey"
 msgid "Emergency Contact Relationship"
 msgstr "Emergency Contact Relationship"
 
+#: src/pages/SourcePage.tsx
+msgid "When a deployment-specific source bundle is not published here, the project repositories below remain linked as the preferred form for making modifications."
+msgstr "When a deployment-specific source bundle is not published here, the project repositories below remain linked as the preferred form for making modifications."
+
 #: src/components/ScopeAssignmentForm.tsx
 msgid "0 or empty for non-leadership only"
 msgstr "0 or empty for non-leadership only"
 
 #: src/pages/SourcePage.tsx
-msgid "Project license files"
-msgstr "Project license files"
+#~ msgid "Project license files"
+#~ msgstr "Project license files"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "File removed successfully."
@@ -3586,6 +3602,10 @@ msgstr "Freelance"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Loading onboarding"
 msgstr "Loading onboarding"
+
+#: src/pages/SourcePage.tsx
+msgid "Open public repository"
+msgstr "Open public repository"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Optional description for this unit."

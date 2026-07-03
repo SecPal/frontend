@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added a deployment-backed `/source` manifest contract at `/source-offer.json`
+  so the public AGPL source-offer page can consume immutable corresponding
+  source URLs for the deployed frontend/API/contracts release set without
+  exposing broader runtime diagnostics; the frontend now falls back to the
+  public project repositories only when that narrow manifest is missing or
+  invalid, and `docs/deployment-spa-routing.md` documents the frontend versus
+  deployment/API responsibilities.
 - Added the canonical shadcn `components.json` baseline for the frontend
   (`new-york`, Tailwind v4 `src/index.css`, `zinc`, Lucide, and repo aliases)
   plus a guardrail inventory test for the remaining non-canonical UI
