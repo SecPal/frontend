@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added deployment-backed `/source` metadata contracts so the public AGPL
+  source-offer page can consume immutable corresponding source URLs for the
+  deployed release set without exposing broader runtime diagnostics:
+  `/source-offer.json` now covers `frontend` / `contracts` plus optional
+  `android`, `GET /v1/release` provides the live `api` source URL, the
+  frontend tolerates mixed valid/invalid metadata sources without discarding
+  still-valid release links, and `docs/deployment-spa-routing.md` documents the
+  frontend versus deployment/API responsibilities.
 - Added the canonical shadcn `components.json` baseline for the frontend
   (`new-york`, Tailwind v4 `src/index.css`, `zinc`, Lucide, and repo aliases)
   plus a guardrail inventory test for the remaining non-canonical UI
@@ -46,6 +54,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   user menu with dedicated `AGPL v3+` and `Source Code` entries, and the
   source entry preserves the current route in navigation state for the return
   flow.
+- Hardened `/source` deployment manifests by trimming validated source URLs
+  before rendering them and by waiting for the manifest request to settle
+  before showing fallback repository guidance, so deployments do not flash
+  mutable fallback links ahead of immutable release URLs.
+- Kept `/source` deployment manifests effective when the separate live API
+  release fetch fails before returning an HTTP response, so valid same-origin
+  immutable frontend and contracts source links no longer fall back to mutable
+  repository URLs on mixed deployment/API outages.
+- Restored the `/source` fallback repository links while the
+  `/source-offer.json` request is still pending, so stalled manifest fetches
+  do not leave the corresponding-source section empty on the public AGPL page.
+- Narrowed the `/source` deployment notice so optional repositories that still
+  fall back to a public repository link are no longer described as immutable
+  deployment source, and added explicit short-cache delivery rules for
+  `/source-offer.json` to the shipped Apache/Nginx deployment templates.
+- Fixed the shipped Apache rewrite rule for `/source-offer.json` so deployed
+  manifests are served when present while missing manifests still return HTTP
+  404 instead of the SPA shell.
+- Stopped production builds from failing before first paint or reusing leaked
+  Polyscope preview API origins when they are opened on local loopback hosts
+  such as `localhost`, so static LHCI audits and other local production-build
+  checks stay same-origin instead of requiring deployment API metadata.
+- Limited that localhost preview-origin guard to production mode so local
+  development keeps honoring an explicit preview `VITE_API_URL` instead of
+  falling back to same-origin routing.
+- Limited the `/source` Android repository block to deployments that publish an
+  explicit Android release entry in `/source-offer.json`, so frontend-only
+  deployments no longer advertise Android source links without a matching
+  released Android version.
+- Refined the `/source` explanatory copy in English and German so the
+  deployment and fallback notices read naturally while still describing the
+  source-offer behavior precisely.
 - Refined the new legal-menu follow-up so the collapsed desktop sidebar opens
   `Legal` in a separate dropdown instead of expanding the whole sidebar, the
   login `Legal` trigger keeps the same neutral surface styling as the language

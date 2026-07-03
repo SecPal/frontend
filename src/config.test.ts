@@ -13,11 +13,33 @@ describe("config", () => {
     vi.stubEnv("MODE", "production");
     vi.stubEnv("VITE_API_URL", "");
 
-    const { getApiBaseUrl } = await import("./config");
+    const { resolveApiBaseUrl } = await import("./config");
 
-    expect(() => getApiBaseUrl()).toThrow(
+    expect(() =>
+      resolveApiBaseUrl({
+        runtimeHostname: "customer.secpal.dev",
+      })
+    ).toThrow(
       "VITE_API_URL must be set to an absolute https:// or http:// API origin in production"
     );
+  });
+
+  it("allows empty API configuration for localhost production audits", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "");
+
+    const { buildApiUrl, resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "localhost",
+      })
+    ).toBe("");
+    expect(
+      buildApiUrl("/v1/me", {
+        runtimeHostname: "localhost",
+      })
+    ).toBe("/v1/me");
   });
 
   it("prefers VITE_API_URL when explicitly configured", async () => {
@@ -316,6 +338,42 @@ describe("config", () => {
         runtimeHostname: "velvet-zebra.preview.secpal.dev",
       })
     ).toBe("https://api-velvet-zebra.preview.secpal.dev");
+  });
+
+  it("ignores a leaked preview API origin on localhost production audits", async () => {
+    vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "https://api-velvet-zebra.preview.secpal.dev");
+
+    const { buildApiUrl, resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "localhost",
+      })
+    ).toBe("");
+    expect(
+      buildApiUrl("/v1/me", {
+        runtimeHostname: "localhost",
+      })
+    ).toBe("/v1/me");
+  });
+
+  it("keeps an explicit preview API origin on localhost during development", async () => {
+    vi.stubEnv("MODE", "development");
+    vi.stubEnv("VITE_API_URL", "https://api-velvet-zebra.preview.secpal.dev");
+
+    const { buildApiUrl, resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "localhost",
+      })
+    ).toBe("https://api-velvet-zebra.preview.secpal.dev");
+    expect(
+      buildApiUrl("/v1/me", {
+        runtimeHostname: "localhost",
+      })
+    ).toBe("https://api-velvet-zebra.preview.secpal.dev/v1/me");
   });
 
   it("does not override a different explicit preview API host on a Polyscope workspace app", async () => {

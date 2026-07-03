@@ -39,6 +39,10 @@ msgstr "Welcome to SecPal Onboarding"
 msgid "Date of birth is required"
 msgstr "Date of birth is required"
 
+#: src/pages/SourcePage.tsx
+msgid "Published source release links shown below are immutable. Components without a published source release remain linked to their public repositories."
+msgstr "Published source release links shown below are immutable. Components without a published source release remain linked to their public repositories."
+
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Edit Employee"
 msgstr "Edit Employee"
@@ -137,10 +141,6 @@ msgstr "Employment permitted"
 #: src/pages/SourcePage.tsx
 msgid "Source offer for users interacting with SecPal over a network."
 msgstr "Source offer for users interacting with SecPal over a network."
-
-#: src/pages/SourcePage.tsx
-msgid "These repositories contain the preferred form for making modifications to the SecPal components made available through this service."
-msgstr "These repositories contain the preferred form for making modifications to the SecPal components made available through this service."
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
@@ -1411,6 +1411,11 @@ msgstr "Sign out"
 msgid "You signed in successfully, but your onboarding is not complete yet. Please complete onboarding to continue using SecPal."
 msgstr "You signed in successfully, but your onboarding is not complete yet. Please complete onboarding to continue using SecPal."
 
+#. placeholder {0}: repository.name
+#: src/pages/SourcePage.tsx
+msgid "Open public repository for {0}"
+msgstr "Open public repository for {0}"
+
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
 msgid "You're all set"
 msgstr "You're all set"
@@ -1820,6 +1825,10 @@ msgstr "Loading customer details"
 msgid "Applicant / Pre-Contract / Active / On Leave / Terminated"
 msgstr "Applicant / Pre-Contract / Active / On Leave / Terminated"
 
+#: src/pages/SourcePage.tsx
+msgid "The source release links shown below point to the immutable corresponding source published for this deployment."
+msgstr "The source release links shown below point to the immutable corresponding source published for this deployment."
+
 #. placeholder {0}: step.step_number
 #. placeholder {1}: step.title
 #: src/pages/Onboarding/OnboardingWizard.tsx
@@ -2101,6 +2110,10 @@ msgstr "Based on the selected nationality, please specify which valid German res
 #: src/components/NotificationPreferences.tsx
 msgid "Notifications are tied to this signed-in browser profile and the selected deployment domain."
 msgstr "Notifications are tied to this signed-in browser profile and the selected deployment domain."
+
+#: src/pages/SourcePage.tsx
+msgid "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the links below."
+msgstr "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the links below."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Optional"
@@ -2566,6 +2579,10 @@ msgstr "Back to Login"
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
 
+#: src/pages/SourcePage.tsx
+msgid "These links identify the preferred form for making modifications to the SecPal components made available through this service."
+msgstr "These links identify the preferred form for making modifications to the SecPal components made available through this service."
+
 #: src/components/VerificationDots.tsx
 msgid "Hash Chain (Data)"
 msgstr "Hash Chain (Data)"
@@ -2780,10 +2797,6 @@ msgstr "Causer"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Try Again"
 msgstr "Try Again"
-
-#: src/pages/SourcePage.tsx
-msgid "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the repositories linked below."
-msgstr "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the repositories linked below."
 
 #. placeholder {0}: formData.min_viewable_rank
 #: src/components/ScopeAssignmentForm.tsx
@@ -3397,10 +3410,6 @@ msgstr "Emergency Contact Relationship"
 msgid "0 or empty for non-leadership only"
 msgstr "0 or empty for non-leadership only"
 
-#: src/pages/SourcePage.tsx
-msgid "Project license files"
-msgstr "Project license files"
-
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "File removed successfully."
 msgstr "File removed successfully."
@@ -3482,6 +3491,10 @@ msgstr "Living There Since"
 #: src/pages/Login.tsx
 msgid "Check your device…"
 msgstr "Check your device…"
+
+#: src/pages/SourcePage.tsx
+msgid "If this deployment does not publish source releases here, the project repositories below remain linked as the preferred form for making modifications."
+msgstr "If this deployment does not publish source releases here, the project repositories below remain linked as the preferred form for making modifications."
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Merkle Root"
@@ -3586,6 +3599,10 @@ msgstr "Freelance"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Loading onboarding"
 msgstr "Loading onboarding"
+
+#: src/pages/SourcePage.tsx
+msgid "Open public repository"
+msgstr "Open public repository"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Optional description for this unit."

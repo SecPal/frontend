@@ -3443,6 +3443,11 @@ describe("Login", () => {
           name: "Powered by SecPal – A guard's best friend",
         })
       ).toHaveClass("text-foreground");
+      expect(
+        screen.getByRole("link", {
+          name: "Powered by SecPal – A guard's best friend",
+        })
+      ).toHaveAttribute("rel", "noopener");
 
       const card = screen
         .getByRole("button", { name: /log in/i })

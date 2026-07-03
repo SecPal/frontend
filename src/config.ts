@@ -48,6 +48,10 @@ function isLoopbackApiHost(hostname: string): boolean {
   );
 }
 
+function isPreviewHostname(hostname: string): boolean {
+  return parsePreviewHostname(hostname) !== null;
+}
+
 function normalizeConfiguredApiBaseUrl(value: string): string {
   return stripTrailingSlashes(value.trim());
 }
@@ -165,6 +169,23 @@ export function resolveApiBaseUrl(options?: {
   const runtimeHostname = options?.runtimeHostname ?? getRuntimeHostname();
   const normalizedConfiguredBaseUrl =
     normalizeConfiguredApiBaseUrl(configuredBaseUrl);
+
+  if (
+    mode === "production" &&
+    runtimeHostname &&
+    isLoopbackApiHost(runtimeHostname)
+  ) {
+    if (!normalizedConfiguredBaseUrl) {
+      return "";
+    }
+
+    if (
+      isAbsoluteHttpUrl(normalizedConfiguredBaseUrl) &&
+      isPreviewHostname(new URL(normalizedConfiguredBaseUrl).hostname)
+    ) {
+      return "";
+    }
+  }
 
   if (
     shouldUseCanonicalLiveApiOrigin(

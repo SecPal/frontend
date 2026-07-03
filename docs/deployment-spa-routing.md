@@ -232,6 +232,89 @@ VITE_API_URL=https://api.secpal.dev npm run build
 npm run build
 ```
 
+## Immutable `/source` Metadata
+
+The public `/source` page now combines two narrow metadata sources:
+
+- same-origin `/source-offer.json` for the deployed `frontend` and
+  `contracts` source-release URLs, plus optional `android`
+- live `GET /v1/release` API metadata for the deployed `api` source-release URL
+
+This keeps `/source` pinned to immutable corresponding source for the running
+deployment without turning the main UI into a generic build-info page.
+
+### Frontend Responsibility
+
+- Fetch `/source-offer.json` and `GET /v1/release` only when rendering
+  `/source`
+- Accept only the narrow metadata shapes below and render only published source
+  release URLs
+- Keep components without a published source release linked to their public
+  repositories instead of inventing mutable pseudo-release links
+- Fall back fully to the public project repositories only when neither metadata
+  source yields a valid published source release, so local development and
+  preview environments stay usable
+
+### Frontend Deployment Responsibility
+
+- Serve `/source-offer.json` from the same origin as the frontend deployment
+- Populate immutable `sourceUrl` values for `frontend` and `contracts`;
+  `android` is optional
+- Keep the manifest narrow: publish only the corresponding-source URLs needed
+  for AGPL compliance, not commit SHAs, build timestamps, dependency versions,
+  or wider diagnostic metadata
+- Serve the manifest with `Cache-Control: no-cache, must-revalidate` (or
+  stricter) so `/source` tracks the currently deployed release after rollouts
+- Add exact-match delivery rules for `/source-offer.json` in the deployed web
+  server config so the manifest does not fall through to generic SPA or
+  long-cache asset handling
+
+### API Responsibility
+
+- Serve `GET /v1/release` from the canonical API origin configured through
+  `VITE_API_URL`
+- Return only the narrow published source-release metadata needed for AGPL
+  corresponding-source delivery
+- Resolve any internal release refs server-side and emit only the final
+  immutable public source URL
+
+### Frontend Manifest Shape
+
+```json
+{
+  "version": 1,
+  "repositories": {
+    "frontend": {
+      "sourceUrl": "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz"
+    },
+    "contracts": {
+      "sourceUrl": "https://github.com/SecPal/contracts/releases/download/contracts-2026-06-26/source.tar.gz"
+    }
+  }
+}
+```
+
+`android` may be added when an Android release is part of the deployed source
+offer.
+
+### API Release Shape
+
+```json
+{
+  "data": {
+    "version": "api-2026-07-03",
+    "source_url": "https://github.com/SecPal/api/releases/download/api-2026-07-03/source.tar.gz"
+  }
+}
+```
+
+The frontend treats malformed JSON, unsupported versions, missing required
+manifest entries, and non-HTTP(S) URLs as invalid for that specific metadata
+source. If one source is valid and the other is not, `/source` renders a mixed
+result: immutable release links where published, public repository links
+elsewhere. Full mutable fallback is only the safety net when neither source
+produces a valid published release link.
+
 ---
 
 ## Security Checklist
@@ -244,8 +327,10 @@ Before deploying to production:
 - ✅ `VITE_API_URL` is an absolute API origin for the current deployment (never a relative path)
 - ✅ No `.env` files committed to Git
 - ✅ Service Worker registered (PWA functionality)
+- ✅ `/source-offer.json` publishes immutable corresponding-source URLs for the deployed `frontend` / `contracts` set, with optional `android`
+- ✅ `GET /v1/release` publishes the immutable corresponding-source URL for the deployed `api`
 - ✅ CSP, permissions, and modern cross-origin headers enabled
-- ✅ `index.html`, `sw.js`, and `manifest.webmanifest` use short cache rules
+- ✅ `index.html`, `sw.js`, `manifest.webmanifest`, and `/source-offer.json` use short cache rules
 
 ---
 
@@ -278,6 +363,12 @@ After deployment, test these scenarios:
 
 6. **API connectivity:**
    - Login should work ✅
+
+7. **Source offer:**
+   - Visit `/source` directly ✅
+   - Confirm `frontend` / `contracts` links use the immutable URLs from `/source-offer.json` when published ✅
+   - Confirm the `api` link uses the immutable URL from `GET /v1/release` when published ✅
+   - Confirm `/source-offer.json` and `GET /v1/release` do not expose extra runtime or diagnostic metadata ✅
    - API requests should succeed ✅
    - Check CORS headers in Network tab ✅
    - Check `https://app.secpal.dev/v1/me` no longer returns `200 text/html`; it must fail clearly on the app host and succeed only on `https://api.secpal.dev/v1/me` ✅

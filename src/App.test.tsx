@@ -260,6 +260,11 @@ describe("App", () => {
         /source offer for users interacting with secpal over a network\./i
       )
     ).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        /the project repositories below remain linked as the preferred form for making modifications/i
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText(/source code and license/i)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "https://github.com/SecPal/frontend" })
@@ -271,8 +276,8 @@ describe("App", () => {
       screen.getByRole("link", { name: "https://github.com/SecPal/contracts" })
     ).toHaveAttribute("href", "https://github.com/SecPal/contracts");
     expect(
-      screen.getByRole("link", { name: "https://github.com/SecPal/android" })
-    ).toHaveAttribute("href", "https://github.com/SecPal/android");
+      screen.queryByRole("link", { name: "https://github.com/SecPal/android" })
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /read the agpl v3 license/i })
     ).toHaveAttribute("href", "https://www.gnu.org/licenses/agpl-3.0.html");
@@ -302,29 +307,37 @@ describe("App", () => {
       "/"
     );
     expect(
-      screen.getByRole("link", { name: /secpal\/frontend license/i })
-    ).toHaveAttribute(
-      "href",
-      "https://github.com/SecPal/frontend/blob/main/LICENSE"
-    );
+      await screen.findByText(
+        /the project repositories below remain linked as the preferred form for making modifications/i
+      )
+    ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /secpal\/api license/i })
-    ).toHaveAttribute(
-      "href",
-      "https://github.com/SecPal/api/blob/main/LICENSE"
-    );
+      screen.getByRole("link", { name: "https://github.com/SecPal/frontend" })
+    ).toHaveAttribute("href", "https://github.com/SecPal/frontend");
     expect(
-      screen.getByRole("link", { name: /secpal\/contracts license/i })
-    ).toHaveAttribute(
-      "href",
-      "https://github.com/SecPal/contracts/blob/main/LICENSE"
-    );
+      screen.getByRole("link", { name: "https://github.com/SecPal/api" })
+    ).toHaveAttribute("href", "https://github.com/SecPal/api");
     expect(
-      screen.getByRole("link", { name: /secpal\/android license/i })
-    ).toHaveAttribute(
-      "href",
-      "https://github.com/SecPal/android/blob/main/LICENSE"
-    );
+      screen.getByRole("link", { name: "https://github.com/SecPal/contracts" })
+    ).toHaveAttribute("href", "https://github.com/SecPal/contracts");
+    expect(
+      screen.queryByRole("link", { name: "https://github.com/SecPal/android" })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/project license files/i)
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /secpal\/frontend license/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /secpal\/api license/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /secpal\/contracts license/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /secpal\/android license/i })
+    ).not.toBeInTheDocument();
   });
 
   it("keeps the authenticated home surface on canonical theme tokens", async () => {
