@@ -448,6 +448,11 @@ msgstr "By default (unchecked), users cannot see or edit their own employee reco
 msgid "Failed to complete MFA action."
 msgstr "Failed to complete MFA action."
 
+#: src/components/LoginLegalMenu.tsx
+#: src/components/nav-legal.tsx
+msgid "Imprint"
+msgstr "Imprint"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Invalid onboarding link. Please check your email and try again."
 msgstr "Invalid onboarding link. Please check your email and try again."
@@ -978,7 +983,7 @@ msgstr "You'll now receive important updates from SecPal"
 msgid "Complete each earlier residence until your history reaches five years before today, or move your current residence start date back."
 msgstr "Complete each earlier residence until your history reaches five years before today, or move your current residence start date back."
 
-#: src/pages/Login.tsx
+#: src/components/LoginLegalMenu.tsx
 msgid "Failed to change language. Please try again."
 msgstr "Failed to change language. Please try again."
 
@@ -1891,7 +1896,7 @@ msgstr "Get started by creating your first organizational unit."
 msgid "Provide a short reason before this Android enrollment session is revoked."
 msgstr "Provide a short reason before this Android enrollment session is revoked."
 
-#: src/pages/Login.tsx
+#: src/components/LoginLegalMenu.tsx
 msgid "Select language"
 msgstr "Select language"
 
@@ -2411,6 +2416,11 @@ msgstr "Invitation Mail Sent"
 msgid "Shared OpenAPI contracts and interface definitions used across SecPal components."
 msgstr "Shared OpenAPI contracts and interface definitions used across SecPal components."
 
+#: src/components/LoginLegalMenu.tsx
+#: src/components/nav-legal.tsx
+msgid "Legal pages"
+msgstr "Legal pages"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Step {currentStep} of {totalSteps}"
 msgstr "Step {currentStep} of {totalSteps}"
@@ -2463,6 +2473,11 @@ msgstr "Last synced: {0}"
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Date/Time"
 msgstr "Date/Time"
+
+#: src/components/LoginLegalMenu.tsx
+#: src/components/nav-legal.tsx
+msgid "Open Source"
+msgstr "Open Source"
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
@@ -2545,7 +2560,8 @@ msgstr "Default"
 msgid "Back to Login"
 msgstr "Back to Login"
 
-#: src/components/LegalFooterLinks.tsx
+#: src/components/LoginLegalMenu.tsx
+#: src/components/nav-legal.tsx
 #: src/pages/SourcePage.tsx
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
@@ -2661,7 +2677,8 @@ msgid "Workspace"
 msgstr "Workspace"
 
 #: src/components/application-layout.tsx
-#: src/components/LegalFooterLinks.tsx
+#: src/components/LoginLegalMenu.tsx
+#: src/components/nav-legal.tsx
 msgid "Source Code"
 msgstr "Source Code"
 
@@ -2834,6 +2851,11 @@ msgstr "Files uploaded successfully."
 #: src/components/NotificationPermissionPrompt.tsx
 msgid "Category-specific notification controls are not available yet."
 msgstr "Category-specific notification controls are not available yet."
+
+#: src/components/LoginLegalMenu.tsx
+#: src/components/nav-legal.tsx
+msgid "Privacy"
+msgstr "Privacy"
 
 #: src/components/RouteGuardState.tsx
 msgid "The page you requested does not exist or is no longer available."
@@ -3290,6 +3312,11 @@ msgstr "Create a new organizational unit under \"{parentName}\"."
 msgid "Passkey sign-in was cancelled or not permitted by the browser."
 msgstr "Passkey sign-in was cancelled or not permitted by the browser."
 
+#: src/components/LoginLegalMenu.tsx
+#: src/components/nav-legal.tsx
+msgid "Legal"
+msgstr "Legal"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Android provisioning QR code"
 msgstr "Android provisioning QR code"
@@ -3332,6 +3359,7 @@ msgstr "User menu"
 msgid "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
+#: src/components/LoginLegalMenu.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Language"
 msgstr "Language"

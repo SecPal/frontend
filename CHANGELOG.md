@@ -40,6 +40,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Moved the AGPL/license and source-code notices out of the authenticated and
+  login footers so those footers keep only the "Powered by SecPal" slogan; the
+  authenticated sidebar now exposes a collapsible `Legal` section above the
+  user menu with dedicated `AGPL v3+` and `Source Code` entries, and the
+  source entry preserves the current route in navigation state for the return
+  flow.
+- Refined the new legal-menu follow-up so the collapsed desktop sidebar opens
+  `Legal` in a separate dropdown instead of expanding the whole sidebar, the
+  login `Legal` trigger keeps the same neutral surface styling as the language
+  picker in dark mode, the authenticated `Legal` triggers no longer compose
+  sidebar tooltips through Radix `asChild` wrappers, the `Legal` section now
+  lives in the scrollable sidebar content instead of the fixed footer, the
+  vault-locked login shell keeps bottom safe-area breathing room when no footer
+  is present, the user menu stays bounded for long profile names and email
+  addresses, and pointer dismissal now clears trigger focus for the shared
+  dropdown primitives used by both flows.
+- Fixed pointer-dismissed dropdown menus that use trigger-child composition so
+  Radix menu triggers rendered through shared `Button` and
+  `SidebarMenuButton` children still blur their restored focus ring instead of
+  staying visibly focused after pointer-driven close.
+- Limited pointer-dismiss blur handling to the dropdown or select trigger that
+  actually owns the closing overlay, so clicking a different menu trigger no
+  longer strips focus from the newly targeted control.
+- Aligned the remaining footer slogan with the standard `text-xs` type scale
+  and tightened the surrounding vertical spacing now that the legal-link row is
+  gone.
 - `AuthContext` now keeps new logins behind the full sensitive logout cleanup
   completion path, so the five-second best-effort logout timeout no longer lets
   a replacement session race the previous session's IndexedDB and cache
@@ -145,6 +171,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Removed the duplicate `AGPL v3+` and `Source Code` footer links from the
+  vault-locked login shell now that the interactive login `Legal` menu already
+  exposes those notices there.
+- Restored the login bootstrap screen's AGPL and source-code footer links so
+  legal notices stay reachable while auth bootstrap is still pending.
 - Localized the sidebar user-menu trigger label, corrected destructive
   dropdown-menu icon tinting to use the canonical shadcn descendant selector,
   and removed the unused quick-access sidebar section that was no longer part

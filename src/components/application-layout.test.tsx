@@ -126,16 +126,6 @@ const renderWithProviders = (
   );
 };
 
-function LocationStateProbe() {
-  const location = useLocation();
-  const state =
-    typeof location.state === "object" && location.state !== null
-      ? location.state
-      : {};
-
-  return <output data-testid="location-state">{JSON.stringify(state)}</output>;
-}
-
 function PathnameProbe() {
   const location = useLocation();
 
@@ -451,6 +441,35 @@ describe("ApplicationLayout", () => {
       expect(
         document.querySelector('[data-slot="sidebar-menu-button"][href="/"]')
       ).toBeInTheDocument();
+    });
+
+    it("renders a collapsible legal section above the user menu", async () => {
+      const user = userEvent.setup();
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(
+        screen.queryByRole("link", { name: /agpl v3\+/i })
+      ).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: /legal/i }));
+
+      expect(
+        await screen.findByRole("link", { name: /agpl v3\+/i })
+      ).toHaveAttribute("href", "https://www.gnu.org/licenses/agpl-3.0.html");
+      expect(
+        screen.getByRole("link", { name: /source code/i })
+      ).toHaveAttribute("href", "/source");
+
+      const legalTrigger = screen.getByRole("button", { name: /legal/i });
+      const userMenuButton = screen.getByRole("button", { name: /user menu/i });
+      expect(legalTrigger.compareDocumentPosition(userMenuButton)).toBe(
+        Node.DOCUMENT_POSITION_FOLLOWING
+      );
     });
 
     it("renders user information in the sidebar footer avatar", () => {
@@ -1290,74 +1309,18 @@ describe("ApplicationLayout", () => {
       expect(footer).toHaveClass(
         "pb-[var(--app-footer-padding-bottom)]",
         "bg-background",
-        "text-muted-foreground"
+        "text-muted-foreground",
+        "text-xs"
       );
       expect(footer?.className).not.toContain("bg-white");
       expect(footer?.className).not.toContain("dark:bg-zinc-900");
       expect(footer).toHaveTextContent(
         "Powered by SecPal – A guard's best friend"
       );
-      expect(footer).toHaveTextContent("AGPL v3+");
-      expect(footer).toHaveTextContent("Source Code");
+      expect(footer).not.toHaveTextContent("AGPL v3+");
+      expect(footer).not.toHaveTextContent("Source Code");
       expect(footer?.firstElementChild).toHaveClass(
         ...APP_SHELL_MAX_WIDTH_CLASS.split(" ")
-      );
-    });
-
-    it("renders license link in main content footer", () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      const licenseLink = screen.getByRole("link", { name: /agpl v3\+/i });
-      expect(licenseLink).toBeInTheDocument();
-      expect(licenseLink).toHaveAttribute(
-        "href",
-        "https://www.gnu.org/licenses/agpl-3.0.html"
-      );
-      expect(licenseLink).toHaveAttribute("target", "_blank");
-      expect(licenseLink).toHaveAttribute("rel", "noopener noreferrer");
-    });
-
-    it("renders source code link in main content footer", () => {
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      const footer = screen.getByRole("contentinfo");
-      const sourceLink = within(footer).getByRole("link", {
-        name: /source code/i,
-      });
-      expect(sourceLink).toBeInTheDocument();
-      expect(sourceLink).toHaveAttribute("href", "/source");
-      expect(screen.getByText("AGPL v3+")).toBeInTheDocument();
-      expect(within(footer).getByText("Source Code")).toBeInTheDocument();
-    });
-
-    it("stores the current app route when navigating to source from the footer", async () => {
-      const user = userEvent.setup();
-
-      renderWithProviders(
-        <>
-          <ApplicationLayout>
-            <div>Content</div>
-          </ApplicationLayout>
-          <LocationStateProbe />
-        </>,
-        { route: "/customers/new?draft=1#notes" }
-      );
-
-      const footer = screen.getByRole("contentinfo");
-      await user.click(
-        within(footer).getByRole("link", { name: /source code/i })
-      );
-
-      expect(screen.getByTestId("location-state")).toHaveTextContent(
-        JSON.stringify({ sourceReturnTo: "/customers/new?draft=1#notes" })
       );
     });
 
@@ -1372,7 +1335,7 @@ describe("ApplicationLayout", () => {
         screen.getByRole("link", {
           name: "Powered by SecPal – A guard's best friend",
         })
-      ).toBeInTheDocument();
+      ).toHaveClass("text-xs");
     });
   });
 

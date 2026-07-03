@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
@@ -539,6 +539,65 @@ describe("shared shadcn/radix UI basis", () => {
 
     await user.click(screen.getByRole("radio", { name: "Recovery code" }));
     expect(handleRadioChange).toHaveBeenCalledWith("recovery");
+  });
+
+  it("blurs select triggers after outside pointer dismissal", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Select defaultValue="de">
+        <SelectTrigger aria-label="Language">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="de">German</SelectItem>
+          <SelectItem value="en">English</SelectItem>
+        </SelectContent>
+      </Select>
+    );
+
+    const trigger = screen.getByRole("combobox", { name: "Language" });
+
+    await user.click(trigger);
+    fireEvent.pointerDown(document.body);
+    fireEvent.mouseDown(document.body);
+    fireEvent.click(document.body);
+
+    await waitFor(() => {
+      expect(document.activeElement).not.toBe(trigger);
+    });
+  });
+
+  it("keeps focus on the next control when a pointer close leaves a select", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <div>
+        <Select defaultValue="de">
+          <SelectTrigger aria-label="Language">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="de">German</SelectItem>
+            <SelectItem value="en">English</SelectItem>
+          </SelectContent>
+        </Select>
+        <button type="button">Next action</button>
+      </div>
+    );
+
+    const trigger = screen.getByRole("combobox", { name: "Language" });
+    const nextButton = screen.getByRole("button", { name: "Next action" });
+
+    await user.click(trigger);
+    fireEvent.pointerDown(document.body);
+    nextButton.focus();
+    fireEvent.mouseDown(nextButton);
+    fireEvent.click(nextButton);
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(nextButton);
+    });
   });
 
   it("renders a Radix dialog with the shared responsive content boundary", async () => {

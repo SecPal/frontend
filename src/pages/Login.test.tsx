@@ -227,16 +227,37 @@ function switchToRecoveryCodeMode() {
 async function selectLanguage(visibleName: string) {
   const trigger = screen.getByRole("combobox", {
     name: /select language/i,
-  }) as HTMLSelectElement;
-  const selectedOption = Array.from(trigger.options).find(
-    (option) => option.text === visibleName
-  );
+  });
+  fireEvent.pointerDown(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(trigger, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(trigger, { button: 0 });
 
-  if (!selectedOption) {
-    throw new Error(`Language option "${visibleName}" not found`);
-  }
+  const option = await screen.findByRole("option", { name: visibleName });
+  fireEvent.pointerDown(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.pointerUp(option, {
+    button: 0,
+    pointerId: 1,
+    pointerType: "mouse",
+  });
+  fireEvent.click(option, { button: 0 });
+}
 
-  fireEvent.change(trigger, { target: { value: selectedOption.value } });
+async function openLoginLegalMenu() {
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: /legal|rechtliches/i }));
+  await screen.findByRole("menuitem", { name: /agpl v3\+/i });
 }
 
 describe("Login", () => {
@@ -3268,6 +3289,91 @@ describe("Login", () => {
         screen.queryByRole("alert", { name: /failed to change language/i })
       ).not.toBeInTheDocument();
     });
+
+    it("blurs the language trigger after pointer selection", async () => {
+      vi.mocked(i18nModule.activateLocale).mockImplementation(
+        async (locale) => {
+          i18n.activate(locale);
+        }
+      );
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      const trigger = screen.getByRole("combobox", {
+        name: /select language/i,
+      });
+
+      await selectLanguage("Deutsch");
+
+      await waitFor(() => {
+        expect(document.activeElement).not.toBe(trigger);
+      });
+    });
+
+    it("renders a localized group label in the login language dropdown", async () => {
+      const user = userEvent.setup();
+
+      vi.mocked(i18nModule.activateLocale).mockImplementation(
+        async (locale) => {
+          i18n.activate(locale);
+        }
+      );
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      await user.click(
+        screen.getByRole("combobox", { name: /select language/i })
+      );
+      expect(screen.getByText("Language")).toHaveClass(
+        "text-muted-foreground",
+        "text-xs",
+        "font-medium"
+      );
+
+      await user.keyboard("{Escape}");
+      await selectLanguage("Deutsch");
+      await user.click(
+        screen.getByRole("combobox", { name: /sprache auswählen/i })
+      );
+      expect(screen.getByText("Sprache")).toHaveClass(
+        "text-muted-foreground",
+        "text-xs",
+        "font-medium"
+      );
+    });
+
+    it("keeps the login language dropdown at its natural content width", async () => {
+      const user = userEvent.setup();
+
+      renderLogin();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      await user.click(
+        screen.getByRole("combobox", { name: /select language/i })
+      );
+
+      const dropdown = screen.getByRole("listbox");
+      expect(dropdown).toHaveClass("data-[side=bottom]:translate-y-1");
+      expect(dropdown).toHaveClass("w-fit", "min-w-fit");
+      expect(dropdown.className).not.toContain("min-w-[8rem]");
+    });
   });
 
   describe("footer", () => {
@@ -3293,6 +3399,8 @@ describe("Login", () => {
         "pt-[calc(1.5rem+var(--app-safe-area-inset-top))]"
       );
       expect(shell).not.toHaveClass("justify-center");
+      expect(shell.className).not.toContain("pb-6");
+      expect(shell.className).not.toContain("md:pb-10");
 
       const languageSelect = screen.getByRole("combobox", {
         name: /select language/i,
@@ -3306,6 +3414,17 @@ describe("Login", () => {
         "text-foreground",
         "focus-visible:ring-ring/50"
       );
+      const legalButton = screen.getByRole("button", {
+        name: /legal|rechtliches/i,
+      });
+      expect(legalButton).toBeInTheDocument();
+      expect(legalButton).toHaveClass(
+        "border-input",
+        "bg-background",
+        "text-foreground",
+        "focus-visible:ring-ring/50"
+      );
+      expect(legalButton.className).not.toContain("dark:bg-input/30");
       expect(languageSelect.className).not.toContain("border-zinc-300");
       expect(languageSelect.className).not.toContain(
         "focus-visible:ring-blue-600/20"
@@ -3313,7 +3432,11 @@ describe("Login", () => {
 
       const footer = screen.getByRole("contentinfo");
       expect(footer).not.toHaveClass("absolute");
-      expect(footer).toHaveClass("pb-[env(safe-area-inset-bottom,0px)]");
+      expect(footer).toHaveClass(
+        "mt-auto",
+        "pt-3",
+        "pb-[var(--app-footer-padding-bottom)]"
+      );
       expect(footer.querySelector("div")).toHaveClass("text-muted-foreground");
       expect(
         screen.getByRole("link", {
@@ -3334,7 +3457,7 @@ describe("Login", () => {
       );
     });
 
-    it("renders footer with license and source code links", async () => {
+    it("renders footer without license and source code links", async () => {
       renderLogin();
 
       // Wait for initial render
@@ -3344,9 +3467,39 @@ describe("Login", () => {
         ).toBeInTheDocument();
       });
 
-      // Check for license link
-      const licenseLink = screen.getByRole("link", { name: /agpl v3\+/i });
-      expect(licenseLink).toBeInTheDocument();
+      expect(
+        screen.queryByRole("link", { name: /agpl v3\+/i })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("link", { name: /source code/i })
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole("contentinfo")).not.toHaveTextContent("AGPL v3+");
+      expect(screen.getByRole("contentinfo")).not.toHaveTextContent(
+        "Source Code"
+      );
+    });
+
+    it("renders legal-page placeholders above the AGPL and source code links in the login legal menu", async () => {
+      renderLogin();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
+        ).toBeInTheDocument();
+      });
+
+      await openLoginLegalMenu();
+
+      expect(screen.getByText(/legal pages/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("menuitem", { name: /imprint/i })
+      ).toHaveAttribute("data-disabled", "");
+      expect(
+        screen.getByRole("menuitem", { name: /privacy/i })
+      ).toHaveAttribute("data-disabled", "");
+      expect(screen.getByText(/open source/i)).toBeInTheDocument();
+
+      const licenseLink = screen.getByRole("menuitem", { name: /agpl v3\+/i });
       expect(licenseLink).toHaveAttribute(
         "href",
         "https://www.gnu.org/licenses/agpl-3.0.html"
@@ -3354,12 +3507,10 @@ describe("Login", () => {
       expect(licenseLink).toHaveAttribute("target", "_blank");
       expect(licenseLink).toHaveAttribute("rel", "noopener noreferrer");
 
-      // Check for source code link
-      const sourceLink = screen.getByRole("link", { name: /source code/i });
-      expect(sourceLink).toBeInTheDocument();
-      expect(sourceLink).toHaveAttribute("href", "/source");
-      expect(screen.getByRole("contentinfo")).toHaveTextContent("AGPL v3+");
-      expect(screen.getByRole("contentinfo")).toHaveTextContent("Source Code");
+      const sourceCodeLink = screen.getByRole("menuitem", {
+        name: /source code/i,
+      });
+      expect(sourceCodeLink).toHaveAttribute("href", "/source");
     });
 
     it("renders footer with SecPal slogan", async () => {
@@ -3370,8 +3521,27 @@ describe("Login", () => {
           screen.getByRole("link", {
             name: "Powered by SecPal – A guard's best friend",
           })
+        ).toHaveClass("text-xs");
+      });
+    });
+
+    it("keeps the login legal dropdown at its natural content width", async () => {
+      renderLogin();
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /log in/i })
         ).toBeInTheDocument();
       });
+
+      await openLoginLegalMenu();
+
+      const dropdown = screen
+        .getByText(/legal pages/i)
+        .closest('[data-slot="dropdown-menu-content"]');
+      expect(dropdown).not.toBeNull();
+      expect(dropdown).toHaveClass("w-fit", "min-w-fit");
+      expect(dropdown!.className).not.toContain("w-56");
     });
   });
 });

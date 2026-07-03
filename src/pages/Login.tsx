@@ -9,7 +9,7 @@ import { useLingui } from "@lingui/react";
 import { KeyRound } from "lucide-react";
 
 import type { MfaChallenge, MfaVerificationMethod } from "@/types/api";
-import { LegalFooterLinks } from "@/components/LegalFooterLinks";
+import { LoginHeaderControls } from "@/components/LoginLegalMenu";
 import { useAuth } from "../hooks/useAuth";
 import { useRecoverableLazyComponent } from "../hooks/useRecoverableLazyComponent";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
@@ -17,7 +17,6 @@ import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { getAuthTransport, AuthApiError } from "../services/authTransport";
 import { sanitizeAuthUser } from "../services/authState";
 import { Logo } from "../components/Logo";
-import { activateLocale, locales, setLocalePreference } from "../i18n";
 import { loadLoginMfaDialogModule } from "../lib/lazyAppModules";
 import {
   isRecoverableLazyModuleError,
@@ -29,7 +28,6 @@ import {
   LoginCardHeader,
   LoginCardTitle,
   LoginField,
-  LoginFieldError,
   LoginFieldGroup,
   LoginFieldLabel,
   LoginFieldSeparator,
@@ -703,11 +701,7 @@ export function Login() {
 
   return (
     <LoginShell>
-      {!isCompletingLogin && (
-        <div className="absolute top-[calc(1rem+var(--app-safe-area-inset-top))] right-4 sm:top-[calc(1.5rem+var(--app-safe-area-inset-top))] sm:right-6">
-          <LoginLanguageSwitcher />
-        </div>
-      )}
+      {!isCompletingLogin && <LoginHeaderControls />}
 
       {/*
         Centered card region. `flex-1` lets it grow to fill the space between
@@ -982,67 +976,22 @@ export function Login() {
   );
 }
 
-function LoginLanguageSwitcher() {
-  const { _, i18n } = useLingui();
-  const [error, setError] = useState<string | null>(null);
-
-  const handleValueChange = async (locale: string) => {
-    setError(null);
-
-    try {
-      await activateLocale(locale);
-      setLocalePreference(locale);
-    } catch {
-      setError(_(msg`Failed to change language. Please try again.`));
-    }
-  };
-
-  return (
-    <div>
-      <label className="sr-only" htmlFor="login-language-select">
-        {_(msg`Select language`)}
-      </label>
-      <select
-        id="login-language-select"
-        value={i18n.locale}
-        onChange={(event) => {
-          void handleValueChange(event.target.value);
-        }}
-        aria-label={_(msg`Select language`)}
-        className="border-input bg-background text-foreground shadow-xs focus-visible:ring-ring/50 h-10 min-w-[7rem] rounded-md border px-3 text-sm outline-none transition focus-visible:border-ring focus-visible:ring-2"
-      >
-        {Object.entries(locales).map(([code, name]) => (
-          <option key={code} value={code}>
-            {name}
-          </option>
-        ))}
-      </select>
-      {error ? (
-        <LoginFieldError role="alert" aria-live="assertive" className="mt-2">
-          {error}
-        </LoginFieldError>
-      ) : null}
-    </div>
-  );
-}
-
 function LoginLegalFooter() {
   return (
     // Natural-flow footer: sits at the bottom of the LoginShell flex column,
     // pushed there by the centered-card wrapper above (`flex-1`). No absolute
     // positioning so it cannot overlap the credential card on short landscape
     // viewports (≈320px tall) where the card itself fills most of the height.
-    <footer className="mt-4 w-full max-w-sm pb-[env(safe-area-inset-bottom,0px)] text-center text-[11px]">
-      <div className="text-muted-foreground flex flex-col items-center gap-2">
+    <footer className="mt-auto w-full max-w-sm pt-3 pb-[var(--app-footer-padding-bottom)] text-center text-xs">
+      <div className="text-muted-foreground">
         <a
           href="https://secpal.app"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-foreground hover:text-foreground/80 font-semibold"
+          className="text-foreground hover:text-foreground/80 inline-block text-xs font-semibold"
         >
           <Trans>Powered by SecPal – A guard's best friend</Trans>
         </a>
-        <LegalFooterLinks className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2" />
       </div>
     </footer>
   );
