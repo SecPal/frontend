@@ -126,7 +126,8 @@ function isMutableGitHubArchiveUrl(
   return (
     repositoryRelativePath.startsWith("/archive/") ||
     repositoryRelativePath.startsWith("/tarball/") ||
-    repositoryRelativePath.startsWith("/zipball/")
+    repositoryRelativePath.startsWith("/zipball/") ||
+    repositoryRelativePath.startsWith("/releases/latest/")
   );
 }
 
