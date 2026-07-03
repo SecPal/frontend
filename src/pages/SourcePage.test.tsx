@@ -158,8 +158,9 @@ describe("SourcePage", () => {
     renderWithProviders();
 
     const androidArticle = await screen.findByText("SecPal/android");
-    const androidLinks = within(androidArticle.closest("article") as HTMLElement)
-      .getAllByRole("link");
+    const androidLinks = within(
+      androidArticle.closest("article") as HTMLElement
+    ).getAllByRole("link");
 
     expect(androidLinks).toHaveLength(1);
     expect(androidLinks[0]).toHaveAttribute(
