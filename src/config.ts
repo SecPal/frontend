@@ -171,6 +171,7 @@ export function resolveApiBaseUrl(options?: {
     normalizeConfiguredApiBaseUrl(configuredBaseUrl);
 
   if (
+    mode === "production" &&
     runtimeHostname &&
     isLoopbackApiHost(runtimeHostname) &&
     isAbsoluteHttpUrl(normalizedConfiguredBaseUrl) &&

@@ -336,6 +336,24 @@ describe("config", () => {
     ).toBe("/v1/me");
   });
 
+  it("keeps an explicit preview API origin on localhost during development", async () => {
+    vi.stubEnv("MODE", "development");
+    vi.stubEnv("VITE_API_URL", "https://api-velvet-zebra.preview.secpal.dev");
+
+    const { buildApiUrl, resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "localhost",
+      })
+    ).toBe("https://api-velvet-zebra.preview.secpal.dev");
+    expect(
+      buildApiUrl("/v1/me", {
+        runtimeHostname: "localhost",
+      })
+    ).toBe("https://api-velvet-zebra.preview.secpal.dev/v1/me");
+  });
+
   it("does not override a different explicit preview API host on a Polyscope workspace app", async () => {
     vi.stubEnv("MODE", "production");
     vi.stubEnv("VITE_API_URL", "https://api-other.preview.secpal.dev");
