@@ -5,11 +5,7 @@ import { isSafeHttpUrl } from "@/utils/safeUrl";
 
 const SOURCE_OFFER_URL = "/source-offer.json";
 
-export type SourceRepositoryId =
-  | "frontend"
-  | "api"
-  | "contracts"
-  | "android";
+export type SourceRepositoryId = "frontend" | "api" | "contracts" | "android";
 
 interface SourceRepositoryDefinition {
   id: SourceRepositoryId;
@@ -61,7 +57,9 @@ interface SourceOfferManifestRepository {
 
 interface SourceOfferManifest {
   version: 1;
-  repositories: Partial<Record<SourceRepositoryId, SourceOfferManifestRepository>>;
+  repositories: Partial<
+    Record<SourceRepositoryId, SourceOfferManifestRepository>
+  >;
 }
 
 type SourceOfferFetch = typeof fetch;
@@ -83,12 +81,17 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
 function parseManifestRepository(
   value: unknown
 ): SourceOfferManifestRepository | null {
-  if (!isObjectRecord(value) || !isSafeHttpUrl(String(value.sourceUrl ?? ""))) {
+  if (!isObjectRecord(value)) {
+    return null;
+  }
+
+  const sourceUrl = String(value.sourceUrl ?? "").trim();
+  if (!isSafeHttpUrl(sourceUrl)) {
     return null;
   }
 
   return {
-    sourceUrl: String(value.sourceUrl),
+    sourceUrl,
   };
 }
 
@@ -138,7 +141,8 @@ function resolveDeploymentSourceOffer(
     repositories: SOURCE_REPOSITORY_DEFINITIONS.map((repository) => ({
       ...repository,
       sourceUrl:
-        manifest.repositories[repository.id]?.sourceUrl ?? repository.repositoryUrl,
+        manifest.repositories[repository.id]?.sourceUrl ??
+        repository.repositoryUrl,
     })),
   };
 }

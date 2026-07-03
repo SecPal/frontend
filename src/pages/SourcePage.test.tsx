@@ -32,16 +32,16 @@ describe("SourcePage", () => {
     );
   });
 
-  it("keeps the source page on canonical theme tokens", () => {
+  it("keeps the source page on canonical theme tokens", async () => {
     const { container } = renderWithProviders();
+    const repoLink = await screen.findByRole("link", {
+      name: "https://github.com/SecPal/frontend",
+    });
 
     const main = container.querySelector("main");
     const banner = container.querySelector("main > div > div");
     const cards = container.querySelectorAll('[data-slot="card"]');
     const repoArticle = screen.getByText("SecPal/frontend").closest("article");
-    const repoLink = screen.getByRole("link", {
-      name: "https://github.com/SecPal/frontend",
-    });
     const issueLink = screen.getByRole("link", {
       name: /secpal\/frontend issues/i,
     });
@@ -108,7 +108,9 @@ describe("SourcePage", () => {
       )
     ).toBeInTheDocument();
 
-    const frontendArticle = screen.getByText("SecPal/frontend").closest("article");
+    const frontendArticle = screen
+      .getByText("SecPal/frontend")
+      .closest("article");
     expect(frontendArticle).not.toBeNull();
 
     const frontendLinks = within(frontendArticle as HTMLElement).getAllByRole(
@@ -121,6 +123,72 @@ describe("SourcePage", () => {
     expect(frontendLinks[1]).toHaveAttribute(
       "href",
       "https://github.com/SecPal/frontend"
+    );
+  });
+
+  it("does not show fallback source links before the manifest request settles", async () => {
+    let resolveFetch: ((value: Response) => void) | undefined;
+
+    vi.mocked(globalThis.fetch).mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        })
+    );
+
+    renderWithProviders();
+
+    expect(
+      screen.queryByText(
+        /the project repositories below remain linked as the preferred form for making modifications/i
+      )
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", {
+        name: "https://github.com/SecPal/frontend",
+      })
+    ).not.toBeInTheDocument();
+
+    resolveFetch?.(
+      new Response(
+        JSON.stringify({
+          version: 1,
+          repositories: {
+            frontend: {
+              sourceUrl:
+                "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
+            },
+            api: {
+              sourceUrl:
+                "https://github.com/SecPal/api/releases/download/api-2026-06-26/source.tar.gz",
+            },
+            contracts: {
+              sourceUrl:
+                "https://github.com/SecPal/contracts/releases/download/contracts-2026-06-26/source.tar.gz",
+            },
+          },
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        }
+      )
+    );
+
+    expect(
+      await screen.findByText(
+        /immutable corresponding source published for this deployment/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", {
+        name: "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz",
+      })
+    ).toHaveAttribute(
+      "href",
+      "https://github.com/SecPal/frontend/releases/download/frontend-2026-06-26/source.tar.gz"
     );
   });
 

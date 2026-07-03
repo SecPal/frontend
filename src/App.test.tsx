@@ -261,7 +261,7 @@ describe("App", () => {
       )
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
+      await screen.findByText(
         /the project repositories below remain linked as the preferred form for making modifications/i
       )
     ).toBeInTheDocument();
@@ -307,7 +307,7 @@ describe("App", () => {
       "/"
     );
     expect(
-      screen.getByText(
+      await screen.findByText(
         /the project repositories below remain linked as the preferred form for making modifications/i
       )
     ).toBeInTheDocument();

@@ -53,6 +53,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   user menu with dedicated `AGPL v3+` and `Source Code` entries, and the
   source entry preserves the current route in navigation state for the return
   flow.
+- Hardened `/source` deployment manifests by trimming validated source URLs
+  before rendering them and by waiting for the manifest request to settle
+  before showing fallback repository guidance, so deployments do not flash
+  mutable fallback links ahead of immutable release URLs.
 - Refined the new legal-menu follow-up so the collapsed desktop sidebar opens
   `Legal` in a separate dropdown instead of expanding the whole sidebar, the
   login `Legal` trigger keeps the same neutral surface styling as the language

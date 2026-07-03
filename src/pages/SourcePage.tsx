@@ -16,8 +16,8 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Logo } from "@/components/Logo";
 import {
-  getFallbackSourceRepositories,
   loadSourceOffer,
+  type LoadedSourceOffer,
   type SourceOfferRepository,
 } from "@/lib/sourceOffer";
 import { buttonVariants } from "@/ui/styles";
@@ -80,12 +80,9 @@ export function SourcePage() {
   const { isAuthenticated, isLoading } = useAuth();
   const { _ } = useLingui();
   const location = useLocation();
-  const [repositories, setRepositories] = useState<SourceOfferRepository[]>(
-    getFallbackSourceRepositories()
+  const [sourceOffer, setSourceOffer] = useState<LoadedSourceOffer | null>(
+    null
   );
-  const [sourceOfferMode, setSourceOfferMode] = useState<
-    "deployment" | "fallback"
-  >("fallback");
   const sourceReturnTo = getSourceReturnTo(location.state);
   const showAuthenticatedReturn = isAuthenticated || isLoading;
   const secondaryActionHref = showAuthenticatedReturn
@@ -105,14 +102,16 @@ export function SourcePage() {
         return;
       }
 
-      setRepositories(result.repositories);
-      setSourceOfferMode(result.mode);
+      setSourceOffer(result);
     });
 
     return () => {
       isActive = false;
     };
   }, []);
+
+  const repositories: SourceOfferRepository[] = sourceOffer?.repositories ?? [];
+  const sourceOfferMode = sourceOffer?.mode;
 
   return (
     <main className="min-h-[var(--app-shell-min-height)] bg-background text-foreground">
@@ -173,13 +172,13 @@ export function SourcePage() {
                       These links point to the immutable corresponding source
                       published for this deployment.
                     </Trans>
-                  ) : (
+                  ) : sourceOfferMode === "fallback" ? (
                     <Trans>
                       When a deployment-specific source bundle is not published
                       here, the project repositories below remain linked as the
                       preferred form for making modifications.
                     </Trans>
-                  )}
+                  ) : null}
                 </p>
 
                 <div className="flex flex-wrap gap-3">
@@ -221,69 +220,70 @@ export function SourcePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {SOURCE_REPOSITORIES.map((repository) => {
-                  const sourceOfferRepository = repositories.find(
-                    (entry) => entry.id === repository.id
-                  );
+                {repositories.length > 0 &&
+                  SOURCE_REPOSITORIES.map((repository) => {
+                    const sourceOfferRepository = repositories.find(
+                      (entry) => entry.id === repository.id
+                    );
 
-                  if (!sourceOfferRepository) {
-                    return null;
-                  }
+                    if (!sourceOfferRepository) {
+                      return null;
+                    }
 
-                  const showsSeparateRepositoryLink =
-                    sourceOfferMode === "deployment" &&
-                    sourceOfferRepository.sourceUrl !==
-                      sourceOfferRepository.repositoryUrl;
+                    const showsSeparateRepositoryLink =
+                      sourceOfferMode === "deployment" &&
+                      sourceOfferRepository.sourceUrl !==
+                        sourceOfferRepository.repositoryUrl;
 
-                  return (
-                    <article
-                      key={repository.id}
-                      className="rounded-xl border border-border bg-muted p-5"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-2">
-                          <h3 className="text-foreground text-base font-semibold">
-                            {repository.name}
-                          </h3>
-                          <p className="text-muted-foreground text-sm leading-6">
-                            {_(repository.description)}
-                          </p>
+                    return (
+                      <article
+                        key={repository.id}
+                        className="rounded-xl border border-border bg-muted p-5"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="space-y-2">
+                            <h3 className="text-foreground text-base font-semibold">
+                              {repository.name}
+                            </h3>
+                            <p className="text-muted-foreground text-sm leading-6">
+                              {_(repository.description)}
+                            </p>
+                          </div>
+                          <FolderGit2
+                            className="text-muted-foreground mt-0.5 size-5 shrink-0"
+                            aria-hidden="true"
+                          />
                         </div>
-                        <FolderGit2
-                          className="text-muted-foreground mt-0.5 size-5 shrink-0"
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <div className="mt-4 space-y-3">
-                        <a
-                          href={sourceOfferRepository.sourceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary decoration-border inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-primary/80"
-                        >
-                          <FileCode2 className="size-4" aria-hidden="true" />
-                          <span>{sourceOfferRepository.sourceUrl}</span>
-                        </a>
-                        {showsSeparateRepositoryLink ? (
+                        <div className="mt-4 space-y-3">
                           <a
-                            href={sourceOfferRepository.repositoryUrl}
+                            href={sourceOfferRepository.sourceUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-muted-foreground inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-foreground"
+                            className="text-primary decoration-border inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-primary/80"
                           >
-                            <span>
-                              <Trans>Open public repository</Trans>
-                            </span>
-                            <ExternalLink
-                              className="size-4"
-                              aria-hidden="true"
-                            />
+                            <FileCode2 className="size-4" aria-hidden="true" />
+                            <span>{sourceOfferRepository.sourceUrl}</span>
                           </a>
-                        ) : null}
-                      </div>
-                    </article>
-                  );
-                })}
+                          {showsSeparateRepositoryLink ? (
+                            <a
+                              href={sourceOfferRepository.repositoryUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-muted-foreground inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4 hover:text-foreground"
+                            >
+                              <span>
+                                <Trans>Open public repository</Trans>
+                              </span>
+                              <ExternalLink
+                                className="size-4"
+                                aria-hidden="true"
+                              />
+                            </a>
+                          ) : null}
+                        </div>
+                      </article>
+                    );
+                  })}
               </CardContent>
             </Card>
           </section>
