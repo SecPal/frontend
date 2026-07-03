@@ -72,6 +72,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the shipped Apache rewrite rule for `/source-offer.json` so deployed
   manifests are served when present while missing manifests still return HTTP
   404 instead of the SPA shell.
+- Stopped production builds from reusing leaked Polyscope preview API origins
+  when they are opened on local loopback hosts such as `localhost`, so static
+  LHCI audits and other local production-build checks stay same-origin instead
+  of issuing cross-origin session bootstrap requests to preview APIs.
 - Limited the `/source` Android repository block to deployments that publish an
   explicit Android release entry in `/source-offer.json`, so frontend-only
   deployments no longer advertise Android source links without a matching
