@@ -153,6 +153,27 @@ describe("Build Configuration and Source Verification", () => {
     expect(packageLock.packages?.[""]?.license).toBe(packageJson.license);
   });
 
+  it("keeps SecPal-owned governance files on the attribution license expression", () => {
+    for (const relativePath of [
+      ".pre-commit-config.yaml",
+      ".yamllint.yml",
+      ".github/copilot-instructions.md",
+      ".github/instructions/org-shared.instructions.md",
+      ".github/instructions/react-typescript.instructions.md",
+      ".github/instructions/github-workflows.instructions.md",
+    ]) {
+      const fileContents = readRepoFile(relativePath);
+
+      expect(fileContents).toContain("SecPal Contributors");
+      expect(fileContents).toContain(
+        [
+          "SPDX-License-Identifier",
+          "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
+        ].join(": ")
+      );
+    }
+  });
+
   it("keeps SecPal attribution off Lukas-owned locale sidecars", () => {
     for (const relativePath of [
       "src/locales/de/messages.js.license",

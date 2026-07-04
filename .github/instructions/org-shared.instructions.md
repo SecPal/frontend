@@ -1,6 +1,6 @@
 ---
-# SPDX-FileCopyrightText: 2026 SecPal
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 SecPal Contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 name: Frontend Runtime Overlay
 description: Reinforces strict SecPal governance for all files in this repo.
 applyTo: "**"
