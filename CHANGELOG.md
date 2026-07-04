@@ -54,6 +54,12 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 
 ### Changed
 
+- Extended `scripts/check-license-compatibility.sh` and the required
+  **Quality Checks / Check License Compatibility** workflow step to validate
+  both REUSE source-file SPDX metadata and dependency licenses recorded in
+  `package-lock.json`, fail closed on malformed lockfiles, and cover the
+  dependency license set already present in the repository, so incompatible npm
+  package licenses now fail the same CI guard tracked in issue #1321.
 - Standardized the German customer site-count copy on `CustomerDetail` to use
   `Objekt` / `Objekte`, matching the rest of the Sites UI and keeping the zero
   state on the natural "keine Objekte" wording.

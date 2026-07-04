@@ -35,7 +35,7 @@ jobs:
       - name: Install REUSE
         run: pip install --disable-pip-version-check reuse
 
-      - name: Check AGPL license compatibility
+      - name: Check source-file and dependency license compatibility
         run: bash scripts/check-license-compatibility.sh
 
   prettier:
