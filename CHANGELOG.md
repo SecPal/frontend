@@ -57,7 +57,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 - Aligned `LICENSES/LicenseRef-SecPal-Attribution.txt` with the central SecPal
   attribution policy wording so the approved modified-version and preferred
   attribution notices use the exact en-dash forms (`Based on SecPal –
-  modified by [name/entity]`, `Powered by SecPal – A guard's best friend`,
+modified by [name/entity]`, `Powered by SecPal – A guard's best friend`,
   `Based on SecPal – A guard's best friend`).
 - Extended `scripts/check-license-compatibility.sh` and the required
   **Quality Checks / Check License Compatibility** workflow step to validate
