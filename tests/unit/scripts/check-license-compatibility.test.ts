@@ -143,7 +143,9 @@ describe("check-license-compatibility", () => {
 
     try {
       const result = runCheck(tempDir, {
-        reuseEntries: [{ licenseExpressions: ["LicenseRef-SecPal-Attribution"] }],
+        reuseEntries: [
+          { licenseExpressions: ["LicenseRef-SecPal-Attribution"] },
+        ],
       });
 
       expect(result.status).toBe(1);
@@ -226,6 +228,59 @@ describe("check-license-compatibility", () => {
     }
   });
 
+  it("accepts compatible dependency licenses already present in package-lock.json", () => {
+    const tempDir = mkdtempSync(
+      path.join(os.tmpdir(), "secpal-license-check-")
+    );
+
+    try {
+      const result = runCheck(tempDir, {
+        reuseEntries: [{ licenseExpressions: ["MIT"] }],
+        packageLockContents: JSON.stringify(
+          {
+            name: "@secpal/frontend",
+            lockfileVersion: 3,
+            packages: {
+              "": {
+                license: "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
+              },
+              "node_modules/caniuse-lite": {
+                license: "CC-BY-4.0",
+              },
+              "node_modules/cssstyle": {
+                license: "BSD",
+              },
+              "node_modules/foreground-child": {
+                license: "BlueOak-1.0.0",
+              },
+              "node_modules/package-json-from-dist": {
+                license: "MIT-0",
+              },
+              "node_modules/tslib": {
+                license: "0BSD",
+              },
+              "node_modules/tldts-core": {
+                license: "MPL-2.0",
+              },
+              "node_modules/rfc4648": {
+                license: "Python-2.0",
+              },
+            },
+          },
+          null,
+          2
+        ),
+      });
+
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.stdout).toContain(
+        "All licenses are compatible with AGPL-3.0-or-later"
+      );
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
   it("rejects incompatible dependency licenses from package-lock.json", () => {
     const tempDir = mkdtempSync(
       path.join(os.tmpdir(), "secpal-license-check-")
@@ -240,8 +295,7 @@ describe("check-license-compatibility", () => {
             lockfileVersion: 3,
             packages: {
               "": {
-                license:
-                  "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
+                license: "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
               },
               "node_modules/bad-license-package": {
                 license: "LicenseRef-Proprietary",
