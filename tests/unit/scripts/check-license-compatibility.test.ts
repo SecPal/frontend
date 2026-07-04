@@ -78,7 +78,9 @@ function runCheck(tempDir: string, licenseExpressions: string[]) {
 
 describe("check-license-compatibility", () => {
   it("accepts AGPL files with the SecPal attribution term", () => {
-    const tempDir = mkdtempSync(path.join(os.tmpdir(), "secpal-license-check-"));
+    const tempDir = mkdtempSync(
+      path.join(os.tmpdir(), "secpal-license-check-")
+    );
 
     try {
       mkdirSync(path.join(tempDir, "scripts"), { recursive: true });
@@ -106,7 +108,9 @@ describe("check-license-compatibility", () => {
   });
 
   it("rejects the SecPal attribution term without AGPL", () => {
-    const tempDir = mkdtempSync(path.join(os.tmpdir(), "secpal-license-check-"));
+    const tempDir = mkdtempSync(
+      path.join(os.tmpdir(), "secpal-license-check-")
+    );
 
     try {
       mkdirSync(path.join(tempDir, "scripts"), { recursive: true });
@@ -130,7 +134,9 @@ describe("check-license-compatibility", () => {
   });
 
   it("rejects Tailwind Plus license markers in this repository", () => {
-    const tempDir = mkdtempSync(path.join(os.tmpdir(), "secpal-license-check-"));
+    const tempDir = mkdtempSync(
+      path.join(os.tmpdir(), "secpal-license-check-")
+    );
 
     try {
       mkdirSync(path.join(tempDir, "scripts"), { recursive: true });

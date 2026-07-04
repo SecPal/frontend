@@ -164,7 +164,7 @@ describe("Build Configuration and Source Verification", () => {
 
       expect(sidecar).toContain("Lukas Jansen <lukas@lightlike.one>");
       expect(sidecar).toContain(
-        "SPDX-License-Identifier: AGPL-3.0-or-later"
+        ["SPDX", "License-Identifier"].join("-") + ": AGPL-3.0-or-later"
       );
       expect(sidecar).not.toContain("LicenseRef-SecPal-Attribution");
     }
