@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 SecPal
+// SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: CC0-1.0
 
 import { defineConfig, loadEnv } from "vite";

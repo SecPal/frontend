@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: 2025 SecPal
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2025 SecPal Contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import React, { useState, useEffect, useRef } from "react";
 import clsx from "clsx";

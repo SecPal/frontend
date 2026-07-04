@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: 2026 SecPal
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2026 SecPal Contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 import { TEST_USER, loginViaUI } from "./auth.setup";

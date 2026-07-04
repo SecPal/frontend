@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: 2026 SecPal
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2026 SecPal Contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
@@ -119,6 +119,33 @@ describe("SourcePage", () => {
         name: "Powered by SecPal – A guard's best friend",
       })
     ).toHaveAttribute("rel", "noopener");
+  });
+
+  it("describes the additional SecPal attribution terms in legal notices", async () => {
+    renderWithProviders();
+
+    const legalNotices = await screen.findByRole("heading", {
+      name: "Legal notices",
+    });
+    const legalCard = legalNotices.closest('[data-slot="card"]');
+
+    expect(legalCard).not.toBeNull();
+
+    const legalContent = within(legalCard as HTMLElement);
+
+    expect(
+      legalContent.getByText(
+        /agpl-3\.0-or-later with additional secpal attribution terms/i
+      )
+    ).toBeInTheDocument();
+    expect(
+      legalContent.getByText(/powered by secpal/i)
+    ).toBeInTheDocument();
+    expect(
+      legalContent.getByText(
+        /the tagline "a guard's best friend" and https:\/\/secpal\.app are preferred, but they are not required license conditions/i
+      )
+    ).toBeInTheDocument();
   });
 
   it("renders deployment-specific immutable source references when the manifest is published", async () => {

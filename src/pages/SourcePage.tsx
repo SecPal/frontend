@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: 2026 SecPal
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2026 SecPal Contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -174,11 +174,11 @@ export function SourcePage() {
               <CardContent className="space-y-5">
                 <p className="text-muted-foreground max-w-3xl text-sm leading-7 sm:text-base">
                   <Trans>
-                    SecPal is licensed under the GNU Affero General Public
-                    License, version 3 or any later version. If you use this
-                    service over a network, you may obtain the corresponding
-                    source code for the SecPal components made available through
-                    this service at no charge from the links below.
+                    SecPal is licensed under AGPL-3.0-or-later with additional
+                    SecPal attribution terms. If you use this service over a
+                    network, you may obtain the corresponding source code for
+                    the SecPal components made available through this service at
+                    no charge from the links below.
                   </Trans>
                 </p>
                 <p className="text-muted-foreground max-w-3xl text-sm leading-6">
@@ -368,7 +368,7 @@ export function SourcePage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-muted-foreground text-sm leading-6">
-                  <Trans>Copyright SecPal and contributors.</Trans>
+                  <Trans>Copyright SecPal Contributors.</Trans>
                 </p>
                 <p className="text-muted-foreground text-sm leading-6">
                   <Trans>
@@ -377,6 +377,24 @@ export function SourcePage() {
                     Public License as published by the Free Software Foundation,
                     either version 3 of the License, or (at your option) any
                     later version.
+                  </Trans>
+                </p>
+                <p className="text-muted-foreground text-sm leading-6">
+                  <Trans>
+                    SecPal is licensed under AGPL-3.0-or-later with additional
+                    SecPal attribution terms under AGPLv3 section 7(b) and
+                    section 7(c). Appropriate legal notices for unmodified
+                    SecPal deployments must preserve the attribution notice
+                    "Powered by SecPal". Modified versions should use "Based on
+                    SecPal" and must not imply endorsement by the SecPal
+                    project maintainers.
+                  </Trans>
+                </p>
+                <p className="text-muted-foreground text-sm leading-6">
+                  <Trans>
+                    The tagline "A guard's best friend" and
+                    https://secpal.app are preferred, but they are not required
+                    license conditions.
                   </Trans>
                 </p>
                 <p className="text-muted-foreground text-sm leading-6">
