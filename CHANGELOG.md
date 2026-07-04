@@ -54,11 +54,10 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 
 ### Changed
 
-- Aligned `LICENSES/LicenseRef-SecPal-Attribution.txt` with the central SecPal
-  attribution policy wording so the approved modified-version and preferred
-  attribution notices use the exact en-dash forms (`Based on SecPal –
-modified by [name/entity]`, `Powered by SecPal – A guard's best friend`,
-  `Based on SecPal – A guard's best friend`).
+- Added a guardrail test for `LICENSES/LicenseRef-SecPal-Attribution.txt` so
+  the repository attribution addendum stays aligned with the checked-in central
+  SecPal wording for the approved modified-version and preferred attribution
+  notices.
 - Extended `scripts/check-license-compatibility.sh` and the required
   **Quality Checks / Check License Compatibility** workflow step to validate
   both REUSE source-file SPDX metadata and dependency licenses recorded in
