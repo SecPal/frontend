@@ -315,4 +315,106 @@ describe("check-license-compatibility", () => {
       rmSync(tempDir, { recursive: true, force: true });
     }
   });
+
+  it("accepts dependency licenses already used by this repository", () => {
+    const tempDir = mkdtempSync(
+      path.join(os.tmpdir(), "secpal-license-check-")
+    );
+
+    try {
+      const packageLicenses = [
+        "0BSD",
+        "Apache-2.0",
+        "BSD",
+        "BSD-2-Clause",
+        "BSD-3-Clause",
+        "BlueOak-1.0.0",
+        "CC-BY-4.0",
+        "CC0-1.0",
+        "ISC",
+        "MIT",
+        "MIT-0",
+        "MPL-2.0",
+        "OFL-1.1",
+        "Python-2.0",
+        "(BSD-2-Clause OR MIT OR Apache-2.0)",
+        "(MIT OR CC0-1.0)",
+      ];
+
+      const result = runCheck(tempDir, {
+        reuseEntries: [{ licenseExpressions: ["MIT"] }],
+        packageLockContents: JSON.stringify(
+          {
+            name: "@secpal/frontend",
+            lockfileVersion: 3,
+            packages: Object.fromEntries(
+              packageLicenses.map((license, index) => [
+                `node_modules/package-${index + 1}`,
+                { license },
+              ])
+            ),
+          },
+          null,
+          2
+        ),
+      });
+
+      expect(result.status, result.stdout + result.stderr).toBe(0);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("fails closed when package-lock.json cannot be parsed", () => {
+    const tempDir = mkdtempSync(
+      path.join(os.tmpdir(), "secpal-license-check-")
+    );
+
+    try {
+      const result = runCheck(tempDir, {
+        reuseEntries: [{ licenseExpressions: ["MIT"] }],
+        packageLockContents: "{ bad json",
+      });
+
+      expect(result.status).toBe(1);
+      expect(result.stdout + result.stderr).toContain(
+        "ERROR: Unable to parse package-lock.json"
+      );
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects incompatible dependency licenses from lockfileVersion 1 package-lock.json", () => {
+    const tempDir = mkdtempSync(
+      path.join(os.tmpdir(), "secpal-license-check-")
+    );
+
+    try {
+      const result = runCheck(tempDir, {
+        reuseEntries: [{ licenseExpressions: ["MIT"] }],
+        packageLockContents: JSON.stringify(
+          {
+            name: "@secpal/frontend",
+            lockfileVersion: 1,
+            dependencies: {
+              "bad-license-package": {
+                version: "1.0.0",
+                license: "LicenseRef-Proprietary",
+              },
+            },
+          },
+          null,
+          2
+        ),
+      });
+
+      expect(result.status).toBe(1);
+      expect(result.stdout + result.stderr).toContain(
+        "ERROR: Incompatible license found in package-lock.json package node_modules/bad-license-package: LicenseRef-Proprietary"
+      );
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
 });

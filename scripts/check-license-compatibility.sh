@@ -8,23 +8,23 @@ echo "Checking for AGPL-3.0-or-later compatibility..."
 reuse spdx -o reuse.spdx
 
 compatible_licenses=(
+  "0BSD"
   "AGPL-3.0-or-later"
   "GPL-3.0-or-later"
   "LGPL-3.0-or-later"
+  "BSD"
   "MIT"
   "MIT-0"
-  "0BSD"
-  "BSD"
   "BSD-2-Clause"
   "BSD-3-Clause"
   "Apache-2.0"
-  "CC0-1.0"
+  "BlueOak-1.0.0"
   "CC-BY-4.0"
+  "CC0-1.0"
   "ISC"
   "MPL-2.0"
   "OFL-1.1"
   "ODbL-1.0"
-  "BlueOak-1.0.0"
   "Python-2.0"
   "LicenseRef-SecPal-Attribution"
 )
@@ -118,34 +118,92 @@ validate_license_subject "$current_file" "$current_license_lines"
 
 if [ -f package-lock.json ]; then
   echo "Found dependency license entries from package-lock.json:"
-  while IFS=$'\t' read -r package_name license_expression; do
-    [ -z "$package_name" ] && continue
-
-    if [ -z "$license_expression" ]; then
-      echo "ERROR: Missing license in package-lock.json package ${package_name}"
-      incompatible_found=1
-      continue
-    fi
-
-    echo "${package_name}"
-    printf '  %s\n' "$license_expression"
-    validate_license_subject "package-lock.json package ${package_name}" "$license_expression"
-  done < <(
+  if ! dependency_license_entries=$(
     python3 - <<'PY'
 import json
+import sys
 from pathlib import Path
 
 package_lock = Path("package-lock.json")
 if not package_lock.exists():
     raise SystemExit(0)
 
-packages = json.loads(package_lock.read_text(encoding="utf-8")).get("packages", {})
-for package_name, metadata in packages.items():
-    normalized_name = package_name or "."
-    license_expression = metadata.get("license", "")
-    print(f"{normalized_name}\t{license_expression}")
+try:
+    lockfile = json.loads(package_lock.read_text(encoding="utf-8"))
+except (OSError, json.JSONDecodeError) as error:
+    print(f"package-lock.json: {error}", file=sys.stderr)
+    raise SystemExit(1)
+
+if not isinstance(lockfile, dict):
+    print("package-lock.json: expected a JSON object", file=sys.stderr)
+    raise SystemExit(1)
+
+
+def license_expression(metadata):
+    if not isinstance(metadata, dict):
+        return ""
+
+    value = metadata.get("license", "")
+    return value if isinstance(value, str) else ""
+
+
+def emit_package(package_name, metadata):
+    print(f"{package_name}\t{license_expression(metadata)}")
+
+
+packages = lockfile.get("packages")
+if packages is not None:
+    if not isinstance(packages, dict):
+        print("package-lock.json: packages must be a JSON object", file=sys.stderr)
+        raise SystemExit(1)
+
+    for package_name, metadata in packages.items():
+        normalized_name = package_name or "."
+        emit_package(normalized_name, metadata)
+    raise SystemExit(0)
+
+
+def emit_v1_dependencies(dependencies, parent_path="node_modules"):
+    if not isinstance(dependencies, dict):
+        print("package-lock.json: dependencies must be a JSON object", file=sys.stderr)
+        raise SystemExit(1)
+
+    for dependency_name, metadata in dependencies.items():
+        package_name = f"{parent_path}/{dependency_name}"
+        emit_package(package_name, metadata)
+        if isinstance(metadata, dict) and "dependencies" in metadata:
+            emit_v1_dependencies(
+                metadata["dependencies"],
+                f"{package_name}/node_modules",
+            )
+
+
+dependencies = lockfile.get("dependencies")
+if dependencies is not None:
+    emit_v1_dependencies(dependencies)
+    raise SystemExit(0)
+
+print("package-lock.json: unsupported lockfile shape", file=sys.stderr)
+raise SystemExit(1)
 PY
-  )
+  ); then
+    echo "ERROR: Unable to parse package-lock.json" >&2
+    incompatible_found=1
+  else
+    while IFS=$'\t' read -r package_name license_expression; do
+      [ -z "$package_name" ] && continue
+
+      if [ -z "$license_expression" ]; then
+        echo "ERROR: Missing license in package-lock.json package ${package_name}"
+        incompatible_found=1
+        continue
+      fi
+
+      echo "${package_name}"
+      printf '  %s\n' "$license_expression"
+      validate_license_subject "package-lock.json package ${package_name}" "$license_expression"
+    done <<< "$dependency_license_entries"
+  fi
 fi
 
 if [ $incompatible_found -eq 1 ]; then
