@@ -193,7 +193,10 @@ describe("check-license-compatibility", () => {
       });
 
       expect(result.status).toBe(1);
-      expect(result.stdout + result.stderr).toContain(
+      expect(result.stderr).toContain(
+        "ERROR: Incompatible license found in ./file-1.txt: LicenseRef-TailwindPlus"
+      );
+      expect(result.stdout).not.toContain(
         "ERROR: Incompatible license found in ./file-1.txt: LicenseRef-TailwindPlus"
       );
     } finally {
@@ -308,7 +311,10 @@ describe("check-license-compatibility", () => {
       });
 
       expect(result.status).toBe(1);
-      expect(result.stdout + result.stderr).toContain(
+      expect(result.stderr).toContain(
+        "ERROR: Incompatible license found in package-lock.json package node_modules/bad-license-package: LicenseRef-Proprietary"
+      );
+      expect(result.stdout).not.toContain(
         "ERROR: Incompatible license found in package-lock.json package node_modules/bad-license-package: LicenseRef-Proprietary"
       );
     } finally {

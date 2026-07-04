@@ -75,19 +75,19 @@ validate_license_subject() {
       done
 
       if [ $found -eq 0 ]; then
-        echo "ERROR: Incompatible license found in ${subject_name}: $license"
+        echo "ERROR: Incompatible license found in ${subject_name}: $license" >&2
         incompatible_found=1
       fi
     done
   done <<< "$license_lines"
 
   if [ $has_invalid_secpal_attribution_pairing -eq 1 ]; then
-    echo "ERROR: LicenseRef-SecPal-Attribution must be conjoined with AGPL-3.0-or-later in ${subject_name}"
+    echo "ERROR: LicenseRef-SecPal-Attribution must be conjoined with AGPL-3.0-or-later in ${subject_name}" >&2
     incompatible_found=1
   fi
 
   if [ $has_secpal_attribution -eq 1 ] && [ $has_agpl -eq 0 ]; then
-    echo "ERROR: LicenseRef-SecPal-Attribution must be paired with AGPL-3.0-or-later in ${subject_name}"
+    echo "ERROR: LicenseRef-SecPal-Attribution must be paired with AGPL-3.0-or-later in ${subject_name}" >&2
     incompatible_found=1
   fi
 }
@@ -194,7 +194,7 @@ PY
       [ -z "$package_name" ] && continue
 
       if [ -z "$license_expression" ]; then
-        echo "ERROR: Missing license in package-lock.json package ${package_name}"
+        echo "ERROR: Missing license in package-lock.json package ${package_name}" >&2
         incompatible_found=1
         continue
       fi
@@ -207,7 +207,7 @@ PY
 fi
 
 if [ $incompatible_found -eq 1 ]; then
-  echo "ERROR: Found licenses incompatible with AGPL-3.0-or-later"
+  echo "ERROR: Found licenses incompatible with AGPL-3.0-or-later" >&2
   exit 1
 fi
 
