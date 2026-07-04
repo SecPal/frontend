@@ -356,7 +356,7 @@ describe("preflight changed-file detection", () => {
       run("git", ["checkout", "-b", "topic/license-plus-staged"], tempDir);
       writeFileSync(
         path.join(tempDir, "src.ts.license"),
-        "SPDX-FileCopyrightText: 2026 SecPal Contributors\nSPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution\n",
+        "SPDX-FileCopyrightText: 2027 SecPal Contributors\nSPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution\n",
         "utf8"
       );
       run("git", ["commit", "-am", "update license sidecar"], tempDir);
