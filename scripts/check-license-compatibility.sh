@@ -29,11 +29,17 @@ validate_file_licenses() {
   local license_lines=$2
   local has_agpl=0
   local has_secpal_attribution=0
+  local has_invalid_secpal_attribution_pairing=0
 
   [ -z "$file_name" ] && return
 
   while IFS= read -r license_expression; do
     [ -z "$license_expression" ] && continue
+
+    if [[ "$license_expression" == *"LicenseRef-SecPal-Attribution"* ]] &&
+      [[ "$license_expression" == *" OR "* ]]; then
+      has_invalid_secpal_attribution_pairing=1
+    fi
 
     normalized_expression=${license_expression//\(/( }
     normalized_expression=${normalized_expression//\)/ )}
@@ -67,6 +73,11 @@ validate_file_licenses() {
       fi
     done
   done <<< "$license_lines"
+
+  if [ $has_invalid_secpal_attribution_pairing -eq 1 ]; then
+    echo "ERROR: LicenseRef-SecPal-Attribution must be conjoined with AGPL-3.0-or-later in ${file_name}"
+    incompatible_found=1
+  fi
 
   if [ $has_secpal_attribution -eq 1 ] && [ $has_agpl -eq 0 ]; then
     echo "ERROR: LicenseRef-SecPal-Attribution must be paired with AGPL-3.0-or-later in ${file_name}"

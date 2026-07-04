@@ -146,6 +146,38 @@ describe("check-license-compatibility", () => {
     }
   });
 
+  it("rejects OR expressions that leave the attribution term standalone", () => {
+    const tempDir = mkdtempSync(
+      path.join(os.tmpdir(), "secpal-license-check-")
+    );
+
+    try {
+      mkdirSync(path.join(tempDir, "scripts"), { recursive: true });
+      writeFileSync(
+        path.join(tempDir, "scripts", "check-license-compatibility.sh"),
+        readFileSync(
+          path.join(repoRoot, "scripts", "check-license-compatibility.sh"),
+          "utf8"
+        )
+      );
+
+      const result = runCheck(tempDir, [
+        {
+          licenseExpressions: [
+            "AGPL-3.0-or-later OR LicenseRef-SecPal-Attribution",
+          ],
+        },
+      ]);
+
+      expect(result.status).toBe(1);
+      expect(result.stdout + result.stderr).toContain(
+        "LicenseRef-SecPal-Attribution must be conjoined with AGPL-3.0-or-later"
+      );
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
   it("rejects Tailwind Plus license markers in this repository", () => {
     const tempDir = mkdtempSync(
       path.join(os.tmpdir(), "secpal-license-check-")
