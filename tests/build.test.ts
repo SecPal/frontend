@@ -15,6 +15,32 @@ function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(repoRoot, relativePath), "utf8");
 }
 
+function getIndentedSection(text: string, sectionName: string): string {
+  const lines = text.split("\n");
+  const startIndex = lines.findIndex(
+    (line) => line.trim() === `${sectionName}:`
+  );
+
+  if (startIndex === -1) {
+    return "";
+  }
+
+  const sectionIndent = lines[startIndex].match(/^ */)?.[0].length ?? 0;
+  const sectionLines = [lines[startIndex]];
+
+  for (const line of lines.slice(startIndex + 1)) {
+    const lineIndent = line.match(/^ */)?.[0].length ?? 0;
+
+    if (line.trim() !== "" && lineIndent <= sectionIndent) {
+      break;
+    }
+
+    sectionLines.push(line);
+  }
+
+  return sectionLines.join("\n");
+}
+
 function expectWarningFreeShippedNginxConfigSyntax(nginxConfig: string): void {
   expect(nginxConfig).toMatch(/^\s*http2\s+on;$/mu);
   expect(nginxConfig).not.toMatch(/^\s*listen\b[^#;\n]*\bhttp2\b[^;\n]*;$/mu);
@@ -91,6 +117,29 @@ describe("Build Configuration and Source Verification", () => {
     expect(viteConfig).toContain("vite-plugin-static-copy");
     expect(viteConfig).toContain('src: "public/.htaccess"');
     expect(viteConfig).toContain('dest: "."');
+  });
+
+  it("keeps timeout-minutes only on runnable quality workflow jobs", () => {
+    const qualityWorkflow = readRepoFile(".github/workflows/quality.yml");
+    const jobsSection = getIndentedSection(qualityWorkflow, "jobs");
+    const jobNames = Array.from(
+      jobsSection.matchAll(/^  ([a-z0-9-]+):$/gm),
+      (match) => match[1]
+    );
+
+    expect(jobNames.length).toBeGreaterThan(0);
+
+    for (const jobName of jobNames) {
+      const jobSection = getIndentedSection(jobsSection, jobName);
+
+      if (jobSection.includes("\n    uses: ")) {
+        expect(jobSection).not.toContain("timeout-minutes:");
+        continue;
+      }
+
+      expect(jobSection).toContain("runs-on:");
+      expect(jobSection).toContain("timeout-minutes:");
+    }
   });
 
   it("keeps auth-storage MAC payload assembly on the shared helper", () => {
