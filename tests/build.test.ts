@@ -123,7 +123,7 @@ describe("Build Configuration and Source Verification", () => {
     const qualityWorkflow = readRepoFile(".github/workflows/quality.yml");
     const jobsSection = getIndentedSection(qualityWorkflow, "jobs");
     const jobNames = Array.from(
-      jobsSection.matchAll(/^  ([a-z0-9-]+):$/gm),
+      jobsSection.matchAll(/^ {2}([a-z0-9-]+):$/gm),
       (match) => match[1]
     );
 
