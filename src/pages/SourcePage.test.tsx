@@ -138,9 +138,7 @@ describe("SourcePage", () => {
         /agpl-3\.0-or-later with additional secpal attribution terms/i
       )
     ).toBeInTheDocument();
-    expect(
-      legalContent.getByText(/powered by secpal/i)
-    ).toBeInTheDocument();
+    expect(legalContent.getByText(/powered by secpal/i)).toBeInTheDocument();
     expect(
       legalContent.getByText(
         /the tagline "a guard's best friend" and https:\/\/secpal\.app are preferred, but they are not required license conditions/i

@@ -386,15 +386,14 @@ export function SourcePage() {
                     section 7(c). Appropriate legal notices for unmodified
                     SecPal deployments must preserve the attribution notice
                     "Powered by SecPal". Modified versions should use "Based on
-                    SecPal" and must not imply endorsement by the SecPal
-                    project maintainers.
+                    SecPal" and must not imply endorsement by the SecPal project
+                    maintainers.
                   </Trans>
                 </p>
                 <p className="text-muted-foreground text-sm leading-6">
                   <Trans>
-                    The tagline "A guard's best friend" and
-                    https://secpal.app are preferred, but they are not required
-                    license conditions.
+                    The tagline "A guard's best friend" and https://secpal.app
+                    are preferred, but they are not required license conditions.
                   </Trans>
                 </p>
                 <p className="text-muted-foreground text-sm leading-6">
