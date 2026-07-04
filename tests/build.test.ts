@@ -162,7 +162,7 @@ describe("Build Configuration and Source Verification", () => {
     ]) {
       const sidecar = readRepoFile(relativePath);
 
-      expect(sidecar).toContain("Lukas Jansen <lukas@lightlike.one>");
+      expect(sidecar).toContain("SecPal Contributors");
       expect(sidecar).toContain(
         ["SPDX", "License-Identifier"].join("-") + ": AGPL-3.0-or-later"
       );

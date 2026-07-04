@@ -19,18 +19,25 @@ const repoRoot = path.resolve(
   "../../.."
 );
 
-function installMockReuse(tempDir: string, licenseExpressions: string[]) {
+type MockReuseEntry = {
+  fileName?: string;
+  licenseExpressions: string[];
+};
+
+function installMockReuse(tempDir: string, entries: MockReuseEntry[]) {
   const binDir = path.join(tempDir, "bin");
   mkdirSync(binDir, { recursive: true });
 
-  const reuseSpdx = licenseExpressions
-    .map((licenseExpression, index) => {
-      const fileName = `./file-${index + 1}.txt`;
+  const reuseSpdx = entries
+    .map((entry, index) => {
+      const fileName = entry.fileName ?? `./file-${index + 1}.txt`;
       return [
         `FileName: ${fileName}`,
         `SPDXID: SPDXRef-File-${index + 1}`,
         "FileChecksum: SHA1: 0000000000000000000000000000000000000000",
-        `LicenseInfoInFile: ${licenseExpression}`,
+        ...entry.licenseExpressions.map(
+          (licenseExpression) => `LicenseInfoInFile: ${licenseExpression}`
+        ),
         "FileCopyrightText: NONE",
         "",
       ].join("\n");
@@ -61,8 +68,8 @@ exit 1
   return binDir;
 }
 
-function runCheck(tempDir: string, licenseExpressions: string[]) {
-  const binDir = installMockReuse(tempDir, licenseExpressions);
+function runCheck(tempDir: string, entries: MockReuseEntry[]) {
+  const binDir = installMockReuse(tempDir, entries);
   const result = spawnSync("bash", ["scripts/check-license-compatibility.sh"], {
     cwd: tempDir,
     encoding: "utf8",
@@ -93,9 +100,13 @@ describe("check-license-compatibility", () => {
       );
 
       const result = runCheck(tempDir, [
-        "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
-        "CC0-1.0",
-        "MIT",
+        {
+          licenseExpressions: [
+            "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
+          ],
+        },
+        { licenseExpressions: ["CC0-1.0"] },
+        { licenseExpressions: ["MIT"] },
       ]);
 
       expect(result.status, result.stderr).toBe(0);
@@ -122,7 +133,9 @@ describe("check-license-compatibility", () => {
         )
       );
 
-      const result = runCheck(tempDir, ["LicenseRef-SecPal-Attribution"]);
+      const result = runCheck(tempDir, [
+        { licenseExpressions: ["LicenseRef-SecPal-Attribution"] },
+      ]);
 
       expect(result.status).toBe(1);
       expect(result.stdout + result.stderr).toContain(
@@ -148,11 +161,47 @@ describe("check-license-compatibility", () => {
         )
       );
 
-      const result = runCheck(tempDir, ["LicenseRef-TailwindPlus"]);
+      const result = runCheck(tempDir, [
+        { licenseExpressions: ["LicenseRef-TailwindPlus"] },
+      ]);
 
       expect(result.status).toBe(1);
       expect(result.stdout + result.stderr).toContain(
-        "ERROR: Incompatible license found: LicenseRef-TailwindPlus"
+        "ERROR: Incompatible license found in ./file-1.txt: LicenseRef-TailwindPlus"
+      );
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("accepts split REUSE license lines for one AGPL-covered file", () => {
+    const tempDir = mkdtempSync(
+      path.join(os.tmpdir(), "secpal-license-check-")
+    );
+
+    try {
+      mkdirSync(path.join(tempDir, "scripts"), { recursive: true });
+      writeFileSync(
+        path.join(tempDir, "scripts", "check-license-compatibility.sh"),
+        readFileSync(
+          path.join(repoRoot, "scripts", "check-license-compatibility.sh"),
+          "utf8"
+        )
+      );
+
+      const result = runCheck(tempDir, [
+        {
+          fileName: "./AGENTS.md",
+          licenseExpressions: [
+            "AGPL-3.0-or-later",
+            "LicenseRef-SecPal-Attribution",
+          ],
+        },
+      ]);
+
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.stdout).toContain(
+        "All licenses are compatible with AGPL-3.0-or-later"
       );
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
