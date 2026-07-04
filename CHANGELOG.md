@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2026 SecPal
+SPDX-FileCopyrightText: 2026 SecPal Contributors
 SPDX-License-Identifier: CC0-1.0
 -->
 
@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
+  AGPL SPDX expressions to `AGPL-3.0-or-later AND
+LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to
+  state the additional attribution terms, preserve the required `Powered by
+SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
+  rather than mandatory license conditions.
 - Added deployment-backed `/source` metadata contracts so the public AGPL
   source-offer page can consume immutable corresponding source URLs for the
   deployed release set without exposing broader runtime diagnostics:

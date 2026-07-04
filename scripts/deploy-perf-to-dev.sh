@@ -1,8 +1,6 @@
-#!/bin/bash
-# SPDX-FileCopyrightText: 2025-2026 SecPal
-# SPDX-License-Identifier: CC0-1.0
-
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
+# SPDX-License-Identifier: CC0-1.0
 
 # Deploy performance optimization branch to app.secpal.dev for testing
 # This script should be run from the frontend directory
@@ -10,16 +8,12 @@
 set -euo pipefail
 # Branch: perf/aggressive-code-splitting
 
-set -e
-
 echo "🚀 Deploying Performance Optimizations to app.secpal.dev"
 echo "=========================================================="
 echo ""
 
 # SSH connection details
 SSH_HOST="secpal@triangulum.uberspace.de"
-FRONTEND_DIR="/var/www/virtual/secpal/frontend"
-BRANCH="perf/aggressive-code-splitting"
 
 echo "📡 Connecting to Uberspace..."
 ssh "$SSH_HOST" << 'ENDSSH'

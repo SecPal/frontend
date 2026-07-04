@@ -212,6 +212,10 @@ msgstr "Laden Sie Vorder- und Rückseite als separate Dateien hoch, falls vorhan
 msgid "Organizational structure"
 msgstr "Organisatorische Struktur"
 
+#: src/pages/SourcePage.tsx
+msgid "SecPal is licensed under AGPL-3.0-or-later with additional SecPal attribution terms under AGPLv3 section 7(b) and section 7(c). Appropriate legal notices for unmodified SecPal deployments must preserve the attribution notice \"Powered by SecPal\". Modified versions should use \"Based on SecPal\" and must not imply endorsement by the SecPal project maintainers."
+msgstr "SecPal ist unter AGPL-3.0-or-later mit zusätzlichen SecPal-Attributionsbedingungen gemäß AGPLv3 Abschnitt 7(b) und Abschnitt 7(c) lizenziert. Geeignete rechtliche Hinweise für unveränderte SecPal-Bereitstellungen müssen den Attributionshinweis \"Powered by SecPal\" beibehalten. Modifizierte Versionen sollten \"Based on SecPal\" verwenden und dürfen keine Unterstützung durch die Maintainer des SecPal-Projekts implizieren."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Failed to load form template"
 msgstr "Formularvorlage konnte nicht geladen werden"
@@ -224,6 +228,10 @@ msgstr "Ein gültiger Aufenthaltstitel ohne Arbeitserlaubnis kann nicht akzeptie
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "No"
 msgstr "Nein"
+
+#: src/pages/SourcePage.tsx
+msgid "SecPal is licensed under AGPL-3.0-or-later with additional SecPal attribution terms. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the links below."
+msgstr "SecPal ist unter AGPL-3.0-or-later mit zusätzlichen SecPal-Attributionsbedingungen lizenziert. Wenn Sie diesen Dienst über ein Netzwerk nutzen, können Sie den entsprechenden Quelltext für die über diesen Dienst bereitgestellten SecPal-Komponenten kostenlos über die nachstehenden Links beziehen."
 
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "City is required."
@@ -1037,6 +1045,10 @@ msgstr "Verwenden Sie diesen QR-Code während der Android-Einrichtung, bevor er 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Lowest rank number the user can view (1 = CEO, higher numbers = lower positions). Range: 1-255"
 msgstr "Niedrigste Rangnummer, die der Benutzer sehen kann (1 = CEO, höhere Zahlen = niedrigere Positionen). Bereich: 1-255"
+
+#: src/pages/SourcePage.tsx
+msgid "Copyright SecPal Contributors."
+msgstr "Copyright SecPal Contributors."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Too many onboarding attempts. Please try again later."
@@ -2111,10 +2123,6 @@ msgstr "Basierend auf der gewählten Staatsangehörigkeit geben Sie bitte an, we
 msgid "Notifications are tied to this signed-in browser profile and the selected deployment domain."
 msgstr "Benachrichtigungen sind an dieses angemeldete Browserprofil und die ausgewählte Deployment-Domain gebunden."
 
-#: src/pages/SourcePage.tsx
-msgid "SecPal is licensed under the GNU Affero General Public License, version 3 or any later version. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the links below."
-msgstr "SecPal ist unter der GNU Affero General Public License, Version 3 oder jeder späteren Version, lizenziert. Wenn Sie diesen Dienst über ein Netzwerk nutzen, können Sie den entsprechenden Quelltext für die über diesen Dienst bereitgestellten SecPal-Komponenten kostenlos über die untenstehenden Links beziehen."
-
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Optional"
 msgstr "Optional"
@@ -2702,6 +2710,10 @@ msgstr "Quelltext"
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Assign Organizational Scope"
 msgstr "Organisatorischen Umfang zuordnen"
+
+#: src/pages/SourcePage.tsx
+msgid "The tagline \"A guard's best friend\" and https://secpal.app are preferred, but they are not required license conditions."
+msgstr "Der Slogan \"A guard's best friend\" und https://secpal.app sind erwünscht, aber keine verpflichtenden Lizenzbedingungen."
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Event Hash"
@@ -3763,10 +3775,6 @@ msgstr "Das Passwort muss Groß- und Kleinbuchstaben enthalten"
 #: src/pages/Sites/SiteCreate.tsx
 msgid "Select organizational unit..."
 msgstr "Organisationseinheit auswählen..."
-
-#: src/pages/SourcePage.tsx
-msgid "Copyright SecPal and contributors."
-msgstr "Urheberrecht bei SecPal und den Mitwirkenden."
 
 #. placeholder {0}: unit.name
 #: src/pages/Organization/OrganizationPage.tsx

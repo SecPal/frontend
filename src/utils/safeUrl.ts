@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: 2026 SecPal
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2026 SecPal Contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 const LOOPBACK_HOSTNAMES = new Set(["localhost", "::1", "[::1]"]);
 const PERCENT_ENCODED_RE = /%[0-9a-f]{2}/i;

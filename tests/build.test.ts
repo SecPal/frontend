@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: 2025-2026 SecPal
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -13,6 +13,32 @@ const repoRoot = path.resolve(__dirname, "..");
 
 function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(repoRoot, relativePath), "utf8");
+}
+
+function getIndentedSection(text: string, sectionName: string): string {
+  const lines = text.split("\n");
+  const startIndex = lines.findIndex(
+    (line) => line.trim() === `${sectionName}:`
+  );
+
+  if (startIndex === -1) {
+    return "";
+  }
+
+  const sectionIndent = lines[startIndex].match(/^ */)?.[0].length ?? 0;
+  const sectionLines = [lines[startIndex]];
+
+  for (const line of lines.slice(startIndex + 1)) {
+    const lineIndent = line.match(/^ */)?.[0].length ?? 0;
+
+    if (line.trim() !== "" && lineIndent <= sectionIndent) {
+      break;
+    }
+
+    sectionLines.push(line);
+  }
+
+  return sectionLines.join("\n");
 }
 
 function expectWarningFreeShippedNginxConfigSyntax(nginxConfig: string): void {
@@ -91,6 +117,78 @@ describe("Build Configuration and Source Verification", () => {
     expect(viteConfig).toContain("vite-plugin-static-copy");
     expect(viteConfig).toContain('src: "public/.htaccess"');
     expect(viteConfig).toContain('dest: "."');
+  });
+
+  it("keeps timeout-minutes only on runnable quality workflow jobs", () => {
+    const qualityWorkflow = readRepoFile(".github/workflows/quality.yml");
+    const jobsSection = getIndentedSection(qualityWorkflow, "jobs");
+    const jobNames = Array.from(
+      jobsSection.matchAll(/^ {2}([a-z0-9-]+):$/gm),
+      (match) => match[1]
+    );
+
+    expect(jobNames.length).toBeGreaterThan(0);
+
+    for (const jobName of jobNames) {
+      const jobSection = getIndentedSection(jobsSection, jobName);
+
+      if (jobSection.includes("\n    uses: ")) {
+        expect(jobSection).not.toContain("timeout-minutes:");
+        continue;
+      }
+
+      expect(jobSection).toContain("runs-on:");
+      expect(jobSection).toContain("timeout-minutes:");
+    }
+  });
+
+  it("keeps the package-lock root license aligned with package.json", () => {
+    const packageJson = JSON.parse(readRepoFile("package.json")) as {
+      license: string;
+    };
+    const packageLock = JSON.parse(readRepoFile("package-lock.json")) as {
+      packages?: Record<string, { license?: string }>;
+    };
+
+    expect(packageLock.packages?.[""]?.license).toBe(packageJson.license);
+  });
+
+  it("keeps SecPal-owned governance files on the attribution license expression", () => {
+    for (const relativePath of [
+      ".pre-commit-config.yaml",
+      ".yamllint.yml",
+      ".github/copilot-instructions.md",
+      ".github/instructions/org-shared.instructions.md",
+      ".github/instructions/react-typescript.instructions.md",
+      ".github/instructions/github-workflows.instructions.md",
+    ]) {
+      const fileContents = readRepoFile(relativePath);
+
+      expect(fileContents).toContain("SecPal Contributors");
+      expect(fileContents).toContain(
+        [
+          "SPDX-License-Identifier",
+          "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
+        ].join(": ")
+      );
+    }
+  });
+
+  it("keeps SecPal attribution off Lukas-owned locale sidecars", () => {
+    for (const relativePath of [
+      "src/locales/de/messages.js.license",
+      "src/locales/de/messages.po.license",
+      "src/locales/en/messages.js.license",
+      "src/locales/en/messages.po.license",
+    ]) {
+      const sidecar = readRepoFile(relativePath);
+
+      expect(sidecar).toContain("SecPal Contributors");
+      expect(sidecar).toContain(
+        ["SPDX", "License-Identifier"].join("-") + ": AGPL-3.0-or-later"
+      );
+      expect(sidecar).not.toContain("LicenseRef-SecPal-Attribution");
+    }
   });
 
   it("keeps auth-storage MAC payload assembly on the shared helper", () => {

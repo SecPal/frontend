@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText: 2026 SecPal
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2026 SecPal Contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 export const WORKSPACE_PREVIEW_HOSTNAME_PATTERN =
   /^(?:(api|frontend|secpal-app|changelog)-)?([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.preview\.secpal\.dev$/i;

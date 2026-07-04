@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
