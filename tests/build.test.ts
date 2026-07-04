@@ -142,6 +142,34 @@ describe("Build Configuration and Source Verification", () => {
     }
   });
 
+  it("keeps the package-lock root license aligned with package.json", () => {
+    const packageJson = JSON.parse(readRepoFile("package.json")) as {
+      license: string;
+    };
+    const packageLock = JSON.parse(readRepoFile("package-lock.json")) as {
+      packages?: Record<string, { license?: string }>;
+    };
+
+    expect(packageLock.packages?.[""]?.license).toBe(packageJson.license);
+  });
+
+  it("keeps SecPal attribution off Lukas-owned locale sidecars", () => {
+    for (const relativePath of [
+      "src/locales/de/messages.js.license",
+      "src/locales/de/messages.po.license",
+      "src/locales/en/messages.js.license",
+      "src/locales/en/messages.po.license",
+    ]) {
+      const sidecar = readRepoFile(relativePath);
+
+      expect(sidecar).toContain("Lukas Jansen <lukas@lightlike.one>");
+      expect(sidecar).toContain(
+        "SPDX-License-Identifier: AGPL-3.0-or-later"
+      );
+      expect(sidecar).not.toContain("LicenseRef-SecPal-Attribution");
+    }
+  });
+
   it("keeps auth-storage MAC payload assembly on the shared helper", () => {
     const storageService = readRepoFile("src/services/storage.ts");
     const passkeyAuthStorage = readRepoFile(
