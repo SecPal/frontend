@@ -24,6 +24,11 @@ type MockReuseEntry = {
   licenseExpressions: string[];
 };
 
+type TestRepositoryFixture = {
+  reuseEntries: MockReuseEntry[];
+  packageLockContents?: string;
+};
+
 function installMockReuse(tempDir: string, entries: MockReuseEntry[]) {
   const binDir = path.join(tempDir, "bin");
   mkdirSync(binDir, { recursive: true });
@@ -68,8 +73,28 @@ exit 1
   return binDir;
 }
 
-function runCheck(tempDir: string, entries: MockReuseEntry[]) {
-  const binDir = installMockReuse(tempDir, entries);
+function setupTestRepository(
+  tempDir: string,
+  { packageLockContents }: TestRepositoryFixture
+) {
+  mkdirSync(path.join(tempDir, "scripts"), { recursive: true });
+  writeFileSync(
+    path.join(tempDir, "scripts", "check-license-compatibility.sh"),
+    readFileSync(
+      path.join(repoRoot, "scripts", "check-license-compatibility.sh"),
+      "utf8"
+    )
+  );
+
+  if (packageLockContents !== undefined) {
+    writeFileSync(path.join(tempDir, "package-lock.json"), packageLockContents);
+  }
+}
+
+function runCheck(tempDir: string, fixture: TestRepositoryFixture) {
+  setupTestRepository(tempDir, fixture);
+
+  const binDir = installMockReuse(tempDir, fixture.reuseEntries);
   const result = spawnSync("bash", ["scripts/check-license-compatibility.sh"], {
     cwd: tempDir,
     encoding: "utf8",
@@ -90,24 +115,17 @@ describe("check-license-compatibility", () => {
     );
 
     try {
-      mkdirSync(path.join(tempDir, "scripts"), { recursive: true });
-      writeFileSync(
-        path.join(tempDir, "scripts", "check-license-compatibility.sh"),
-        readFileSync(
-          path.join(repoRoot, "scripts", "check-license-compatibility.sh"),
-          "utf8"
-        )
-      );
-
-      const result = runCheck(tempDir, [
-        {
-          licenseExpressions: [
-            "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
-          ],
-        },
-        { licenseExpressions: ["CC0-1.0"] },
-        { licenseExpressions: ["MIT"] },
-      ]);
+      const result = runCheck(tempDir, {
+        reuseEntries: [
+          {
+            licenseExpressions: [
+              "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
+            ],
+          },
+          { licenseExpressions: ["CC0-1.0"] },
+          { licenseExpressions: ["MIT"] },
+        ],
+      });
 
       expect(result.status, result.stderr).toBe(0);
       expect(result.stdout).toContain(
@@ -124,18 +142,9 @@ describe("check-license-compatibility", () => {
     );
 
     try {
-      mkdirSync(path.join(tempDir, "scripts"), { recursive: true });
-      writeFileSync(
-        path.join(tempDir, "scripts", "check-license-compatibility.sh"),
-        readFileSync(
-          path.join(repoRoot, "scripts", "check-license-compatibility.sh"),
-          "utf8"
-        )
-      );
-
-      const result = runCheck(tempDir, [
-        { licenseExpressions: ["LicenseRef-SecPal-Attribution"] },
-      ]);
+      const result = runCheck(tempDir, {
+        reuseEntries: [{ licenseExpressions: ["LicenseRef-SecPal-Attribution"] }],
+      });
 
       expect(result.status).toBe(1);
       expect(result.stdout + result.stderr).toContain(
@@ -152,22 +161,15 @@ describe("check-license-compatibility", () => {
     );
 
     try {
-      mkdirSync(path.join(tempDir, "scripts"), { recursive: true });
-      writeFileSync(
-        path.join(tempDir, "scripts", "check-license-compatibility.sh"),
-        readFileSync(
-          path.join(repoRoot, "scripts", "check-license-compatibility.sh"),
-          "utf8"
-        )
-      );
-
-      const result = runCheck(tempDir, [
-        {
-          licenseExpressions: [
-            "AGPL-3.0-or-later OR LicenseRef-SecPal-Attribution",
-          ],
-        },
-      ]);
+      const result = runCheck(tempDir, {
+        reuseEntries: [
+          {
+            licenseExpressions: [
+              "AGPL-3.0-or-later OR LicenseRef-SecPal-Attribution",
+            ],
+          },
+        ],
+      });
 
       expect(result.status).toBe(1);
       expect(result.stdout + result.stderr).toContain(
@@ -184,18 +186,9 @@ describe("check-license-compatibility", () => {
     );
 
     try {
-      mkdirSync(path.join(tempDir, "scripts"), { recursive: true });
-      writeFileSync(
-        path.join(tempDir, "scripts", "check-license-compatibility.sh"),
-        readFileSync(
-          path.join(repoRoot, "scripts", "check-license-compatibility.sh"),
-          "utf8"
-        )
-      );
-
-      const result = runCheck(tempDir, [
-        { licenseExpressions: ["LicenseRef-TailwindPlus"] },
-      ]);
+      const result = runCheck(tempDir, {
+        reuseEntries: [{ licenseExpressions: ["LicenseRef-TailwindPlus"] }],
+      });
 
       expect(result.status).toBe(1);
       expect(result.stdout + result.stderr).toContain(
@@ -212,28 +205,57 @@ describe("check-license-compatibility", () => {
     );
 
     try {
-      mkdirSync(path.join(tempDir, "scripts"), { recursive: true });
-      writeFileSync(
-        path.join(tempDir, "scripts", "check-license-compatibility.sh"),
-        readFileSync(
-          path.join(repoRoot, "scripts", "check-license-compatibility.sh"),
-          "utf8"
-        )
-      );
-
-      const result = runCheck(tempDir, [
-        {
-          fileName: "./AGENTS.md",
-          licenseExpressions: [
-            "AGPL-3.0-or-later",
-            "LicenseRef-SecPal-Attribution",
-          ],
-        },
-      ]);
+      const result = runCheck(tempDir, {
+        reuseEntries: [
+          {
+            fileName: "./AGENTS.md",
+            licenseExpressions: [
+              "AGPL-3.0-or-later",
+              "LicenseRef-SecPal-Attribution",
+            ],
+          },
+        ],
+      });
 
       expect(result.status, result.stderr).toBe(0);
       expect(result.stdout).toContain(
         "All licenses are compatible with AGPL-3.0-or-later"
+      );
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects incompatible dependency licenses from package-lock.json", () => {
+    const tempDir = mkdtempSync(
+      path.join(os.tmpdir(), "secpal-license-check-")
+    );
+
+    try {
+      const result = runCheck(tempDir, {
+        reuseEntries: [{ licenseExpressions: ["MIT"] }],
+        packageLockContents: JSON.stringify(
+          {
+            name: "@secpal/frontend",
+            lockfileVersion: 3,
+            packages: {
+              "": {
+                license:
+                  "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
+              },
+              "node_modules/bad-license-package": {
+                license: "LicenseRef-Proprietary",
+              },
+            },
+          },
+          null,
+          2
+        ),
+      });
+
+      expect(result.status).toBe(1);
+      expect(result.stdout + result.stderr).toContain(
+        "ERROR: Incompatible license found in package-lock.json package node_modules/bad-license-package: LicenseRef-Proprietary"
       );
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
