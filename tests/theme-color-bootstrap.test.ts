@@ -29,30 +29,73 @@ interface ThemeColorTestWindow extends Window {
   };
 }
 
-describe("theme-color bootstrap stale asset recovery", () => {
-  it("skips reload when it cannot persist the one-shot recovery latch", async () => {
-    document.head.innerHTML = "";
-    document.body.innerHTML = "";
+function installRecoveryEnvironment() {
+  document.head.innerHTML = "";
+  document.body.innerHTML = "";
 
-    const testWindow = globalThis as ThemeColorTestWindow;
-    testWindow.__themeColorReload = vi.fn();
-    const getRegistrations = vi
-      .fn()
-      .mockResolvedValue([{ unregister: vi.fn().mockResolvedValue(true) }]);
-    Object.defineProperty(navigator, "serviceWorker", {
+  const testWindow = globalThis as ThemeColorTestWindow;
+  testWindow.__themeColorReload = vi.fn();
+  const unregister = vi.fn().mockResolvedValue(true);
+  const getRegistrations = vi.fn().mockResolvedValue([{ unregister }]);
+  Object.defineProperty(navigator, "serviceWorker", {
+    configurable: true,
+    value: {
+      getRegistrations,
+    },
+  });
+  const cacheDelete = vi.fn().mockResolvedValue(true);
+  const cacheKeys = vi.fn().mockResolvedValue(["html-shell"]);
+  Object.defineProperty(window, "caches", {
+    configurable: true,
+    value: {
+      keys: cacheKeys,
+      delete: cacheDelete,
+    },
+  });
+
+  return { cacheDelete, cacheKeys, getRegistrations, testWindow, unregister };
+}
+
+async function waitForRecoveryTasks() {
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+  await new Promise((resolve) => window.setTimeout(resolve, 0));
+}
+
+describe("theme-color bootstrap stale asset recovery", () => {
+  it("recovers when an early same-origin built asset preload fails", async () => {
+    const { cacheDelete, cacheKeys, getRegistrations, testWindow, unregister } =
+      installRecoveryEnvironment();
+    Object.defineProperty(window, "sessionStorage", {
       configurable: true,
       value: {
-        getRegistrations,
+        getItem: vi.fn().mockReturnValue(null),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
+        clear: vi.fn(),
       },
     });
-    const cacheKeys = vi.fn().mockResolvedValue(["html-shell"]);
-    Object.defineProperty(window, "caches", {
-      configurable: true,
-      value: {
-        keys: cacheKeys,
-        delete: vi.fn().mockResolvedValue(true),
-      },
-    });
+    new Function(instrumentedThemeColorBootstrapSource)();
+
+    const preload = document.createElement("link");
+    preload.rel = "modulepreload";
+    preload.href = "/assets/index-stale.js";
+    document.head.append(preload);
+    preload.dispatchEvent(new Event("error"));
+
+    await waitForRecoveryTasks();
+
+    expect(getRegistrations).toHaveBeenCalledOnce();
+    expect(unregister).toHaveBeenCalledOnce();
+    expect(cacheKeys).toHaveBeenCalledOnce();
+    expect(cacheDelete).toHaveBeenCalledWith("html-shell");
+    expect(testWindow.__themeColorReload).toHaveBeenCalledOnce();
+  });
+
+  it("skips reload when it cannot persist the one-shot recovery latch", async () => {
+    const { cacheKeys, getRegistrations, testWindow } =
+      installRecoveryEnvironment();
     Object.defineProperty(window, "sessionStorage", {
       configurable: true,
       value: {
@@ -69,10 +112,7 @@ describe("theme-color bootstrap stale asset recovery", () => {
     expect(testWindow.__themeColorTestHooks).toBeDefined();
     testWindow.__themeColorTestHooks?.recoverFromStaleHashedAsset();
 
-    await Promise.resolve();
-    await Promise.resolve();
-    await Promise.resolve();
-    await new Promise((resolve) => window.setTimeout(resolve, 0));
+    await waitForRecoveryTasks();
 
     expect(getRegistrations).not.toHaveBeenCalled();
     expect(cacheKeys).not.toHaveBeenCalled();

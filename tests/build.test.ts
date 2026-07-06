@@ -378,7 +378,9 @@ describe("Build Configuration and Source Verification", () => {
     expect(viteConfig).toContain(
       'globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"]'
     );
-    expect(viteConfig).toContain('globIgnores: ["**/*.html"]');
+    expect(viteConfig).toContain(
+      'globIgnores: ["**/*.html", "theme-color.js"]'
+    );
     expect(viteConfig).toContain("navigateFallback: null");
     expect(viteConfig).toContain("nonceBearingHtmlShellPattern");
     expect(viteConfig).toContain("manifestTransforms");
@@ -395,6 +397,15 @@ describe("Build Configuration and Source Verification", () => {
     expect(serviceWorker).not.toContain(
       'createHandlerBoundToURL("/index.html")'
     );
+  });
+
+  it("keeps the recovery bootstrap out of service-worker caches", () => {
+    const serviceWorker = readRepoFile("src/sw.ts");
+    const viteConfig = readRepoFile("vite.config.ts");
+
+    expect(viteConfig).toContain('"theme-color.js"');
+    expect(serviceWorker).toContain("isCacheableStaticAssetRequest");
+    expect(serviceWorker).toContain('pathname !== "/theme-color.js"');
   });
 
   it("uses an external theme-color bootstrap so CSP can block inline scripts", () => {

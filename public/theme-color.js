@@ -40,21 +40,26 @@
 
   function isRecoverableBootstrapAssetError(event) {
     const target = event && event.target;
+    let assetUrl;
 
-    if (!(target instanceof HTMLScriptElement) || !target.src) {
+    if (target instanceof HTMLScriptElement && target.src) {
+      assetUrl = target.src;
+    } else if (target instanceof HTMLLinkElement && target.href) {
+      assetUrl = target.href;
+    } else {
       return false;
     }
 
     let targetUrl;
     try {
-      targetUrl = new URL(target.src, window.location.href);
+      targetUrl = new URL(assetUrl, window.location.href);
     } catch {
       return false;
     }
 
     return (
       targetUrl.origin === window.location.origin &&
-      /\/assets\/.+\.js$/.test(targetUrl.pathname)
+      /\/assets\/.+\.(?:css|js)$/.test(targetUrl.pathname)
     );
   }
 
