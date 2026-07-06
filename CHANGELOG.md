@@ -243,7 +243,10 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   `/assets/index-*.js`, `public/theme-color.js` now clears the affected
   runtime caches, unregisters stale service workers, reloads once, and resets
   the recovery latch after `src/main.tsx` finishes bootstrapping so deployed
-  updates no longer strand users on a blank dark screen.
+  updates no longer strand users on a blank dark screen. That recovery now
+  also aborts before reloading when it cannot persist the one-shot
+  `sessionStorage` latch, preventing storage failures from causing a reload
+  loop.
 - Removed the duplicate `AGPL v3+` and `Source Code` footer links from the
   vault-locked login shell now that the interactive login `Legal` menu already
   exposes those notices there.

@@ -21,8 +21,7 @@
   function hasPendingAssetLoadRecovery() {
     try {
       return (
-        window.sessionStorage.getItem(assetLoadRecoveryStorageKey) ===
-        "pending"
+        window.sessionStorage.getItem(assetLoadRecoveryStorageKey) === "pending"
       );
     } catch {
       return false;
@@ -32,8 +31,9 @@
   function markPendingAssetLoadRecovery() {
     try {
       window.sessionStorage.setItem(assetLoadRecoveryStorageKey, "pending");
+      return true;
     } catch {
-      // Ignore storage access failures; recovery remains best-effort.
+      return false;
     }
   }
 
@@ -90,7 +90,8 @@
         .filter((cacheName) =>
           cacheNameAllowlist.some(
             (allowedName) =>
-              cacheName === allowedName || cacheName.indexOf(allowedName + "-") === 0
+              cacheName === allowedName ||
+              cacheName.indexOf(allowedName + "-") === 0
           )
         )
         .map((cacheName) => window.caches.delete(cacheName))
@@ -102,7 +103,9 @@
       return;
     }
 
-    markPendingAssetLoadRecovery();
+    if (!markPendingAssetLoadRecovery()) {
+      return;
+    }
 
     Promise.all([
       unregisterServiceWorkers().catch(function () {}),
