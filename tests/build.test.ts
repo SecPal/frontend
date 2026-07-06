@@ -164,13 +164,16 @@ describe("Build Configuration and Source Verification", () => {
       "dev:android":
         "cross-env VITE_APP_SURFACE=android-native vite --mode android",
       "dev:ios": "cross-env VITE_APP_SURFACE=ios-native vite --mode ios",
-      build: "tsc && vite build",
+      build:
+        "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build",
       "build:web":
         "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build --mode web",
       "build:android":
         "cross-env VITE_APP_SURFACE=android-native tsc && cross-env VITE_APP_SURFACE=android-native vite build --mode android",
       "build:ios":
         "cross-env VITE_APP_SURFACE=ios-native tsc && cross-env VITE_APP_SURFACE=ios-native vite build --mode ios",
+      "build:analyze":
+        "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build --mode analyze",
     });
   });
 

@@ -59,6 +59,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   all the way through the spawned Vite command, and Vite build planning now
   rejects `android-mock` / `ios-mock` before production artifacts can be
   emitted.
+- Pinned the default `build` and `build:analyze` entrypoints to the web
+  surface as well, so generic production and analysis builds cannot emit
+  Android or iOS route surfaces from a leaked parent-shell
+  `VITE_APP_SURFACE`.
+- Raised the privacy shield over existing `document.body` portal siblings too,
+  so already-open Radix dialogs, dropdowns, and similar portal content are
+  hidden and inert while the shield is active.
 - Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
   AGPL SPDX expressions to `AGPL-3.0-or-later AND
 LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to

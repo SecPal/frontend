@@ -94,6 +94,30 @@ describe("RouteGuardState theme tokens", () => {
     expect(shieldedBackground).toHaveAttribute("inert");
   });
 
+  it("hides existing body-level portal siblings behind the privacy shield", async () => {
+    const existingPortal = document.createElement("div");
+    existingPortal.setAttribute("data-portal", "existing");
+    existingPortal.textContent = "Sensitive portal content";
+    document.body.appendChild(existingPortal);
+
+    const { unmount } = renderWithProviders(
+      <RoutePrivacyShieldState onDismiss={vi.fn()}>
+        <button type="button">Background action</button>
+      </RoutePrivacyShieldState>
+    );
+
+    await screen.findByRole("button", { name: /show app/i });
+
+    expect(existingPortal).toHaveAttribute("aria-hidden", "true");
+    expect(existingPortal).toHaveAttribute("inert");
+
+    unmount();
+
+    expect(existingPortal).not.toHaveAttribute("aria-hidden");
+    expect(existingPortal).not.toHaveAttribute("inert");
+    existingPortal.remove();
+  });
+
   it("keeps the email verification state on canonical theme tokens", async () => {
     renderWithProviders(
       <RouteEmailVerificationState

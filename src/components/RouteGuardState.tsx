@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { msg } from "@lingui/core/macro";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { createPortal } from "react-dom";
@@ -157,8 +157,54 @@ export function RoutePrivacyShieldState({
   children,
   isActive = true,
 }: RoutePrivacyShieldStateProps) {
+  useEffect(() => {
+    if (!isActive || typeof document === "undefined") {
+      return;
+    }
+
+    const overlayMarker = document.querySelector(
+      '[data-route-guard-overlay="privacy-shield"]'
+    );
+    const overlayContainer = overlayMarker;
+
+    if (!(overlayContainer instanceof HTMLElement)) {
+      return;
+    }
+
+    const hiddenSiblings = Array.from(document.body.children).filter(
+      (element) => element !== overlayContainer
+    );
+    const previousState = hiddenSiblings.map((element) => ({
+      element,
+      ariaHidden: element.getAttribute("aria-hidden"),
+      hadInert: element.hasAttribute("inert"),
+    }));
+
+    for (const element of hiddenSiblings) {
+      element.setAttribute("aria-hidden", "true");
+      element.setAttribute("inert", "");
+    }
+
+    return () => {
+      for (const { element, ariaHidden, hadInert } of previousState) {
+        if (ariaHidden === null) {
+          element.removeAttribute("aria-hidden");
+        } else {
+          element.setAttribute("aria-hidden", ariaHidden);
+        }
+
+        if (hadInert) {
+          element.setAttribute("inert", "");
+        } else {
+          element.removeAttribute("inert");
+        }
+      }
+    };
+  }, [isActive]);
+
   const overlayContent = (
     <div
+      data-route-guard-overlay="privacy-shield"
       className="fixed inset-0 z-[70] flex items-center justify-center bg-background/95 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
