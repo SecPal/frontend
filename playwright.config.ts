@@ -72,8 +72,9 @@ for (const name of ["NO_COLOR", "NODE_DISABLE_COLORS"] as const) {
  * 1. Local Development (default):
  *    - Uses a dedicated Android-surface Vite dev server
  *      (http://localhost:4174)
- *    - Uses the Android-native app surface by default so Android provisioning
- *      specs run against the route surface where that feature is registered
+ *    - Forces the Android-native app surface by default so Android
+ *      provisioning specs run against the route surface where that feature is
+ *      registered, regardless of any parent-shell `VITE_APP_SURFACE`
  *    - Full authentication and API integration
  *    - Command: `npx playwright test`
  *
@@ -91,7 +92,7 @@ for (const name of ["NO_COLOR", "NODE_DISABLE_COLORS"] as const) {
  *
  * 3. CI Smoke Tests:
  *    - Uses Vite preview server (static build)
- *    - Uses the Android-native app surface by default for parity with the
+ *    - Forces the Android-native app surface by default for parity with the
  *      default local e2e route surface
  *    - No backend required (smoke tests only)
  *    - Command: `CI=true npx playwright test`
@@ -129,7 +130,7 @@ const LOCAL_E2E_BASE_URL =
  */
 const isRemoteTarget = isRemotePlaywrightTarget(BASE_URL);
 const configuredAppSurface = resolveConfiguredAppSurface(
-  process.env.VITE_APP_SURFACE,
+  process.env.PLAYWRIGHT_APP_SURFACE,
   "android-native"
 );
 

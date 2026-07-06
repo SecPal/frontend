@@ -37,9 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   flow so visual `privacy-shield` masking stays separate from the real
   `vault-locked` offline-vault lock/unlock path (US-007).
 - Added a committed `.env.web`, pinned `build:web` / `dev:web` to web mode,
-  and tightened Playwright's default local Android e2e surface so empty
-  `VITE_APP_SURFACE` values and reused plain web dev servers do not silently
-  target the wrong surface.
+  and tightened Playwright's default Android e2e surface so empty or parent
+  shell `VITE_APP_SURFACE` values cannot silently override the route surface;
+  Playwright now requires an explicit `PLAYWRIGHT_APP_SURFACE` override for
+  non-Android local or CI runs.
 - Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
   AGPL SPDX expressions to `AGPL-3.0-or-later AND
 LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to
