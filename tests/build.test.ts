@@ -153,6 +153,23 @@ describe("Build Configuration and Source Verification", () => {
     expect(packageLock.packages?.[""]?.license).toBe(packageJson.license);
   });
 
+  it("keeps explicit dev and build scripts for every app surface", () => {
+    const packageJson = JSON.parse(readRepoFile("package.json")) as {
+      scripts?: Record<string, string>;
+    };
+
+    expect(packageJson.scripts).toMatchObject({
+      dev: "vite",
+      "dev:web": "vite",
+      "dev:android": "vite --mode android",
+      "dev:ios": "vite --mode ios",
+      build: "tsc && vite build",
+      "build:web": "tsc && vite build",
+      "build:android": "tsc && vite build --mode android",
+      "build:ios": "tsc && vite build --mode ios",
+    });
+  });
+
   it("keeps SecPal-owned governance files on the attribution license expression", () => {
     for (const relativePath of [
       ".pre-commit-config.yaml",

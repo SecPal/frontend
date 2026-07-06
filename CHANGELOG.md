@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `src/platform/appSurface.ts`, covering web, Android mock/native, and iOS
   mock/native frontend surfaces with production guards for mock surfaces
   (US-002).
+- Added explicit `dev:*` and `build:*` package scripts for web, Android, and
+  iOS surfaces while preserving the default production web build path (US-003).
 - Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
   AGPL SPDX expressions to `AGPL-3.0-or-later AND
 LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to
