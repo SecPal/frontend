@@ -23,6 +23,10 @@ interface RouteVaultLockedStateProps {
   onSignInAgain: () => void;
 }
 
+interface RoutePrivacyShieldStateProps {
+  onDismiss: () => void;
+}
+
 interface RouteEmailVerificationStateProps {
   email: string;
   onRetry: () => void;
@@ -138,6 +142,34 @@ export function RouteVaultLockedState({
           </Button>
           <Button variant="outline" onClick={onSignInAgain} type="button">
             <Trans>Sign out</Trans>
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function RoutePrivacyShieldState({
+  onDismiss,
+}: RoutePrivacyShieldStateProps) {
+  return (
+    <div
+      className="flex min-h-screen items-center justify-center p-4"
+      data-route-guard-state="privacy-shield"
+    >
+      <div className="max-w-md text-center">
+        <h1 className="mb-2 text-lg font-semibold">
+          <Trans>Privacy Shield</Trans>
+        </h1>
+        <p className="text-muted-foreground text-base/6 sm:text-sm/6">
+          <Trans>
+            SecPal is visually shielding this screen. The encrypted offline
+            vault stays unlocked until you lock it explicitly.
+          </Trans>
+        </p>
+        <div className="mt-6 flex justify-center">
+          <Button onClick={onDismiss} type="button">
+            <Trans>Show app</Trans>
           </Button>
         </div>
       </div>

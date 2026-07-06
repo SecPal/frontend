@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `SecPalDeviceState`, `SecPalEnterprise`, and `SecPalPush` typed stubs for
   future native plugin integrations without introducing a generic native
   command bridge or changing the existing auth bridge (US-006).
+- Added a central sensitive UI state helper and guarded-route privacy shield
+  flow so visual `privacy-shield` masking stays separate from the real
+  `vault-locked` offline-vault lock/unlock path (US-007).
 - Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
   AGPL SPDX expressions to `AGPL-3.0-or-later AND
 LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to

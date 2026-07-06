@@ -12,8 +12,14 @@ import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
   RouteLoadingState,
+  RoutePrivacyShieldState,
   RouteVaultLockedState,
 } from "./RouteGuardState";
+import {
+  getSensitiveUiState,
+  isPrivacyShieldState,
+  isVaultLockedState,
+} from "../lib/sensitiveUiState";
 
 interface PermissionRouteProps {
   children: React.ReactNode;
@@ -52,11 +58,18 @@ export function PermissionRoute({
     hasPermission,
     isAuthenticated,
     isVaultLocked = false,
+    hidePrivacyShield,
     logout,
     retryBootstrap,
+    sensitiveUiState,
     unlock,
     user,
   } = auth;
+  const routeSensitiveUiState =
+    sensitiveUiState ??
+    getSensitiveUiState({
+      isVaultLocked,
+    });
 
   if (isRouteAuthBootstrapPending(auth)) {
     return <RouteLoadingState />;
@@ -72,12 +85,18 @@ export function PermissionRoute({
     );
   }
 
-  if (isVaultLocked) {
+  if (isVaultLockedState(routeSensitiveUiState)) {
     return (
       <RouteVaultLockedState
         onUnlock={unlock ?? (async () => false)}
         onSignInAgain={logout}
       />
+    );
+  }
+
+  if (isPrivacyShieldState(routeSensitiveUiState)) {
+    return (
+      <RoutePrivacyShieldState onDismiss={hidePrivacyShield ?? (() => {})} />
     );
   }
 

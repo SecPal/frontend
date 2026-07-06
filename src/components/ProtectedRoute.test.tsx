@@ -91,6 +91,9 @@ const LockingTestComponent = () => {
       <button onClick={() => auth.lock?.()} type="button">
         Lock vault now
       </button>
+      <button onClick={() => auth.showPrivacyShield?.()} type="button">
+        Show privacy shield
+      </button>
       <div>Protected Content</div>
     </div>
   );
@@ -544,6 +547,43 @@ describe("ProtectedRoute", () => {
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /unlock/i }));
     });
+
+    await waitFor(() => {
+      expect(screen.getByText("Protected Content")).toBeInTheDocument();
+    });
+  });
+
+  it("shows a visual privacy shield without exposing the vault unlock flow", async () => {
+    const persistedUser = {
+      id: 1,
+      name: "Test",
+      email: "test@secpal.dev",
+      emailVerified: true,
+    };
+
+    mockGetCurrentUser.mockResolvedValueOnce(persistedUser);
+
+    await persistAuthUser(persistedUser);
+
+    renderLockingProtectedRoute();
+
+    await waitFor(() => {
+      expect(screen.getByText("Protected Content")).toBeInTheDocument();
+    });
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /show privacy shield/i })
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: /privacy shield/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^unlock$/i })
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /show app/i }));
 
     await waitFor(() => {
       expect(screen.getByText("Protected Content")).toBeInTheDocument();

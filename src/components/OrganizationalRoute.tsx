@@ -12,8 +12,14 @@ import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
   RouteLoadingState,
+  RoutePrivacyShieldState,
   RouteVaultLockedState,
 } from "./RouteGuardState";
+import {
+  getSensitiveUiState,
+  isPrivacyShieldState,
+  isVaultLockedState,
+} from "../lib/sensitiveUiState";
 
 interface OrganizationalRouteProps {
   children: React.ReactNode;
@@ -40,11 +46,18 @@ export function OrganizationalRoute({
     isAuthenticated,
     isVaultLocked = false,
     hasOrganizationalAccess,
+    hidePrivacyShield,
     logout,
     retryBootstrap,
+    sensitiveUiState,
     unlock,
     user,
   } = auth;
+  const routeSensitiveUiState =
+    sensitiveUiState ??
+    getSensitiveUiState({
+      isVaultLocked,
+    });
 
   if (isRouteAuthBootstrapPending(auth)) {
     return <RouteLoadingState />;
@@ -60,12 +73,18 @@ export function OrganizationalRoute({
     );
   }
 
-  if (isVaultLocked) {
+  if (isVaultLockedState(routeSensitiveUiState)) {
     return (
       <RouteVaultLockedState
         onUnlock={unlock ?? (async () => false)}
         onSignInAgain={logout}
       />
+    );
+  }
+
+  if (isPrivacyShieldState(routeSensitiveUiState)) {
+    return (
+      <RoutePrivacyShieldState onDismiss={hidePrivacyShield ?? (() => {})} />
     );
   }
 

@@ -7,6 +7,7 @@ import type {
   EmployeeOnboardingWorkflowStatus,
   EmployeeStatus,
 } from "@/types/api";
+import type { SensitiveUiState } from "../lib/sensitiveUiState";
 
 export type AuthUserId = string;
 export type AuthBootstrapRecoveryReason = "timeout" | "network";
@@ -32,11 +33,15 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   isVaultLocked?: boolean;
+  isPrivacyShielded?: boolean;
+  sensitiveUiState?: SensitiveUiState;
   bootstrapRecoveryReason: AuthBootstrapRecoveryReason | null;
   login: (user: User) => Promise<void>;
   logout: () => Promise<void> | void;
   lock?: () => void;
   unlock?: () => Promise<boolean>;
+  showPrivacyShield?: () => void;
+  hidePrivacyShield?: () => void;
   retryBootstrap: () => void;
   /**
    * Check if user has a specific permission.

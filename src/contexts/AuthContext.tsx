@@ -31,6 +31,7 @@ import {
   AUTH_VAULT_STORAGE_KEY,
   AUTH_VAULT_LOCK_KEY,
 } from "../lib/offlineVaultKeys";
+import { getSensitiveUiState } from "../lib/sensitiveUiState";
 
 export const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
 const AUTH_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS = 5_000;
@@ -240,6 +241,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isVaultLocked, setIsVaultLocked] = useState(
     () => authStorage.hasVaultLock?.() === true
   );
+  const [isPrivacyShielded, setIsPrivacyShielded] = useState(false);
   const [isLoading, setIsLoading] = useState(() => {
     const hasLogoutBarrier = authStorage.hasLogoutBarrier();
 
@@ -406,6 +408,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setBootstrapRecoveryReason(null);
     setUser(null);
     setIsVaultLocked(false);
+    setIsPrivacyShielded(false);
     setIsLoading(false);
     syncOfflineAuthState(false, { redirectOpenClients: true });
     removeUserForActiveBarrier();
@@ -440,6 +443,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setBootstrapRecoveryReason(null);
         setUser(null);
         setIsVaultLocked(false);
+        setIsPrivacyShielded(false);
         setIsLoading(false);
         syncOfflineAuthState(false, {
           redirectOpenClients: shouldRedirectOpenClients,
@@ -475,6 +479,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setBootstrapRecoveryReason(null);
       setUser(null);
       setIsVaultLocked(false);
+      setIsPrivacyShielded(false);
       setIsLoading(false);
       syncOfflineAuthState(false, {
         redirectOpenClients: shouldRedirectOpenClientsRef.current,
@@ -679,6 +684,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setBootstrapRecoveryReason(null);
       setUser(sanitizedUser);
       setIsVaultLocked(false);
+      setIsPrivacyShielded(false);
       setIsLoading(false);
       syncOfflineAuthState(true);
     },
@@ -730,6 +736,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     invalidateBootstrapRevalidation();
     setBootstrapRecoveryReason(null);
     setUser(null);
+    setIsPrivacyShielded(false);
     setIsVaultLocked(true);
     setIsLoading(false);
     // Vault lock is a recoverable local state, so keep offline session access enabled.
@@ -752,6 +759,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setBootstrapRecoveryReason(null);
       setUser(restoredUser);
       setIsVaultLocked(false);
+      setIsPrivacyShielded(false);
       setIsLoading(false);
       syncOfflineAuthState(true);
       return true;
@@ -761,6 +769,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
   }, [clearAuthenticatedState, syncOfflineAuthState]);
+
+  const showPrivacyShield = useCallback(() => {
+    if (isVaultLocked) {
+      return;
+    }
+
+    setIsPrivacyShielded(true);
+  }, [isVaultLocked]);
+
+  const hidePrivacyShield = useCallback(() => {
+    setIsPrivacyShielded(false);
+  }, []);
 
   const retryBootstrap = useCallback(() => {
     if (authTransport.kind === "browser-session") {
@@ -1158,6 +1178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           invalidateBootstrapRevalidation();
           setBootstrapRecoveryReason(null);
           setUser(null);
+          setIsPrivacyShielded(false);
           setIsVaultLocked(true);
           setIsLoading(false);
           syncOfflineAuthState(true);
@@ -1179,6 +1200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             invalidateBootstrapRevalidation();
             setUser(unlockedUser);
             setIsVaultLocked(false);
+            setIsPrivacyShielded(false);
             setIsLoading(false);
             syncOfflineAuthState(true);
           } catch (error) {
@@ -1345,11 +1367,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       isAuthenticated: !!user,
       isLoading,
+      isPrivacyShielded,
+      sensitiveUiState: getSensitiveUiState({
+        isPrivacyShieldVisible: isPrivacyShielded,
+        isVaultLocked,
+      }),
       bootstrapRecoveryReason,
       login,
       logout,
       lock,
       unlock,
+      showPrivacyShield,
+      hidePrivacyShield,
       retryBootstrap,
       hasPermission,
       hasOrganizationalAccess,
@@ -1358,11 +1387,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [
       user,
       isLoading,
+      isPrivacyShielded,
       bootstrapRecoveryReason,
       login,
       logout,
       lock,
       unlock,
+      showPrivacyShield,
+      hidePrivacyShield,
       retryBootstrap,
       hasPermission,
       hasOrganizationalAccess,
