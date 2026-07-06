@@ -170,12 +170,17 @@ describe("Build Configuration and Source Verification", () => {
     });
   });
 
-  it("commits the Android mode env surface override", () => {
+  it("commits native mode env surface overrides", () => {
     const androidEnv = readRepoFile(".env.android");
+    const iosEnv = readRepoFile(".env.ios");
 
     expect(androidEnv).toContain("VITE_APP_SURFACE=android-native");
     expect(androidEnv).toContain(
       "Android-targeted Vite mode builds must load the Android app surface."
+    );
+    expect(iosEnv).toContain("VITE_APP_SURFACE=ios-native");
+    expect(iosEnv).toContain(
+      "iOS-targeted Vite mode builds must load the iOS app surface."
     );
   });
 

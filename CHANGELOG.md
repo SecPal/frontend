@@ -263,6 +263,11 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 - Added the committed `.env.android` mode override so `dev:android` and
   `build:android` load the `android-native` app surface instead of silently
   falling back to `web`.
+- Added the committed `.env.ios` mode override so `dev:ios` and `build:ios`
+  load the `ios-native` app surface instead of silently falling back to `web`.
+- Set Playwright's self-started app surface to `android-native` by default so
+  the existing Android provisioning e2e coverage runs against the route surface
+  where that feature is registered.
 - Added an early bootstrap recovery path for stale hashed entry bundles: when a
   cached HTML shell or service worker still points at a deleted
   `/assets/index-*.js`, `public/theme-color.js` now clears the affected

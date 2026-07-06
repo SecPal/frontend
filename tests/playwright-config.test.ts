@@ -36,6 +36,7 @@ describe("playwright config", () => {
     expect(webServer?.command).toBe("npm run dev");
     expect(webServer?.url).toBe("http://localhost:5173");
     expect(webServer?.env?.VITE_API_URL).toBe("");
+    expect(webServer?.env?.VITE_APP_SURFACE).toBe("android-native");
   });
 
   it("pins the CI preview server to the local preview origin for browser-session audits", async () => {
@@ -57,6 +58,7 @@ describe("playwright config", () => {
     );
     expect(webServer?.url).toBe("http://localhost:4173");
     expect(webServer?.env?.VITE_API_URL).toBe("http://localhost:4173");
+    expect(webServer?.env?.VITE_APP_SURFACE).toBe("android-native");
   });
 
   it("enables a fixed chromium CDP port for preview Lighthouse audits when explicitly requested", async () => {
