@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added `@capacitor/core` as a runtime dependency and introduced the
+  side-effect-free `src/platform/runtime.ts` platform abstraction for future
+  native integrations without adding Capacitor project scaffolding (US-001).
 - Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
   AGPL SPDX expressions to `AGPL-3.0-or-later AND
 LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to
