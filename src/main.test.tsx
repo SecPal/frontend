@@ -6,6 +6,8 @@ import {
   installSystemColorSchemeSync,
   syncSystemColorScheme,
 } from "./lib/systemColorScheme";
+import { AppWithI18n } from "./main";
+import { render, waitFor } from "@testing-library/react";
 
 function createMatchMediaStub(initialMatches: boolean) {
   let matches = initialMatches;
@@ -103,5 +105,20 @@ describe("system color scheme sync", () => {
     expect(document.documentElement).toHaveClass("dark");
     expect(document.documentElement.style.colorScheme).toBe("dark");
     expect(matchMediaStub.listenerCount()).toBe(0);
+  });
+
+  it("dispatches the bootstrap-ready event after the app renders", async () => {
+    const matchMediaStub = createMatchMediaStub(false);
+    vi.stubGlobal("matchMedia", matchMediaStub.matchMedia);
+    const bootstrapReadyListener = vi.fn();
+    window.addEventListener("app-bootstrap-ready", bootstrapReadyListener, {
+      once: true,
+    });
+
+    render(<AppWithI18n />);
+
+    await waitFor(() => {
+      expect(bootstrapReadyListener).toHaveBeenCalledOnce();
+    });
   });
 });

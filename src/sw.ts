@@ -68,13 +68,21 @@ cleanupOutdatedCaches();
 // Precache all build assets (injected by Vite PWA plugin)
 precacheAndRoute(self.__WB_MANIFEST);
 
+function isCacheableStaticAssetRequest(request: Request): boolean {
+  const pathname = new URL(request.url).pathname;
+
+  return (
+    pathname !== "/theme-color.js" &&
+    (request.destination === "image" ||
+      request.destination === "style" ||
+      request.destination === "script" ||
+      request.destination === "font")
+  );
+}
+
 // Cache static assets with CacheFirst strategy
 registerRoute(
-  ({ request }) =>
-    request.destination === "image" ||
-    request.destination === "style" ||
-    request.destination === "script" ||
-    request.destination === "font",
+  ({ request }) => isCacheableStaticAssetRequest(request),
   new CacheFirst({
     cacheName: "static-assets",
   })

@@ -378,7 +378,9 @@ describe("Build Configuration and Source Verification", () => {
     expect(viteConfig).toContain(
       'globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"]'
     );
-    expect(viteConfig).toContain('globIgnores: ["**/*.html"]');
+    expect(viteConfig).toContain(
+      'globIgnores: ["**/*.html", "theme-color.js"]'
+    );
     expect(viteConfig).toContain("navigateFallback: null");
     expect(viteConfig).toContain("nonceBearingHtmlShellPattern");
     expect(viteConfig).toContain("manifestTransforms");
@@ -397,6 +399,15 @@ describe("Build Configuration and Source Verification", () => {
     );
   });
 
+  it("keeps the recovery bootstrap out of service-worker caches", () => {
+    const serviceWorker = readRepoFile("src/sw.ts");
+    const viteConfig = readRepoFile("vite.config.ts");
+
+    expect(viteConfig).toContain('"theme-color.js"');
+    expect(serviceWorker).toContain("isCacheableStaticAssetRequest");
+    expect(serviceWorker).toContain('pathname !== "/theme-color.js"');
+  });
+
   it("uses an external theme-color bootstrap so CSP can block inline scripts", () => {
     const indexHtml = readRepoFile("index.html");
 
@@ -409,6 +420,19 @@ describe("Build Configuration and Source Verification", () => {
     expect(themeColorJs.trim().length).toBeGreaterThan(0);
     expect(themeColorJs).toContain("theme-color");
     expect(themeColorJs).not.toContain("<script");
+  });
+
+  it("keeps stale hashed-entry recovery in the early bootstrap script", () => {
+    const themeColorJs = readRepoFile("public/theme-color.js");
+
+    expect(themeColorJs).toContain("window.addEventListener(");
+    expect(themeColorJs).toContain('"error"');
+    expect(themeColorJs).toContain("secpal.asset-load-recovery");
+    expect(themeColorJs).toContain("navigator.serviceWorker.getRegistrations");
+    expect(themeColorJs).toContain("window.caches.keys");
+    expect(themeColorJs).toContain("window.location.reload()");
+    expect(themeColorJs).toContain("app-bootstrap-ready");
+    expect(themeColorJs).not.toContain("(?:\\?.*)?$");
   });
 
   it("reads CSP nonces from emitted script/link tags instead of a custom meta carrier", () => {
@@ -434,12 +458,17 @@ describe("Build Configuration and Source Verification", () => {
     );
     expect(htaccess).toContain('Files "source-offer.json"');
     expect(htaccess).toContain('Cache-Control "no-cache, must-revalidate"');
+    expect(htaccess).toContain('Files "theme-color.js"');
+    expect(htaccess).toContain(
+      'Cache-Control "no-cache, no-store, must-revalidate"'
+    );
 
     expect(nginxConfig).toContain("location = /sw.js");
     expect(nginxConfig).toContain("Service-Worker-Allowed");
     expect(nginxConfig).toContain("default_type application/manifest+json");
     expect(nginxConfig).toContain("location = /manifest.webmanifest");
     expect(nginxConfig).toContain("location = /source-offer.json");
+    expect(nginxConfig).toContain("location = /theme-color.js");
     expect(nginxConfig).toContain("default_type application/json");
   });
 
