@@ -33,6 +33,7 @@
       window.sessionStorage.setItem(assetLoadRecoveryStorageKey, "pending");
       return true;
     } catch {
+      // Ignore storage access failures; recovery remains best-effort.
       return false;
     }
   }
@@ -53,7 +54,7 @@
 
     return (
       targetUrl.origin === window.location.origin &&
-      /\/assets\/.+\.js(?:\?.*)?$/.test(targetUrl.pathname)
+      /\/assets\/.+\.js$/.test(targetUrl.pathname)
     );
   }
 

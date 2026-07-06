@@ -110,14 +110,15 @@ describe("system color scheme sync", () => {
   it("dispatches the bootstrap-ready event after the app renders", async () => {
     const matchMediaStub = createMatchMediaStub(false);
     vi.stubGlobal("matchMedia", matchMediaStub.matchMedia);
-    const dispatchEventSpy = vi.spyOn(window, "dispatchEvent");
+    const bootstrapReadyListener = vi.fn();
+    window.addEventListener("app-bootstrap-ready", bootstrapReadyListener, {
+      once: true,
+    });
 
     render(<AppWithI18n />);
 
     await waitFor(() => {
-      expect(dispatchEventSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ type: "app-bootstrap-ready" })
-      );
+      expect(bootstrapReadyListener).toHaveBeenCalledOnce();
     });
   });
 });

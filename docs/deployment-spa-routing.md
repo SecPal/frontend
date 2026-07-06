@@ -30,7 +30,7 @@ It also now carries the baseline browser hardening for the shipped PWA:
 - enforcing a production CSP without inline scripts
 - explicitly denying unused browser capabilities via `Permissions-Policy`
 - setting `COOP` / `CORP` and related response headers consistently
-- keeping `index.html`, `sw.js`, and `manifest.webmanifest` on short cache rules so security and PWA updates land quickly
+- keeping `index.html`, `sw.js`, `manifest.webmanifest`, and `theme-color.js` on short cache rules so security and PWA updates land quickly
 
 **File:** `public/.htaccess`
 
@@ -95,7 +95,7 @@ The file already covers:
 - the production CSP and `Permissions-Policy`
 - `Strict-Transport-Security`, `Referrer-Policy`, and framing protection
 - explicit `404` handling for `/v1/*`, `/sanctum/*`, and `/health*`
-- exact-match delivery rules for `/`, `/index.html`, `/sw.js`, and `/manifest.webmanifest`
+- exact-match delivery rules for `/`, `/index.html`, `/sw.js`, `/manifest.webmanifest`, and `/theme-color.js`
 - the manifest MIME fix (`application/manifest+json`) and update-safe cache headers
 
 Use this file as your site config or merge its contents into the live server block:
@@ -330,7 +330,7 @@ Before deploying to production:
 - ✅ `/source-offer.json` publishes immutable corresponding-source URLs for the deployed `frontend` / `contracts` set, with optional `android`
 - ✅ `GET /v1/release` publishes the immutable corresponding-source URL for the deployed `api`
 - ✅ CSP, permissions, and modern cross-origin headers enabled
-- ✅ `index.html`, `sw.js`, `manifest.webmanifest`, and `/source-offer.json` use short cache rules
+- ✅ `index.html`, `sw.js`, `manifest.webmanifest`, `/theme-color.js`, and `/source-offer.json` use short cache rules
 
 ---
 

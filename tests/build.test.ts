@@ -421,6 +421,7 @@ describe("Build Configuration and Source Verification", () => {
     expect(themeColorJs).toContain("window.caches.keys");
     expect(themeColorJs).toContain("window.location.reload()");
     expect(themeColorJs).toContain("app-bootstrap-ready");
+    expect(themeColorJs).not.toContain("(?:\\?.*)?$");
   });
 
   it("reads CSP nonces from emitted script/link tags instead of a custom meta carrier", () => {
@@ -446,12 +447,15 @@ describe("Build Configuration and Source Verification", () => {
     );
     expect(htaccess).toContain('Files "source-offer.json"');
     expect(htaccess).toContain('Cache-Control "no-cache, must-revalidate"');
+    expect(htaccess).toContain('Files "theme-color.js"');
+    expect(htaccess).toContain('Cache-Control "no-cache, no-store, must-revalidate"');
 
     expect(nginxConfig).toContain("location = /sw.js");
     expect(nginxConfig).toContain("Service-Worker-Allowed");
     expect(nginxConfig).toContain("default_type application/manifest+json");
     expect(nginxConfig).toContain("location = /manifest.webmanifest");
     expect(nginxConfig).toContain("location = /source-offer.json");
+    expect(nginxConfig).toContain("location = /theme-color.js");
     expect(nginxConfig).toContain("default_type application/json");
   });
 
