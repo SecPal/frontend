@@ -45,8 +45,16 @@ const mockClearSensitiveClientState = vi.hoisted(() =>
 const mockClearBrowserPushClientState = vi.hoisted(() =>
   vi.fn().mockResolvedValue(undefined)
 );
+const appSurfaceMock = vi.hoisted(() => ({
+  isAndroidSurface: true,
+}));
 
 vi.mock("../services/authApi");
+vi.mock("../platform/appSurface", () => ({
+  get isAndroidSurface() {
+    return appSurfaceMock.isAndroidSurface;
+  },
+}));
 vi.mock("@/components/UpdatePrompt", () => ({
   UpdatePrompt: () => <div data-testid="layout-update-prompt" />,
 }));
@@ -194,6 +202,7 @@ describe("ApplicationLayout", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    appSurfaceMock.isAndroidSurface = true;
     await Promise.all([
       db.analytics.clear(),
       db.organizationalUnitCache.clear(),
@@ -1514,6 +1523,29 @@ describe("ApplicationLayout", () => {
         hasOrganizationalScopes: true,
         roles: [],
         permissions: ["activity_log.read"],
+      });
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(
+        screen.queryByRole("link", { name: "Android Provisioning" })
+      ).not.toBeInTheDocument();
+    });
+
+    it("hides the Android provisioning navigation entry outside Android surfaces", async () => {
+      appSurfaceMock.isAndroidSurface = false;
+
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "Operations User",
+        email: "operations@secpal.dev",
+        hasOrganizationalScopes: true,
+        roles: [],
+        permissions: ["android_enrollment.read"],
       });
 
       renderWithProviders(

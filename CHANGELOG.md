@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documented the `VITE_APP_SURFACE` values, frontend source-of-truth rule,
   PWA pipeline contract, and shared `src/ui`/shadcn/Radix/Lucide design-system
   requirements for web, Android, and future iOS surfaces (US-004).
+- Protected the `/android-provisioning` product route and authenticated shell
+  navigation behind the Android app-surface flag in addition to the existing
+  `androidProvisioning` capability gate (US-005).
 - Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
   AGPL SPDX expressions to `AGPL-3.0-or-later AND
 LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to
