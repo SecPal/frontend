@@ -165,7 +165,8 @@ describe("Build Configuration and Source Verification", () => {
       "dev:ios": "vite --mode ios",
       build: "tsc && vite build",
       "build:web": "tsc && vite build --mode web",
-      "build:android": "tsc && vite build --mode android",
+      "build:android":
+        "cross-env VITE_APP_SURFACE=android-native tsc && cross-env VITE_APP_SURFACE=android-native vite build --mode android",
       "build:ios": "tsc && vite build --mode ios",
     });
   });

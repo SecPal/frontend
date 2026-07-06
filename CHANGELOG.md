@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   shell `VITE_APP_SURFACE` values cannot silently override the route surface;
   Playwright now requires an explicit `PLAYWRIGHT_APP_SURFACE` override for
   non-Android local or CI runs.
+- Forced `build:android` to export `VITE_APP_SURFACE=android-native` in the
+  command itself so Android-targeted builds stay deterministic even when CI or
+  a parent shell exports a conflicting app surface.
 - Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
   AGPL SPDX expressions to `AGPL-3.0-or-later AND
 LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to

@@ -34,7 +34,7 @@
     "start": "vite",
     "build": "tsc && vite build",
     "build:web": "tsc && vite build --mode web",
-    "build:android": "tsc && vite build --mode android",
+    "build:android": "cross-env VITE_APP_SURFACE=android-native tsc && cross-env VITE_APP_SURFACE=android-native vite build --mode android",
     "build:ios": "tsc && vite build --mode ios",
     "build:analyze": "tsc && vite build --mode analyze",
     "preview": "vite preview",
