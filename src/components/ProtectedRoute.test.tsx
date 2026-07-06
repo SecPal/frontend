@@ -674,6 +674,48 @@ describe("ProtectedRoute", () => {
     expect(screen.getByText("Protected Content")).toBeInTheDocument();
   });
 
+  it("keeps the email verification gate hidden behind the privacy shield", () => {
+    vi.spyOn(authHook, "useAuth").mockReturnValue({
+      isLoading: false,
+      isAuthenticated: true,
+      isPrivacyShielded: true,
+      sensitiveUiState: "privacy-shield",
+      bootstrapRecoveryReason: null,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: false,
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hidePrivacyShield: vi.fn(),
+      hasPermission: vi.fn(() => true),
+      hasOrganizationalAccess: vi.fn(() => true),
+    });
+
+    render(
+      <BrowserRouter>
+        <I18nProvider i18n={i18n}>
+          <ProtectedRoute>
+            <div>Protected Content</div>
+          </ProtectedRoute>
+        </I18nProvider>
+      </BrowserRouter>
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /privacy shield/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /verify your email address/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/user@secpal\.dev/i).closest("[aria-hidden='true']")
+    ).not.toBeNull();
+  });
+
   it("shows loading state initially", () => {
     mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
 

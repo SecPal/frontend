@@ -105,37 +105,35 @@ export function FeatureRoute({
   const isRevalidating = isRouteAuthSnapshotRevalidating(auth);
 
   return (
-    <EmailVerificationGate
-      user={user}
-      onRetry={retryBootstrap}
-      onSignInAgain={logout}
+    <RoutePrivacyShieldState
+      isActive={isPrivacyShieldState(routeSensitiveUiState)}
+      onDismiss={hidePrivacyShield ?? (() => {})}
     >
-      {() => {
-        if (isRevalidating && revalidatingFallback !== undefined) {
-          return <>{revalidatingFallback}</>;
-        }
+      <EmailVerificationGate
+        user={user}
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+      >
+        {() => {
+          if (isRevalidating && revalidatingFallback !== undefined) {
+            return <>{revalidatingFallback}</>;
+          }
 
-        const content = !capabilities[feature] ? (
-          fallbackPath ? (
-            <Navigate to={fallbackPath} replace />
+          const content = !capabilities[feature] ? (
+            fallbackPath ? (
+              <Navigate to={fallbackPath} replace />
+            ) : (
+              <>{missingFeatureElement}</>
+            )
+          ) : requiredAction && !requiredAction(capabilities) ? (
+            <>{deniedActionElement}</>
           ) : (
-            <>{missingFeatureElement}</>
-          )
-        ) : requiredAction && !requiredAction(capabilities) ? (
-          <>{deniedActionElement}</>
-        ) : (
-          <>{children}</>
-        );
+            <>{children}</>
+          );
 
-        return (
-          <RoutePrivacyShieldState
-            isActive={isPrivacyShieldState(routeSensitiveUiState)}
-            onDismiss={hidePrivacyShield ?? (() => {})}
-          >
-            {content}
-          </RoutePrivacyShieldState>
-        );
-      }}
-    </EmailVerificationGate>
+          return content;
+        }}
+      </EmailVerificationGate>
+    </RoutePrivacyShieldState>
   );
 }

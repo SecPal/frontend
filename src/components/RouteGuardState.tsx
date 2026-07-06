@@ -5,6 +5,7 @@ import { msg } from "@lingui/core/macro";
 import { useState } from "react";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { Alert, AlertDescription } from "@/ui/alert";
 import { Button } from "@/ui/button";
@@ -157,12 +158,31 @@ export function RoutePrivacyShieldState({
   isActive = true,
 }: RoutePrivacyShieldStateProps) {
   const overlayContent = (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 p-4 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-background/95 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="privacy-shield-title"
+      onKeyDownCapture={(event) => {
+        if (event.key !== "Tab") {
+          return;
+        }
+
+        const dismissButton = event.currentTarget.querySelector("button");
+
+        if (!(dismissButton instanceof HTMLButtonElement)) {
+          return;
+        }
+
+        event.preventDefault();
+        dismissButton.focus();
+      }}
+    >
       <div
         className="w-full max-w-md text-center"
         data-route-guard-state="privacy-shield"
       >
-        <h1 className="mb-2 text-lg font-semibold">
+        <h1 id="privacy-shield-title" className="mb-2 text-lg font-semibold">
           <Trans>Privacy Shield</Trans>
         </h1>
         <p className="text-muted-foreground text-base/6 sm:text-sm/6">
@@ -172,7 +192,7 @@ export function RoutePrivacyShieldState({
           </Trans>
         </p>
         <div className="mt-6 flex justify-center">
-          <Button onClick={onDismiss} type="button">
+          <Button autoFocus onClick={onDismiss} type="button">
             <Trans>Show app</Trans>
           </Button>
         </div>
@@ -188,11 +208,14 @@ export function RoutePrivacyShieldState({
       >
         <div
           aria-hidden={isActive ? "true" : undefined}
+          inert={isActive ? true : undefined}
           className={isActive ? "pointer-events-none select-none" : undefined}
         >
           {children}
         </div>
-        {isActive ? overlayContent : null}
+        {isActive && typeof document !== "undefined"
+          ? createPortal(overlayContent, document.body)
+          : null}
       </div>
     );
   }
@@ -201,11 +224,9 @@ export function RoutePrivacyShieldState({
     return null;
   }
 
-  return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      {overlayContent}
-    </div>
-  );
+  return typeof document !== "undefined"
+    ? createPortal(overlayContent, document.body)
+    : overlayContent;
 }
 
 export function RouteEmailVerificationState({

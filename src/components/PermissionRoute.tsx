@@ -103,35 +103,33 @@ export function PermissionRoute({
   const isRevalidating = isRouteAuthSnapshotRevalidating(auth);
 
   return (
-    <EmailVerificationGate
-      user={user}
-      onRetry={retryBootstrap}
-      onSignInAgain={logout}
+    <RoutePrivacyShieldState
+      isActive={isPrivacyShieldState(routeSensitiveUiState)}
+      onDismiss={hidePrivacyShield ?? (() => {})}
     >
-      {() => {
-        if (isRevalidating && revalidatingFallback !== undefined) {
-          return <>{revalidatingFallback}</>;
-        }
+      <EmailVerificationGate
+        user={user}
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+      >
+        {() => {
+          if (isRevalidating && revalidatingFallback !== undefined) {
+            return <>{revalidatingFallback}</>;
+          }
 
-        const content = !hasPermission(permission) ? (
-          fallbackPath ? (
-            <Navigate to={fallbackPath} replace />
+          const content = !hasPermission(permission) ? (
+            fallbackPath ? (
+              <Navigate to={fallbackPath} replace />
+            ) : (
+              <RouteAccessDeniedState />
+            )
           ) : (
-            <RouteAccessDeniedState />
-          )
-        ) : (
-          <>{children}</>
-        );
+            <>{children}</>
+          );
 
-        return (
-          <RoutePrivacyShieldState
-            isActive={isPrivacyShieldState(routeSensitiveUiState)}
-            onDismiss={hidePrivacyShield ?? (() => {})}
-          >
-            {content}
-          </RoutePrivacyShieldState>
-        );
-      }}
-    </EmailVerificationGate>
+          return content;
+        }}
+      </EmailVerificationGate>
+    </RoutePrivacyShieldState>
   );
 }

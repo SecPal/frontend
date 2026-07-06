@@ -95,17 +95,17 @@ export function ProtectedRoute({
       : children;
 
   return (
-    <EmailVerificationGate
-      user={user}
-      onRetry={retryBootstrap}
-      onSignInAgain={logout}
+    <RoutePrivacyShieldState
+      isActive={isPrivacyShieldState(routeSensitiveUiState)}
+      onDismiss={hidePrivacyShield ?? (() => {})}
     >
-      <RoutePrivacyShieldState
-        isActive={isPrivacyShieldState(routeSensitiveUiState)}
-        onDismiss={hidePrivacyShield ?? (() => {})}
+      <EmailVerificationGate
+        user={user}
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
       >
         {protectedContent}
-      </RoutePrivacyShieldState>
-    </EmailVerificationGate>
+      </EmailVerificationGate>
+    </RoutePrivacyShieldState>
   );
 }

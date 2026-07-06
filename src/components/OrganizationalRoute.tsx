@@ -91,31 +91,29 @@ export function OrganizationalRoute({
   const isRevalidating = isRouteAuthSnapshotRevalidating(auth);
 
   return (
-    <EmailVerificationGate
-      user={user}
-      onRetry={retryBootstrap}
-      onSignInAgain={logout}
+    <RoutePrivacyShieldState
+      isActive={isPrivacyShieldState(routeSensitiveUiState)}
+      onDismiss={hidePrivacyShield ?? (() => {})}
     >
-      {() => {
-        if (isRevalidating && revalidatingFallback !== undefined) {
-          return <>{revalidatingFallback}</>;
-        }
+      <EmailVerificationGate
+        user={user}
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+      >
+        {() => {
+          if (isRevalidating && revalidatingFallback !== undefined) {
+            return <>{revalidatingFallback}</>;
+          }
 
-        const content = !hasOrganizationalAccess() ? (
-          <RouteAccessDeniedState />
-        ) : (
-          <>{children}</>
-        );
+          const content = !hasOrganizationalAccess() ? (
+            <RouteAccessDeniedState />
+          ) : (
+            <>{children}</>
+          );
 
-        return (
-          <RoutePrivacyShieldState
-            isActive={isPrivacyShieldState(routeSensitiveUiState)}
-            onDismiss={hidePrivacyShield ?? (() => {})}
-          >
-            {content}
-          </RoutePrivacyShieldState>
-        );
-      }}
-    </EmailVerificationGate>
+          return content;
+        }}
+      </EmailVerificationGate>
+    </RoutePrivacyShieldState>
   );
 }
