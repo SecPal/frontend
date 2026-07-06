@@ -170,6 +170,46 @@ describe("Build Configuration and Source Verification", () => {
     });
   });
 
+  it("documents the app surface and shared UI source-of-truth contract", () => {
+    const readme = readRepoFile("README.md");
+    const envExample = readRepoFile(".env.example");
+
+    for (const appSurface of [
+      "web",
+      "android-mock",
+      "android-native",
+      "ios-mock",
+      "ios-native",
+    ]) {
+      expect(readme).toContain(appSurface);
+      expect(envExample).toContain(appSurface);
+    }
+
+    expect(readme).toContain(
+      "`frontend` is the source of truth for SecPal product design, UI, and UX"
+    );
+    expect(readme).toContain(
+      "Android and future iOS repositories provide native OS integrations"
+    );
+    expect(readme).toContain("vite-plugin-pwa");
+    expect(readme).toContain("Manifest");
+    expect(readme).toContain("Service Worker");
+    expect(readme).toContain("Workbox");
+    expect(readme).toContain("src/ui");
+    expect(readme).toContain("shadcn-compatible");
+    expect(readme).toContain("Radix");
+    expect(readme).toContain("lucide-react");
+    expect(readme).toContain("Do not introduce visual rebuilds");
+
+    expect(envExample).toContain("VITE_APP_SURFACE=web");
+    expect(envExample).toContain(
+      "VITE_APP_SURFACE selects only the frontend surface contract"
+    );
+    expect(envExample).toContain(
+      "Do not use it for secrets, capabilities, security gates, or auth behavior"
+    );
+  });
+
   it("keeps SecPal-owned governance files on the attribution license expression", () => {
     for (const relativePath of [
       ".pre-commit-config.yaml",

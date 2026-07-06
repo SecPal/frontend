@@ -39,8 +39,7 @@ export const appSurface = resolveAppSurface();
 export const isWebSurface = appSurface === "web";
 export const isAndroidMockSurface = appSurface === "android-mock";
 export const isAndroidNativeSurface = appSurface === "android-native";
-export const isAndroidSurface =
-  isAndroidMockSurface || isAndroidNativeSurface;
+export const isAndroidSurface = isAndroidMockSurface || isAndroidNativeSurface;
 export const isIosMockSurface = appSurface === "ios-mock";
 export const isIosNativeSurface = appSurface === "ios-native";
 export const isIosSurface = isIosMockSurface || isIosNativeSurface;
