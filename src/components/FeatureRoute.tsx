@@ -54,6 +54,7 @@ export function FeatureRoute({
   const {
     bootstrapRecoveryReason,
     isAuthenticated,
+    isPrivacyShielded = false,
     isVaultLocked = false,
     hidePrivacyShield,
     logout,
@@ -66,6 +67,7 @@ export function FeatureRoute({
   const routeSensitiveUiState =
     sensitiveUiState ??
     getSensitiveUiState({
+      isPrivacyShieldVisible: isPrivacyShielded,
       isVaultLocked,
     });
 
@@ -96,12 +98,6 @@ export function FeatureRoute({
     );
   }
 
-  if (isPrivacyShieldState(routeSensitiveUiState)) {
-    return (
-      <RoutePrivacyShieldState onDismiss={hidePrivacyShield ?? (() => {})} />
-    );
-  }
-
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
@@ -119,19 +115,26 @@ export function FeatureRoute({
           return <>{revalidatingFallback}</>;
         }
 
-        if (!capabilities[feature]) {
-          if (fallbackPath) {
-            return <Navigate to={fallbackPath} replace />;
-          }
+        const content = !capabilities[feature] ? (
+          fallbackPath ? (
+            <Navigate to={fallbackPath} replace />
+          ) : (
+            <>{missingFeatureElement}</>
+          )
+        ) : requiredAction && !requiredAction(capabilities) ? (
+          <>{deniedActionElement}</>
+        ) : (
+          <>{children}</>
+        );
 
-          return <>{missingFeatureElement}</>;
-        }
-
-        if (requiredAction && !requiredAction(capabilities)) {
-          return <>{deniedActionElement}</>;
-        }
-
-        return <>{children}</>;
+        return (
+          <RoutePrivacyShieldState
+            isActive={isPrivacyShieldState(routeSensitiveUiState)}
+            onDismiss={hidePrivacyShield ?? (() => {})}
+          >
+            {content}
+          </RoutePrivacyShieldState>
+        );
       }}
     </EmailVerificationGate>
   );

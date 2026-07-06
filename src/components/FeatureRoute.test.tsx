@@ -152,6 +152,49 @@ describe("FeatureRoute", () => {
     expect(screen.queryByText("Customers Content")).not.toBeInTheDocument();
   });
 
+  it("derives the privacy shield from isPrivacyShielded when sensitiveUiState is omitted", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      isLoading: false,
+      isAuthenticated: true,
+      isPrivacyShielded: true,
+      bootstrapRecoveryReason: null,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hidePrivacyShield: vi.fn(),
+      hasPermission: vi.fn(),
+      hasOrganizationalAccess: vi.fn(),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/customers"]}>
+          <Routes>
+            <Route
+              path="/customers"
+              element={
+                <FeatureRoute feature="customers">
+                  <div>Customers Content</div>
+                </FeatureRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /privacy shield/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Customers Content")).toBeInTheDocument();
+  });
+
   it("shows the email verification gate before rendering the feature", () => {
     render(
       <I18nProvider i18n={i18n}>

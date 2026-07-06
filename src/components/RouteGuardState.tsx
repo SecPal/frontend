@@ -25,6 +25,8 @@ interface RouteVaultLockedStateProps {
 
 interface RoutePrivacyShieldStateProps {
   onDismiss: () => void;
+  children?: React.ReactNode;
+  isActive?: boolean;
 }
 
 interface RouteEmailVerificationStateProps {
@@ -151,13 +153,15 @@ export function RouteVaultLockedState({
 
 export function RoutePrivacyShieldState({
   onDismiss,
+  children,
+  isActive = true,
 }: RoutePrivacyShieldStateProps) {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center p-4"
-      data-route-guard-state="privacy-shield"
-    >
-      <div className="max-w-md text-center">
+  const overlayContent = (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 p-4 backdrop-blur-sm">
+      <div
+        className="w-full max-w-md text-center"
+        data-route-guard-state="privacy-shield"
+      >
         <h1 className="mb-2 text-lg font-semibold">
           <Trans>Privacy Shield</Trans>
         </h1>
@@ -173,6 +177,33 @@ export function RoutePrivacyShieldState({
           </Button>
         </div>
       </div>
+    </div>
+  );
+
+  if (children !== undefined) {
+    return (
+      <div
+        className={isActive ? "relative min-h-screen" : undefined}
+        data-route-guard-state={isActive ? "privacy-shield" : undefined}
+      >
+        <div
+          aria-hidden={isActive ? "true" : undefined}
+          className={isActive ? "pointer-events-none select-none" : undefined}
+        >
+          {children}
+        </div>
+        {isActive ? overlayContent : null}
+      </div>
+    );
+  }
+
+  if (!isActive) {
+    return null;
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center p-4">
+      {overlayContent}
     </div>
   );
 }

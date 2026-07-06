@@ -160,20 +160,25 @@ describe("Build Configuration and Source Verification", () => {
 
     expect(packageJson.scripts).toMatchObject({
       dev: "vite",
-      "dev:web": "vite",
+      "dev:web": "vite --mode web",
       "dev:android": "vite --mode android",
       "dev:ios": "vite --mode ios",
       build: "tsc && vite build",
-      "build:web": "tsc && vite build",
+      "build:web": "tsc && vite build --mode web",
       "build:android": "tsc && vite build --mode android",
       "build:ios": "tsc && vite build --mode ios",
     });
   });
 
-  it("commits native mode env surface overrides", () => {
+  it("commits per-surface mode env overrides", () => {
+    const webEnv = readRepoFile(".env.web");
     const androidEnv = readRepoFile(".env.android");
     const iosEnv = readRepoFile(".env.ios");
 
+    expect(webEnv).toContain("VITE_APP_SURFACE=web");
+    expect(webEnv).toContain(
+      "Web-targeted Vite mode builds must load the web app surface."
+    );
     expect(androidEnv).toContain("VITE_APP_SURFACE=android-native");
     expect(androidEnv).toContain(
       "Android-targeted Vite mode builds must load the Android app surface."

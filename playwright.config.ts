@@ -19,6 +19,27 @@ import {
   resolvePlaywrightBaseUrl,
 } from "./tests/e2e/target-urls";
 
+const DEFAULT_LOCAL_ANDROID_E2E_BASE_URL = "http://localhost:4174";
+
+function readTrimmedEnvValue(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+
+  return trimmed ? trimmed : undefined;
+}
+
+function resolveConfiguredAppSurface(
+  value: string | undefined,
+  fallback: string
+): string {
+  return readTrimmedEnvValue(value) ?? fallback;
+}
+
+function resolveLocalDevServerCommand(baseUrl: string): string {
+  const { hostname, port } = new URL(baseUrl);
+
+  return `npm run dev:android -- --host ${hostname} --port ${port || "80"} --strictPort`;
+}
+
 /**
  * Suppress the Node.js stderr warning:
  *   "The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set."
@@ -49,7 +70,8 @@ for (const name of ["NO_COLOR", "NODE_DISABLE_COLORS"] as const) {
  * Three modes of operation:
  *
  * 1. Local Development (default):
- *    - Uses Vite dev server (http://localhost:5173)
+ *    - Uses a dedicated Android-surface Vite dev server
+ *      (http://localhost:4174)
  *    - Uses the Android-native app surface by default so Android provisioning
  *      specs run against the route surface where that feature is registered
  *    - Full authentication and API integration
@@ -84,9 +106,18 @@ for (const name of ["NO_COLOR", "NODE_DISABLE_COLORS"] as const) {
  * 1. Current Polyscope workspace preview: https://frontend-<workspace>.preview.secpal.dev
  * 2. Explicit PLAYWRIGHT_BASE_URL when no Polyscope workspace is active
  * 3. CI mode: http://localhost:4173 (preview server)
- * 4. Default: http://localhost:5173 (dev server with proxy)
+ * 4. Default: http://localhost:5173 (generic dev server with proxy)
  */
 const BASE_URL = resolvePlaywrightBaseUrl();
+const configuredPlaywrightBaseUrl = readTrimmedEnvValue(
+  process.env.PLAYWRIGHT_BASE_URL
+);
+const LOCAL_E2E_BASE_URL =
+  !process.env.CI &&
+  !isRemotePlaywrightTarget(BASE_URL) &&
+  configuredPlaywrightBaseUrl === undefined
+    ? DEFAULT_LOCAL_ANDROID_E2E_BASE_URL
+    : BASE_URL;
 
 /**
  * Detect if we're running against a server that Playwright should NOT start
@@ -97,6 +128,10 @@ const BASE_URL = resolvePlaywrightBaseUrl();
  * `webServer`.
  */
 const isRemoteTarget = isRemotePlaywrightTarget(BASE_URL);
+const configuredAppSurface = resolveConfiguredAppSurface(
+  process.env.VITE_APP_SURFACE,
+  "android-native"
+);
 
 const usesSingleWorker = shouldUseSingleWorker();
 const lighthouseExecutablePath = getConfiguredLighthouseBrowserPath();
@@ -164,7 +199,7 @@ export default defineConfig({
   // Shared settings for all projects
   use: {
     // Base URL for all tests
-    baseURL: BASE_URL,
+    baseURL: LOCAL_E2E_BASE_URL,
 
     // Collect trace when retrying the failed test
     trace: "on-first-retry",
@@ -215,20 +250,20 @@ export default defineConfig({
           env: {
             ...process.env,
             VITE_API_URL: PREVIEW_BASE_URL,
-            VITE_APP_SURFACE: process.env.VITE_APP_SURFACE ?? "android-native",
+            VITE_APP_SURFACE: configuredAppSurface,
           },
           url: PREVIEW_BASE_URL,
           reuseExistingServer: false,
           timeout: 120_000,
         }
       : {
-          command: "npm run dev",
+          command: resolveLocalDevServerCommand(LOCAL_E2E_BASE_URL),
           env: {
             ...process.env,
             VITE_API_URL: "",
-            VITE_APP_SURFACE: process.env.VITE_APP_SURFACE ?? "android-native",
+            VITE_APP_SURFACE: configuredAppSurface,
           },
-          url: "http://localhost:5173",
+          url: LOCAL_E2E_BASE_URL,
           reuseExistingServer: true, // Reuse if already running
           timeout: 30_000,
         },

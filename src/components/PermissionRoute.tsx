@@ -57,6 +57,7 @@ export function PermissionRoute({
     bootstrapRecoveryReason,
     hasPermission,
     isAuthenticated,
+    isPrivacyShielded = false,
     isVaultLocked = false,
     hidePrivacyShield,
     logout,
@@ -68,6 +69,7 @@ export function PermissionRoute({
   const routeSensitiveUiState =
     sensitiveUiState ??
     getSensitiveUiState({
+      isPrivacyShieldVisible: isPrivacyShielded,
       isVaultLocked,
     });
 
@@ -94,12 +96,6 @@ export function PermissionRoute({
     );
   }
 
-  if (isPrivacyShieldState(routeSensitiveUiState)) {
-    return (
-      <RoutePrivacyShieldState onDismiss={hidePrivacyShield ?? (() => {})} />
-    );
-  }
-
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
@@ -117,15 +113,24 @@ export function PermissionRoute({
           return <>{revalidatingFallback}</>;
         }
 
-        if (!hasPermission(permission)) {
-          if (fallbackPath) {
-            return <Navigate to={fallbackPath} replace />;
-          }
+        const content = !hasPermission(permission) ? (
+          fallbackPath ? (
+            <Navigate to={fallbackPath} replace />
+          ) : (
+            <RouteAccessDeniedState />
+          )
+        ) : (
+          <>{children}</>
+        );
 
-          return <RouteAccessDeniedState />;
-        }
-
-        return <>{children}</>;
+        return (
+          <RoutePrivacyShieldState
+            isActive={isPrivacyShieldState(routeSensitiveUiState)}
+            onDismiss={hidePrivacyShield ?? (() => {})}
+          >
+            {content}
+          </RoutePrivacyShieldState>
+        );
       }}
     </EmailVerificationGate>
   );

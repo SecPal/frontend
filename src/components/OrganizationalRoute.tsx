@@ -44,6 +44,7 @@ export function OrganizationalRoute({
   const {
     bootstrapRecoveryReason,
     isAuthenticated,
+    isPrivacyShielded = false,
     isVaultLocked = false,
     hasOrganizationalAccess,
     hidePrivacyShield,
@@ -56,6 +57,7 @@ export function OrganizationalRoute({
   const routeSensitiveUiState =
     sensitiveUiState ??
     getSensitiveUiState({
+      isPrivacyShieldVisible: isPrivacyShielded,
       isVaultLocked,
     });
 
@@ -82,12 +84,6 @@ export function OrganizationalRoute({
     );
   }
 
-  if (isPrivacyShieldState(routeSensitiveUiState)) {
-    return (
-      <RoutePrivacyShieldState onDismiss={hidePrivacyShield ?? (() => {})} />
-    );
-  }
-
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
@@ -105,11 +101,20 @@ export function OrganizationalRoute({
           return <>{revalidatingFallback}</>;
         }
 
-        if (!hasOrganizationalAccess()) {
-          return <RouteAccessDeniedState />;
-        }
+        const content = !hasOrganizationalAccess() ? (
+          <RouteAccessDeniedState />
+        ) : (
+          <>{children}</>
+        );
 
-        return <>{children}</>;
+        return (
+          <RoutePrivacyShieldState
+            isActive={isPrivacyShieldState(routeSensitiveUiState)}
+            onDismiss={hidePrivacyShield ?? (() => {})}
+          >
+            {content}
+          </RoutePrivacyShieldState>
+        );
       }}
     </EmailVerificationGate>
   );

@@ -41,6 +41,7 @@ export function ProtectedRoute({
   const {
     bootstrapRecoveryReason,
     isAuthenticated,
+    isPrivacyShielded = false,
     isVaultLocked = false,
     hidePrivacyShield,
     logout,
@@ -52,6 +53,7 @@ export function ProtectedRoute({
   const routeSensitiveUiState =
     sensitiveUiState ??
     getSensitiveUiState({
+      isPrivacyShieldVisible: isPrivacyShielded,
       isVaultLocked,
     });
 
@@ -82,17 +84,15 @@ export function ProtectedRoute({
     );
   }
 
-  if (isPrivacyShieldState(routeSensitiveUiState)) {
-    return (
-      <RoutePrivacyShieldState onDismiss={hidePrivacyShield ?? (() => {})} />
-    );
-  }
-
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
   const isRevalidating = isRouteAuthSnapshotRevalidating(auth);
+  const protectedContent =
+    isRevalidating && revalidatingFallback !== undefined
+      ? revalidatingFallback
+      : children;
 
   return (
     <EmailVerificationGate
@@ -100,9 +100,12 @@ export function ProtectedRoute({
       onRetry={retryBootstrap}
       onSignInAgain={logout}
     >
-      {isRevalidating && revalidatingFallback !== undefined
-        ? revalidatingFallback
-        : children}
+      <RoutePrivacyShieldState
+        isActive={isPrivacyShieldState(routeSensitiveUiState)}
+        onDismiss={hidePrivacyShield ?? (() => {})}
+      >
+        {protectedContent}
+      </RoutePrivacyShieldState>
     </EmailVerificationGate>
   );
 }

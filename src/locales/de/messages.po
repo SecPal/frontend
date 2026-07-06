@@ -2859,7 +2859,7 @@ msgstr "MFA ist derzeit für dieses Konto deaktiviert. Richten Sie jetzt eine Au
 
 #: src/components/RouteGuardState.tsx
 msgid "Privacy Shield"
-msgstr "Privacy Shield"
+msgstr "Sichtschutz"
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Invalid Link"

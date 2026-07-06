@@ -9,6 +9,7 @@ import {
   screen,
   waitFor as waitForTestingLibrary,
 } from "@testing-library/react";
+import { useState } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -83,6 +84,27 @@ const mockVerifiedRevalidatingAuth = (): ReturnType<typeof vi.spyOn> =>
   });
 
 const TestComponent = () => <div>Protected Content</div>;
+const ShieldStateTestComponent = () => {
+  const auth = authHook.useAuth();
+  const [note, setNote] = useState("");
+
+  return (
+    <div>
+      <button onClick={() => auth.showPrivacyShield?.()} type="button">
+        Show privacy shield
+      </button>
+      <label htmlFor="shield-note">Shield note</label>
+      <input
+        id="shield-note"
+        value={note}
+        onChange={(event) => {
+          setNote(event.target.value);
+        }}
+      />
+      <div>{note || "empty-note"}</div>
+    </div>
+  );
+};
 const LockingTestComponent = () => {
   const auth = authHook.useAuth();
 
@@ -143,6 +165,27 @@ const renderLockingProtectedRoute = () => {
               element={
                 <ProtectedRoute>
                   <LockingTestComponent />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </AuthProvider>
+      </I18nProvider>
+    </BrowserRouter>
+  );
+};
+
+const renderShieldStateProtectedRoute = () => {
+  return render(
+    <BrowserRouter>
+      <I18nProvider i18n={i18n}>
+        <AuthProvider>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <ShieldStateTestComponent />
                 </ProtectedRoute>
               }
             />
@@ -565,11 +608,16 @@ describe("ProtectedRoute", () => {
 
     await persistAuthUser(persistedUser);
 
-    renderLockingProtectedRoute();
+    renderShieldStateProtectedRoute();
 
     await waitFor(() => {
-      expect(screen.getByText("Protected Content")).toBeInTheDocument();
+      expect(screen.getByLabelText("Shield note")).toBeInTheDocument();
     });
+
+    fireEvent.input(screen.getByLabelText("Shield note"), {
+      target: { value: "keep-mounted" },
+    });
+    expect(screen.getByText("keep-mounted")).toBeInTheDocument();
 
     fireEvent.click(
       screen.getByRole("button", { name: /show privacy shield/i })
@@ -578,7 +626,7 @@ describe("ProtectedRoute", () => {
     expect(
       await screen.findByRole("heading", { name: /privacy shield/i })
     ).toBeInTheDocument();
-    expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+    expect(screen.getByText("keep-mounted")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /^unlock$/i })
     ).not.toBeInTheDocument();
@@ -586,8 +634,44 @@ describe("ProtectedRoute", () => {
     fireEvent.click(screen.getByRole("button", { name: /show app/i }));
 
     await waitFor(() => {
-      expect(screen.getByText("Protected Content")).toBeInTheDocument();
+      expect(screen.getByText("keep-mounted")).toBeInTheDocument();
     });
+  });
+
+  it("derives the privacy shield from isPrivacyShielded when sensitiveUiState is omitted", () => {
+    vi.spyOn(authHook, "useAuth").mockReturnValue({
+      isLoading: false,
+      isAuthenticated: true,
+      isPrivacyShielded: true,
+      bootstrapRecoveryReason: null,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hidePrivacyShield: vi.fn(),
+      hasPermission: vi.fn(() => true),
+      hasOrganizationalAccess: vi.fn(() => true),
+    });
+
+    render(
+      <BrowserRouter>
+        <I18nProvider i18n={i18n}>
+          <ProtectedRoute>
+            <div>Protected Content</div>
+          </ProtectedRoute>
+        </I18nProvider>
+      </BrowserRouter>
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /privacy shield/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Protected Content")).toBeInTheDocument();
   });
 
   it("shows loading state initially", () => {
