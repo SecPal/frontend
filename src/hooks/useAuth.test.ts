@@ -3200,6 +3200,47 @@ describe("useAuth", () => {
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 
+  it("clears a visual privacy shield when pageshow restores a real vault lock", async () => {
+    const mockUser = {
+      id: 1,
+      name: "Bootstrap User",
+      email: "bootstrap@secpal.dev",
+    };
+
+    await persistAuthUser(mockUser);
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      result.current.showPrivacyShield?.();
+    });
+
+    expect(result.current.isPrivacyShielded).toBe(true);
+    expect(result.current.sensitiveUiState).toBe("privacy-shield");
+
+    act(() => {
+      authStorage.lockVault?.();
+      window.dispatchEvent(
+        new PageTransitionEvent("pageshow", { persisted: true })
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.isVaultLocked).toBe(true);
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.user).toBeNull();
+    expect(result.current.isPrivacyShielded).toBe(false);
+    expect(result.current.sensitiveUiState).toBe("vault-locked");
+  });
+
   it("ignores pageshow that is not a BFCache restore (persisted=false)", () => {
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,

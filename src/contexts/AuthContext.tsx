@@ -1302,6 +1302,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (authStorage.hasVaultLock?.()) {
           setBootstrapRecoveryReason(null);
           setUser(null);
+          setIsPrivacyShielded(false);
           setIsVaultLocked(true);
           setIsLoading(false);
           syncOfflineAuthState(true);
