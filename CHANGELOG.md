@@ -44,6 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Forced `build:android` to export `VITE_APP_SURFACE=android-native` in the
   command itself so Android-targeted builds stay deterministic even when CI or
   a parent shell exports a conflicting app surface.
+- Forced every surface-specific `dev:*` and `build:*` script to export its
+  matching `VITE_APP_SURFACE` in the command itself so web, Android, and iOS
+  runs stay deterministic even when a parent shell or CI job exports a
+  conflicting surface value.
 - Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
   AGPL SPDX expressions to `AGPL-3.0-or-later AND
 LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to

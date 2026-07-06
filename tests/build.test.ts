@@ -160,14 +160,17 @@ describe("Build Configuration and Source Verification", () => {
 
     expect(packageJson.scripts).toMatchObject({
       dev: "vite",
-      "dev:web": "vite --mode web",
-      "dev:android": "vite --mode android",
-      "dev:ios": "vite --mode ios",
+      "dev:web": "cross-env VITE_APP_SURFACE=web vite --mode web",
+      "dev:android":
+        "cross-env VITE_APP_SURFACE=android-native vite --mode android",
+      "dev:ios": "cross-env VITE_APP_SURFACE=ios-native vite --mode ios",
       build: "tsc && vite build",
-      "build:web": "tsc && vite build --mode web",
+      "build:web":
+        "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build --mode web",
       "build:android":
         "cross-env VITE_APP_SURFACE=android-native tsc && cross-env VITE_APP_SURFACE=android-native vite build --mode android",
-      "build:ios": "tsc && vite build --mode ios",
+      "build:ios":
+        "cross-env VITE_APP_SURFACE=ios-native tsc && cross-env VITE_APP_SURFACE=ios-native vite build --mode ios",
     });
   });
 
