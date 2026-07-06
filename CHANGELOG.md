@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Protected the `/android-provisioning` product route and authenticated shell
   navigation behind the Android app-surface flag in addition to the existing
   `androidProvisioning` capability gate (US-005).
+- Added a minimal `src/native` facade surface with explicit
+  `SecPalDeviceState`, `SecPalEnterprise`, and `SecPalPush` typed stubs for
+  future native plugin integrations without introducing a generic native
+  command bridge or changing the existing auth bridge (US-006).
 - Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
   AGPL SPDX expressions to `AGPL-3.0-or-later AND
 LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to
