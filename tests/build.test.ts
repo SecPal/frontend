@@ -170,6 +170,15 @@ describe("Build Configuration and Source Verification", () => {
     });
   });
 
+  it("commits the Android mode env surface override", () => {
+    const androidEnv = readRepoFile(".env.android");
+
+    expect(androidEnv).toContain("VITE_APP_SURFACE=android-native");
+    expect(androidEnv).toContain(
+      "Android-targeted Vite mode builds must load the Android app surface."
+    );
+  });
+
   it("documents the app surface and shared UI source-of-truth contract", () => {
     const readme = readRepoFile("README.md");
     const envExample = readRepoFile(".env.example");

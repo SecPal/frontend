@@ -260,6 +260,9 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 
 ### Fixed
 
+- Added the committed `.env.android` mode override so `dev:android` and
+  `build:android` load the `android-native` app surface instead of silently
+  falling back to `web`.
 - Added an early bootstrap recovery path for stale hashed entry bundles: when a
   cached HTML shell or service worker still points at a deleted
   `/assets/index-*.js`, `public/theme-color.js` now clears the affected
