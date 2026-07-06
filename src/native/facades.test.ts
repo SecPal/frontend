@@ -17,9 +17,9 @@ describe("native facade surface", () => {
     await expect(nativeFacades.SecPalDeviceState.getSnapshot()).resolves.toBe(
       null
     );
-    await expect(
-      nativeFacades.SecPalEnterprise.getEnrollment()
-    ).resolves.toBe(null);
+    await expect(nativeFacades.SecPalEnterprise.getEnrollment()).resolves.toBe(
+      null
+    );
     await expect(nativeFacades.SecPalPush.getRegistration()).resolves.toBe(
       null
     );
