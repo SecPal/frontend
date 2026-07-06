@@ -459,7 +459,9 @@ describe("Build Configuration and Source Verification", () => {
     expect(htaccess).toContain('Files "source-offer.json"');
     expect(htaccess).toContain('Cache-Control "no-cache, must-revalidate"');
     expect(htaccess).toContain('Files "theme-color.js"');
-    expect(htaccess).toContain('Cache-Control "no-cache, no-store, must-revalidate"');
+    expect(htaccess).toContain(
+      'Cache-Control "no-cache, no-store, must-revalidate"'
+    );
 
     expect(nginxConfig).toContain("location = /sw.js");
     expect(nginxConfig).toContain("Service-Worker-Allowed");
