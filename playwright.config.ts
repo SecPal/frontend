@@ -18,6 +18,10 @@ import {
   isRemotePlaywrightTarget,
   resolvePlaywrightBaseUrl,
 } from "./tests/e2e/target-urls";
+import {
+  getAppSurfaceMode,
+  resolveAppSurface,
+} from "./src/platform/appSurfaceContract";
 
 const DEFAULT_LOCAL_ANDROID_E2E_BASE_URL = "http://localhost:4174";
 
@@ -34,10 +38,14 @@ function resolveConfiguredAppSurface(
   return readTrimmedEnvValue(value) ?? fallback;
 }
 
-function resolveLocalDevServerCommand(baseUrl: string): string {
+function resolveLocalDevServerCommand(
+  baseUrl: string,
+  appSurface: string
+): string {
   const { hostname, port } = new URL(baseUrl);
+  const mode = getAppSurfaceMode(resolveAppSurface(appSurface, false));
 
-  return `npm run dev:android -- --host ${hostname} --port ${port || "80"} --strictPort`;
+  return `cross-env VITE_APP_SURFACE=${appSurface} vite --mode ${mode} --host ${hostname} --port ${port || "80"} --strictPort`;
 }
 
 /**
@@ -258,7 +266,10 @@ export default defineConfig({
           timeout: 120_000,
         }
       : {
-          command: resolveLocalDevServerCommand(LOCAL_E2E_BASE_URL),
+          command: resolveLocalDevServerCommand(
+            LOCAL_E2E_BASE_URL,
+            configuredAppSurface
+          ),
           env: {
             ...process.env,
             VITE_API_URL: "",

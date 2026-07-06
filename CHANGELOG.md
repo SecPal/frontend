@@ -52,6 +52,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reconciliation when the app restores into a real `vault-locked` state, so
   the auth context no longer carries an outdated visual shield flag behind the
   higher-priority offline-vault lock.
+- Centralized frontend surface resolution in a shared app-surface contract so
+  runtime modules, Vite build planning, and Playwright local dev-server
+  selection all validate the same surface rules and mode families.
+- Local Playwright runs now honor explicit `PLAYWRIGHT_APP_SURFACE` overrides
+  all the way through the spawned Vite command, and Vite build planning now
+  rejects `android-mock` / `ios-mock` before production artifacts can be
+  emitted.
 - Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
   AGPL SPDX expressions to `AGPL-3.0-or-later AND
 LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to
