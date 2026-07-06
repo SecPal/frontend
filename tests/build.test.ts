@@ -411,6 +411,18 @@ describe("Build Configuration and Source Verification", () => {
     expect(themeColorJs).not.toContain("<script");
   });
 
+  it("keeps stale hashed-entry recovery in the early bootstrap script", () => {
+    const themeColorJs = readRepoFile("public/theme-color.js");
+
+    expect(themeColorJs).toContain("window.addEventListener(");
+    expect(themeColorJs).toContain('"error"');
+    expect(themeColorJs).toContain("secpal.asset-load-recovery");
+    expect(themeColorJs).toContain("navigator.serviceWorker.getRegistrations");
+    expect(themeColorJs).toContain("window.caches.keys");
+    expect(themeColorJs).toContain("window.location.reload()");
+    expect(themeColorJs).toContain("app-bootstrap-ready");
+  });
+
   it("reads CSP nonces from emitted script/link tags instead of a custom meta carrier", () => {
     const nonceHelper = readRepoFile("src/lib/cspNonce.tsx");
 

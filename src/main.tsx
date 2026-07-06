@@ -30,6 +30,10 @@ export function AppWithI18n() {
 
   useEffect(() => installSystemColorSchemeSync(), []);
 
+  useEffect(() => {
+    window.dispatchEvent(new Event("app-bootstrap-ready"));
+  }, []);
+
   return (
     <I18nProvider i18n={i18n}>
       <RuntimeStyleCspSupport />

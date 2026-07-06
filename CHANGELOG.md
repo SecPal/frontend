@@ -238,6 +238,12 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 
 ### Fixed
 
+- Added an early bootstrap recovery path for stale hashed entry bundles: when a
+  cached HTML shell or service worker still points at a deleted
+  `/assets/index-*.js`, `public/theme-color.js` now clears the affected
+  runtime caches, unregisters stale service workers, reloads once, and resets
+  the recovery latch after `src/main.tsx` finishes bootstrapping so deployed
+  updates no longer strand users on a blank dark screen.
 - Removed the duplicate `AGPL v3+` and `Source Code` footer links from the
   vault-locked login shell now that the interactive login `Legal` menu already
   exposes those notices there.
