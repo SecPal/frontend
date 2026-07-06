@@ -6,7 +6,23 @@
   var appBootstrapReadyEvent = "app-bootstrap-ready";
   const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 
+  function hasPendingAssetLoadRecovery() {
+    try {
+      return (
+        window.sessionStorage.getItem(assetLoadRecoveryStorageKey) === "pending"
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  const pageStartedWithPendingAssetLoadRecovery = hasPendingAssetLoadRecovery();
+
   function clearAssetLoadRecoveryFlag() {
+    if (!pageStartedWithPendingAssetLoadRecovery) {
+      return;
+    }
+
     try {
       window.sessionStorage.removeItem(assetLoadRecoveryStorageKey);
     } catch {
@@ -17,16 +33,6 @@
   window.addEventListener(appBootstrapReadyEvent, clearAssetLoadRecoveryFlag, {
     once: true,
   });
-
-  function hasPendingAssetLoadRecovery() {
-    try {
-      return (
-        window.sessionStorage.getItem(assetLoadRecoveryStorageKey) === "pending"
-      );
-    } catch {
-      return false;
-    }
-  }
 
   function markPendingAssetLoadRecovery() {
     try {
