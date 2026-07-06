@@ -127,7 +127,7 @@ describe("playwright config", () => {
 
     expect(webServer).toBeDefined();
     expect(webServer?.command).toBe(
-      "npm run build -- --mode preview && npm run preview"
+      "cross-env VITE_APP_SURFACE=android-native tsc && cross-env VITE_APP_SURFACE=android-native vite build --mode preview && npm run preview"
     );
     expect(webServer?.url).toBe("http://localhost:4173");
     expect(webServer?.env?.VITE_API_URL).toBe("http://localhost:4173");
@@ -180,6 +180,9 @@ describe("playwright config", () => {
         ? config.webServer
         : undefined;
 
+    expect(webServer?.command).toBe(
+      "cross-env VITE_APP_SURFACE=ios-native tsc && cross-env VITE_APP_SURFACE=ios-native vite build --mode preview && npm run preview"
+    );
     expect(webServer?.env?.VITE_APP_SURFACE).toBe("ios-native");
   });
 

@@ -48,6 +48,12 @@ function resolveLocalDevServerCommand(
   return `cross-env VITE_APP_SURFACE=${appSurface} vite --mode ${mode} --host ${hostname} --port ${port || "80"} --strictPort`;
 }
 
+function resolveCiPreviewServerCommand(appSurface: string): string {
+  const surface = resolveAppSurface(appSurface, true);
+
+  return `cross-env VITE_APP_SURFACE=${surface} tsc && cross-env VITE_APP_SURFACE=${surface} vite build --mode preview && npm run preview`;
+}
+
 /**
  * Suppress the Node.js stderr warning:
  *   "The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set."
@@ -255,7 +261,7 @@ export default defineConfig({
     ? undefined
     : process.env.CI
       ? {
-          command: "npm run build -- --mode preview && npm run preview",
+          command: resolveCiPreviewServerCommand(configuredAppSurface),
           env: {
             ...process.env,
             VITE_API_URL: PREVIEW_BASE_URL,
