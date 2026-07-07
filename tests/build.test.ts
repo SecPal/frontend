@@ -236,6 +236,17 @@ describe("Build Configuration and Source Verification", () => {
     );
   });
 
+  it("keeps API URL examples on approved SecPal domains", () => {
+    const envExample = readRepoFile(".env.example");
+    const deploymentDoc = readRepoFile("docs/deployment-spa-routing.md");
+
+    expect(envExample).toContain("https://api.secpal.dev");
+    expect(envExample).not.toContain("customer.example");
+    expect(deploymentDoc).toContain("https://api.secpal.dev");
+    expect(deploymentDoc).toContain("https://customer-api.secpal.dev");
+    expect(deploymentDoc).not.toContain("customer.example");
+  });
+
   it("keeps SecPal-owned governance files on the attribution license expression", () => {
     for (const relativePath of [
       ".pre-commit-config.yaml",

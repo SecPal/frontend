@@ -73,6 +73,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   surface for route assumptions, and the Android provisioning E2E proof skips
   itself unless the current Playwright surface explicitly exposes the Android
   route.
+- Local Playwright runs now disable dev-server reuse when
+  `PLAYWRIGHT_APP_SURFACE` explicitly switches surfaces, and SecPal-owned API
+  configuration examples now stay on approved `secpal.dev` hosts across env
+  samples, deployment docs, and config regression tests.
 - Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
   AGPL SPDX expressions to `AGPL-3.0-or-later AND
 LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to

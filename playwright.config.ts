@@ -138,6 +138,8 @@ const LOCAL_E2E_BASE_URL =
  */
 const isRemoteTarget = isRemotePlaywrightTarget(BASE_URL);
 const configuredAppSurface = resolvePlaywrightAppSurface();
+const hasExplicitPlaywrightAppSurfaceOverride =
+  readTrimmedEnvValue(process.env.PLAYWRIGHT_APP_SURFACE) !== undefined;
 
 const usesSingleWorker = shouldUseSingleWorker();
 const lighthouseExecutablePath = getConfiguredLighthouseBrowserPath();
@@ -273,7 +275,7 @@ export default defineConfig({
             VITE_APP_SURFACE: configuredAppSurface,
           },
           url: LOCAL_E2E_BASE_URL,
-          reuseExistingServer: true, // Reuse if already running
+          reuseExistingServer: !hasExplicitPlaywrightAppSurfaceOverride,
           timeout: 30_000,
         },
 });

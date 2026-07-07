@@ -212,7 +212,7 @@ server {
 
 **Build-time variables** (set before `npm run build`):
 
-- `VITE_API_URL` - Backend API URL as an absolute origin (for example `https://api.secpal.dev` or `https://api.customer.example`)
+- `VITE_API_URL` - Backend API URL as an absolute origin (for example `https://api.secpal.dev` or `https://customer-api.secpal.dev`)
 
 **Example (.env.production):**
 
@@ -410,7 +410,7 @@ export default defineConfig({
 
 ```bash
 VITE_API_URL=https://api.secpal.dev npm run build
-VITE_API_URL=https://api.customer.example npm run build
+VITE_API_URL=https://customer-api.secpal.dev npm run build
 ```
 
 The frontend now fails fast on invalid production values instead of silently falling back to the SPA host.

@@ -37,6 +37,7 @@ describe("playwright config", () => {
       "cross-env VITE_APP_SURFACE=android-native vite --mode android --host localhost --port 4174 --strictPort"
     );
     expect(webServer?.url).toBe("http://localhost:4174");
+    expect(webServer?.reuseExistingServer).toBe(true);
     expect(webServer?.env?.VITE_API_URL).toBe("");
     expect(webServer?.env?.VITE_APP_SURFACE).toBe("android-native");
   });
@@ -109,6 +110,7 @@ describe("playwright config", () => {
     expect(webServer?.command).toBe(
       "cross-env VITE_APP_SURFACE=web vite --mode web --host localhost --port 4174 --strictPort"
     );
+    expect(webServer?.reuseExistingServer).toBe(false);
     expect(webServer?.env?.VITE_APP_SURFACE).toBe("web");
   });
 

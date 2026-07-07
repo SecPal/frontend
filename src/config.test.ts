@@ -81,24 +81,24 @@ describe("config", () => {
 
   it("accepts deployment-specific absolute production API URLs", async () => {
     vi.stubEnv("MODE", "production");
-    vi.stubEnv("VITE_API_URL", "https://portal.customer.example");
+    vi.stubEnv("VITE_API_URL", "https://customer-api.secpal.dev");
 
     const { buildApiUrl, getApiBaseUrl } = await import("./config");
 
-    expect(getApiBaseUrl()).toBe("https://portal.customer.example");
+    expect(getApiBaseUrl()).toBe("https://customer-api.secpal.dev");
     expect(buildApiUrl("/v1/auth/logout")).toBe(
-      "https://portal.customer.example/v1/auth/logout"
+      "https://customer-api.secpal.dev/v1/auth/logout"
     );
   });
 
   it("normalizes VITE_API_URL to its origin, stripping accidental path segments", async () => {
     vi.stubEnv("MODE", "production");
-    vi.stubEnv("VITE_API_URL", "https://api.customer.example/api");
+    vi.stubEnv("VITE_API_URL", "https://customer-api.secpal.dev/api");
 
     const { buildApiUrl, getApiBaseUrl } = await import("./config");
 
-    expect(getApiBaseUrl()).toBe("https://api.customer.example");
-    expect(buildApiUrl("/v1/me")).toBe("https://api.customer.example/v1/me");
+    expect(getApiBaseUrl()).toBe("https://customer-api.secpal.dev");
+    expect(buildApiUrl("/v1/me")).toBe("https://customer-api.secpal.dev/v1/me");
   });
 
   it("falls back to the canonical live API origin on app.secpal.dev when a preview loopback origin leaked into the bundle", async () => {
