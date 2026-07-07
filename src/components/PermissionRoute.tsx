@@ -12,8 +12,14 @@ import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
   RouteLoadingState,
+  RoutePrivacyShieldState,
   RouteVaultLockedState,
 } from "./RouteGuardState";
+import {
+  getSensitiveUiState,
+  isPrivacyShieldState,
+  isVaultLockedState,
+} from "../lib/sensitiveUiState";
 
 interface PermissionRouteProps {
   children: React.ReactNode;
@@ -51,12 +57,21 @@ export function PermissionRoute({
     bootstrapRecoveryReason,
     hasPermission,
     isAuthenticated,
+    isPrivacyShielded = false,
     isVaultLocked = false,
+    hidePrivacyShield,
     logout,
     retryBootstrap,
+    sensitiveUiState,
     unlock,
     user,
   } = auth;
+  const routeSensitiveUiState =
+    sensitiveUiState ??
+    getSensitiveUiState({
+      isPrivacyShieldVisible: isPrivacyShielded,
+      isVaultLocked,
+    });
 
   if (isRouteAuthBootstrapPending(auth)) {
     return <RouteLoadingState />;
@@ -72,7 +87,7 @@ export function PermissionRoute({
     );
   }
 
-  if (isVaultLocked) {
+  if (isVaultLockedState(routeSensitiveUiState)) {
     return (
       <RouteVaultLockedState
         onUnlock={unlock ?? (async () => false)}
@@ -88,26 +103,33 @@ export function PermissionRoute({
   const isRevalidating = isRouteAuthSnapshotRevalidating(auth);
 
   return (
-    <EmailVerificationGate
-      user={user}
-      onRetry={retryBootstrap}
-      onSignInAgain={logout}
+    <RoutePrivacyShieldState
+      isActive={isPrivacyShieldState(routeSensitiveUiState)}
+      onDismiss={hidePrivacyShield ?? (() => {})}
     >
-      {() => {
-        if (isRevalidating && revalidatingFallback !== undefined) {
-          return <>{revalidatingFallback}</>;
-        }
-
-        if (!hasPermission(permission)) {
-          if (fallbackPath) {
-            return <Navigate to={fallbackPath} replace />;
+      <EmailVerificationGate
+        user={user}
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+      >
+        {() => {
+          if (isRevalidating && revalidatingFallback !== undefined) {
+            return <>{revalidatingFallback}</>;
           }
 
-          return <RouteAccessDeniedState />;
-        }
+          const content = !hasPermission(permission) ? (
+            fallbackPath ? (
+              <Navigate to={fallbackPath} replace />
+            ) : (
+              <RouteAccessDeniedState />
+            )
+          ) : (
+            <>{children}</>
+          );
 
-        return <>{children}</>;
-      }}
-    </EmailVerificationGate>
+          return content;
+        }}
+      </EmailVerificationGate>
+    </RoutePrivacyShieldState>
   );
 }

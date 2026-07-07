@@ -1689,6 +1689,10 @@ msgstr "Next"
 msgid "Create"
 msgstr "Create"
 
+#: src/components/RouteGuardState.tsx
+msgid "Show app"
+msgstr "Show app"
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Passkey label"
 msgstr "Passkey label"
@@ -2853,6 +2857,10 @@ msgstr "Warning"
 msgid "MFA is currently off for this account. Set up an authenticator app now to require a second factor at sign in."
 msgstr "MFA is currently off for this account. Set up an authenticator app now to require a second factor at sign in."
 
+#: src/components/RouteGuardState.tsx
+msgid "Privacy Shield"
+msgstr "Privacy Shield"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Invalid Link"
 msgstr "Invalid Link"
@@ -2864,6 +2872,10 @@ msgstr "Enter one value per line."
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Welcome to SecPal!"
 msgstr "Welcome to SecPal!"
+
+#: src/components/RouteGuardState.tsx
+msgid "SecPal is visually shielding this screen. The encrypted offline vault stays unlocked until you lock it explicitly."
+msgstr "SecPal is visually shielding this screen. The encrypted offline vault stays unlocked until you lock it explicitly."
 
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
 msgid "You will be notified when your submission has been reviewed."

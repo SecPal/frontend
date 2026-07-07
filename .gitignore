@@ -14,6 +14,9 @@ build/
 .env
 .env.*
 !.env.example
+!.env.web
+!.env.android
+!.env.ios
 secrets/
 credentials/
 *.key

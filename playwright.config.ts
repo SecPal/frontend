@@ -16,8 +16,37 @@ import {
 import {
   PREVIEW_BASE_URL,
   isRemotePlaywrightTarget,
+  resolvePlaywrightAppSurface,
   resolvePlaywrightBaseUrl,
 } from "./tests/e2e/target-urls";
+import {
+  getAppSurfaceMode,
+  resolveAppSurface,
+} from "./src/platform/appSurfaceContract";
+
+const DEFAULT_LOCAL_ANDROID_E2E_BASE_URL = "http://localhost:4174";
+
+function readTrimmedEnvValue(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+
+  return trimmed ? trimmed : undefined;
+}
+
+function resolveLocalDevServerCommand(
+  baseUrl: string,
+  appSurface: string
+): string {
+  const { hostname, port } = new URL(baseUrl);
+  const mode = getAppSurfaceMode(resolveAppSurface(appSurface, false));
+
+  return `cross-env VITE_APP_SURFACE=${appSurface} vite --mode ${mode} --host ${hostname} --port ${port || "80"} --strictPort`;
+}
+
+function resolveCiPreviewServerCommand(appSurface: string): string {
+  const surface = resolveAppSurface(appSurface, true);
+
+  return `cross-env VITE_APP_SURFACE=${surface} tsc && cross-env VITE_APP_SURFACE=${surface} vite build --mode preview && npm run preview`;
+}
 
 /**
  * Suppress the Node.js stderr warning:
@@ -49,8 +78,11 @@ for (const name of ["NO_COLOR", "NODE_DISABLE_COLORS"] as const) {
  * Three modes of operation:
  *
  * 1. Local Development (default):
- *    - Uses Vite dev server (http://localhost:5173)
- *    - Uses the repository's current Vite/API wiring for local development
+ *    - Uses a dedicated Android-surface Vite dev server
+ *      (http://localhost:4174)
+ *    - Forces the Android-native app surface by default so Android
+ *      provisioning specs run against the route surface where that feature is
+ *      registered, regardless of any parent-shell `VITE_APP_SURFACE`
  *    - Full authentication and API integration
  *    - Command: `npx playwright test`
  *
@@ -68,6 +100,8 @@ for (const name of ["NO_COLOR", "NODE_DISABLE_COLORS"] as const) {
  *
  * 3. CI Smoke Tests:
  *    - Uses Vite preview server (static build)
+ *    - Forces the Android-native app surface by default for parity with the
+ *      default local e2e route surface
  *    - No backend required (smoke tests only)
  *    - Command: `CI=true npx playwright test`
  *
@@ -81,9 +115,18 @@ for (const name of ["NO_COLOR", "NODE_DISABLE_COLORS"] as const) {
  * 1. Current Polyscope workspace preview: https://frontend-<workspace>.preview.secpal.dev
  * 2. Explicit PLAYWRIGHT_BASE_URL when no Polyscope workspace is active
  * 3. CI mode: http://localhost:4173 (preview server)
- * 4. Default: http://localhost:5173 (dev server with proxy)
+ * 4. Default: http://localhost:5173 (generic dev server with proxy)
  */
 const BASE_URL = resolvePlaywrightBaseUrl();
+const configuredPlaywrightBaseUrl = readTrimmedEnvValue(
+  process.env.PLAYWRIGHT_BASE_URL
+);
+const LOCAL_E2E_BASE_URL =
+  !process.env.CI &&
+  !isRemotePlaywrightTarget(BASE_URL) &&
+  configuredPlaywrightBaseUrl === undefined
+    ? DEFAULT_LOCAL_ANDROID_E2E_BASE_URL
+    : BASE_URL;
 
 /**
  * Detect if we're running against a server that Playwright should NOT start
@@ -94,6 +137,9 @@ const BASE_URL = resolvePlaywrightBaseUrl();
  * `webServer`.
  */
 const isRemoteTarget = isRemotePlaywrightTarget(BASE_URL);
+const configuredAppSurface = resolvePlaywrightAppSurface();
+const hasExplicitPlaywrightAppSurfaceOverride =
+  readTrimmedEnvValue(process.env.PLAYWRIGHT_APP_SURFACE) !== undefined;
 
 const usesSingleWorker = shouldUseSingleWorker();
 const lighthouseExecutablePath = getConfiguredLighthouseBrowserPath();
@@ -161,7 +207,7 @@ export default defineConfig({
   // Shared settings for all projects
   use: {
     // Base URL for all tests
-    baseURL: BASE_URL,
+    baseURL: LOCAL_E2E_BASE_URL,
 
     // Collect trace when retrying the failed test
     trace: "on-first-retry",
@@ -208,23 +254,28 @@ export default defineConfig({
     ? undefined
     : process.env.CI
       ? {
-          command: "npm run build -- --mode preview && npm run preview",
+          command: resolveCiPreviewServerCommand(configuredAppSurface),
           env: {
             ...process.env,
             VITE_API_URL: PREVIEW_BASE_URL,
+            VITE_APP_SURFACE: configuredAppSurface,
           },
           url: PREVIEW_BASE_URL,
           reuseExistingServer: false,
           timeout: 120_000,
         }
       : {
-          command: "npm run dev",
+          command: resolveLocalDevServerCommand(
+            LOCAL_E2E_BASE_URL,
+            configuredAppSurface
+          ),
           env: {
             ...process.env,
             VITE_API_URL: "",
+            VITE_APP_SURFACE: configuredAppSurface,
           },
-          url: "http://localhost:5173",
-          reuseExistingServer: true, // Reuse if already running
+          url: LOCAL_E2E_BASE_URL,
+          reuseExistingServer: !hasExplicitPlaywrightAppSurfaceOverride,
           timeout: 30_000,
         },
 });

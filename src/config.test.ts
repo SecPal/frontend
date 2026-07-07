@@ -24,6 +24,41 @@ describe("config", () => {
     );
   });
 
+  it("keeps production API validation active for production web-surface builds", async () => {
+    vi.stubEnv("MODE", "web");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "");
+
+    const { resolveApiBaseUrl } = await import("./config");
+
+    expect(() =>
+      resolveApiBaseUrl({
+        runtimeHostname: "customer.secpal.dev",
+      })
+    ).toThrow(
+      "VITE_API_URL must be set to an absolute https:// or http:// API origin in production"
+    );
+  });
+
+  it("keeps preview-mode loopback API bases relaxed even when Vite marks the bundle as PROD", async () => {
+    vi.stubEnv("MODE", "preview");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "http://localhost:4173");
+
+    const { buildApiUrl, resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "localhost",
+      })
+    ).toBe("http://localhost:4173");
+    expect(
+      buildApiUrl("/v1/me", {
+        runtimeHostname: "localhost",
+      })
+    ).toBe("http://localhost:4173/v1/me");
+  });
+
   it("allows empty API configuration for localhost production audits", async () => {
     vi.stubEnv("MODE", "production");
     vi.stubEnv("VITE_API_URL", "");
@@ -65,6 +100,21 @@ describe("config", () => {
     );
   });
 
+  it("rejects relative API URLs for production Android-surface builds too", async () => {
+    vi.stubEnv("MODE", "android");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "/api");
+
+    const { buildApiUrl, getApiBaseUrl } = await import("./config");
+
+    expect(() => getApiBaseUrl()).toThrow(
+      "VITE_API_URL must be an absolute https:// or http:// API origin in production"
+    );
+    expect(() => buildApiUrl("/v1/me")).toThrow(
+      "VITE_API_URL must be an absolute https:// or http:// API origin in production"
+    );
+  });
+
   it("rejects loopback API origins in production builds", async () => {
     vi.stubEnv("MODE", "production");
     vi.stubEnv("VITE_API_URL", "http://localhost:4173");
@@ -81,24 +131,24 @@ describe("config", () => {
 
   it("accepts deployment-specific absolute production API URLs", async () => {
     vi.stubEnv("MODE", "production");
-    vi.stubEnv("VITE_API_URL", "https://portal.customer.example");
+    vi.stubEnv("VITE_API_URL", "https://customer-api.secpal.dev");
 
     const { buildApiUrl, getApiBaseUrl } = await import("./config");
 
-    expect(getApiBaseUrl()).toBe("https://portal.customer.example");
+    expect(getApiBaseUrl()).toBe("https://customer-api.secpal.dev");
     expect(buildApiUrl("/v1/auth/logout")).toBe(
-      "https://portal.customer.example/v1/auth/logout"
+      "https://customer-api.secpal.dev/v1/auth/logout"
     );
   });
 
   it("normalizes VITE_API_URL to its origin, stripping accidental path segments", async () => {
     vi.stubEnv("MODE", "production");
-    vi.stubEnv("VITE_API_URL", "https://api.customer.example/api");
+    vi.stubEnv("VITE_API_URL", "https://customer-api.secpal.dev/api");
 
     const { buildApiUrl, getApiBaseUrl } = await import("./config");
 
-    expect(getApiBaseUrl()).toBe("https://api.customer.example");
-    expect(buildApiUrl("/v1/me")).toBe("https://api.customer.example/v1/me");
+    expect(getApiBaseUrl()).toBe("https://customer-api.secpal.dev");
+    expect(buildApiUrl("/v1/me")).toBe("https://customer-api.secpal.dev/v1/me");
   });
 
   it("falls back to the canonical live API origin on app.secpal.dev when a preview loopback origin leaked into the bundle", async () => {
@@ -114,6 +164,28 @@ describe("config", () => {
         runtimeHostname: "app.secpal.dev",
       })
     ).toBe("https://api.secpal.dev/v1/me");
+  });
+
+  it("keeps localhost preview API URLs usable for preview-mode builds even when Vite sets PROD", async () => {
+    vi.stubEnv("MODE", "preview");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "http://localhost:4173");
+
+    const { buildApiUrl, getApiBaseUrl } = await import("./config");
+
+    expect(getApiBaseUrl()).toBe("http://localhost:4173");
+    expect(buildApiUrl("/v1/release")).toBe("http://localhost:4173/v1/release");
+  });
+
+  it("keeps loopback API URLs usable for analyze-mode builds even when Vite sets PROD", async () => {
+    vi.stubEnv("MODE", "analyze");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "http://localhost:4173");
+
+    const { buildApiUrl, getApiBaseUrl } = await import("./config");
+
+    expect(getApiBaseUrl()).toBe("http://localhost:4173");
+    expect(buildApiUrl("/v1/release")).toBe("http://localhost:4173/v1/release");
   });
 
   it("falls back to the canonical live API origin on app.secpal.dev when the bundle kept a relative API base", async () => {

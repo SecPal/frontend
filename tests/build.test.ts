@@ -153,6 +153,100 @@ describe("Build Configuration and Source Verification", () => {
     expect(packageLock.packages?.[""]?.license).toBe(packageJson.license);
   });
 
+  it("keeps explicit dev and build scripts for every app surface", () => {
+    const packageJson = JSON.parse(readRepoFile("package.json")) as {
+      scripts?: Record<string, string>;
+    };
+
+    expect(packageJson.scripts).toMatchObject({
+      dev: "vite",
+      "dev:web": "cross-env VITE_APP_SURFACE=web vite --mode web",
+      "dev:android":
+        "cross-env VITE_APP_SURFACE=android-native vite --mode android",
+      "dev:ios": "cross-env VITE_APP_SURFACE=ios-native vite --mode ios",
+      build:
+        "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build",
+      "build:web":
+        "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build --mode web",
+      "build:android":
+        "cross-env VITE_APP_SURFACE=android-native tsc && cross-env VITE_APP_SURFACE=android-native vite build --mode android",
+      "build:ios":
+        "cross-env VITE_APP_SURFACE=ios-native tsc && cross-env VITE_APP_SURFACE=ios-native vite build --mode ios",
+      "build:analyze":
+        "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build --mode analyze",
+    });
+  });
+
+  it("commits per-surface mode env overrides", () => {
+    const webEnv = readRepoFile(".env.web");
+    const androidEnv = readRepoFile(".env.android");
+    const iosEnv = readRepoFile(".env.ios");
+
+    expect(webEnv).toContain("VITE_APP_SURFACE=web");
+    expect(webEnv).toContain(
+      "Web-targeted Vite mode builds must load the web app surface."
+    );
+    expect(androidEnv).toContain("VITE_APP_SURFACE=android-native");
+    expect(androidEnv).toContain(
+      "Android-targeted Vite mode builds must load the Android app surface."
+    );
+    expect(iosEnv).toContain("VITE_APP_SURFACE=ios-native");
+    expect(iosEnv).toContain(
+      "iOS-targeted Vite mode builds must load the iOS app surface."
+    );
+  });
+
+  it("documents the app surface and shared UI source-of-truth contract", () => {
+    const readme = readRepoFile("README.md");
+    const envExample = readRepoFile(".env.example");
+
+    for (const appSurface of [
+      "web",
+      "android-mock",
+      "android-native",
+      "ios-mock",
+      "ios-native",
+    ]) {
+      expect(readme).toContain(appSurface);
+      expect(envExample).toContain(appSurface);
+    }
+
+    expect(readme).toContain(
+      "`frontend` is the source of truth for SecPal product design, UI, and UX"
+    );
+    expect(readme).toContain(
+      "Android and future iOS repositories provide native OS integrations"
+    );
+    expect(readme).toContain("vite-plugin-pwa");
+    expect(readme).toContain("Manifest");
+    expect(readme).toContain("Service Worker");
+    expect(readme).toContain("Workbox");
+    expect(readme).toContain("src/ui");
+    expect(readme).toContain("shadcn-compatible");
+    expect(readme).toContain("Radix");
+    expect(readme).toContain("lucide-react");
+    expect(readme).toContain("Do not introduce visual rebuilds");
+
+    expect(envExample).toContain("VITE_APP_SURFACE=web");
+    expect(envExample).toContain(
+      "VITE_APP_SURFACE selects only the frontend surface contract"
+    );
+    expect(envExample).toContain(
+      "Do not use it for secrets, capabilities, security gates, or auth behavior"
+    );
+  });
+
+  it("keeps API URL examples on approved SecPal domains", () => {
+    const envExample = readRepoFile(".env.example");
+    const deploymentDoc = readRepoFile("docs/deployment-spa-routing.md");
+
+    expect(envExample).toContain("https://api.secpal.dev");
+    expect(envExample).not.toContain("customer.example");
+    expect(deploymentDoc).toContain("https://api.secpal.dev");
+    expect(deploymentDoc).toContain("https://customer-api.secpal.dev");
+    expect(deploymentDoc).not.toContain("customer.example");
+  });
+
   it("keeps SecPal-owned governance files on the attribution license expression", () => {
     for (const relativePath of [
       ".pre-commit-config.yaml",

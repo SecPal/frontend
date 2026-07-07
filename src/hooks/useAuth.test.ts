@@ -2267,6 +2267,7 @@ describe("useAuth", () => {
 
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.isVaultLocked).toBe(true);
+    expect(result.current.sensitiveUiState).toBe("vault-locked");
     expect(result.current.user).toBeNull();
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
@@ -2278,8 +2279,58 @@ describe("useAuth", () => {
     });
 
     expect(result.current.isVaultLocked).toBe(false);
+    expect(result.current.sensitiveUiState).toBe("clear");
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.user).toEqual(revalidatedUser);
+  });
+
+  it("shows a visual privacy shield without locking or clearing the offline vault session", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+
+    await authStorage.setUser(mockUser);
+    mockGetCurrentUser.mockResolvedValueOnce(mockUser);
+
+    const lockVault = vi.spyOn(authStorage, "lockVault");
+    const storedVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+
+    expect(storedVaultState).not.toBeNull();
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(mockUser);
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      result.current.showPrivacyShield?.();
+    });
+
+    expect(result.current.sensitiveUiState).toBe("privacy-shield");
+    expect(result.current.isPrivacyShielded).toBe(true);
+    expect(result.current.isVaultLocked).toBe(false);
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.user).toEqual(mockUser);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(storedVaultState);
+    expect(lockVault).not.toHaveBeenCalled();
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(mockUser);
+
+    act(() => {
+      result.current.hidePrivacyShield?.();
+    });
+
+    expect(result.current.sensitiveUiState).toBe("clear");
+    expect(result.current.isPrivacyShielded).toBe(false);
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.user).toEqual(mockUser);
   });
 
   it("keeps offline session access enabled when bootstrap restores a locked vault", async () => {
@@ -3147,6 +3198,47 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.user).not.toBeNull();
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
+  });
+
+  it("clears a visual privacy shield when pageshow restores a real vault lock", async () => {
+    const mockUser = {
+      id: 1,
+      name: "Bootstrap User",
+      email: "bootstrap@secpal.dev",
+    };
+
+    await persistAuthUser(mockUser);
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      result.current.showPrivacyShield?.();
+    });
+
+    expect(result.current.isPrivacyShielded).toBe(true);
+    expect(result.current.sensitiveUiState).toBe("privacy-shield");
+
+    act(() => {
+      authStorage.lockVault?.();
+      window.dispatchEvent(
+        new PageTransitionEvent("pageshow", { persisted: true })
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.isVaultLocked).toBe(true);
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.user).toBeNull();
+    expect(result.current.isPrivacyShielded).toBe(false);
+    expect(result.current.sensitiveUiState).toBe("vault-locked");
   });
 
   it("ignores pageshow that is not a BFCache restore (persisted=false)", () => {

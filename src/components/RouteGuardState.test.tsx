@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -12,6 +12,7 @@ import {
   RouteBootstrapRecoveryState,
   RouteEmailVerificationState,
   RouteNotFoundState,
+  RoutePrivacyShieldState,
   RouteVaultLockedState,
 } from "./RouteGuardState";
 
@@ -71,6 +72,50 @@ describe("RouteGuardState theme tokens", () => {
     );
     expect(error).toHaveClass("text-destructive");
     expect(error.className).not.toContain("text-red-600");
+  });
+
+  it("moves focus onto the privacy shield overlay action and portals it above page content", async () => {
+    const { container } = renderWithProviders(
+      <RoutePrivacyShieldState onDismiss={vi.fn()}>
+        <button type="button">Background action</button>
+      </RoutePrivacyShieldState>
+    );
+
+    const showAppButton = await screen.findByRole("button", {
+      name: /show app/i,
+    });
+
+    await waitFor(() => {
+      expect(showAppButton).toHaveFocus();
+    });
+    expect(showAppButton.closest("body")).not.toBeNull();
+
+    const shieldedBackground = container.querySelector('[aria-hidden="true"]');
+    expect(shieldedBackground).toHaveAttribute("inert");
+  });
+
+  it("hides existing body-level portal siblings behind the privacy shield", async () => {
+    const existingPortal = document.createElement("div");
+    existingPortal.setAttribute("data-portal", "existing");
+    existingPortal.textContent = "Sensitive portal content";
+    document.body.appendChild(existingPortal);
+
+    const { unmount } = renderWithProviders(
+      <RoutePrivacyShieldState onDismiss={vi.fn()}>
+        <button type="button">Background action</button>
+      </RoutePrivacyShieldState>
+    );
+
+    await screen.findByRole("button", { name: /show app/i });
+
+    expect(existingPortal).toHaveAttribute("aria-hidden", "true");
+    expect(existingPortal).toHaveAttribute("inert");
+
+    unmount();
+
+    expect(existingPortal).not.toHaveAttribute("aria-hidden");
+    expect(existingPortal).not.toHaveAttribute("inert");
+    existingPortal.remove();
   });
 
   it("keeps the email verification state on canonical theme tokens", async () => {

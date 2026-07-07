@@ -16,6 +16,7 @@ import type { ProxyOptions } from "vite";
 import { resolveLinguiVitePluginExports } from "./linguiVitePluginInterop";
 import { applyInjectManifestCodeSplittingFix } from "./src/lib/pwaInjectManifestBuildConfig";
 import { buildPwaRuntimeCaching } from "./src/lib/pwaRuntimeCaching";
+import { resolveAppSurface } from "./src/platform/appSurfaceContract";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const { lingui } = resolveLinguiVitePluginExports(linguiVitePlugin);
@@ -148,6 +149,7 @@ function getManualChunk(moduleId: string): string | undefined {
 export default defineConfig(({ mode, command }) => {
   // Load env file based on `mode` in the current working directory.
   const env = loadEnv(mode, process.cwd(), "");
+  resolveAppSurface(env.VITE_APP_SURFACE, command === "build");
   const isCi = Boolean(process.env.CI);
   const devServerProxyConfig =
     command === "serve" ? buildDevServerProxyConfig(env.VITE_API_URL) : null;

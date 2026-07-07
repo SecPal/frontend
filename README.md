@@ -25,6 +25,27 @@ The current frontend ships the browser and PWA surfaces for SecPal's workforce o
 
 Legacy Secrets-era password-vault content has been removed from the current route surface and is no longer described in this README.
 
+## App Surfaces and Source of Truth
+
+`frontend` is the source of truth for SecPal product design, UI, and UX.
+Android and future iOS repositories provide native OS integrations such as app
+packaging, platform permissions, secure OS APIs, and store delivery. They must
+reuse the React UI surface instead of rebuilding parallel native screens.
+
+`VITE_APP_SURFACE` selects the frontend surface contract only. It must not be
+used for secrets, security gates, auth behavior, or capability authorization.
+Supported values are:
+
+- `web` - browser and installable PWA surface
+- `android-mock` - Android-facing mock surface for non-production validation
+- `android-native` - Android WebView/native integration surface
+- `ios-mock` - iOS-facing mock surface for non-production validation
+- `ios-native` - iOS WebView/native integration surface
+
+The PWA delivery path continues to use `vite-plugin-pwa`, the web app
+Manifest, the Service Worker, and Workbox. Surface-specific native work must
+not replace that browser/PWA pipeline.
+
 ## Runtime and Deployment
 
 Important operational entry points for the current app:
@@ -151,6 +172,11 @@ inventory at zero.
 **Icons:** Lucide React
 **License:** AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 **Architecture Notes:** [`src/ui/MIGRATION.md`](src/ui/MIGRATION.md)
+
+UI and UX work must build on the existing `src/ui`, shadcn-compatible, Radix,
+and `lucide-react` building blocks. Do not introduce visual rebuilds of the same
+screens or controls in route-local components or native repositories when an
+existing frontend primitive can express the interaction.
 
 ## 📋 Prerequisites
 

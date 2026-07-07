@@ -16,8 +16,14 @@ import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
   RouteLoadingState,
+  RoutePrivacyShieldState,
   RouteVaultLockedState,
 } from "./RouteGuardState";
+import {
+  getSensitiveUiState,
+  isPrivacyShieldState,
+  isVaultLockedState,
+} from "../lib/sensitiveUiState";
 
 interface FeatureRouteProps {
   children: React.ReactNode;
@@ -48,13 +54,22 @@ export function FeatureRoute({
   const {
     bootstrapRecoveryReason,
     isAuthenticated,
+    isPrivacyShielded = false,
     isVaultLocked = false,
+    hidePrivacyShield,
     logout,
     retryBootstrap,
+    sensitiveUiState,
     unlock,
     user,
   } = auth;
   const capabilities = useUserCapabilities();
+  const routeSensitiveUiState =
+    sensitiveUiState ??
+    getSensitiveUiState({
+      isPrivacyShieldVisible: isPrivacyShielded,
+      isVaultLocked,
+    });
 
   if (isRouteAuthBootstrapPending(auth)) {
     if (!authStorage.hasStoredUser()) {
@@ -74,7 +89,7 @@ export function FeatureRoute({
     );
   }
 
-  if (isVaultLocked) {
+  if (isVaultLockedState(routeSensitiveUiState)) {
     return (
       <RouteVaultLockedState
         onUnlock={unlock ?? (async () => false)}
@@ -90,30 +105,35 @@ export function FeatureRoute({
   const isRevalidating = isRouteAuthSnapshotRevalidating(auth);
 
   return (
-    <EmailVerificationGate
-      user={user}
-      onRetry={retryBootstrap}
-      onSignInAgain={logout}
+    <RoutePrivacyShieldState
+      isActive={isPrivacyShieldState(routeSensitiveUiState)}
+      onDismiss={hidePrivacyShield ?? (() => {})}
     >
-      {() => {
-        if (isRevalidating && revalidatingFallback !== undefined) {
-          return <>{revalidatingFallback}</>;
-        }
-
-        if (!capabilities[feature]) {
-          if (fallbackPath) {
-            return <Navigate to={fallbackPath} replace />;
+      <EmailVerificationGate
+        user={user}
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+      >
+        {() => {
+          if (isRevalidating && revalidatingFallback !== undefined) {
+            return <>{revalidatingFallback}</>;
           }
 
-          return <>{missingFeatureElement}</>;
-        }
+          const content = !capabilities[feature] ? (
+            fallbackPath ? (
+              <Navigate to={fallbackPath} replace />
+            ) : (
+              <>{missingFeatureElement}</>
+            )
+          ) : requiredAction && !requiredAction(capabilities) ? (
+            <>{deniedActionElement}</>
+          ) : (
+            <>{children}</>
+          );
 
-        if (requiredAction && !requiredAction(capabilities)) {
-          return <>{deniedActionElement}</>;
-        }
-
-        return <>{children}</>;
-      }}
-    </EmailVerificationGate>
+          return content;
+        }}
+      </EmailVerificationGate>
+    </RoutePrivacyShieldState>
   );
 }

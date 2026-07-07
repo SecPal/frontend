@@ -33,9 +33,85 @@ describe("playwright config", () => {
         : undefined;
 
     expect(webServer).toBeDefined();
-    expect(webServer?.command).toBe("npm run dev");
-    expect(webServer?.url).toBe("http://localhost:5173");
+    expect(webServer?.command).toBe(
+      "cross-env VITE_APP_SURFACE=android-native vite --mode android --host localhost --port 4174 --strictPort"
+    );
+    expect(webServer?.url).toBe("http://localhost:4174");
+    expect(webServer?.reuseExistingServer).toBe(true);
     expect(webServer?.env?.VITE_API_URL).toBe("");
+    expect(webServer?.env?.VITE_APP_SURFACE).toBe("android-native");
+  });
+
+  it("treats an empty VITE_APP_SURFACE as unset for the local dev web server", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("VITE_APP_SURFACE", "");
+    mockNonPolyscopeCwd();
+    vi.resetModules();
+    const { default: config } = await import("../playwright.config");
+
+    const webServer =
+      config.webServer && !Array.isArray(config.webServer)
+        ? config.webServer
+        : undefined;
+
+    expect(webServer?.env?.VITE_APP_SURFACE).toBe("android-native");
+  });
+
+  it("ignores a parent VITE_APP_SURFACE override for the default local dev web server", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("VITE_APP_SURFACE", "web");
+    mockNonPolyscopeCwd();
+    vi.resetModules();
+    const { default: config } = await import("../playwright.config");
+
+    const webServer =
+      config.webServer && !Array.isArray(config.webServer)
+        ? config.webServer
+        : undefined;
+
+    expect(webServer?.env?.VITE_APP_SURFACE).toBe("android-native");
+  });
+
+  it("allows an explicit Playwright app surface override for the local dev web server", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("VITE_APP_SURFACE", "web");
+    vi.stubEnv("PLAYWRIGHT_APP_SURFACE", "ios-native");
+    mockNonPolyscopeCwd();
+    vi.resetModules();
+    const { default: config } = await import("../playwright.config");
+
+    const webServer =
+      config.webServer && !Array.isArray(config.webServer)
+        ? config.webServer
+        : undefined;
+
+    expect(webServer?.command).toBe(
+      "cross-env VITE_APP_SURFACE=ios-native vite --mode ios --host localhost --port 4174 --strictPort"
+    );
+    expect(webServer?.env?.VITE_APP_SURFACE).toBe("ios-native");
+  });
+
+  it("uses the requested local web surface when Playwright overrides the app surface", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("PLAYWRIGHT_APP_SURFACE", "web");
+    mockNonPolyscopeCwd();
+    vi.resetModules();
+    const { default: config } = await import("../playwright.config");
+
+    const webServer =
+      config.webServer && !Array.isArray(config.webServer)
+        ? config.webServer
+        : undefined;
+
+    expect(webServer?.command).toBe(
+      "cross-env VITE_APP_SURFACE=web vite --mode web --host localhost --port 4174 --strictPort"
+    );
+    expect(webServer?.reuseExistingServer).toBe(false);
+    expect(webServer?.env?.VITE_APP_SURFACE).toBe("web");
   });
 
   it("pins the CI preview server to the local preview origin for browser-session audits", async () => {
@@ -53,10 +129,63 @@ describe("playwright config", () => {
 
     expect(webServer).toBeDefined();
     expect(webServer?.command).toBe(
-      "npm run build -- --mode preview && npm run preview"
+      "cross-env VITE_APP_SURFACE=android-native tsc && cross-env VITE_APP_SURFACE=android-native vite build --mode preview && npm run preview"
     );
     expect(webServer?.url).toBe("http://localhost:4173");
     expect(webServer?.env?.VITE_API_URL).toBe("http://localhost:4173");
+    expect(webServer?.env?.VITE_APP_SURFACE).toBe("android-native");
+  });
+
+  it("treats an empty VITE_APP_SURFACE as unset for the CI preview web server", async () => {
+    vi.stubEnv("CI", "true");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("VITE_APP_SURFACE", "");
+    mockNonPolyscopeCwd();
+    vi.resetModules();
+    const { default: config } = await import("../playwright.config");
+
+    const webServer =
+      config.webServer && !Array.isArray(config.webServer)
+        ? config.webServer
+        : undefined;
+
+    expect(webServer?.env?.VITE_APP_SURFACE).toBe("android-native");
+  });
+
+  it("ignores a parent VITE_APP_SURFACE override for the default CI preview web server", async () => {
+    vi.stubEnv("CI", "true");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("VITE_APP_SURFACE", "ios-native");
+    mockNonPolyscopeCwd();
+    vi.resetModules();
+    const { default: config } = await import("../playwright.config");
+
+    const webServer =
+      config.webServer && !Array.isArray(config.webServer)
+        ? config.webServer
+        : undefined;
+
+    expect(webServer?.env?.VITE_APP_SURFACE).toBe("android-native");
+  });
+
+  it("allows an explicit Playwright app surface override for the CI preview web server", async () => {
+    vi.stubEnv("CI", "true");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("VITE_APP_SURFACE", "web");
+    vi.stubEnv("PLAYWRIGHT_APP_SURFACE", "ios-native");
+    mockNonPolyscopeCwd();
+    vi.resetModules();
+    const { default: config } = await import("../playwright.config");
+
+    const webServer =
+      config.webServer && !Array.isArray(config.webServer)
+        ? config.webServer
+        : undefined;
+
+    expect(webServer?.command).toBe(
+      "cross-env VITE_APP_SURFACE=ios-native tsc && cross-env VITE_APP_SURFACE=ios-native vite build --mode preview && npm run preview"
+    );
+    expect(webServer?.env?.VITE_APP_SURFACE).toBe("ios-native");
   });
 
   it("enables a fixed chromium CDP port for preview Lighthouse audits when explicitly requested", async () => {

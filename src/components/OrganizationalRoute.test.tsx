@@ -103,6 +103,49 @@ describe("OrganizationalRoute", () => {
     expect(screen.queryByText("Organization Content")).not.toBeInTheDocument();
   });
 
+  it("derives the privacy shield from isPrivacyShielded when sensitiveUiState is omitted", () => {
+    vi.mocked(authHook.useAuth).mockReturnValue({
+      hasPermission: vi.fn(),
+      isLoading: false,
+      isAuthenticated: true,
+      isPrivacyShielded: true,
+      bootstrapRecoveryReason: null,
+      user: {
+        id: "1",
+        name: "User",
+        email: "user@secpal.dev",
+        emailVerified: true,
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+      retryBootstrap: vi.fn(),
+      hidePrivacyShield: vi.fn(),
+      hasOrganizationalAccess: vi.fn(() => true),
+    });
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/organization"]}>
+          <Routes>
+            <Route
+              path="/organization"
+              element={
+                <OrganizationalRoute>
+                  <div>Organization Content</div>
+                </OrganizationalRoute>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+
+    expect(
+      screen.getByRole("heading", { name: /privacy shield/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Organization Content")).toBeInTheDocument();
+  });
+
   it("renders children when the user has organizational access", () => {
     vi.mocked(authHook.useAuth).mockReturnValue({
       hasPermission: vi.fn(),

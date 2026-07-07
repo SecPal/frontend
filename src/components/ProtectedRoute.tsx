@@ -13,8 +13,14 @@ import { LoginRouteLoadingState } from "./LoginRouteState";
 import {
   RouteBootstrapRecoveryState,
   RouteLoadingState,
+  RoutePrivacyShieldState,
   RouteVaultLockedState,
 } from "./RouteGuardState";
+import {
+  getSensitiveUiState,
+  isPrivacyShieldState,
+  isVaultLockedState,
+} from "../lib/sensitiveUiState";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -35,12 +41,21 @@ export function ProtectedRoute({
   const {
     bootstrapRecoveryReason,
     isAuthenticated,
+    isPrivacyShielded = false,
     isVaultLocked = false,
+    hidePrivacyShield,
     logout,
     retryBootstrap,
+    sensitiveUiState,
     unlock,
     user,
   } = auth;
+  const routeSensitiveUiState =
+    sensitiveUiState ??
+    getSensitiveUiState({
+      isPrivacyShieldVisible: isPrivacyShielded,
+      isVaultLocked,
+    });
 
   if (isRouteAuthBootstrapPending(auth)) {
     if (!authStorage.hasStoredUser()) {
@@ -60,7 +75,7 @@ export function ProtectedRoute({
     );
   }
 
-  if (isVaultLocked) {
+  if (isVaultLockedState(routeSensitiveUiState)) {
     return (
       <RouteVaultLockedState
         onUnlock={unlock ?? (async () => false)}
@@ -74,16 +89,23 @@ export function ProtectedRoute({
   }
 
   const isRevalidating = isRouteAuthSnapshotRevalidating(auth);
+  const protectedContent =
+    isRevalidating && revalidatingFallback !== undefined
+      ? revalidatingFallback
+      : children;
 
   return (
-    <EmailVerificationGate
-      user={user}
-      onRetry={retryBootstrap}
-      onSignInAgain={logout}
+    <RoutePrivacyShieldState
+      isActive={isPrivacyShieldState(routeSensitiveUiState)}
+      onDismiss={hidePrivacyShield ?? (() => {})}
     >
-      {isRevalidating && revalidatingFallback !== undefined
-        ? revalidatingFallback
-        : children}
-    </EmailVerificationGate>
+      <EmailVerificationGate
+        user={user}
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+      >
+        {protectedContent}
+      </EmailVerificationGate>
+    </RoutePrivacyShieldState>
   );
 }

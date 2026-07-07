@@ -5,6 +5,10 @@ import {
   parsePreviewHostname,
   type PreviewHostname,
 } from "../../src/previewHostname";
+import {
+  resolveAppSurface,
+  type AppSurface,
+} from "../../src/platform/appSurfaceContract";
 
 const POLYSCOPE_CLONE_PATH_PATTERN =
   /(?:^|\/)\.polyscope\/clones\/[^/]+\/([^/]+)(?:\/|$)/;
@@ -178,8 +182,64 @@ export function isRemotePlaywrightTarget(
   return /^https:\/\//i.test(baseUrl);
 }
 
+function isLocalPlaywrightHost(hostname: string): boolean {
+  return (
+    hostname === "localhost" ||
+    hostname.endsWith(".localhost") ||
+    hostname === "127.0.0.1" ||
+    hostname.startsWith("127.") ||
+    hostname === "::1" ||
+    hostname === "[::1]" ||
+    hostname === "ddev.site" ||
+    hostname.endsWith(".ddev.site")
+  );
+}
+
+function isLocalHttpsPlaywrightTarget(baseUrl: string): boolean {
+  if (!isRemotePlaywrightTarget(baseUrl)) {
+    return false;
+  }
+
+  try {
+    return isLocalPlaywrightHost(new URL(baseUrl).hostname);
+  } catch {
+    return false;
+  }
+}
+
 export function isWorkspacePreviewTarget(
   baseUrl = resolvePlaywrightBaseUrl()
 ): boolean {
   return getWorkspacePreviewNameFromBaseUrl(baseUrl) !== undefined;
+}
+
+export function resolvePlaywrightAppSurface(
+  env: NodeJS.ProcessEnv = process.env,
+  cwd = process.cwd()
+): AppSurface {
+  const configuredSurface = readTrimmedEnvValue(env.PLAYWRIGHT_APP_SURFACE);
+
+  if (configuredSurface) {
+    return resolveAppSurface(configuredSurface, false);
+  }
+
+  const baseUrl = resolvePlaywrightBaseUrl(env, cwd);
+
+  if (
+    isRemotePlaywrightTarget(baseUrl) &&
+    !isLocalHttpsPlaywrightTarget(baseUrl)
+  ) {
+    return "web";
+  }
+
+  return "android-native";
+}
+
+export function supportsAndroidProvisioningE2E(
+  env: NodeJS.ProcessEnv = process.env,
+  cwd = process.cwd()
+): boolean {
+  const surface = resolvePlaywrightAppSurface(env, cwd);
+
+  return surface === "android-mock" || surface === "android-native";
 }

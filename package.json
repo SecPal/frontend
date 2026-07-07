@@ -28,9 +28,15 @@
   ],
   "scripts": {
     "dev": "vite",
+    "dev:web": "cross-env VITE_APP_SURFACE=web vite --mode web",
+    "dev:android": "cross-env VITE_APP_SURFACE=android-native vite --mode android",
+    "dev:ios": "cross-env VITE_APP_SURFACE=ios-native vite --mode ios",
     "start": "vite",
-    "build": "tsc && vite build",
-    "build:analyze": "tsc && vite build --mode analyze",
+    "build": "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build",
+    "build:web": "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build --mode web",
+    "build:android": "cross-env VITE_APP_SURFACE=android-native tsc && cross-env VITE_APP_SURFACE=android-native vite build --mode android",
+    "build:ios": "cross-env VITE_APP_SURFACE=ios-native tsc && cross-env VITE_APP_SURFACE=ios-native vite build --mode ios",
+    "build:analyze": "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build --mode analyze",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --cache",
     "typecheck": "tsc --noEmit",
@@ -71,6 +77,7 @@
     "lighthouse:ci": "npx --yes @lhci/cli@0.15.1 autorun --config=lighthouserc.cjs"
   },
   "dependencies": {
+    "@capacitor/core": "^8.4.1",
     "@lingui/core": "^6.5.0",
     "@lingui/react": "^6.5.0",
     "@radix-ui/react-avatar": "^1.2.1",

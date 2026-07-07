@@ -14,6 +14,76 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added `@capacitor/core` as a runtime dependency and introduced the
+  side-effect-free `src/platform/runtime.ts` platform abstraction for future
+  native integrations without adding Capacitor project scaffolding (US-001).
+- Added strict `VITE_APP_SURFACE` validation through
+  `src/platform/appSurface.ts`, covering web, Android mock/native, and iOS
+  mock/native frontend surfaces with production guards for mock surfaces
+  (US-002).
+- Added explicit `dev:*` and `build:*` package scripts for web, Android, and
+  iOS surfaces while preserving the default production web build path (US-003).
+- Documented the `VITE_APP_SURFACE` values, frontend source-of-truth rule,
+  PWA pipeline contract, and shared `src/ui`/shadcn/Radix/Lucide design-system
+  requirements for web, Android, and future iOS surfaces (US-004).
+- Protected the `/android-provisioning` product route and authenticated shell
+  navigation behind the Android app-surface flag in addition to the existing
+  `androidProvisioning` capability gate (US-005).
+- Added a minimal `src/native` facade surface with explicit
+  `SecPalDeviceState`, `SecPalEnterprise`, and `SecPalPush` typed stubs for
+  future native plugin integrations without introducing a generic native
+  command bridge or changing the existing auth bridge (US-006).
+- Added a central sensitive UI state helper and guarded-route privacy shield
+  flow so visual `privacy-shield` masking stays separate from the real
+  `vault-locked` offline-vault lock/unlock path (US-007).
+- Added a committed `.env.web`, pinned `build:web` / `dev:web` to web mode,
+  and tightened Playwright's default Android e2e surface so empty or parent
+  shell `VITE_APP_SURFACE` values cannot silently override the route surface;
+  Playwright now requires an explicit `PLAYWRIGHT_APP_SURFACE` override for
+  non-Android local or CI runs.
+- Forced `build:android` to export `VITE_APP_SURFACE=android-native` in the
+  command itself so Android-targeted builds stay deterministic even when CI or
+  a parent shell exports a conflicting app surface.
+- Forced every surface-specific `dev:*` and `build:*` script to export its
+  matching `VITE_APP_SURFACE` in the command itself so web, Android, and iOS
+  runs stay deterministic even when a parent shell or CI job exports a
+  conflicting surface value.
+- Cleared stale `privacy-shield` UI state during BFCache `pageshow`
+  reconciliation when the app restores into a real `vault-locked` state, so
+  the auth context no longer carries an outdated visual shield flag behind the
+  higher-priority offline-vault lock.
+- Centralized frontend surface resolution in a shared app-surface contract so
+  runtime modules, Vite build planning, and Playwright local dev-server
+  selection all validate the same surface rules and mode families.
+- Local Playwright runs now honor explicit `PLAYWRIGHT_APP_SURFACE` overrides
+  all the way through the spawned Vite command, and Vite build planning now
+  rejects `android-mock` / `ios-mock` before production artifacts can be
+  emitted.
+- Pinned the default `build` and `build:analyze` entrypoints to the web
+  surface as well, so generic production and analysis builds cannot emit
+  Android or iOS route surfaces from a leaked parent-shell
+  `VITE_APP_SURFACE`.
+- Raised the privacy shield over existing `document.body` portal siblings too,
+  so already-open Radix dialogs, dropdowns, and similar portal content are
+  hidden and inert while the shield is active.
+- The CI preview web-server path now builds the preview artifact with the same
+  resolved Playwright app surface that the suite expects, instead of routing
+  through the default web-pinned `build` script.
+- Remote HTTPS and workspace-preview Playwright targets now default to the web
+  surface for route assumptions, and the Android provisioning E2E proof skips
+  itself unless the current Playwright surface explicitly exposes the Android
+  route.
+- Local Playwright runs now disable dev-server reuse when
+  `PLAYWRIGHT_APP_SURFACE` explicitly switches surfaces, and SecPal-owned API
+  configuration examples now stay on approved `secpal.dev` hosts across env
+  samples, deployment docs, and config regression tests.
+- Production API base validation now keys off deployable build semantics
+  instead of the surface mode name alone, so `build:web`,
+  `build:android`, and `build:ios` still fail fast on missing, relative, or
+  loopback `VITE_API_URL` values.
+- Non-deployable Vite build modes such as `preview` and `analyze` now stay out
+  of that strict production API validation, so CI/local preview builds can keep
+  their loopback API base while deployable surface artifacts remain fail-fast.
 - Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
   AGPL SPDX expressions to `AGPL-3.0-or-later AND
 LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to
@@ -51,6 +121,17 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 - Extended `INVALID_CREDENTIALS_PATTERN` to also match the short `"Invalid credentials"` backend message so both forms are localized consistently.
 - Added i18n coverage for previously hardcoded error strings in the Login page: passkey completion errors, MFA completion errors, unexpected submission errors, and the MFA verification failure message.
 - Added localized `login.title` ("Welcome to SecPal" / "Willkommen bei SecPal") and `login.separator` ("or" / "oder") strings for the new `login-05` brand block and separator.
+
+### Fixed
+
+- Restored the default Android Playwright surface for local HTTPS targets such
+  as `https://localhost` and `*.ddev.site`, so `/android-provisioning` E2E
+  coverage no longer skips itself on local HTTPS runs unless
+  `PLAYWRIGHT_APP_SURFACE` explicitly targets the web surface.
+- Restored preview-mode API base resolution to the pre-validation behavior
+  even when Vite marks the bundle as `PROD`, so preview smoke builds on
+  localhost keep honoring their loopback `VITE_API_URL` instead of tripping
+  deploy-only production API guards.
 
 ### Changed
 
@@ -238,6 +319,14 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 
 ### Fixed
 
+- Added the committed `.env.android` mode override so `dev:android` and
+  `build:android` load the `android-native` app surface instead of silently
+  falling back to `web`.
+- Added the committed `.env.ios` mode override so `dev:ios` and `build:ios`
+  load the `ios-native` app surface instead of silently falling back to `web`.
+- Set Playwright's self-started app surface to `android-native` by default so
+  the existing Android provisioning e2e coverage runs against the route surface
+  where that feature is registered.
 - Added an early bootstrap recovery path for stale hashed entry bundles: when a
   cached HTML shell or service worker still points at a deleted
   `/assets/index-*.js`, `public/theme-color.js` now clears the affected

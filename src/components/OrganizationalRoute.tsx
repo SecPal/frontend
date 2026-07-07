@@ -12,8 +12,14 @@ import {
   RouteAccessDeniedState,
   RouteBootstrapRecoveryState,
   RouteLoadingState,
+  RoutePrivacyShieldState,
   RouteVaultLockedState,
 } from "./RouteGuardState";
+import {
+  getSensitiveUiState,
+  isPrivacyShieldState,
+  isVaultLockedState,
+} from "../lib/sensitiveUiState";
 
 interface OrganizationalRouteProps {
   children: React.ReactNode;
@@ -38,13 +44,22 @@ export function OrganizationalRoute({
   const {
     bootstrapRecoveryReason,
     isAuthenticated,
+    isPrivacyShielded = false,
     isVaultLocked = false,
     hasOrganizationalAccess,
+    hidePrivacyShield,
     logout,
     retryBootstrap,
+    sensitiveUiState,
     unlock,
     user,
   } = auth;
+  const routeSensitiveUiState =
+    sensitiveUiState ??
+    getSensitiveUiState({
+      isPrivacyShieldVisible: isPrivacyShielded,
+      isVaultLocked,
+    });
 
   if (isRouteAuthBootstrapPending(auth)) {
     return <RouteLoadingState />;
@@ -60,7 +75,7 @@ export function OrganizationalRoute({
     );
   }
 
-  if (isVaultLocked) {
+  if (isVaultLockedState(routeSensitiveUiState)) {
     return (
       <RouteVaultLockedState
         onUnlock={unlock ?? (async () => false)}
@@ -76,22 +91,29 @@ export function OrganizationalRoute({
   const isRevalidating = isRouteAuthSnapshotRevalidating(auth);
 
   return (
-    <EmailVerificationGate
-      user={user}
-      onRetry={retryBootstrap}
-      onSignInAgain={logout}
+    <RoutePrivacyShieldState
+      isActive={isPrivacyShieldState(routeSensitiveUiState)}
+      onDismiss={hidePrivacyShield ?? (() => {})}
     >
-      {() => {
-        if (isRevalidating && revalidatingFallback !== undefined) {
-          return <>{revalidatingFallback}</>;
-        }
+      <EmailVerificationGate
+        user={user}
+        onRetry={retryBootstrap}
+        onSignInAgain={logout}
+      >
+        {() => {
+          if (isRevalidating && revalidatingFallback !== undefined) {
+            return <>{revalidatingFallback}</>;
+          }
 
-        if (!hasOrganizationalAccess()) {
-          return <RouteAccessDeniedState />;
-        }
+          const content = !hasOrganizationalAccess() ? (
+            <RouteAccessDeniedState />
+          ) : (
+            <>{children}</>
+          );
 
-        return <>{children}</>;
-      }}
-    </EmailVerificationGate>
+          return content;
+        }}
+      </EmailVerificationGate>
+    </RoutePrivacyShieldState>
   );
 }
