@@ -5,6 +5,10 @@ import {
   parsePreviewHostname,
   type PreviewHostname,
 } from "../../src/previewHostname";
+import {
+  resolveAppSurface,
+  type AppSurface,
+} from "../../src/platform/appSurfaceContract";
 
 const POLYSCOPE_CLONE_PATH_PATTERN =
   /(?:^|\/)\.polyscope\/clones\/[^/]+\/([^/]+)(?:\/|$)/;
@@ -182,4 +186,32 @@ export function isWorkspacePreviewTarget(
   baseUrl = resolvePlaywrightBaseUrl()
 ): boolean {
   return getWorkspacePreviewNameFromBaseUrl(baseUrl) !== undefined;
+}
+
+export function resolvePlaywrightAppSurface(
+  env: NodeJS.ProcessEnv = process.env,
+  cwd = process.cwd()
+): AppSurface {
+  const configuredSurface = readTrimmedEnvValue(env.PLAYWRIGHT_APP_SURFACE);
+
+  if (configuredSurface) {
+    return resolveAppSurface(configuredSurface, false);
+  }
+
+  const baseUrl = resolvePlaywrightBaseUrl(env, cwd);
+
+  if (isRemotePlaywrightTarget(baseUrl)) {
+    return "web";
+  }
+
+  return "android-native";
+}
+
+export function supportsAndroidProvisioningE2E(
+  env: NodeJS.ProcessEnv = process.env,
+  cwd = process.cwd()
+): boolean {
+  const surface = resolvePlaywrightAppSurface(env, cwd);
+
+  return surface === "android-mock" || surface === "android-native";
 }

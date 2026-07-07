@@ -66,6 +66,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Raised the privacy shield over existing `document.body` portal siblings too,
   so already-open Radix dialogs, dropdowns, and similar portal content are
   hidden and inert while the shield is active.
+- The CI preview web-server path now builds the preview artifact with the same
+  resolved Playwright app surface that the suite expects, instead of routing
+  through the default web-pinned `build` script.
+- Remote HTTPS and workspace-preview Playwright targets now default to the web
+  surface for route assumptions, and the Android provisioning E2E proof skips
+  itself unless the current Playwright surface explicitly exposes the Android
+  route.
 - Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
   AGPL SPDX expressions to `AGPL-3.0-or-later AND
 LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to

@@ -149,6 +149,34 @@ describe("playwright target resolution", () => {
     expect(config.webServer).toBeUndefined();
   });
 
+  it("defaults remote workspace previews to the web app surface", async () => {
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "grumpy-lynx");
+    vi.stubEnv("PLAYWRIGHT_APP_SURFACE", "");
+    vi.stubEnv("CI", "");
+
+    const { resolvePlaywrightAppSurface, supportsAndroidProvisioningE2E } =
+      await import("./e2e/target-urls.ts");
+
+    expect(resolvePlaywrightAppSurface()).toBe("web");
+    expect(supportsAndroidProvisioningE2E()).toBe(false);
+  });
+
+  it("honors an explicit Android Playwright app surface override on workspace previews", async () => {
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "grumpy-lynx");
+    vi.stubEnv("PLAYWRIGHT_APP_SURFACE", "android-native");
+    vi.stubEnv("CI", "");
+
+    const { resolvePlaywrightAppSurface, supportsAndroidProvisioningE2E } =
+      await import("./e2e/target-urls.ts");
+
+    expect(resolvePlaywrightAppSurface()).toBe("android-native");
+    expect(supportsAndroidProvisioningE2E()).toBe(true);
+  });
+
   it("derives the API preview URL from the frontend preview when PLAYWRIGHT_API_BASE_URL is a non-preview value", async () => {
     vi.stubEnv(
       "PLAYWRIGHT_BASE_URL",

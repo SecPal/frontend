@@ -16,6 +16,7 @@ import {
 import {
   PREVIEW_BASE_URL,
   isRemotePlaywrightTarget,
+  resolvePlaywrightAppSurface,
   resolvePlaywrightBaseUrl,
 } from "./tests/e2e/target-urls";
 import {
@@ -29,13 +30,6 @@ function readTrimmedEnvValue(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
 
   return trimmed ? trimmed : undefined;
-}
-
-function resolveConfiguredAppSurface(
-  value: string | undefined,
-  fallback: string
-): string {
-  return readTrimmedEnvValue(value) ?? fallback;
 }
 
 function resolveLocalDevServerCommand(
@@ -143,10 +137,7 @@ const LOCAL_E2E_BASE_URL =
  * `webServer`.
  */
 const isRemoteTarget = isRemotePlaywrightTarget(BASE_URL);
-const configuredAppSurface = resolveConfiguredAppSurface(
-  process.env.PLAYWRIGHT_APP_SURFACE,
-  "android-native"
-);
+const configuredAppSurface = resolvePlaywrightAppSurface();
 
 const usesSingleWorker = shouldUseSingleWorker();
 const lighthouseExecutablePath = getConfiguredLighthouseBrowserPath();

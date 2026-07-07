@@ -8,6 +8,7 @@ import {
   installMockAuthRoutes,
   installStoredMockBrowserSession,
 } from "./offline-live-helpers";
+import { supportsAndroidProvisioningE2E } from "./target-urls";
 
 const androidProvisioningMockUser = buildOfflineLiveMockUser({
   permissions: ["android_enrollment.read", "android_enrollment.write"],
@@ -220,71 +221,78 @@ async function installOnboardingReviewRoutes(
 }
 
 test.describe("Neutral review and provisioning flows", () => {
-  test("uses the neutral Android enrollment endpoints for load and create", async ({
-    authenticatedPage: page,
-  }) => {
-    const requestLog: string[] = [];
-
-    await installAndroidProvisioningMockSession(page);
-    await installAndroidProvisioningRoutes(page.context(), requestLog);
-
-    await page.goto("/android-provisioning");
-    await page.waitForLoadState("networkidle");
-
-    await expect(
-      page.getByRole("heading", { name: /Android Provisioning/i })
-    ).toBeVisible();
-    await expect(page.getByText("Front desk tablet")).toBeVisible();
-    expect(requestLog).toContain(
-      "GET /v1/android-enrollment-sessions?per_page=15"
+  test.describe("Android provisioning", () => {
+    test.skip(
+      !supportsAndroidProvisioningE2E(),
+      "Android provisioning E2E only runs when the current Playwright surface exposes /android-provisioning. Workspace previews default to the web surface unless PLAYWRIGHT_APP_SURFACE explicitly targets Android."
     );
 
-    await page.getByLabel(/Device label/i).fill("Reception kiosk");
-    await page.getByLabel(/Update channel/i).selectOption("direct_apk");
-    await page
-      .getByRole("button", { name: /Create enrollment session/i })
-      .click();
+    test("uses the neutral Android enrollment endpoints for load and create", async ({
+      authenticatedPage: page,
+    }) => {
+      const requestLog: string[] = [];
 
-    await expect(
-      page.getByRole("heading", { name: /Provisioning QR code/i })
-    ).toBeVisible();
-    await expect(
-      page.getByAltText(/Android provisioning QR code/i)
-    ).toBeVisible();
-    expect(requestLog).toContain("POST /v1/android-enrollment-sessions");
-  });
+      await installAndroidProvisioningMockSession(page);
+      await installAndroidProvisioningRoutes(page.context(), requestLog);
 
-  test("uses the neutral Android revoke endpoint", async ({
-    authenticatedPage: page,
-  }) => {
-    const requestLog: string[] = [];
+      await page.goto("/android-provisioning");
+      await page.waitForLoadState("networkidle");
 
-    await installAndroidProvisioningMockSession(page);
-    await installAndroidProvisioningRoutes(page.context(), requestLog);
+      await expect(
+        page.getByRole("heading", { name: /Android Provisioning/i })
+      ).toBeVisible();
+      await expect(page.getByText("Front desk tablet")).toBeVisible();
+      expect(requestLog).toContain(
+        "GET /v1/android-enrollment-sessions?per_page=15"
+      );
 
-    await page.goto("/android-provisioning");
-    await page.waitForLoadState("networkidle");
+      await page.getByLabel(/Device label/i).fill("Reception kiosk");
+      await page.getByLabel(/Update channel/i).selectOption("direct_apk");
+      await page
+        .getByRole("button", { name: /Create enrollment session/i })
+        .click();
 
-    page.once("dialog", async (dialog) => {
-      expect(dialog.type()).toBe("prompt");
-      await dialog.accept("Token exposed");
+      await expect(
+        page.getByRole("heading", { name: /Provisioning QR code/i })
+      ).toBeVisible();
+      await expect(
+        page.getByAltText(/Android provisioning QR code/i)
+      ).toBeVisible();
+      expect(requestLog).toContain("POST /v1/android-enrollment-sessions");
     });
 
-    await page
-      .getByRole("button", { name: /Revoke/i })
-      .first()
-      .click();
+    test("uses the neutral Android revoke endpoint", async ({
+      authenticatedPage: page,
+    }) => {
+      const requestLog: string[] = [];
 
-    await expect(
-      page
-        .locator("span")
-        .filter({ hasText: /^Revoked$/ })
+      await installAndroidProvisioningMockSession(page);
+      await installAndroidProvisioningRoutes(page.context(), requestLog);
+
+      await page.goto("/android-provisioning");
+      await page.waitForLoadState("networkidle");
+
+      page.once("dialog", async (dialog) => {
+        expect(dialog.type()).toBe("prompt");
+        await dialog.accept("Token exposed");
+      });
+
+      await page
+        .getByRole("button", { name: /Revoke/i })
         .first()
-    ).toBeVisible();
-    await expect(page.getByText(/Token exposed/i)).toBeVisible();
-    expect(requestLog).toContain(
-      "POST /v1/android-enrollment-sessions/session-1/revoke"
-    );
+        .click();
+
+      await expect(
+        page
+          .locator("span")
+          .filter({ hasText: /^Revoked$/ })
+          .first()
+      ).toBeVisible();
+      await expect(page.getByText(/Token exposed/i)).toBeVisible();
+      expect(requestLog).toContain(
+        "POST /v1/android-enrollment-sessions/session-1/revoke"
+      );
+    });
   });
 
   test("uses the neutral onboarding review confirm endpoint from employee detail", async ({
