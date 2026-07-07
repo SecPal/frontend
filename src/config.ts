@@ -160,21 +160,20 @@ function shouldUseCanonicalLiveApiOrigin(
 
 export function resolveApiBaseUrl(options?: {
   configuredBaseUrl?: string;
+  isProduction?: boolean;
   mode?: string;
   runtimeHostname?: string | null;
 }): string {
   const configuredBaseUrl =
     options?.configuredBaseUrl ?? import.meta.env.VITE_API_URL ?? "";
   const mode = options?.mode ?? import.meta.env.MODE;
+  const isProduction =
+    options?.isProduction ?? (import.meta.env.PROD || mode === "production");
   const runtimeHostname = options?.runtimeHostname ?? getRuntimeHostname();
   const normalizedConfiguredBaseUrl =
     normalizeConfiguredApiBaseUrl(configuredBaseUrl);
 
-  if (
-    mode === "production" &&
-    runtimeHostname &&
-    isLoopbackApiHost(runtimeHostname)
-  ) {
+  if (isProduction && runtimeHostname && isLoopbackApiHost(runtimeHostname)) {
     if (!normalizedConfiguredBaseUrl) {
       return "";
     }
@@ -210,7 +209,7 @@ export function resolveApiBaseUrl(options?: {
   }
 
   if (!normalizedConfiguredBaseUrl) {
-    if (mode === "production") {
+    if (isProduction) {
       throw new ApiBaseUrlConfigurationError(
         "VITE_API_URL must be set to an absolute https:// or http:// API origin in production. Relative or missing API base URLs are unsafe because they can route /v1/* and /sanctum/* back to the SPA host."
       );
@@ -219,7 +218,7 @@ export function resolveApiBaseUrl(options?: {
     return "";
   }
 
-  if (mode !== "production") {
+  if (!isProduction) {
     return normalizedConfiguredBaseUrl;
   }
 
@@ -318,6 +317,7 @@ export function buildApiUrl(
   path: string,
   options?: {
     configuredBaseUrl?: string;
+    isProduction?: boolean;
     mode?: string;
     runtimeHostname?: string | null;
   }

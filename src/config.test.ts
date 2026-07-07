@@ -24,6 +24,22 @@ describe("config", () => {
     );
   });
 
+  it("keeps production API validation active for production web-surface builds", async () => {
+    vi.stubEnv("MODE", "web");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "");
+
+    const { resolveApiBaseUrl } = await import("./config");
+
+    expect(() =>
+      resolveApiBaseUrl({
+        runtimeHostname: "customer.secpal.dev",
+      })
+    ).toThrow(
+      "VITE_API_URL must be set to an absolute https:// or http:// API origin in production"
+    );
+  });
+
   it("allows empty API configuration for localhost production audits", async () => {
     vi.stubEnv("MODE", "production");
     vi.stubEnv("VITE_API_URL", "");
@@ -53,6 +69,21 @@ describe("config", () => {
 
   it("does not allow production auth/API traffic to fall back to relative routing", async () => {
     vi.stubEnv("MODE", "production");
+    vi.stubEnv("VITE_API_URL", "/api");
+
+    const { buildApiUrl, getApiBaseUrl } = await import("./config");
+
+    expect(() => getApiBaseUrl()).toThrow(
+      "VITE_API_URL must be an absolute https:// or http:// API origin in production"
+    );
+    expect(() => buildApiUrl("/v1/me")).toThrow(
+      "VITE_API_URL must be an absolute https:// or http:// API origin in production"
+    );
+  });
+
+  it("rejects relative API URLs for production Android-surface builds too", async () => {
+    vi.stubEnv("MODE", "android");
+    vi.stubEnv("PROD", true);
     vi.stubEnv("VITE_API_URL", "/api");
 
     const { buildApiUrl, getApiBaseUrl } = await import("./config");
