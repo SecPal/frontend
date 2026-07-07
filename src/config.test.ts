@@ -40,6 +40,25 @@ describe("config", () => {
     );
   });
 
+  it("keeps preview-mode loopback API bases relaxed even when Vite marks the bundle as PROD", async () => {
+    vi.stubEnv("MODE", "preview");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "http://localhost:4173");
+
+    const { buildApiUrl, resolveApiBaseUrl } = await import("./config");
+
+    expect(
+      resolveApiBaseUrl({
+        runtimeHostname: "localhost",
+      })
+    ).toBe("http://localhost:4173");
+    expect(
+      buildApiUrl("/v1/me", {
+        runtimeHostname: "localhost",
+      })
+    ).toBe("http://localhost:4173/v1/me");
+  });
+
   it("allows empty API configuration for localhost production audits", async () => {
     vi.stubEnv("MODE", "production");
     vi.stubEnv("VITE_API_URL", "");

@@ -52,6 +52,15 @@ function isPreviewHostname(hostname: string): boolean {
   return parsePreviewHostname(hostname) !== null;
 }
 
+function isDeployableProductionMode(mode: string): boolean {
+  return (
+    mode === "production" ||
+    mode === "web" ||
+    mode === "android" ||
+    mode === "ios"
+  );
+}
+
 function normalizeConfiguredApiBaseUrl(value: string): string {
   return stripTrailingSlashes(value.trim());
 }
@@ -168,7 +177,9 @@ export function resolveApiBaseUrl(options?: {
     options?.configuredBaseUrl ?? import.meta.env.VITE_API_URL ?? "";
   const mode = options?.mode ?? import.meta.env.MODE;
   const isProduction =
-    options?.isProduction ?? (import.meta.env.PROD || mode === "production");
+    options?.isProduction ??
+    (mode === "production" ||
+      (import.meta.env.PROD && isDeployableProductionMode(mode)));
   const runtimeHostname = options?.runtimeHostname ?? getRuntimeHostname();
   const normalizedConfiguredBaseUrl =
     normalizeConfiguredApiBaseUrl(configuredBaseUrl);

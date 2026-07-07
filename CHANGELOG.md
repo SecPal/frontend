@@ -125,6 +125,10 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   as `https://localhost` and `*.ddev.site`, so `/android-provisioning` E2E
   coverage no longer skips itself on local HTTPS runs unless
   `PLAYWRIGHT_APP_SURFACE` explicitly targets the web surface.
+- Restored preview-mode API base resolution to the pre-validation behavior
+  even when Vite marks the bundle as `PROD`, so preview smoke builds on
+  localhost keep honoring their loopback `VITE_API_URL` instead of tripping
+  deploy-only production API guards.
 
 ### Changed
 
