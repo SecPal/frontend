@@ -182,6 +182,31 @@ export function isRemotePlaywrightTarget(
   return /^https:\/\//i.test(baseUrl);
 }
 
+function isLocalPlaywrightHost(hostname: string): boolean {
+  return (
+    hostname === "localhost" ||
+    hostname.endsWith(".localhost") ||
+    hostname === "127.0.0.1" ||
+    hostname.startsWith("127.") ||
+    hostname === "::1" ||
+    hostname === "[::1]" ||
+    hostname === "ddev.site" ||
+    hostname.endsWith(".ddev.site")
+  );
+}
+
+function isLocalHttpsPlaywrightTarget(baseUrl: string): boolean {
+  if (!isRemotePlaywrightTarget(baseUrl)) {
+    return false;
+  }
+
+  try {
+    return isLocalPlaywrightHost(new URL(baseUrl).hostname);
+  } catch {
+    return false;
+  }
+}
+
 export function isWorkspacePreviewTarget(
   baseUrl = resolvePlaywrightBaseUrl()
 ): boolean {
@@ -200,7 +225,10 @@ export function resolvePlaywrightAppSurface(
 
   const baseUrl = resolvePlaywrightBaseUrl(env, cwd);
 
-  if (isRemotePlaywrightTarget(baseUrl)) {
+  if (
+    isRemotePlaywrightTarget(baseUrl) &&
+    !isLocalHttpsPlaywrightTarget(baseUrl)
+  ) {
     return "web";
   }
 

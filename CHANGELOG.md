@@ -111,6 +111,13 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 - Added i18n coverage for previously hardcoded error strings in the Login page: passkey completion errors, MFA completion errors, unexpected submission errors, and the MFA verification failure message.
 - Added localized `login.title` ("Welcome to SecPal" / "Willkommen bei SecPal") and `login.separator` ("or" / "oder") strings for the new `login-05` brand block and separator.
 
+### Fixed
+
+- Restored the default Android Playwright surface for local HTTPS targets such
+  as `https://localhost` and `*.ddev.site`, so `/android-provisioning` E2E
+  coverage no longer skips itself on local HTTPS runs unless
+  `PLAYWRIGHT_APP_SURFACE` explicitly targets the web surface.
+
 ### Changed
 
 - Added a guardrail test for `LICENSES/LicenseRef-SecPal-Attribution.txt` so
