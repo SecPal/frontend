@@ -536,6 +536,10 @@ describe("AuthContext", () => {
         expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
       });
 
+      await waitFor(() => {
+        expect(sessionEventHandlers.get("session:expired")).toHaveLength(1);
+      });
+
       vi.mocked(resetPrefetchCache).mockClear();
 
       await act(async () => {
