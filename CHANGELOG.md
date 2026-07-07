@@ -81,6 +81,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instead of the surface mode name alone, so `build:web`,
   `build:android`, and `build:ios` still fail fast on missing, relative, or
   loopback `VITE_API_URL` values.
+- Non-deployable Vite build modes such as `preview` and `analyze` now stay out
+  of that strict production API validation, so CI/local preview builds can keep
+  their loopback API base while deployable surface artifacts remain fail-fast.
 - Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
   AGPL SPDX expressions to `AGPL-3.0-or-later AND
 LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to

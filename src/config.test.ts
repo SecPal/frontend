@@ -166,6 +166,28 @@ describe("config", () => {
     ).toBe("https://api.secpal.dev/v1/me");
   });
 
+  it("keeps localhost preview API URLs usable for preview-mode builds even when Vite sets PROD", async () => {
+    vi.stubEnv("MODE", "preview");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "http://localhost:4173");
+
+    const { buildApiUrl, getApiBaseUrl } = await import("./config");
+
+    expect(getApiBaseUrl()).toBe("http://localhost:4173");
+    expect(buildApiUrl("/v1/release")).toBe("http://localhost:4173/v1/release");
+  });
+
+  it("keeps loopback API URLs usable for analyze-mode builds even when Vite sets PROD", async () => {
+    vi.stubEnv("MODE", "analyze");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "http://localhost:4173");
+
+    const { buildApiUrl, getApiBaseUrl } = await import("./config");
+
+    expect(getApiBaseUrl()).toBe("http://localhost:4173");
+    expect(buildApiUrl("/v1/release")).toBe("http://localhost:4173/v1/release");
+  });
+
   it("falls back to the canonical live API origin on app.secpal.dev when the bundle kept a relative API base", async () => {
     vi.stubEnv("MODE", "preview");
     vi.stubEnv("VITE_API_URL", "/api");
