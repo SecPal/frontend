@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   encrypted auth snapshot and no readable CSRF cookie are present, so preview
   and logged-out sessions redirect cleanly to `/login` instead of surfacing
   auth recovery UI after a failing `/v1/me` probe.
+- Fixed the local domain-policy preflight so it validates real SecPal
+  hostnames instead of flagging `secpal.`-prefixed storage keys and `.context`
+  workspace notes as forbidden domains.
 
 ### Added
 
