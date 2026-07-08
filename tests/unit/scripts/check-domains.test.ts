@@ -83,4 +83,22 @@ describe("check-domains", () => {
       "Domain Policy Check FAILED"
     );
   });
+
+  it("rejects forbidden secpal hostnames with punycode TLDs", () => {
+    const result = runDomainCheck([
+      {
+        path: "README.md",
+        contents: `Use https://${["status", "secpal", "xn--p1ai"].join(".")} for diagnostics.\n`,
+      },
+    ]);
+
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain(
+      ["status", "secpal", "xn--p1ai"].join(".")
+    );
+    expect(result.stdout + result.stderr).toContain(
+      "Domain Policy Check FAILED"
+    );
+  });
 });

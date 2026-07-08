@@ -169,6 +169,15 @@ async function renderWithI18n(component: React.ReactElement) {
   return result;
 }
 
+async function waitForPathname(pathname: string) {
+  await waitFor(
+    () => {
+      expect(window.location.pathname).toBe(pathname);
+    },
+    { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+  );
+}
+
 async function seedPersistedAuthUser(user: Record<string, unknown>) {
   const persistedUser = sanitizePersistedAuthUser(user);
 
@@ -509,9 +518,7 @@ describe("App", () => {
 
       await renderWithI18n(<App />);
 
-      await waitFor(() => {
-        expect(window.location.pathname).toBe(path);
-      });
+      await waitForPathname(path);
 
       await screen.findByRole("button", { name: /sign out/i });
       expect(screen.getByTestId("update-prompt")).toBeInTheDocument();
@@ -843,15 +850,21 @@ describe("App", () => {
   it("redirects protected routes to login when no local auth snapshot or readable csrf cookie exists", async () => {
     window.history.replaceState({}, "", "/");
     clearXsrfCookie();
+    mockGetCurrentUser.mockRejectedValueOnce(
+      new AuthApiError(
+        "Current user fetch failed: Failed to fetch",
+        undefined,
+        undefined,
+        "NETWORK_ERROR"
+      )
+    );
 
     await renderWithI18n(<App />);
 
-    await waitFor(() => {
-      expect(window.location.pathname).toBe("/login");
-    });
+    await waitForPathname("/login");
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
   it("shows bootstrap recovery in place after protected-route session restore fails and allows retry", async () => {
@@ -1302,9 +1315,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await waitFor(() => {
-      expect(window.location.pathname).toBe("/organization");
-    });
+    await waitForPathname("/organization");
 
     expect(screen.queryByText(/Page Not Found/i)).not.toBeInTheDocument();
   });
@@ -1328,9 +1339,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await waitFor(() => {
-      expect(window.location.pathname).toBe("/onboarding");
-    });
+    await waitForPathname("/onboarding");
     expect(
       await screen.findByText(
         /your onboarding is not complete yet\. please complete onboarding/i
@@ -1456,9 +1465,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await waitFor(() => {
-      expect(window.location.pathname).toBe("/onboarding");
-    });
+    await waitForPathname("/onboarding");
 
     await waitFor(() => {
       expect(
@@ -1575,9 +1582,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await waitFor(() => {
-      expect(window.location.pathname).toBe("/login");
-    });
+    await waitForPathname("/login");
 
     await act(async () => {
       await Promise.resolve();

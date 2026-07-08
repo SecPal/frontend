@@ -274,9 +274,34 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
-  it("skips protected-route browser-session bootstrap when no local auth snapshot or readable csrf cookie exists", async () => {
+  it("still bootstraps a protected browser-session route when the readable csrf cookie is missing", async () => {
     window.history.replaceState({}, "", "/");
     clearCsrfTokenCookie();
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    expect(result.current.isLoading).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("treats protected-route bootstrap failures without a local snapshot or readable csrf cookie as logged out", async () => {
+    window.history.replaceState({}, "", "/");
+    clearCsrfTokenCookie();
+    mockGetCurrentUser.mockRejectedValueOnce(
+      new AuthApiError(
+        "Current user fetch failed: Failed to fetch",
+        undefined,
+        undefined,
+        "NETWORK_ERROR"
+      )
+    );
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -289,7 +314,7 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.bootstrapRecoveryReason).toBeNull();
-    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
   it("does not run sensitive logout cleanup when bootstrap revalidation finds no browser-session user", async () => {

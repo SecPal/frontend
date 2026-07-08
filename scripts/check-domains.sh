@@ -24,7 +24,7 @@ echo "Deprecated web hosts: api.secpal.app"
 echo "Forbidden: secpal.com, secpal.org, secpal.net, secpal.io, secpal.example, ANY other"
 echo ""
 
-matches=$(grep -r -n -E '([A-Za-z0-9-]+\.)*secpal\.[A-Za-z]{2,24}($|[^A-Za-z0-9-])' \
+matches=$(grep -r -n -E '([A-Za-z0-9-]+\.)*secpal\.(xn--[A-Za-z0-9-]{2,59}|[A-Za-z]{2,24})($|[^A-Za-z0-9-])' \
     --include="*.md" \
     --include="*.yaml" \
     --include="*.yml" \

@@ -106,7 +106,15 @@ function shouldBootstrapBrowserSessionWithoutStoredUser(
     return false;
   }
 
-  return getCsrfTokenFromCookie() !== null;
+  return true;
+}
+
+function shouldTreatBootstrapFailureWithoutStoredUserAsLoggedOut(
+  clearSensitiveStateOnInvalidSession: boolean
+): boolean {
+  return (
+    !clearSensitiveStateOnInvalidSession && getCsrfTokenFromCookie() === null
+  );
 }
 
 function getBootstrapErrorCode(error: unknown): string | null {
@@ -1008,6 +1016,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (isOfflineBootstrapError(error)) {
             setIsLoading(false);
             setBootstrapRecoveryReason(null);
+            return;
+          }
+
+          if (
+            shouldTreatBootstrapFailureWithoutStoredUserAsLoggedOut(
+              clearSensitiveStateOnInvalidSession
+            )
+          ) {
+            setBootstrapRecoveryReason(null);
+            setUser(null);
+            setIsVaultLocked(false);
+            setIsLoading(false);
+            syncOfflineAuthState(false);
             return;
           }
 
