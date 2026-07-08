@@ -119,4 +119,22 @@ describe("check-domains", () => {
       "Domain Policy Check FAILED"
     );
   });
+
+  it("rejects forbidden secpal hostnames with long ascii final labels", () => {
+    const result = runDomainCheck([
+      {
+        path: "README.md",
+        contents: `Use https://${["status", "secpal", "abcdefghijklmnopqrstuvwxyz"].join(".")} for diagnostics.\n`,
+      },
+    ]);
+
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain(
+      ["status", "secpal", "abcdefghijklmnopqrstuvwxyz"].join(".")
+    );
+    expect(result.stdout + result.stderr).toContain(
+      "Domain Policy Check FAILED"
+    );
+  });
 });
