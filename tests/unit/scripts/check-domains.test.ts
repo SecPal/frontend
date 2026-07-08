@@ -66,6 +66,24 @@ describe("check-domains", () => {
     expect(result.stdout).toContain("Domain Policy Check PASSED");
   });
 
+  it("rejects forbidden hostnames on lines that also mention the asset key", () => {
+    const forbiddenHostname = ["status", "secpal", "io"].join(".");
+
+    const result = runDomainCheck([
+      {
+        path: "README.md",
+        contents: `Inline note: "secpal.asset-load-recovery" must not mask https://${forbiddenHostname}.\n`,
+      },
+    ]);
+
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain(forbiddenHostname);
+    expect(result.stdout + result.stderr).toContain(
+      "Domain Policy Check FAILED"
+    );
+  });
+
   it("rejects forbidden secpal hostnames", () => {
     const result = runDomainCheck([
       {
