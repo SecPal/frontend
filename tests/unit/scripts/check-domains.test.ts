@@ -137,4 +137,22 @@ describe("check-domains", () => {
       "Domain Policy Check FAILED"
     );
   });
+
+  it("rejects forbidden secpal hostnames with hyphenated final labels", () => {
+    const result = runDomainCheck([
+      {
+        path: "README.md",
+        contents: `Use https://${["api", "secpal", "dev-test"].join(".")} for diagnostics.\n`,
+      },
+    ]);
+
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain(
+      ["api", "secpal", "dev-test"].join(".")
+    );
+    expect(result.stdout + result.stderr).toContain(
+      "Domain Policy Check FAILED"
+    );
+  });
 });

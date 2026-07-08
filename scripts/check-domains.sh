@@ -24,7 +24,7 @@ echo "Deprecated web hosts: api.secpal.app"
 echo "Forbidden: secpal.com, secpal.org, secpal.net, secpal.io, secpal.example, ANY other"
 echo ""
 
-matches=$(grep -r -n -E '([A-Za-z0-9-]+\.)*secpal\.(xn--[A-Za-z0-9-]{2,59}|[A-Za-z0-9]{2,63})($|[^A-Za-z0-9-])' \
+matches=$(grep -r -n -E '([A-Za-z0-9-]+\.)*secpal\.[A-Za-z0-9-]{2,63}($|[^A-Za-z0-9-])' \
     --include="*.md" \
     --include="*.yaml" \
     --include="*.yml" \
@@ -44,6 +44,7 @@ matches=$(grep -r -n -E '([A-Za-z0-9-]+\.)*secpal\.(xn--[A-Za-z0-9-]{2,59}|[A-Za
     grep -v -- "check-domains.sh" | \
     grep -v -- "Forbidden:" | \
     grep -v -- "FORBIDDEN:" | \
+    grep -v -- 'secpal\.asset-load-recovery' | \
     grep -v -- '- "secpal\.' | \
     grep -v -- '^[[:space:]]*- \[' || true)
 
