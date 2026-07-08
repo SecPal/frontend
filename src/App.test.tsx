@@ -840,6 +840,20 @@ describe("App", () => {
     expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
   });
 
+  it("redirects protected routes to login when no local auth snapshot or readable csrf cookie exists", async () => {
+    window.history.replaceState({}, "", "/");
+    clearXsrfCookie();
+
+    await renderWithI18n(<App />);
+
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/login");
+    });
+
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(mockGetCurrentUser).not.toHaveBeenCalled();
+  });
+
   it("shows bootstrap recovery in place after protected-route session restore fails and allows retry", async () => {
     const recoveredUser = {
       id: "1",

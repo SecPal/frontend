@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Stopped opportunistic protected-route browser-session bootstrap when no
+  encrypted auth snapshot and no readable CSRF cookie are present, so preview
+  and logged-out sessions redirect cleanly to `/login` instead of surfacing
+  auth recovery UI after a failing `/v1/me` probe.
+
 ### Added
 
 - Added `@capacitor/core` as a runtime dependency and introduced the
