@@ -109,6 +109,36 @@ function shouldBootstrapBrowserSessionWithoutStoredUser(
   return true;
 }
 
+function shouldTreatBootstrapFailureWithoutStoredUserAsLoggedOut(
+  clearSensitiveStateOnInvalidSession: boolean
+): boolean {
+  return (
+    !clearSensitiveStateOnInvalidSession && getCsrfTokenFromCookie() === null
+  );
+}
+
+function createConfirmedBootstrapSessionError(error: unknown): Error {
+  const wrappedError =
+    error instanceof Error
+      ? error
+      : new Error("Persisting confirmed bootstrap session failed.");
+  Object.defineProperty(wrappedError, "__confirmedBootstrapSession", {
+    value: true,
+    configurable: true,
+  });
+  return wrappedError;
+}
+
+function isConfirmedBootstrapSessionError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "__confirmedBootstrapSession" in error &&
+    (error as { __confirmedBootstrapSession?: unknown })
+      .__confirmedBootstrapSession === true
+  );
+}
+
 function getBootstrapErrorCode(error: unknown): string | null {
   if (typeof error !== "object" || error === null || !("code" in error)) {
     return null;
@@ -903,6 +933,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const startBootstrapRevalidation = (
       clearSensitiveStateOnInvalidSession: boolean
     ) => {
+      const clearBootstrapToLoggedOutState = () => {
+        if (shouldResetPrefetchCacheAfterStorageMismatchRef.current) {
+          shouldResetPrefetchCacheAfterStorageMismatchRef.current = false;
+          resetPrefetchCache();
+        }
+        hasLogoutBarrierRef.current = false;
+        shouldSkipBarrierVaultTableCleanupRef.current = false;
+        setBootstrapRecoveryReason(null);
+        setUser(null);
+        setIsVaultLocked(false);
+        setIsLoading(false);
+        syncOfflineAuthState(false);
+      };
+
       const retryBootstrapAutomatically = () => {
         invalidateBootstrapRevalidation();
         hasAutomaticallyRetriedBootstrapRef.current = true;
@@ -921,6 +965,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         didTimeout = true;
+        if (
+          shouldTreatBootstrapFailureWithoutStoredUserAsLoggedOut(
+            clearSensitiveStateOnInvalidSession
+          )
+        ) {
+          invalidateBootstrapRevalidation();
+          clearBootstrapToLoggedOutState();
+          return;
+        }
+
         if (!hasAutomaticallyRetriedBootstrapRef.current) {
           retryBootstrapAutomatically();
           return;
@@ -948,7 +1002,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           }
 
-          await persistAuthenticatedUser(currentUser);
+          try {
+            await persistAuthenticatedUser(currentUser);
+          } catch (error: unknown) {
+            throw createConfirmedBootstrapSessionError(error);
+          }
 
           if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
             reconcileActiveBarrierState();
@@ -985,17 +1043,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (isInvalidBootstrapSessionError(error)) {
             if (!clearSensitiveStateOnInvalidSession) {
-              if (shouldResetPrefetchCacheAfterStorageMismatchRef.current) {
-                shouldResetPrefetchCacheAfterStorageMismatchRef.current = false;
-                resetPrefetchCache();
-              }
-              hasLogoutBarrierRef.current = false;
-              shouldSkipBarrierVaultTableCleanupRef.current = false;
-              setBootstrapRecoveryReason(null);
-              setUser(null);
-              setIsVaultLocked(false);
-              setIsLoading(false);
-              syncOfflineAuthState(false);
+              clearBootstrapToLoggedOutState();
               return;
             }
 
@@ -1008,6 +1056,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (isOfflineBootstrapError(error)) {
             setIsLoading(false);
             setBootstrapRecoveryReason(null);
+            return;
+          }
+
+          if (
+            !isConfirmedBootstrapSessionError(error) &&
+            shouldTreatBootstrapFailureWithoutStoredUserAsLoggedOut(
+              clearSensitiveStateOnInvalidSession
+            )
+          ) {
+            clearBootstrapToLoggedOutState();
             return;
           }
 

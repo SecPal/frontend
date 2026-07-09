@@ -169,6 +169,15 @@ async function renderWithI18n(component: React.ReactElement) {
   return result;
 }
 
+async function waitForPathname(pathname: string) {
+  await waitFor(
+    () => {
+      expect(window.location.pathname).toBe(pathname);
+    },
+    { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+  );
+}
+
 async function seedPersistedAuthUser(user: Record<string, unknown>) {
   const persistedUser = sanitizePersistedAuthUser(user);
 
@@ -509,9 +518,7 @@ describe("App", () => {
 
       await renderWithI18n(<App />);
 
-      await waitFor(() => {
-        expect(window.location.pathname).toBe(path);
-      });
+      await waitForPathname(path);
 
       await screen.findByRole("button", { name: /sign out/i });
       expect(screen.getByTestId("update-prompt")).toBeInTheDocument();
@@ -838,6 +845,87 @@ describe("App", () => {
       screen.queryByRole("status", { name: /loading login/i })
     ).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+  });
+
+  it("redirects protected routes to login when no local auth snapshot or readable csrf cookie exists", async () => {
+    window.history.replaceState({}, "", "/");
+    clearXsrfCookie();
+    mockGetCurrentUser.mockRejectedValueOnce(
+      new AuthApiError(
+        "Current user fetch failed: Failed to fetch",
+        undefined,
+        undefined,
+        "NETWORK_ERROR"
+      )
+    );
+
+    await renderWithI18n(<App />);
+
+    await waitForPathname("/login");
+
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("redirects protected routes to login when bootstrap without a local auth snapshot or readable csrf cookie times out", async () => {
+    window.history.replaceState({}, "", "/");
+    clearXsrfCookie();
+    vi.useFakeTimers();
+    const lateUser = {
+      id: "1",
+      name: "Late Bootstrap User",
+      email: "late-bootstrap@secpal.dev",
+      emailVerified: true,
+      roles: [],
+      permissions: [],
+      hasOrganizationalScopes: false,
+      hasCustomerAccess: false,
+      hasSiteAccess: false,
+    };
+    let resolveCurrentUser: ((value: typeof lateUser) => void) | undefined;
+    mockGetCurrentUser.mockImplementationOnce(
+      () =>
+        new Promise<typeof lateUser>((resolve) => {
+          resolveCurrentUser = resolve;
+        }) as ReturnType<typeof mockGetCurrentUser>
+    );
+
+    try {
+      await renderWithI18n(<App />);
+
+      await act(async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        vi.advanceTimersByTime(ROUTE_NAVIGATION_TIMEOUT_MS);
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(window.location.pathname).toBe("/login");
+      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+      expect(mockAuthStorage.setUser).not.toHaveBeenCalled();
+
+      await act(async () => {
+        resolveCurrentUser?.(lateUser);
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(window.location.pathname).toBe("/login");
+      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+      expect(mockAuthStorage.setUser).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("shows bootstrap recovery in place after protected-route session restore fails and allows retry", async () => {
@@ -1288,9 +1376,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await waitFor(() => {
-      expect(window.location.pathname).toBe("/organization");
-    });
+    await waitForPathname("/organization");
 
     expect(screen.queryByText(/Page Not Found/i)).not.toBeInTheDocument();
   });
@@ -1314,9 +1400,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await waitFor(() => {
-      expect(window.location.pathname).toBe("/onboarding");
-    });
+    await waitForPathname("/onboarding");
     expect(
       await screen.findByText(
         /your onboarding is not complete yet\. please complete onboarding/i
@@ -1442,9 +1526,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await waitFor(() => {
-      expect(window.location.pathname).toBe("/onboarding");
-    });
+    await waitForPathname("/onboarding");
 
     await waitFor(() => {
       expect(
@@ -1561,9 +1643,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await waitFor(() => {
-      expect(window.location.pathname).toBe("/login");
-    });
+    await waitForPathname("/login");
 
     await act(async () => {
       await Promise.resolve();

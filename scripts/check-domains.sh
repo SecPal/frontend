@@ -24,7 +24,7 @@ echo "Deprecated web hosts: api.secpal.app"
 echo "Forbidden: secpal.com, secpal.org, secpal.net, secpal.io, secpal.example, ANY other"
 echo ""
 
-matches=$(grep -r -n -E "secpal\.[A-Za-z0-9.-]+" \
+matches=$(grep -r -n -E '([A-Za-z0-9-]+\.)*secpal\.[A-Za-z0-9-]{1,63}($|[^A-Za-z0-9-])' \
     --include="*.md" \
     --include="*.yaml" \
     --include="*.yml" \
@@ -36,6 +36,7 @@ matches=$(grep -r -n -E "secpal\.[A-Za-z0-9.-]+" \
     --include="*.jsx" \
     --include="*.php" \
     --include="*.html" \
+    --exclude-dir=".context" \
     --exclude-dir=".git" \
     --exclude-dir="node_modules" \
     --exclude-dir="vendor" \
@@ -45,6 +46,11 @@ matches=$(grep -r -n -E "secpal\.[A-Za-z0-9.-]+" \
     grep -v -- "FORBIDDEN:" | \
     grep -v -- '- "secpal\.' | \
     grep -v -- '^[[:space:]]*- \[' || true)
+
+# Drop the known storage key token without discarding other matches on the same line.
+matches=$(printf '%s\n' "$matches" | \
+    sed -E 's@(^[^:]+:[0-9]+:)secpal\.asset-load-recovery($|[^A-Za-z0-9._/?:#-])@\1\2@g' | \
+    sed -E 's@(^|[^A-Za-z0-9/.:@-])secpal\.asset-load-recovery($|[^A-Za-z0-9._/?:#-])@\1\2@g' || true)
 
 # Allowlist approach: flag any secpal.* domain not matching an approved pattern.
 # Approved or temporarily tolerated here: secpal.app, apk.secpal.app,

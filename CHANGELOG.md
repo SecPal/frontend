@@ -12,6 +12,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Stopped opportunistic protected-route browser-session bootstrap when no
+  encrypted auth snapshot and no readable CSRF cookie are present, so preview
+  and logged-out sessions redirect cleanly to `/login` instead of surfacing
+  auth recovery UI after a failing `/v1/me` probe.
+- Fixed the local domain-policy preflight so it validates real SecPal
+  hostnames across one-character, punycode, digit-bearing, long, and
+  hyphenated host labels without letting the known
+  `secpal.asset-load-recovery` storage key mask same-line forbidden hosts or
+  URL-host usage of the same token, including scheme-colon, query-, and
+  fragment-suffixed host forms, while still ignoring the standalone key and
+  `.context` workspace notes as forbidden domains.
+
 ### Added
 
 - Added `@capacitor/core` as a runtime dependency and introduced the

@@ -291,6 +291,155 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
+  it("treats protected-route bootstrap failures without a local snapshot or readable csrf cookie as logged out", async () => {
+    window.history.replaceState({}, "", "/");
+    clearCsrfTokenCookie();
+    mockGetCurrentUser.mockRejectedValueOnce(
+      new AuthApiError(
+        "Current user fetch failed: Failed to fetch",
+        undefined,
+        undefined,
+        "NETWORK_ERROR"
+      )
+    );
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.bootstrapRecoveryReason).toBeNull();
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+  });
+
+  it("treats protected-route bootstrap timeouts without a local snapshot or readable csrf cookie as logged out", async () => {
+    window.history.replaceState({}, "", "/");
+    clearCsrfTokenCookie();
+    mockGetCurrentUser.mockImplementation(
+      () =>
+        new Promise(() => undefined) as ReturnType<typeof mockGetCurrentUser>
+    );
+    vi.useFakeTimers();
+
+    const { result, unmount } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    try {
+      expect(result.current.isLoading).toBe(true);
+
+      await act(async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+        await Promise.resolve();
+      });
+
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.bootstrapRecoveryReason).toBeNull();
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+    } finally {
+      unmount();
+    }
+  });
+
+  it("ignores a late bootstrap success after timing out to logged out without a local snapshot or readable csrf cookie", async () => {
+    window.history.replaceState({}, "", "/");
+    clearCsrfTokenCookie();
+    const deferred = createDeferredPromise<{
+      id: number;
+      name: string;
+      email: string;
+    }>();
+    mockGetCurrentUser.mockImplementation(() => deferred.promise);
+    vi.useFakeTimers();
+
+    const { result, unmount } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    try {
+      await act(async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+        await Promise.resolve();
+      });
+
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.bootstrapRecoveryReason).toBeNull();
+
+      await act(async () => {
+        deferred.resolve({
+          id: 1,
+          name: "Late Bootstrap User",
+          email: "late-bootstrap@secpal.dev",
+        });
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(mockFetchCsrfToken).not.toHaveBeenCalled();
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.bootstrapRecoveryReason).toBeNull();
+    } finally {
+      unmount();
+    }
+  });
+
+  it("keeps confirmed browser sessions behind recovery UI when csrf refresh fails after /v1/me succeeds", async () => {
+    window.history.replaceState({}, "", "/");
+    clearCsrfTokenCookie();
+    mockGetCurrentUser.mockResolvedValue({
+      id: 1,
+      name: "Bootstrap User",
+      email: "bootstrap@secpal.dev",
+    });
+    mockFetchCsrfToken.mockRejectedValue(
+      new AuthApiError(
+        "CSRF refresh failed: Network down",
+        undefined,
+        undefined,
+        "NETWORK_ERROR"
+      )
+    );
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.bootstrapRecoveryReason).toBe("network");
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+  });
+
   it("does not run sensitive logout cleanup when bootstrap revalidation finds no browser-session user", async () => {
     window.history.replaceState({}, "", "/");
     mockGetCurrentUser.mockRejectedValue(
@@ -3157,6 +3306,58 @@ describe("useAuth", () => {
       expect(result.current.isLoading).toBe(false);
     });
 
+    expect(resetPrefetchCacheSpy).toHaveBeenCalledTimes(1);
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+  });
+
+  it("resets the prefetch cache when cross-tab auth storage removal falls back to logged out after a no-csrf network failure", async () => {
+    window.history.replaceState({}, "", "/");
+    await persistAuthUser({
+      id: 1,
+      name: "Bootstrap User",
+      email: "bootstrap@secpal.dev",
+    });
+    const resetPrefetchCacheSpy = vi.spyOn(prefetch, "resetPrefetchCache");
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    clearCsrfTokenCookie();
+    mockGetCurrentUser.mockRejectedValueOnce(
+      new AuthApiError(
+        "Current user fetch failed: Failed to fetch",
+        undefined,
+        undefined,
+        "NETWORK_ERROR"
+      )
+    );
+
+    act(() => {
+      localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
+
+      const clearedStorageEvent = new Event("storage");
+      Object.defineProperties(clearedStorageEvent, {
+        key: { value: AUTH_VAULT_STORAGE_KEY },
+        oldValue: { value: "previous-vault-state" },
+        newValue: { value: null },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
+      window.dispatchEvent(clearedStorageEvent);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.bootstrapRecoveryReason).toBeNull();
     expect(resetPrefetchCacheSpy).toHaveBeenCalledTimes(1);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
     expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
