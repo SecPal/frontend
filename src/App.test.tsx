@@ -4,6 +4,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 import { act, render, waitFor } from "@testing-library/react";
 import { screen } from "@testing-library/dom";
+import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import App from "./App";
@@ -143,9 +144,124 @@ vi.mock("./components/UpdatePrompt", () => ({
 // prevents that backlog without affecting the auth behaviour under test.
 // Using spyOn (not stubGlobal) so it is not undone by unstubGlobals: true
 // between tests.
-vi.spyOn(globalThis, "fetch").mockRejectedValue(
-  new TypeError("fetch is not available in App.test.tsx")
-);
+const fetchSpy = vi
+  .spyOn(globalThis, "fetch")
+  .mockRejectedValue(new TypeError("fetch is not available in App.test.tsx"));
+
+function createAndroidRuntimeBootstrapBridge({
+  configured = false,
+  getRuntimeBootstrap = vi.fn().mockResolvedValue(
+    configured
+      ? {
+          configured: true,
+          bootstrap: {
+            instanceDisplayName: "SecPal Demo",
+            apiOrigin: "https://api.secpal.dev",
+            rawApiBaseUrl: "https://api.secpal.dev/v1",
+            minimumSupportedAppVersion: "1.4.0",
+            minimumSupportedAppBuild: 10400,
+            androidPush: {
+              provider: "fcm",
+              metadataRevision: 3,
+              publicClientMetadata: {
+                apiKey: "public-client-api-key-demo-1234567890",
+                projectId: "secpal-demo-push",
+                applicationId: "1:1234567890:android:abcdef1234567890",
+                senderId: "1234567890",
+              },
+            },
+            features: {
+              passwordLoginEnabled: true,
+              passkeyLoginEnabled: true,
+              managedAndroidEnrollment: false,
+            },
+          },
+        }
+      : { configured: false }
+  ),
+  getRuntimeInfo = vi.fn().mockResolvedValue({
+    clientPlatform: "android",
+    appVersion: "1.4.0",
+    appBuild: 10400,
+  }),
+  login = vi.fn(),
+  getCurrentUser = vi.fn().mockResolvedValue({
+    id: "42",
+    name: "Configured User",
+    email: "configured.user@secpal.dev",
+    emailVerified: true,
+  }),
+  setRuntimeBootstrap = vi.fn().mockResolvedValue(undefined),
+  clearRuntimeBootstrap = vi.fn().mockResolvedValue(undefined),
+  logout = vi.fn().mockResolvedValue(undefined),
+}: {
+  configured?: boolean;
+  getRuntimeBootstrap?: ReturnType<typeof vi.fn>;
+  getRuntimeInfo?: ReturnType<typeof vi.fn>;
+  login?: ReturnType<typeof vi.fn>;
+  getCurrentUser?: ReturnType<typeof vi.fn>;
+  setRuntimeBootstrap?: ReturnType<typeof vi.fn>;
+  clearRuntimeBootstrap?: ReturnType<typeof vi.fn>;
+  logout?: ReturnType<typeof vi.fn>;
+} = {}) {
+  const bridge = {
+    login,
+    getCurrentUser,
+    getRuntimeBootstrap,
+    getRuntimeInfo,
+    setRuntimeBootstrap,
+    clearRuntimeBootstrap,
+    logout,
+  };
+
+  (
+    globalThis as typeof globalThis & {
+      SecPalNativeAuthBridge?: typeof bridge;
+    }
+  ).SecPalNativeAuthBridge = bridge;
+
+  return bridge;
+}
+
+function createBootstrapResponse(overrides: Record<string, unknown> = {}) {
+  return {
+    data: {
+      client_platform: "android",
+      api_base_url: "https://api.secpal.dev/v1",
+      instance: {
+        display_name: "SecPal Demo",
+      },
+      compatibility: {
+        bootstrap_version: "v1",
+        schema_version: 3,
+        minimum_supported_app_version: "1.4.0",
+        minimum_supported_app_build: 10400,
+      },
+      features: {
+        password_login: true,
+        passkey_login: true,
+        managed_android_enrollment: false,
+        notification_channels: {
+          android_fcm: true,
+          web_push: false,
+        },
+      },
+      notification_channels: {
+        android_fcm: {
+          channel: "android_fcm",
+          metadata_revision: 3,
+          public_runtime_metadata: {
+            api_key: "public-client-api-key-demo-1234567890",
+            project_id: "secpal-demo-push",
+            application_id: "1:1234567890:android:abcdef1234567890",
+            sender_id: "1234567890",
+          },
+        },
+      },
+      ...overrides,
+    },
+  };
+}
 
 function setXsrfCookie(token = "test-xsrf-token"): void {
   document.cookie = `XSRF-TOKEN=${encodeURIComponent(token)}; path=/; SameSite=Lax`;
@@ -235,6 +351,9 @@ describe("App", () => {
     window.history.replaceState({}, "", "/login");
     i18n.load("en", {});
     i18n.activate("en");
+    fetchSpy.mockRejectedValue(
+      new TypeError("fetch is not available in App.test.tsx")
+    );
     mockFetchCsrfToken.mockResolvedValue(undefined);
     mockLoadAuthenticatedAppModule.mockReset();
     mockLoadAuthenticatedAppModule.mockImplementation(
@@ -254,6 +373,542 @@ describe("App", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
   });
+
+  it("shows Android runtime discovery before login when no runtime bootstrap is configured", async () => {
+    createAndroidRuntimeBootstrapBridge({ configured: false });
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByLabelText(/instance url|instanz-url/i)
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/instance url/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/language/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /continue to login/i })
+    ).toBeDisabled();
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps the public source route reachable before Android runtime discovery is configured", async () => {
+    window.history.replaceState({}, "", "/source");
+    createAndroidRuntimeBootstrapBridge({ configured: false });
+    clearXsrfCookie();
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: /agpl v3\+/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /enter your instance url/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the public onboarding completion route reachable before Android runtime discovery is configured", async () => {
+    window.history.replaceState({}, "", "/onboarding/complete");
+    createAndroidRuntimeBootstrapBridge({ configured: false });
+    clearXsrfCookie();
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: /invalid link/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /enter your instance url/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("requires Android runtime discovery when the native bootstrap read fails", async () => {
+    createAndroidRuntimeBootstrapBridge({
+      getRuntimeBootstrap: vi
+        .fn()
+        .mockRejectedValue(new Error("Runtime bootstrap is unreadable")),
+    });
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: /enter your instance url/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+  });
+
+  it("requires Android runtime discovery when bootstrap state is unavailable for an Android runtime", async () => {
+    createAndroidRuntimeBootstrapBridge({
+      getRuntimeBootstrap: vi.fn().mockResolvedValue(null),
+    });
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: /enter your instance url/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+  });
+
+  it("clears stale authenticated state before Android runtime discovery starts", async () => {
+    createAndroidRuntimeBootstrapBridge({ configured: false });
+    await seedPersistedAuthUser({
+      id: "42",
+      name: "Stale Runtime User",
+      email: "stale.runtime.user@secpal.dev",
+      emailVerified: true,
+    });
+    mockAuthStorage.clear.mockClear();
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: /enter your instance url/i })
+    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockAuthStorage.clear).toHaveBeenCalled();
+    });
+    expect(mockLoadAuthenticatedAppModule).not.toHaveBeenCalled();
+  });
+
+  it("switches discovery UI language immediately when the user changes it", async () => {
+    const user = userEvent.setup();
+    createAndroidRuntimeBootstrapBridge({ configured: false });
+
+    await renderWithI18n(<App />);
+
+    await user.selectOptions(screen.getByLabelText(/language/i), "de");
+
+    expect(
+      await screen.findByRole("heading", { name: /instanz-url eingeben/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /instanz prüfen/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /weiter zur anmeldung/i })
+    ).toBeInTheDocument();
+  });
+
+  it("validates, summarizes, and confirms an Android runtime bootstrap before login", async () => {
+    const user = userEvent.setup();
+    const bridge = createAndroidRuntimeBootstrapBridge({ configured: false });
+    fetchSpy.mockResolvedValue(
+      new Response(JSON.stringify(createBootstrapResponse()), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    await user.type(
+      await screen.findByLabelText(/instance url/i),
+      "https://api.secpal.dev"
+    );
+    await user.selectOptions(screen.getByLabelText(/language/i), "de");
+    await user.click(
+      screen.getByRole("button", { name: /check instance|instanz prüfen/i })
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: /secpal demo/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("https://api.secpal.dev")).toBeInTheDocument();
+
+    const request = fetchSpy.mock.calls[0]?.[0] as Request;
+    const url = new URL(request.url);
+    expect(url.pathname).toBe("/v1/bootstrap");
+    expect(url.searchParams.get("client_platform")).toBe("android");
+    expect(url.searchParams.get("app_version")).toBe("1.4.0");
+    expect(url.searchParams.get("app_build")).toBe("10400");
+    expect(request.headers.get("Accept-Language")).toBe("de");
+
+    await user.click(
+      screen.getByRole("button", {
+        name: /continue to login|weiter zur anmeldung/i,
+      })
+    );
+
+    await waitFor(() => {
+      expect(bridge.setRuntimeBootstrap).toHaveBeenCalledWith({
+        instanceDisplayName: "SecPal Demo",
+        apiOrigin: "https://api.secpal.dev",
+        rawApiBaseUrl: "https://api.secpal.dev/v1",
+        minimumSupportedAppVersion: "1.4.0",
+        minimumSupportedAppBuild: 10400,
+        androidPush: {
+          provider: "fcm",
+          metadataRevision: 3,
+          publicClientMetadata: {
+            apiKey: "public-client-api-key-demo-1234567890",
+            projectId: "secpal-demo-push",
+            applicationId: "1:1234567890:android:abcdef1234567890",
+            senderId: "1234567890",
+          },
+        },
+        features: {
+          passwordLoginEnabled: true,
+          passkeyLoginEnabled: true,
+          managedAndroidEnrollment: false,
+        },
+      });
+    });
+    expect(
+      await screen.findByRole("heading", { name: /SecPal/i })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /mail/i })).toBeInTheDocument();
+  });
+
+  it("preserves runtime login feature flags immediately after confirming Android runtime discovery", async () => {
+    const user = userEvent.setup();
+    createAndroidRuntimeBootstrapBridge({ configured: false });
+    fetchSpy.mockResolvedValue(
+      new Response(
+        JSON.stringify(
+          createBootstrapResponse({
+            features: {
+              password_login: false,
+              passkey_login: false,
+              managed_android_enrollment: false,
+              notification_channels: {
+                android_fcm: false,
+                web_push: false,
+              },
+            },
+            notification_channels: undefined,
+          })
+        ),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }
+      )
+    );
+
+    await renderWithI18n(<App />);
+
+    await user.type(
+      await screen.findByLabelText(/instance url/i),
+      "https://api.secpal.dev"
+    );
+    await user.click(screen.getByRole("button", { name: /check instance/i }));
+    await screen.findByRole("heading", { name: /secpal demo/i });
+
+    await user.click(
+      screen.getByRole("button", { name: /continue to login/i })
+    );
+
+    expect(
+      await screen.findByText(/signed in to secpal demo/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /log in/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /sign in with passkey/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps runtime discovery open when the native shell cannot apply the bootstrap", async () => {
+    const user = userEvent.setup();
+    createAndroidRuntimeBootstrapBridge({
+      configured: false,
+      setRuntimeBootstrap: null as unknown as ReturnType<typeof vi.fn>,
+    });
+    fetchSpy.mockResolvedValue(
+      new Response(JSON.stringify(createBootstrapResponse()), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    await user.type(
+      await screen.findByLabelText(/instance url/i),
+      "https://api.secpal.dev"
+    );
+    await user.click(screen.getByRole("button", { name: /check instance/i }));
+    await screen.findByRole("heading", { name: /secpal demo/i });
+
+    await user.click(
+      screen.getByRole("button", { name: /continue to login/i })
+    );
+
+    expect(
+      await screen.findByRole("button", { name: /check instance/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /continue to login/i })
+    ).toBeEnabled();
+    expect(
+      screen.getByText(
+        /android runtime bootstrap apply is unavailable in this native shell/i
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("shows the configured Android instance summary on the login screen", async () => {
+    createAndroidRuntimeBootstrapBridge({ configured: true });
+    clearXsrfCookie();
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByText(/signed in to secpal demo/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText("https://api.secpal.dev")).toBeInTheDocument();
+    expect(document.getElementById("secpal-runtime-switch-instance")).toBe(
+      screen.getByRole("button", { name: /switch instance/i })
+    );
+    expect(
+      screen.getByRole("button", { name: /switch instance/i })
+    ).toBeEnabled();
+    expect(
+      screen.queryByRole("heading", { name: /enter your instance url/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("preserves runtime login feature flags from the configured Android bootstrap", async () => {
+    createAndroidRuntimeBootstrapBridge({
+      configured: true,
+      getRuntimeBootstrap: vi.fn().mockResolvedValue({
+        configured: true,
+        bootstrap: {
+          instanceDisplayName: "SecPal Demo",
+          apiOrigin: "https://api.secpal.dev",
+          rawApiBaseUrl: "https://api.secpal.dev/v1",
+          minimumSupportedAppVersion: "1.4.0",
+          minimumSupportedAppBuild: 10400,
+          features: {
+            passwordLoginEnabled: false,
+            passkeyLoginEnabled: false,
+            managedAndroidEnrollment: false,
+          },
+        },
+      }),
+    });
+    clearXsrfCookie();
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByText(/signed in to secpal demo/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /log in/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /sign in with passkey/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("clears configured Android runtime and logged-out local state before returning to discovery", async () => {
+    const user = userEvent.setup();
+    const bridge = createAndroidRuntimeBootstrapBridge({ configured: true });
+    clearXsrfCookie();
+    localStorage.setItem("auth_token", "stale-token");
+    localStorage.setItem("secpal-notification-preferences", "{}");
+    sessionStorage.setItem("tenant:selected", "tenant-1");
+
+    await renderWithI18n(<App />);
+
+    await user.click(
+      await screen.findByRole("button", { name: /switch instance/i })
+    );
+
+    await waitFor(() => {
+      expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
+    });
+    expect(mockAuthStorage.clear).toHaveBeenCalled();
+    expect(localStorage.getItem("auth_token")).toBeNull();
+    expect(localStorage.getItem("secpal-notification-preferences")).toBeNull();
+    expect(sessionStorage.getItem("tenant:selected")).toBeNull();
+    expect(
+      await screen.findByRole("heading", { name: /enter your instance url/i })
+    ).toBeInTheDocument();
+  });
+
+  it("best-effort revokes the native session before switching Android instances", async () => {
+    const user = userEvent.setup();
+    const logoutSpy = vi.fn().mockResolvedValue(undefined);
+    const bridge = createAndroidRuntimeBootstrapBridge({
+      configured: true,
+      logout: logoutSpy,
+    });
+    clearXsrfCookie();
+
+    await renderWithI18n(<App />);
+
+    await user.click(
+      await screen.findByRole("button", { name: /switch instance/i })
+    );
+
+    await waitFor(() => {
+      expect(logoutSpy).toHaveBeenCalledTimes(1);
+    });
+    expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
+    expect(
+      await screen.findByRole("heading", { name: /enter your instance url/i })
+    ).toBeInTheDocument();
+  });
+
+  it("clears configured Android runtime and authenticated state before returning to discovery", async () => {
+    const user = userEvent.setup();
+    const bridge = createAndroidRuntimeBootstrapBridge({ configured: true });
+    localStorage.setItem("auth_token", "stale-token");
+    sessionStorage.setItem("tenant:selected", "tenant-1");
+    await seedPersistedAuthUser({
+      id: "42",
+      name: "Configured User",
+      email: "configured.user@secpal.dev",
+      emailVerified: true,
+    });
+    mockAuthStorage.getUser.mockImplementationOnce(
+      () =>
+        new Promise(() => undefined) as ReturnType<
+          typeof mockAuthStorage.getUser
+        >
+    );
+
+    await renderWithI18n(<App />);
+
+    await user.click(
+      await screen.findByRole("button", { name: /switch instance/i })
+    );
+
+    await waitFor(() => {
+      expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
+    });
+    expect(mockAuthStorage.clear).toHaveBeenCalled();
+    expect(localStorage.getItem("auth_token")).toBeNull();
+    expect(sessionStorage.getItem("tenant:selected")).toBeNull();
+    expect(
+      await screen.findByRole("heading", {
+        name: /enter your instance url/i,
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("clears configured Android runtime even when push cleanup observes a registration conflict", async () => {
+    const user = userEvent.setup();
+    const bridge = createAndroidRuntimeBootstrapBridge({ configured: true });
+    clearXsrfCookie();
+    const unsubscribe = vi.fn().mockResolvedValue(false);
+    const serviceWorkerDescriptor = Object.getOwnPropertyDescriptor(
+      navigator,
+      "serviceWorker"
+    );
+
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: {
+        ready: Promise.resolve({
+          pushManager: {
+            getSubscription: vi.fn().mockResolvedValue({
+              endpoint: "https://app.secpal.dev/stale-registration",
+              unsubscribe,
+            }),
+          },
+        }),
+      },
+    });
+
+    try {
+      await renderWithI18n(<App />);
+
+      await user.click(
+        await screen.findByRole("button", { name: /switch instance/i })
+      );
+
+      await waitFor(() => {
+        expect(unsubscribe).toHaveBeenCalled();
+      });
+      expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
+      expect(mockAuthStorage.clear).toHaveBeenCalled();
+      expect(
+        await screen.findByRole("heading", {
+          name: /enter your instance url/i,
+        })
+      ).toBeInTheDocument();
+    } finally {
+      if (serviceWorkerDescriptor) {
+        Object.defineProperty(
+          navigator,
+          "serviceWorker",
+          serviceWorkerDescriptor
+        );
+      } else {
+        delete (navigator as { serviceWorker?: unknown }).serviceWorker;
+      }
+    }
+  });
+
+  it.each([
+    {
+      name: "validation errors",
+      instanceUrl: "http://api.secpal.dev",
+      fetchResponse: null,
+      message: /secure https instance url/i,
+    },
+    {
+      name: "bootstrap state-invalid errors",
+      instanceUrl: "https://api.secpal.dev",
+      fetchResponse: new Response(
+        JSON.stringify(
+          createBootstrapResponse({
+            features: {
+              password_login: true,
+            },
+          })
+        ),
+        { status: 200 }
+      ),
+      message: /bootstrap response is incomplete/i,
+    },
+    {
+      name: "bootstrap unavailable errors",
+      instanceUrl: "https://api.secpal.dev",
+      fetchResponse: new TypeError("Failed to fetch"),
+      message: /could not reach that instance/i,
+    },
+    {
+      name: "unsupported-client-version responses",
+      instanceUrl: "https://api.secpal.dev",
+      fetchResponse: new Response(JSON.stringify(createBootstrapResponse()), {
+        status: 426,
+      }),
+      message: /update the android app/i,
+    },
+  ])(
+    "blocks Android runtime confirmation on $name",
+    async ({ instanceUrl, fetchResponse, message }) => {
+      const user = userEvent.setup();
+      const bridge = createAndroidRuntimeBootstrapBridge({ configured: false });
+
+      if (fetchResponse instanceof Error) {
+        fetchSpy.mockRejectedValue(fetchResponse);
+      } else if (fetchResponse) {
+        fetchSpy.mockResolvedValue(fetchResponse);
+      }
+
+      await renderWithI18n(<App />);
+
+      await user.type(
+        await screen.findByLabelText(/instance url/i),
+        instanceUrl
+      );
+      await user.click(screen.getByRole("button", { name: /check instance/i }));
+
+      expect(await screen.findByText(message)).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /continue to login/i })
+      ).toBeDisabled();
+      expect(bridge.setRuntimeBootstrap).not.toHaveBeenCalled();
+    }
+  );
 
   it("renders the public source route without requiring authentication", async () => {
     window.history.replaceState({}, "", "/source");

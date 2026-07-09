@@ -109,4 +109,15 @@ describe("app surface", () => {
       );
     }
   );
+
+  it("allows android-mock when a preview bundle runs with PROD=true", async () => {
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("MODE", "preview");
+    vi.stubEnv("VITE_APP_SURFACE", "android-mock");
+
+    const surface = await import("./appSurface");
+
+    expect(surface.appSurface).toBe("android-mock");
+    expect(surface.isAndroidMockSurface).toBe(true);
+  });
 });

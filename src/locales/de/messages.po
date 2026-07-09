@@ -39,6 +39,10 @@ msgstr "Willkommen zum SecPal Onboarding"
 msgid "Date of birth is required"
 msgstr "Geburtsdatum ist erforderlich"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Continue to login"
+msgstr "Weiter zur Anmeldung"
+
 #: src/pages/SourcePage.tsx
 msgid "Published source release links shown below are immutable. Components without a published source release remain linked to their public repositories."
 msgstr "Die unten angezeigten Quelltext-Releases sind unveränderlich. Für Komponenten ohne veröffentlichten Quelltext-Release verlinken wir stattdessen auf die öffentlichen Repositories."
@@ -498,6 +502,10 @@ msgstr "Android-Provisionierung"
 msgid "Onboarding step navigation"
 msgstr "Onboarding-Schrittnavigation"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Enter your instance URL"
+msgstr "Instanz-URL eingeben"
+
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency contact name is required."
@@ -581,6 +589,10 @@ msgstr "Fehlgeschlagen"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to confirm onboarding"
 msgstr "Onboarding konnte nicht bestätigt werden"
+
+#: src/pages/Login.tsx
+msgid "SecPal could not switch instances. Please try again."
+msgstr "SecPal konnte die Instanz nicht wechseln. Bitte versuchen Sie es erneut."
 
 #: src/components/NotificationPermissionPrompt.tsx
 #: src/components/NotificationPreferences.tsx
@@ -947,6 +959,10 @@ msgstr "Die Adress-Autovervollständigung ist fehlgeschlagen."
 msgid "Emergency Contact Name"
 msgstr "Name des Notfallkontakts"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Enter the instance URL you received from your supervisor."
+msgstr "Geben Sie die Instanz-URL ein, die Sie von Ihrem Vorgesetzten erhalten haben."
+
 #: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "House Number"
@@ -992,6 +1008,7 @@ msgid "Complete each earlier residence until your history reaches five years bef
 msgstr "Vervollständigen Sie jeden früheren Wohnort, bis Ihre Angaben bis fünf Jahre vor heute reichen, oder setzen Sie das „Wohnhaft seit“-Datum der aktuellen Adresse weiter zurück."
 
 #: src/components/LoginLegalMenu.tsx
+#: src/components/RuntimeDiscoveryFlow.tsx
 msgid "Failed to change language. Please try again."
 msgstr "Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut."
 
@@ -1080,6 +1097,10 @@ msgstr "Details zur Beschäftigung"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Failed to confirm MFA enrollment."
 msgstr "MFA-Einrichtung konnte nicht bestätigt werden."
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Instance URL"
+msgstr "Instanz-URL"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 #: src/components/OrganizationalUnitTree.tsx
@@ -1836,6 +1857,10 @@ msgstr "OpenTimestamp"
 msgid "Loading customer details"
 msgstr "Kundendetails werden geladen"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Minimum Android version"
+msgstr "Minimale Android-Version"
+
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Applicant / Pre-Contract / Active / On Leave / Terminated"
@@ -1854,6 +1879,10 @@ msgstr "Schritt {0}: {1}"
 #: src/components/RouteGuardState.tsx
 msgid "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
 msgstr "SecPal hat Sie als {email} angemeldet, aber dieses Konto kann nicht auf die geschützte App zugreifen, bis die E-Mail-Adresse verifiziert ist."
+
+#: src/pages/Login.tsx
+msgid "Switch instance"
+msgstr "Instanz wechseln"
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -2613,6 +2642,10 @@ msgstr "Vorübergehend"
 msgid "Position"
 msgstr "Position"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Check instance"
+msgstr "Instanz prüfen"
+
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Loading site form"
 msgstr "Objektformular wird geladen"
@@ -2813,6 +2846,10 @@ msgstr "Verursacher"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Try Again"
 msgstr "Erneut versuchen"
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Not sure which instance to use?"
+msgstr "Nicht sicher, welche Instanz Sie verwenden sollen?"
 
 #. placeholder {0}: formData.min_viewable_rank
 #: src/components/ScopeAssignmentForm.tsx
@@ -3090,6 +3127,14 @@ msgstr "Speichern"
 msgid "No postal address stored yet."
 msgstr "Noch keine Postanschrift hinterlegt."
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "API origin"
+msgstr "API-Ursprung"
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Ask your supervisor for the SecPal instance URL before continuing."
+msgstr "Fragen Sie Ihren Vorgesetzten nach der SecPal Instanz-URL, bevor Sie fortfahren."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Failed to save draft"
 msgstr "Entwurf konnte nicht gespeichert werden"
@@ -3106,6 +3151,10 @@ msgstr "Zurück zu den Kunden"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "We couldn't submit the form yet. Please review the highlighted fields."
 msgstr "Wir konnten das Formular noch nicht abschicken. Bitte überprüfen Sie die markierten Felder."
+
+#: src/pages/Login.tsx
+msgid "Switching instance..."
+msgstr "Instanz wird gewechselt..."
 
 #: src/components/application-layout.tsx
 #: src/components/nav-user.tsx
@@ -3306,6 +3355,10 @@ msgstr "Wen kann dieser Benutzer SEHEN?"
 msgid "Unlock"
 msgstr "Entsperren"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Instance unavailable"
+msgstr "Instanz nicht verfügbar"
+
 #: src/pages/SourcePage.tsx
 msgid "Back to login"
 msgstr "Zurück zur Anmeldung"
@@ -3397,6 +3450,7 @@ msgid "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Bitte laden Sie Ihren Personalausweis hoch (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
 #: src/components/LoginLegalMenu.tsx
+#: src/components/RuntimeDiscoveryFlow.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Language"
 msgstr "Sprache"
@@ -3463,6 +3517,11 @@ msgstr "Postanschrift bearbeiten"
 #: src/pages/SourcePage.tsx
 msgid "Read the AGPL v3 license"
 msgstr "AGPL-v3-Lizenz lesen"
+
+#. placeholder {0}: runtimeBootstrap.instanceDisplayName
+#: src/pages/Login.tsx
+msgid "Signed in to {0}"
+msgstr "Angemeldet bei {0}"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please select a file to upload."
@@ -3627,6 +3686,10 @@ msgstr "Onboarding wird geladen"
 #: src/pages/SourcePage.tsx
 msgid "Open public repository"
 msgstr "Öffentliches Repository öffnen"
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Checking instance"
+msgstr "Instanz wird geprüft"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Optional description for this unit."
@@ -3813,6 +3876,10 @@ msgstr "Telefon"
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "This session has already been used to complete device bootstrap."
 msgstr "Diese Sitzung wurde bereits für den Geräte-Bootstrap verwendet."
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Saving instance"
+msgstr "Instanz wird gespeichert"
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 msgid "Failed to update employee"

@@ -28,6 +28,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added explicit `android-mock` development, local preview build, and
+  Playwright override workflows, including README guidance for local and
+  Polyscope switching while keeping mock surfaces out of deployable
+  production build modes (US-007).
+- Added regression coverage for the Android shared frontend migration flow,
+  including a stable login instance-switch control hook used by Android
+  live-device smoke proof for returning configured runtimes to discovery
+  (US-006).
+- Added a frontend-rendered Android login instance hint and switch action that
+  shows the configured instance label/API origin, clears the native runtime
+  bootstrap, runs the shared sensitive logout cleanup path, and returns the app
+  to runtime discovery (US-004).
+- Added a frontend-owned Android runtime discovery flow that appears before
+  login when no runtime bootstrap is configured, validates secure instance
+  URLs through canonical `GET /v1/bootstrap` Android parameters, blocks
+  invalid/unavailable/incompatible/unsupported responses, and confirms the
+  resolved instance before applying it to the native runtime (US-003).
+- Added canonical `GET /v1/bootstrap` TypeScript models covering Android and
+  browser runtime discovery, per-channel notification metadata, and the
+  frontend-side `SecPalRuntimeBootstrap` native facade for runtime info,
+  bootstrap application, and bootstrap clearing (US-001).
+- Exposed Android runtime bootstrap bridge calls through the shared
+  `SecPalRuntimeBootstrap` facade, including current runtime bootstrap reads,
+  canonical-to-native payload mapping, and token-free regression coverage
+  (US-002).
 - Added `@capacitor/core` as a runtime dependency and introduced the
   side-effect-free `src/platform/runtime.ts` platform abstraction for future
   native integrations without adding Capacitor project scaffolding (US-001).

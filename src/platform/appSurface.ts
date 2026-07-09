@@ -7,9 +7,12 @@ import {
 } from "./appSurfaceContract";
 
 const resolveRuntimeAppSurface = (): AppSurface => {
+  const isProductionArtifact =
+    import.meta.env.PROD && import.meta.env.MODE !== "preview";
+
   return resolveConfiguredAppSurface(
     import.meta.env.VITE_APP_SURFACE,
-    import.meta.env.PROD
+    isProductionArtifact
   );
 };
 

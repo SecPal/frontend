@@ -163,6 +163,8 @@ describe("Build Configuration and Source Verification", () => {
       "dev:web": "cross-env VITE_APP_SURFACE=web vite --mode web",
       "dev:android":
         "cross-env VITE_APP_SURFACE=android-native vite --mode android",
+      "dev:android:mock":
+        "cross-env VITE_APP_SURFACE=android-mock vite --mode android",
       "dev:ios": "cross-env VITE_APP_SURFACE=ios-native vite --mode ios",
       build:
         "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build",
@@ -170,6 +172,8 @@ describe("Build Configuration and Source Verification", () => {
         "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build --mode web",
       "build:android":
         "cross-env VITE_APP_SURFACE=android-native tsc && cross-env VITE_APP_SURFACE=android-native vite build --mode android",
+      "build:android:mock":
+        "cross-env VITE_APP_SURFACE=android-mock tsc && cross-env VITE_APP_SURFACE=android-mock vite build --mode preview",
       "build:ios":
         "cross-env VITE_APP_SURFACE=ios-native tsc && cross-env VITE_APP_SURFACE=ios-native vite build --mode ios",
       "build:analyze":
@@ -226,6 +230,10 @@ describe("Build Configuration and Source Verification", () => {
     expect(readme).toContain("Radix");
     expect(readme).toContain("lucide-react");
     expect(readme).toContain("Do not introduce visual rebuilds");
+    expect(readme).toContain("npm run dev:android:mock");
+    expect(readme).toContain("npm run build:android:mock");
+    expect(readme).toContain("PLAYWRIGHT_APP_SURFACE=android-mock");
+    expect(readme).toContain("workspace previews keep the deployed bundle");
 
     expect(envExample).toContain("VITE_APP_SURFACE=web");
     expect(envExample).toContain(
