@@ -102,6 +102,42 @@ describe("check-domains", () => {
     );
   });
 
+  it("rejects the asset key hostname when a query string follows it", () => {
+    const forbiddenHostname = ["secpal", "asset-load-recovery"].join(".");
+
+    const result = runDomainCheck([
+      {
+        path: "README.md",
+        contents: `Use ${forbiddenHostname}?debug=1 for diagnostics.\n`,
+      },
+    ]);
+
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain(forbiddenHostname);
+    expect(result.stdout + result.stderr).toContain(
+      "Domain Policy Check FAILED"
+    );
+  });
+
+  it("rejects the asset key hostname when a fragment follows it", () => {
+    const forbiddenHostname = ["secpal", "asset-load-recovery"].join(".");
+
+    const result = runDomainCheck([
+      {
+        path: "README.md",
+        contents: `Use ${forbiddenHostname}#frag for diagnostics.\n`,
+      },
+    ]);
+
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain(forbiddenHostname);
+    expect(result.stdout + result.stderr).toContain(
+      "Domain Policy Check FAILED"
+    );
+  });
+
   it("rejects forbidden secpal hostnames", () => {
     const result = runDomainCheck([
       {

@@ -22,8 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hostnames across one-character, punycode, digit-bearing, long, and
   hyphenated host labels without letting the known
   `secpal.asset-load-recovery` storage key mask same-line forbidden hosts or
-  URL-host usage of the same token, while still ignoring the standalone key
-  and `.context` workspace notes as forbidden domains.
+  URL-host usage of the same token, including query- and fragment-suffixed
+  host forms, while still ignoring the standalone key and `.context`
+  workspace notes as forbidden domains.
 
 ### Added
 
