@@ -21,8 +21,7 @@ export type {
 } from "./bootstrap";
 
 export type BrowserBootstrapCompatibility = BootstrapCompatibility;
-export type BrowserWebPushRuntimeMetadata =
-  WebPushNotificationChannelRuntime;
+export type BrowserWebPushRuntimeMetadata = WebPushNotificationChannelRuntime;
 export type BrowserPushBootstrapData = BootstrapConfiguration & {
   client_platform: "browser";
 };

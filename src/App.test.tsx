@@ -144,9 +144,9 @@ vi.mock("./components/UpdatePrompt", () => ({
 // prevents that backlog without affecting the auth behaviour under test.
 // Using spyOn (not stubGlobal) so it is not undone by unstubGlobals: true
 // between tests.
-const fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(
-  new TypeError("fetch is not available in App.test.tsx")
-);
+const fetchSpy = vi
+  .spyOn(globalThis, "fetch")
+  .mockRejectedValue(new TypeError("fetch is not available in App.test.tsx"));
 
 function createAndroidRuntimeBootstrapBridge({
   configured = false,
@@ -398,7 +398,9 @@ describe("App", () => {
     expect(
       await screen.findByRole("heading", { name: /customer example/i })
     ).toBeInTheDocument();
-    expect(screen.getByText("https://customer-api.example")).toBeInTheDocument();
+    expect(
+      screen.getByText("https://customer-api.example")
+    ).toBeInTheDocument();
 
     const request = fetchSpy.mock.calls[0]?.[0] as Request;
     const url = new URL(request.url);
@@ -408,7 +410,9 @@ describe("App", () => {
     expect(url.searchParams.get("app_build")).toBe("10400");
     expect(request.headers.get("Accept-Language")).toBe("de");
 
-    await user.click(screen.getByRole("button", { name: /continue to login/i }));
+    await user.click(
+      screen.getByRole("button", { name: /continue to login/i })
+    );
 
     await waitFor(() => {
       expect(bridge.setRuntimeBootstrap).toHaveBeenCalledWith({
@@ -449,10 +453,12 @@ describe("App", () => {
     expect(
       await screen.findByText(/signed in to customer example/i)
     ).toBeInTheDocument();
-    expect(screen.getByText("https://customer-api.example")).toBeInTheDocument();
     expect(
-      document.getElementById("secpal-runtime-switch-instance")
-    ).toBe(screen.getByRole("button", { name: /switch instance/i }));
+      screen.getByText("https://customer-api.example")
+    ).toBeInTheDocument();
+    expect(document.getElementById("secpal-runtime-switch-instance")).toBe(
+      screen.getByRole("button", { name: /switch instance/i })
+    );
     expect(
       screen.getByRole("button", { name: /switch instance/i })
     ).toBeEnabled();
@@ -628,10 +634,11 @@ describe("App", () => {
 
       await renderWithI18n(<App />);
 
-      await user.type(await screen.findByLabelText(/instance url/i), instanceUrl);
-      await user.click(
-        screen.getByRole("button", { name: /check instance/i })
+      await user.type(
+        await screen.findByLabelText(/instance url/i),
+        instanceUrl
       );
+      await user.click(screen.getByRole("button", { name: /check instance/i }));
 
       expect(await screen.findByText(message)).toBeInTheDocument();
       expect(

@@ -3,10 +3,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import type {
-  BootstrapResponse,
-  NativeRuntimeBootstrap,
-} from "./bootstrap";
+import type { BootstrapResponse, NativeRuntimeBootstrap } from "./bootstrap";
 
 describe("bootstrap API types", () => {
   it("models the full canonical public bootstrap document", () => {

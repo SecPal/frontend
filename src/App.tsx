@@ -265,7 +265,9 @@ function NativeRuntimeDiscoveryGate({
 }: {
   children: React.ReactNode;
 }) {
-  const [runtimeInfo, setRuntimeInfo] = useState<SecPalRuntimeInfo | null>(null);
+  const [runtimeInfo, setRuntimeInfo] = useState<SecPalRuntimeInfo | null>(
+    null
+  );
   const [loginRuntimeBootstrap, setLoginRuntimeBootstrap] =
     useState<LoginRuntimeBootstrapSummary | null>(null);
   const [isDiscoveryRequired, setIsDiscoveryRequired] = useState(false);
@@ -326,8 +328,7 @@ function NativeRuntimeDiscoveryGate({
           return;
         }
 
-        const nextRuntimeInfo =
-          await SecPalRuntimeBootstrap.getRuntimeInfo();
+        const nextRuntimeInfo = await SecPalRuntimeBootstrap.getRuntimeInfo();
 
         if (!isMounted) {
           return;

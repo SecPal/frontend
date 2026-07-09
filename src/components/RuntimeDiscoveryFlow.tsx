@@ -277,7 +277,9 @@ export function RuntimeDiscoveryFlow({
                 id="secpal-instance-discovery-validate"
                 type="submit"
                 className="w-full"
-                disabled={isChecking || isConfirming || instanceUrl.trim() === ""}
+                disabled={
+                  isChecking || isConfirming || instanceUrl.trim() === ""
+                }
               >
                 {isChecking ? (
                   <>

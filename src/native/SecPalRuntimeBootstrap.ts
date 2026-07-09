@@ -95,8 +95,7 @@ function toAppliedRuntimeBootstrap(
           publicClientMetadata: {
             apiKey: androidFcm.public_runtime_metadata.api_key,
             projectId: androidFcm.public_runtime_metadata.project_id,
-            applicationId:
-              androidFcm.public_runtime_metadata.application_id,
+            applicationId: androidFcm.public_runtime_metadata.application_id,
             senderId: androidFcm.public_runtime_metadata.sender_id,
           },
         }
@@ -104,8 +103,7 @@ function toAppliedRuntimeBootstrap(
     features: {
       passwordLoginEnabled: bootstrap.features.password_login,
       passkeyLoginEnabled: bootstrap.features.passkey_login,
-      managedAndroidEnrollment:
-        bootstrap.features.managed_android_enrollment,
+      managedAndroidEnrollment: bootstrap.features.managed_android_enrollment,
     },
   };
 }
@@ -129,9 +127,7 @@ export const SecPalRuntimeBootstrap: SecPalRuntimeBootstrapFacade = {
 
     return bridge.getRuntimeBootstrap();
   },
-  async setRuntimeBootstrap(
-    bootstrap: NativeRuntimeBootstrap
-  ): Promise<void> {
+  async setRuntimeBootstrap(bootstrap: NativeRuntimeBootstrap): Promise<void> {
     const bridge = getRuntimeBootstrapBridge();
 
     if (typeof bridge?.setRuntimeBootstrap !== "function") {
