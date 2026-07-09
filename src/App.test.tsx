@@ -871,9 +871,23 @@ describe("App", () => {
     window.history.replaceState({}, "", "/");
     clearXsrfCookie();
     vi.useFakeTimers();
+    const lateUser = {
+      id: "1",
+      name: "Late Bootstrap User",
+      email: "late-bootstrap@secpal.dev",
+      emailVerified: true,
+      roles: [],
+      permissions: [],
+      hasOrganizationalScopes: false,
+      hasCustomerAccess: false,
+      hasSiteAccess: false,
+    };
+    let resolveCurrentUser: ((value: typeof lateUser) => void) | undefined;
     mockGetCurrentUser.mockImplementationOnce(
       () =>
-        new Promise(() => undefined) as ReturnType<typeof mockGetCurrentUser>
+        new Promise<typeof lateUser>((resolve) => {
+          resolveCurrentUser = resolve;
+        }) as ReturnType<typeof mockGetCurrentUser>
     );
 
     try {
@@ -897,6 +911,18 @@ describe("App", () => {
       expect(window.location.pathname).toBe("/login");
       expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
       expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+      expect(mockAuthStorage.setUser).not.toHaveBeenCalled();
+
+      await act(async () => {
+        resolveCurrentUser?.(lateUser);
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(window.location.pathname).toBe("/login");
+      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+      expect(mockAuthStorage.setUser).not.toHaveBeenCalled();
     } finally {
       vi.useRealTimers();
     }
