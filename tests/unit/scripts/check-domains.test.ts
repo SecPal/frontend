@@ -66,6 +66,19 @@ describe("check-domains", () => {
     expect(result.stdout).toContain("Domain Policy Check PASSED");
   });
 
+  it("accepts the storage key when it is the first token on a scanned line", () => {
+    const result = runDomainCheck([
+      {
+        path: "README.md",
+        contents: "secpal.asset-load-recovery\n",
+      },
+    ]);
+
+    expect(result.error).toBeUndefined();
+    expect(result.status, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toContain("Domain Policy Check PASSED");
+  });
+
   it("rejects forbidden hostnames on lines that also mention the asset key", () => {
     const forbiddenHostname = ["status", "secpal", "io"].join(".");
 

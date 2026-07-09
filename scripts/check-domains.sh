@@ -49,7 +49,7 @@ matches=$(grep -r -n -E '([A-Za-z0-9-]+\.)*secpal\.[A-Za-z0-9-]{1,63}($|[^A-Za-z
 
 # Drop the known storage key token without discarding other matches on the same line.
 matches=$(printf '%s\n' "$matches" | \
-    sed -E 's/(^|[^A-Za-z0-9/:.-])secpal\.asset-load-recovery($|[^A-Za-z0-9._/?:#-])/\1\2/g' || true)
+    sed -E 's/(^|[^A-Za-z0-9/.-])secpal\.asset-load-recovery($|[^A-Za-z0-9._/?:#-])/\1\2/g' || true)
 
 # Allowlist approach: flag any secpal.* domain not matching an approved pattern.
 # Approved or temporarily tolerated here: secpal.app, apk.secpal.app,
