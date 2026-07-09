@@ -82,6 +82,11 @@ describe("vite config dev proxy", () => {
 });
 
 describe("vite config surface validation", () => {
+  afterEach(() => {
+    delete process.env.VITE_APP_SURFACE;
+    vi.resetModules();
+  });
+
   it.each(["android-mock", "ios-mock"] as const)(
     "rejects %s before a production artifact can be emitted",
     async (configuredSurface) => {
@@ -102,4 +107,20 @@ describe("vite config surface validation", () => {
       );
     }
   );
+
+  it("allows android-mock for local preview build validation", async () => {
+    process.env.VITE_APP_SURFACE = "android-mock";
+    const { default: viteConfig } = await import("../vite.config");
+
+    expect(() =>
+      typeof viteConfig === "function"
+        ? viteConfig({
+            command: "build",
+            mode: "preview",
+            isPreview: false,
+            isSsrBuild: false,
+          })
+        : viteConfig
+    ).not.toThrow();
+  });
 });

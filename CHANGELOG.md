@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added explicit `android-mock` development, local preview build, and
+  Playwright override workflows, including README guidance for local and
+  Polyscope switching while keeping mock surfaces out of deployable
+  production build modes (US-007).
 - Added regression coverage for the Android shared frontend migration flow,
   including a stable login instance-switch control hook used by Android
   live-device smoke proof for returning configured runtimes to discovery
