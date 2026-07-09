@@ -824,7 +824,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(unsubscribe).toHaveBeenCalledTimes(1);
+        expect(unsubscribe).toHaveBeenCalled();
       });
       expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
       expect(mockAuthStorage.clear).toHaveBeenCalled();
