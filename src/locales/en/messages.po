@@ -590,6 +590,10 @@ msgstr "Failed"
 msgid "Failed to confirm onboarding"
 msgstr "Failed to confirm onboarding"
 
+#: src/pages/Login.tsx
+msgid "SecPal could not switch instances. Please try again."
+msgstr "SecPal could not switch instances. Please try again."
+
 #: src/components/NotificationPermissionPrompt.tsx
 #: src/components/NotificationPreferences.tsx
 msgid "This deployment does not currently publish browser Web Push. Keep HTTPS, the selected deployment domain, and same-origin service-worker hosting aligned before rollout."
@@ -1875,6 +1879,10 @@ msgstr "Step {0}: {1}"
 msgid "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
 msgstr "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
 
+#: src/pages/Login.tsx
+msgid "Switch instance"
+msgstr "Switch instance"
+
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency Contact Notes"
@@ -3143,6 +3151,10 @@ msgstr "Back to Customers"
 msgid "We couldn't submit the form yet. Please review the highlighted fields."
 msgstr "We couldn't submit the form yet. Please review the highlighted fields."
 
+#: src/pages/Login.tsx
+msgid "Switching instance..."
+msgstr "Switching instance..."
+
 #: src/components/application-layout.tsx
 #: src/components/nav-user.tsx
 #: src/pages/Settings/SettingsPage.tsx
@@ -3504,6 +3516,11 @@ msgstr "Edit Postal Address"
 #: src/pages/SourcePage.tsx
 msgid "Read the AGPL v3 license"
 msgstr "Read the AGPL v3 license"
+
+#. placeholder {0}: runtimeBootstrap.instanceDisplayName
+#: src/pages/Login.tsx
+msgid "Signed in to {0}"
+msgstr "Signed in to {0}"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please select a file to upload."

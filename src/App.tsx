@@ -1,7 +1,15 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-import { lazy, Suspense, useEffect, useState } from "react";
+import {
+  createContext,
+  lazy,
+  Suspense,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import {
   BrowserRouter,
   Navigate,
@@ -26,13 +34,33 @@ import { loadAuthenticatedAppModule } from "./lib/lazyAppModules";
 import { isRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
 import {
   SecPalRuntimeBootstrap,
+  type SecPalAppliedRuntimeBootstrap,
   type SecPalRuntimeInfo,
 } from "./native";
+import { Login } from "./pages/Login";
+import { SourcePage } from "./pages/SourcePage";
 
 const LOGIN_ROUTE_BOOTSTRAP_INTERACTIVE_DELAY_MS = 1000;
 
-import { Login } from "./pages/Login";
-import { SourcePage } from "./pages/SourcePage";
+type LoginRuntimeBootstrapSummary = Pick<
+  SecPalAppliedRuntimeBootstrap,
+  "apiOrigin" | "instanceDisplayName"
+>;
+
+interface NativeRuntimeBootstrapContextValue {
+  readonly loginRuntimeBootstrap: LoginRuntimeBootstrapSummary | null;
+  readonly returnToRuntimeDiscovery: () => Promise<void>;
+}
+
+const NativeRuntimeBootstrapContext =
+  createContext<NativeRuntimeBootstrapContextValue>({
+    loginRuntimeBootstrap: null,
+    returnToRuntimeDiscovery: async () => undefined,
+  });
+
+function useNativeRuntimeBootstrapContext() {
+  return useContext(NativeRuntimeBootstrapContext);
+}
 
 const OnboardingComplete = lazy(() =>
   import("./pages/Onboarding/OnboardingComplete").then((module) => ({
@@ -80,6 +108,8 @@ function AuthenticatedAppSlot({
 
 function LoginRoute() {
   const auth = useAuth();
+  const { loginRuntimeBootstrap, returnToRuntimeDiscovery } =
+    useNativeRuntimeBootstrapContext();
   const {
     bootstrapRecoveryReason,
     isAuthenticated,
@@ -88,6 +118,10 @@ function LoginRoute() {
     retryBootstrap,
     unlock,
   } = auth;
+  const handleSwitchRuntimeBootstrap = useCallback(async () => {
+    await logout();
+    await returnToRuntimeDiscovery();
+  }, [logout, returnToRuntimeDiscovery]);
 
   if (isVaultLocked) {
     if (!unlock) {
@@ -117,11 +151,23 @@ function LoginRoute() {
     return <Navigate to="/" replace />;
   }
 
-  return <Login />;
+  return (
+    <Login
+      runtimeBootstrap={loginRuntimeBootstrap}
+      onSwitchRuntimeBootstrap={handleSwitchRuntimeBootstrap}
+    />
+  );
 }
 
 function LoginRouteBootstrapGate() {
   const [showInteractiveLogin, setShowInteractiveLogin] = useState(false);
+  const { logout } = useAuth();
+  const { loginRuntimeBootstrap, returnToRuntimeDiscovery } =
+    useNativeRuntimeBootstrapContext();
+  const handleSwitchRuntimeBootstrap = useCallback(async () => {
+    await logout();
+    await returnToRuntimeDiscovery();
+  }, [logout, returnToRuntimeDiscovery]);
 
   useEffect(() => {
     const timeoutId = globalThis.setTimeout(() => {
@@ -133,7 +179,14 @@ function LoginRouteBootstrapGate() {
     };
   }, []);
 
-  return showInteractiveLogin ? <Login /> : <LoginRouteLoadingState />;
+  return showInteractiveLogin ? (
+    <Login
+      runtimeBootstrap={loginRuntimeBootstrap}
+      onSwitchRuntimeBootstrap={handleSwitchRuntimeBootstrap}
+    />
+  ) : (
+    <LoginRouteLoadingState />
+  );
 }
 
 function AuthenticatedAppRoute() {
@@ -213,8 +266,29 @@ function NativeRuntimeDiscoveryGate({
   children: React.ReactNode;
 }) {
   const [runtimeInfo, setRuntimeInfo] = useState<SecPalRuntimeInfo | null>(null);
+  const [loginRuntimeBootstrap, setLoginRuntimeBootstrap] =
+    useState<LoginRuntimeBootstrapSummary | null>(null);
   const [isDiscoveryRequired, setIsDiscoveryRequired] = useState(false);
   const [isCheckingRuntime, setIsCheckingRuntime] = useState(true);
+
+  const requireRuntimeDiscovery = useCallback(async () => {
+    const nextRuntimeInfo = await SecPalRuntimeBootstrap.getRuntimeInfo();
+
+    setLoginRuntimeBootstrap(null);
+
+    if (nextRuntimeInfo?.clientPlatform === "android") {
+      setRuntimeInfo(nextRuntimeInfo);
+      setIsDiscoveryRequired(true);
+    } else {
+      setRuntimeInfo(null);
+      setIsDiscoveryRequired(false);
+    }
+  }, []);
+
+  const returnToRuntimeDiscovery = useCallback(async () => {
+    await SecPalRuntimeBootstrap.clearRuntimeBootstrap();
+    await requireRuntimeDiscovery();
+  }, [requireRuntimeDiscovery]);
 
   useEffect(() => {
     let isMounted = true;
@@ -228,7 +302,24 @@ function NativeRuntimeDiscoveryGate({
           return;
         }
 
-        if (!bootstrapState || bootstrapState.configured) {
+        if (!bootstrapState) {
+          setLoginRuntimeBootstrap(null);
+          setIsDiscoveryRequired(false);
+          setRuntimeInfo(null);
+          setIsCheckingRuntime(false);
+          return;
+        }
+
+        if (bootstrapState.configured) {
+          setLoginRuntimeBootstrap(
+            bootstrapState.bootstrap
+              ? {
+                  apiOrigin: bootstrapState.bootstrap.apiOrigin,
+                  instanceDisplayName:
+                    bootstrapState.bootstrap.instanceDisplayName,
+                }
+              : null
+          );
           setIsDiscoveryRequired(false);
           setRuntimeInfo(null);
           setIsCheckingRuntime(false);
@@ -243,14 +334,17 @@ function NativeRuntimeDiscoveryGate({
         }
 
         if (nextRuntimeInfo?.clientPlatform === "android") {
+          setLoginRuntimeBootstrap(null);
           setRuntimeInfo(nextRuntimeInfo);
           setIsDiscoveryRequired(true);
         } else {
+          setLoginRuntimeBootstrap(null);
           setRuntimeInfo(null);
           setIsDiscoveryRequired(false);
         }
       } catch {
         if (isMounted) {
+          setLoginRuntimeBootstrap(null);
           setRuntimeInfo(null);
           setIsDiscoveryRequired(false);
         }
@@ -277,6 +371,22 @@ function NativeRuntimeDiscoveryGate({
       <RuntimeDiscoveryFlow
         runtimeInfo={runtimeInfo}
         onConfigured={() => {
+          void SecPalRuntimeBootstrap.getRuntimeBootstrap()
+            .then((bootstrapState) => {
+              if (!bootstrapState?.configured || !bootstrapState.bootstrap) {
+                setLoginRuntimeBootstrap(null);
+                return;
+              }
+
+              setLoginRuntimeBootstrap({
+                apiOrigin: bootstrapState.bootstrap.apiOrigin,
+                instanceDisplayName:
+                  bootstrapState.bootstrap.instanceDisplayName,
+              });
+            })
+            .catch(() => {
+              setLoginRuntimeBootstrap(null);
+            });
           setIsDiscoveryRequired(false);
           setRuntimeInfo(null);
         }}
@@ -284,7 +394,13 @@ function NativeRuntimeDiscoveryGate({
     );
   }
 
-  return children;
+  return (
+    <NativeRuntimeBootstrapContext.Provider
+      value={{ loginRuntimeBootstrap, returnToRuntimeDiscovery }}
+    >
+      {children}
+    </NativeRuntimeBootstrapContext.Provider>
+  );
 }
 
 function App() {

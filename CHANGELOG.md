@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added a frontend-rendered Android login instance hint and switch action that
+  shows the configured instance label/API origin, clears the native runtime
+  bootstrap, runs the shared sensitive logout cleanup path, and returns the app
+  to runtime discovery (US-004).
 - Added a frontend-owned Android runtime discovery flow that appears before
   login when no runtime bootstrap is configured, validates secure instance
   URLs through canonical `GET /v1/bootstrap` Android parameters, blocks

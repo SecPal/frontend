@@ -150,24 +150,54 @@ const fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(
 
 function createAndroidRuntimeBootstrapBridge({
   configured = false,
-  getRuntimeBootstrap = vi.fn().mockResolvedValue({ configured }),
+  getRuntimeBootstrap = vi.fn().mockResolvedValue(
+    configured
+      ? {
+          configured: true,
+          bootstrap: {
+            instanceDisplayName: "Customer Example",
+            apiOrigin: "https://customer-api.example",
+            rawApiBaseUrl: "https://customer-api.example/v1",
+            minimumSupportedAppVersion: "1.4.0",
+            minimumSupportedAppBuild: 10400,
+            androidPush: {
+              provider: "fcm",
+              metadataRevision: 3,
+              publicClientMetadata: {
+                apiKey: "public-client-api-key-demo-1234567890",
+                projectId: "secpal-demo-push",
+                applicationId: "1:1234567890:android:abcdef1234567890",
+                senderId: "1234567890",
+              },
+            },
+            features: {
+              passwordLoginEnabled: true,
+              passkeyLoginEnabled: true,
+              managedAndroidEnrollment: false,
+            },
+          },
+        }
+      : { configured: false }
+  ),
   getRuntimeInfo = vi.fn().mockResolvedValue({
     clientPlatform: "android",
     appVersion: "1.4.0",
     appBuild: 10400,
   }),
   setRuntimeBootstrap = vi.fn().mockResolvedValue(undefined),
+  clearRuntimeBootstrap = vi.fn().mockResolvedValue(undefined),
 }: {
   configured?: boolean;
   getRuntimeBootstrap?: ReturnType<typeof vi.fn>;
   getRuntimeInfo?: ReturnType<typeof vi.fn>;
   setRuntimeBootstrap?: ReturnType<typeof vi.fn>;
+  clearRuntimeBootstrap?: ReturnType<typeof vi.fn>;
 } = {}) {
   const bridge = {
     getRuntimeBootstrap,
     getRuntimeInfo,
     setRuntimeBootstrap,
-    clearRuntimeBootstrap: vi.fn().mockResolvedValue(undefined),
+    clearRuntimeBootstrap,
   };
 
   (
@@ -408,6 +438,141 @@ describe("App", () => {
       await screen.findByRole("heading", { name: /SecPal/i })
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+  });
+
+  it("shows the configured Android instance summary on the login screen", async () => {
+    createAndroidRuntimeBootstrapBridge({ configured: true });
+    clearXsrfCookie();
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByText(/signed in to customer example/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText("https://customer-api.example")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /switch instance/i })
+    ).toBeEnabled();
+    expect(
+      screen.queryByRole("heading", { name: /enter your instance url/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("clears configured Android runtime and logged-out local state before returning to discovery", async () => {
+    const user = userEvent.setup();
+    const bridge = createAndroidRuntimeBootstrapBridge({ configured: true });
+    clearXsrfCookie();
+    localStorage.setItem("auth_token", "stale-token");
+    localStorage.setItem("secpal-notification-preferences", "{}");
+    sessionStorage.setItem("tenant:selected", "tenant-1");
+
+    await renderWithI18n(<App />);
+
+    await user.click(
+      await screen.findByRole("button", { name: /switch instance/i })
+    );
+
+    await waitFor(() => {
+      expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
+    });
+    expect(mockAuthStorage.clear).toHaveBeenCalled();
+    expect(localStorage.getItem("auth_token")).toBeNull();
+    expect(localStorage.getItem("secpal-notification-preferences")).toBeNull();
+    expect(sessionStorage.getItem("tenant:selected")).toBeNull();
+    expect(
+      await screen.findByRole("heading", { name: /enter your instance url/i })
+    ).toBeInTheDocument();
+  });
+
+  it("clears configured Android runtime and authenticated state before returning to discovery", async () => {
+    const user = userEvent.setup();
+    const bridge = createAndroidRuntimeBootstrapBridge({ configured: true });
+    localStorage.setItem("auth_token", "stale-token");
+    sessionStorage.setItem("tenant:selected", "tenant-1");
+    await seedPersistedAuthUser({
+      id: "42",
+      name: "Configured User",
+      email: "configured.user@secpal.dev",
+      emailVerified: true,
+    });
+    mockAuthStorage.getUser.mockImplementationOnce(
+      () =>
+        new Promise(() => undefined) as ReturnType<
+          typeof mockAuthStorage.getUser
+        >
+    );
+
+    await renderWithI18n(<App />);
+
+    await user.click(
+      await screen.findByRole("button", { name: /switch instance/i })
+    );
+
+    await waitFor(() => {
+      expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
+    });
+    expect(mockAuthStorage.clear).toHaveBeenCalled();
+    expect(localStorage.getItem("auth_token")).toBeNull();
+    expect(sessionStorage.getItem("tenant:selected")).toBeNull();
+    expect(
+      await screen.findByRole("heading", {
+        name: /enter your instance url/i,
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("clears configured Android runtime even when push cleanup observes a registration conflict", async () => {
+    const user = userEvent.setup();
+    const bridge = createAndroidRuntimeBootstrapBridge({ configured: true });
+    clearXsrfCookie();
+    const unsubscribe = vi.fn().mockResolvedValue(false);
+    const serviceWorkerDescriptor = Object.getOwnPropertyDescriptor(
+      navigator,
+      "serviceWorker"
+    );
+
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: {
+        ready: Promise.resolve({
+          pushManager: {
+            getSubscription: vi.fn().mockResolvedValue({
+              endpoint: "https://push.example/stale-registration",
+              unsubscribe,
+            }),
+          },
+        }),
+      },
+    });
+
+    try {
+      await renderWithI18n(<App />);
+
+      await user.click(
+        await screen.findByRole("button", { name: /switch instance/i })
+      );
+
+      await waitFor(() => {
+        expect(unsubscribe).toHaveBeenCalledTimes(1);
+      });
+      expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
+      expect(mockAuthStorage.clear).toHaveBeenCalled();
+      expect(
+        await screen.findByRole("heading", {
+          name: /enter your instance url/i,
+        })
+      ).toBeInTheDocument();
+    } finally {
+      if (serviceWorkerDescriptor) {
+        Object.defineProperty(
+          navigator,
+          "serviceWorker",
+          serviceWorkerDescriptor
+        );
+      } else {
+        delete (navigator as { serviceWorker?: unknown }).serviceWorker;
+      }
+    }
   });
 
   it.each([

@@ -57,6 +57,16 @@ const RECOVERY_CODE_LENGTH = 8;
 type Translate = ReturnType<typeof useLingui>["_"];
 type HealthStatus = import("../services/healthApi").HealthStatus;
 
+export interface LoginRuntimeBootstrapSummary {
+  readonly instanceDisplayName: string;
+  readonly apiOrigin: string;
+}
+
+export interface LoginProps {
+  readonly runtimeBootstrap?: LoginRuntimeBootstrapSummary | null;
+  readonly onSwitchRuntimeBootstrap?: () => Promise<void>;
+}
+
 async function loadAuthApiModule() {
   return await import("../services/authApi");
 }
@@ -268,7 +278,10 @@ function getLocalizedMfaErrorMessage(
   return message;
 }
 
-export function Login() {
+export function Login({
+  runtimeBootstrap = null,
+  onSwitchRuntimeBootstrap,
+}: LoginProps = {}) {
   const navigate = useNavigate();
   const { _ } = useLingui();
   const { login } = useAuth();
@@ -312,6 +325,8 @@ export function Login() {
   const [mfaError, setMfaError] = useState<string | null>(null);
   const [isVerifyingMfa, setIsVerifyingMfa] = useState(false);
   const [isCompletingLogin, setIsCompletingLogin] = useState(false);
+  const [isSwitchingRuntimeBootstrap, setIsSwitchingRuntimeBootstrap] =
+    useState(false);
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const normalizedMfaCode = mfaCode.trim();
   const isIncompleteTotpCode =
@@ -399,7 +414,8 @@ export function Login() {
     isSystemNotReady ||
     isLocked ||
     isMfaChallengeActive ||
-    isCompletingLogin;
+    isCompletingLogin ||
+    isSwitchingRuntimeBootstrap;
   const isLoginSubmitDisabled =
     !isOnline ||
     isSubmitting ||
@@ -407,7 +423,8 @@ export function Login() {
     isSystemNotReady ||
     isLocked ||
     isMfaChallengeActive ||
-    isCompletingLogin;
+    isCompletingLogin ||
+    isSwitchingRuntimeBootstrap;
   const isPasskeySubmitDisabled =
     !isOnline ||
     isSubmitting ||
@@ -415,7 +432,8 @@ export function Login() {
     isSystemNotReady ||
     isLocked ||
     isMfaChallengeActive ||
-    isCompletingLogin;
+    isCompletingLogin ||
+    isSwitchingRuntimeBootstrap;
 
   // Compute aria-describedby for inputs (combines error, lockout, and offline alerts)
   const ariaDescribedBy =
@@ -494,6 +512,29 @@ export function Login() {
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSwitchRuntimeBootstrap = async () => {
+    if (!runtimeBootstrap || !onSwitchRuntimeBootstrap) {
+      return;
+    }
+
+    setError(null);
+    setHasCredentialError(false);
+    setIsSwitchingRuntimeBootstrap(true);
+
+    try {
+      await onSwitchRuntimeBootstrap();
+    } catch (err) {
+      console.error("Runtime bootstrap reset error:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : _(msg`SecPal could not switch instances. Please try again.`)
+      );
+    } finally {
+      setIsSwitchingRuntimeBootstrap(false);
     }
   };
 
@@ -730,6 +771,43 @@ export function Login() {
                   <Trans id="login.title">Welcome to SecPal</Trans>
                 </LoginCardTitle>
               </LoginCardHeader>
+
+              {runtimeBootstrap && onSwitchRuntimeBootstrap ? (
+                <LoginStatusMessage variant="neutral" live="off">
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <p>
+                        <Trans>
+                          Signed in to {runtimeBootstrap.instanceDisplayName}
+                        </Trans>
+                      </p>
+                      <p className="break-all text-muted-foreground">
+                        {runtimeBootstrap.apiOrigin}
+                      </p>
+                    </div>
+                    <LoginButton
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => void handleSwitchRuntimeBootstrap()}
+                      disabled={
+                        isSubmitting ||
+                        isSubmittingPasskey ||
+                        isMfaChallengeActive ||
+                        isCompletingLogin ||
+                        isSwitchingRuntimeBootstrap
+                      }
+                      aria-busy={isSwitchingRuntimeBootstrap}
+                    >
+                      {isSwitchingRuntimeBootstrap ? (
+                        <Trans>Switching instance...</Trans>
+                      ) : (
+                        <Trans>Switch instance</Trans>
+                      )}
+                    </LoginButton>
+                  </div>
+                </LoginStatusMessage>
+              ) : null}
 
               {!isOnline && (
                 <LoginStatusMessage
