@@ -1008,6 +1008,7 @@ msgid "Complete each earlier residence until your history reaches five years bef
 msgstr "Vervollständigen Sie jeden früheren Wohnort, bis Ihre Angaben bis fünf Jahre vor heute reichen, oder setzen Sie das „Wohnhaft seit“-Datum der aktuellen Adresse weiter zurück."
 
 #: src/components/LoginLegalMenu.tsx
+#: src/components/RuntimeDiscoveryFlow.tsx
 msgid "Failed to change language. Please try again."
 msgstr "Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut."
 

@@ -1008,6 +1008,7 @@ msgid "Complete each earlier residence until your history reaches five years bef
 msgstr "Complete each earlier residence until your history reaches five years before today, or move your current residence start date back."
 
 #: src/components/LoginLegalMenu.tsx
+#: src/components/RuntimeDiscoveryFlow.tsx
 msgid "Failed to change language. Please try again."
 msgstr "Failed to change language. Please try again."
 

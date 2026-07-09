@@ -77,7 +77,7 @@ export function RuntimeDiscoveryFlow({
   onConfigured,
 }: {
   runtimeInfo: SecPalRuntimeInfo;
-  onConfigured: () => void;
+  onConfigured: (bootstrap: BootstrapConfiguration) => void;
 }) {
   const { _ } = useLingui();
   const [instanceUrl, setInstanceUrl] = useState("");
@@ -125,7 +125,7 @@ export function RuntimeDiscoveryFlow({
 
     try {
       await SecPalRuntimeBootstrap.setRuntimeBootstrap(resolvedBootstrap);
-      onConfigured();
+      onConfigured(resolvedBootstrap);
     } catch (confirmError) {
       setError(getDiscoveryErrorMessage(confirmError));
       setIsConfirming(false);

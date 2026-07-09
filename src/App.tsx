@@ -35,6 +35,8 @@ import { isRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
 import { SecPalRuntimeBootstrap, type SecPalRuntimeInfo } from "./native";
 import { Login, type LoginRuntimeBootstrapSummary } from "./pages/Login";
 import { SourcePage } from "./pages/SourcePage";
+import { getAuthTransport } from "./services/authTransport";
+import type { BootstrapConfiguration } from "@/types/api";
 
 const LOGIN_ROUTE_BOOTSTRAP_INTERACTIVE_DELAY_MS = 1000;
 
@@ -278,11 +280,25 @@ function toLoginRuntimeBootstrapSummary(
   };
 }
 
+function toLoginRuntimeBootstrapSummaryFromConfiguration(
+  bootstrap: BootstrapConfiguration
+): LoginRuntimeBootstrapSummary {
+  return {
+    apiOrigin: new URL(bootstrap.api_base_url).origin,
+    instanceDisplayName: bootstrap.instance.display_name,
+    features: {
+      passwordLoginEnabled: bootstrap.features.password_login,
+      passkeyLoginEnabled: bootstrap.features.passkey_login,
+    },
+  };
+}
+
 function NativeRuntimeDiscoveryGate({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { logout } = useAuth();
   const { pathname } = useLocation();
   const [runtimeInfo, setRuntimeInfo] = useState<SecPalRuntimeInfo | null>(
     null
@@ -292,26 +308,51 @@ function NativeRuntimeDiscoveryGate({
   const [isDiscoveryRequired, setIsDiscoveryRequired] = useState(false);
   const [isCheckingRuntime, setIsCheckingRuntime] = useState(true);
   const normalizedPathname = normalizePathname(pathname);
-  const bypassRuntimeDiscovery = normalizedPathname === "/source";
+  const bypassRuntimeDiscovery =
+    normalizedPathname === "/source" ||
+    normalizedPathname === "/onboarding/complete";
 
-  const requireRuntimeDiscovery = useCallback(async () => {
-    const nextRuntimeInfo = await SecPalRuntimeBootstrap.getRuntimeInfo();
-
-    setLoginRuntimeBootstrap(null);
-
-    if (nextRuntimeInfo?.clientPlatform === "android") {
-      setRuntimeInfo(nextRuntimeInfo);
-      setIsDiscoveryRequired(true);
-    } else {
-      setRuntimeInfo(null);
-      setIsDiscoveryRequired(false);
+  const revokeCurrentRuntimeSession = useCallback(async () => {
+    try {
+      await getAuthTransport().logout();
+    } catch (error) {
+      console.warn(
+        "Failed to revoke the current auth session before switching Android instances:",
+        error
+      );
     }
   }, []);
 
+  const requireRuntimeDiscovery = useCallback(
+    async ({
+      clearAuthState = true,
+    }: {
+      clearAuthState?: boolean;
+    } = {}) => {
+      const nextRuntimeInfo = await SecPalRuntimeBootstrap.getRuntimeInfo();
+
+      setLoginRuntimeBootstrap(null);
+
+      if (nextRuntimeInfo?.clientPlatform === "android") {
+        if (clearAuthState) {
+          void logout();
+        }
+
+        setRuntimeInfo(nextRuntimeInfo);
+        setIsDiscoveryRequired(true);
+      } else {
+        setRuntimeInfo(null);
+        setIsDiscoveryRequired(false);
+      }
+    },
+    [logout]
+  );
+
   const returnToRuntimeDiscovery = useCallback(async () => {
+    await revokeCurrentRuntimeSession();
     await SecPalRuntimeBootstrap.clearRuntimeBootstrap();
-    await requireRuntimeDiscovery();
-  }, [requireRuntimeDiscovery]);
+    await requireRuntimeDiscovery({ clearAuthState: false });
+  }, [requireRuntimeDiscovery, revokeCurrentRuntimeSession]);
 
   useEffect(() => {
     let isMounted = true;
@@ -326,10 +367,7 @@ function NativeRuntimeDiscoveryGate({
         }
 
         if (!bootstrapState) {
-          setLoginRuntimeBootstrap(null);
-          setIsDiscoveryRequired(false);
-          setRuntimeInfo(null);
-          setIsCheckingRuntime(false);
+          await requireRuntimeDiscovery();
           return;
         }
 
@@ -351,6 +389,10 @@ function NativeRuntimeDiscoveryGate({
 
         if (nextRuntimeInfo?.clientPlatform === "android") {
           setLoginRuntimeBootstrap(null);
+          void logout();
+          if (!isMounted) {
+            return;
+          }
           setRuntimeInfo(nextRuntimeInfo);
           setIsDiscoveryRequired(true);
         } else {
@@ -360,9 +402,7 @@ function NativeRuntimeDiscoveryGate({
         }
       } catch {
         if (isMounted) {
-          setLoginRuntimeBootstrap(null);
-          setRuntimeInfo(null);
-          setIsDiscoveryRequired(false);
+          await requireRuntimeDiscovery();
         }
       } finally {
         if (isMounted) {
@@ -376,7 +416,7 @@ function NativeRuntimeDiscoveryGate({
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [logout, requireRuntimeDiscovery]);
 
   if (bypassRuntimeDiscovery) {
     return (
@@ -396,20 +436,10 @@ function NativeRuntimeDiscoveryGate({
     return (
       <RuntimeDiscoveryFlow
         runtimeInfo={runtimeInfo}
-        onConfigured={() => {
-          void SecPalRuntimeBootstrap.getRuntimeBootstrap()
-            .then((bootstrapState) => {
-              setLoginRuntimeBootstrap(
-                bootstrapState?.configured
-                  ? toLoginRuntimeBootstrapSummary(
-                      bootstrapState.bootstrap ?? null
-                    )
-                  : null
-              );
-            })
-            .catch(() => {
-              setLoginRuntimeBootstrap(null);
-            });
+        onConfigured={(bootstrap) => {
+          setLoginRuntimeBootstrap(
+            toLoginRuntimeBootstrapSummaryFromConfiguration(bootstrap)
+          );
           setIsDiscoveryRequired(false);
           setRuntimeInfo(null);
         }}
