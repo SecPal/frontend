@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added explicit `android-mock` development, local preview build, and
+  Playwright override workflows, including README guidance for local and
+  Polyscope switching while keeping mock surfaces out of deployable
+  production build modes (US-007).
 - Added `@capacitor/core` as a runtime dependency and introduced the
   side-effect-free `src/platform/runtime.ts` platform abstraction for future
   native integrations without adding Capacitor project scaffolding (US-001).

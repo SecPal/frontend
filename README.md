@@ -42,6 +42,52 @@ Supported values are:
 - `ios-mock` - iOS-facing mock surface for non-production validation
 - `ios-native` - iOS WebView/native integration surface
 
+Use the explicit surface scripts instead of relying on a parent-shell
+`VITE_APP_SURFACE` value:
+
+```bash
+# Browser/PWA development
+npm run dev:web
+npm run build:web
+
+# Android shared-UI review without the native shell
+npm run dev:android:mock
+npm run build:android:mock
+
+# Android WebView/native integration artifact
+npm run dev:android
+npm run build:android
+```
+
+`android-mock` is for local development, local Playwright, and local preview
+build validation. It is intentionally non-deployable: production-style Vite
+build modes such as `web`, `android`, and `ios` reject mock surfaces before an
+artifact is emitted. Use `android-native` for the Android WebView artifact and
+`web` for browser/PWA deployments.
+
+Playwright defaults local HTTP/HTTPS development and CI preview runs to the
+Android route surface so Android-specific shared UI stays covered. Select a
+surface explicitly with `PLAYWRIGHT_APP_SURFACE`:
+
+```bash
+# Local Android mock UI review with Playwright's self-started Vite server
+PLAYWRIGHT_APP_SURFACE=android-mock npm run test:e2e
+
+# Local browser/PWA route assumptions
+PLAYWRIGHT_APP_SURFACE=web npm run test:e2e
+
+# Android native route assumptions
+PLAYWRIGHT_APP_SURFACE=android-native npm run test:e2e
+```
+
+In Polyscope, workspace previews keep the deployed bundle surface they were
+built with and default Playwright route assumptions to `web`. Use
+`PLAYWRIGHT_APP_SURFACE=android-mock` only to run Android-specific tests or route
+selection against a preview that already exposes that UI surface. For local
+shared-UI review while still using a workspace backend, run
+`npm run dev:android:mock` in this workspace and point API configuration at the
+matching preview API if needed.
+
 The PWA delivery path continues to use `vite-plugin-pwa`, the web app
 Manifest, the Service Worker, and Workbox. Surface-specific native work must
 not replace that browser/PWA pipeline.

@@ -114,6 +114,26 @@ describe("playwright config", () => {
     expect(webServer?.env?.VITE_APP_SURFACE).toBe("web");
   });
 
+  it("uses the requested local Android mock surface when Playwright overrides the app surface", async () => {
+    vi.stubEnv("CI", "");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("PLAYWRIGHT_APP_SURFACE", "android-mock");
+    mockNonPolyscopeCwd();
+    vi.resetModules();
+    const { default: config } = await import("../playwright.config");
+
+    const webServer =
+      config.webServer && !Array.isArray(config.webServer)
+        ? config.webServer
+        : undefined;
+
+    expect(webServer?.command).toBe(
+      "cross-env VITE_APP_SURFACE=android-mock vite --mode android --host localhost --port 4174 --strictPort"
+    );
+    expect(webServer?.reuseExistingServer).toBe(false);
+    expect(webServer?.env?.VITE_APP_SURFACE).toBe("android-mock");
+  });
+
   it("pins the CI preview server to the local preview origin for browser-session audits", async () => {
     vi.stubEnv("CI", "true");
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
@@ -186,6 +206,25 @@ describe("playwright config", () => {
       "cross-env VITE_APP_SURFACE=ios-native tsc && cross-env VITE_APP_SURFACE=ios-native vite build --mode preview && npm run preview"
     );
     expect(webServer?.env?.VITE_APP_SURFACE).toBe("ios-native");
+  });
+
+  it("allows an explicit Android mock app surface override for the CI preview web server", async () => {
+    vi.stubEnv("CI", "true");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
+    vi.stubEnv("PLAYWRIGHT_APP_SURFACE", "android-mock");
+    mockNonPolyscopeCwd();
+    vi.resetModules();
+    const { default: config } = await import("../playwright.config");
+
+    const webServer =
+      config.webServer && !Array.isArray(config.webServer)
+        ? config.webServer
+        : undefined;
+
+    expect(webServer?.command).toBe(
+      "cross-env VITE_APP_SURFACE=android-mock tsc && cross-env VITE_APP_SURFACE=android-mock vite build --mode preview && npm run preview"
+    );
+    expect(webServer?.env?.VITE_APP_SURFACE).toBe("android-mock");
   });
 
   it("enables a fixed chromium CDP port for preview Lighthouse audits when explicitly requested", async () => {

@@ -43,7 +43,7 @@ function resolveLocalDevServerCommand(
 }
 
 function resolveCiPreviewServerCommand(appSurface: string): string {
-  const surface = resolveAppSurface(appSurface, true);
+  const surface = resolveAppSurface(appSurface, false);
 
   return `cross-env VITE_APP_SURFACE=${surface} tsc && cross-env VITE_APP_SURFACE=${surface} vite build --mode preview && npm run preview`;
 }
