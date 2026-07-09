@@ -19,10 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and logged-out sessions redirect cleanly to `/login` instead of surfacing
   auth recovery UI after a failing `/v1/me` probe.
 - Fixed the local domain-policy preflight so it validates real SecPal
-  hostnames across punycode, digit-bearing, long, and hyphenated host labels
-  without letting the known `secpal.asset-load-recovery` storage key mask
-  same-line forbidden hosts, while still ignoring that token and `.context`
-  workspace notes as forbidden domains.
+  hostnames across one-character, punycode, digit-bearing, long, and
+  hyphenated host labels without letting the known
+  `secpal.asset-load-recovery` storage key mask same-line forbidden hosts or
+  URL-host usage of the same token, while still ignoring the standalone key
+  and `.context` workspace notes as forbidden domains.
 
 ### Added
 

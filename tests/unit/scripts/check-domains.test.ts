@@ -84,6 +84,24 @@ describe("check-domains", () => {
     );
   });
 
+  it("rejects the asset key when it is used as a hostname", () => {
+    const forbiddenHostname = ["secpal", "asset-load-recovery"].join(".");
+
+    const result = runDomainCheck([
+      {
+        path: "README.md",
+        contents: `Use https://${forbiddenHostname}/path for diagnostics.\n`,
+      },
+    ]);
+
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain(forbiddenHostname);
+    expect(result.stdout + result.stderr).toContain(
+      "Domain Policy Check FAILED"
+    );
+  });
+
   it("rejects forbidden secpal hostnames", () => {
     const result = runDomainCheck([
       {
@@ -169,6 +187,22 @@ describe("check-domains", () => {
     expect(result.stdout + result.stderr).toContain(
       ["api", "secpal", "dev-test"].join(".")
     );
+    expect(result.stdout + result.stderr).toContain(
+      "Domain Policy Check FAILED"
+    );
+  });
+
+  it("rejects forbidden secpal hostnames with one-character final labels", () => {
+    const result = runDomainCheck([
+      {
+        path: "README.md",
+        contents: `Use https://${["secpal", "x"].join(".")} for diagnostics.\n`,
+      },
+    ]);
+
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain(["secpal", "x"].join("."));
     expect(result.stdout + result.stderr).toContain(
       "Domain Policy Check FAILED"
     );

@@ -317,6 +317,45 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
+  it("treats protected-route bootstrap timeouts without a local snapshot or readable csrf cookie as logged out", async () => {
+    window.history.replaceState({}, "", "/");
+    clearCsrfTokenCookie();
+    mockGetCurrentUser.mockImplementation(
+      () =>
+        new Promise(() => undefined) as ReturnType<typeof mockGetCurrentUser>
+    );
+    vi.useFakeTimers();
+
+    const { result, unmount } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    try {
+      expect(result.current.isLoading).toBe(true);
+
+      await act(async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+        await Promise.resolve();
+      });
+
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.bootstrapRecoveryReason).toBeNull();
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+    } finally {
+      unmount();
+    }
+  });
+
   it("keeps confirmed browser sessions behind recovery UI when csrf refresh fails after /v1/me succeeds", async () => {
     window.history.replaceState({}, "", "/");
     clearCsrfTokenCookie();

@@ -965,6 +965,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         didTimeout = true;
+        if (
+          shouldTreatBootstrapFailureWithoutStoredUserAsLoggedOut(
+            clearSensitiveStateOnInvalidSession
+          )
+        ) {
+          clearBootstrapToLoggedOutState();
+          return;
+        }
+
         if (!hasAutomaticallyRetriedBootstrapRef.current) {
           retryBootstrapAutomatically();
           return;

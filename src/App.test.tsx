@@ -867,6 +867,41 @@ describe("App", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
+  it("redirects protected routes to login when bootstrap without a local auth snapshot or readable csrf cookie times out", async () => {
+    window.history.replaceState({}, "", "/");
+    clearXsrfCookie();
+    vi.useFakeTimers();
+    mockGetCurrentUser.mockImplementationOnce(
+      () =>
+        new Promise(() => undefined) as ReturnType<typeof mockGetCurrentUser>
+    );
+
+    try {
+      await renderWithI18n(<App />);
+
+      await act(async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        vi.advanceTimersByTime(ROUTE_NAVIGATION_TIMEOUT_MS);
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(window.location.pathname).toBe("/login");
+      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("shows bootstrap recovery in place after protected-route session restore fails and allows retry", async () => {
     const recoveredUser = {
       id: "1",
