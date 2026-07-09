@@ -356,6 +356,60 @@ describe("useAuth", () => {
     }
   });
 
+  it("ignores a late bootstrap success after timing out to logged out without a local snapshot or readable csrf cookie", async () => {
+    window.history.replaceState({}, "", "/");
+    clearCsrfTokenCookie();
+    const deferred = createDeferredPromise<{
+      id: number;
+      name: string;
+      email: string;
+    }>();
+    mockGetCurrentUser.mockImplementation(() => deferred.promise);
+    vi.useFakeTimers();
+
+    const { result, unmount } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    try {
+      await act(async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+        await Promise.resolve();
+      });
+
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.bootstrapRecoveryReason).toBeNull();
+
+      await act(async () => {
+        deferred.resolve({
+          id: 1,
+          name: "Late Bootstrap User",
+          email: "late-bootstrap@secpal.dev",
+        });
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(mockFetchCsrfToken).not.toHaveBeenCalled();
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.bootstrapRecoveryReason).toBeNull();
+    } finally {
+      unmount();
+    }
+  });
+
   it("keeps confirmed browser sessions behind recovery UI when csrf refresh fails after /v1/me succeeds", async () => {
     window.history.replaceState({}, "", "/");
     clearCsrfTokenCookie();
