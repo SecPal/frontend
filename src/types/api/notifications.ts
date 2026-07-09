@@ -1,49 +1,34 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
+import type {
+  BootstrapConfiguration,
+  BootstrapCompatibility,
+  BootstrapResponse,
+  WebPushNotificationChannelRuntime,
+} from "./bootstrap";
+
 /**
- * Notification installation and browser bootstrap API types.
+ * Notification installation API types.
  *
  * Derived from the shared API contract in `contracts/docs/openapi.yaml` and
- * aligned with the authenticated browser Web Push lifecycle.
+ * aligned with the authenticated notification installation lifecycle.
  */
 
-export type NotificationChannel = "android_fcm" | "web_push";
+export type {
+  NotificationChannel,
+  NotificationChannelFeatureFlags,
+} from "./bootstrap";
 
-export interface NotificationChannelFeatureFlags {
-  android_fcm: boolean;
-  web_push: boolean;
-}
-
-export interface BrowserBootstrapCompatibility {
-  bootstrap_version: string;
-  schema_version: number;
-  minimum_supported_app_version?: string;
-  minimum_supported_app_build?: number;
-}
-
-export interface BrowserWebPushRuntimeMetadata {
-  channel: "web_push";
-  metadata_revision: number;
-  public_runtime_metadata: {
-    vapid_public_key: string;
-  };
-}
-
-export interface BrowserPushBootstrapData {
-  client_platform: "browser" | string;
-  compatibility: BrowserBootstrapCompatibility;
-  features: {
-    notification_channels: NotificationChannelFeatureFlags;
-  };
-  notification_channels?: {
-    web_push?: BrowserWebPushRuntimeMetadata;
-  };
-}
-
-export interface BrowserPushBootstrapResponse {
+export type BrowserBootstrapCompatibility = BootstrapCompatibility;
+export type BrowserWebPushRuntimeMetadata =
+  WebPushNotificationChannelRuntime;
+export type BrowserPushBootstrapData = BootstrapConfiguration & {
+  client_platform: "browser";
+};
+export type BrowserPushBootstrapResponse = BootstrapResponse & {
   data: BrowserPushBootstrapData;
-}
+};
 
 export type NotificationInstallationLifecycleEvent =
   "registered" | "credential_rotated" | "client_updated";

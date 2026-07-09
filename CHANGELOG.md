@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added canonical `GET /v1/bootstrap` TypeScript models covering Android and
+  browser runtime discovery, per-channel notification metadata, and the
+  frontend-side `SecPalRuntimeBootstrap` native facade for runtime info,
+  bootstrap application, and bootstrap clearing (US-001).
 - Added `@capacitor/core` as a runtime dependency and introduced the
   side-effect-free `src/platform/runtime.ts` platform abstraction for future
   native integrations without adding Capacitor project scaffolding (US-001).

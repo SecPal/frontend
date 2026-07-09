@@ -17,3 +17,8 @@ export {
   type SecPalPushFacade,
   type SecPalPushRegistration,
 } from "./SecPalPush";
+export {
+  SecPalRuntimeBootstrap,
+  type SecPalRuntimeBootstrapFacade,
+  type SecPalRuntimeInfo,
+} from "./SecPalRuntimeBootstrap";

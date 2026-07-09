@@ -4,6 +4,7 @@
 export * from "../customers";
 export * from "./android-enrollment";
 export * from "./auth";
+export * from "./bootstrap";
 export * from "./employees";
 export * from "./notifications";
 export * from "./release";
