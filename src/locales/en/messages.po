@@ -39,6 +39,10 @@ msgstr "Welcome to SecPal Onboarding"
 msgid "Date of birth is required"
 msgstr "Date of birth is required"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Continue to login"
+msgstr "Continue to login"
+
 #: src/pages/SourcePage.tsx
 msgid "Published source release links shown below are immutable. Components without a published source release remain linked to their public repositories."
 msgstr "Published source release links shown below are immutable. Components without a published source release remain linked to their public repositories."
@@ -498,6 +502,10 @@ msgstr "Android Provisioning"
 msgid "Onboarding step navigation"
 msgstr "Onboarding step navigation"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Enter your instance URL"
+msgstr "Enter your instance URL"
+
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Emergency contact name is required."
@@ -947,6 +955,10 @@ msgstr "Address autocomplete request failed."
 msgid "Emergency Contact Name"
 msgstr "Emergency Contact Name"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Enter the instance URL you received from your supervisor."
+msgstr "Enter the instance URL you received from your supervisor."
+
 #: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "House Number"
@@ -1080,6 +1092,10 @@ msgstr "Employment Details"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Failed to confirm MFA enrollment."
 msgstr "Failed to confirm MFA enrollment."
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Instance URL"
+msgstr "Instance URL"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 #: src/components/OrganizationalUnitTree.tsx
@@ -1835,6 +1851,10 @@ msgstr "OpenTimestamp"
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "Loading customer details"
 msgstr "Loading customer details"
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Minimum Android version"
+msgstr "Minimum Android version"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
@@ -2613,6 +2633,10 @@ msgstr "Temporary"
 msgid "Position"
 msgstr "Position"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Check instance"
+msgstr "Check instance"
+
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Loading site form"
 msgstr "Loading site form"
@@ -2813,6 +2837,10 @@ msgstr "Causer"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Try Again"
 msgstr "Try Again"
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Not sure which instance to use?"
+msgstr "Not sure which instance to use?"
 
 #. placeholder {0}: formData.min_viewable_rank
 #: src/components/ScopeAssignmentForm.tsx
@@ -3090,6 +3118,14 @@ msgstr "Save"
 msgid "No postal address stored yet."
 msgstr "No postal address stored yet."
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "API origin"
+msgstr "API origin"
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Ask your supervisor for the SecPal instance URL before continuing."
+msgstr "Ask your supervisor for the SecPal instance URL before continuing."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Failed to save draft"
 msgstr "Failed to save draft"
@@ -3306,6 +3342,10 @@ msgstr "Who can this user VIEW?"
 msgid "Unlock"
 msgstr "Unlock"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Instance unavailable"
+msgstr "Instance unavailable"
+
 #: src/pages/SourcePage.tsx
 msgid "Back to login"
 msgstr "Back to login"
@@ -3397,6 +3437,7 @@ msgid "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
 #: src/components/LoginLegalMenu.tsx
+#: src/components/RuntimeDiscoveryFlow.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Language"
 msgstr "Language"
@@ -3628,6 +3669,10 @@ msgstr "Loading onboarding"
 msgid "Open public repository"
 msgstr "Open public repository"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Checking instance"
+msgstr "Checking instance"
+
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Optional description for this unit."
 msgstr "Optional description for this unit."
@@ -3813,6 +3858,10 @@ msgstr "Phone"
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "This session has already been used to complete device bootstrap."
 msgstr "This session has already been used to complete device bootstrap."
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Saving instance"
+msgstr "Saving instance"
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 msgid "Failed to update employee"

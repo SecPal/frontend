@@ -21,8 +21,13 @@ import {
 } from "./components/LoginRouteState";
 import { PublicRouteLoader } from "./components/PublicRouteLoader";
 import { RouteBootstrapRecoveryState } from "./components/RouteGuardState";
+import { RuntimeDiscoveryFlow } from "./components/RuntimeDiscoveryFlow";
 import { loadAuthenticatedAppModule } from "./lib/lazyAppModules";
 import { isRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
+import {
+  SecPalRuntimeBootstrap,
+  type SecPalRuntimeInfo,
+} from "./native";
 
 const LOGIN_ROUTE_BOOTSTRAP_INTERACTIVE_DELAY_MS = 1000;
 
@@ -202,23 +207,105 @@ function PublicRouteUpdatePrompt() {
   return <UpdatePrompt />;
 }
 
+function NativeRuntimeDiscoveryGate({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [runtimeInfo, setRuntimeInfo] = useState<SecPalRuntimeInfo | null>(null);
+  const [isDiscoveryRequired, setIsDiscoveryRequired] = useState(false);
+  const [isCheckingRuntime, setIsCheckingRuntime] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function checkRuntimeBootstrap() {
+      try {
+        const bootstrapState =
+          await SecPalRuntimeBootstrap.getRuntimeBootstrap();
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (!bootstrapState || bootstrapState.configured) {
+          setIsDiscoveryRequired(false);
+          setRuntimeInfo(null);
+          setIsCheckingRuntime(false);
+          return;
+        }
+
+        const nextRuntimeInfo =
+          await SecPalRuntimeBootstrap.getRuntimeInfo();
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (nextRuntimeInfo?.clientPlatform === "android") {
+          setRuntimeInfo(nextRuntimeInfo);
+          setIsDiscoveryRequired(true);
+        } else {
+          setRuntimeInfo(null);
+          setIsDiscoveryRequired(false);
+        }
+      } catch {
+        if (isMounted) {
+          setRuntimeInfo(null);
+          setIsDiscoveryRequired(false);
+        }
+      } finally {
+        if (isMounted) {
+          setIsCheckingRuntime(false);
+        }
+      }
+    }
+
+    void checkRuntimeBootstrap();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  if (isCheckingRuntime) {
+    return <PublicRouteLoader />;
+  }
+
+  if (isDiscoveryRequired && runtimeInfo) {
+    return (
+      <RuntimeDiscoveryFlow
+        runtimeInfo={runtimeInfo}
+        onConfigured={() => {
+          setIsDiscoveryRequired(false);
+          setRuntimeInfo(null);
+        }}
+      />
+    );
+  }
+
+  return children;
+}
+
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <NativeRuntimePwaGuard />
         <PublicRouteUpdatePrompt />
-        <Suspense fallback={<PublicRouteLoader />}>
-          <Routes>
-            <Route path="/login" element={<LoginRoute />} />
-            <Route path="/source" element={<SourcePage />} />
-            <Route
-              path="/onboarding/complete"
-              element={<OnboardingComplete />}
-            />
-            <Route path="*" element={<AuthenticatedAppRoute />} />
-          </Routes>
-        </Suspense>
+        <NativeRuntimeDiscoveryGate>
+          <Suspense fallback={<PublicRouteLoader />}>
+            <Routes>
+              <Route path="/login" element={<LoginRoute />} />
+              <Route path="/source" element={<SourcePage />} />
+              <Route
+                path="/onboarding/complete"
+                element={<OnboardingComplete />}
+              />
+              <Route path="*" element={<AuthenticatedAppRoute />} />
+            </Routes>
+          </Suspense>
+        </NativeRuntimeDiscoveryGate>
       </BrowserRouter>
     </AuthProvider>
   );

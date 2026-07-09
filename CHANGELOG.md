@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added a frontend-owned Android runtime discovery flow that appears before
+  login when no runtime bootstrap is configured, validates secure instance
+  URLs through canonical `GET /v1/bootstrap` Android parameters, blocks
+  invalid/unavailable/incompatible/unsupported responses, and confirms the
+  resolved instance before applying it to the native runtime (US-003).
 - Added canonical `GET /v1/bootstrap` TypeScript models covering Android and
   browser runtime discovery, per-channel notification metadata, and the
   frontend-side `SecPalRuntimeBootstrap` native facade for runtime info,

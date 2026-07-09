@@ -4,6 +4,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 import { act, render, waitFor } from "@testing-library/react";
 import { screen } from "@testing-library/dom";
+import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import App from "./App";
@@ -143,9 +144,80 @@ vi.mock("./components/UpdatePrompt", () => ({
 // prevents that backlog without affecting the auth behaviour under test.
 // Using spyOn (not stubGlobal) so it is not undone by unstubGlobals: true
 // between tests.
-vi.spyOn(globalThis, "fetch").mockRejectedValue(
+const fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(
   new TypeError("fetch is not available in App.test.tsx")
 );
+
+function createAndroidRuntimeBootstrapBridge({
+  configured = false,
+  getRuntimeBootstrap = vi.fn().mockResolvedValue({ configured }),
+  getRuntimeInfo = vi.fn().mockResolvedValue({
+    clientPlatform: "android",
+    appVersion: "1.4.0",
+    appBuild: 10400,
+  }),
+  setRuntimeBootstrap = vi.fn().mockResolvedValue(undefined),
+}: {
+  configured?: boolean;
+  getRuntimeBootstrap?: ReturnType<typeof vi.fn>;
+  getRuntimeInfo?: ReturnType<typeof vi.fn>;
+  setRuntimeBootstrap?: ReturnType<typeof vi.fn>;
+} = {}) {
+  const bridge = {
+    getRuntimeBootstrap,
+    getRuntimeInfo,
+    setRuntimeBootstrap,
+    clearRuntimeBootstrap: vi.fn().mockResolvedValue(undefined),
+  };
+
+  (
+    globalThis as typeof globalThis & {
+      SecPalNativeAuthBridge?: typeof bridge;
+    }
+  ).SecPalNativeAuthBridge = bridge;
+
+  return bridge;
+}
+
+function createBootstrapResponse(overrides: Record<string, unknown> = {}) {
+  return {
+    data: {
+      client_platform: "android",
+      api_base_url: "https://customer-api.example/v1",
+      instance: {
+        display_name: "Customer Example",
+      },
+      compatibility: {
+        bootstrap_version: "v1",
+        schema_version: 3,
+        minimum_supported_app_version: "1.4.0",
+        minimum_supported_app_build: 10400,
+      },
+      features: {
+        password_login: true,
+        passkey_login: true,
+        managed_android_enrollment: false,
+        notification_channels: {
+          android_fcm: true,
+          web_push: false,
+        },
+      },
+      notification_channels: {
+        android_fcm: {
+          channel: "android_fcm",
+          metadata_revision: 3,
+          public_runtime_metadata: {
+            api_key: "public-client-api-key-demo-1234567890",
+            project_id: "secpal-demo-push",
+            application_id: "1:1234567890:android:abcdef1234567890",
+            sender_id: "1234567890",
+          },
+        },
+      },
+      ...overrides,
+    },
+  };
+}
 
 function setXsrfCookie(token = "test-xsrf-token"): void {
   document.cookie = `XSRF-TOKEN=${encodeURIComponent(token)}; path=/; SameSite=Lax`;
@@ -235,6 +307,9 @@ describe("App", () => {
     window.history.replaceState({}, "", "/login");
     i18n.load("en", {});
     i18n.activate("en");
+    fetchSpy.mockRejectedValue(
+      new TypeError("fetch is not available in App.test.tsx")
+    );
     mockFetchCsrfToken.mockResolvedValue(undefined);
     mockLoadAuthenticatedAppModule.mockReset();
     mockLoadAuthenticatedAppModule.mockImplementation(
@@ -254,6 +329,149 @@ describe("App", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
   });
+
+  it("shows Android runtime discovery before login when no runtime bootstrap is configured", async () => {
+    createAndroidRuntimeBootstrapBridge({ configured: false });
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("heading", { name: /enter your instance url/i })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/instance url/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/language/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /continue to login/i })
+    ).toBeDisabled();
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+  });
+
+  it("validates, summarizes, and confirms an Android runtime bootstrap before login", async () => {
+    const user = userEvent.setup();
+    const bridge = createAndroidRuntimeBootstrapBridge({ configured: false });
+    fetchSpy.mockResolvedValue(
+      new Response(JSON.stringify(createBootstrapResponse()), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+
+    await renderWithI18n(<App />);
+
+    await user.type(
+      await screen.findByLabelText(/instance url/i),
+      "https://customer.example"
+    );
+    await user.selectOptions(screen.getByLabelText(/language/i), "de");
+    await user.click(screen.getByRole("button", { name: /check instance/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: /customer example/i })
+    ).toBeInTheDocument();
+    expect(screen.getByText("https://customer-api.example")).toBeInTheDocument();
+
+    const request = fetchSpy.mock.calls[0]?.[0] as Request;
+    const url = new URL(request.url);
+    expect(url.pathname).toBe("/v1/bootstrap");
+    expect(url.searchParams.get("client_platform")).toBe("android");
+    expect(url.searchParams.get("app_version")).toBe("1.4.0");
+    expect(url.searchParams.get("app_build")).toBe("10400");
+    expect(request.headers.get("Accept-Language")).toBe("de");
+
+    await user.click(screen.getByRole("button", { name: /continue to login/i }));
+
+    await waitFor(() => {
+      expect(bridge.setRuntimeBootstrap).toHaveBeenCalledWith({
+        instanceDisplayName: "Customer Example",
+        apiOrigin: "https://customer-api.example",
+        rawApiBaseUrl: "https://customer-api.example/v1",
+        minimumSupportedAppVersion: "1.4.0",
+        minimumSupportedAppBuild: 10400,
+        androidPush: {
+          provider: "fcm",
+          metadataRevision: 3,
+          publicClientMetadata: {
+            apiKey: "public-client-api-key-demo-1234567890",
+            projectId: "secpal-demo-push",
+            applicationId: "1:1234567890:android:abcdef1234567890",
+            senderId: "1234567890",
+          },
+        },
+        features: {
+          passwordLoginEnabled: true,
+          passkeyLoginEnabled: true,
+          managedAndroidEnrollment: false,
+        },
+      });
+    });
+    expect(
+      await screen.findByRole("heading", { name: /SecPal/i })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+  });
+
+  it.each([
+    {
+      name: "validation errors",
+      instanceUrl: "http://customer.example",
+      fetchResponse: null,
+      message: /secure https instance url/i,
+    },
+    {
+      name: "bootstrap state-invalid errors",
+      instanceUrl: "https://customer.example",
+      fetchResponse: new Response(
+        JSON.stringify(
+          createBootstrapResponse({
+            features: {
+              password_login: true,
+            },
+          })
+        ),
+        { status: 200 }
+      ),
+      message: /bootstrap response is incomplete/i,
+    },
+    {
+      name: "bootstrap unavailable errors",
+      instanceUrl: "https://customer.example",
+      fetchResponse: new TypeError("Failed to fetch"),
+      message: /could not reach that instance/i,
+    },
+    {
+      name: "unsupported-client-version responses",
+      instanceUrl: "https://customer.example",
+      fetchResponse: new Response(JSON.stringify(createBootstrapResponse()), {
+        status: 426,
+      }),
+      message: /update the android app/i,
+    },
+  ])(
+    "blocks Android runtime confirmation on $name",
+    async ({ instanceUrl, fetchResponse, message }) => {
+      const user = userEvent.setup();
+      const bridge = createAndroidRuntimeBootstrapBridge({ configured: false });
+
+      if (fetchResponse instanceof Error) {
+        fetchSpy.mockRejectedValue(fetchResponse);
+      } else if (fetchResponse) {
+        fetchSpy.mockResolvedValue(fetchResponse);
+      }
+
+      await renderWithI18n(<App />);
+
+      await user.type(await screen.findByLabelText(/instance url/i), instanceUrl);
+      await user.click(
+        screen.getByRole("button", { name: /check instance/i })
+      );
+
+      expect(await screen.findByText(message)).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /continue to login/i })
+      ).toBeDisabled();
+      expect(bridge.setRuntimeBootstrap).not.toHaveBeenCalled();
+    }
+  );
 
   it("renders the public source route without requiring authentication", async () => {
     window.history.replaceState({}, "", "/source");
