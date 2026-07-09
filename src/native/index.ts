@@ -19,6 +19,9 @@ export {
 } from "./SecPalPush";
 export {
   SecPalRuntimeBootstrap,
+  type SecPalAndroidPushRuntimeBootstrap,
+  type SecPalAppliedRuntimeBootstrap,
   type SecPalRuntimeBootstrapFacade,
+  type SecPalRuntimeBootstrapState,
   type SecPalRuntimeInfo,
 } from "./SecPalRuntimeBootstrap";

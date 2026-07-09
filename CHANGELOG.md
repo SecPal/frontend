@@ -32,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   browser runtime discovery, per-channel notification metadata, and the
   frontend-side `SecPalRuntimeBootstrap` native facade for runtime info,
   bootstrap application, and bootstrap clearing (US-001).
+- Exposed Android runtime bootstrap bridge calls through the shared
+  `SecPalRuntimeBootstrap` facade, including current runtime bootstrap reads,
+  canonical-to-native payload mapping, and token-free regression coverage
+  (US-002).
 - Added `@capacitor/core` as a runtime dependency and introduced the
   side-effect-free `src/platform/runtime.ts` platform abstraction for future
   native integrations without adding Capacitor project scaffolding (US-001).
