@@ -786,6 +786,7 @@ export function Login({
                       </p>
                     </div>
                     <LoginButton
+                      id="secpal-runtime-switch-instance"
                       type="button"
                       variant="outline"
                       className="w-full"

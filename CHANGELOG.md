@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added regression coverage for the Android shared frontend migration flow,
+  including a stable login instance-switch control hook used by Android
+  live-device smoke proof for returning configured runtimes to discovery
+  (US-006).
 - Added a frontend-rendered Android login instance hint and switch action that
   shows the configured instance label/API origin, clears the native runtime
   bootstrap, runs the shared sensitive logout cleanup path, and returns the app

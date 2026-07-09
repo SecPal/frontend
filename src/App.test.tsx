@@ -451,6 +451,9 @@ describe("App", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("https://customer-api.example")).toBeInTheDocument();
     expect(
+      document.getElementById("secpal-runtime-switch-instance")
+    ).toBe(screen.getByRole("button", { name: /switch instance/i }));
+    expect(
       screen.getByRole("button", { name: /switch instance/i })
     ).toBeEnabled();
     expect(
