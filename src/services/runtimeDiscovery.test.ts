@@ -19,9 +19,9 @@ function createBootstrapPayload(overrides: Record<string, unknown> = {}) {
   return {
     data: {
       client_platform: "android",
-      api_base_url: "https://customer-api.example/v1",
+      api_base_url: "https://api.secpal.dev/v1",
       instance: {
-        display_name: "Customer Example",
+        display_name: "SecPal Demo",
       },
       compatibility: {
         bootstrap_version: "v1",
@@ -54,7 +54,7 @@ describe("runtime discovery", () => {
 
     await expect(
       discoverAndroidRuntimeBootstrap({
-        instanceUrl: "https://customer.example/",
+        instanceUrl: "https://api.secpal.dev/",
         locale: "de",
         runtimeInfo,
         fetchBootstrap,
@@ -64,7 +64,7 @@ describe("runtime discovery", () => {
     const request = fetchBootstrap.mock.calls[0]?.[0] as Request;
     const url = new URL(request.url);
 
-    expect(url.origin).toBe("https://customer.example");
+    expect(url.origin).toBe("https://api.secpal.dev");
     expect(url.pathname).toBe("/v1/bootstrap");
     expect(url.searchParams.get("client_platform")).toBe("android");
     expect(url.searchParams.get("app_version")).toBe("1.4.0");
@@ -78,7 +78,7 @@ describe("runtime discovery", () => {
 
     await expect(
       discoverAndroidRuntimeBootstrap({
-        instanceUrl: "http://customer.example",
+        instanceUrl: "http://api.secpal.dev",
         locale: "en",
         runtimeInfo,
         fetchBootstrap,
@@ -87,7 +87,7 @@ describe("runtime discovery", () => {
 
     await expect(
       discoverAndroidRuntimeBootstrap({
-        instanceUrl: "https://customer.example@evil.example/path?tenant=1",
+        instanceUrl: "https://api.secpal.dev@evil.example/path?tenant=1",
         locale: "en",
         runtimeInfo,
         fetchBootstrap,
@@ -100,7 +100,7 @@ describe("runtime discovery", () => {
   it("surfaces unavailable bootstrap endpoints as blocking discovery errors", async () => {
     await expect(
       discoverAndroidRuntimeBootstrap({
-        instanceUrl: "https://customer.example",
+        instanceUrl: "https://api.secpal.dev",
         locale: "en",
         runtimeInfo,
         fetchBootstrap: vi
@@ -113,7 +113,7 @@ describe("runtime discovery", () => {
   it("rejects malformed or state-invalid bootstrap payloads", async () => {
     await expect(
       discoverAndroidRuntimeBootstrap({
-        instanceUrl: "https://customer.example",
+        instanceUrl: "https://api.secpal.dev",
         locale: "en",
         runtimeInfo,
         fetchBootstrap: vi.fn().mockResolvedValue(
@@ -135,7 +135,7 @@ describe("runtime discovery", () => {
   it("rejects incompatible and unsupported-client bootstrap responses", async () => {
     await expect(
       discoverAndroidRuntimeBootstrap({
-        instanceUrl: "https://customer.example",
+        instanceUrl: "https://api.secpal.dev",
         locale: "en",
         runtimeInfo,
         fetchBootstrap: vi.fn().mockResolvedValue(
@@ -158,7 +158,7 @@ describe("runtime discovery", () => {
 
     await expect(
       discoverAndroidRuntimeBootstrap({
-        instanceUrl: "https://customer.example",
+        instanceUrl: "https://api.secpal.dev",
         locale: "en",
         runtimeInfo,
         fetchBootstrap: vi.fn().mockResolvedValue(
@@ -171,7 +171,7 @@ describe("runtime discovery", () => {
 
     await expect(
       discoverAndroidRuntimeBootstrap({
-        instanceUrl: "https://customer.example",
+        instanceUrl: "https://api.secpal.dev",
         locale: "en",
         runtimeInfo,
         fetchBootstrap: vi.fn().mockResolvedValue(
@@ -191,5 +191,36 @@ describe("runtime discovery", () => {
         ),
       })
     ).rejects.toMatchObject({ code: "UNSUPPORTED_CLIENT_VERSION" });
+  });
+
+  it("drops disabled Android FCM metadata even when stale channel data is present", async () => {
+    await expect(
+      discoverAndroidRuntimeBootstrap({
+        instanceUrl: "https://api.secpal.dev",
+        locale: "en",
+        runtimeInfo,
+        fetchBootstrap: vi.fn().mockResolvedValue(
+          new Response(
+            JSON.stringify(
+              createBootstrapPayload({
+                notification_channels: {
+                  android_fcm: {
+                    channel: "android_fcm",
+                    metadata_revision: 3,
+                    public_runtime_metadata: {
+                      api_key: "stale-public-client-api-key",
+                      project_id: "stale-project",
+                      application_id: "1:1234567890:android:stale",
+                      sender_id: "1234567890",
+                    },
+                  },
+                },
+              })
+            ),
+            { status: 200 }
+          )
+        ),
+      })
+    ).resolves.toEqual(createBootstrapPayload().data);
   });
 });

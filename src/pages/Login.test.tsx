@@ -25,6 +25,7 @@ import { authStorage } from "../services/storage";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import * as i18nModule from "../i18n";
 import { createRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
+import type { LoginProps } from "./Login";
 
 const { mockLoadLoginMfaDialogModule } = vi.hoisted(() => ({
   mockLoadLoginMfaDialogModule: vi.fn(() => import("./LoginMfaDialog")),
@@ -81,12 +82,12 @@ vi.mock("../lib/lazyAppModules", async () => {
   };
 });
 
-const renderLogin = () => {
+const renderLogin = (props: LoginProps = {}) => {
   return render(
     <MemoryRouter initialEntries={["/login"]}>
       <I18nProvider i18n={i18n}>
         <AuthProvider>
-          <Login />
+          <Login {...props} />
         </AuthProvider>
       </I18nProvider>
     </MemoryRouter>
@@ -302,6 +303,51 @@ describe("Login", () => {
         screen.getByRole("button", { name: /log in/i })
       ).toBeInTheDocument();
     });
+  });
+
+  it("hides password login controls when the configured runtime disables password login", async () => {
+    renderLogin({
+      runtimeBootstrap: {
+        instanceDisplayName: "SecPal Demo",
+        apiOrigin: "https://api.secpal.dev",
+        features: {
+          passwordLoginEnabled: false,
+          passkeyLoginEnabled: false,
+        },
+      },
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("button", { name: /log in/i })
+      ).not.toBeInTheDocument();
+    });
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
+  });
+
+  it("hides passkey login when the configured runtime disables passkey login", async () => {
+    mockBrowserPasskeySupport(true);
+
+    renderLogin({
+      runtimeBootstrap: {
+        instanceDisplayName: "SecPal Demo",
+        apiOrigin: "https://api.secpal.dev",
+        features: {
+          passwordLoginEnabled: true,
+          passkeyLoginEnabled: false,
+        },
+      },
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /log in/i })
+      ).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByRole("button", { name: /sign in with passkey/i })
+    ).not.toBeInTheDocument();
   });
 
   it("submits login form with email and password", async () => {

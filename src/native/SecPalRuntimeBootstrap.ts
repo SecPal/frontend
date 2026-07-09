@@ -130,8 +130,14 @@ export const SecPalRuntimeBootstrap: SecPalRuntimeBootstrapFacade = {
   async setRuntimeBootstrap(bootstrap: NativeRuntimeBootstrap): Promise<void> {
     const bridge = getRuntimeBootstrapBridge();
 
-    if (typeof bridge?.setRuntimeBootstrap !== "function") {
+    if (!bridge) {
       return undefined;
+    }
+
+    if (typeof bridge?.setRuntimeBootstrap !== "function") {
+      throw new Error(
+        "Android runtime bootstrap apply is unavailable in this native shell."
+      );
     }
 
     await bridge.setRuntimeBootstrap(toAppliedRuntimeBootstrap(bootstrap));

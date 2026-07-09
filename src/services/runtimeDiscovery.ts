@@ -197,7 +197,7 @@ function validateNotificationChannels(
   features: BootstrapFeatureFlags
 ): NotificationChannelRuntimeMetadata | undefined {
   if (!features.notification_channels.android_fcm) {
-    return isRecord(value) ? value : undefined;
+    return undefined;
   }
 
   if (!isRecord(value) || !isRecord(value.android_fcm)) {

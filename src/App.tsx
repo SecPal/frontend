@@ -32,20 +32,11 @@ import { RouteBootstrapRecoveryState } from "./components/RouteGuardState";
 import { RuntimeDiscoveryFlow } from "./components/RuntimeDiscoveryFlow";
 import { loadAuthenticatedAppModule } from "./lib/lazyAppModules";
 import { isRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
-import {
-  SecPalRuntimeBootstrap,
-  type SecPalAppliedRuntimeBootstrap,
-  type SecPalRuntimeInfo,
-} from "./native";
-import { Login } from "./pages/Login";
+import { SecPalRuntimeBootstrap, type SecPalRuntimeInfo } from "./native";
+import { Login, type LoginRuntimeBootstrapSummary } from "./pages/Login";
 import { SourcePage } from "./pages/SourcePage";
 
 const LOGIN_ROUTE_BOOTSTRAP_INTERACTIVE_DELAY_MS = 1000;
-
-type LoginRuntimeBootstrapSummary = Pick<
-  SecPalAppliedRuntimeBootstrap,
-  "apiOrigin" | "instanceDisplayName"
->;
 
 interface NativeRuntimeBootstrapContextValue {
   readonly loginRuntimeBootstrap: LoginRuntimeBootstrapSummary | null;
@@ -260,11 +251,39 @@ function PublicRouteUpdatePrompt() {
   return <UpdatePrompt />;
 }
 
+function normalizePathname(pathname: string): string {
+  return pathname !== "/" && pathname.endsWith("/")
+    ? pathname.slice(0, -1)
+    : pathname;
+}
+
+function toLoginRuntimeBootstrapSummary(
+  bootstrap: {
+    apiOrigin: string;
+    instanceDisplayName: string;
+    features?: {
+      passwordLoginEnabled: boolean;
+      passkeyLoginEnabled: boolean;
+    };
+  } | null
+): LoginRuntimeBootstrapSummary | null {
+  if (!bootstrap) {
+    return null;
+  }
+
+  return {
+    apiOrigin: bootstrap.apiOrigin,
+    instanceDisplayName: bootstrap.instanceDisplayName,
+    features: bootstrap.features,
+  };
+}
+
 function NativeRuntimeDiscoveryGate({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { pathname } = useLocation();
   const [runtimeInfo, setRuntimeInfo] = useState<SecPalRuntimeInfo | null>(
     null
   );
@@ -272,6 +291,8 @@ function NativeRuntimeDiscoveryGate({
     useState<LoginRuntimeBootstrapSummary | null>(null);
   const [isDiscoveryRequired, setIsDiscoveryRequired] = useState(false);
   const [isCheckingRuntime, setIsCheckingRuntime] = useState(true);
+  const normalizedPathname = normalizePathname(pathname);
+  const bypassRuntimeDiscovery = normalizedPathname === "/source";
 
   const requireRuntimeDiscovery = useCallback(async () => {
     const nextRuntimeInfo = await SecPalRuntimeBootstrap.getRuntimeInfo();
@@ -314,13 +335,7 @@ function NativeRuntimeDiscoveryGate({
 
         if (bootstrapState.configured) {
           setLoginRuntimeBootstrap(
-            bootstrapState.bootstrap
-              ? {
-                  apiOrigin: bootstrapState.bootstrap.apiOrigin,
-                  instanceDisplayName:
-                    bootstrapState.bootstrap.instanceDisplayName,
-                }
-              : null
+            toLoginRuntimeBootstrapSummary(bootstrapState.bootstrap ?? null)
           );
           setIsDiscoveryRequired(false);
           setRuntimeInfo(null);
@@ -363,6 +378,16 @@ function NativeRuntimeDiscoveryGate({
     };
   }, []);
 
+  if (bypassRuntimeDiscovery) {
+    return (
+      <NativeRuntimeBootstrapContext.Provider
+        value={{ loginRuntimeBootstrap, returnToRuntimeDiscovery }}
+      >
+        {children}
+      </NativeRuntimeBootstrapContext.Provider>
+    );
+  }
+
   if (isCheckingRuntime) {
     return <PublicRouteLoader />;
   }
@@ -374,16 +399,13 @@ function NativeRuntimeDiscoveryGate({
         onConfigured={() => {
           void SecPalRuntimeBootstrap.getRuntimeBootstrap()
             .then((bootstrapState) => {
-              if (!bootstrapState?.configured || !bootstrapState.bootstrap) {
-                setLoginRuntimeBootstrap(null);
-                return;
-              }
-
-              setLoginRuntimeBootstrap({
-                apiOrigin: bootstrapState.bootstrap.apiOrigin,
-                instanceDisplayName:
-                  bootstrapState.bootstrap.instanceDisplayName,
-              });
+              setLoginRuntimeBootstrap(
+                bootstrapState?.configured
+                  ? toLoginRuntimeBootstrapSummary(
+                      bootstrapState.bootstrap ?? null
+                    )
+                  : null
+              );
             })
             .catch(() => {
               setLoginRuntimeBootstrap(null);

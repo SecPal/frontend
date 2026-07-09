@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { useEffect, useState, type FormEvent } from "react";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { CheckCircle2, ServerCog } from "lucide-react";
 
@@ -11,6 +13,7 @@ import {
   RuntimeDiscoveryError,
   discoverAndroidRuntimeBootstrap,
 } from "../services/runtimeDiscovery";
+import { activateLocale, setLocalePreference } from "../i18n";
 import type { BootstrapConfiguration } from "@/types/api";
 import {
   LoginButton,
@@ -76,6 +79,7 @@ export function RuntimeDiscoveryFlow({
   runtimeInfo: SecPalRuntimeInfo;
   onConfigured: () => void;
 }) {
+  const { _ } = useLingui();
   const [instanceUrl, setInstanceUrl] = useState("");
   const [locale, setLocale] = useState<RuntimeDiscoveryLocale>(() =>
     getStoredDiscoveryLocale()
@@ -128,6 +132,22 @@ export function RuntimeDiscoveryFlow({
     }
   }
 
+  async function handleLocaleChange(nextLocale: RuntimeDiscoveryLocale) {
+    setError(null);
+
+    try {
+      await activateLocale(nextLocale);
+      setLocalePreference(nextLocale);
+      setLocale(nextLocale);
+    } catch (localeError) {
+      setError(
+        localeError instanceof Error
+          ? localeError.message
+          : _(msg`Failed to change language. Please try again.`)
+      );
+    }
+  }
+
   const apiOrigin = resolvedBootstrap
     ? getApiOrigin(resolvedBootstrap.api_base_url)
     : null;
@@ -162,7 +182,7 @@ export function RuntimeDiscoveryFlow({
                   inputMode="url"
                   autoCapitalize="none"
                   autoComplete="url"
-                  placeholder="https://customer.example"
+                  placeholder="https://api.secpal.dev"
                   value={instanceUrl}
                   onChange={(event) => {
                     setInstanceUrl(event.target.value);
@@ -186,7 +206,7 @@ export function RuntimeDiscoveryFlow({
                   onChange={(event) => {
                     const nextLocale =
                       event.target.value === "de" ? "de" : "en";
-                    setLocale(nextLocale);
+                    void handleLocaleChange(nextLocale);
                   }}
                 >
                   <option value="en">English</option>

@@ -183,4 +183,41 @@ describe("native facade surface", () => {
     );
     expect(nativeFacades.SecPalRuntimeBootstrap).not.toHaveProperty("request");
   });
+
+  it("fails closed when an Android bridge exposes runtime discovery without bootstrap apply", async () => {
+    nativeGlobal.SecPalNativeAuthBridge = {
+      getRuntimeInfo: vi.fn().mockResolvedValue({
+        clientPlatform: "android",
+        appVersion: "1.4.0",
+        appBuild: 10400,
+      }),
+      getRuntimeBootstrap: vi.fn().mockResolvedValue({ configured: false }),
+    };
+
+    await expect(
+      nativeFacades.SecPalRuntimeBootstrap.setRuntimeBootstrap({
+        api_base_url: "https://api.secpal.dev/v1",
+        instance: {
+          display_name: "SecPal Demo",
+        },
+        compatibility: {
+          bootstrap_version: "v1",
+          schema_version: 3,
+          minimum_supported_app_version: "1.4.0",
+          minimum_supported_app_build: 10400,
+        },
+        features: {
+          password_login: true,
+          passkey_login: true,
+          managed_android_enrollment: false,
+          notification_channels: {
+            android_fcm: false,
+            web_push: false,
+          },
+        },
+      })
+    ).rejects.toThrow(
+      "Android runtime bootstrap apply is unavailable in this native shell."
+    );
+  });
 });
