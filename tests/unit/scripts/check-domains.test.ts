@@ -151,6 +151,24 @@ describe("check-domains", () => {
     );
   });
 
+  it("rejects host labels that prefix the asset key with a hyphen", () => {
+    const forbiddenHostname = ["track-secpal", "asset-load-recovery"].join(".");
+
+    const result = runDomainCheck([
+      {
+        path: "README.md",
+        contents: `Use ${forbiddenHostname} for diagnostics.\n`,
+      },
+    ]);
+
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain(forbiddenHostname);
+    expect(result.stdout + result.stderr).toContain(
+      "Domain Policy Check FAILED"
+    );
+  });
+
   it("rejects the asset key hostname when a query string follows it", () => {
     const forbiddenHostname = ["secpal", "asset-load-recovery"].join(".");
 
