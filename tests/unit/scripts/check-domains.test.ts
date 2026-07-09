@@ -79,24 +79,6 @@ describe("check-domains", () => {
     expect(result.stdout).toContain("Domain Policy Check PASSED");
   });
 
-  it("rejects the asset key hostname when it follows a scheme colon", () => {
-    const forbiddenHostname = ["secpal", "asset-load-recovery"].join(".");
-
-    const result = runDomainCheck([
-      {
-        path: "README.md",
-        contents: `Use http:${forbiddenHostname} for diagnostics.\n`,
-      },
-    ]);
-
-    expect(result.error).toBeUndefined();
-    expect(result.status).toBe(1);
-    expect(result.stdout + result.stderr).toContain(forbiddenHostname);
-    expect(result.stdout + result.stderr).toContain(
-      "Domain Policy Check FAILED"
-    );
-  });
-
   it("rejects forbidden hostnames on lines that also mention the asset key", () => {
     const forbiddenHostname = ["status", "secpal", "io"].join(".");
 
@@ -122,6 +104,42 @@ describe("check-domains", () => {
       {
         path: "README.md",
         contents: `Use https://${forbiddenHostname}/path for diagnostics.\n`,
+      },
+    ]);
+
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain(forbiddenHostname);
+    expect(result.stdout + result.stderr).toContain(
+      "Domain Policy Check FAILED"
+    );
+  });
+
+  it("rejects the asset key when it follows a scheme colon", () => {
+    const forbiddenHostname = ["secpal", "asset-load-recovery"].join(".");
+
+    const result = runDomainCheck([
+      {
+        path: "README.md",
+        contents: `Use http:${forbiddenHostname} for diagnostics.\n`,
+      },
+    ]);
+
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain(forbiddenHostname);
+    expect(result.stdout + result.stderr).toContain(
+      "Domain Policy Check FAILED"
+    );
+  });
+
+  it("rejects the asset key when it is used as an email domain", () => {
+    const forbiddenHostname = ["secpal", "asset-load-recovery"].join(".");
+
+    const result = runDomainCheck([
+      {
+        path: "README.md",
+        contents: `Contact admin@${forbiddenHostname} for diagnostics.\n`,
       },
     ]);
 
