@@ -721,7 +721,7 @@ describe("App", () => {
     );
 
     await waitFor(() => {
-      expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
+      expect(bridge.clearRuntimeBootstrap).toHaveBeenCalled();
     });
     expect(mockAuthStorage.clear).toHaveBeenCalled();
     expect(localStorage.getItem("auth_token")).toBeNull();
@@ -730,6 +730,7 @@ describe("App", () => {
     expect(
       await screen.findByRole("heading", { name: /enter your instance url/i })
     ).toBeInTheDocument();
+    expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
   });
 
   it("best-effort revokes the native session before switching Android instances", async () => {
@@ -781,7 +782,7 @@ describe("App", () => {
     );
 
     await waitFor(() => {
-      expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
+      expect(bridge.clearRuntimeBootstrap).toHaveBeenCalled();
     });
     expect(mockAuthStorage.clear).toHaveBeenCalled();
     expect(localStorage.getItem("auth_token")).toBeNull();
@@ -791,6 +792,7 @@ describe("App", () => {
         name: /enter your instance url/i,
       })
     ).toBeInTheDocument();
+    expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
   });
 
   it("clears configured Android runtime even when push cleanup observes a registration conflict", async () => {
@@ -825,7 +827,7 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
+        expect(bridge.clearRuntimeBootstrap).toHaveBeenCalled();
       });
       await waitFor(() => {
         expect(unsubscribe).toHaveBeenCalled();
@@ -836,6 +838,7 @@ describe("App", () => {
           name: /enter your instance url/i,
         })
       ).toBeInTheDocument();
+      expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
     } finally {
       if (serviceWorkerDescriptor) {
         Object.defineProperty(
