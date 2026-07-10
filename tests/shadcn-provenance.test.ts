@@ -172,9 +172,20 @@ describe("shadcn source provenance", () => {
 
       const sbomPath = path.join(projectRoot, "dist", "dependencies.spdx.json");
       expect(existsSync(sbomPath)).toBe(true);
-      expect(JSON.parse(readFileSync(sbomPath, "utf8"))).toMatchObject({
-        spdxVersion: "SPDX-2.3",
-      });
+      const sbom = JSON.parse(readFileSync(sbomPath, "utf8")) as {
+        packages: { licenseDeclared: string; name: string }[];
+        spdxVersion: string;
+      };
+
+      expect(sbom).toMatchObject({ spdxVersion: "SPDX-2.3" });
+      expect(
+        sbom.packages.find(({ name }) => name === "css-mediaquery")
+          ?.licenseDeclared
+      ).toBe("NOASSERTION");
+      expect(
+        sbom.packages.find(({ name }) => name === "@secpal/frontend")
+          ?.licenseDeclared
+      ).toBe("NOASSERTION");
     } finally {
       rmSync(projectRoot, { recursive: true, force: true });
     }
