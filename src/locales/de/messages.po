@@ -45,7 +45,7 @@ msgstr "Weiter zur Anmeldung"
 
 #: src/pages/SourcePage.tsx
 msgid "Published source release links shown below are immutable. Components without a published source release remain linked to their public repositories."
-msgstr "Die unten angezeigten Quelltext-Releases sind unveränderlich. Für Komponenten ohne veröffentlichten Quelltext-Release verlinken wir stattdessen auf die öffentlichen Repositories."
+msgstr "Die unten angezeigten Quellcode-Releases sind unveränderlich. Für Komponenten ohne veröffentlichten Quellcode-Release verlinken wir stattdessen auf die öffentlichen Repositories."
 
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Edit Employee"
@@ -142,10 +142,6 @@ msgstr "Weitere Links"
 msgid "Employment permitted"
 msgstr "Erwerbstätigkeit gestattet"
 
-#: src/pages/SourcePage.tsx
-msgid "Source offer for users interacting with SecPal over a network."
-msgstr "Quelltextangebot für Nutzer, die SecPal über ein Netzwerk verwenden."
-
 #: src/components/ScopeAssignmentForm.tsx
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
 msgstr "Um einem Mitarbeiter den Dienstgrad zu entziehen, muss der Benutzer die Berechtigung haben, diesen Dienstgrad zu vergeben. Dies verhindert eine Eskalation der Privilegien."
@@ -235,7 +231,7 @@ msgstr "Nein"
 
 #: src/pages/SourcePage.tsx
 msgid "SecPal is licensed under AGPL-3.0-or-later with additional SecPal attribution terms. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the links below."
-msgstr "SecPal ist unter AGPL-3.0-or-later mit zusätzlichen SecPal-Attributionsbedingungen lizenziert. Wenn Sie diesen Dienst über ein Netzwerk nutzen, können Sie den entsprechenden Quelltext für die über diesen Dienst bereitgestellten SecPal-Komponenten kostenlos über die nachstehenden Links beziehen."
+msgstr "SecPal ist unter AGPL-3.0-or-later mit zusätzlichen SecPal-Attributionsbedingungen lizenziert. Wenn Sie diesen Dienst über ein Netzwerk nutzen, können Sie den entsprechenden Quellcode für die über diesen Dienst bereitgestellten SecPal-Komponenten kostenlos über die nachstehenden Links beziehen."
 
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "City is required."
@@ -1504,7 +1500,7 @@ msgstr "Ausgesetzt"
 
 #: src/pages/SourcePage.tsx
 msgid "Corresponding source repositories"
-msgstr "Repositories des entsprechenden Quelltexts"
+msgstr "Repositories des entsprechenden Quellcodes"
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Failed to delete site"
@@ -1868,7 +1864,7 @@ msgstr "Bewerber / Vorvertrag / Aktiv / Beurlaubt / Beendet"
 
 #: src/pages/SourcePage.tsx
 msgid "The source release links shown below point to the immutable corresponding source published for this deployment."
-msgstr "Die unten angezeigten Quelltext-Releases verweisen auf den unveränderlichen entsprechenden Quelltext dieser Bereitstellung."
+msgstr "Die unten angezeigten Quellcode-Releases verweisen auf den unveränderlichen entsprechenden Quellcode dieser Bereitstellung."
 
 #. placeholder {0}: step.step_number
 #. placeholder {1}: step.title
@@ -1966,6 +1962,10 @@ msgstr "Alle Protokolle"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Processing..."
 msgstr "Verarbeitung..."
+
+#: src/pages/SourcePage.tsx
+msgid "AGPL source offer for the SecPal components made available through this service."
+msgstr "Quellcodeangebot zur AGPL-Lizenz für die über diesen Dienst bereitgestellten SecPal-Komponenten."
 
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "{sitesCount, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
@@ -2620,7 +2620,7 @@ msgstr "AGPL v3+"
 
 #: src/pages/SourcePage.tsx
 msgid "These links identify the preferred form for making modifications to the SecPal components made available through this service."
-msgstr "Diese Links verweisen auf die für Änderungen bevorzugte Form des Quelltexts der über diesen Dienst bereitgestellten SecPal-Komponenten."
+msgstr "Diese Links verweisen auf die für Änderungen bevorzugte Form des Quellcodes der über diesen Dienst bereitgestellten SecPal-Komponenten."
 
 #: src/components/VerificationDots.tsx
 msgid "Hash Chain (Data)"
@@ -3531,7 +3531,7 @@ msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein."
 
 #: src/pages/SourcePage.tsx
 msgid "Source code and license"
-msgstr "Quelltext und Lizenz"
+msgstr "Quellcode und Lizenz"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "For German nationals, you can provide either identity card or passport."
@@ -3575,7 +3575,7 @@ msgstr "Auf Ihrem Gerät prüfen…"
 
 #: src/pages/SourcePage.tsx
 msgid "If this deployment does not publish source releases here, the project repositories below remain linked as the preferred form for making modifications."
-msgstr "Wenn diese Bereitstellung hier keine Quelltext-Releases veröffentlicht, bleiben die unten verlinkten Projekt-Repositories als bevorzugte Form für Änderungen verfügbar."
+msgstr "Wenn diese Bereitstellung hier keine Quellcode-Releases veröffentlicht, bleiben die unten verlinkten Projekt-Repositories als bevorzugte Form für Änderungen verfügbar."
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Merkle Root"

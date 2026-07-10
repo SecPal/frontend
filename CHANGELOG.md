@@ -14,10 +14,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Clarified the `/source` description as the AGPL source offer for the SecPal
+  components made available through the service.
 - Removed the redundant `AGPL v3+` link from every `Legal` menu; the `/source`
   page remains the single entry point for source and license information.
-- Renamed the German `Source Code` menu label from `Quelltext` to `Quellcode`.
+- Renamed the German `Source Code` wording from `Quelltext` to `Quellcode` in
+  the legal menu and on the `/source` page.
 - Added the shared `Legal` and language controls to the `/source` page header.
+- Aligned the `/source` page legal and language controls with the logo and
+  return button on wider screens while preserving the separate top row on
+  narrower screens.
+- Kept the `/source` page header controls in visual and keyboard focus order
+  at every screen width.
+- Restored wrapping for the `/source` page return button on narrow screens so
+  it cannot overlap the page title.
 - Preserved the original authenticated return route when the `Source Code`
   item is selected again from the `/source` page's `Legal` menu.
 - Stopped opportunistic protected-route browser-session bootstrap when no
