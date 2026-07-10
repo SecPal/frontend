@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Aligned the `/source` page legal and language controls with the logo and
   return button on wider screens while preserving the separate top row on
   narrower screens.
+- Restored wrapping for the `/source` page return button on narrow screens so
+  it cannot overlap the page title.
 - Preserved the original authenticated return route when the `Source Code`
   item is selected again from the `/source` page's `Legal` menu.
 - Stopped opportunistic protected-route browser-session bootstrap when no

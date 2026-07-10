@@ -133,27 +133,30 @@ describe("SourcePage", () => {
   });
 
   it("uses Quellcode consistently in German", async () => {
+    const previousLocale = i18n.locale;
     i18n.load("de", deMessages);
     i18n.activate("de");
 
-    renderWithProviders();
+    try {
+      renderWithProviders();
 
-    expect(
-      await screen.findByRole("heading", { name: "Quellcode und Lizenz" })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /Quellcodeangebot zur AGPL-Lizenz für die über diesen Dienst bereitgestellten SecPal-Komponenten\./i
-      )
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", {
-        name: "Repositories des entsprechenden Quellcodes",
-      })
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/Quelltext/i)).not.toBeInTheDocument();
-
-    i18n.activate("en");
+      expect(
+        await screen.findByRole("heading", { name: "Quellcode und Lizenz" })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Quellcodeangebot zur AGPL-Lizenz für die über diesen Dienst bereitgestellten SecPal-Komponenten\./i
+        )
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", {
+          name: "Repositories des entsprechenden Quellcodes",
+        })
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/Quelltext/i)).not.toBeInTheDocument();
+    } finally {
+      i18n.activate(previousLocale);
+    }
   });
 
   it("keeps legal and language controls at the page edges", async () => {
@@ -186,8 +189,6 @@ describe("SourcePage", () => {
     expect(header).toHaveClass(
       "grid",
       "grid-cols-[minmax(0,1fr)_auto]",
-      "gap-x-6",
-      "gap-y-4",
       "min-[86rem]:grid-cols-[minmax(0,1fr)_minmax(0,64rem)_minmax(0,1fr)]"
     );
     expect(legalWrapper).not.toBe(languageWrapper);
@@ -204,6 +205,7 @@ describe("SourcePage", () => {
     expect(middleRow).toHaveClass(
       "order-3",
       "col-span-2",
+      "flex-wrap",
       "max-w-5xl",
       "justify-self-center",
       "min-[86rem]:col-start-2"

@@ -142,7 +142,7 @@ export function SourcePage() {
           <div className="order-2 shrink-0 justify-self-end min-[86rem]:col-start-3 min-[86rem]:row-start-1">
             <LoginLanguageSwitcher />
           </div>
-          <div className="order-3 col-span-2 flex w-full max-w-5xl min-w-0 items-center justify-between gap-3 justify-self-center min-[86rem]:col-span-1 min-[86rem]:col-start-2 min-[86rem]:row-start-1">
+          <div className="order-3 col-span-2 flex w-full max-w-5xl min-w-0 flex-wrap items-center justify-between gap-3 justify-self-center min-[86rem]:col-span-1 min-[86rem]:col-start-2 min-[86rem]:row-start-1">
             <div className="flex min-w-0 items-center gap-3">
               <Logo size="32" className="shrink-0" />
               <div className="space-y-1">
