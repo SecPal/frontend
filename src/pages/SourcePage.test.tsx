@@ -83,9 +83,9 @@ describe("SourcePage", () => {
     });
 
     const main = container.querySelector("main");
-    const banner = screen
-      .getByRole("heading", { name: "AGPL v3+" })
-      .closest(".grid");
+    const banner = container.querySelector(
+      "[data-testid='source-page-header']"
+    );
     const cards = container.querySelectorAll('[data-slot="card"]');
     const repoArticle = screen.getByText("SecPal/frontend").closest("article");
     const issueLink = screen.getByRole("link", {
@@ -141,7 +141,11 @@ describe("SourcePage", () => {
       renderWithProviders();
 
       expect(
-        await screen.findByRole("heading", { name: "Quellcode und Lizenz" })
+        (
+          await screen.findAllByRole("heading", {
+            name: "Quellcode und Lizenz",
+          })
+        )[0]
       ).toBeInTheDocument();
       expect(
         screen.getByText(
@@ -162,60 +166,69 @@ describe("SourcePage", () => {
   it("keeps legal and language controls at the page edges", async () => {
     const { container } = renderWithProviders();
     const main = container.querySelector("main");
-    const header = screen
-      .getByRole("heading", { name: "AGPL v3+" })
-      .closest(".grid");
-    const legalControl = screen.getByRole("button", { name: /legal/i });
-    const languageControl = screen.getByRole("combobox", {
-      name: /select language/i,
-    });
-    const backLink = screen.getByRole("link", { name: /back to login/i });
-    const middleRow = screen
-      .getByRole("heading", { name: "AGPL v3+" })
-      .closest(".min-\\[86rem\\]\\:col-start-2");
-    const brandCluster = screen
-      .getByRole("heading", { name: "AGPL v3+" })
-      .closest(".items-center");
-    const legalWrapper = legalControl.closest(".order-1");
-    const languageWrapper = languageControl.closest(".order-2");
+    const header = container.querySelector(
+      "[data-testid='source-page-header']"
+    );
+    const mobileControls = container.querySelector(
+      "[data-testid='source-header-controls-mobile']"
+    );
+    const desktopControls = container.querySelector(
+      "[data-testid='source-header-controls-desktop']"
+    );
 
     expect(main).not.toHaveClass("relative");
-    expect(legalControl).toBeInTheDocument();
-    expect(languageControl).toBeInTheDocument();
-    expect(header).toContainElement(legalControl);
-    expect(header).toContainElement(languageControl);
-    expect(header).toContainElement(backLink);
     expect(header).not.toHaveClass("border-b", "border-border");
     expect(header).toHaveClass(
       "grid",
       "grid-cols-[minmax(0,1fr)_auto]",
       "min-[86rem]:grid-cols-[minmax(0,1fr)_minmax(0,64rem)_minmax(0,1fr)]"
     );
-    expect(legalWrapper).not.toBe(languageWrapper);
-    expect(legalWrapper).toHaveClass(
-      "order-1",
-      "justify-self-start",
-      "min-[86rem]:col-start-1"
-    );
-    expect(languageWrapper).toHaveClass(
-      "order-2",
-      "justify-self-end",
-      "min-[86rem]:col-start-3"
-    );
-    expect(middleRow).toHaveClass(
-      "order-3",
-      "col-span-2",
-      "flex-wrap",
-      "max-w-5xl",
-      "justify-self-center",
-      "min-[86rem]:col-start-2"
-    );
+    expect(mobileControls).toHaveClass("contents", "min-[86rem]:hidden");
+    expect(desktopControls).toHaveClass("hidden", "min-[86rem]:contents");
     expect(
-      within(brandCluster as HTMLElement).queryByRole("link")
+      Array.from(
+        (mobileControls as HTMLElement).querySelectorAll("button, a")
+      ).map((control) => control.textContent?.trim())
+    ).toEqual(["Legal", "English", "Back to login"]);
+    expect(
+      Array.from(
+        (desktopControls as HTMLElement).querySelectorAll("button, a")
+      ).map((control) => control.textContent?.trim())
+    ).toEqual(["Legal", "Back to login", "English"]);
+    expect(
+      within(mobileControls as HTMLElement).getByRole("button", {
+        name: /legal/i,
+      })
+    ).toBeInTheDocument();
+    expect(
+      within(desktopControls as HTMLElement).getByRole("combobox", {
+        name: /select language/i,
+      })
+    ).toBeInTheDocument();
+    expect(
+      within(desktopControls as HTMLElement).getByRole("link", {
+        name: /back to login/i,
+      })
+    ).toHaveClass("shrink-0", "rounded-xl");
+    expect(
+      within(desktopControls as HTMLElement).getByRole("heading", {
+        name: "AGPL v3+",
+      })
+    ).toBeInTheDocument();
+    expect(
+      within(mobileControls as HTMLElement).getByRole("heading", {
+        name: "AGPL v3+",
+      })
+    ).toBeInTheDocument();
+    expect(
+      within(desktopControls as HTMLElement).queryByRole("link", {
+        name: /source code/i,
+      })
     ).not.toBeInTheDocument();
-    expect(backLink).toHaveClass("shrink-0", "rounded-xl");
     expect(
-      within(languageControl.parentElement as HTMLElement).queryByRole("link")
+      within(mobileControls as HTMLElement).queryByRole("link", {
+        name: /source code/i,
+      })
     ).not.toBeInTheDocument();
     await screen.findByText(
       /if this deployment does not publish source releases here/i
@@ -228,17 +241,26 @@ describe("SourcePage", () => {
       isAuthenticated: true,
       isLoading: false,
     } as ReturnType<typeof useAuth>);
-    renderWithProviders([
+    const { container } = renderWithProviders([
       {
         pathname: "/source",
         state: { sourceReturnTo: "/customers/new?draft=1#notes" },
       },
     ]);
 
-    const backLink = screen.getByRole("link", { name: /^back$/i });
+    const mobileControls = container.querySelector(
+      "[data-testid='source-header-controls-mobile']"
+    );
+    const backLink = within(mobileControls as HTMLElement).getByRole("link", {
+      name: /^back$/i,
+    });
     expect(backLink).toHaveAttribute("href", "/customers/new?draft=1#notes");
 
-    await user.click(screen.getByRole("button", { name: /legal/i }));
+    await user.click(
+      within(mobileControls as HTMLElement).getByRole("button", {
+        name: /legal/i,
+      })
+    );
     await user.click(
       await screen.findByRole("menuitem", { name: /source code/i })
     );

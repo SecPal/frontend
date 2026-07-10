@@ -4,7 +4,7 @@
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import {
   ArrowLeft,
   ExternalLink,
@@ -85,6 +85,46 @@ function getSourceReturnTo(state: unknown): string | null {
   return sourceReturnTo;
 }
 
+interface SourcePageHeaderContentProps {
+  className: string;
+  secondaryActionHref: string;
+  secondaryActionLabel: ReactNode;
+}
+
+function SourcePageHeaderContent({
+  className,
+  secondaryActionHref,
+  secondaryActionLabel,
+}: SourcePageHeaderContentProps) {
+  return (
+    <div className={className}>
+      <div className="flex min-w-0 items-center gap-3">
+        <Logo size="32" className="shrink-0" />
+        <div className="space-y-1">
+          <p className="text-muted-foreground text-xs font-semibold uppercase tracking-[0.14em]">
+            SecPal
+          </p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            <Trans>AGPL v3+</Trans>
+          </h1>
+        </div>
+      </div>
+      <Link
+        to={secondaryActionHref}
+        className={buttonVariants({
+          variant: "outline",
+          className: "shrink-0 rounded-xl",
+        })}
+      >
+        <span className="inline-flex items-center gap-2">
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          {secondaryActionLabel}
+        </span>
+      </Link>
+    </div>
+  );
+}
+
 export function SourcePage() {
   const { isAuthenticated, isLoading } = useAuth();
   const { _ } = useLingui();
@@ -135,37 +175,41 @@ export function SourcePage() {
   return (
     <main className="min-h-[var(--app-shell-min-height)] bg-background text-foreground">
       <div className="px-4 pt-[calc(1.5rem+var(--app-safe-area-inset-top))] sm:px-6 lg:px-8">
-        <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-4 pb-4 min-[86rem]:grid-cols-[minmax(0,1fr)_minmax(0,64rem)_minmax(0,1fr)]">
-          <div className="order-1 shrink-0 justify-self-start min-[86rem]:col-start-1 min-[86rem]:row-start-1">
-            <LoginLegalMenu sourceReturnTo={sourceReturnTo ?? undefined} />
-          </div>
-          <div className="order-2 shrink-0 justify-self-end min-[86rem]:col-start-3 min-[86rem]:row-start-1">
-            <LoginLanguageSwitcher />
-          </div>
-          <div className="order-3 col-span-2 flex w-full max-w-5xl min-w-0 flex-wrap items-center justify-between gap-3 justify-self-center min-[86rem]:col-span-1 min-[86rem]:col-start-2 min-[86rem]:row-start-1">
-            <div className="flex min-w-0 items-center gap-3">
-              <Logo size="32" className="shrink-0" />
-              <div className="space-y-1">
-                <p className="text-muted-foreground text-xs font-semibold uppercase tracking-[0.14em]">
-                  SecPal
-                </p>
-                <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                  <Trans>AGPL v3+</Trans>
-                </h1>
-              </div>
+        <div
+          data-testid="source-page-header"
+          className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-4 pb-4 min-[86rem]:grid-cols-[minmax(0,1fr)_minmax(0,64rem)_minmax(0,1fr)]"
+        >
+          <div
+            data-testid="source-header-controls-mobile"
+            className="contents min-[86rem]:hidden"
+          >
+            <div className="shrink-0 justify-self-start">
+              <LoginLegalMenu sourceReturnTo={sourceReturnTo ?? undefined} />
             </div>
-            <Link
-              to={secondaryActionHref}
-              className={buttonVariants({
-                variant: "outline",
-                className: "shrink-0 rounded-xl",
-              })}
-            >
-              <span className="inline-flex items-center gap-2">
-                <ArrowLeft className="size-4" aria-hidden="true" />
-                {secondaryActionLabel}
-              </span>
-            </Link>
+            <div className="shrink-0 justify-self-end">
+              <LoginLanguageSwitcher />
+            </div>
+            <SourcePageHeaderContent
+              className="col-span-2 flex w-full max-w-5xl min-w-0 flex-wrap items-center justify-between gap-3 justify-self-center"
+              secondaryActionHref={secondaryActionHref}
+              secondaryActionLabel={secondaryActionLabel}
+            />
+          </div>
+          <div
+            data-testid="source-header-controls-desktop"
+            className="hidden min-[86rem]:contents"
+          >
+            <div className="shrink-0 justify-self-start min-[86rem]:col-start-1 min-[86rem]:row-start-1">
+              <LoginLegalMenu sourceReturnTo={sourceReturnTo ?? undefined} />
+            </div>
+            <SourcePageHeaderContent
+              className="flex w-full max-w-5xl min-w-0 flex-wrap items-center justify-between gap-3 justify-self-center min-[86rem]:col-start-2 min-[86rem]:row-start-1"
+              secondaryActionHref={secondaryActionHref}
+              secondaryActionLabel={secondaryActionLabel}
+            />
+            <div className="shrink-0 justify-self-end min-[86rem]:col-start-3 min-[86rem]:row-start-1">
+              <LoginLanguageSwitcher />
+            </div>
           </div>
         </div>
       </div>
