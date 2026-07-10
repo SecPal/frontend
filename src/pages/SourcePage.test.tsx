@@ -3,9 +3,11 @@
 
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { useAuth } from "@/hooks/useAuth";
 import { SourcePage } from "./SourcePage";
 
 vi.mock("@/hooks/useAuth", () => ({
@@ -51,10 +53,12 @@ function mockSourceOfferRequests(options?: {
   );
 }
 
-function renderWithProviders() {
+function renderWithProviders(
+  initialEntries: Array<string | { pathname: string; state?: unknown }> = ["/"]
+) {
   return render(
     <I18nProvider i18n={i18n}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={initialEntries}>
         <SourcePage />
       </MemoryRouter>
     </I18nProvider>
@@ -63,6 +67,10 @@ function renderWithProviders() {
 
 describe("SourcePage", () => {
   beforeEach(() => {
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: false,
+      isLoading: false,
+    } as ReturnType<typeof useAuth>);
     vi.spyOn(globalThis, "fetch");
     mockSourceOfferRequests();
   });
@@ -149,6 +157,30 @@ describe("SourcePage", () => {
     await screen.findByText(
       /if this deployment does not publish source releases here/i
     );
+  });
+
+  it("preserves the authenticated return route after selecting source code from its legal menu", async () => {
+    const user = userEvent.setup();
+    vi.mocked(useAuth).mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+    } as ReturnType<typeof useAuth>);
+    renderWithProviders([
+      {
+        pathname: "/source",
+        state: { sourceReturnTo: "/customers/new?draft=1#notes" },
+      },
+    ]);
+
+    const backLink = screen.getByRole("link", { name: /^back$/i });
+    expect(backLink).toHaveAttribute("href", "/customers/new?draft=1#notes");
+
+    await user.click(screen.getByRole("button", { name: /legal/i }));
+    await user.click(
+      await screen.findByRole("menuitem", { name: /source code/i })
+    );
+
+    expect(backLink).toHaveAttribute("href", "/customers/new?draft=1#notes");
   });
 
   it("describes the additional SecPal attribution terms in legal notices", async () => {

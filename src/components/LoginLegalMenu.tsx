@@ -30,9 +30,17 @@ import {
   DropdownMenuTrigger,
 } from "@/ui/dropdown-menu";
 
-export function LoginLegalMenu() {
+interface LoginLegalMenuProps {
+  sourceReturnTo?: string;
+}
+
+export function LoginLegalMenu({
+  sourceReturnTo: preservedSourceReturnTo,
+}: LoginLegalMenuProps = {}) {
   const location = useLocation();
-  const sourceReturnTo = `${location.pathname}${location.search}${location.hash}`;
+  const sourceReturnTo =
+    preservedSourceReturnTo ??
+    `${location.pathname}${location.search}${location.hash}`;
 
   return (
     <DropdownMenu>

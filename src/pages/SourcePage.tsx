@@ -136,7 +136,7 @@ export function SourcePage() {
     <main className="min-h-[var(--app-shell-min-height)] bg-background text-foreground">
       <div className="px-4 pt-[calc(1.5rem+var(--app-safe-area-inset-top))] sm:px-6 lg:px-8">
         <div className="mb-6 flex items-start justify-between gap-4">
-          <LoginLegalMenu />
+          <LoginLegalMenu sourceReturnTo={sourceReturnTo ?? undefined} />
           <LoginLanguageSwitcher />
         </div>
         <div className="mx-auto mb-6 flex max-w-5xl flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
