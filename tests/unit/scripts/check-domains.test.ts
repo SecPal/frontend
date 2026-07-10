@@ -79,6 +79,22 @@ describe("check-domains", () => {
     expect(result.stdout).toContain("Domain Policy Check PASSED");
   });
 
+  it("ignores generated SPDX identifiers in build artifacts", () => {
+    const generatedSpdxId = ["SPDXRef-Package-secpal", "frontend-0.0.1"].join(
+      "."
+    );
+    const result = runDomainCheck([
+      {
+        path: "dist/dependencies.spdx.json",
+        contents: `{"SPDXID":"${generatedSpdxId}"}\n`,
+      },
+    ]);
+
+    expect(result.error).toBeUndefined();
+    expect(result.status, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toContain("Domain Policy Check PASSED");
+  });
+
   it("rejects forbidden hostnames on lines that also mention the asset key", () => {
     const forbiddenHostname = ["status", "secpal", "io"].join(".");
 

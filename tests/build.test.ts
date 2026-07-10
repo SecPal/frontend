@@ -119,6 +119,34 @@ describe("Build Configuration and Source Verification", () => {
     expect(viteConfig).toContain('dest: "."');
   });
 
+  it("forwards custom Vite output directories to the build artifact and SBOM", () => {
+    const distRoot = mkdtempSync(path.join(tmpdir(), "secpal-build-output-"));
+    const safeEnv = { ...process.env };
+    delete safeEnv.NODE_V8_COVERAGE;
+
+    try {
+      execFileSync(
+        "npm",
+        ["run", "build", "--", "--outDir", distRoot, "--base", "/custom/"],
+        {
+          cwd: repoRoot,
+          stdio: "pipe",
+          env: safeEnv,
+        }
+      );
+
+      expect(existsSync(path.join(distRoot, "index.html"))).toBe(true);
+      expect(existsSync(path.join(distRoot, "dependencies.spdx.json"))).toBe(
+        true
+      );
+      expect(readFileSync(path.join(distRoot, "index.html"), "utf8")).toContain(
+        'src="/custom/'
+      );
+    } finally {
+      rmSync(distRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
   it("keeps timeout-minutes only on runnable quality workflow jobs", () => {
     const qualityWorkflow = readRepoFile(".github/workflows/quality.yml");
     const jobsSection = getIndentedSection(qualityWorkflow, "jobs");
@@ -157,7 +185,6 @@ describe("Build Configuration and Source Verification", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
       scripts?: Record<string, string>;
     };
-
     expect(packageJson.scripts).toMatchObject({
       dev: "vite",
       "dev:web": "cross-env VITE_APP_SURFACE=web vite --mode web",
@@ -167,17 +194,17 @@ describe("Build Configuration and Source Verification", () => {
         "cross-env VITE_APP_SURFACE=android-mock vite --mode android",
       "dev:ios": "cross-env VITE_APP_SURFACE=ios-native vite --mode ios",
       build:
-        "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build",
+        "cross-env VITE_APP_SURFACE=web node ./scripts/build-with-sbom.mjs",
       "build:web":
-        "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build --mode web",
+        "cross-env VITE_APP_SURFACE=web node ./scripts/build-with-sbom.mjs --mode web",
       "build:android":
-        "cross-env VITE_APP_SURFACE=android-native tsc && cross-env VITE_APP_SURFACE=android-native vite build --mode android",
+        "cross-env VITE_APP_SURFACE=android-native node ./scripts/build-with-sbom.mjs --mode android",
       "build:android:mock":
-        "cross-env VITE_APP_SURFACE=android-mock tsc && cross-env VITE_APP_SURFACE=android-mock vite build --mode preview",
+        "cross-env VITE_APP_SURFACE=android-mock node ./scripts/build-with-sbom.mjs --mode preview",
       "build:ios":
-        "cross-env VITE_APP_SURFACE=ios-native tsc && cross-env VITE_APP_SURFACE=ios-native vite build --mode ios",
+        "cross-env VITE_APP_SURFACE=ios-native node ./scripts/build-with-sbom.mjs --mode ios",
       "build:analyze":
-        "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build --mode analyze",
+        "cross-env VITE_APP_SURFACE=web node ./scripts/build-with-sbom.mjs --mode analyze",
     });
   });
 
