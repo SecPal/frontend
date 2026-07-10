@@ -824,10 +824,12 @@ describe("App", () => {
       );
 
       await waitFor(() => {
-        expect(unsubscribe).toHaveBeenCalled();
+        expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
       });
-      expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
-      expect(mockAuthStorage.clear).toHaveBeenCalled();
+      await waitFor(() => {
+        expect(unsubscribe).toHaveBeenCalled();
+        expect(mockAuthStorage.clear).toHaveBeenCalled();
+      });
       expect(
         await screen.findByRole("heading", {
           name: /enter your instance url/i,
