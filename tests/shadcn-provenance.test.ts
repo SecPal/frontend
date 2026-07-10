@@ -125,9 +125,12 @@ describe("shadcn source provenance", () => {
     expect(packageJson.scripts["generate:dependency-sbom"]).toContain(
       "node ./scripts/generate-dependency-sbom.mjs"
     );
-    expect(packageJson.scripts["generate:dependency-sbom"]).toContain(
-      "dist/dependencies.spdx.json"
+    const sbomGenerator = readFileSync(
+      path.join(repoRoot, "scripts", "generate-dependency-sbom.mjs"),
+      "utf8"
     );
+    expect(sbomGenerator).toContain('process.argv[2] ?? "dist"');
+    expect(sbomGenerator).toContain('"dependencies.spdx.json"');
 
     for (const { scriptName } of releaseBuildConfigurations) {
       expect(packageJson.scripts[scriptName], scriptName).toContain(
