@@ -45,12 +45,16 @@ function cacheEntryToOrganizationalUnit(
     id: entry.id,
     type: entry.type,
     name: entry.name,
+    is_legal_entity: entry.is_legal_entity ?? false,
+    is_establishment: entry.is_establishment ?? false,
     custom_type_name: entry.custom_type_name ?? undefined,
     parent: entry.parent
       ? {
           id: entry.parent.id,
           type: entry.parent.type as OrganizationalUnit["type"],
           name: entry.parent.name,
+          is_legal_entity: entry.parent.is_legal_entity ?? false,
+          is_establishment: entry.parent.is_establishment ?? false,
           created_at: "",
           updated_at: "",
         }

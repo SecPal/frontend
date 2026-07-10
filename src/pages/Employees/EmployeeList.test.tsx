@@ -175,6 +175,8 @@ describe("EmployeeList", () => {
         {
           id: "unit-1",
           name: "Engineering",
+          is_legal_entity: false,
+          is_establishment: false,
           type: "department",
           description: null,
           parent: null,
@@ -185,6 +187,8 @@ describe("EmployeeList", () => {
         {
           id: "unit-2",
           name: "Design",
+          is_legal_entity: false,
+          is_establishment: false,
           type: "department",
           description: null,
           parent: null,

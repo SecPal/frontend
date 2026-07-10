@@ -5,6 +5,7 @@ import { useState, useCallback } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Button } from "@/ui/button";
+import { Checkbox } from "@/ui/checkbox";
 import { Input } from "@/ui/input";
 import {
   Select,
@@ -72,6 +73,8 @@ interface FormData {
   name: string;
   type: OrganizationalUnitType;
   description: string;
+  isLegalEntity: boolean;
+  isEstablishment: boolean;
 }
 
 interface FormErrors {
@@ -98,6 +101,8 @@ function OrganizationalUnitFormDialogContent({
         name: unit.name,
         type: unit.type,
         description: unit.description || "",
+        isLegalEntity: unit.is_legal_entity,
+        isEstablishment: unit.is_establishment,
       };
     }
 
@@ -106,6 +111,8 @@ function OrganizationalUnitFormDialogContent({
       name: "",
       type: defaultType || "branch",
       description: "",
+      isLegalEntity: false,
+      isEstablishment: false,
     };
   });
   const [errors, setErrors] = useState<FormErrors>({});
@@ -153,6 +160,8 @@ function OrganizationalUnitFormDialogContent({
           type: formData.type,
           description: formData.description.trim() || null,
           parent_id: parentId || null,
+          is_legal_entity: formData.isLegalEntity,
+          is_establishment: formData.isEstablishment,
         };
         result = await createOrganizationalUnit(createData);
       } else {
@@ -163,6 +172,8 @@ function OrganizationalUnitFormDialogContent({
           name: formData.name.trim(),
           type: formData.type,
           description: formData.description.trim() || null,
+          is_legal_entity: formData.isLegalEntity,
+          is_establishment: formData.isEstablishment,
         };
         result = await updateOrganizationalUnit(unit.id, updateData);
       }
@@ -201,10 +212,10 @@ function OrganizationalUnitFormDialogContent({
 
   const handleChange = (
     field: keyof FormData,
-    value: string | OrganizationalUnitType
+    value: string | boolean | OrganizationalUnitType
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
+    if (field in errors && errors[field as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
@@ -337,6 +348,38 @@ function OrganizationalUnitFormDialogContent({
                   {errors.type}
                 </FieldError>
               )}
+            </Field>
+
+            <Field>
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id="organizational-unit-is-legal-entity"
+                  checked={formData.isLegalEntity}
+                  onCheckedChange={(checked) =>
+                    handleChange("isLegalEntity", checked === true)
+                  }
+                  disabled={isSubmitting}
+                />
+                <FieldLabel htmlFor="organizational-unit-is-legal-entity">
+                  <Trans>Legal Entity</Trans>
+                </FieldLabel>
+              </div>
+            </Field>
+
+            <Field>
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id="organizational-unit-is-establishment"
+                  checked={formData.isEstablishment}
+                  onCheckedChange={(checked) =>
+                    handleChange("isEstablishment", checked === true)
+                  }
+                  disabled={isSubmitting}
+                />
+                <FieldLabel htmlFor="organizational-unit-is-establishment">
+                  <Trans>Establishment</Trans>
+                </FieldLabel>
+              </div>
             </Field>
 
             <Field>

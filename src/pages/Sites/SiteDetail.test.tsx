@@ -102,6 +102,8 @@ describe("SiteDetail", () => {
     id: "org-unit-123",
     type: "department" as const,
     name: "IT Department",
+    is_legal_entity: false,
+    is_establishment: false,
     created_at: "2025-01-15T10:00:00Z",
     updated_at: "2025-01-20T15:30:00Z",
   };

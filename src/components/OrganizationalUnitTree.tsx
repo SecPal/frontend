@@ -388,6 +388,8 @@ function moveUnitInTree(
           id: nextParent.id,
           type: nextParent.type,
           name: nextParent.name,
+          is_legal_entity: nextParent.is_legal_entity,
+          is_establishment: nextParent.is_establishment,
           created_at: nextParent.created_at,
           updated_at: nextParent.updated_at,
         }

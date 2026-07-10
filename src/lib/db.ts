@@ -44,6 +44,8 @@ export interface OrganizationalUnitCacheEntry {
     | "department"
     | "custom";
   name: string;
+  is_legal_entity?: boolean;
+  is_establishment?: boolean;
   custom_type_name?: string;
   description?: string;
   metadata?: Record<string, unknown> | null;
@@ -52,6 +54,8 @@ export interface OrganizationalUnitCacheEntry {
     id: string;
     type: string;
     name: string;
+    is_legal_entity?: boolean;
+    is_establishment?: boolean;
   } | null;
   created_at: string;
   updated_at: string;

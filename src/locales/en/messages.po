@@ -2568,6 +2568,10 @@ msgstr "Merkle Batch ID"
 msgid "I stored these recovery codes securely and understand they will not be shown again."
 msgstr "I stored these recovery codes securely and understand they will not be shown again."
 
+#: src/components/OrganizationalUnitFormDialog.tsx
+msgid "Establishment"
+msgstr "Establishment"
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Store your recovery codes now"
 msgstr "Store your recovery codes now"
@@ -3425,6 +3429,10 @@ msgstr "Activate this employee?"
 #: src/components/RouteGuardState.tsx
 msgid "Unlocking..."
 msgstr "Unlocking..."
+
+#: src/components/OrganizationalUnitFormDialog.tsx
+msgid "Legal Entity"
+msgstr "Legal Entity"
 
 #: src/pages/Employees/EmployeeList.tsx
 msgid "Search by name or email..."

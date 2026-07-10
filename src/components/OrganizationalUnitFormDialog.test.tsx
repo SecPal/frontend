@@ -8,6 +8,8 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { OrganizationalUnitFormDialog } from "./OrganizationalUnitFormDialog";
 import type { OrganizationalUnit } from "../types/organizational";
+import { messages as deMessages } from "../locales/de/messages.mjs";
+import { messages as enMessages } from "../locales/en/messages.mjs";
 
 vi.mock("./dialog", () => ({
   Dialog: vi.fn(({ open, children }) =>
@@ -114,6 +116,8 @@ describe("OrganizationalUnitFormDialog", () => {
     id: "unit-1",
     type: "branch",
     name: "Berlin Branch",
+    is_legal_entity: false,
+    is_establishment: false,
     description: "Main branch in Berlin",
     metadata: null,
     created_at: "2025-01-01T00:00:00Z",
@@ -125,11 +129,29 @@ describe("OrganizationalUnitFormDialog", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    i18n.load("en", enMessages);
+    i18n.activate("en");
     // Default to online
     vi.mocked(useOnlineStatus).mockReturnValue(true);
   });
 
   describe("Create mode", () => {
+    it("uses the precise German label for legal entities", () => {
+      i18n.load("de", deMessages);
+      i18n.activate("de");
+
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      expect(screen.getByLabelText("Juristische Person")).toBeInTheDocument();
+    });
+
     it("renders create dialog with correct title", () => {
       renderWithI18n(
         <OrganizationalUnitFormDialog
@@ -194,11 +216,58 @@ describe("OrganizationalUnitFormDialog", () => {
           type: "branch",
           description: null,
           parent_id: "parent-1",
+          is_legal_entity: false,
+          is_establishment: false,
         });
       });
 
       expect(mockOnSuccess).toHaveBeenCalledWith(newUnit);
       expect(mockOnClose).toHaveBeenCalled();
+    });
+
+    it("initializes both legal status flags to false", () => {
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      expect(screen.getByLabelText("Legal Entity")).not.toBeChecked();
+      expect(screen.getByLabelText("Establishment")).not.toBeChecked();
+    });
+
+    it("allows legal status flags to be toggled independently", async () => {
+      const user = userEvent.setup();
+
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      const legalEntityCheckbox = screen.getByLabelText("Legal Entity");
+      const establishmentCheckbox = screen.getByLabelText("Establishment");
+
+      await user.click(legalEntityCheckbox);
+
+      expect(legalEntityCheckbox).toBeChecked();
+      expect(establishmentCheckbox).not.toBeChecked();
+
+      await user.click(establishmentCheckbox);
+
+      expect(legalEntityCheckbox).toBeChecked();
+      expect(establishmentCheckbox).toBeChecked();
+
+      await user.click(legalEntityCheckbox);
+
+      expect(legalEntityCheckbox).not.toBeChecked();
+      expect(establishmentCheckbox).toBeChecked();
     });
 
     it("shows validation error when name is empty", async () => {
@@ -299,11 +368,32 @@ describe("OrganizationalUnitFormDialog", () => {
       ).toBeInTheDocument();
     });
 
+    it("initializes legal status flags independently from the edited unit", () => {
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="edit"
+          unit={{
+            ...mockUnit,
+            is_legal_entity: true,
+            is_establishment: false,
+          }}
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      expect(screen.getByLabelText("Legal Entity")).toBeChecked();
+      expect(screen.getByLabelText("Establishment")).not.toBeChecked();
+    });
+
     it("submits edit form with correct data", async () => {
       const user = userEvent.setup();
       const updatedUnit: OrganizationalUnit = {
         ...mockUnit,
         name: "Updated Branch",
+        is_legal_entity: false,
+        is_establishment: true,
       };
 
       vi.mocked(updateOrganizationalUnit).mockResolvedValue(updatedUnit);
@@ -313,7 +403,11 @@ describe("OrganizationalUnitFormDialog", () => {
           open={true}
           onClose={mockOnClose}
           mode="edit"
-          unit={mockUnit}
+          unit={{
+            ...mockUnit,
+            is_legal_entity: true,
+            is_establishment: false,
+          }}
           onSuccess={mockOnSuccess}
         />
       );
@@ -322,6 +416,8 @@ describe("OrganizationalUnitFormDialog", () => {
       const nameInput = screen.getByDisplayValue("Berlin Branch");
       await user.clear(nameInput);
       await user.type(nameInput, "Updated Branch");
+      await user.click(screen.getByLabelText("Legal Entity"));
+      await user.click(screen.getByLabelText("Establishment"));
 
       // Submit
       const submitButton = screen.getByRole("button", {
@@ -334,6 +430,8 @@ describe("OrganizationalUnitFormDialog", () => {
           name: "Updated Branch",
           type: "branch",
           description: "Main branch in Berlin",
+          is_legal_entity: false,
+          is_establishment: true,
         });
       });
 
@@ -414,6 +512,8 @@ describe("OrganizationalUnitFormDialog", () => {
       await waitFor(() => {
         expect(screen.getByText("Saving...")).toBeInTheDocument();
       });
+      expect(screen.getByLabelText("Legal Entity")).toBeDisabled();
+      expect(screen.getByLabelText("Establishment")).toBeDisabled();
     });
   });
 

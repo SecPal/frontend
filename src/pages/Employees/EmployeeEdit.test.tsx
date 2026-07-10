@@ -103,6 +103,8 @@ const mockOrganizationalUnits = [
   {
     id: "unit-1",
     name: "Engineering",
+    is_legal_entity: false,
+    is_establishment: false,
     type: "branch" as const,
     parent: null,
     created_at: "2025-01-01T00:00:00Z",
@@ -111,6 +113,8 @@ const mockOrganizationalUnits = [
   {
     id: "unit-2",
     name: "Marketing",
+    is_legal_entity: false,
+    is_establishment: false,
     type: "branch" as const,
     parent: null,
     created_at: "2025-01-01T00:00:00Z",

@@ -59,6 +59,8 @@ describe("SiteCreate", () => {
     {
       id: "customer-1",
       name: "Customer One",
+      is_legal_entity: false,
+      is_establishment: false,
       customer_number: "C001",
       billing_address: {
         street: "Street 1",
@@ -93,6 +95,8 @@ describe("SiteCreate", () => {
       id: "org-1",
       type: "department" as const,
       name: "IT Department",
+      is_legal_entity: false,
+      is_establishment: false,
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     },
@@ -100,6 +104,8 @@ describe("SiteCreate", () => {
       id: "org-2",
       type: "division" as const,
       name: "Security Team",
+      is_legal_entity: false,
+      is_establishment: false,
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     },
