@@ -21,8 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Recorded shadcn's MIT provenance for copied and adapted shared UI and
   sidebar-07 source in checked REUSE metadata and a third-party notice,
   including the migration registry baselines, release-artifact license copies,
-  a separately validated npm dependency inventory, and artifact checks across
-  every supported release build configuration.
+  a separately validated npm dependency inventory, artifact checks across every
+  supported release build configuration, and standalone SBOM generation.
 - Clarified the `/source` description as the AGPL source offer for the SecPal
   components made available through the service.
 - Removed the redundant `AGPL v3+` link from every `Legal` menu; the `/source`

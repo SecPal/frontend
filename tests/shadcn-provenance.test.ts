@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -34,6 +40,10 @@ const shadcnDerivedSources = [
   "src/ui/switch.tsx",
   "src/ui/textarea.tsx",
   "src/ui/tooltip.tsx",
+  "src/ui/primitives.tsx",
+  "src/ui/styles.ts",
+  "src/ui/auth.tsx",
+  "src/ui/onboarding.tsx",
   "src/components/app-sidebar.tsx",
   "src/components/nav-main.tsx",
   "src/components/nav-user.tsx",
@@ -110,6 +120,9 @@ describe("shadcn source provenance", () => {
   });
 
   it("emits a lockfile-only SPDX dependency inventory with every release build", () => {
+    expect(packageJson.scripts["pregenerate:dependency-sbom"]).toContain(
+      "mkdir"
+    );
     expect(packageJson.scripts["generate:dependency-sbom"]).toContain(
       "npm sbom --package-lock-only --sbom-format spdx --sbom-type application"
     );
@@ -145,6 +158,34 @@ describe("shadcn source provenance", () => {
 
     expect(sbom.spdxVersion).toBe("SPDX-2.3");
     expect(sbom.packages?.length).toBeGreaterThan(0);
+  });
+
+  it("generates the dependency SBOM from a checkout without dist", () => {
+    const projectRoot = mkdtempSync(path.join(tmpdir(), "secpal-sbom-"));
+
+    try {
+      copyFileSync(
+        path.join(repoRoot, "package.json"),
+        path.join(projectRoot, "package.json")
+      );
+      copyFileSync(
+        path.join(repoRoot, "package-lock.json"),
+        path.join(projectRoot, "package-lock.json")
+      );
+
+      execFileSync("npm", ["run", "generate:dependency-sbom"], {
+        cwd: projectRoot,
+        stdio: "pipe",
+      });
+
+      const sbomPath = path.join(projectRoot, "dist", "dependencies.spdx.json");
+      expect(existsSync(sbomPath)).toBe(true);
+      expect(JSON.parse(readFileSync(sbomPath, "utf8"))).toMatchObject({
+        spdxVersion: "SPDX-2.3",
+      });
+    } finally {
+      rmSync(projectRoot, { recursive: true, force: true });
+    }
   });
 
   it.each(releaseBuildConfigurations)(

@@ -58,6 +58,10 @@ class variants identified the following adapted files.
 - `src/ui/switch.tsx`
 - `src/ui/textarea.tsx`
 - `src/ui/tooltip.tsx`
+- `src/ui/primitives.tsx`
+- `src/ui/styles.ts`
+- `src/ui/auth.tsx`
+- `src/ui/onboarding.tsx`
 - `src/components/app-sidebar.tsx`
 - `src/components/nav-main.tsx`
 - `src/components/nav-user.tsx`
