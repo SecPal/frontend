@@ -125,7 +125,7 @@ describe("shadcn source provenance", () => {
       "mkdir"
     );
     expect(packageJson.scripts["generate:dependency-sbom"]).toContain(
-      "npm sbom --package-lock-only --sbom-format spdx --sbom-type application"
+      "npx --yes --package npm@12.0.0 npm sbom --package-lock-only --sbom-format spdx --sbom-type application"
     );
     expect(packageJson.scripts["generate:dependency-sbom"]).toContain(
       "dist/dependencies.spdx.json"
@@ -139,8 +139,12 @@ describe("shadcn source provenance", () => {
 
     const sbom = JSON.parse(
       execFileSync(
-        "npm",
+        "npx",
         [
+          "--yes",
+          "--package",
+          "npm@12.0.0",
+          "npm",
           "sbom",
           "--package-lock-only",
           "--sbom-format",

@@ -40,7 +40,7 @@
     "build:ios": "cross-env VITE_APP_SURFACE=ios-native tsc && cross-env VITE_APP_SURFACE=ios-native vite build --mode ios && npm run generate:dependency-sbom",
     "build:analyze": "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build --mode analyze && npm run generate:dependency-sbom",
     "pregenerate:dependency-sbom": "node -e \"require('node:fs').mkdirSync('dist', { recursive: true })\"",
-    "generate:dependency-sbom": "npm sbom --package-lock-only --sbom-format spdx --sbom-type application > dist/dependencies.spdx.json",
+    "generate:dependency-sbom": "npx --yes --package npm@12.0.0 npm sbom --package-lock-only --sbom-format spdx --sbom-type application > dist/dependencies.spdx.json",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --cache",
     "typecheck": "tsc --noEmit",
