@@ -142,10 +142,6 @@ msgstr "Weitere Links"
 msgid "Employment permitted"
 msgstr "Erwerbstätigkeit gestattet"
 
-#: src/pages/SourcePage.tsx
-msgid "Source offer for users interacting with SecPal over a network."
-msgstr "Quellcodeangebot für Nutzer, die SecPal über ein Netzwerk verwenden."
-
 #: src/components/ScopeAssignmentForm.tsx
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
 msgstr "Um einem Mitarbeiter den Dienstgrad zu entziehen, muss der Benutzer die Berechtigung haben, diesen Dienstgrad zu vergeben. Dies verhindert eine Eskalation der Privilegien."
@@ -1966,6 +1962,10 @@ msgstr "Alle Protokolle"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Processing..."
 msgstr "Verarbeitung..."
+
+#: src/pages/SourcePage.tsx
+msgid "AGPL source offer for the SecPal components made available through this service."
+msgstr "Quellcodeangebot zur AGPL-Lizenz für die über diesen Dienst bereitgestellten SecPal-Komponenten."
 
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "{sitesCount, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"

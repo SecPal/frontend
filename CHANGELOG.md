@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Clarified the `/source` description as the AGPL source offer for the SecPal
+  components made available through the service.
 - Removed the redundant `AGPL v3+` link from every `Legal` menu; the `/source`
   page remains the single entry point for source and license information.
 - Renamed the German `Source Code` wording from `Quelltext` to `Quellcode` in

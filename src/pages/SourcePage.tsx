@@ -180,8 +180,8 @@ export function SourcePage() {
                 </CardTitle>
                 <CardDescription className="max-w-3xl text-sm leading-6">
                   <Trans>
-                    Source offer for users interacting with SecPal over a
-                    network.
+                    AGPL source offer for the SecPal components made available
+                    through this service.
                   </Trans>
                 </CardDescription>
               </CardHeader>

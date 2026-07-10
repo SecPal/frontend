@@ -142,10 +142,6 @@ msgstr "Further links"
 msgid "Employment permitted"
 msgstr "Employment permitted"
 
-#: src/pages/SourcePage.tsx
-msgid "Source offer for users interacting with SecPal over a network."
-msgstr "Source offer for users interacting with SecPal over a network."
-
 #: src/components/ScopeAssignmentForm.tsx
 msgid "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
 msgstr "To remove rank from employee, user must have permission to assign that rank. This prevents privilege escalation."
@@ -1966,6 +1962,10 @@ msgstr "All logs"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Processing..."
 msgstr "Processing..."
+
+#: src/pages/SourcePage.tsx
+msgid "AGPL source offer for the SecPal components made available through this service."
+msgstr "AGPL source offer for the SecPal components made available through this service."
 
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "{sitesCount, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"

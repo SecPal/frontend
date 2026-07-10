@@ -142,7 +142,9 @@ describe("SourcePage", () => {
       await screen.findByRole("heading", { name: "Quellcode und Lizenz" })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Quellcodeangebot für Nutzer/i)
+      screen.getByText(
+        /Quellcodeangebot zur AGPL-Lizenz für die über diesen Dienst bereitgestellten SecPal-Komponenten\./i
+      )
     ).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
