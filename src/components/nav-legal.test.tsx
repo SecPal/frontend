@@ -8,6 +8,7 @@ import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import { messages as deMessages } from "@/locales/de/messages.mjs";
 import { messages as enMessages } from "@/locales/en/messages.mjs";
 import { NavLegal } from "./nav-legal";
 import { useSidebar } from "@/ui/sidebar";
@@ -116,16 +117,33 @@ describe("NavLegal", () => {
     expect(screen.getByText(/privacy/i)).toBeInTheDocument();
     expect(screen.getByText(/open source/i)).toBeInTheDocument();
 
-    const licenseLink = await screen.findByRole("link", { name: /agpl v3\+/i });
-    expect(licenseLink).toHaveAttribute(
-      "href",
-      "https://www.gnu.org/licenses/agpl-3.0.html"
-    );
-    expect(licenseLink).toHaveAttribute("target", "_blank");
-    expect(licenseLink).toHaveAttribute("rel", "noopener noreferrer");
+    expect(
+      screen.queryByRole("link", { name: /agpl v3\+/i })
+    ).not.toBeInTheDocument();
 
     const sourceCodeLink = screen.getByRole("link", { name: /source code/i });
     expect(sourceCodeLink).toHaveAttribute("href", "/source");
+  });
+
+  it("labels the German source-code menu item as Quellcode", async () => {
+    const user = userEvent.setup();
+    i18n.load("de", deMessages);
+    i18n.activate("de");
+
+    render(
+      <MemoryRouter>
+        <I18nProvider i18n={i18n}>
+          <NavLegal />
+        </I18nProvider>
+      </MemoryRouter>
+    );
+
+    await user.click(screen.getByRole("button", { name: /rechtliches/i }));
+
+    expect(screen.getByRole("link", { name: "Quellcode" })).toHaveAttribute(
+      "href",
+      "/source"
+    );
   });
 
   it("does not pass sidebar tooltips through externally wrapped legal triggers", () => {
@@ -242,6 +260,12 @@ describe("NavLegal", () => {
     expect(setOpen).not.toHaveBeenCalled();
     expect(await screen.findByText(/legal pages/i)).toBeInTheDocument();
     expect(screen.getByText(/open source/i)).toBeInTheDocument();
+    expect(
+      screen.queryByRole("menuitem", { name: /agpl v3\+/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: /source code/i })
+    ).toHaveAttribute("href", "/source");
   });
 
   it("keeps the source code link available in the collapsed desktop dropdown on source routes", async () => {

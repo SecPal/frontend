@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Removed the redundant `AGPL v3+` link from every `Legal` menu; the `/source`
+  page remains the single entry point for source and license information.
+- Renamed the German `Source Code` menu label from `Quelltext` to `Quellcode`.
+- Added the shared `Legal` and language controls to the `/source` page header.
+- Preserved the original authenticated return route when the `Source Code`
+  item is selected again from the `/source` page's `Legal` menu.
 - Stopped opportunistic protected-route browser-session bootstrap when no
   encrypted auth snapshot and no readable CSRF cookie are present, so preview
   and logged-out sessions redirect cleanly to `/login` instead of surfacing

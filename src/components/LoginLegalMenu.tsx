@@ -30,9 +30,17 @@ import {
   DropdownMenuTrigger,
 } from "@/ui/dropdown-menu";
 
-export function LoginLegalMenu() {
+interface LoginLegalMenuProps {
+  sourceReturnTo?: string;
+}
+
+export function LoginLegalMenu({
+  sourceReturnTo: preservedSourceReturnTo,
+}: LoginLegalMenuProps = {}) {
   const location = useLocation();
-  const sourceReturnTo = `${location.pathname}${location.search}${location.hash}`;
+  const sourceReturnTo =
+    preservedSourceReturnTo ??
+    `${location.pathname}${location.search}${location.hash}`;
 
   return (
     <DropdownMenu>
@@ -66,16 +74,6 @@ export function LoginLegalMenu() {
           <DropdownMenuLabel>
             <Trans>Open Source</Trans>
           </DropdownMenuLabel>
-          <DropdownMenuItem asChild>
-            <a
-              href="https://www.gnu.org/licenses/agpl-3.0.html"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Scale />
-              <Trans>AGPL v3+</Trans>
-            </a>
-          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <PrefetchLink to="/source" state={{ sourceReturnTo }}>
               <Code2 />

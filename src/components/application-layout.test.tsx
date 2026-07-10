@@ -452,7 +452,7 @@ describe("ApplicationLayout", () => {
       ).toBeInTheDocument();
     });
 
-    it("renders a collapsible legal section above the user menu", async () => {
+    it("renders a collapsible legal section with source code above the user menu", async () => {
       const user = userEvent.setup();
 
       renderWithProviders(
@@ -468,10 +468,10 @@ describe("ApplicationLayout", () => {
       await user.click(screen.getByRole("button", { name: /legal/i }));
 
       expect(
-        await screen.findByRole("link", { name: /agpl v3\+/i })
-      ).toHaveAttribute("href", "https://www.gnu.org/licenses/agpl-3.0.html");
+        screen.queryByRole("link", { name: /agpl v3\+/i })
+      ).not.toBeInTheDocument();
       expect(
-        screen.getByRole("link", { name: /source code/i })
+        await screen.findByRole("link", { name: /source code/i })
       ).toHaveAttribute("href", "/source");
 
       const legalTrigger = screen.getByRole("button", { name: /legal/i });

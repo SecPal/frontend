@@ -258,7 +258,7 @@ async function selectLanguage(visibleName: string) {
 async function openLoginLegalMenu() {
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: /legal|rechtliches/i }));
-  await screen.findByRole("menuitem", { name: /agpl v3\+/i });
+  await screen.findByRole("menuitem", { name: /source code/i });
 }
 
 describe("Login", () => {
@@ -3530,7 +3530,7 @@ describe("Login", () => {
       );
     });
 
-    it("renders legal-page placeholders above the AGPL and source code links in the login legal menu", async () => {
+    it("renders legal-page placeholders above the source code link in the login legal menu", async () => {
       renderLogin();
 
       await waitFor(() => {
@@ -3549,14 +3549,9 @@ describe("Login", () => {
         screen.getByRole("menuitem", { name: /privacy/i })
       ).toHaveAttribute("data-disabled", "");
       expect(screen.getByText(/open source/i)).toBeInTheDocument();
-
-      const licenseLink = screen.getByRole("menuitem", { name: /agpl v3\+/i });
-      expect(licenseLink).toHaveAttribute(
-        "href",
-        "https://www.gnu.org/licenses/agpl-3.0.html"
-      );
-      expect(licenseLink).toHaveAttribute("target", "_blank");
-      expect(licenseLink).toHaveAttribute("rel", "noopener noreferrer");
+      expect(
+        screen.queryByRole("menuitem", { name: /agpl v3\+/i })
+      ).not.toBeInTheDocument();
 
       const sourceCodeLink = screen.getByRole("menuitem", {
         name: /source code/i,

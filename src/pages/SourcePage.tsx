@@ -15,6 +15,10 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Footer } from "@/components/Footer";
+import {
+  LoginLanguageSwitcher,
+  LoginLegalMenu,
+} from "@/components/LoginLegalMenu";
 import { Logo } from "@/components/Logo";
 import {
   getFallbackSourceRepositories,
@@ -130,9 +134,13 @@ export function SourcePage() {
 
   return (
     <main className="min-h-[var(--app-shell-min-height)] bg-background text-foreground">
-      <div className="mx-auto max-w-5xl px-4 pt-[calc(1.5rem+var(--app-safe-area-inset-top))] pb-10 sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-start justify-between gap-4 border-b border-border pb-4">
-          <div className="flex items-center gap-3">
+      <div className="px-4 pt-[calc(1.5rem+var(--app-safe-area-inset-top))] sm:px-6 lg:px-8">
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <LoginLegalMenu sourceReturnTo={sourceReturnTo ?? undefined} />
+          <LoginLanguageSwitcher />
+        </div>
+        <div className="mx-auto mb-6 flex max-w-5xl flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+          <div className="flex min-w-0 items-center gap-3">
             <Logo size="32" className="shrink-0" />
             <div className="space-y-1">
               <p className="text-muted-foreground text-xs font-semibold uppercase tracking-[0.14em]">
@@ -156,7 +164,9 @@ export function SourcePage() {
             </span>
           </Link>
         </div>
+      </div>
 
+      <div className="mx-auto max-w-5xl px-4 pb-10 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.85fr)]">
           <section className="space-y-6">
             <Card className="rounded-2xl border-border shadow-sm">
