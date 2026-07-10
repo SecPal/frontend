@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Stabilized the Android instance-switch cleanup regression test by awaiting the
+  native runtime reset before checking asynchronous browser push cleanup, and
+  reset auth-storage mock history after test setup so cleanup assertions cannot
+  be satisfied by setup calls.
 - Clarified the `/source` description as the AGPL source offer for the SecPal
   components made available through the service.
 - Removed the redundant `AGPL v3+` link from every `Legal` menu; the `/source`

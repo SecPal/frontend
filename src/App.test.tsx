@@ -342,6 +342,7 @@ describe("App", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     await authStorage.clear();
+    mockAuthStorage.clear.mockClear();
     localStorage.clear();
     sessionStorage.clear();
     delete (globalThis as { SecPalNativeAuthBridge?: unknown })
