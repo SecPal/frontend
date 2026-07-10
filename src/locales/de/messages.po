@@ -2614,8 +2614,6 @@ msgstr "Standard"
 msgid "Back to Login"
 msgstr "Zurück zur Anmeldung"
 
-#: src/components/LoginLegalMenu.tsx
-#: src/components/nav-legal.tsx
 #: src/pages/SourcePage.tsx
 msgid "AGPL v3+"
 msgstr "AGPL v3+"
@@ -2742,7 +2740,7 @@ msgstr "Arbeitsbereich"
 #: src/components/LoginLegalMenu.tsx
 #: src/components/nav-legal.tsx
 msgid "Source Code"
-msgstr "Quelltext"
+msgstr "Quellcode"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Assign Organizational Scope"

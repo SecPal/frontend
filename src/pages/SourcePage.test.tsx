@@ -74,7 +74,7 @@ describe("SourcePage", () => {
     });
 
     const main = container.querySelector("main");
-    const banner = container.querySelector("main > div > div");
+    const banner = container.querySelector("main .border-b");
     const cards = container.querySelectorAll('[data-slot="card"]');
     const repoArticle = screen.getByText("SecPal/frontend").closest("article");
     const issueLink = screen.getByRole("link", {
@@ -119,6 +119,36 @@ describe("SourcePage", () => {
         name: "Powered by SecPal – A guard's best friend",
       })
     ).toHaveAttribute("rel", "noopener");
+  });
+
+  it("puts legal and language controls in the row above the source title", async () => {
+    const { container } = renderWithProviders();
+    const main = container.querySelector("main");
+    const banner = container.querySelector("main .border-b");
+    const legalControl = screen.getByRole("button", { name: /legal/i });
+    const languageControl = screen.getByRole("combobox", {
+      name: /select language/i,
+    });
+    const backLink = screen.getByRole("link", { name: /back to login/i });
+    const titleColumn = screen
+      .getByRole("heading", { name: "AGPL v3+" })
+      .closest(".flex-wrap");
+
+    expect(main).not.toHaveClass("relative");
+    expect(legalControl).toBeInTheDocument();
+    expect(languageControl).toBeInTheDocument();
+    expect(legalControl.closest(".border-b")).not.toBe(banner);
+    expect(languageControl.closest(".border-b")).not.toBe(banner);
+    expect(backLink.closest(".border-b")).toBe(banner);
+    expect(banner).toHaveClass("max-w-5xl");
+    expect(titleColumn).toHaveClass("justify-between");
+    expect(within(titleColumn as HTMLElement).getByRole("link")).toBe(backLink);
+    expect(
+      within(languageControl.parentElement as HTMLElement).queryByRole("link")
+    ).not.toBeInTheDocument();
+    await screen.findByText(
+      /if this deployment does not publish source releases here/i
+    );
   });
 
   it("describes the additional SecPal attribution terms in legal notices", async () => {

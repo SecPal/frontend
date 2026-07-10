@@ -60,7 +60,9 @@ describe("LoginRouteState", () => {
     expect(footerBrand.className).not.toContain("text-zinc-700");
   });
 
-  it("renders the login top controls in the vault-locked state", () => {
+  it("renders the login top controls in the vault-locked state", async () => {
+    const user = userEvent.setup();
+
     renderWithI18n(
       <LoginRouteVaultLockedState
         onUnlock={vi.fn().mockResolvedValue(true)}
@@ -80,6 +82,17 @@ describe("LoginRouteState", () => {
     expect(screen.getByRole("contentinfo")).not.toHaveTextContent(
       "Source Code"
     );
+
+    await user.click(
+      screen.getByRole("button", { name: /legal|rechtliches/i })
+    );
+
+    expect(
+      screen.queryByRole("link", { name: /agpl v3\+/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: /source code/i })
+    ).toHaveAttribute("href", "/source");
   });
 
   it("keeps the vault-locked explanation and error states on canonical tokens", async () => {

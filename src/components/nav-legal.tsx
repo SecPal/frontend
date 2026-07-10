@@ -96,19 +96,6 @@ export function NavLegal() {
                     <Trans>Open Source</Trans>
                   </DropdownMenuLabel>
                   <DropdownMenuItem asChild>
-                    <a
-                      href="https://www.gnu.org/licenses/agpl-3.0.html"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={handleItemClick}
-                    >
-                      <Scale />
-                      <span>
-                        <Trans>AGPL v3+</Trans>
-                      </span>
-                    </a>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
                     <PrefetchLink
                       to="/source"
                       state={{ sourceReturnTo }}
@@ -183,21 +170,6 @@ export function NavLegal() {
                       <Trans>Open Source</Trans>
                     </span>
                   </SidebarGroupLabel>
-                </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
-                  <SidebarMenuSubButton asChild>
-                    <a
-                      href="https://www.gnu.org/licenses/agpl-3.0.html"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={handleItemClick}
-                    >
-                      <Scale />
-                      <span>
-                        <Trans>AGPL v3+</Trans>
-                      </span>
-                    </a>
-                  </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
                 <SidebarMenuSubItem>
                   <SidebarMenuSubButton asChild isActive={isSourceRoute}>
