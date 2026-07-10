@@ -157,6 +157,7 @@ describe("Build Configuration and Source Verification", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
       scripts?: Record<string, string>;
     };
+    const dependencySbomStep = " && npm run generate:dependency-sbom";
 
     expect(packageJson.scripts).toMatchObject({
       dev: "vite",
@@ -167,17 +168,23 @@ describe("Build Configuration and Source Verification", () => {
         "cross-env VITE_APP_SURFACE=android-mock vite --mode android",
       "dev:ios": "cross-env VITE_APP_SURFACE=ios-native vite --mode ios",
       build:
-        "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build",
+        "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build" +
+        dependencySbomStep,
       "build:web":
-        "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build --mode web",
+        "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build --mode web" +
+        dependencySbomStep,
       "build:android":
-        "cross-env VITE_APP_SURFACE=android-native tsc && cross-env VITE_APP_SURFACE=android-native vite build --mode android",
+        "cross-env VITE_APP_SURFACE=android-native tsc && cross-env VITE_APP_SURFACE=android-native vite build --mode android" +
+        dependencySbomStep,
       "build:android:mock":
-        "cross-env VITE_APP_SURFACE=android-mock tsc && cross-env VITE_APP_SURFACE=android-mock vite build --mode preview",
+        "cross-env VITE_APP_SURFACE=android-mock tsc && cross-env VITE_APP_SURFACE=android-mock vite build --mode preview" +
+        dependencySbomStep,
       "build:ios":
-        "cross-env VITE_APP_SURFACE=ios-native tsc && cross-env VITE_APP_SURFACE=ios-native vite build --mode ios",
+        "cross-env VITE_APP_SURFACE=ios-native tsc && cross-env VITE_APP_SURFACE=ios-native vite build --mode ios" +
+        dependencySbomStep,
       "build:analyze":
-        "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build --mode analyze",
+        "cross-env VITE_APP_SURFACE=web tsc && cross-env VITE_APP_SURFACE=web vite build --mode analyze" +
+        dependencySbomStep,
     });
   });
 
