@@ -40,6 +40,23 @@ const shadcnDerivedSources = [
   "src/components/team-switcher.tsx",
 ];
 
+const releaseBuildConfigurations = [
+  { scriptName: "build", surface: "web", mode: undefined },
+  { scriptName: "build:web", surface: "web", mode: "web" },
+  {
+    scriptName: "build:android",
+    surface: "android-native",
+    mode: "android",
+  },
+  {
+    scriptName: "build:android:mock",
+    surface: "android-mock",
+    mode: "preview",
+  },
+  { scriptName: "build:ios", surface: "ios-native", mode: "ios" },
+  { scriptName: "build:analyze", surface: "web", mode: "analyze" },
+] as const;
+
 describe("shadcn source provenance", () => {
   it("keeps SecPal source licensing and aggregates shadcn MIT provenance", () => {
     for (const sourcePath of shadcnDerivedSources) {
@@ -100,48 +117,69 @@ describe("shadcn source provenance", () => {
       "dist/dependencies.spdx.json"
     );
 
-    for (const scriptName of [
-      "build",
-      "build:web",
-      "build:android",
-      "build:android:mock",
-      "build:ios",
-      "build:analyze",
-    ]) {
+    for (const { scriptName } of releaseBuildConfigurations) {
       expect(packageJson.scripts[scriptName], scriptName).toContain(
         "npm run generate:dependency-sbom"
       );
     }
-  });
 
-  it("ships the shadcn notice and MIT license in built artifacts", () => {
-    const distRoot = mkdtempSync(path.join(tmpdir(), "secpal-provenance-"));
-    const safeEnv = { ...process.env };
-    delete safeEnv.NODE_V8_COVERAGE;
-
-    try {
+    const sbom = JSON.parse(
       execFileSync(
         "npm",
-        ["exec", "--", "vite", "build", "--outDir", distRoot],
+        [
+          "sbom",
+          "--package-lock-only",
+          "--sbom-format",
+          "spdx",
+          "--sbom-type",
+          "application",
+        ],
         {
+          cwd: repoRoot,
+          encoding: "utf8",
+          maxBuffer: 10 * 1024 * 1024,
+          stdio: ["ignore", "pipe", "pipe"],
+        }
+      )
+    ) as { packages?: unknown[]; spdxVersion?: string };
+
+    expect(sbom.spdxVersion).toBe("SPDX-2.3");
+    expect(sbom.packages?.length).toBeGreaterThan(0);
+  });
+
+  it.each(releaseBuildConfigurations)(
+    "$scriptName ships the shadcn notice and MIT license",
+    ({ mode, surface }) => {
+      const distRoot = mkdtempSync(path.join(tmpdir(), "secpal-provenance-"));
+      const safeEnv = { ...process.env, VITE_APP_SURFACE: surface };
+      delete safeEnv.NODE_V8_COVERAGE;
+
+      try {
+        const viteArguments = ["exec", "--", "vite", "build"];
+        if (mode) {
+          viteArguments.push("--mode", mode);
+        }
+        viteArguments.push("--outDir", distRoot);
+
+        execFileSync("npm", viteArguments, {
           cwd: repoRoot,
           stdio: "pipe",
           env: safeEnv,
-        }
-      );
+        });
 
-      const noticePath = path.join(distRoot, "THIRD-PARTY-NOTICES.md");
-      const licensePath = path.join(distRoot, "LICENSES", "MIT.txt");
-      expect(existsSync(noticePath)).toBe(true);
-      expect(existsSync(licensePath)).toBe(true);
-      expect(readFileSync(noticePath, "utf8")).toContain(
-        "SPDX-FileCopyrightText: 2023 shadcn"
-      );
-      expect(readFileSync(licensePath, "utf8")).toContain(
-        "The above copyright notice and this permission notice shall be included"
-      );
-    } finally {
-      rmSync(distRoot, { recursive: true, force: true });
+        const noticePath = path.join(distRoot, "THIRD-PARTY-NOTICES.md");
+        const licensePath = path.join(distRoot, "LICENSES", "MIT.txt");
+        expect(existsSync(noticePath)).toBe(true);
+        expect(existsSync(licensePath)).toBe(true);
+        expect(readFileSync(noticePath, "utf8")).toContain(
+          "SPDX-FileCopyrightText: 2023 shadcn"
+        );
+        expect(readFileSync(licensePath, "utf8")).toContain(
+          "The above copyright notice and this permission notice shall be included"
+        );
+      } finally {
+        rmSync(distRoot, { recursive: true, force: true });
+      }
     }
-  });
+  );
 });
