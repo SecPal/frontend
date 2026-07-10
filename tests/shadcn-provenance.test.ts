@@ -5,6 +5,7 @@ import { execFileSync } from "node:child_process";
 import {
   copyFileSync,
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   rmSync,
@@ -121,11 +122,8 @@ describe("shadcn source provenance", () => {
   });
 
   it("emits a lockfile-only SPDX dependency inventory with every release build", () => {
-    expect(packageJson.scripts["pregenerate:dependency-sbom"]).toContain(
-      "mkdir"
-    );
     expect(packageJson.scripts["generate:dependency-sbom"]).toContain(
-      "npx --yes --package npm@12.0.0 npm sbom --package-lock-only --sbom-format spdx --sbom-type application"
+      "node ./scripts/generate-dependency-sbom.mjs"
     );
     expect(packageJson.scripts["generate:dependency-sbom"]).toContain(
       "dist/dependencies.spdx.json"
@@ -133,7 +131,7 @@ describe("shadcn source provenance", () => {
 
     for (const { scriptName } of releaseBuildConfigurations) {
       expect(packageJson.scripts[scriptName], scriptName).toContain(
-        "npm run generate:dependency-sbom"
+        "node ./scripts/build-with-sbom.mjs"
       );
     }
 
@@ -176,6 +174,11 @@ describe("shadcn source provenance", () => {
       copyFileSync(
         path.join(repoRoot, "package-lock.json"),
         path.join(projectRoot, "package-lock.json")
+      );
+      mkdirSync(path.join(projectRoot, "scripts"));
+      copyFileSync(
+        path.join(repoRoot, "scripts", "generate-dependency-sbom.mjs"),
+        path.join(projectRoot, "scripts", "generate-dependency-sbom.mjs")
       );
 
       execFileSync("npm", ["run", "generate:dependency-sbom"], {

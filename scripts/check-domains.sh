@@ -40,6 +40,7 @@ matches=$(grep -r -n -E '([A-Za-z0-9-]+\.)*secpal\.[A-Za-z0-9-]{1,63}($|[^A-Za-z
     --exclude-dir=".git" \
     --exclude-dir="node_modules" \
     --exclude-dir="vendor" \
+    --exclude-dir="dist" \
     . 2>/dev/null | \
     grep -v -- "check-domains.sh" | \
     grep -v -- "Forbidden:" | \

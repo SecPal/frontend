@@ -23,7 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   including the migration registry baselines, release-artifact license copies,
   a separately validated npm dependency inventory, artifact checks across every
   supported release build configuration, standalone and npm-version-compatible
-  SBOM generation, and the shared `cn` utility helper.
+  SBOM generation, custom Vite output-directory support, and the shared `cn`
+  utility helper.
 - Clarified the `/source` description as the AGPL source offer for the SecPal
   components made available through the service.
 - Removed the redundant `AGPL v3+` link from every `Legal` menu; the `/source`
