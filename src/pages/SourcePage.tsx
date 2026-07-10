@@ -61,6 +61,9 @@ const SOURCE_REPOSITORIES = [
 const SOURCE_REPOSITORY_DISPLAY_ORDER: readonly (typeof SOURCE_REPOSITORIES)[number]["id"][] =
   ["android", "frontend", "api", "contracts"] as const;
 
+const WIDE_HEADER_MEDIA_QUERY = "(min-width: 86rem)";
+const WIDE_HEADER_FALLBACK_PX = 1376;
+
 function getSourceReturnTo(state: unknown): string | null {
   if (typeof state !== "object" || state === null) {
     return null;
@@ -83,6 +86,18 @@ function getSourceReturnTo(state: unknown): string | null {
   }
 
   return sourceReturnTo;
+}
+
+function getIsWideHeader() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  if (typeof window.matchMedia === "function") {
+    return window.matchMedia(WIDE_HEADER_MEDIA_QUERY).matches;
+  }
+
+  return window.innerWidth >= WIDE_HEADER_FALLBACK_PX;
 }
 
 interface SourcePageHeaderContentProps {
@@ -132,6 +147,7 @@ export function SourcePage() {
   const [sourceOffer, setSourceOffer] = useState<LoadedSourceOffer | null>(
     null
   );
+  const [isWideHeader, setIsWideHeader] = useState(getIsWideHeader);
   const sourceReturnTo = getSourceReturnTo(location.state);
   const showAuthenticatedReturn = isAuthenticated || isLoading;
   const secondaryActionHref = showAuthenticatedReturn
@@ -165,6 +181,24 @@ export function SourcePage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      typeof window.matchMedia !== "function"
+    ) {
+      return;
+    }
+
+    const mediaQueryList = window.matchMedia(WIDE_HEADER_MEDIA_QUERY);
+    const onChange = (event: MediaQueryListEvent) => {
+      setIsWideHeader(event.matches);
+    };
+
+    mediaQueryList.addEventListener("change", onChange);
+
+    return () => mediaQueryList.removeEventListener("change", onChange);
+  }, []);
+
   const repositories: SourceOfferRepository[] =
     sourceOffer?.repositories ?? getFallbackSourceRepositories();
   const sourceOfferMode = sourceOffer?.mode;
@@ -179,37 +213,40 @@ export function SourcePage() {
           data-testid="source-page-header"
           className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-4 pb-4 min-[86rem]:grid-cols-[minmax(0,1fr)_minmax(0,64rem)_minmax(0,1fr)]"
         >
-          <div
-            data-testid="source-header-controls-mobile"
-            className="contents min-[86rem]:hidden"
-          >
-            <div className="shrink-0 justify-self-start">
-              <LoginLegalMenu sourceReturnTo={sourceReturnTo ?? undefined} />
-            </div>
-            <div className="shrink-0 justify-self-end">
-              <LoginLanguageSwitcher />
-            </div>
-            <SourcePageHeaderContent
-              className="col-span-2 flex w-full max-w-5xl min-w-0 flex-wrap items-center justify-between gap-3 justify-self-center"
-              secondaryActionHref={secondaryActionHref}
-              secondaryActionLabel={secondaryActionLabel}
-            />
-          </div>
-          <div
-            data-testid="source-header-controls-desktop"
-            className="hidden min-[86rem]:contents"
-          >
-            <div className="shrink-0 justify-self-start min-[86rem]:col-start-1 min-[86rem]:row-start-1">
-              <LoginLegalMenu sourceReturnTo={sourceReturnTo ?? undefined} />
-            </div>
-            <SourcePageHeaderContent
-              className="flex w-full max-w-5xl min-w-0 flex-wrap items-center justify-between gap-3 justify-self-center min-[86rem]:col-start-2 min-[86rem]:row-start-1"
-              secondaryActionHref={secondaryActionHref}
-              secondaryActionLabel={secondaryActionLabel}
-            />
-            <div className="shrink-0 justify-self-end min-[86rem]:col-start-3 min-[86rem]:row-start-1">
-              <LoginLanguageSwitcher />
-            </div>
+          <div data-testid="source-header-controls" className="contents">
+            {isWideHeader ? (
+              <>
+                <div className="shrink-0 justify-self-start min-[86rem]:col-start-1 min-[86rem]:row-start-1">
+                  <LoginLegalMenu
+                    sourceReturnTo={sourceReturnTo ?? undefined}
+                  />
+                </div>
+                <SourcePageHeaderContent
+                  className="flex w-full max-w-5xl min-w-0 flex-wrap items-center justify-between gap-3 justify-self-center min-[86rem]:col-start-2 min-[86rem]:row-start-1"
+                  secondaryActionHref={secondaryActionHref}
+                  secondaryActionLabel={secondaryActionLabel}
+                />
+                <div className="shrink-0 justify-self-end min-[86rem]:col-start-3 min-[86rem]:row-start-1">
+                  <LoginLanguageSwitcher />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="shrink-0 justify-self-start">
+                  <LoginLegalMenu
+                    sourceReturnTo={sourceReturnTo ?? undefined}
+                  />
+                </div>
+                <div className="shrink-0 justify-self-end">
+                  <LoginLanguageSwitcher />
+                </div>
+                <SourcePageHeaderContent
+                  className="col-span-2 flex w-full max-w-5xl min-w-0 flex-wrap items-center justify-between gap-3 justify-self-center"
+                  secondaryActionHref={secondaryActionHref}
+                  secondaryActionLabel={secondaryActionLabel}
+                />
+              </>
+            )}
           </div>
         </div>
       </div>

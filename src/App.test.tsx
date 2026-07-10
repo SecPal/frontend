@@ -921,7 +921,7 @@ describe("App", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /source offer for users interacting with secpal over a network\./i
+        /agpl source offer for the secpal components made available through this service\./i
       )
     ).toBeInTheDocument();
     expect(

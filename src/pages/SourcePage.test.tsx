@@ -164,75 +164,74 @@ describe("SourcePage", () => {
   });
 
   it("keeps legal and language controls at the page edges", async () => {
-    const { container } = renderWithProviders();
-    const main = container.querySelector("main");
-    const header = container.querySelector(
-      "[data-testid='source-page-header']"
-    );
-    const mobileControls = container.querySelector(
-      "[data-testid='source-header-controls-mobile']"
-    );
-    const desktopControls = container.querySelector(
-      "[data-testid='source-header-controls-desktop']"
+    const mediaQueryList = {
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => mediaQueryList as unknown as MediaQueryList)
     );
 
-    expect(main).not.toHaveClass("relative");
-    expect(header).not.toHaveClass("border-b", "border-border");
-    expect(header).toHaveClass(
-      "grid",
-      "grid-cols-[minmax(0,1fr)_auto]",
-      "min-[86rem]:grid-cols-[minmax(0,1fr)_minmax(0,64rem)_minmax(0,1fr)]"
-    );
-    expect(mobileControls).toHaveClass("contents", "min-[86rem]:hidden");
-    expect(desktopControls).toHaveClass("hidden", "min-[86rem]:contents");
-    expect(
-      Array.from(
-        (mobileControls as HTMLElement).querySelectorAll("button, a")
-      ).map((control) => control.textContent?.trim())
-    ).toEqual(["Legal", "English", "Back to login"]);
-    expect(
-      Array.from(
-        (desktopControls as HTMLElement).querySelectorAll("button, a")
-      ).map((control) => control.textContent?.trim())
-    ).toEqual(["Legal", "Back to login", "English"]);
-    expect(
-      within(mobileControls as HTMLElement).getByRole("button", {
-        name: /legal/i,
-      })
-    ).toBeInTheDocument();
-    expect(
-      within(desktopControls as HTMLElement).getByRole("combobox", {
-        name: /select language/i,
-      })
-    ).toBeInTheDocument();
-    expect(
-      within(desktopControls as HTMLElement).getByRole("link", {
-        name: /back to login/i,
-      })
-    ).toHaveClass("shrink-0", "rounded-xl");
-    expect(
-      within(desktopControls as HTMLElement).getByRole("heading", {
-        name: "AGPL v3+",
-      })
-    ).toBeInTheDocument();
-    expect(
-      within(mobileControls as HTMLElement).getByRole("heading", {
-        name: "AGPL v3+",
-      })
-    ).toBeInTheDocument();
-    expect(
-      within(desktopControls as HTMLElement).queryByRole("link", {
-        name: /source code/i,
-      })
-    ).not.toBeInTheDocument();
-    expect(
-      within(mobileControls as HTMLElement).queryByRole("link", {
-        name: /source code/i,
-      })
-    ).not.toBeInTheDocument();
-    await screen.findByText(
-      /if this deployment does not publish source releases here/i
-    );
+    try {
+      const { container, unmount } = renderWithProviders();
+      const main = container.querySelector("main");
+      const header = container.querySelector(
+        "[data-testid='source-page-header']"
+      );
+      const mobileControls = container.querySelector(
+        "[data-testid='source-header-controls']"
+      );
+
+      expect(main).not.toHaveClass("relative");
+      expect(header).not.toHaveClass("border-b", "border-border");
+      expect(header).toHaveClass(
+        "grid",
+        "grid-cols-[minmax(0,1fr)_auto]",
+        "min-[86rem]:grid-cols-[minmax(0,1fr)_minmax(0,64rem)_minmax(0,1fr)]"
+      );
+      expect(screen.getAllByRole("heading", { name: "AGPL v3+" })).toHaveLength(
+        1
+      );
+      expect(
+        Array.from(
+          (mobileControls as HTMLElement).querySelectorAll("button, a")
+        ).map((control) => control.textContent?.trim())
+      ).toEqual(["Legal", "English", "Back to login"]);
+
+      unmount();
+      mediaQueryList.matches = true;
+
+      const { container: desktopContainer } = renderWithProviders();
+      const desktopControls = desktopContainer.querySelector(
+        "[data-testid='source-header-controls']"
+      );
+
+      expect(screen.getAllByRole("heading", { name: "AGPL v3+" })).toHaveLength(
+        1
+      );
+      expect(
+        Array.from(
+          (desktopControls as HTMLElement).querySelectorAll("button, a")
+        ).map((control) => control.textContent?.trim())
+      ).toEqual(["Legal", "Back to login", "English"]);
+      expect(
+        within(desktopControls as HTMLElement).getByRole("combobox", {
+          name: /select language/i,
+        })
+      ).toBeInTheDocument();
+      expect(
+        within(desktopControls as HTMLElement).getByRole("link", {
+          name: /back to login/i,
+        })
+      ).toHaveClass("shrink-0", "rounded-xl");
+      await screen.findByText(
+        /if this deployment does not publish source releases here/i
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("preserves the authenticated return route after selecting source code from its legal menu", async () => {
@@ -249,7 +248,7 @@ describe("SourcePage", () => {
     ]);
 
     const mobileControls = container.querySelector(
-      "[data-testid='source-header-controls-mobile']"
+      "[data-testid='source-header-controls']"
     );
     const backLink = within(mobileControls as HTMLElement).getByRole("link", {
       name: /^back$/i,
