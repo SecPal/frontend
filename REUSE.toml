@@ -89,3 +89,31 @@ SPDX-License-Identifier = "CC0-1.0"
 [[annotations]]
 path = "tests/**"
 SPDX-License-Identifier = "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution"
+
+[[annotations]]
+path = [
+  "src/ui/alert.tsx",
+  "src/ui/avatar.tsx",
+  "src/ui/breadcrumb.tsx",
+  "src/ui/button.tsx",
+  "src/ui/card.tsx",
+  "src/ui/checkbox.tsx",
+  "src/ui/collapsible.tsx",
+  "src/ui/dropdown-menu.tsx",
+  "src/ui/input.tsx",
+  "src/ui/select.tsx",
+  "src/ui/separator.tsx",
+  "src/ui/sheet.tsx",
+  "src/ui/sidebar.tsx",
+  "src/ui/skeleton.tsx",
+  "src/ui/switch.tsx",
+  "src/ui/textarea.tsx",
+  "src/ui/tooltip.tsx",
+  "src/components/app-sidebar.tsx",
+  "src/components/nav-main.tsx",
+  "src/components/nav-user.tsx",
+  "src/components/team-switcher.tsx",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2023 shadcn"
+SPDX-License-Identifier = "MIT"

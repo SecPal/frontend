@@ -183,8 +183,8 @@ export default defineConfig(({ mode, command }) => {
       }),
       lingui(),
       tailwindcss(),
-      // Copy static files that Vite ignores by default:
-      // - .htaccess (dotfile from public/) and assetlinks.json (Android Digital Asset Links)
+      // Copy static files that Vite ignores by default, deployment metadata,
+      // and third-party notices required in every distributable artifact.
       viteStaticCopy({
         targets: [
           {
@@ -206,6 +206,14 @@ export default defineConfig(({ mode, command }) => {
               stripBase: true,
               name: "assetlinks.json",
             },
+          },
+          {
+            src: "THIRD-PARTY-NOTICES.md",
+            dest: ".",
+          },
+          {
+            src: "LICENSES/MIT.txt",
+            dest: ".",
           },
         ],
       }),

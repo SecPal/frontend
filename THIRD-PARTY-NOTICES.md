@@ -17,9 +17,10 @@ SPDX-License-Identifier: MIT
 ```
 
 The complete MIT license text is included at [LICENSES/MIT.txt](LICENSES/MIT.txt).
-This notice is the central provenance record for the listed source files; their
-SecPal SPDX headers continue to describe the license for the SecPal source
-distribution.
+This notice is the human-readable provenance record for the listed source
+files. `REUSE.toml` aggregates the upstream MIT copyright and license metadata
+with the SecPal SPDX metadata already present in those files. Release builds
+include this notice and the complete MIT license text.
 
 ### Compared registry revisions
 

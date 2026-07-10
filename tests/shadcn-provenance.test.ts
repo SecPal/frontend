@@ -1,7 +1,9 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -39,19 +41,22 @@ const shadcnDerivedSources = [
 ];
 
 describe("shadcn source provenance", () => {
-  it("keeps SecPal source licensing separate from centrally recorded MIT provenance", () => {
+  it("keeps SecPal source licensing and aggregates shadcn MIT provenance", () => {
     for (const sourcePath of shadcnDerivedSources) {
       const source = readFileSync(path.join(repoRoot, sourcePath), "utf8");
 
       expect(source, sourcePath).toContain(
         "SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution"
       );
-      expect(source, sourcePath).not.toContain(
-        "SPDX-FileCopyrightText: 2023 shadcn"
-      );
-      expect(source, sourcePath).not.toContain(
-        "MIT AND AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution"
-      );
+    }
+
+    const reuseConfig = readFileSync(path.join(repoRoot, "REUSE.toml"), "utf8");
+    expect(reuseConfig).toContain('precedence = "aggregate"');
+    expect(reuseConfig).toContain('SPDX-FileCopyrightText = "2023 shadcn"');
+    expect(reuseConfig).toContain('SPDX-License-Identifier = "MIT"');
+
+    for (const sourcePath of shadcnDerivedSources) {
+      expect(reuseConfig, sourcePath).toContain(`"${sourcePath}"`);
     }
   });
 
@@ -106,6 +111,37 @@ describe("shadcn source provenance", () => {
       expect(packageJson.scripts[scriptName], scriptName).toContain(
         "npm run generate:dependency-sbom"
       );
+    }
+  });
+
+  it("ships the shadcn notice and MIT license in built artifacts", () => {
+    const distRoot = mkdtempSync(path.join(tmpdir(), "secpal-provenance-"));
+    const safeEnv = { ...process.env };
+    delete safeEnv.NODE_V8_COVERAGE;
+
+    try {
+      execFileSync(
+        "npm",
+        ["exec", "--", "vite", "build", "--outDir", distRoot],
+        {
+          cwd: repoRoot,
+          stdio: "pipe",
+          env: safeEnv,
+        }
+      );
+
+      const noticePath = path.join(distRoot, "THIRD-PARTY-NOTICES.md");
+      const licensePath = path.join(distRoot, "LICENSES", "MIT.txt");
+      expect(existsSync(noticePath)).toBe(true);
+      expect(existsSync(licensePath)).toBe(true);
+      expect(readFileSync(noticePath, "utf8")).toContain(
+        "SPDX-FileCopyrightText: 2023 shadcn"
+      );
+      expect(readFileSync(licensePath, "utf8")).toContain(
+        "The above copyright notice and this permission notice shall be included"
+      );
+    } finally {
+      rmSync(distRoot, { recursive: true, force: true });
     }
   });
 });

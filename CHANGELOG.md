@@ -19,8 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reset auth-storage mock history after test setup so cleanup assertions cannot
   be satisfied by setup calls.
 - Recorded shadcn's MIT provenance for copied and adapted shared UI and
-  sidebar-07 source in a checked third-party notice, including the migration
-  registry baselines and separate npm dependency inventory.
+  sidebar-07 source in checked REUSE metadata and a third-party notice,
+  including the migration registry baselines, release-artifact license copies,
+  and a separate npm dependency inventory.
 - Clarified the `/source` description as the AGPL source offer for the SecPal
   components made available through the service.
 - Removed the redundant `AGPL v3+` link from every `Legal` menu; the `/source`
