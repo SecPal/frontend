@@ -21,7 +21,10 @@ const repoRoot = path.resolve(
 );
 const packageJson = JSON.parse(
   readFileSync(path.join(repoRoot, "package.json"), "utf8")
-) as { scripts: Record<string, string> };
+) as {
+  engines: Record<string, string>;
+  scripts: Record<string, string>;
+};
 
 const shadcnDerivedSources = [
   "src/lib/utils.ts",
@@ -129,6 +132,8 @@ describe("shadcn source provenance", () => {
       path.join(repoRoot, "scripts", "generate-dependency-sbom.mjs"),
       "utf8"
     );
+    expect(packageJson.engines.npm).toBe(">=12.0.0");
+    expect(sbomGenerator).toContain('execFileSync(\n  "npm",');
     expect(sbomGenerator).toContain('process.argv[2] ?? "dist"');
     expect(sbomGenerator).toContain('"dependencies.spdx.json"');
 
@@ -140,12 +145,8 @@ describe("shadcn source provenance", () => {
 
     const sbom = JSON.parse(
       execFileSync(
-        "npx",
+        "npm",
         [
-          "--yes",
-          "--package",
-          "npm@12.0.0",
-          "npm",
           "sbom",
           "--package-lock-only",
           "--sbom-format",

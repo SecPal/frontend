@@ -10,12 +10,8 @@ const outputDirectory = process.argv[2] ?? "dist";
 mkdirSync(outputDirectory, { recursive: true });
 
 const sbom = execFileSync(
-  "npx",
+  "npm",
   [
-    "--yes",
-    "--package",
-    "npm@12.0.0",
-    "npm",
     "sbom",
     "--package-lock-only",
     "--sbom-format",
