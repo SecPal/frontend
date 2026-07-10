@@ -8,6 +8,8 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { OrganizationalUnitFormDialog } from "./OrganizationalUnitFormDialog";
 import type { OrganizationalUnit } from "../types/organizational";
+import { messages as deMessages } from "../locales/de/messages.mjs";
+import { messages as enMessages } from "../locales/en/messages.mjs";
 
 vi.mock("./dialog", () => ({
   Dialog: vi.fn(({ open, children }) =>
@@ -127,11 +129,29 @@ describe("OrganizationalUnitFormDialog", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    i18n.load("en", enMessages);
+    i18n.activate("en");
     // Default to online
     vi.mocked(useOnlineStatus).mockReturnValue(true);
   });
 
   describe("Create mode", () => {
+    it("uses the precise German label for legal entities", () => {
+      i18n.load("de", deMessages);
+      i18n.activate("de");
+
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      expect(screen.getByLabelText("Juristische Person")).toBeInTheDocument();
+    });
+
     it("renders create dialog with correct title", () => {
       renderWithI18n(
         <OrganizationalUnitFormDialog

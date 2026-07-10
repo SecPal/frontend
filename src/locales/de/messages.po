@@ -3432,7 +3432,7 @@ msgstr "Wird entsperrt..."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Legal Entity"
-msgstr "Rechtsträger"
+msgstr "Juristische Person"
 
 #: src/pages/Employees/EmployeeList.tsx
 msgid "Search by name or email..."
