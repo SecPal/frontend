@@ -21,6 +21,8 @@ export function buildOrganizationalUnitCacheEntry(
     id: unit.id,
     type: unit.type,
     name: unit.name,
+    is_legal_entity: unit.is_legal_entity,
+    is_establishment: unit.is_establishment,
     custom_type_name: unit.custom_type_name ?? undefined,
     parent_id: unit.parent?.id ?? null,
     parent: unit.parent
@@ -28,6 +30,8 @@ export function buildOrganizationalUnitCacheEntry(
           id: unit.parent.id,
           type: unit.parent.type,
           name: unit.parent.name,
+          is_legal_entity: unit.parent.is_legal_entity,
+          is_establishment: unit.parent.is_establishment,
         }
       : null,
     created_at: unit.created_at,

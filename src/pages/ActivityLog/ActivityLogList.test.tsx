@@ -170,6 +170,8 @@ describe("ActivityLogList", () => {
         {
           id: "unit-1",
           name: "Engineering",
+          is_legal_entity: false,
+          is_establishment: false,
           type: "department",
           created_at: "",
           updated_at: "",

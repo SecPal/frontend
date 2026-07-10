@@ -48,6 +48,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added independent Legal Entity and Establishment controls to the
+  organizational-unit create/edit dialog, including full request payloads,
+  response typing, fixtures, and German catalog translations (US-004).
 - Added explicit `android-mock` development, local preview build, and
   Playwright override workflows, including README guidance for local and
   Polyscope switching while keeping mock surfaces out of deployable

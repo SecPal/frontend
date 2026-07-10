@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal Contributors
+// SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 /**
@@ -31,6 +31,8 @@ export interface OrganizationalUnit {
   id: string;
   type: OrganizationalUnitType;
   name: string;
+  is_legal_entity: boolean;
+  is_establishment: boolean;
   custom_type_name?: string | null;
   description?: string | null;
   metadata?: Record<string, unknown> | null;
@@ -110,6 +112,8 @@ export interface OrganizationalUnitPaginatedResponse {
 export interface CreateOrganizationalUnitRequest {
   name: string;
   type: OrganizationalUnitType;
+  is_legal_entity?: boolean;
+  is_establishment?: boolean;
   custom_type_name?: string | null;
   description?: string | null;
   metadata?: Record<string, unknown> | null;
@@ -122,6 +126,8 @@ export interface CreateOrganizationalUnitRequest {
 export interface UpdateOrganizationalUnitRequest {
   name?: string;
   type?: OrganizationalUnitType;
+  is_legal_entity?: boolean;
+  is_establishment?: boolean;
   custom_type_name?: string | null;
   description?: string | null;
   metadata?: Record<string, unknown> | null;
