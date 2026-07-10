@@ -23,6 +23,7 @@ const packageJson = JSON.parse(
 ) as { scripts: Record<string, string> };
 
 const shadcnDerivedSources = [
+  "src/lib/utils.ts",
   "src/ui/alert.tsx",
   "src/ui/avatar.tsx",
   "src/ui/breadcrumb.tsx",
