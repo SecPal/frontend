@@ -1,29 +1,66 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: MIT
 
-import { execFileSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const outputDirectory = process.argv[2] ?? "dist";
+const packageLock = JSON.parse(readFileSync("package-lock.json", "utf8"));
+
+function toSpdxIdPart(value) {
+  return String(value).replaceAll(/[^A-Za-z0-9.-]+/g, "-");
+}
+
+function packageName(packagePath, packageData, index) {
+  if (packageData.name) {
+    return packageData.name;
+  }
+
+  if (packagePath === "") {
+    return packageLock.name ?? "application";
+  }
+
+  return packagePath.split("node_modules/").at(-1) ?? `package-${index}`;
+}
+
+const packages = Object.entries(packageLock.packages ?? {})
+  .filter(([, packageData]) => packageData.version)
+  .map(([packagePath, packageData], index) => {
+    const name = packageName(packagePath, packageData, index);
+    const version = packageData.version;
+
+    return {
+      SPDXID: `SPDXRef-Package-${index}-${toSpdxIdPart(name)}-${toSpdxIdPart(version)}`,
+      copyrightText: "NOASSERTION",
+      downloadLocation: "NOASSERTION",
+      filesAnalyzed: false,
+      licenseConcluded: "NOASSERTION",
+      licenseDeclared: packageData.license ?? "NOASSERTION",
+      name,
+      versionInfo: version,
+    };
+  });
+
+const sbom = {
+  SPDXID: "SPDXRef-DOCUMENT",
+  creationInfo: {
+    created: new Date().toISOString(),
+    creators: ["Tool: SecPal lockfile SPDX generator"],
+  },
+  dataLicense: "CC0-1.0",
+  documentNamespace: `https://spdx.org/spdxdocs/${toSpdxIdPart(packageLock.name ?? "application")}-${Date.now()}`,
+  name: `${packageLock.name ?? "application"} dependency inventory`,
+  packages,
+  relationships: packages.map(({ SPDXID }) => ({
+    relatedSpdxElement: SPDXID,
+    relationshipType: "DESCRIBES",
+    spdxElementId: "SPDXRef-DOCUMENT",
+  })),
+  spdxVersion: "SPDX-2.3",
+};
 
 mkdirSync(outputDirectory, { recursive: true });
-
-const sbom = execFileSync(
-  "npm",
-  [
-    "sbom",
-    "--package-lock-only",
-    "--sbom-format",
-    "spdx",
-    "--sbom-type",
-    "application",
-  ],
-  {
-    encoding: "utf8",
-    maxBuffer: 10 * 1024 * 1024,
-    stdio: ["ignore", "pipe", "inherit"],
-  }
+writeFileSync(
+  path.join(outputDirectory, "dependencies.spdx.json"),
+  `${JSON.stringify(sbom, null, 2)}\n`
 );
-
-writeFileSync(path.join(outputDirectory, "dependencies.spdx.json"), sbom);

@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sidebar-07 source in checked REUSE metadata and a third-party notice,
   including the migration registry baselines, release-artifact license copies,
   a separately validated npm dependency inventory, artifact checks across every
-  supported release build configuration, standalone and npm-12-compatible
+  supported release build configuration, standalone and lockfile-only
   SBOM generation, custom Vite output-directory support, and the shared `cn`
   utility helper.
 - Clarified the `/source` description as the AGPL source offer for the SecPal

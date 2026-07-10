@@ -132,8 +132,11 @@ describe("shadcn source provenance", () => {
       path.join(repoRoot, "scripts", "generate-dependency-sbom.mjs"),
       "utf8"
     );
-    expect(packageJson.engines.npm).toBe(">=12.0.0");
-    expect(sbomGenerator).toContain('execFileSync(\n  "npm",');
+    expect(packageJson.engines.npm).toBe(">=10.0.0");
+    expect(sbomGenerator).toContain(
+      'readFileSync("package-lock.json", "utf8")'
+    );
+    expect(sbomGenerator).not.toContain("execFileSync");
     expect(sbomGenerator).toContain('process.argv[2] ?? "dist"');
     expect(sbomGenerator).toContain('"dependencies.spdx.json"');
 
@@ -142,29 +145,6 @@ describe("shadcn source provenance", () => {
         "node ./scripts/build-with-sbom.mjs"
       );
     }
-
-    const sbom = JSON.parse(
-      execFileSync(
-        "npm",
-        [
-          "sbom",
-          "--package-lock-only",
-          "--sbom-format",
-          "spdx",
-          "--sbom-type",
-          "application",
-        ],
-        {
-          cwd: repoRoot,
-          encoding: "utf8",
-          maxBuffer: 10 * 1024 * 1024,
-          stdio: ["ignore", "pipe", "pipe"],
-        }
-      )
-    ) as { packages?: unknown[]; spdxVersion?: string };
-
-    expect(sbom.spdxVersion).toBe("SPDX-2.3");
-    expect(sbom.packages?.length).toBeGreaterThan(0);
   });
 
   it("generates the dependency SBOM from a checkout without dist", () => {
