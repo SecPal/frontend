@@ -135,34 +135,38 @@ export function SourcePage() {
   return (
     <main className="min-h-[var(--app-shell-min-height)] bg-background text-foreground">
       <div className="px-4 pt-[calc(1.5rem+var(--app-safe-area-inset-top))] sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <LoginLegalMenu sourceReturnTo={sourceReturnTo ?? undefined} />
-          <LoginLanguageSwitcher />
-        </div>
-        <div className="mx-auto mb-6 flex max-w-5xl flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <Logo size="32" className="shrink-0" />
-            <div className="space-y-1">
-              <p className="text-muted-foreground text-xs font-semibold uppercase tracking-[0.14em]">
-                SecPal
-              </p>
-              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                <Trans>AGPL v3+</Trans>
-              </h1>
-            </div>
+        <div className="mb-6 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-4 pb-4 min-[86rem]:grid-cols-[minmax(0,1fr)_minmax(0,64rem)_minmax(0,1fr)]">
+          <div className="order-1 shrink-0 justify-self-start min-[86rem]:col-start-1 min-[86rem]:row-start-1">
+            <LoginLegalMenu sourceReturnTo={sourceReturnTo ?? undefined} />
           </div>
-          <Link
-            to={secondaryActionHref}
-            className={buttonVariants({
-              variant: "outline",
-              className: "shrink-0 rounded-xl",
-            })}
-          >
-            <span className="inline-flex items-center gap-2">
-              <ArrowLeft className="size-4" aria-hidden="true" />
-              {secondaryActionLabel}
-            </span>
-          </Link>
+          <div className="order-2 shrink-0 justify-self-end min-[86rem]:col-start-3 min-[86rem]:row-start-1">
+            <LoginLanguageSwitcher />
+          </div>
+          <div className="order-3 col-span-2 flex w-full max-w-5xl min-w-0 items-center justify-between gap-3 justify-self-center min-[86rem]:col-span-1 min-[86rem]:col-start-2 min-[86rem]:row-start-1">
+            <div className="flex min-w-0 items-center gap-3">
+              <Logo size="32" className="shrink-0" />
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-xs font-semibold uppercase tracking-[0.14em]">
+                  SecPal
+                </p>
+                <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                  <Trans>AGPL v3+</Trans>
+                </h1>
+              </div>
+            </div>
+            <Link
+              to={secondaryActionHref}
+              className={buttonVariants({
+                variant: "outline",
+                className: "shrink-0 rounded-xl",
+              })}
+            >
+              <span className="inline-flex items-center gap-2">
+                <ArrowLeft className="size-4" aria-hidden="true" />
+                {secondaryActionLabel}
+              </span>
+            </Link>
+          </div>
         </div>
       </div>
 

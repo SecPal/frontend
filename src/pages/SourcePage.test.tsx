@@ -7,6 +7,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { messages as deMessages } from "@/locales/de/messages.mjs";
 import { useAuth } from "@/hooks/useAuth";
 import { SourcePage } from "./SourcePage";
 
@@ -82,7 +83,9 @@ describe("SourcePage", () => {
     });
 
     const main = container.querySelector("main");
-    const banner = container.querySelector("main .border-b");
+    const banner = screen
+      .getByRole("heading", { name: "AGPL v3+" })
+      .closest(".grid");
     const cards = container.querySelectorAll('[data-slot="card"]');
     const repoArticle = screen.getByText("SecPal/frontend").closest("article");
     const issueLink = screen.getByRole("link", {
@@ -90,7 +93,7 @@ describe("SourcePage", () => {
     });
 
     expect(main).toHaveClass("bg-background", "text-foreground");
-    expect(banner).toHaveClass("border-border");
+    expect(banner).not.toHaveClass("border-b", "border-border");
     expect(cards[0]).toHaveClass("border-border", "bg-card");
     expect(repoArticle).toHaveClass("border-border", "bg-muted");
     expect(repoLink).toHaveClass(
@@ -129,28 +132,84 @@ describe("SourcePage", () => {
     ).toHaveAttribute("rel", "noopener");
   });
 
-  it("puts legal and language controls in the row above the source title", async () => {
+  it("uses Quellcode consistently in German", async () => {
+    i18n.load("de", deMessages);
+    i18n.activate("de");
+
+    renderWithProviders();
+
+    expect(
+      await screen.findByRole("heading", { name: "Quellcode und Lizenz" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Quellcodeangebot für Nutzer/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "Repositories des entsprechenden Quellcodes",
+      })
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Quelltext/i)).not.toBeInTheDocument();
+
+    i18n.activate("en");
+  });
+
+  it("keeps legal and language controls at the page edges", async () => {
     const { container } = renderWithProviders();
     const main = container.querySelector("main");
-    const banner = container.querySelector("main .border-b");
+    const header = screen
+      .getByRole("heading", { name: "AGPL v3+" })
+      .closest(".grid");
     const legalControl = screen.getByRole("button", { name: /legal/i });
     const languageControl = screen.getByRole("combobox", {
       name: /select language/i,
     });
     const backLink = screen.getByRole("link", { name: /back to login/i });
-    const titleColumn = screen
+    const middleRow = screen
       .getByRole("heading", { name: "AGPL v3+" })
-      .closest(".flex-wrap");
+      .closest(".min-\\[86rem\\]\\:col-start-2");
+    const brandCluster = screen
+      .getByRole("heading", { name: "AGPL v3+" })
+      .closest(".items-center");
+    const legalWrapper = legalControl.closest(".order-1");
+    const languageWrapper = languageControl.closest(".order-2");
 
     expect(main).not.toHaveClass("relative");
     expect(legalControl).toBeInTheDocument();
     expect(languageControl).toBeInTheDocument();
-    expect(legalControl.closest(".border-b")).not.toBe(banner);
-    expect(languageControl.closest(".border-b")).not.toBe(banner);
-    expect(backLink.closest(".border-b")).toBe(banner);
-    expect(banner).toHaveClass("max-w-5xl");
-    expect(titleColumn).toHaveClass("justify-between");
-    expect(within(titleColumn as HTMLElement).getByRole("link")).toBe(backLink);
+    expect(header).toContainElement(legalControl);
+    expect(header).toContainElement(languageControl);
+    expect(header).toContainElement(backLink);
+    expect(header).not.toHaveClass("border-b", "border-border");
+    expect(header).toHaveClass(
+      "grid",
+      "grid-cols-[minmax(0,1fr)_auto]",
+      "gap-x-6",
+      "gap-y-4",
+      "min-[86rem]:grid-cols-[minmax(0,1fr)_minmax(0,64rem)_minmax(0,1fr)]"
+    );
+    expect(legalWrapper).not.toBe(languageWrapper);
+    expect(legalWrapper).toHaveClass(
+      "order-1",
+      "justify-self-start",
+      "min-[86rem]:col-start-1"
+    );
+    expect(languageWrapper).toHaveClass(
+      "order-2",
+      "justify-self-end",
+      "min-[86rem]:col-start-3"
+    );
+    expect(middleRow).toHaveClass(
+      "order-3",
+      "col-span-2",
+      "max-w-5xl",
+      "justify-self-center",
+      "min-[86rem]:col-start-2"
+    );
+    expect(
+      within(brandCluster as HTMLElement).queryByRole("link")
+    ).not.toBeInTheDocument();
+    expect(backLink).toHaveClass("shrink-0", "rounded-xl");
     expect(
       within(languageControl.parentElement as HTMLElement).queryByRole("link")
     ).not.toBeInTheDocument();
