@@ -124,6 +124,24 @@ describe("shadcn source provenance", () => {
     expect(notice).toContain("`@tailwindcss/vite`");
   });
 
+  it("records the dependency-license audit and its focused remediation", () => {
+    const notice = readFileSync(
+      path.join(repoRoot, "THIRD-PARTY-NOTICES.md"),
+      "utf8"
+    );
+
+    expect(notice).toContain("## Audit status (2026-07-11)");
+    expect(notice).toContain("`reuse lint`");
+    expect(notice).toContain("#1367");
+    expect(notice).toContain("no Tailwind-derived source");
+    expect(notice).toContain("`@fontsource/inter`");
+    expect(notice).toContain("`OFL-1.1`");
+
+    const reuseConfig = readFileSync(path.join(repoRoot, "REUSE.toml"), "utf8");
+    expect(reuseConfig).not.toContain('path = "src/locales/**/messages.js"');
+    expect(reuseConfig).not.toContain('path = "src/locales/**/messages.mjs"');
+  });
+
   it("emits a lockfile-only SPDX dependency inventory with every release build", () => {
     expect(packageJson.scripts["generate:dependency-sbom"]).toContain(
       "node ./scripts/generate-dependency-sbom.mjs"

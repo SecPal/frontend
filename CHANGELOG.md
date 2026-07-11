@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Audited third-party licensing and REUSE metadata: removed stale CC0 Lingui
+  generated-output annotations that conflicted with the checked-in catalog
+  sidecars, documented the verified shadcn provenance and dependency inventory
+  status, and tracked release-artifact dependency-notice bundling separately.
 - Updated the document language during bootstrap and when the selected
   application locale changes, preventing browsers from offering to translate
   German content as English and ensuring locale bootstrap updates are not
