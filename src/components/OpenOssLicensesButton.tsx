@@ -4,7 +4,7 @@
 import { Trans } from "@lingui/react/macro";
 import { SecPalEnterprise } from "@/native";
 import { isAndroidSurface } from "@/platform/appSurface";
-import { buttonVariants } from "@/ui/styles";
+import { Button } from "@/ui/button";
 
 export function OpenOssLicensesButton() {
   if (!isAndroidSurface) {
@@ -12,14 +12,13 @@ export function OpenOssLicensesButton() {
   }
 
   return (
-    <button
-      type="button"
-      className={buttonVariants({ variant: "outline" })}
+    <Button
+      variant="outline"
       onClick={() => {
         void SecPalEnterprise.openOssLicenses();
       }}
     >
       <Trans>Open source licenses</Trans>
-    </button>
+    </Button>
   );
 }
