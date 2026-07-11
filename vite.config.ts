@@ -17,6 +17,7 @@ import { resolveLinguiVitePluginExports } from "./linguiVitePluginInterop";
 import { applyInjectManifestCodeSplittingFix } from "./src/lib/pwaInjectManifestBuildConfig";
 import { buildPwaRuntimeCaching } from "./src/lib/pwaRuntimeCaching";
 import { resolveAppSurface } from "./src/platform/appSurfaceContract";
+import { thirdPartyDependencyNotices } from "./thirdPartyDependencyNotices";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const { lingui } = resolveLinguiVitePluginExports(linguiVitePlugin);
@@ -217,14 +218,21 @@ export default defineConfig(({ mode, command }) => {
           },
         ],
       }),
+      thirdPartyDependencyNotices(),
       VitePWA({
         registerType: "prompt",
         strategies: "injectManifest",
         integration: {
-          configureCustomSWViteBuild: applyInjectManifestCodeSplittingFix,
+          configureCustomSWViteBuild: (inlineConfig) => {
+            applyInjectManifestCodeSplittingFix(inlineConfig);
+            inlineConfig.plugins = [
+              ...(inlineConfig.plugins ?? []),
+              thirdPartyDependencyNotices({ mergeExistingArtifact: true }),
+            ];
+          },
         },
         injectManifest: {
-          globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"],
+          globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2,md}"],
           globIgnores: ["**/*.html", "theme-color.js", "document-language.js"],
           manifestTransforms: [
             async (entries) => ({
@@ -284,7 +292,7 @@ export default defineConfig(({ mode, command }) => {
           ],
         },
         workbox: {
-          globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"],
+          globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2,md}"],
           globIgnores: ["**/*.html", "theme-color.js", "document-language.js"],
           navigateFallback: null,
           cleanupOutdatedCaches: true,
