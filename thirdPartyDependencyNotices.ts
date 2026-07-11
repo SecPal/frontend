@@ -20,7 +20,7 @@ interface InstalledPackage {
 }
 
 function packageDirectoryForModule(moduleId: string): string | null {
-  const normalizedModuleId = moduleId.split("?")[0].replaceAll("\\\\", "/");
+  const normalizedModuleId = moduleId.split("?")[0].replaceAll("\\", "/");
   const marker = "/node_modules/";
   const markerIndex = normalizedModuleId.lastIndexOf(marker);
 
@@ -52,25 +52,28 @@ function installedPackageForModule(moduleId: string): InstalledPackage | null {
 
   const packageJson = JSON.parse(
     readFileSync(path.join(directory, "package.json"), "utf8")
-  ) as {
-    author?: string;
-    copyright?: string;
-    license?: string;
-    name?: string;
-    version?: string;
-  };
+  ) as Record<string, unknown>;
 
-  if (!packageJson.name || !packageJson.version) {
+  const name = optionalString(packageJson.name);
+  const version = optionalString(packageJson.version);
+
+  if (!name || !version) {
     throw new Error(`Bundled package at ${directory} lacks a name or version.`);
   }
 
   return {
-    copyright: packageJson.copyright ?? packageJson.author,
+    copyright:
+      optionalString(packageJson.copyright) ??
+      optionalString(packageJson.author),
     directory,
-    license: packageJson.license,
-    name: packageJson.name,
-    version: packageJson.version,
+    license: optionalString(packageJson.license),
+    name,
+    version,
   };
+}
+
+function optionalString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
 function readPackageNoticeFiles(packageData: InstalledPackage): string {
@@ -142,25 +145,67 @@ export function createThirdPartyDependencyNotice(
   return `${noticeHeader}${entries.join("\n\n")}\n`;
 }
 
-function mergeThirdPartyDependencyNotices(
+function noticeSections(notice: string): readonly [string, string][] {
+  if (!notice.startsWith(noticeHeader)) {
+    throw new Error("Dependency notice has an unexpected header.");
+  }
+
+  const sections: Array<[string, string]> = [];
+  let currentHeading: string | null = null;
+  let currentLines: string[] = [];
+  let fenceMarker: "```" | "~~~" | null = null;
+
+  const finishSection = () => {
+    if (currentHeading) {
+      sections.push([currentHeading, currentLines.join("\n").trimEnd()]);
+    }
+  };
+
+  for (const line of notice.slice(noticeHeader.length).trim().split("\n")) {
+    const trimmedLine = line.trimStart();
+    const nextFenceMarker = trimmedLine.startsWith("```")
+      ? "```"
+      : trimmedLine.startsWith("~~~")
+        ? "~~~"
+        : null;
+
+    if (!fenceMarker && line.startsWith("## ")) {
+      finishSection();
+      currentHeading = line;
+      currentLines = [line];
+      continue;
+    }
+
+    if (currentHeading) {
+      currentLines.push(line);
+    } else if (line.trim()) {
+      throw new Error("Dependency notice contains content before a package.");
+    }
+
+    if (nextFenceMarker === fenceMarker) {
+      fenceMarker = null;
+    } else if (!fenceMarker && nextFenceMarker) {
+      fenceMarker = nextFenceMarker;
+    }
+  }
+
+  if (fenceMarker) {
+    throw new Error("Dependency notice contains an unclosed fenced block.");
+  }
+
+  finishSection();
+  return sections;
+}
+
+export function mergeThirdPartyDependencyNotices(
   existingNotice: string,
   generatedNotice: string
 ): string {
   const sections = new Map<string, string>();
 
   for (const notice of [existingNotice, generatedNotice]) {
-    for (const section of notice
-      .slice(noticeHeader.length)
-      .trim()
-      .split("\n\n## ")) {
-      const normalizedSection = section.startsWith("## ")
-        ? section
-        : `## ${section}`;
-      const heading = normalizedSection.split("\n", 1)[0];
-
-      if (heading !== "##") {
-        sections.set(heading, normalizedSection);
-      }
+    for (const [heading, section] of noticeSections(notice)) {
+      sections.set(heading, section);
     }
   }
 
@@ -178,7 +223,7 @@ export function thirdPartyDependencyNotices({
     path.join(process.cwd(), "package.json")
   );
   const addResolvedPackage = (source: string) => {
-    if (!source.startsWith("@") && !source.match(/^[A-Za-z0-9_-]+\//)) {
+    if (source.startsWith(".") || source.startsWith("/")) {
       return;
     }
 

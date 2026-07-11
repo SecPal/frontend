@@ -147,6 +147,7 @@ describe("Build Configuration and Source Verification", () => {
         "utf8"
       );
       expect(dependencyNotices).toContain("@fontsource/inter");
+      expect(dependencyNotices).toContain("## tailwindcss@");
       expect(dependencyNotices).toContain("SIL Open Font License");
       expect(dependencyNotices).toContain(
         "Copyright 2016 The Inter Project Authors"
