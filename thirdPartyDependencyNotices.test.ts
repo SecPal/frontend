@@ -101,6 +101,25 @@ describe("createThirdPartyDependencyNotice", () => {
       createThirdPartyDependencyNotice([`${packageDirectory}/index.js`])
     ).toThrow("lacks a name or version");
   });
+
+  it("uses a longer fence when a license notice contains backticks", () => {
+    const root = mkdtempSync(path.join(os.tmpdir(), "dependency-notices-"));
+    temporaryDirectories.push(root);
+    const packageDirectory = createPackage(
+      root,
+      "fenced-license-package",
+      "1.0.0",
+      "```\nLicense text inside an upstream fence.\n```"
+    );
+
+    const notice = createThirdPartyDependencyNotice([
+      `${packageDirectory}/index.js`,
+    ]);
+
+    expect(notice).toContain(
+      "````text\n```\nLicense text inside an upstream fence.\n```\n````"
+    );
+  });
 });
 
 describe("mergeThirdPartyDependencyNotices", () => {
@@ -120,6 +139,15 @@ describe("mergeThirdPartyDependencyNotices", () => {
     expect(mergedNotice.indexOf("## example-license@1.0.0")).toBeLessThan(
       mergedNotice.indexOf("## workbox-core@7.4.0")
     );
+  });
+
+  it("keeps nested upstream fences inside the generated outer fence", () => {
+    const existingNotice = `${header}## fenced-license@1.0.0\n\n### LICENSE\n\n\`\`\`\`text\n\`\`\`\n## License heading\n\`\`\`\n\`\`\`\`\n`;
+    const generatedNotice = `${header}## workbox-core@7.4.0\n\n### LICENSE\n\n\`\`\`text\nWorkbox terms.\n\`\`\`\n`;
+
+    expect(() =>
+      mergeThirdPartyDependencyNotices(existingNotice, generatedNotice)
+    ).not.toThrow();
   });
 
   it("rejects malformed or truncated generated artifacts", () => {

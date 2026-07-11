@@ -76,6 +76,16 @@ function optionalString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
+function fencedNoticeText(text: string): string {
+  const longestBacktickRun = Math.max(
+    2,
+    ...Array.from(text.matchAll(/`+/g), ([match]) => match.length)
+  );
+  const fence = "`".repeat(longestBacktickRun + 1);
+
+  return `${fence}text\n${text.trimEnd()}\n${fence}`;
+}
+
 function readPackageNoticeFiles(packageData: InstalledPackage): string {
   const noticeFiles = readdirSync(packageData.directory)
     .filter((fileName) => noticeFilePattern.test(fileName))
@@ -95,7 +105,7 @@ function readPackageNoticeFiles(packageData: InstalledPackage): string {
     );
 
     try {
-      return `The npm package does not include a standalone notice file. Its package metadata declares ${packageData.license}.${packageData.copyright ? `\n\nCopyright/author metadata: ${packageData.copyright}` : ""}\n\n### ${packageData.license}\n\n\`\`\`text\n${readFileSync(fallbackLicensePath, "utf8").trimEnd()}\n\`\`\``;
+      return `The npm package does not include a standalone notice file. Its package metadata declares ${packageData.license}.${packageData.copyright ? `\n\nCopyright/author metadata: ${packageData.copyright}` : ""}\n\n### ${packageData.license}\n\n${fencedNoticeText(readFileSync(fallbackLicensePath, "utf8"))}`;
     } catch {
       throw new Error(
         `Bundled package ${packageData.name}@${packageData.version} declares ${packageData.license} but its canonical license text is unavailable at ${fallbackLicensePath}.`
@@ -106,10 +116,9 @@ function readPackageNoticeFiles(packageData: InstalledPackage): string {
   return noticeFiles
     .map(
       (fileName) =>
-        `### ${fileName}\n\n\`\`\`text\n${readFileSync(
-          path.join(packageData.directory, fileName),
-          "utf8"
-        ).trimEnd()}\n\`\`\``
+        `### ${fileName}\n\n${fencedNoticeText(
+          readFileSync(path.join(packageData.directory, fileName), "utf8")
+        )}`
     )
     .join("\n\n");
 }
@@ -163,11 +172,7 @@ function noticeSections(notice: string): readonly [string, string][] {
 
   for (const line of notice.slice(noticeHeader.length).trim().split("\n")) {
     const trimmedLine = line.trimStart();
-    const nextFenceMarker = trimmedLine.startsWith("```")
-      ? "```"
-      : trimmedLine.startsWith("~~~")
-        ? "~~~"
-        : null;
+    const nextFenceMarker = trimmedLine.match(/^(`{3,}|~{3,})/)?.[1] ?? null;
 
     if (!fenceMarker && line.startsWith("## ")) {
       finishSection();
