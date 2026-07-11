@@ -129,6 +129,47 @@ describe("shared shadcn/radix UI basis", () => {
     expect(matchMedia).toHaveBeenCalledWith("(min-width: 90rem)");
   });
 
+  it("keeps the sidebar expanded by default at the desktop breakpoint", () => {
+    const matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query === "(min-width: 90rem)",
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    vi.stubGlobal("matchMedia", matchMedia);
+
+    const { container } = render(
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader>Navigation</SidebarHeader>
+        </Sidebar>
+      </SidebarProvider>
+    );
+
+    expect(container.querySelector('[data-slot="sidebar"]')).toHaveAttribute(
+      "data-state",
+      "expanded"
+    );
+    expect(matchMedia).toHaveBeenCalledWith("(min-width: 90rem)");
+  });
+
+  it("uses the viewport width when matchMedia is unavailable", () => {
+    vi.stubGlobal("matchMedia", undefined);
+    vi.stubGlobal("innerWidth", 1440);
+
+    const { container } = render(
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader>Navigation</SidebarHeader>
+        </Sidebar>
+      </SidebarProvider>
+    );
+
+    expect(container.querySelector('[data-slot="sidebar"]')).toHaveAttribute(
+      "data-state",
+      "expanded"
+    );
+  });
+
   it("uses canonical shadcn slots and theme-token classes across core primitives", () => {
     const { container } = render(
       <div>
