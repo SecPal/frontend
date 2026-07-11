@@ -71,10 +71,10 @@ export async function listOrganizationalUnits(
     params.set("parent_id", filters.parent_id ?? "null");
   }
   if (filters?.is_active !== undefined) {
-    params.set("is_active", String(filters.is_active));
+    params.set("is_active", filters.is_active ? "1" : "0");
   }
   if (filters?.is_assignable !== undefined) {
-    params.set("is_assignable", String(filters.is_assignable));
+    params.set("is_assignable", filters.is_assignable ? "1" : "0");
   }
   if (filters?.per_page) {
     params.set("per_page", String(filters.per_page));

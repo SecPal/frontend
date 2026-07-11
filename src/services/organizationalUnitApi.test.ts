@@ -79,6 +79,7 @@ describe("Organizational Unit API", () => {
       await listOrganizationalUnits({
         type: "branch",
         parent_id: "parent-1",
+        is_active: false,
         is_assignable: true,
         per_page: 10,
       });
@@ -96,7 +97,11 @@ describe("Organizational Unit API", () => {
         expect.any(Object)
       );
       expect(mockFetchWithCsrf).toHaveBeenCalledWith(
-        expect.stringContaining("is_assignable=true"),
+        expect.stringContaining("is_active=0"),
+        expect.any(Object)
+      );
+      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
+        expect.stringContaining("is_assignable=1"),
         expect.any(Object)
       );
     });

@@ -353,6 +353,19 @@ describe("OrganizationalUnitTree", () => {
     }
   );
 
+  it("treats omitted status flags as active and assignable", () => {
+    vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+      ...mockHookResponse,
+      units: [mockUnits[0]!],
+      rootUnitIds: ["unit-1"],
+    });
+
+    renderWithI18n(<OrganizationalUnitTree />);
+
+    expect(screen.getByText("Active")).toBeInTheDocument();
+    expect(screen.getByText("Assignable")).toBeInTheDocument();
+  });
+
   it("keeps tree rows, empty state, and error state on canonical theme tokens", async () => {
     const { rerender, container } = renderWithI18n(<OrganizationalUnitTree />);
 

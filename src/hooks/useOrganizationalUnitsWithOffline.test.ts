@@ -200,6 +200,38 @@ describe("useOrganizationalUnitsWithOffline", () => {
       expect(result.current.rootUnitIds).toEqual([]); // No metadata when offline
     });
 
+    it("defaults missing legacy cache status flags to enabled", async () => {
+      vi.mocked(
+        organizationalUnitApi.listOrganizationalUnits
+      ).mockRejectedValue(new Error("API Error"));
+      vi.mocked(
+        organizationalUnitStore.listOrganizationalUnits
+      ).mockResolvedValue([
+        {
+          ...mockCachedUnits[0]!,
+          is_active: undefined,
+          is_assignable: undefined,
+          parent: {
+            id: "parent-1",
+            type: "company",
+            name: "SecPal GmbH",
+          },
+        },
+      ]);
+
+      const { result } = renderHook(() => useOrganizationalUnitsWithOffline());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.units[0]).toMatchObject({
+        is_active: true,
+        is_assignable: true,
+        parent: { is_active: true, is_assignable: true },
+      });
+    });
+
     it("should show error when API fails and no cache available", async () => {
       vi.mocked(
         organizationalUnitApi.listOrganizationalUnits

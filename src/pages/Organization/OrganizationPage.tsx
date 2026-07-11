@@ -349,7 +349,7 @@ export function OrganizationPage() {
                       <Trans>Administrative status</Trans>
                     </dt>
                     <dd className="text-foreground">
-                      {selectedUnit.is_active ? (
+                      {selectedUnit.is_active !== false ? (
                         <Trans>Active</Trans>
                       ) : (
                         <Trans>Inactive</Trans>
@@ -361,7 +361,7 @@ export function OrganizationPage() {
                       <Trans>Assignment status</Trans>
                     </dt>
                     <dd className="text-foreground">
-                      {selectedUnit.is_assignable ? (
+                      {selectedUnit.is_assignable !== false ? (
                         <Trans>Assignable</Trans>
                       ) : (
                         <Trans>Not assignable</Trans>

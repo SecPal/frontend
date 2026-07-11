@@ -186,10 +186,14 @@ const TreeNode = memo(
           </span>
 
           <Badge className="hidden md:inline-flex shrink-0 bg-muted text-muted-foreground">
-            {unit.is_active ? <Trans>Active</Trans> : <Trans>Inactive</Trans>}
+            {unit.is_active !== false ? (
+              <Trans>Active</Trans>
+            ) : (
+              <Trans>Inactive</Trans>
+            )}
           </Badge>
           <Badge className="hidden md:inline-flex shrink-0 bg-muted text-muted-foreground">
-            {unit.is_assignable ? (
+            {unit.is_assignable !== false ? (
               <Trans>Assignable</Trans>
             ) : (
               <Trans>Not assignable</Trans>
