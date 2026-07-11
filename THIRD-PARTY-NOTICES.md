@@ -86,3 +86,30 @@ This inventory includes build dependencies such as `tailwindcss` and
 `@tailwindcss/vite`, as well as runtime dependencies such as React, Radix UI,
 and Lucide. Their package licenses remain independent from the shadcn copied-
 source provenance recorded above.
+
+## Audit status (2026-07-11)
+
+- `reuse lint` passes. The repository uses only `AGPL-3.0-or-later`,
+  `CC0-1.0`, `MIT`, and `LicenseRef-SecPal-Attribution` in its REUSE metadata;
+  each has a corresponding text in `LICENSES/`.
+- The Lingui catalogs and compiled messages contain SecPal translation content.
+  Their checked-in `.license` sidecars therefore remain the authority for
+  their SecPal licensing. The obsolete `CC0-1.0` Lingui annotations were
+  removed from `REUSE.toml` so generated output is not misclassified as
+  third-party or public-domain source.
+- The audit identified the shadcn material listed above as copied or adapted
+  third-party source. Its upstream copyright and MIT license remain aggregated
+  in `REUSE.toml` and preserved in release artifacts; its notice was not
+  replaced with `SecPal Contributors`.
+- `package-lock.json` contains license declarations for every resolved npm
+  package and the compatibility check accepts the current license set. The
+  SBOM is an inventory, not a replacement for required package notices.
+- Tailwind is used only as an npm dependency and styling tool; the audit found
+  no Tailwind-derived source, so no Tailwind-specific license terms apply.
+
+A production-build inspection confirmed that `@fontsource/inter` webfonts
+licensed under `OFL-1.1` are distributed, while the artifact currently ships
+only the shadcn MIT text. Release artifacts therefore still need a complete
+dependency-notice bundle for the packages actually bundled, including the
+Inter copyright and OFL text and any package-specific notices. That focused
+distribution remediation is tracked in [#1367](https://github.com/SecPal/frontend/issues/1367).
