@@ -7,7 +7,12 @@ const nativeEnterprisePluginMock = vi.hoisted(() => ({
   openOssLicenses: undefined as (() => Promise<void>) | undefined,
 }));
 
+const capacitorMock = vi.hoisted(() => ({
+  isPluginAvailable: vi.fn(() => false),
+}));
+
 vi.mock("@capacitor/core", () => ({
+  Capacitor: capacitorMock,
   registerPlugin: vi.fn(() => nativeEnterprisePluginMock),
 }));
 
@@ -19,6 +24,8 @@ const nativeGlobal = globalThis as typeof globalThis & {
 
 afterEach(() => {
   delete nativeGlobal.SecPalNativeAuthBridge;
+  capacitorMock.isPluginAvailable.mockReset();
+  capacitorMock.isPluginAvailable.mockReturnValue(false);
   nativeEnterprisePluginMock.openOssLicenses = undefined;
 });
 
@@ -41,6 +48,7 @@ describe("native facade surface", () => {
     await expect(
       nativeFacades.SecPalEnterprise.openOssLicenses()
     ).resolves.toBe(false);
+    expect(nativeFacades.SecPalEnterprise.isOssLicensesAvailable()).toBe(false);
     await expect(nativeFacades.SecPalPush.getRegistration()).resolves.toBe(
       null
     );
@@ -80,8 +88,10 @@ describe("native facade surface", () => {
 
   it("opens OSS notices through the native enterprise capability when available", async () => {
     const openOssLicenses = vi.fn().mockResolvedValue(undefined);
+    capacitorMock.isPluginAvailable.mockReturnValue(true);
     nativeEnterprisePluginMock.openOssLicenses = openOssLicenses;
 
+    expect(nativeFacades.SecPalEnterprise.isOssLicensesAvailable()).toBe(true);
     await expect(
       nativeFacades.SecPalEnterprise.openOssLicenses()
     ).resolves.toBe(true);
@@ -89,6 +99,7 @@ describe("native facade surface", () => {
   });
 
   it("returns false when the native OSS notices capability rejects", async () => {
+    capacitorMock.isPluginAvailable.mockReturnValue(true);
     nativeEnterprisePluginMock.openOssLicenses = vi
       .fn()
       .mockRejectedValue(new Error("Native notices activity is unavailable"));

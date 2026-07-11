@@ -11,11 +11,8 @@ import { messages as deMessages } from "@/locales/de/messages.mjs";
 import { useAuth } from "@/hooks/useAuth";
 import { SourcePage } from "./SourcePage";
 
-const appSurfaceMock = vi.hoisted(() => ({
-  isAndroidSurface: false,
-}));
-
 const nativeFacadeMock = vi.hoisted(() => ({
+  isOssLicensesAvailable: vi.fn(() => false),
   openOssLicenses: vi.fn(),
 }));
 
@@ -24,12 +21,6 @@ vi.mock("@/hooks/useAuth", () => ({
     isAuthenticated: false,
     isLoading: false,
   })),
-}));
-
-vi.mock("@/platform/appSurface", () => ({
-  get isAndroidSurface() {
-    return appSurfaceMock.isAndroidSurface;
-  },
 }));
 
 vi.mock("@/native", () => ({
@@ -86,7 +77,8 @@ function renderWithProviders(
 
 describe("SourcePage", () => {
   beforeEach(() => {
-    appSurfaceMock.isAndroidSurface = false;
+    nativeFacadeMock.isOssLicensesAvailable.mockReset();
+    nativeFacadeMock.isOssLicensesAvailable.mockReturnValue(false);
     nativeFacadeMock.openOssLicenses.mockReset();
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
@@ -96,9 +88,9 @@ describe("SourcePage", () => {
     mockSourceOfferRequests();
   });
 
-  it("opens native OSS notices from the source page on Android surfaces", async () => {
+  it("opens native OSS notices from the source page when the capability is available", async () => {
     const user = userEvent.setup();
-    appSurfaceMock.isAndroidSurface = true;
+    nativeFacadeMock.isOssLicensesAvailable.mockReturnValue(true);
     renderWithProviders();
 
     await user.click(
@@ -108,7 +100,7 @@ describe("SourcePage", () => {
     expect(nativeFacadeMock.openOssLicenses).toHaveBeenCalledOnce();
   });
 
-  it("hides native OSS notices from the source page outside Android surfaces", async () => {
+  it("hides native OSS notices when the capability is unavailable", async () => {
     renderWithProviders();
 
     await screen.findByRole("heading", { name: /source code and license/i });

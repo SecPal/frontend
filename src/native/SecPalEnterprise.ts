@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-import { registerPlugin } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 
 export interface SecPalEnterpriseEnrollment {
   readonly tenantId: string;
@@ -10,6 +10,7 @@ export interface SecPalEnterpriseEnrollment {
 
 export interface SecPalEnterpriseFacade {
   getEnrollment(): Promise<SecPalEnterpriseEnrollment | null>;
+  isOssLicensesAvailable(): boolean;
   openOssLicenses(): Promise<boolean>;
 }
 
@@ -20,12 +21,22 @@ interface SecPalEnterprisePlugin {
 const secPalEnterprisePlugin =
   registerPlugin<SecPalEnterprisePlugin>("SecPalEnterprise");
 
+function isOssLicensesAvailable(): boolean {
+  return Capacitor.isPluginAvailable("SecPalEnterprise");
+}
+
 export const SecPalEnterprise: SecPalEnterpriseFacade = {
   async getEnrollment(): Promise<SecPalEnterpriseEnrollment | null> {
     return null;
   },
+  isOssLicensesAvailable(): boolean {
+    return isOssLicensesAvailable();
+  },
   async openOssLicenses(): Promise<boolean> {
-    if (typeof secPalEnterprisePlugin.openOssLicenses !== "function") {
+    if (
+      !isOssLicensesAvailable() ||
+      typeof secPalEnterprisePlugin.openOssLicenses !== "function"
+    ) {
       return false;
     }
 

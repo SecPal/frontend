@@ -3,11 +3,10 @@
 
 import { Trans } from "@lingui/react/macro";
 import { SecPalEnterprise } from "@/native";
-import { isAndroidSurface } from "@/platform/appSurface";
 import { Button } from "@/ui/button";
 
 export function OpenOssLicensesButton() {
-  if (!isAndroidSurface) {
+  if (!SecPalEnterprise.isOssLicensesAvailable()) {
     return null;
   }
 
