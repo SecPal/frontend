@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Release artifacts now include a deterministic third-party dependency notice
+  bundle generated from their actual JavaScript and copied-asset module graph.
+  It preserves package-specific notices and license texts, including Inter's
+  OFL-1.1 notice, while retaining the existing shadcn MIT notice files.
 - Audited third-party licensing and REUSE metadata: removed stale CC0 Lingui
   generated-output annotations that conflicted with the checked-in catalog
   sidecars, documented the verified shadcn provenance and dependency inventory

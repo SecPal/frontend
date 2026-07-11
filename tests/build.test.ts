@@ -139,6 +139,34 @@ describe("Build Configuration and Source Verification", () => {
       expect(existsSync(path.join(distRoot, "dependencies.spdx.json"))).toBe(
         true
       );
+      expect(
+        existsSync(path.join(distRoot, "THIRD-PARTY-DEPENDENCY-NOTICES.md"))
+      ).toBe(true);
+      const dependencyNotices = readFileSync(
+        path.join(distRoot, "THIRD-PARTY-DEPENDENCY-NOTICES.md"),
+        "utf8"
+      );
+      expect(dependencyNotices).toContain("@fontsource/inter");
+      expect(dependencyNotices).toContain("## tailwindcss@");
+      expect(dependencyNotices).toContain("SIL Open Font License");
+      expect(dependencyNotices).toContain(
+        "Copyright 2016 The Inter Project Authors"
+      );
+      for (const workboxPackage of [
+        "workbox-core",
+        "workbox-precaching",
+        "workbox-routing",
+        "workbox-strategies",
+      ]) {
+        expect(dependencyNotices).toContain(`## ${workboxPackage}@`);
+      }
+      expect(readFileSync(path.join(distRoot, "sw.js"), "utf8")).toContain(
+        "THIRD-PARTY-DEPENDENCY-NOTICES.md"
+      );
+      expect(existsSync(path.join(distRoot, "THIRD-PARTY-NOTICES.md"))).toBe(
+        true
+      );
+      expect(existsSync(path.join(distRoot, "LICENSES/MIT.txt"))).toBe(true);
       expect(readFileSync(path.join(distRoot, "index.html"), "utf8")).toContain(
         'src="/custom/'
       );
@@ -505,7 +533,7 @@ describe("Build Configuration and Source Verification", () => {
       "<!--#echo var='csp_nonce' encoding='none' -->"
     );
     expect(viteConfig).toContain(
-      'globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"]'
+      'globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2,md}"]'
     );
     expect(viteConfig).toContain(
       'globIgnores: ["**/*.html", "theme-color.js", "document-language.js"]'
