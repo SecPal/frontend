@@ -14,8 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Updated the document language when the selected application locale changes,
-  preventing browsers from offering to translate German content as English.
+- Updated the document language during bootstrap and when the selected
+  application locale changes, preventing browsers from offering to translate
+  German content as English and ensuring locale bootstrap updates are not
+  served from stale server or service-worker caches.
 - Kept the regular sidebar collapsed by default below the 1440 px breakpoint
   so narrow landscape screens retain their available content space while
   preserving each user's saved sidebar preference.
