@@ -124,20 +124,32 @@ describe("system color scheme sync", () => {
   });
 
   it("sets the document language from the detected browser locale before rendering", () => {
-    const originalLanguage = navigator.language;
+    const originalLanguageDescriptor = Object.getOwnPropertyDescriptor(
+      navigator,
+      "language"
+    );
+    const originalDocumentLanguage = document.documentElement.lang;
     Object.defineProperty(navigator, "language", {
       configurable: true,
       value: "de-DE",
     });
     localStorage.removeItem("secpal-locale");
 
-    initializeLocale();
+    try {
+      initializeLocale();
 
-    expect(document.documentElement).toHaveAttribute("lang", "de");
-
-    Object.defineProperty(navigator, "language", {
-      configurable: true,
-      value: originalLanguage,
-    });
+      expect(document.documentElement).toHaveAttribute("lang", "de");
+    } finally {
+      if (originalLanguageDescriptor) {
+        Object.defineProperty(
+          navigator,
+          "language",
+          originalLanguageDescriptor
+        );
+      } else {
+        Reflect.deleteProperty(navigator, "language");
+      }
+      document.documentElement.lang = originalDocumentLanguage;
+    }
   });
 });

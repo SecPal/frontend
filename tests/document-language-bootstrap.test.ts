@@ -96,7 +96,7 @@ describe("document language bootstrap", () => {
     ).not.toThrow();
     expect(
       executeBootstrap({ languageError: new Error("language unavailable") })
-    ).toBe("en");
+    ).toBe(defaultLocale);
   });
 
   it("loads before the application bootstrap", () => {
