@@ -62,9 +62,9 @@
   Header always set Origin-Agent-Cluster "?1"
   Header always set X-Permitted-Cross-Domain-Policies "none"
 
-  # Keep the HTML shell, recovery bootstrap, service worker, and manifest fresh
-  # so security and PWA updates activate quickly instead of sitting behind
-  # intermediary caches.
+  # Keep the HTML shell, early bootstraps, service worker, and manifest fresh
+  # so security, locale, and PWA updates activate quickly instead of sitting
+  # behind intermediary caches.
   <Files "index.html">
     Header always set Cache-Control "no-cache, no-store, must-revalidate"
   </Files>
@@ -83,6 +83,10 @@
   </Files>
 
   <Files "theme-color.js">
+    Header always set Cache-Control "no-cache, no-store, must-revalidate"
+  </Files>
+
+  <Files "document-language.js">
     Header always set Cache-Control "no-cache, no-store, must-revalidate"
   </Files>
 </IfModule>

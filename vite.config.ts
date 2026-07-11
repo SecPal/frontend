@@ -225,7 +225,7 @@ export default defineConfig(({ mode, command }) => {
         },
         injectManifest: {
           globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"],
-          globIgnores: ["**/*.html", "theme-color.js"],
+          globIgnores: ["**/*.html", "theme-color.js", "document-language.js"],
           manifestTransforms: [
             async (entries) => ({
               manifest: entries.filter(
@@ -285,7 +285,7 @@ export default defineConfig(({ mode, command }) => {
         },
         workbox: {
           globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"],
-          globIgnores: ["**/*.html", "theme-color.js"],
+          globIgnores: ["**/*.html", "theme-color.js", "document-language.js"],
           navigateFallback: null,
           cleanupOutdatedCaches: true,
           runtimeCaching: buildPwaRuntimeCaching(),
