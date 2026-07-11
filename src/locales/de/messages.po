@@ -861,7 +861,7 @@ msgstr "Einheit"
 #: src/components/OrganizationalUnitTree.tsx
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Not assignable"
-msgstr ""
+msgstr "Nicht zuweisbar"
 
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -3793,7 +3793,7 @@ msgstr "Die Passkey-Anmeldung wurde abgebrochen."
 #: src/components/OrganizationalUnitTree.tsx
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Assignable"
-msgstr ""
+msgstr "Zuweisbar"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Create a new root organizational unit."
