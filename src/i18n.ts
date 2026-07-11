@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal Contributors
+// SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { i18n } from "@lingui/core";
@@ -22,11 +22,15 @@ const localeMessages = {
 i18n.load(defaultLocale, localeMessages[defaultLocale]);
 i18n.activate(defaultLocale);
 
-export async function activateLocale(locale: string) {
+export function activateLocale(locale: string): void {
   const selectedLocale: Locale =
     locale in locales ? (locale as Locale) : defaultLocale;
   i18n.load(selectedLocale, localeMessages[selectedLocale]);
   i18n.activate(selectedLocale);
+
+  if (typeof document !== "undefined") {
+    document.documentElement.lang = selectedLocale;
+  }
 }
 
 // Detect locale from browser or localStorage
@@ -58,6 +62,14 @@ export function detectLocale(): string {
   }
 
   return defaultLocale;
+}
+
+export function initializeLocale(): void {
+  try {
+    void activateLocale(detectLocale());
+  } catch (error) {
+    console.error("Failed to initialize i18n locale:", error);
+  }
 }
 
 // Save locale preference

@@ -508,7 +508,7 @@ describe("Build Configuration and Source Verification", () => {
       'globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2}"]'
     );
     expect(viteConfig).toContain(
-      'globIgnores: ["**/*.html", "theme-color.js"]'
+      'globIgnores: ["**/*.html", "theme-color.js", "document-language.js"]'
     );
     expect(viteConfig).toContain("navigateFallback: null");
     expect(viteConfig).toContain("nonceBearingHtmlShellPattern");
@@ -528,13 +528,15 @@ describe("Build Configuration and Source Verification", () => {
     );
   });
 
-  it("keeps the recovery bootstrap out of service-worker caches", () => {
+  it("keeps early bootstrap scripts out of service-worker caches", () => {
     const serviceWorker = readRepoFile("src/sw.ts");
     const viteConfig = readRepoFile("vite.config.ts");
 
     expect(viteConfig).toContain('"theme-color.js"');
+    expect(viteConfig).toContain('"document-language.js"');
     expect(serviceWorker).toContain("isCacheableStaticAssetRequest");
     expect(serviceWorker).toContain('pathname !== "/theme-color.js"');
+    expect(serviceWorker).toContain('pathname !== "/document-language.js"');
   });
 
   it("uses an external theme-color bootstrap so CSP can block inline scripts", () => {
@@ -588,6 +590,7 @@ describe("Build Configuration and Source Verification", () => {
     expect(htaccess).toContain('Files "source-offer.json"');
     expect(htaccess).toContain('Cache-Control "no-cache, must-revalidate"');
     expect(htaccess).toContain('Files "theme-color.js"');
+    expect(htaccess).toContain('Files "document-language.js"');
     expect(htaccess).toContain(
       'Cache-Control "no-cache, no-store, must-revalidate"'
     );
@@ -598,6 +601,7 @@ describe("Build Configuration and Source Verification", () => {
     expect(nginxConfig).toContain("location = /manifest.webmanifest");
     expect(nginxConfig).toContain("location = /source-offer.json");
     expect(nginxConfig).toContain("location = /theme-color.js");
+    expect(nginxConfig).toContain("location = /document-language.js");
     expect(nginxConfig).toContain("default_type application/json");
   });
 

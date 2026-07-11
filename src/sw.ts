@@ -73,6 +73,7 @@ function isCacheableStaticAssetRequest(request: Request): boolean {
 
   return (
     pathname !== "/theme-color.js" &&
+    pathname !== "/document-language.js" &&
     (request.destination === "image" ||
       request.destination === "style" ||
       request.destination === "script" ||
