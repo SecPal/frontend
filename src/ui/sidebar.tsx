@@ -36,6 +36,19 @@ const SIDEBAR_WIDTH = "16rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
+const SIDEBAR_DEFAULT_OPEN_MEDIA_QUERY = "(min-width: 90rem)";
+
+function getDefaultSidebarOpen(): boolean {
+  if (typeof window === "undefined") {
+    return true;
+  }
+
+  if (typeof window.matchMedia === "function") {
+    return window.matchMedia(SIDEBAR_DEFAULT_OPEN_MEDIA_QUERY).matches;
+  }
+
+  return window.innerWidth >= 1440;
+}
 
 function getSidebarOpenFromCookie(defaultOpen: boolean): boolean {
   if (typeof document === "undefined") {
@@ -88,7 +101,7 @@ export function useSidebar() {
 }
 
 export function SidebarProvider({
-  defaultOpen = true,
+  defaultOpen: defaultOpenProp,
   open: openProp,
   onOpenChange: setOpenProp,
   className,
@@ -101,6 +114,7 @@ export function SidebarProvider({
   onOpenChange?: (open: boolean) => void;
 }) {
   const isMobile = useIsMobile();
+  const defaultOpen = defaultOpenProp ?? getDefaultSidebarOpen();
   const [openMobile, setOpenMobile] = React.useState(false);
   const [uncontrolledOpen, setUncontrolledOpen] = React.useState(() =>
     getSidebarOpenFromCookie(defaultOpen)

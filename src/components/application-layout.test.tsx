@@ -216,7 +216,7 @@ describe("ApplicationLayout", () => {
     clearSidebarStateCookie();
     Object.defineProperty(window, "innerWidth", {
       configurable: true,
-      value: 1024,
+      value: 1440,
     });
     i18n.load("en", {});
     i18n.activate("en");

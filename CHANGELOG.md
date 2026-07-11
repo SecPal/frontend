@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Kept the regular sidebar collapsed by default below the 1440 px breakpoint
+  so narrow landscape screens retain their available content space while
+  preserving each user's saved sidebar preference.
 - Stabilized the Android instance-switch cleanup regression test by awaiting the
   native runtime reset before checking asynchronous browser push cleanup, and
   reset auth-storage mock history after test setup so cleanup assertions cannot
