@@ -18,11 +18,29 @@ interface SecPalEnterprisePlugin {
   openOssLicenses?(): Promise<void>;
 }
 
+interface CapacitorPluginHeader {
+  readonly name: string;
+  readonly methods: readonly { readonly name: string }[];
+}
+
 const secPalEnterprisePlugin =
   registerPlugin<SecPalEnterprisePlugin>("SecPalEnterprise");
 
 function isOssLicensesAvailable(): boolean {
-  return Capacitor.isPluginAvailable("SecPalEnterprise");
+  const pluginHeaders = (
+    Capacitor as typeof Capacitor & {
+      PluginHeaders?: readonly CapacitorPluginHeader[];
+    }
+  ).PluginHeaders;
+
+  return (
+    Capacitor.isPluginAvailable("SecPalEnterprise") &&
+    pluginHeaders?.some(
+      (header) =>
+        header.name === "SecPalEnterprise" &&
+        header.methods.some((method) => method.name === "openOssLicenses")
+    ) === true
+  );
 }
 
 export const SecPalEnterprise: SecPalEnterpriseFacade = {

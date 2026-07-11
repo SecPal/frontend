@@ -9,6 +9,10 @@ const nativeEnterprisePluginMock = vi.hoisted(() => ({
 
 const capacitorMock = vi.hoisted(() => ({
   isPluginAvailable: vi.fn(() => false),
+  PluginHeaders: [] as Array<{
+    name: string;
+    methods: Array<{ name: string }>;
+  }>,
 }));
 
 vi.mock("@capacitor/core", () => ({
@@ -26,6 +30,7 @@ afterEach(() => {
   delete nativeGlobal.SecPalNativeAuthBridge;
   capacitorMock.isPluginAvailable.mockReset();
   capacitorMock.isPluginAvailable.mockReturnValue(false);
+  capacitorMock.PluginHeaders = [];
   nativeEnterprisePluginMock.openOssLicenses = undefined;
 });
 
@@ -89,6 +94,12 @@ describe("native facade surface", () => {
   it("opens OSS notices through the native enterprise capability when available", async () => {
     const openOssLicenses = vi.fn().mockResolvedValue(undefined);
     capacitorMock.isPluginAvailable.mockReturnValue(true);
+    capacitorMock.PluginHeaders = [
+      {
+        name: "SecPalEnterprise",
+        methods: [{ name: "openOssLicenses" }],
+      },
+    ];
     nativeEnterprisePluginMock.openOssLicenses = openOssLicenses;
 
     expect(nativeFacades.SecPalEnterprise.isOssLicensesAvailable()).toBe(true);
@@ -98,8 +109,32 @@ describe("native facade surface", () => {
     expect(openOssLicenses).toHaveBeenCalledOnce();
   });
 
+  it("hides OSS notices when the native plugin lacks the notices method", async () => {
+    const openOssLicenses = vi.fn().mockResolvedValue(undefined);
+    capacitorMock.isPluginAvailable.mockReturnValue(true);
+    capacitorMock.PluginHeaders = [
+      {
+        name: "SecPalEnterprise",
+        methods: [{ name: "getManagedState" }],
+      },
+    ];
+    nativeEnterprisePluginMock.openOssLicenses = openOssLicenses;
+
+    expect(nativeFacades.SecPalEnterprise.isOssLicensesAvailable()).toBe(false);
+    await expect(
+      nativeFacades.SecPalEnterprise.openOssLicenses()
+    ).resolves.toBe(false);
+    expect(openOssLicenses).not.toHaveBeenCalled();
+  });
+
   it("returns false when the native OSS notices capability rejects", async () => {
     capacitorMock.isPluginAvailable.mockReturnValue(true);
+    capacitorMock.PluginHeaders = [
+      {
+        name: "SecPalEnterprise",
+        methods: [{ name: "openOssLicenses" }],
+      },
+    ];
     nativeEnterprisePluginMock.openOssLicenses = vi
       .fn()
       .mockRejectedValue(new Error("Native notices activity is unavailable"));
