@@ -76,7 +76,9 @@ export default function SiteCreate() {
           listOrganizationalUnits({ per_page: 100 }),
         ]);
         setCustomers(customersData.data);
-        setOrgUnits(orgUnitsData.data);
+        setOrgUnits(
+          orgUnitsData.data.filter((unit) => unit.is_assignable !== false)
+        );
       } catch (err) {
         setError(
           err instanceof Error

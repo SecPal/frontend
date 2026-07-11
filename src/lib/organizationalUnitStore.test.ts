@@ -50,6 +50,19 @@ describe("buildOrganizationalUnitCacheEntry", () => {
     expect(entry.updated_at).toBe("2025-01-02T00:00:00Z");
   });
 
+  it("preserves independent active and assignable status flags", () => {
+    const entry = buildOrganizationalUnitCacheEntry({
+      ...baseUnit,
+      is_active: false,
+      is_assignable: true,
+    });
+
+    expect(entry).toMatchObject({
+      is_active: false,
+      is_assignable: true,
+    });
+  });
+
   it("omits description and metadata fields from the cache entry", () => {
     const entry = buildOrganizationalUnitCacheEntry(baseUnit);
 

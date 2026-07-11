@@ -313,7 +313,9 @@ export function EmployeeCreate() {
     async function loadOrganizationalUnits() {
       try {
         const response = await listOrganizationalUnits();
-        setOrganizationalUnits(response.data);
+        setOrganizationalUnits(
+          response.data.filter((unit) => unit.is_assignable !== false)
+        );
       } catch (err) {
         console.error("Failed to load organizational units:", err);
       } finally {

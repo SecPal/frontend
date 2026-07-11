@@ -31,6 +31,10 @@ export interface OrganizationalUnit {
   id: string;
   type: OrganizationalUnitType;
   name: string;
+  /** Whether the unit is administratively active. */
+  is_active?: boolean;
+  /** Whether the unit can receive new operational assignments. */
+  is_assignable?: boolean;
   is_legal_entity: boolean;
   is_establishment: boolean;
   custom_type_name?: string | null;
@@ -112,6 +116,8 @@ export interface OrganizationalUnitPaginatedResponse {
 export interface CreateOrganizationalUnitRequest {
   name: string;
   type: OrganizationalUnitType;
+  is_active?: boolean;
+  is_assignable?: boolean;
   is_legal_entity?: boolean;
   is_establishment?: boolean;
   custom_type_name?: string | null;
@@ -126,6 +132,8 @@ export interface CreateOrganizationalUnitRequest {
 export interface UpdateOrganizationalUnitRequest {
   name?: string;
   type?: OrganizationalUnitType;
+  is_active?: boolean;
+  is_assignable?: boolean;
   is_legal_entity?: boolean;
   is_establishment?: boolean;
   custom_type_name?: string | null;

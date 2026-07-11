@@ -136,6 +136,41 @@ describe("OrganizationalUnitFormDialog", () => {
   });
 
   describe("Create mode", () => {
+    it("submits active and assignable status independently", async () => {
+      const user = userEvent.setup();
+      vi.mocked(createOrganizationalUnit).mockResolvedValue(mockUnit);
+
+      renderWithI18n(
+        <OrganizationalUnitFormDialog
+          open={true}
+          onClose={mockOnClose}
+          mode="create"
+          onSuccess={mockOnSuccess}
+        />
+      );
+
+      await user.type(
+        screen.getByPlaceholderText(/e\.g\., Berlin Branch/i),
+        "Independent status unit"
+      );
+      await user.click(
+        screen.getByRole("checkbox", {
+          name: "Assignable for new assignments",
+        })
+      );
+
+      submitDialogForm(/create/i);
+
+      await waitFor(() => {
+        expect(createOrganizationalUnit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            is_active: true,
+            is_assignable: false,
+          })
+        );
+      });
+    });
+
     it("uses the precise German label for legal entities", () => {
       i18n.load("de", deMessages);
       i18n.activate("de");
@@ -216,6 +251,8 @@ describe("OrganizationalUnitFormDialog", () => {
           type: "branch",
           description: null,
           parent_id: "parent-1",
+          is_active: true,
+          is_assignable: true,
           is_legal_entity: false,
           is_establishment: false,
         });
@@ -430,6 +467,8 @@ describe("OrganizationalUnitFormDialog", () => {
           name: "Updated Branch",
           type: "branch",
           description: "Main branch in Berlin",
+          is_active: true,
+          is_assignable: true,
           is_legal_entity: false,
           is_establishment: true,
         });

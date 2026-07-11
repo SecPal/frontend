@@ -52,6 +52,8 @@ describe("useOrganizationalUnitsWithOffline", () => {
       id: "unit-1",
       type: "branch",
       name: "Berlin Branch (cached)",
+      is_active: false,
+      is_assignable: true,
       is_legal_entity: false,
       is_establishment: false,
       created_at: "2025-01-01T00:00:00Z",
@@ -188,6 +190,10 @@ describe("useOrganizationalUnitsWithOffline", () => {
 
       expect(result.current.units).toHaveLength(1);
       expect(result.current.units[0]!.name).toBe("Berlin Branch (cached)");
+      expect(result.current.units[0]).toMatchObject({
+        is_active: false,
+        is_assignable: true,
+      });
       expect(result.current.isStale).toBe(true);
       expect(result.current.isOffline).toBe(false);
       expect(result.current.error).toBeNull(); // No error - we have cache
