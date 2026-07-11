@@ -7,6 +7,7 @@ import {
   syncSystemColorScheme,
 } from "./lib/systemColorScheme";
 import { AppWithI18n } from "./main";
+import { initializeLocale } from "./i18n";
 import { render, waitFor } from "@testing-library/react";
 
 function createMatchMediaStub(initialMatches: boolean) {
@@ -119,6 +120,24 @@ describe("system color scheme sync", () => {
 
     await waitFor(() => {
       expect(bootstrapReadyListener).toHaveBeenCalledOnce();
+    });
+  });
+
+  it("sets the document language from the detected browser locale before rendering", () => {
+    const originalLanguage = navigator.language;
+    Object.defineProperty(navigator, "language", {
+      configurable: true,
+      value: "de-DE",
+    });
+    localStorage.removeItem("secpal-locale");
+
+    initializeLocale();
+
+    expect(document.documentElement).toHaveAttribute("lang", "de");
+
+    Object.defineProperty(navigator, "language", {
+      configurable: true,
+      value: originalLanguage,
     });
   });
 });

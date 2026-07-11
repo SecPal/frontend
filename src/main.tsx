@@ -6,7 +6,7 @@ import { createRoot } from "react-dom/client";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import App from "./App";
-import { activateLocale, detectLocale } from "./i18n";
+import { initializeLocale } from "./i18n";
 import { RuntimeStyleCspSupport } from "./lib/RuntimeStyleCspSupport";
 import {
   installSystemColorSchemeSync,
@@ -16,18 +16,6 @@ import { initWebVitals } from "./lib/webVitals";
 import "./index.css";
 
 export function AppWithI18n() {
-  useEffect(() => {
-    const initLocale = async () => {
-      try {
-        const locale = detectLocale();
-        await activateLocale(locale);
-      } catch (err) {
-        console.error("Failed to initialize i18n locale:", err);
-      }
-    };
-    initLocale();
-  }, []);
-
   useEffect(() => installSystemColorSchemeSync(), []);
 
   useEffect(() => {
@@ -50,6 +38,7 @@ if (typeof window !== "undefined" && !isTest) {
     throw new Error("Root element not found");
   }
 
+  initializeLocale();
   syncSystemColorScheme();
 
   // Cache root instance to avoid HMR warning

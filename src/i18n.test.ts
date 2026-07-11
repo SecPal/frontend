@@ -24,4 +24,12 @@ describe("i18n catalog loading", () => {
     await activateLocale("unsupported");
     expect(i18n.locale).toBe(defaultLocale);
   });
+
+  it("keeps the document language in sync with the active locale", async () => {
+    await activateLocale("de");
+    expect(document.documentElement).toHaveAttribute("lang", "de");
+
+    await activateLocale("unsupported");
+    expect(document.documentElement).toHaveAttribute("lang", defaultLocale);
+  });
 });
