@@ -7,10 +7,12 @@ import * as nativeFacades from "./index";
 
 const nativeGlobal = globalThis as typeof globalThis & {
   SecPalNativeAuthBridge?: unknown;
+  Capacitor?: unknown;
 };
 
 afterEach(() => {
   delete nativeGlobal.SecPalNativeAuthBridge;
+  delete nativeGlobal.Capacitor;
 });
 
 describe("native facade surface", () => {
@@ -29,6 +31,9 @@ describe("native facade surface", () => {
     await expect(nativeFacades.SecPalEnterprise.getEnrollment()).resolves.toBe(
       null
     );
+    await expect(
+      nativeFacades.SecPalEnterprise.openOssLicenses()
+    ).resolves.toBe(false);
     await expect(nativeFacades.SecPalPush.getRegistration()).resolves.toBe(
       null
     );
@@ -64,6 +69,20 @@ describe("native facade surface", () => {
     await expect(
       nativeFacades.SecPalRuntimeBootstrap.clearRuntimeBootstrap()
     ).resolves.toBeUndefined();
+  });
+
+  it("opens OSS notices through the native enterprise capability when available", async () => {
+    const openOssLicenses = vi.fn().mockResolvedValue(undefined);
+    nativeGlobal.Capacitor = {
+      Plugins: {
+        SecPalEnterprise: { openOssLicenses },
+      },
+    };
+
+    await expect(
+      nativeFacades.SecPalEnterprise.openOssLicenses()
+    ).resolves.toBe(true);
+    expect(openOssLicenses).toHaveBeenCalledOnce();
   });
 
   it("delegates runtime bootstrap calls to the shared native auth bridge without exposing bearer tokens", async () => {

@@ -66,6 +66,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added an Android-only OSS-notices control on the source-license screen that
+  opens the native notices activity when the `SecPalEnterprise` capability is
+  available.
 - Added independent administrative-active and assignment-eligibility controls
   and status badges for organizational units, preserving both flags in offline
   data and using assignment eligibility for new employee and site assignments.
