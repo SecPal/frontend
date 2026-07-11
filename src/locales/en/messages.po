@@ -55,6 +55,10 @@ msgstr "Edit Employee"
 msgid "Loading employee qualifications"
 msgstr "Loading employee qualifications"
 
+#: src/components/OpenOssLicensesButton.tsx
+msgid "Open source licenses"
+msgstr "Open source licenses"
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Activity Information"
 msgstr "Activity Information"

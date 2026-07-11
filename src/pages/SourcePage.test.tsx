@@ -11,11 +11,20 @@ import { messages as deMessages } from "@/locales/de/messages.mjs";
 import { useAuth } from "@/hooks/useAuth";
 import { SourcePage } from "./SourcePage";
 
+const nativeFacadeMock = vi.hoisted(() => ({
+  isOssLicensesAvailable: vi.fn(() => false),
+  openOssLicenses: vi.fn(),
+}));
+
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: vi.fn(() => ({
     isAuthenticated: false,
     isLoading: false,
   })),
+}));
+
+vi.mock("@/native", () => ({
+  SecPalEnterprise: nativeFacadeMock,
 }));
 
 function mockSourceOfferRequests(options?: {
@@ -68,12 +77,37 @@ function renderWithProviders(
 
 describe("SourcePage", () => {
   beforeEach(() => {
+    nativeFacadeMock.isOssLicensesAvailable.mockReset();
+    nativeFacadeMock.isOssLicensesAvailable.mockReturnValue(false);
+    nativeFacadeMock.openOssLicenses.mockReset();
     vi.mocked(useAuth).mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
     } as ReturnType<typeof useAuth>);
     vi.spyOn(globalThis, "fetch");
     mockSourceOfferRequests();
+  });
+
+  it("opens native OSS notices from the source page when the capability is available", async () => {
+    const user = userEvent.setup();
+    nativeFacadeMock.isOssLicensesAvailable.mockReturnValue(true);
+    renderWithProviders();
+
+    await user.click(
+      await screen.findByRole("button", { name: /open source licenses/i })
+    );
+
+    expect(nativeFacadeMock.openOssLicenses).toHaveBeenCalledOnce();
+  });
+
+  it("hides native OSS notices when the capability is unavailable", async () => {
+    renderWithProviders();
+
+    await screen.findByRole("heading", { name: /source code and license/i });
+
+    expect(
+      screen.queryByRole("button", { name: /open source licenses/i })
+    ).not.toBeInTheDocument();
   });
 
   it("keeps the source page on canonical theme tokens", async () => {

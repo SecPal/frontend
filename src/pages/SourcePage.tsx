@@ -15,6 +15,7 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Footer } from "@/components/Footer";
+import { OpenOssLicensesButton } from "@/components/OpenOssLicensesButton";
 import {
   LoginLanguageSwitcher,
   LoginLegalMenu,
@@ -301,6 +302,7 @@ export function SourcePage() {
                 </p>
 
                 <div className="flex flex-wrap gap-3">
+                  <OpenOssLicensesButton />
                   <a
                     href="https://www.gnu.org/licenses/agpl-3.0.html"
                     target="_blank"
