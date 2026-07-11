@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 (function () {
-  var locale = "en";
+  var locale;
 
   function getBrowserLocale() {
     try {
