@@ -312,7 +312,10 @@ export function EmployeeCreate() {
   useEffect(() => {
     async function loadOrganizationalUnits() {
       try {
-        const response = await listOrganizationalUnits();
+        const response = await listOrganizationalUnits({
+          is_assignable: true,
+          per_page: 100,
+        });
         setOrganizationalUnits(
           response.data.filter((unit) => unit.is_assignable !== false)
         );

@@ -164,6 +164,7 @@ describe("SiteCreate", () => {
       expect(
         organizationalUnitApi.listOrganizationalUnits
       ).toHaveBeenCalledWith({
+        is_assignable: true,
         per_page: 100,
       });
     });

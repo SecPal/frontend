@@ -105,11 +105,17 @@ export function EmployeeEdit() {
     status: "pre_contract",
     contract_type: "full_time",
   });
+  const [currentOrganizationalUnit, setCurrentOrganizationalUnit] = useState<
+    Employee["organizational_unit"] | null
+  >(null);
 
   useEffect(() => {
     async function loadOrganizationalUnits() {
       try {
-        const response = await listOrganizationalUnits();
+        const response = await listOrganizationalUnits({
+          is_assignable: true,
+          per_page: 100,
+        });
         setOrganizationalUnits(
           response.data.filter((unit) => unit.is_assignable !== false)
         );
@@ -150,6 +156,7 @@ export function EmployeeEdit() {
           status: employee.status,
           contract_type: employee.contract_type || "full_time",
         });
+        setCurrentOrganizationalUnit(employee.organizational_unit ?? null);
         const addressRows = mergeAddressBaseList(
           employee.addresses,
           employee.current_address
@@ -610,6 +617,17 @@ export function EmployeeEdit() {
                             />
                           </SelectTrigger>
                           <SelectContent>
+                            {currentOrganizationalUnit &&
+                            !organizationalUnits.some(
+                              (unit) => unit.id === currentOrganizationalUnit.id
+                            ) ? (
+                              <SelectItem
+                                value={currentOrganizationalUnit.id}
+                                data-value={currentOrganizationalUnit.id}
+                              >
+                                {currentOrganizationalUnit.name}
+                              </SelectItem>
+                            ) : null}
                             {organizationalUnits.map((unit) => (
                               <SelectItem
                                 key={unit.id}
