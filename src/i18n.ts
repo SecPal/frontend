@@ -22,7 +22,7 @@ const localeMessages = {
 i18n.load(defaultLocale, localeMessages[defaultLocale]);
 i18n.activate(defaultLocale);
 
-export async function activateLocale(locale: string) {
+export function activateLocale(locale: string): void {
   const selectedLocale: Locale =
     locale in locales ? (locale as Locale) : defaultLocale;
   i18n.load(selectedLocale, localeMessages[selectedLocale]);

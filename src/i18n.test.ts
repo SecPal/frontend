@@ -3,9 +3,13 @@
 
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { i18n } from "@lingui/core";
-import { activateLocale, defaultLocale } from "./i18n";
+import { activateLocale, defaultLocale, initializeLocale } from "./i18n";
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("i18n catalog loading", () => {
   it("keeps locale catalog loading on a single static path", async () => {
@@ -31,5 +35,22 @@ describe("i18n catalog loading", () => {
 
     await activateLocale("unsupported");
     expect(document.documentElement).toHaveAttribute("lang", defaultLocale);
+  });
+
+  it("reports locale activation failures during initialization", () => {
+    const error = new Error("catalog activation failed");
+    vi.spyOn(i18n, "load").mockImplementationOnce(() => {
+      throw error;
+    });
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    initializeLocale();
+
+    expect(consoleError).toHaveBeenCalledWith(
+      "Failed to initialize i18n locale:",
+      error
+    );
   });
 });

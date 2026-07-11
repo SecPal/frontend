@@ -4,17 +4,23 @@
 (function () {
   var locale = "en";
 
+  function getBrowserLocale() {
+    try {
+      return navigator.language.split("-")[0] === "de" ? "de" : "en";
+    } catch {
+      return "en";
+    }
+  }
+
   try {
     var storedLocale = window.localStorage.getItem("secpal-locale");
     if (storedLocale === "de" || storedLocale === "en") {
       locale = storedLocale;
-    } else if (navigator.language.split("-")[0] === "de") {
-      locale = "de";
+    } else {
+      locale = getBrowserLocale();
     }
   } catch {
-    if (navigator.language.split("-")[0] === "de") {
-      locale = "de";
-    }
+    locale = getBrowserLocale();
   }
 
   document.documentElement.lang = locale;
