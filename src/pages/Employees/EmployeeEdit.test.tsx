@@ -179,9 +179,10 @@ describe("EmployeeEdit", () => {
 
     renderWithProviders("emp-1");
 
-    expect(
-      organizationalUnitApi.listOrganizationalUnits
-    ).toHaveBeenCalledWith({ is_assignable: true, per_page: 100 });
+    expect(organizationalUnitApi.listOrganizationalUnits).toHaveBeenCalledWith({
+      is_assignable: true,
+      per_page: 100,
+    });
     expect(
       await screen.findByRole("combobox", { name: /organizational unit/i })
     ).toHaveTextContent("Engineering");

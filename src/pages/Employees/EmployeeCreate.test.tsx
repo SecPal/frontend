@@ -164,9 +164,10 @@ describe("EmployeeCreate", () => {
 
     renderWithProviders(<EmployeeCreate />);
 
-    expect(
-      organizationalUnitApi.listOrganizationalUnits
-    ).toHaveBeenCalledWith({ is_assignable: true, per_page: 100 });
+    expect(organizationalUnitApi.listOrganizationalUnits).toHaveBeenCalledWith({
+      is_assignable: true,
+      per_page: 100,
+    });
 
     expect(await screen.findByText("Inactive but assignable")).toBeVisible();
     expect(
