@@ -137,6 +137,44 @@ describe("EmployeeCreate", () => {
     expect(screen.getByLabelText(/organizational unit/i)).toBeInTheDocument();
   });
 
+  it("uses is_assignable, not is_active, for organizational-unit assignments", async () => {
+    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
+      data: [
+        {
+          ...mockOrganizationalUnits[0]!,
+          name: "Inactive but assignable",
+          is_active: false,
+          is_assignable: true,
+        },
+        {
+          ...mockOrganizationalUnits[1]!,
+          name: "Active but unavailable",
+          is_active: true,
+          is_assignable: false,
+        },
+      ],
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 100,
+        total: 2,
+        root_unit_ids: ["unit-1", "unit-2"],
+      },
+    });
+
+    renderWithProviders(<EmployeeCreate />);
+
+    expect(organizationalUnitApi.listOrganizationalUnits).toHaveBeenCalledWith({
+      is_assignable: true,
+      per_page: 100,
+    });
+
+    expect(await screen.findByText("Inactive but assignable")).toBeVisible();
+    expect(
+      screen.queryByText("Active but unavailable")
+    ).not.toBeInTheDocument();
+  });
+
   it("should load organizational units on mount", async () => {
     renderWithProviders(<EmployeeCreate />);
 

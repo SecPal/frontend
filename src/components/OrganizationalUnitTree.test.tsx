@@ -326,6 +326,46 @@ describe("OrganizationalUnitTree", () => {
     expect(screen.getByText("North Region")).toBeInTheDocument();
   });
 
+  it.each([
+    [true, true, "Active", "Assignable"],
+    [true, false, "Active", "Not assignable"],
+    [false, true, "Inactive", "Assignable"],
+    [false, false, "Inactive", "Not assignable"],
+  ])(
+    "shows active=%s and assignable=%s as independent statuses",
+    (isActive, isAssignable, activeLabel, assignableLabel) => {
+      vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+        ...mockHookResponse,
+        units: [
+          {
+            ...mockUnits[0]!,
+            is_active: isActive,
+            is_assignable: isAssignable,
+          },
+        ],
+        rootUnitIds: ["unit-1"],
+      });
+
+      renderWithI18n(<OrganizationalUnitTree />);
+
+      expect(screen.getByText(activeLabel)).toBeInTheDocument();
+      expect(screen.getByText(assignableLabel)).toBeInTheDocument();
+    }
+  );
+
+  it("treats omitted status flags as active and assignable", () => {
+    vi.mocked(useOrganizationalUnitsWithOffline).mockReturnValue({
+      ...mockHookResponse,
+      units: [mockUnits[0]!],
+      rootUnitIds: ["unit-1"],
+    });
+
+    renderWithI18n(<OrganizationalUnitTree />);
+
+    expect(screen.getByText("Active")).toBeInTheDocument();
+    expect(screen.getByText("Assignable")).toBeInTheDocument();
+  });
+
   it("keeps tree rows, empty state, and error state on canonical theme tokens", async () => {
     const { rerender, container } = renderWithI18n(<OrganizationalUnitTree />);
 

@@ -73,6 +73,8 @@ interface FormData {
   name: string;
   type: OrganizationalUnitType;
   description: string;
+  isActive: boolean;
+  isAssignable: boolean;
   isLegalEntity: boolean;
   isEstablishment: boolean;
 }
@@ -101,6 +103,8 @@ function OrganizationalUnitFormDialogContent({
         name: unit.name,
         type: unit.type,
         description: unit.description || "",
+        isActive: unit.is_active ?? true,
+        isAssignable: unit.is_assignable ?? true,
         isLegalEntity: unit.is_legal_entity,
         isEstablishment: unit.is_establishment,
       };
@@ -111,6 +115,8 @@ function OrganizationalUnitFormDialogContent({
       name: "",
       type: defaultType || "branch",
       description: "",
+      isActive: true,
+      isAssignable: true,
       isLegalEntity: false,
       isEstablishment: false,
     };
@@ -160,6 +166,8 @@ function OrganizationalUnitFormDialogContent({
           type: formData.type,
           description: formData.description.trim() || null,
           parent_id: parentId || null,
+          is_active: formData.isActive,
+          is_assignable: formData.isAssignable,
           is_legal_entity: formData.isLegalEntity,
           is_establishment: formData.isEstablishment,
         };
@@ -172,6 +180,8 @@ function OrganizationalUnitFormDialogContent({
           name: formData.name.trim(),
           type: formData.type,
           description: formData.description.trim() || null,
+          is_active: formData.isActive,
+          is_assignable: formData.isAssignable,
           is_legal_entity: formData.isLegalEntity,
           is_establishment: formData.isEstablishment,
         };
@@ -275,6 +285,49 @@ function OrganizationalUnitFormDialogContent({
           )}
 
           <div className="space-y-6">
+            <Field>
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id="organizational-unit-is-active"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) =>
+                    handleChange("isActive", checked === true)
+                  }
+                  disabled={isSubmitting}
+                />
+                <FieldLabel htmlFor="organizational-unit-is-active">
+                  <Trans>Administratively Active</Trans>
+                </FieldLabel>
+              </div>
+              <FieldDescription>
+                <Trans>
+                  Controls whether this unit is administratively active.
+                </Trans>
+              </FieldDescription>
+            </Field>
+
+            <Field>
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id="organizational-unit-is-assignable"
+                  checked={formData.isAssignable}
+                  onCheckedChange={(checked) =>
+                    handleChange("isAssignable", checked === true)
+                  }
+                  disabled={isSubmitting}
+                />
+                <FieldLabel htmlFor="organizational-unit-is-assignable">
+                  <Trans>Assignable for new assignments</Trans>
+                </FieldLabel>
+              </div>
+              <FieldDescription>
+                <Trans>
+                  Controls whether this unit can receive new operational
+                  assignments.
+                </Trans>
+              </FieldDescription>
+            </Field>
+
             <Field>
               <FieldLabel htmlFor="organizational-unit-name">
                 <Trans>Name</Trans>

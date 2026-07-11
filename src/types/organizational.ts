@@ -11,44 +11,16 @@
  * @see https://github.com/SecPal/.github/blob/main/docs/adr/20251126-organizational-structure-hierarchy.md
  */
 
-/**
- * Organizational unit types for internal company structure
- */
-export type OrganizationalUnitType =
-  | "holding"
-  | "company"
-  | "region"
-  | "branch"
-  | "division"
-  | "department"
-  | "custom";
-
-/**
- * Organizational unit representing internal company structure
- * (e.g., our branches, divisions, departments)
- */
-export interface OrganizationalUnit {
-  id: string;
-  type: OrganizationalUnitType;
-  name: string;
-  is_legal_entity: boolean;
-  is_establishment: boolean;
-  custom_type_name?: string | null;
-  description?: string | null;
-  metadata?: Record<string, unknown> | null;
-  parent?: OrganizationalUnit | null;
-  permissions?: {
-    create_child: boolean;
-    update: boolean;
-    delete: boolean;
-    manage_scopes: boolean;
-  };
-  children?: OrganizationalUnit[];
-  ancestors?: OrganizationalUnit[];
-  descendants?: OrganizationalUnit[];
-  created_at: string;
-  updated_at: string;
-}
+import type { OrganizationalUnit } from "@/types/api";
+export type {
+  CreateOrganizationalUnitRequest,
+  OrganizationalUnit,
+  OrganizationalUnitFilters,
+  OrganizationalUnitPaginatedResponse,
+  OrganizationalUnitPaginationMeta,
+  OrganizationalUnitType,
+  UpdateOrganizationalUnitRequest,
+} from "@/types/api";
 
 /**
  * User's organizational scope for RBAC
@@ -89,56 +61,3 @@ export interface PaginationMeta {
  * Extended pagination metadata for organizational units
  * Includes root_unit_ids for permission-filtered tree views
  */
-export interface OrganizationalUnitPaginationMeta extends PaginationMeta {
-  /**
-   * IDs of units that should be displayed as tree roots.
-   * These are the user's highest accessible units (units without accessible parents).
-   * Used to build permission-filtered tree views.
-   */
-  root_unit_ids: string[];
-}
-
-/**
- * Paginated response specifically for organizational units
- */
-export interface OrganizationalUnitPaginatedResponse {
-  data: OrganizationalUnit[];
-  meta: OrganizationalUnitPaginationMeta;
-}
-
-/**
- * Create organizational unit request
- */
-export interface CreateOrganizationalUnitRequest {
-  name: string;
-  type: OrganizationalUnitType;
-  is_legal_entity?: boolean;
-  is_establishment?: boolean;
-  custom_type_name?: string | null;
-  description?: string | null;
-  metadata?: Record<string, unknown> | null;
-  parent_id?: string | null;
-}
-
-/**
- * Update organizational unit request
- */
-export interface UpdateOrganizationalUnitRequest {
-  name?: string;
-  type?: OrganizationalUnitType;
-  is_legal_entity?: boolean;
-  is_establishment?: boolean;
-  custom_type_name?: string | null;
-  description?: string | null;
-  metadata?: Record<string, unknown> | null;
-}
-
-/**
- * Filter parameters for listing organizational units
- */
-export interface OrganizationalUnitFilters {
-  type?: OrganizationalUnitType;
-  parent_id?: string | null;
-  per_page?: number;
-  page?: number;
-}

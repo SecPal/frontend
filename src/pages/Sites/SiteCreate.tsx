@@ -73,10 +73,12 @@ export default function SiteCreate() {
       try {
         const [customersData, orgUnitsData] = await Promise.all([
           listCustomers({ per_page: 100 }),
-          listOrganizationalUnits({ per_page: 100 }),
+          listOrganizationalUnits({ is_assignable: true, per_page: 100 }),
         ]);
         setCustomers(customersData.data);
-        setOrgUnits(orgUnitsData.data);
+        setOrgUnits(
+          orgUnitsData.data.filter((unit) => unit.is_assignable !== false)
+        );
       } catch (err) {
         setError(
           err instanceof Error

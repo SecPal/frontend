@@ -62,6 +62,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added independent administrative-active and assignment-eligibility controls
+  and status badges for organizational units, preserving both flags in offline
+  data and using assignment eligibility for new employee and site assignments.
 - Added independent Legal Entity and Establishment controls to the
   organizational-unit create/edit dialog, including full request payloads,
   response typing, fixtures, and German catalog translations (US-004).

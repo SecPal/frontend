@@ -62,5 +62,72 @@ export interface components {
     BootstrapResponse: {
       data: components["schemas"]["BootstrapConfiguration"];
     };
+    OrganizationalUnitType:
+      | "holding"
+      | "company"
+      | "region"
+      | "branch"
+      | "division"
+      | "department"
+      | "custom";
+    OrganizationalUnitPermissions: {
+      create_child: boolean;
+      update: boolean;
+      delete: boolean;
+      manage_scopes: boolean;
+    };
+    OrganizationalUnit: {
+      id: string;
+      type: components["schemas"]["OrganizationalUnitType"];
+      name: string;
+      custom_type_name?: string | null;
+      description?: string | null;
+      metadata?: Record<string, unknown> | null;
+      is_legal_entity: boolean;
+      is_establishment: boolean;
+      is_active?: boolean;
+      is_assignable?: boolean;
+      parent?: components["schemas"]["OrganizationalUnit"] | null;
+      permissions?: components["schemas"]["OrganizationalUnitPermissions"];
+      children?: components["schemas"]["OrganizationalUnit"][];
+      ancestors?: components["schemas"]["OrganizationalUnit"][];
+      descendants?: components["schemas"]["OrganizationalUnit"][];
+      created_at: string;
+      updated_at: string;
+    };
+    OrganizationalUnitCreateRequest: {
+      name: string;
+      type: components["schemas"]["OrganizationalUnitType"];
+      custom_type_name?: string | null;
+      description?: string | null;
+      metadata?: Record<string, unknown> | null;
+      parent_id?: string | null;
+      is_legal_entity?: boolean;
+      is_establishment?: boolean;
+      is_active?: boolean;
+      is_assignable?: boolean;
+    };
+    OrganizationalUnitUpdateRequest: {
+      name?: string;
+      type?: components["schemas"]["OrganizationalUnitType"];
+      custom_type_name?: string | null;
+      description?: string | null;
+      metadata?: Record<string, unknown> | null;
+      is_legal_entity?: boolean;
+      is_establishment?: boolean;
+      is_active?: boolean;
+      is_assignable?: boolean;
+    };
+    OrganizationalUnitPaginationMeta: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
+      root_unit_ids: string[];
+    };
+    OrganizationalUnitCollectionResponse: {
+      data: components["schemas"]["OrganizationalUnit"][];
+      meta: components["schemas"]["OrganizationalUnitPaginationMeta"];
+    };
   };
 }

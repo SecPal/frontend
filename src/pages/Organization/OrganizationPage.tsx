@@ -344,6 +344,30 @@ export function OrganizationPage() {
                       {getTypeLabel(selectedUnit.type)}
                     </dd>
                   </div>
+                  <div>
+                    <dt className="text-muted-foreground font-medium">
+                      <Trans>Administrative status</Trans>
+                    </dt>
+                    <dd className="text-foreground">
+                      {selectedUnit.is_active !== false ? (
+                        <Trans>Active</Trans>
+                      ) : (
+                        <Trans>Inactive</Trans>
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground font-medium">
+                      <Trans>Assignment status</Trans>
+                    </dt>
+                    <dd className="text-foreground">
+                      {selectedUnit.is_assignable !== false ? (
+                        <Trans>Assignable</Trans>
+                      ) : (
+                        <Trans>Not assignable</Trans>
+                      )}
+                    </dd>
+                  </div>
                   {selectedUnit.description && (
                     <div>
                       <dt className="text-muted-foreground font-medium">

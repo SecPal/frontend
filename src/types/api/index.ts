@@ -7,4 +7,5 @@ export * from "./auth";
 export * from "./bootstrap";
 export * from "./employees";
 export * from "./notifications";
+export * from "./organizational";
 export * from "./release";

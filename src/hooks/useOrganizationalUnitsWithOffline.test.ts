@@ -52,6 +52,8 @@ describe("useOrganizationalUnitsWithOffline", () => {
       id: "unit-1",
       type: "branch",
       name: "Berlin Branch (cached)",
+      is_active: false,
+      is_assignable: true,
       is_legal_entity: false,
       is_establishment: false,
       created_at: "2025-01-01T00:00:00Z",
@@ -188,10 +190,46 @@ describe("useOrganizationalUnitsWithOffline", () => {
 
       expect(result.current.units).toHaveLength(1);
       expect(result.current.units[0]!.name).toBe("Berlin Branch (cached)");
+      expect(result.current.units[0]).toMatchObject({
+        is_active: false,
+        is_assignable: true,
+      });
       expect(result.current.isStale).toBe(true);
       expect(result.current.isOffline).toBe(false);
       expect(result.current.error).toBeNull(); // No error - we have cache
       expect(result.current.rootUnitIds).toEqual([]); // No metadata when offline
+    });
+
+    it("defaults missing legacy cache status flags to enabled", async () => {
+      vi.mocked(
+        organizationalUnitApi.listOrganizationalUnits
+      ).mockRejectedValue(new Error("API Error"));
+      vi.mocked(
+        organizationalUnitStore.listOrganizationalUnits
+      ).mockResolvedValue([
+        {
+          ...mockCachedUnits[0]!,
+          is_active: undefined,
+          is_assignable: undefined,
+          parent: {
+            id: "parent-1",
+            type: "company",
+            name: "SecPal GmbH",
+          },
+        },
+      ]);
+
+      const { result } = renderHook(() => useOrganizationalUnitsWithOffline());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.units[0]).toMatchObject({
+        is_active: true,
+        is_assignable: true,
+        parent: { is_active: true, is_assignable: true },
+      });
     });
 
     it("should show error when API fails and no cache available", async () => {

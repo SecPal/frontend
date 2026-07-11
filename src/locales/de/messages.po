@@ -68,6 +68,10 @@ msgstr "Wir konnten Ihren Entwurf noch nicht speichern. Bitte überprüfen Sie d
 msgid "Emergency Contact Email"
 msgstr "E-Mail des Notfallkontakts"
 
+#: src/components/OrganizationalUnitFormDialog.tsx
+msgid "Controls whether this unit is administratively active."
+msgstr "Legt fest, ob diese Einheit administrativ aktiv ist."
+
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
@@ -854,6 +858,11 @@ msgstr "Senden einer Bestätigungs-E-Mail..."
 msgid "Unit"
 msgstr "Einheit"
 
+#: src/components/OrganizationalUnitTree.tsx
+#: src/pages/Organization/OrganizationPage.tsx
+msgid "Not assignable"
+msgstr "Nicht zuweisbar"
+
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Customer Number"
@@ -1407,6 +1416,7 @@ msgstr "Anmeldung wird geladen"
 msgid "Enter the expiry date if the residence title is limited."
 msgstr "Geben Sie das Ablaufdatum an, wenn der Aufenthaltstitel befristet ist."
 
+#: src/components/OrganizationalUnitTree.tsx
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
@@ -1415,6 +1425,7 @@ msgstr "Geben Sie das Ablaufdatum an, wenn der Aufenthaltstitel befristet ist."
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
 #: src/pages/Employees/EmployeeStatusOptions.tsx
+#: src/pages/Organization/OrganizationPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Active"
@@ -1782,6 +1793,10 @@ msgstr "Alle Einheiten"
 msgid "Upload File"
 msgstr "Datei hochladen"
 
+#: src/components/OrganizationalUnitFormDialog.tsx
+msgid "Controls whether this unit can receive new operational assignments."
+msgstr "Legt fest, ob diese Einheit neue operative Zuweisungen erhalten kann."
+
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "Cannot Delete \"{unitName}\""
 msgstr "Löschen von \"{unitName}\" nicht möglich"
@@ -1871,6 +1886,10 @@ msgstr "Die unten angezeigten Quellcode-Releases verweisen auf den unveränderli
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Step {0}: {1}"
 msgstr "Schritt {0}: {1}"
+
+#: src/components/OrganizationalUnitFormDialog.tsx
+msgid "Assignable for new assignments"
+msgstr "Für neue Zuweisungen verfügbar"
 
 #: src/components/RouteGuardState.tsx
 msgid "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
@@ -2418,6 +2437,10 @@ msgstr "E-Mail-Adresse ist erforderlich"
 msgid "Enrollment Sessions"
 msgstr "Enrollment-Sitzungen"
 
+#: src/pages/Organization/OrganizationPage.tsx
+msgid "Administrative status"
+msgstr "Administrativer Status"
+
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Moving organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Das Verschieben von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
@@ -2496,8 +2519,10 @@ msgstr "Es wurden noch keine Android-Enrollment-Sitzungen erstellt."
 msgid "Hide options"
 msgstr "Optionen ausblenden"
 
+#: src/components/OrganizationalUnitTree.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Organization/OrganizationPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Inactive"
@@ -3409,6 +3434,10 @@ msgstr "Die Passkey-Anmeldung wurde abgebrochen oder vom Browser nicht zugelasse
 msgid "Legal"
 msgstr "Rechtliches"
 
+#: src/pages/Organization/OrganizationPage.tsx
+msgid "Assignment status"
+msgstr "Zuweisungsstatus"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Android provisioning QR code"
 msgstr "QR-Code zur Android-Provisionierung"
@@ -3429,6 +3458,10 @@ msgstr "Diesen Mitarbeiter aktivieren?"
 #: src/components/RouteGuardState.tsx
 msgid "Unlocking..."
 msgstr "Wird entsperrt..."
+
+#: src/components/OrganizationalUnitFormDialog.tsx
+msgid "Administratively Active"
+msgstr "Administrativ aktiv"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Legal Entity"
@@ -3756,6 +3789,11 @@ msgstr "Bis"
 #: src/pages/Login.tsx
 msgid "Passkey sign-in was cancelled."
 msgstr "Die Passkey-Anmeldung wurde abgebrochen."
+
+#: src/components/OrganizationalUnitTree.tsx
+#: src/pages/Organization/OrganizationPage.tsx
+msgid "Assignable"
+msgstr "Zuweisbar"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Create a new root organizational unit."

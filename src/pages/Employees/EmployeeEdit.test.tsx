@@ -158,6 +158,36 @@ describe("EmployeeEdit", () => {
     );
   });
 
+  it("keeps the current organizational unit visible when it is no longer assignable", async () => {
+    vi.mocked(
+      organizationalUnitApi.listOrganizationalUnits
+    ).mockResolvedValueOnce({
+      data: [
+        {
+          ...mockOrganizationalUnits[1]!,
+          is_assignable: true,
+        },
+      ],
+      meta: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 100,
+        total: 1,
+        root_unit_ids: [],
+      },
+    });
+
+    renderWithProviders("emp-1");
+
+    expect(organizationalUnitApi.listOrganizationalUnits).toHaveBeenCalledWith({
+      is_assignable: true,
+      per_page: 100,
+    });
+    expect(
+      await screen.findByRole("combobox", { name: /organizational unit/i })
+    ).toHaveTextContent("Engineering");
+  });
+
   it("keeps edit load errors on canonical theme tokens", async () => {
     vi.mocked(employeeApi.fetchEmployee).mockRejectedValueOnce(
       new Error("Load failed")

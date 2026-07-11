@@ -42,6 +42,8 @@ describe("OrganizationPage", () => {
       id: "unit-1",
       type: "holding",
       name: "SecPal Holding",
+      is_active: false,
+      is_assignable: true,
       is_legal_entity: false,
       is_establishment: false,
       description: "Root organizational unit",
@@ -281,6 +283,30 @@ describe("OrganizationPage", () => {
       // Just verify the Type label and at least one translated type label exists
       expect(screen.getAllByText("Holding").length).toBeGreaterThanOrEqual(2);
     });
+  });
+
+  it("treats omitted status flags as active and assignable in the detail panel", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<OrganizationPage />);
+
+    await user.click(await screen.findByText("SecPal GmbH"));
+
+    expect(await screen.findByText("Administrative status")).toBeVisible();
+    expect(screen.getByText("Assignment status")).toBeVisible();
+    expect(screen.getAllByText("Active").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Assignable").length).toBeGreaterThan(0);
+  });
+
+  it("shows administrative and assignment status independently in the detail panel", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<OrganizationPage />);
+
+    await user.click(await screen.findByText("SecPal Holding"));
+
+    expect(await screen.findByText("Administrative status")).toBeVisible();
+    expect(screen.getByText("Assignment status")).toBeVisible();
+    expect(screen.getAllByText("Inactive").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Assignable").length).toBeGreaterThan(0);
   });
 
   it("shows Description in detail panel when unit has one", async () => {

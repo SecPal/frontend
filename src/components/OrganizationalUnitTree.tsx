@@ -24,6 +24,7 @@ import {
 import {
   Card,
   CardContent,
+  Badge,
   LoadingRegion,
   OrganizationalUnitTypeBadge,
   SectionSkeleton,
@@ -183,6 +184,21 @@ const TreeNode = memo(
           <span className="hidden sm:inline-flex shrink-0">
             <OrganizationalUnitTypeBadge type={unit.type} />
           </span>
+
+          <Badge className="hidden md:inline-flex shrink-0 bg-muted text-muted-foreground">
+            {unit.is_active !== false ? (
+              <Trans>Active</Trans>
+            ) : (
+              <Trans>Inactive</Trans>
+            )}
+          </Badge>
+          <Badge className="hidden md:inline-flex shrink-0 bg-muted text-muted-foreground">
+            {unit.is_assignable !== false ? (
+              <Trans>Assignable</Trans>
+            ) : (
+              <Trans>Not assignable</Trans>
+            )}
+          </Badge>
 
           {/* Actions Menu */}
           {hasActions && (
@@ -390,6 +406,8 @@ function moveUnitInTree(
           name: nextParent.name,
           is_legal_entity: nextParent.is_legal_entity,
           is_establishment: nextParent.is_establishment,
+          is_active: nextParent.is_active,
+          is_assignable: nextParent.is_assignable,
           created_at: nextParent.created_at,
           updated_at: nextParent.updated_at,
         }
