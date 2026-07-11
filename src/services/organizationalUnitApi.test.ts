@@ -70,41 +70,44 @@ describe("Organizational Unit API", () => {
       );
     });
 
-    it("should apply filters correctly", async () => {
-      mockFetchWithCsrf.mockResolvedValue({
-        ok: true,
-        json: async () => ({ data: [], meta: {} }),
-      });
+    it.each([
+      ["is_active", true, "is_active=true"],
+      ["is_active", false, "is_active=false"],
+      ["is_assignable", true, "is_assignable=true"],
+      ["is_assignable", false, "is_assignable=false"],
+    ] as const)(
+      "serializes %s=%s as a boolean query value",
+      async (filter, value, expectedQuery) => {
+        mockFetchWithCsrf.mockResolvedValue({
+          ok: true,
+          json: async () => ({ data: [], meta: {} }),
+        });
 
-      await listOrganizationalUnits({
-        type: "branch",
-        parent_id: "parent-1",
-        is_active: false,
-        is_assignable: true,
-        per_page: 10,
-      });
+        await listOrganizationalUnits({
+          type: "branch",
+          parent_id: "parent-1",
+          [filter]: value,
+          per_page: 10,
+        });
 
-      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
-        expect.stringContaining("type=branch"),
-        expect.any(Object)
-      );
-      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
-        expect.stringContaining("parent_id=parent-1"),
-        expect.any(Object)
-      );
-      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
-        expect.stringContaining("per_page=10"),
-        expect.any(Object)
-      );
-      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
-        expect.stringContaining("is_active=0"),
-        expect.any(Object)
-      );
-      expect(mockFetchWithCsrf).toHaveBeenCalledWith(
-        expect.stringContaining("is_assignable=1"),
-        expect.any(Object)
-      );
-    });
+        expect(mockFetchWithCsrf).toHaveBeenCalledWith(
+          expect.stringContaining("type=branch"),
+          expect.any(Object)
+        );
+        expect(mockFetchWithCsrf).toHaveBeenCalledWith(
+          expect.stringContaining("parent_id=parent-1"),
+          expect.any(Object)
+        );
+        expect(mockFetchWithCsrf).toHaveBeenCalledWith(
+          expect.stringContaining("per_page=10"),
+          expect.any(Object)
+        );
+        expect(mockFetchWithCsrf).toHaveBeenCalledWith(
+          expect.stringContaining(expectedQuery),
+          expect.any(Object)
+        );
+      }
+    );
 
     it("should throw ApiError on failure", async () => {
       mockFetchWithCsrf.mockResolvedValue({

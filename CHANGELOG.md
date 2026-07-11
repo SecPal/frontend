@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Serialized organizational-unit active and assignable list filters as
+  `true`/`false`, matching API validation and preventing filtered requests from
+  failing with HTTP 422.
 - Release artifacts now include a deterministic third-party dependency notice
   bundle generated from their actual JavaScript and copied-asset module graph.
   It preserves package-specific notices and license texts, including Inter's
