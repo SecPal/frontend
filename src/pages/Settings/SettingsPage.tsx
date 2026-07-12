@@ -66,6 +66,7 @@ import {
 import {
   getNativePasskeyCapabilities,
   hasNativePasskeyCapabilityBridge,
+  hasNativePasskeyRegistrationBridge,
   type NativePasskeyCapabilities,
 } from "../../services/nativePasskeyCapabilities";
 
@@ -193,7 +194,11 @@ export function SettingsPage() {
   );
   const [nativePasskeyCapabilities, setNativePasskeyCapabilities] = useState<
     NativePasskeyCapabilities | null | undefined
-  >(() => (hasNativePasskeyCapabilityBridge() ? undefined : null));
+  >(() =>
+    hasNativePasskeyCapabilityBridge() || hasNativePasskeyRegistrationBridge()
+      ? undefined
+      : null
+  );
   const supportsPasskeys =
     registrationSupport &&
     nativePasskeyCapabilities !== undefined &&
@@ -245,7 +250,10 @@ export function SettingsPage() {
   const passkeysLoadingLabel = _(msg`Loading passkeys...`);
 
   useEffect(() => {
-    if (!hasNativePasskeyCapabilityBridge()) {
+    if (
+      !hasNativePasskeyCapabilityBridge() &&
+      !hasNativePasskeyRegistrationBridge()
+    ) {
       return;
     }
 
@@ -254,7 +262,9 @@ export function SettingsPage() {
     void getNativePasskeyCapabilities()
       .then((capabilities) => {
         if (active) {
-          setNativePasskeyCapabilities(capabilities);
+          setNativePasskeyCapabilities(
+            capabilities ?? { passkeysAvailable: false }
+          );
         }
       })
       .catch(() => {

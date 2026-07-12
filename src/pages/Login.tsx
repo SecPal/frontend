@@ -398,7 +398,9 @@ export function Login({
     void getNativePasskeyCapabilities()
       .then((capabilities) => {
         if (active) {
-          setNativePasskeyCapabilities(capabilities);
+          setNativePasskeyCapabilities(
+            capabilities ?? { passkeysAvailable: false }
+          );
         }
       })
       .catch(() => {
@@ -1088,7 +1090,8 @@ export function Login({
                   </LoginButton>
                 </LoginField>
               ) : null}
-              {nativePasskeyCapabilities?.passkeysAvailable === false ? (
+              {isPasskeyLoginEnabled &&
+              nativePasskeyCapabilities?.passkeysAvailable === false ? (
                 <LoginStatusMessage
                   live={isPasswordLoginEnabled ? "polite" : "assertive"}
                 >
@@ -1097,6 +1100,11 @@ export function Login({
                     isPasswordLoginEnabled,
                     _
                   )}
+                </LoginStatusMessage>
+              ) : !isPasswordLoginEnabled &&
+                nativePasskeyCapabilities === undefined ? (
+                <LoginStatusMessage live="polite">
+                  <Trans>Checking passkey availability…</Trans>
                 </LoginStatusMessage>
               ) : null}
             </LoginFieldGroup>

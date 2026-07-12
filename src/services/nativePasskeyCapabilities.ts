@@ -8,6 +8,7 @@ export interface NativePasskeyCapabilities {
 
 interface NativePasskeyCapabilitiesBridge {
   getPasskeyCapabilities?(): Promise<NativePasskeyCapabilities>;
+  createPasskeyAttestation?: unknown;
 }
 
 const NATIVE_PASSKEY_CAPABILITY_TIMEOUT_MS = 5_000;
@@ -35,6 +36,16 @@ export function hasNativePasskeyCapabilityBridge(): boolean {
   ).SecPalNativeAuthBridge;
 
   return typeof bridge?.getPasskeyCapabilities === "function";
+}
+
+export function hasNativePasskeyRegistrationBridge(): boolean {
+  const bridge = (
+    globalThis as typeof globalThis & {
+      SecPalNativeAuthBridge?: NativePasskeyCapabilitiesBridge;
+    }
+  ).SecPalNativeAuthBridge;
+
+  return typeof bridge?.createPasskeyAttestation === "function";
 }
 
 export async function getNativePasskeyCapabilities(): Promise<NativePasskeyCapabilities | null> {
