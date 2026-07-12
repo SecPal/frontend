@@ -443,7 +443,9 @@ describe("SettingsPage", () => {
       createPasskeyAttestation: vi.fn(),
     };
     (
-      globalThis as typeof globalThis & { SecPalNativeAuthBridge?: typeof bridge }
+      globalThis as typeof globalThis & {
+        SecPalNativeAuthBridge?: typeof bridge;
+      }
     ).SecPalNativeAuthBridge = bridge;
 
     try {

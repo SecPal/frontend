@@ -559,9 +559,8 @@ describe("Login", () => {
   });
 
   it("shows an incompatibility alert when the login policy hides passwords", async () => {
-    const originalBridge = (
-      globalThis as { SecPalNativeAuthBridge?: unknown }
-    ).SecPalNativeAuthBridge;
+    const originalBridge = (globalThis as { SecPalNativeAuthBridge?: unknown })
+      .SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
       loginWithPasskey: vi.fn(),
@@ -572,7 +571,9 @@ describe("Login", () => {
       logout: vi.fn(),
       getCurrentUser: vi.fn(),
     };
-    (globalThis as { SecPalNativeAuthBridge?: typeof nativeBridge }).SecPalNativeAuthBridge = nativeBridge;
+    (
+      globalThis as { SecPalNativeAuthBridge?: typeof nativeBridge }
+    ).SecPalNativeAuthBridge = nativeBridge;
 
     try {
       renderLogin({
@@ -595,7 +596,9 @@ describe("Login", () => {
         delete (globalThis as { SecPalNativeAuthBridge?: unknown })
           .SecPalNativeAuthBridge;
       } else {
-        (globalThis as { SecPalNativeAuthBridge?: unknown }).SecPalNativeAuthBridge = originalBridge;
+        (
+          globalThis as { SecPalNativeAuthBridge?: unknown }
+        ).SecPalNativeAuthBridge = originalBridge;
       }
     }
   });

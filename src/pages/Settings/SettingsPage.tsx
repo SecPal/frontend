@@ -366,7 +366,9 @@ export function SettingsPage() {
 
     if (nativePasskeyCapabilities?.passkeysAvailable === false) {
       setPasskeyError(
-        _(msg`Passkey registration requires Android 14 or later. Update your device to add a passkey.`)
+        _(
+          msg`Passkey registration requires Android 14 or later. Update your device to add a passkey.`
+        )
       );
       return;
     }
