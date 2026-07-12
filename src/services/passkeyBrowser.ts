@@ -301,9 +301,14 @@ export function isPasskeySupported(): boolean {
 
 export function isPasskeyRegistrationSupported(): boolean {
   return (
-    (isPasskeySupported() &&
-      typeof navigator.credentials?.create === "function") ||
+    isBrowserPasskeyRegistrationSupported() ||
     getNativePasskeyRegistrationBridge() !== null
+  );
+}
+
+export function isBrowserPasskeyRegistrationSupported(): boolean {
+  return (
+    isPasskeySupported() && typeof navigator.credentials?.create === "function"
   );
 }
 

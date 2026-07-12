@@ -471,6 +471,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi.fn().mockResolvedValue({
         user: createAuthUser({ name: "Native Passkey User" }),
       }),
@@ -514,6 +517,95 @@ describe("Login", () => {
     }
   });
 
+  it("hides native passkey sign-in and does not invoke the bridge when Android reports passkeys unavailable", async () => {
+    const authGlobal = globalThis as {
+      SecPalNativeAuthBridge?: {
+        login: ReturnType<typeof vi.fn>;
+        loginWithPasskey?: ReturnType<typeof vi.fn>;
+        getPasskeyCapabilities?: ReturnType<typeof vi.fn>;
+        logout: ReturnType<typeof vi.fn>;
+        getCurrentUser: ReturnType<typeof vi.fn>;
+      };
+    };
+    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+    const nativeBridge = {
+      login: vi.fn(),
+      loginWithPasskey: vi.fn(),
+      getPasskeyCapabilities: vi.fn().mockResolvedValue({
+        passkeysAvailable: false,
+        reason: "PASSKEY_ANDROID_VERSION_UNSUPPORTED",
+      }),
+      logout: vi.fn(),
+      getCurrentUser: vi.fn(),
+    };
+
+    authGlobal.SecPalNativeAuthBridge = nativeBridge;
+
+    try {
+      renderLogin();
+
+      expect(await screen.findByLabelText(/email/i)).toBeEnabled();
+      expect(
+        await screen.findByText(/requires Android 14 or later/i)
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /sign in with passkey/i })
+      ).not.toBeInTheDocument();
+      expect(nativeBridge.loginWithPasskey).not.toHaveBeenCalled();
+    } finally {
+      if (originalNativeBridge === undefined) {
+        delete authGlobal.SecPalNativeAuthBridge;
+      } else {
+        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
+      }
+    }
+  });
+
+  it("shows an incompatibility alert when the login policy hides passwords", async () => {
+    const originalBridge = (globalThis as { SecPalNativeAuthBridge?: unknown })
+      .SecPalNativeAuthBridge;
+    const nativeBridge = {
+      login: vi.fn(),
+      loginWithPasskey: vi.fn(),
+      getPasskeyCapabilities: vi.fn().mockResolvedValue({
+        passkeysAvailable: false,
+        reason: "PASSKEY_ANDROID_VERSION_UNSUPPORTED",
+      }),
+      logout: vi.fn(),
+      getCurrentUser: vi.fn(),
+    };
+    (
+      globalThis as { SecPalNativeAuthBridge?: typeof nativeBridge }
+    ).SecPalNativeAuthBridge = nativeBridge;
+
+    try {
+      renderLogin({
+        runtimeBootstrap: {
+          instanceDisplayName: "SecPal",
+          apiOrigin: "https://api.secpal.dev",
+          features: { passwordLoginEnabled: false, passkeyLoginEnabled: true },
+        },
+      });
+
+      const incompatibilityAlert = await screen.findByRole("alert");
+      expect(incompatibilityAlert).toHaveTextContent(
+        /requires Android 14 or later/i
+      );
+      expect(incompatibilityAlert).toHaveAttribute("aria-live", "assertive");
+      expect(incompatibilityAlert).not.toHaveTextContent(/email and password/i);
+      expect(nativeBridge.loginWithPasskey).not.toHaveBeenCalled();
+    } finally {
+      if (originalBridge === undefined) {
+        delete (globalThis as { SecPalNativeAuthBridge?: unknown })
+          .SecPalNativeAuthBridge;
+      } else {
+        (
+          globalThis as { SecPalNativeAuthBridge?: unknown }
+        ).SecPalNativeAuthBridge = originalBridge;
+      }
+    }
+  });
+
   it("shows a native-device prompt while waiting for native passkey sign-in", async () => {
     const authGlobal = globalThis as {
       SecPalNativeAuthBridge?: {
@@ -527,6 +619,9 @@ describe("Login", () => {
     let resolvePasskeyLogin!: (value: unknown) => void;
     const nativeBridge = {
       login: vi.fn(),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi.fn().mockReturnValue(
         new Promise((resolve) => {
           resolvePasskeyLogin = resolve;
@@ -578,6 +673,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi
         .fn()
         .mockRejectedValue(new authApi.AuthApiError("Native passkey failed.")),
@@ -615,6 +713,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi.fn().mockImplementation(
         () =>
           new Promise((_, reject) => {
@@ -657,6 +758,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi
         .fn()
         .mockRejectedValue(new Error("Native passkey crashed.")),
@@ -694,6 +798,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi
         .fn()
         .mockRejectedValue(new Error("Passkey sign-in was cancelled.")),
@@ -770,6 +877,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi
         .fn()
         .mockRejectedValue(new Error("Passkey sign-in was interrupted.")),
@@ -807,6 +917,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi
         .fn()
         .mockRejectedValue(
@@ -848,6 +961,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi.fn().mockRejectedValue("unexpected-native-failure"),
       logout: vi.fn(),
       getCurrentUser: vi.fn(),

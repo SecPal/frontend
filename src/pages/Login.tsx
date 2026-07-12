@@ -15,6 +15,10 @@ import { useRecoverableLazyComponent } from "../hooks/useRecoverableLazyComponen
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import { getAuthTransport, AuthApiError } from "../services/authTransport";
+import {
+  getNativePasskeyCapabilities,
+  type NativePasskeyCapabilities,
+} from "../services/nativePasskeyCapabilities";
 import { sanitizeAuthUser } from "../services/authState";
 import { Logo } from "../components/Logo";
 import { loadLoginMfaDialogModule } from "../lib/lazyAppModules";
@@ -149,6 +153,26 @@ function getPasskeySignInErrorMessage(
   return translate(
     msg`An unexpected passkey sign-in error occurred. Please try again.`
   );
+}
+
+function getNativePasskeyCompatibilityMessage(
+  capabilities: NativePasskeyCapabilities,
+  canUsePasswordLogin: boolean,
+  translate: Translate
+): string {
+  if (capabilities.reason === "PASSKEY_ANDROID_VERSION_UNSUPPORTED") {
+    if (!canUsePasswordLogin) {
+      return translate(
+        msg`Passkey sign-in requires Android 14 or later. Update your device to sign in with a passkey.`
+      );
+    }
+
+    return translate(
+      msg`Passkey sign-in requires Android 14 or later. Use email and password to sign in, or update your device.`
+    );
+  }
+
+  return translate(msg`Passkey sign-in is not available on this device.`);
 }
 
 function LoginMfaDialogLoader({
@@ -301,7 +325,6 @@ export function Login({
     runtimeBootstrap?.features?.passwordLoginEnabled ?? true;
   const isPasskeyLoginEnabled =
     runtimeBootstrap?.features?.passkeyLoginEnabled ?? true;
-  const canOfferPasskeyLogin = supportsPasskeys && isPasskeyLoginEnabled;
   const {
     remainingAttempts,
     isLocked,
@@ -316,6 +339,14 @@ export function Login({
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmittingPasskey, setIsSubmittingPasskey] = useState(false);
+  const [nativePasskeyCapabilities, setNativePasskeyCapabilities] = useState<
+    NativePasskeyCapabilities | null | undefined
+  >(authTransport.kind === "native-bridge" ? undefined : null);
+  const canOfferPasskeyLogin =
+    supportsPasskeys &&
+    isPasskeyLoginEnabled &&
+    nativePasskeyCapabilities !== undefined &&
+    nativePasskeyCapabilities?.passkeysAvailable !== false;
   const [passkeyStep, setPasskeyStep] = useState<
     "challenge" | "native" | "browser" | "verifying" | null
   >(null);
@@ -356,6 +387,32 @@ export function Login({
   const isOtherMethodAvailable = pendingMfaChallenge
     ? pendingMfaChallenge.available_methods.includes(otherMfaMethod)
     : false;
+
+  useEffect(() => {
+    if (authTransport.kind !== "native-bridge") {
+      return;
+    }
+
+    let active = true;
+
+    void getNativePasskeyCapabilities()
+      .then((capabilities) => {
+        if (active) {
+          setNativePasskeyCapabilities(
+            capabilities ?? { passkeysAvailable: false }
+          );
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setNativePasskeyCapabilities({ passkeysAvailable: false });
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [authTransport]);
 
   // Check backend health on component mount and when online status changes
   useEffect(() => {
@@ -569,6 +626,17 @@ export function Login({
   };
 
   const handlePasskeySignIn = async () => {
+    if (nativePasskeyCapabilities?.passkeysAvailable === false) {
+      setError(
+        getNativePasskeyCompatibilityMessage(
+          nativePasskeyCapabilities,
+          isPasswordLoginEnabled,
+          _
+        )
+      );
+      return;
+    }
+
     setError(null);
     // Passkey failures never reflect on the typed email/password values.
     setHasCredentialError(false);
@@ -1021,6 +1089,23 @@ export function Login({
                     )}
                   </LoginButton>
                 </LoginField>
+              ) : null}
+              {isPasskeyLoginEnabled &&
+              nativePasskeyCapabilities?.passkeysAvailable === false ? (
+                <LoginStatusMessage
+                  live={isPasswordLoginEnabled ? "polite" : "assertive"}
+                >
+                  {getNativePasskeyCompatibilityMessage(
+                    nativePasskeyCapabilities,
+                    isPasswordLoginEnabled,
+                    _
+                  )}
+                </LoginStatusMessage>
+              ) : !isPasswordLoginEnabled &&
+                nativePasskeyCapabilities === undefined ? (
+                <LoginStatusMessage live="polite">
+                  <Trans>Checking passkey availability…</Trans>
+                </LoginStatusMessage>
               ) : null}
             </LoginFieldGroup>
           </LoginForm>

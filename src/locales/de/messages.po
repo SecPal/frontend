@@ -854,6 +854,10 @@ msgstr "Ich kenne meine Bewacher-ID nicht."
 msgid "Device label"
 msgstr "Gerätebezeichnung"
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Passkey registration is not available on this device."
+msgstr "Die Passkey-Registrierung ist auf diesem Gerät nicht verfügbar."
+
 #: src/components/RouteGuardState.tsx
 msgid "Sending verification email..."
 msgstr "Senden einer Bestätigungs-E-Mail..."
@@ -1285,6 +1289,10 @@ msgstr "Postanschrift"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Done"
 msgstr "Erledigt"
+
+#: src/pages/Login.tsx
+msgid "Passkey sign-in requires Android 14 or later. Use email and password to sign in, or update your device."
+msgstr "Für die Passkey-Anmeldung ist Android 14 oder neuer erforderlich. Melden Sie sich mit E-Mail und Passwort an oder aktualisieren Sie Ihr Gerät."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Optional: Upload the reverse side as a second file."
@@ -2192,6 +2200,10 @@ msgstr "Mit Passkey anmelden"
 msgid "No onboarding steps are available right now."
 msgstr "Derzeit sind keine Onboarding-Schritte verfügbar."
 
+#: src/pages/Login.tsx
+msgid "Passkey sign-in requires Android 14 or later. Update your device to sign in with a passkey."
+msgstr "Für die Passkey-Anmeldung ist Android 14 oder neuer erforderlich. Aktualisieren Sie Ihr Gerät, um sich mit einem Passkey anzumelden."
+
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.completing.description"
@@ -2562,6 +2574,10 @@ msgstr "Datum/Uhrzeit"
 msgid "Open Source"
 msgstr "Open Source"
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Checking passkey availability..."
+msgstr "Passkey-Verfügbarkeit wird geprüft..."
+
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
@@ -2886,6 +2902,10 @@ msgstr "Nicht sicher, welche Instanz Sie verwenden sollen?"
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Invalid combination: min={0}, max=0 results in no visible employees!"
 msgstr "Ungültige Kombination: min={0}, max=0 ergibt keine sichtbaren Arbeitnehmer!"
+
+#: src/pages/Login.tsx
+msgid "Passkey sign-in is not available on this device."
+msgstr "Die Anmeldung mit einem Passkey ist auf diesem Gerät nicht verfügbar."
 
 #: src/components/NotificationPreferences.tsx
 msgid "This browser cannot receive SecPal Web Push notifications. Use a current Chrome, Edge, Firefox, or Safari release with Web Push support."
@@ -3235,6 +3255,10 @@ msgstr "QR-Code konnte nicht generiert werden."
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Optional description..."
 msgstr "Optionale Beschreibung..."
+
+#: src/pages/Login.tsx
+msgid "Checking passkey availability…"
+msgstr "Passkey-Verfügbarkeit wird geprüft…"
 
 #: src/lib/errorUtils.ts
 msgid "This action could not be completed because the data changed in the meantime. Please reload and try again."
@@ -3932,6 +3956,10 @@ msgstr "Instanz wird gespeichert"
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 msgid "Failed to update employee"
 msgstr "Fehler beim Aktualisieren des Mitarbeiters"
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Passkey registration requires Android 14 or later. Update your device to add a passkey."
+msgstr "Für die Registrierung eines Passkeys ist Android 14 oder neuer erforderlich. Aktualisieren Sie Ihr Gerät, um einen Passkey hinzuzufügen."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to activate employee"

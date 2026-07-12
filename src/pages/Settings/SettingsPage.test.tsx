@@ -55,6 +55,7 @@ vi.mock("../../services/authAccountApi", async () => {
 });
 
 vi.mock("../../services/passkeyBrowser", () => ({
+  isBrowserPasskeyRegistrationSupported: vi.fn().mockReturnValue(false),
   isPasskeyRegistrationSupported: vi.fn(),
   getPasskeyAttestation: vi.fn(),
 }));
@@ -220,6 +221,9 @@ describe("SettingsPage", () => {
     vi.mocked(passkeyBrowser.isPasskeyRegistrationSupported).mockReturnValue(
       true
     );
+    vi.mocked(
+      passkeyBrowser.isBrowserPasskeyRegistrationSupported
+    ).mockReturnValue(true);
     vi.mocked(authAccountApi.getMfaStatus).mockResolvedValue(
       createDisabledMfaStatusResponse()
     );
@@ -423,6 +427,9 @@ describe("SettingsPage", () => {
     vi.mocked(passkeyBrowser.isPasskeyRegistrationSupported).mockReturnValue(
       false
     );
+    vi.mocked(
+      passkeyBrowser.isBrowserPasskeyRegistrationSupported
+    ).mockReturnValue(false);
 
     await renderSettingsPage();
 
@@ -432,6 +439,102 @@ describe("SettingsPage", () => {
     expect(
       await screen.findByText(/work macbook touch id/i)
     ).toBeInTheDocument();
+  });
+
+  it("does not start native passkey registration when Android reports passkeys unavailable", async () => {
+    vi.mocked(
+      passkeyBrowser.isBrowserPasskeyRegistrationSupported
+    ).mockReturnValue(false);
+    const bridge = {
+      getPasskeyCapabilities: vi.fn().mockResolvedValue({
+        passkeysAvailable: false,
+        reason: "PASSKEY_ANDROID_VERSION_UNSUPPORTED",
+      }),
+      createPasskeyAttestation: vi.fn(),
+    };
+    (
+      globalThis as typeof globalThis & {
+        SecPalNativeAuthBridge?: typeof bridge;
+      }
+    ).SecPalNativeAuthBridge = bridge;
+
+    try {
+      await renderSettingsPage();
+
+      expect(
+        await screen.findByText(/requires Android 14 or later/i)
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /add passkey/i })
+      ).not.toBeInTheDocument();
+      expect(bridge.createPasskeyAttestation).not.toHaveBeenCalled();
+    } finally {
+      delete (globalThis as { SecPalNativeAuthBridge?: unknown })
+        .SecPalNativeAuthBridge;
+    }
+  });
+
+  it("does not report passkeys unsupported while native capabilities are loading", async () => {
+    const bridge = {
+      getPasskeyCapabilities: vi.fn().mockReturnValue(new Promise(() => {})),
+      createPasskeyAttestation: vi.fn(),
+    };
+    (
+      globalThis as typeof globalThis & {
+        SecPalNativeAuthBridge?: typeof bridge;
+      }
+    ).SecPalNativeAuthBridge = bridge;
+
+    try {
+      await renderSettingsPage();
+
+      expect(screen.getByRole("status")).toHaveTextContent(
+        /checking passkey availability/i
+      );
+      expect(
+        screen.queryByText(/this browser does not support passkeys/i)
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/requires Android 14 or later/i)
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /add passkey/i })
+      ).not.toBeInTheDocument();
+    } finally {
+      delete (globalThis as { SecPalNativeAuthBridge?: unknown })
+        .SecPalNativeAuthBridge;
+    }
+  });
+
+  it("shows device-neutral guidance when the native capability response is invalid", async () => {
+    vi.mocked(
+      passkeyBrowser.isBrowserPasskeyRegistrationSupported
+    ).mockReturnValue(false);
+    const bridge = {
+      getPasskeyCapabilities: vi.fn().mockResolvedValue({}),
+      createPasskeyAttestation: vi.fn(),
+    };
+    (
+      globalThis as typeof globalThis & {
+        SecPalNativeAuthBridge?: typeof bridge;
+      }
+    ).SecPalNativeAuthBridge = bridge;
+
+    try {
+      await renderSettingsPage();
+
+      expect(
+        await screen.findByText(
+          /passkey registration is not available on this device/i
+        )
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText(/this browser does not support passkeys/i)
+      ).not.toBeInTheDocument();
+    } finally {
+      delete (globalThis as { SecPalNativeAuthBridge?: unknown })
+        .SecPalNativeAuthBridge;
+    }
   });
 
   it("registers a passkey and appends it to the enrolled list", async () => {
