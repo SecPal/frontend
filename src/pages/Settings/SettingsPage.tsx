@@ -380,7 +380,10 @@ export function SettingsPage() {
   const handlePasskeyRegistration = async (event: FormEvent) => {
     event.preventDefault();
 
-    if (nativePasskeyCapabilities?.passkeysAvailable === false) {
+    if (
+      hasNativePasskeyRegistrationBridge() &&
+      nativePasskeyCapabilities?.passkeysAvailable === false
+    ) {
       setPasskeyError(
         _(
           msg`Passkey registration requires Android 14 or later. Update your device to add a passkey.`
@@ -731,7 +734,8 @@ export function SettingsPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-4">
-              {nativePasskeyCapabilities === undefined ? (
+              {nativePasskeyCapabilities === undefined &&
+              !browserRegistrationSupport ? (
                 <p
                   className="text-muted-foreground text-sm"
                   role="status"
