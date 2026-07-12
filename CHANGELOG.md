@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Kept the mobile sidebar's user footer above Android system navigation bars
+  by applying the bottom safe-area inset, so the user menu and sign-out action
+  remain reachable in portrait mode.
 - Android passkey sign-in and registration now honor the native capability
   bridge: Android 6 through 13 show a safe Android 14 compatibility message,
   retain permitted password sign-in, and report an incompatibility error for
