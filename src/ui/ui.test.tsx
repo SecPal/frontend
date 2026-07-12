@@ -62,6 +62,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarFooter,
   SidebarProvider,
   SectionSkeleton,
   Skeleton,
@@ -127,6 +128,20 @@ describe("shared shadcn/radix UI basis", () => {
       "collapsed"
     );
     expect(matchMedia).toHaveBeenCalledWith("(min-width: 90rem)");
+  });
+
+  it("keeps the sidebar footer above the system navigation area", () => {
+    const { container } = render(
+      <SidebarProvider>
+        <Sidebar collapsible="none">
+          <SidebarFooter>User actions</SidebarFooter>
+        </Sidebar>
+      </SidebarProvider>
+    );
+
+    expect(container.querySelector('[data-slot="sidebar-footer"]')).toHaveClass(
+      "pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]"
+    );
   });
 
   it("keeps the sidebar expanded by default at the desktop breakpoint", () => {
