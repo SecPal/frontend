@@ -1286,6 +1286,10 @@ msgstr "Postanschrift"
 msgid "Done"
 msgstr "Erledigt"
 
+#: src/pages/Login.tsx
+msgid "Passkey sign-in requires Android 14 or later. Use email and password to sign in, or update your device."
+msgstr "Für die Passkey-Anmeldung ist Android 14 oder neuer erforderlich. Melden Sie sich mit E-Mail und Passwort an oder aktualisieren Sie Ihr Gerät."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Optional: Upload the reverse side as a second file."
 msgstr "Optional: Laden Sie die Rückseite als zweite Datei hoch."
@@ -2192,6 +2196,10 @@ msgstr "Mit Passkey anmelden"
 msgid "No onboarding steps are available right now."
 msgstr "Derzeit sind keine Onboarding-Schritte verfügbar."
 
+#: src/pages/Login.tsx
+msgid "Passkey sign-in requires Android 14 or later. Update your device to sign in with a passkey."
+msgstr "Für die Passkey-Anmeldung ist Android 14 oder neuer erforderlich. Aktualisieren Sie Ihr Gerät, um sich mit einem Passkey anzumelden."
+
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.completing.description"
@@ -2886,6 +2894,10 @@ msgstr "Nicht sicher, welche Instanz Sie verwenden sollen?"
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Invalid combination: min={0}, max=0 results in no visible employees!"
 msgstr "Ungültige Kombination: min={0}, max=0 ergibt keine sichtbaren Arbeitnehmer!"
+
+#: src/pages/Login.tsx
+msgid "Passkey sign-in is not available on this device."
+msgstr "Die Anmeldung mit einem Passkey ist auf diesem Gerät nicht verfügbar."
 
 #: src/components/NotificationPreferences.tsx
 msgid "This browser cannot receive SecPal Web Push notifications. Use a current Chrome, Edge, Firefox, or Safari release with Web Push support."
@@ -3932,6 +3944,10 @@ msgstr "Instanz wird gespeichert"
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 msgid "Failed to update employee"
 msgstr "Fehler beim Aktualisieren des Mitarbeiters"
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Passkey registration requires Android 14 or later. Update your device to add a passkey."
+msgstr "Für die Registrierung eines Passkeys ist Android 14 oder neuer erforderlich. Aktualisieren Sie Ihr Gerät, um einen Passkey hinzuzufügen."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to activate employee"

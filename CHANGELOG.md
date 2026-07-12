@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Android passkey sign-in and registration now honor the native capability
+  bridge: Android 6 through 13 show a safe Android 14 compatibility message,
+  retain permitted password sign-in, and report an incompatibility error for
+  deployments that hide password sign-in without invoking native passkey
+  actions.
 - Serialized organizational-unit active and assignable list filters as
   `true`/`false`, matching API validation and preventing filtered requests from
   failing with HTTP 422.

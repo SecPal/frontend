@@ -434,6 +434,34 @@ describe("SettingsPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("does not start native passkey registration when Android reports passkeys unavailable", async () => {
+    const bridge = {
+      getPasskeyCapabilities: vi.fn().mockResolvedValue({
+        passkeysAvailable: false,
+        reason: "PASSKEY_ANDROID_VERSION_UNSUPPORTED",
+      }),
+      createPasskeyAttestation: vi.fn(),
+    };
+    (
+      globalThis as typeof globalThis & { SecPalNativeAuthBridge?: typeof bridge }
+    ).SecPalNativeAuthBridge = bridge;
+
+    try {
+      await renderSettingsPage();
+
+      expect(
+        await screen.findByText(/requires Android 14 or later/i)
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /add passkey/i })
+      ).not.toBeInTheDocument();
+      expect(bridge.createPasskeyAttestation).not.toHaveBeenCalled();
+    } finally {
+      delete (globalThis as { SecPalNativeAuthBridge?: unknown })
+        .SecPalNativeAuthBridge;
+    }
+  });
+
   it("registers a passkey and appends it to the enrolled list", async () => {
     vi.mocked(authAccountApi.getPasskeys)
       .mockResolvedValueOnce(createPasskeyListResponse())

@@ -63,6 +63,11 @@ import {
   getPasskeyAttestation,
   isPasskeyRegistrationSupported,
 } from "../../services/passkeyBrowser";
+import {
+  getNativePasskeyCapabilities,
+  hasNativePasskeyCapabilityBridge,
+  type NativePasskeyCapabilities,
+} from "../../services/nativePasskeyCapabilities";
 
 type SensitiveMfaAction = "disable" | "regenerate";
 
@@ -182,7 +187,17 @@ function PasskeyListSkeleton({ loadingLabel }: { loadingLabel: string }) {
 
 export function SettingsPage() {
   const { _, i18n } = useLingui();
-  const supportsPasskeys = useMemo(() => isPasskeyRegistrationSupported(), []);
+  const registrationSupport = useMemo(
+    () => isPasskeyRegistrationSupported(),
+    []
+  );
+  const [nativePasskeyCapabilities, setNativePasskeyCapabilities] = useState<
+    NativePasskeyCapabilities | null | undefined
+  >(() => (hasNativePasskeyCapabilityBridge() ? undefined : null));
+  const supportsPasskeys =
+    registrationSupport &&
+    nativePasskeyCapabilities !== undefined &&
+    nativePasskeyCapabilities?.passkeysAvailable !== false;
   const [mfaStatus, setMfaStatus] = useState<MfaStatus | null>(null);
   const [isLoadingMfaStatus, setIsLoadingMfaStatus] = useState(true);
   const [mfaStatusError, setMfaStatusError] = useState<string | null>(null);
@@ -228,6 +243,30 @@ export function SettingsPage() {
   );
   const mfaStatusLoadingLabel = _(msg`Loading MFA status...`);
   const passkeysLoadingLabel = _(msg`Loading passkeys...`);
+
+  useEffect(() => {
+    if (!hasNativePasskeyCapabilityBridge()) {
+      return;
+    }
+
+    let active = true;
+
+    void getNativePasskeyCapabilities()
+      .then((capabilities) => {
+        if (active) {
+          setNativePasskeyCapabilities(capabilities);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setNativePasskeyCapabilities({ passkeysAvailable: false });
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -324,6 +363,13 @@ export function SettingsPage() {
 
   const handlePasskeyRegistration = async (event: FormEvent) => {
     event.preventDefault();
+
+    if (nativePasskeyCapabilities?.passkeysAvailable === false) {
+      setPasskeyError(
+        _(msg`Passkey registration requires Android 14 or later. Update your device to add a passkey.`)
+      );
+      return;
+    }
 
     const trimmedLabel = passkeyLabel.trim();
 
@@ -701,7 +747,15 @@ export function SettingsPage() {
                 </form>
               ) : (
                 <p className="text-muted-foreground text-sm">
-                  <Trans>This browser does not support passkeys.</Trans>
+                  {nativePasskeyCapabilities?.reason ===
+                  "PASSKEY_ANDROID_VERSION_UNSUPPORTED" ? (
+                    <Trans>
+                      Passkey registration requires Android 14 or later. Update
+                      your device to add a passkey.
+                    </Trans>
+                  ) : (
+                    <Trans>This browser does not support passkeys.</Trans>
+                  )}
                 </p>
               )}
               {passkeyError ? (

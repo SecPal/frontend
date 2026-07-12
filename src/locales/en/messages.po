@@ -1286,6 +1286,10 @@ msgstr "Postal Address"
 msgid "Done"
 msgstr "Done"
 
+#: src/pages/Login.tsx
+msgid "Passkey sign-in requires Android 14 or later. Use email and password to sign in, or update your device."
+msgstr "Passkey sign-in requires Android 14 or later. Use email and password to sign in, or update your device."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Optional: Upload the reverse side as a second file."
 msgstr "Optional: Upload the reverse side as a second file."
@@ -2192,6 +2196,10 @@ msgstr "Sign in with passkey"
 msgid "No onboarding steps are available right now."
 msgstr "No onboarding steps are available right now."
 
+#: src/pages/Login.tsx
+msgid "Passkey sign-in requires Android 14 or later. Update your device to sign in with a passkey."
+msgstr "Passkey sign-in requires Android 14 or later. Update your device to sign in with a passkey."
+
 #. js-lingui-explicit-id
 #: src/pages/Login.tsx
 msgid "login.completing.description"
@@ -2886,6 +2894,10 @@ msgstr "Not sure which instance to use?"
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Invalid combination: min={0}, max=0 results in no visible employees!"
 msgstr "Invalid combination: min={0}, max=0 results in no visible employees!"
+
+#: src/pages/Login.tsx
+msgid "Passkey sign-in is not available on this device."
+msgstr "Passkey sign-in is not available on this device."
 
 #: src/components/NotificationPreferences.tsx
 msgid "This browser cannot receive SecPal Web Push notifications. Use a current Chrome, Edge, Firefox, or Safari release with Web Push support."
@@ -3932,6 +3944,10 @@ msgstr "Saving instance"
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 msgid "Failed to update employee"
 msgstr "Failed to update employee"
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Passkey registration requires Android 14 or later. Update your device to add a passkey."
+msgstr "Passkey registration requires Android 14 or later. Update your device to add a passkey."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to activate employee"
