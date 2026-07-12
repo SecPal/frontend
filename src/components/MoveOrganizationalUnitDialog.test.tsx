@@ -443,7 +443,15 @@ describe("MoveOrganizationalUnitDialog", () => {
       );
       const label = within(option).getByText(/Make root unit/i);
       const contentRow = label.parentElement;
-      const icon = contentRow?.querySelector("svg");
+
+      expect(contentRow).toBeInTheDocument();
+      if (!contentRow) {
+        throw new Error(
+          "Expected the root-unit option content row to be present."
+        );
+      }
+
+      const icon = contentRow.querySelector("svg");
 
       expect(contentRow).toHaveClass(
         "flex",
