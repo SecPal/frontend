@@ -80,3 +80,4 @@ storybook-static/
 !/.ddev/config.yaml
 
 .context
+.polyscope-preview-stage/
