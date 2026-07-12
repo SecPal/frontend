@@ -589,9 +589,7 @@ describe("Login", () => {
         /requires Android 14 or later/i
       );
       expect(incompatibilityAlert).toHaveAttribute("aria-live", "assertive");
-      expect(incompatibilityAlert).not.toHaveTextContent(
-        /email and password/i
-      );
+      expect(incompatibilityAlert).not.toHaveTextContent(/email and password/i);
       expect(nativeBridge.loginWithPasskey).not.toHaveBeenCalled();
     } finally {
       if (originalBridge === undefined) {
