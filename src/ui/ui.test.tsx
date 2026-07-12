@@ -139,7 +139,14 @@ describe("shared shadcn/radix UI basis", () => {
       </SidebarProvider>
     );
 
-    expect(container.querySelector('[data-slot="sidebar-footer"]')).toHaveClass(
+    const sidebarFooter = container.querySelector<HTMLElement>(
+      '[data-slot="sidebar-footer"]'
+    );
+
+    expect(sidebarFooter).toBeInTheDocument();
+    expect(sidebarFooter).toHaveClass(
+      "px-2",
+      "pt-2",
       "pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]"
     );
   });

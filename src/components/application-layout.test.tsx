@@ -535,17 +535,21 @@ describe("ApplicationLayout", () => {
         expect(mobileSidebar).toHaveClass(
           "pt-[var(--app-safe-area-inset-top)]"
         );
-        expect(
-          mobileSidebar?.querySelector('[data-slot="sidebar-footer"]')
-        ).toHaveClass("pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]");
-        expect(mobileSidebar?.className).not.toContain("[&>button]:hidden");
-        const mobileSidebarRail = mobileSidebar?.querySelector(
+        const mobileSidebarFooter = mobileSidebar!.querySelector<HTMLElement>(
+          '[data-slot="sidebar-footer"]'
+        );
+        expect(mobileSidebarFooter).toBeInTheDocument();
+        expect(mobileSidebarFooter).toHaveClass(
+          "pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]"
+        );
+        expect(mobileSidebar!.className).not.toContain("[&>button]:hidden");
+        const mobileSidebarRail = mobileSidebar!.querySelector(
           '[data-slot="sidebar-rail"]'
         );
         expect(mobileSidebarRail).toBeInTheDocument();
         expect(mobileSidebarRail).toHaveClass("hidden");
         expect(mobileSidebarRail).toHaveClass("md:flex");
-        expect(mobileSidebarRail?.className).not.toContain("sm:flex");
+        expect(mobileSidebarRail!.className).not.toContain("sm:flex");
 
         await user.click(screen.getByRole("button", { name: /close/i }));
 

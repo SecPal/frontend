@@ -428,7 +428,7 @@ export function SidebarFooter({
       data-slot="sidebar-footer"
       data-sidebar="footer"
       className={cn(
-        "flex flex-col gap-2 p-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]",
+        "flex flex-col gap-2 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]",
         className
       )}
       {...props}
