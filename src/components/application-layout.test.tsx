@@ -537,9 +537,7 @@ describe("ApplicationLayout", () => {
         );
         expect(
           mobileSidebar?.querySelector('[data-slot="sidebar-footer"]')
-        ).toHaveClass(
-          "pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]"
-        );
+        ).toHaveClass("pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]");
         expect(mobileSidebar?.className).not.toContain("[&>button]:hidden");
         const mobileSidebarRail = mobileSidebar?.querySelector(
           '[data-slot="sidebar-rail"]'
