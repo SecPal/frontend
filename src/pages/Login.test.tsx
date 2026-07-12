@@ -584,10 +584,12 @@ describe("Login", () => {
         },
       });
 
-      expect(await screen.findByRole("alert")).toHaveTextContent(
+      const incompatibilityAlert = await screen.findByRole("alert");
+      expect(incompatibilityAlert).toHaveTextContent(
         /requires Android 14 or later/i
       );
-      expect(screen.getByRole("alert")).not.toHaveTextContent(
+      expect(incompatibilityAlert).toHaveAttribute("aria-live", "assertive");
+      expect(incompatibilityAlert).not.toHaveTextContent(
         /email and password/i
       );
       expect(nativeBridge.loginWithPasskey).not.toHaveBeenCalled();

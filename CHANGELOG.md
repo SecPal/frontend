@@ -18,7 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   bridge: Android 6 through 13 show a safe Android 14 compatibility message,
   retain permitted password sign-in, and report an incompatibility error for
   deployments that hide password sign-in without invoking native passkey
-  actions.
+  actions. Capability checks now expose an accurate, bounded loading state,
+  malformed native responses use device-neutral guidance, and passkey-only
+  incompatibility alerts use assertive announcements.
 - Serialized organizational-unit active and assignable list filters as
   `true`/`false`, matching API validation and preventing filtered requests from
   failing with HTTP 422.

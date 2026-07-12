@@ -715,7 +715,15 @@ export function SettingsPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-4">
-              {supportsPasskeys ? (
+              {nativePasskeyCapabilities === undefined ? (
+                <p
+                  className="text-muted-foreground text-sm"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <Trans>Checking passkey availability...</Trans>
+                </p>
+              ) : supportsPasskeys ? (
                 <form
                   className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
                   onSubmit={handlePasskeyRegistration}
@@ -754,6 +762,10 @@ export function SettingsPage() {
                     <Trans>
                       Passkey registration requires Android 14 or later. Update
                       your device to add a passkey.
+                    </Trans>
+                  ) : nativePasskeyCapabilities?.passkeysAvailable === false ? (
+                    <Trans>
+                      Passkey registration is not available on this device.
                     </Trans>
                   ) : (
                     <Trans>This browser does not support passkeys.</Trans>

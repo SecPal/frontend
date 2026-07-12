@@ -10,6 +10,8 @@ interface NativePasskeyCapabilitiesBridge {
   getPasskeyCapabilities?(): Promise<NativePasskeyCapabilities>;
 }
 
+const NATIVE_PASSKEY_CAPABILITY_TIMEOUT_MS = 5_000;
+
 function isNativePasskeyCapabilities(
   value: unknown
 ): value is NativePasskeyCapabilities {
@@ -46,7 +48,25 @@ export async function getNativePasskeyCapabilities(): Promise<NativePasskeyCapab
     return null;
   }
 
-  const capabilities: unknown = await bridge.getPasskeyCapabilities();
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error("Native passkey capability request timed out"));
+    }, NATIVE_PASSKEY_CAPABILITY_TIMEOUT_MS);
+  });
+
+  let capabilities: unknown;
+
+  try {
+    capabilities = await Promise.race([
+      bridge.getPasskeyCapabilities(),
+      timeout,
+    ]);
+  } finally {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
+  }
 
   if (!isNativePasskeyCapabilities(capabilities)) {
     throw new Error("Native passkey capability response is invalid");

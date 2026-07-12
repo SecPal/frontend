@@ -9,6 +9,7 @@ const nativeGlobal = globalThis as typeof globalThis & {
 };
 
 afterEach(() => {
+  vi.useRealTimers();
   delete nativeGlobal.SecPalNativeAuthBridge;
 });
 
@@ -23,5 +24,20 @@ describe("getNativePasskeyCapabilities", () => {
     await expect(getNativePasskeyCapabilities()).rejects.toThrow(
       "Native passkey capability response is invalid"
     );
+  });
+
+  it("rejects when the native capability bridge does not settle", async () => {
+    vi.useFakeTimers();
+    nativeGlobal.SecPalNativeAuthBridge = {
+      getPasskeyCapabilities: vi.fn().mockReturnValue(new Promise(() => {})),
+    };
+
+    const capabilities = getNativePasskeyCapabilities();
+    const rejection = expect(capabilities).rejects.toThrow(
+      "Native passkey capability request timed out"
+    );
+
+    await vi.runAllTimersAsync();
+    await rejection;
   });
 });

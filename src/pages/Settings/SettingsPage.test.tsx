@@ -464,6 +464,66 @@ describe("SettingsPage", () => {
     }
   });
 
+  it("does not report passkeys unsupported while native capabilities are loading", async () => {
+    const bridge = {
+      getPasskeyCapabilities: vi.fn().mockReturnValue(new Promise(() => {})),
+      createPasskeyAttestation: vi.fn(),
+    };
+    (
+      globalThis as typeof globalThis & {
+        SecPalNativeAuthBridge?: typeof bridge;
+      }
+    ).SecPalNativeAuthBridge = bridge;
+
+    try {
+      await renderSettingsPage();
+
+      expect(screen.getByRole("status")).toHaveTextContent(
+        /checking passkey availability/i
+      );
+      expect(
+        screen.queryByText(/this browser does not support passkeys/i)
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/requires Android 14 or later/i)
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /add passkey/i })
+      ).not.toBeInTheDocument();
+    } finally {
+      delete (globalThis as { SecPalNativeAuthBridge?: unknown })
+        .SecPalNativeAuthBridge;
+    }
+  });
+
+  it("shows device-neutral guidance when the native capability response is invalid", async () => {
+    const bridge = {
+      getPasskeyCapabilities: vi.fn().mockResolvedValue({}),
+      createPasskeyAttestation: vi.fn(),
+    };
+    (
+      globalThis as typeof globalThis & {
+        SecPalNativeAuthBridge?: typeof bridge;
+      }
+    ).SecPalNativeAuthBridge = bridge;
+
+    try {
+      await renderSettingsPage();
+
+      expect(
+        await screen.findByText(
+          /passkey registration is not available on this device/i
+        )
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText(/this browser does not support passkeys/i)
+      ).not.toBeInTheDocument();
+    } finally {
+      delete (globalThis as { SecPalNativeAuthBridge?: unknown })
+        .SecPalNativeAuthBridge;
+    }
+  });
+
   it("registers a passkey and appends it to the enrolled list", async () => {
     vi.mocked(authAccountApi.getPasskeys)
       .mockResolvedValueOnce(createPasskeyListResponse())

@@ -1090,7 +1090,7 @@ export function Login({
               ) : null}
               {nativePasskeyCapabilities?.passkeysAvailable === false ? (
                 <LoginStatusMessage
-                  role={isPasswordLoginEnabled ? "status" : "alert"}
+                  live={isPasswordLoginEnabled ? "polite" : "assertive"}
                 >
                   {getNativePasskeyCompatibilityMessage(
                     nativePasskeyCapabilities,

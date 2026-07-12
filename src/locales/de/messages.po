@@ -854,6 +854,10 @@ msgstr "Ich kenne meine Bewacher-ID nicht."
 msgid "Device label"
 msgstr "Gerätebezeichnung"
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Passkey registration is not available on this device."
+msgstr "Die Passkey-Registrierung ist auf diesem Gerät nicht verfügbar."
+
 #: src/components/RouteGuardState.tsx
 msgid "Sending verification email..."
 msgstr "Senden einer Bestätigungs-E-Mail..."
@@ -2569,6 +2573,10 @@ msgstr "Datum/Uhrzeit"
 #: src/components/nav-legal.tsx
 msgid "Open Source"
 msgstr "Open Source"
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Checking passkey availability..."
+msgstr "Passkey-Verfügbarkeit wird geprüft..."
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
