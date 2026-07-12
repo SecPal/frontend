@@ -444,6 +444,15 @@ describe("MoveOrganizationalUnitDialog", () => {
       const label = within(option).getByText(/Make root unit/i);
       const contentRow = label.parentElement;
 
+      expect(contentRow).toBeInTheDocument();
+      if (!contentRow) {
+        throw new Error(
+          "Expected the root-unit option content row to be present."
+        );
+      }
+
+      const icon = contentRow.querySelector("svg");
+
       expect(contentRow).toHaveClass(
         "flex",
         "w-full",
@@ -451,7 +460,8 @@ describe("MoveOrganizationalUnitDialog", () => {
         "items-center",
         "gap-2"
       );
-      expect(contentRow?.querySelector("svg")).toHaveClass("shrink-0");
+      expect(icon).toBeInTheDocument();
+      expect(icon).toHaveClass("shrink-0");
       expect(label).toHaveClass("min-w-0", "truncate");
     }, 15000);
 

@@ -52,16 +52,22 @@ describe("mobile sidebar layouts", () => {
         </MemoryRouter>
       );
 
-      expect(document.querySelector("header")).toHaveClass(
-        "pt-[var(--app-safe-area-inset-top)]"
-      );
+      const header = document.querySelector("header");
+
+      expect(header).toBeInTheDocument();
+      expect(header).toHaveClass("pt-[var(--app-safe-area-inset-top)]");
 
       await user.click(screen.getByRole("button", { name: "Open navigation" }));
 
       expect(
         await screen.findByRole("dialog", { name: "Navigationsmenü" })
       ).toBeInTheDocument();
-      expect(document.querySelector('[data-slot="sheet-content"]')).toHaveClass(
+      const sheetContent = document.querySelector(
+        '[data-slot="sheet-content"]'
+      );
+
+      expect(sheetContent).toBeInTheDocument();
+      expect(sheetContent).toHaveClass(
         "pt-[calc(0.5rem+var(--app-safe-area-inset-top))]"
       );
       const mobilePanel = document.querySelector(
@@ -80,9 +86,12 @@ describe("mobile sidebar layouts", () => {
       expect(
         screen.getByRole("button", { name: "Navigation schließen" })
       ).toHaveClass("size-11");
-      expect(document.querySelector('[data-slot="sheet-overlay"]')).toHaveClass(
-        "lg:hidden"
+      const sheetOverlay = document.querySelector(
+        '[data-slot="sheet-overlay"]'
       );
+
+      expect(sheetOverlay).toBeInTheDocument();
+      expect(sheetOverlay).toHaveClass("lg:hidden");
     }
   );
 });
