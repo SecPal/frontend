@@ -273,13 +273,18 @@ describe("EmployeeBwrPanel", () => {
         /Sie können die BWR-Daten einsehen, aber zum Verwalten ist Schreibberechtigung erforderlich/i
       )
     ).toBeInTheDocument();
-    expect(
-      document.querySelector('[data-slot="employee-status-badge"]')
-    ).toHaveClass("bg-muted", "text-muted-foreground");
-    expect(document.querySelector('[data-slot="card"]')).toHaveClass(
-      "bg-card",
-      "text-card-foreground"
+    const employeeStatusBadge = document.querySelector(
+      '[data-slot="employee-status-badge"]'
     );
+    const card = document.querySelector('[data-slot="card"]');
+
+    expect(employeeStatusBadge).toBeInTheDocument();
+    expect(employeeStatusBadge).toHaveClass(
+      "bg-muted",
+      "text-muted-foreground"
+    );
+    expect(card).toBeInTheDocument();
+    expect(card).toHaveClass("bg-card", "text-card-foreground");
 
     i18n.activate("en");
   });

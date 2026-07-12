@@ -3599,7 +3599,9 @@ describe("Login", () => {
         "pt-3",
         "pb-[var(--app-footer-padding-bottom)]"
       );
-      expect(footer.querySelector("div")).toHaveClass("text-muted-foreground");
+      const footerContent = footer.querySelector("div");
+      expect(footerContent).toBeInTheDocument();
+      expect(footerContent).toHaveClass("text-muted-foreground");
       expect(
         screen.getByRole("link", {
           name: "Powered by SecPal – A guard's best friend",

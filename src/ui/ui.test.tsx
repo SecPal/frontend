@@ -297,37 +297,39 @@ describe("shared shadcn/radix UI basis", () => {
       "select-trigger"
     );
     expect(screen.getByRole("alert")).toHaveAttribute("data-slot", "alert");
-    expect(container.querySelector('[data-slot="card"]')).toHaveClass(
+    const card = container.querySelector('[data-slot="card"]');
+    const progress = container.querySelector('[data-slot="progress"]');
+    const avatar = container.querySelector('[data-slot="avatar"]');
+    const avatarFallback = container.querySelector(
+      '[data-slot="avatar-fallback"]'
+    );
+    const skeleton = container.querySelector('[data-slot="skeleton"]');
+    const table = container.querySelector('[data-slot="table"]');
+    const tableHeader = container.querySelector('[data-slot="table-header"]');
+    const tableRow = container.querySelector('[data-slot="table-row"]');
+
+    expect(card).toBeInTheDocument();
+    expect(card).toHaveClass(
       "bg-card",
       "text-card-foreground",
       "border-border"
     );
     expect(screen.getByText("Active")).toHaveAttribute("data-slot", "badge");
-    expect(container.querySelector('[data-slot="progress"]')).toHaveClass(
-      "bg-primary/20"
-    );
-    expect(container.querySelector('[data-slot="avatar"]')).toHaveClass(
-      "rounded-full"
-    );
-    expect(container.querySelector('[data-slot="avatar"]')).toHaveAttribute(
-      "data-size",
-      "sm"
-    );
-    expect(
-      container.querySelector('[data-slot="avatar-fallback"]')
-    ).toHaveClass("bg-muted", "text-muted-foreground");
-    expect(container.querySelector('[data-slot="skeleton"]')).toHaveClass(
-      "bg-muted"
-    );
-    expect(container.querySelector('[data-slot="table"]')).toHaveClass(
-      "caption-bottom"
-    );
-    expect(container.querySelector('[data-slot="table-header"]')).toHaveClass(
-      "[&_tr]:border-border"
-    );
-    expect(
-      container.querySelectorAll('[data-slot="table-row"]')[0]
-    ).toHaveClass("border-border");
+    expect(progress).toBeInTheDocument();
+    expect(progress).toHaveClass("bg-primary/20");
+    expect(avatar).toBeInTheDocument();
+    expect(avatar).toHaveClass("rounded-full");
+    expect(avatar).toHaveAttribute("data-size", "sm");
+    expect(avatarFallback).toBeInTheDocument();
+    expect(avatarFallback).toHaveClass("bg-muted", "text-muted-foreground");
+    expect(skeleton).toBeInTheDocument();
+    expect(skeleton).toHaveClass("bg-muted");
+    expect(table).toBeInTheDocument();
+    expect(table).toHaveClass("caption-bottom");
+    expect(tableHeader).toBeInTheDocument();
+    expect(tableHeader).toHaveClass("[&_tr]:border-border");
+    expect(tableRow).toBeInTheDocument();
+    expect(tableRow).toHaveClass("border-border");
   });
 
   it("keeps native buttons on type=button by default", () => {
