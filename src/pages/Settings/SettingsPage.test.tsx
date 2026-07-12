@@ -475,9 +475,6 @@ describe("SettingsPage", () => {
   });
 
   it("does not report passkeys unsupported while native capabilities are loading", async () => {
-    vi.mocked(
-      passkeyBrowser.isBrowserPasskeyRegistrationSupported
-    ).mockReturnValue(false);
     const bridge = {
       getPasskeyCapabilities: vi.fn().mockReturnValue(new Promise(() => {})),
       createPasskeyAttestation: vi.fn(),

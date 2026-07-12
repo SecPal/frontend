@@ -209,6 +209,9 @@ export function SettingsPage() {
     (registrationSupport &&
       nativePasskeyCapabilities !== undefined &&
       nativePasskeyCapabilities?.passkeysAvailable === true);
+  const isNativeRegistrationCapabilityLoading =
+    hasNativePasskeyRegistrationBridge() &&
+    nativePasskeyCapabilities === undefined;
   const [mfaStatus, setMfaStatus] = useState<MfaStatus | null>(null);
   const [isLoadingMfaStatus, setIsLoadingMfaStatus] = useState(true);
   const [mfaStatusError, setMfaStatusError] = useState<string | null>(null);
@@ -734,8 +737,7 @@ export function SettingsPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-4">
-              {nativePasskeyCapabilities === undefined &&
-              !browserRegistrationSupport ? (
+              {isNativeRegistrationCapabilityLoading ? (
                 <p
                   className="text-muted-foreground text-sm"
                   role="status"
