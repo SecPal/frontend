@@ -55,6 +55,7 @@ vi.mock("../../services/authAccountApi", async () => {
 });
 
 vi.mock("../../services/passkeyBrowser", () => ({
+  isBrowserPasskeyRegistrationSupported: vi.fn().mockReturnValue(false),
   isPasskeyRegistrationSupported: vi.fn(),
   getPasskeyAttestation: vi.fn(),
 }));
@@ -220,6 +221,9 @@ describe("SettingsPage", () => {
     vi.mocked(passkeyBrowser.isPasskeyRegistrationSupported).mockReturnValue(
       true
     );
+    vi.mocked(
+      passkeyBrowser.isBrowserPasskeyRegistrationSupported
+    ).mockReturnValue(true);
     vi.mocked(authAccountApi.getMfaStatus).mockResolvedValue(
       createDisabledMfaStatusResponse()
     );
@@ -423,6 +427,9 @@ describe("SettingsPage", () => {
     vi.mocked(passkeyBrowser.isPasskeyRegistrationSupported).mockReturnValue(
       false
     );
+    vi.mocked(
+      passkeyBrowser.isBrowserPasskeyRegistrationSupported
+    ).mockReturnValue(false);
 
     await renderSettingsPage();
 
@@ -435,6 +442,9 @@ describe("SettingsPage", () => {
   });
 
   it("does not start native passkey registration when Android reports passkeys unavailable", async () => {
+    vi.mocked(
+      passkeyBrowser.isBrowserPasskeyRegistrationSupported
+    ).mockReturnValue(false);
     const bridge = {
       getPasskeyCapabilities: vi.fn().mockResolvedValue({
         passkeysAvailable: false,
@@ -497,6 +507,9 @@ describe("SettingsPage", () => {
   });
 
   it("shows device-neutral guidance when the native capability response is invalid", async () => {
+    vi.mocked(
+      passkeyBrowser.isBrowserPasskeyRegistrationSupported
+    ).mockReturnValue(false);
     const bridge = {
       getPasskeyCapabilities: vi.fn().mockResolvedValue({}),
       createPasskeyAttestation: vi.fn(),

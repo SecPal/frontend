@@ -61,6 +61,7 @@ import { MfaQrCode } from "../../components/MfaQrCode";
 import { formatDateTime } from "../../lib/dateUtils";
 import {
   getPasskeyAttestation,
+  isBrowserPasskeyRegistrationSupported,
   isPasskeyRegistrationSupported,
 } from "../../services/passkeyBrowser";
 import {
@@ -192,6 +193,10 @@ export function SettingsPage() {
     () => isPasskeyRegistrationSupported(),
     []
   );
+  const browserRegistrationSupport = useMemo(
+    () => isBrowserPasskeyRegistrationSupported(),
+    []
+  );
   const [nativePasskeyCapabilities, setNativePasskeyCapabilities] = useState<
     NativePasskeyCapabilities | null | undefined
   >(() =>
@@ -200,9 +205,10 @@ export function SettingsPage() {
       : null
   );
   const supportsPasskeys =
-    registrationSupport &&
-    nativePasskeyCapabilities !== undefined &&
-    nativePasskeyCapabilities?.passkeysAvailable !== false;
+    browserRegistrationSupport ||
+    (registrationSupport &&
+      nativePasskeyCapabilities !== undefined &&
+      nativePasskeyCapabilities?.passkeysAvailable === true);
   const [mfaStatus, setMfaStatus] = useState<MfaStatus | null>(null);
   const [isLoadingMfaStatus, setIsLoadingMfaStatus] = useState(true);
   const [mfaStatusError, setMfaStatusError] = useState<string | null>(null);
