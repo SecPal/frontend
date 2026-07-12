@@ -530,9 +530,6 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
-      getPasskeyCapabilities: vi
-        .fn()
-        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi.fn(),
       getPasskeyCapabilities: vi.fn().mockResolvedValue({
         passkeysAvailable: false,
@@ -569,9 +566,6 @@ describe("Login", () => {
       .SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
-      getPasskeyCapabilities: vi
-        .fn()
-        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi.fn(),
       getPasskeyCapabilities: vi.fn().mockResolvedValue({
         passkeysAvailable: false,
