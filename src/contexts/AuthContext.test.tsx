@@ -519,36 +519,54 @@ describe("AuthContext", () => {
     });
 
     it("clears the prefetch cache when session:expired tears down the session", async () => {
-      await seedStoredUser({
-        id: 1,
+      const storedUser = {
+        id: "1",
         name: "Test User",
         email: "test@secpal.dev",
+        emailVerified: false,
         permissions: ["employees.read"],
-      });
+      };
+      await seedStoredUser(storedUser);
 
-      render(
-        <AuthProvider>
-          <PermissionTestComponent permission="employees.read" />
-        </AuthProvider>
-      );
+      // This test verifies the session-expiry lifecycle, not encrypted-vault
+      // bootstrap timing. Resolve the stored session directly so the event
+      // handler is registered against a known authenticated state.
+      const getUserSpy = vi
+        .spyOn(authStorage, "getUser")
+        .mockResolvedValueOnce(storedUser);
 
-      await waitFor(() => {
-        expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
-      });
+      try {
+        render(
+          <AuthProvider>
+            <PermissionTestComponent permission="employees.read" />
+          </AuthProvider>
+        );
 
-      await waitFor(() => {
-        expect(sessionEventHandlers.get("session:expired")).toHaveLength(1);
-      });
+        await waitFor(() => {
+          expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
+        });
 
-      vi.mocked(resetPrefetchCache).mockClear();
+        await waitFor(() => {
+          expect(sessionEventHandlers.get("session:expired")).toHaveLength(1);
+        });
 
-      await act(async () => {
-        const handlers = sessionEventHandlers.get("session:expired") ?? [];
-        handlers.forEach((handler) => handler());
-        await new Promise((r) => setTimeout(r, 0));
-      });
+        vi.mocked(resetPrefetchCache).mockClear();
 
-      expect(resetPrefetchCache).toHaveBeenCalled();
+        await act(async () => {
+          const handlers = sessionEventHandlers.get("session:expired") ?? [];
+          handlers.forEach((handler) => handler());
+          await new Promise((r) => setTimeout(r, 0));
+        });
+
+        await waitFor(() => {
+          expect(screen.getByTestId("hasPermission")).toHaveTextContent(
+            "false"
+          );
+          expect(resetPrefetchCache).toHaveBeenCalled();
+        });
+      } finally {
+        getUserSpy.mockRestore();
+      }
     });
 
     it("tears down native logout events without service-worker client redirects", async () => {
