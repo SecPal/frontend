@@ -300,11 +300,16 @@ export function isPasskeySupported(): boolean {
 }
 
 export function isPasskeyRegistrationSupported(): boolean {
-  return isBrowserPasskeyRegistrationSupported() || getNativePasskeyRegistrationBridge() !== null;
+  return (
+    isBrowserPasskeyRegistrationSupported() ||
+    getNativePasskeyRegistrationBridge() !== null
+  );
 }
 
 export function isBrowserPasskeyRegistrationSupported(): boolean {
-  return isPasskeySupported() && typeof navigator.credentials?.create === "function";
+  return (
+    isPasskeySupported() && typeof navigator.credentials?.create === "function"
+  );
 }
 
 export async function isConditionalMediationAvailable(): Promise<boolean> {

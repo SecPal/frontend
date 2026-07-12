@@ -471,7 +471,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
-      getPasskeyCapabilities: vi.fn().mockResolvedValue({ passkeysAvailable: true }),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi.fn().mockResolvedValue({
         user: createAuthUser({ name: "Native Passkey User" }),
       }),
@@ -528,7 +530,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
-      getPasskeyCapabilities: vi.fn().mockResolvedValue({ passkeysAvailable: true }),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi.fn(),
       getPasskeyCapabilities: vi.fn().mockResolvedValue({
         passkeysAvailable: false,
@@ -565,7 +569,9 @@ describe("Login", () => {
       .SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
-      getPasskeyCapabilities: vi.fn().mockResolvedValue({ passkeysAvailable: true }),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi.fn(),
       getPasskeyCapabilities: vi.fn().mockResolvedValue({
         passkeysAvailable: false,
@@ -619,7 +625,9 @@ describe("Login", () => {
     let resolvePasskeyLogin!: (value: unknown) => void;
     const nativeBridge = {
       login: vi.fn(),
-      getPasskeyCapabilities: vi.fn().mockResolvedValue({ passkeysAvailable: true }),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi.fn().mockReturnValue(
         new Promise((resolve) => {
           resolvePasskeyLogin = resolve;
@@ -671,7 +679,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
-      getPasskeyCapabilities: vi.fn().mockResolvedValue({ passkeysAvailable: true }),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi
         .fn()
         .mockRejectedValue(new authApi.AuthApiError("Native passkey failed.")),
@@ -709,7 +719,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
-      getPasskeyCapabilities: vi.fn().mockResolvedValue({ passkeysAvailable: true }),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi.fn().mockImplementation(
         () =>
           new Promise((_, reject) => {
@@ -752,7 +764,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
-      getPasskeyCapabilities: vi.fn().mockResolvedValue({ passkeysAvailable: true }),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi
         .fn()
         .mockRejectedValue(new Error("Native passkey crashed.")),
@@ -790,7 +804,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
-      getPasskeyCapabilities: vi.fn().mockResolvedValue({ passkeysAvailable: true }),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi
         .fn()
         .mockRejectedValue(new Error("Passkey sign-in was cancelled.")),
@@ -867,7 +883,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
-      getPasskeyCapabilities: vi.fn().mockResolvedValue({ passkeysAvailable: true }),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi
         .fn()
         .mockRejectedValue(new Error("Passkey sign-in was interrupted.")),
@@ -905,7 +923,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
-      getPasskeyCapabilities: vi.fn().mockResolvedValue({ passkeysAvailable: true }),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi
         .fn()
         .mockRejectedValue(
@@ -947,7 +967,9 @@ describe("Login", () => {
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
     const nativeBridge = {
       login: vi.fn(),
-      getPasskeyCapabilities: vi.fn().mockResolvedValue({ passkeysAvailable: true }),
+      getPasskeyCapabilities: vi
+        .fn()
+        .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi.fn().mockRejectedValue("unexpected-native-failure"),
       logout: vi.fn(),
       getCurrentUser: vi.fn(),
