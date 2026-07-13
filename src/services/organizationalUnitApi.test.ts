@@ -91,20 +91,8 @@ describe("Organizational Unit API", () => {
         });
 
         expect(mockFetchWithCsrf).toHaveBeenCalledWith(
-          expect.stringContaining("type=branch"),
-          expect.any(Object)
-        );
-        expect(mockFetchWithCsrf).toHaveBeenCalledWith(
-          expect.stringContaining("parent_id=parent-1"),
-          expect.any(Object)
-        );
-        expect(mockFetchWithCsrf).toHaveBeenCalledWith(
-          expect.stringContaining("per_page=10"),
-          expect.any(Object)
-        );
-        expect(mockFetchWithCsrf).toHaveBeenCalledWith(
-          expect.stringContaining(expectedQuery),
-          expect.any(Object)
+          `${apiConfig.baseUrl}/v1/organizational-units?type=branch&parent_id=parent-1&${expectedQuery}&per_page=10`,
+          expect.objectContaining({ method: "GET" })
         );
       }
     );
