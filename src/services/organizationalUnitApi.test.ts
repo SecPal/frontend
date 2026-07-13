@@ -71,12 +71,12 @@ describe("Organizational Unit API", () => {
     });
 
     it.each([
-      ["is_active", true, "is_active=true"],
-      ["is_active", false, "is_active=false"],
-      ["is_assignable", true, "is_assignable=true"],
-      ["is_assignable", false, "is_assignable=false"],
+      ["is_active", true, "is_active=1"],
+      ["is_active", false, "is_active=0"],
+      ["is_assignable", true, "is_assignable=1"],
+      ["is_assignable", false, "is_assignable=0"],
     ] as const)(
-      "serializes %s=%s as a boolean query value",
+      "serializes %s=%s as an API-compatible boolean query value",
       async (filter, value, expectedQuery) => {
         mockFetchWithCsrf.mockResolvedValue({
           ok: true,
@@ -91,20 +91,8 @@ describe("Organizational Unit API", () => {
         });
 
         expect(mockFetchWithCsrf).toHaveBeenCalledWith(
-          expect.stringContaining("type=branch"),
-          expect.any(Object)
-        );
-        expect(mockFetchWithCsrf).toHaveBeenCalledWith(
-          expect.stringContaining("parent_id=parent-1"),
-          expect.any(Object)
-        );
-        expect(mockFetchWithCsrf).toHaveBeenCalledWith(
-          expect.stringContaining("per_page=10"),
-          expect.any(Object)
-        );
-        expect(mockFetchWithCsrf).toHaveBeenCalledWith(
-          expect.stringContaining(expectedQuery),
-          expect.any(Object)
+          `${apiConfig.baseUrl}/v1/organizational-units?type=branch&parent_id=parent-1&${expectedQuery}&per_page=10`,
+          expect.objectContaining({ method: "GET" })
         );
       }
     );

@@ -24,9 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   actions. Capability checks now expose an accurate, bounded loading state,
   malformed native responses use device-neutral guidance, and passkey-only
   incompatibility alerts use assertive announcements.
-- Serialized organizational-unit active and assignable list filters as
-  `true`/`false`, matching API validation and preventing filtered requests from
-  failing with HTTP 422.
+- Serialized organizational-unit active and assignable list filters as `1`/`0`,
+  matching API validation and preventing filtered requests from failing with
+  HTTP 422 when opening forms that load assignable organizational units.
 - Release artifacts now include a deterministic third-party dependency notice
   bundle generated from their actual JavaScript and copied-asset module graph.
   It preserves package-specific notices and license texts, including Inter's
