@@ -47,17 +47,45 @@ function runDomainCheck(
 }
 
 describe("check-domains", () => {
+  it("keeps tracked storage-key documentation and fixtures in browser-storage contexts", () => {
+    const assetLoadRecoveryStorageKey = ["secpal", "asset-load-recovery"].join(
+      "."
+    );
+    const changelog = readFileSync(path.join(repoRoot, "CHANGELOG.md"), "utf8");
+    const themeColorBootstrapTests = readFileSync(
+      path.join(repoRoot, "tests/theme-color-bootstrap.test.ts"),
+      "utf8"
+    );
+    const buildTests = readFileSync(
+      path.join(repoRoot, "tests/build.test.ts"),
+      "utf8"
+    );
+    const domainCheckTests = readFileSync(
+      path.join(repoRoot, "tests/unit/scripts/check-domains.test.ts"),
+      "utf8"
+    );
+
+    expect(changelog).toContain(
+      `sessionStorage.setItem("${assetLoadRecoveryStorageKey}", "pending")`
+    );
+    expect(domainCheckTests).toContain(
+      `sessionStorage.setItem("${assetLoadRecoveryStorageKey}", "pending")`
+    );
+    expect(themeColorBootstrapTests).not.toContain(assetLoadRecoveryStorageKey);
+    expect(buildTests).not.toContain(assetLoadRecoveryStorageKey);
+  });
+
   it("accepts secpal-prefixed storage keys that are not hostnames", () => {
     const result = runDomainCheck([
       {
         path: "public/theme-color.js",
         contents:
-          'var assetLoadRecoveryStorageKey = "secpal.asset-load-recovery";\n',
+          'sessionStorage.setItem("secpal.asset-load-recovery", "pending");\n',
       },
       {
         path: ".context/notes.md",
         contents:
-          "`secpal.asset-load-recovery` is a local workspace storage key.\n",
+          '`sessionStorage.setItem("secpal.asset-load-recovery", "pending")` is a local workspace storage write.\n',
       },
     ]);
 
@@ -66,11 +94,12 @@ describe("check-domains", () => {
     expect(result.stdout).toContain("Domain Policy Check PASSED");
   });
 
-  it("accepts the storage key when it is the first token on a scanned line", () => {
+  it("accepts the storage key passed to a browser-storage API", () => {
     const result = runDomainCheck([
       {
         path: "README.md",
-        contents: "secpal.asset-load-recovery\n",
+        contents:
+          'sessionStorage.setItem("secpal.asset-load-recovery", "pending");\n',
       },
     ]);
 
@@ -101,7 +130,7 @@ describe("check-domains", () => {
     const result = runDomainCheck([
       {
         path: "README.md",
-        contents: `Inline note: "secpal.asset-load-recovery" must not mask https://${forbiddenHostname}.\n`,
+        contents: `sessionStorage.setItem("secpal.asset-load-recovery", "pending"); Inline note: storage use must not mask https://${forbiddenHostname}.\n`,
       },
     ]);
 
