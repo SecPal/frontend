@@ -184,7 +184,7 @@ describe("OrganizationalUnitFormDialog", () => {
         />
       );
 
-      expect(screen.getByLabelText("Juristische Person")).toBeInTheDocument();
+      expect(screen.getByLabelText("Rechtsträger")).toBeInTheDocument();
     });
 
     it("renders create dialog with correct title", () => {
