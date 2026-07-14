@@ -115,7 +115,7 @@ describe("CustomerCreate", () => {
     renderWithRouter(<CustomerCreate />);
 
     const labels = Array.from(document.querySelectorAll("label")).map((label) =>
-      label.textContent?.replace("*", "").trim()
+      label.textContent?.replace(/\*/g, "").trim()
     );
 
     expect(labels.indexOf("VAT ID")).toBe(labels.indexOf("Country") - 1);

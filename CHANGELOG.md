@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Corrected customer-form test label normalization so every required marker is removed.
 - Moved the customer VAT ID field directly above the billing country field in
   create and edit forms.
 - Removed the redundant max-width constraint from the customer detail page so
