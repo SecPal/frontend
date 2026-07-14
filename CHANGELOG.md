@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Renamed the German `Legal Entity` label to `Rechtsträger` in the
+  organizational-unit form.
 - Kept the mobile sidebar's user footer above Android system navigation bars
   by applying the bottom safe-area inset, so the user menu and sign-out action
   remain reachable in portrait mode.

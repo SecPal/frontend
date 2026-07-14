@@ -3493,7 +3493,7 @@ msgstr "Administrativ aktiv"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Legal Entity"
-msgstr "Juristische Person"
+msgstr "Rechtsträger"
 
 #: src/pages/Employees/EmployeeList.tsx
 msgid "Search by name or email..."
