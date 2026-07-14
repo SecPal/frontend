@@ -116,11 +116,7 @@ export async function listCustomers(
 function parseCustomerLegalEntityLookup(
   value: unknown
 ): CustomerLegalEntityLookup {
-  if (
-    typeof value !== "object" ||
-    value === null ||
-    Array.isArray(value)
-  ) {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error("Invalid legal entity lookup response");
   }
 

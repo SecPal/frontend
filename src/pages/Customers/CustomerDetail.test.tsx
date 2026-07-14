@@ -62,7 +62,7 @@ describe("CustomerDetail", () => {
     id: "customer-123",
     name: "Test Customer GmbH",
     customer_number: "CUST-2025-001",
-      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
+    legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     billing_address: {
       street: "Teststrasse 42",
       city: "München",

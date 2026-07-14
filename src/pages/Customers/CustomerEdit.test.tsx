@@ -48,7 +48,7 @@ describe("CustomerEdit", () => {
     id: "customer-123",
     name: "Existing Customer",
     customer_number: "CUST-2025-001",
-      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
+    legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     billing_address: {
       street: "Old Street 10",
       city: "Old City",
