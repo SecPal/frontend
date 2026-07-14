@@ -288,6 +288,10 @@ msgstr "Keine organisatorischen Einheiten"
 msgid "This onboarding step uses a schema we cannot render yet."
 msgstr "Dieser Onboarding-Schritt verwendet ein Schema, das noch nicht dargestellt werden kann."
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Legal entity is required."
+msgstr "Rechtsträger ist erforderlich."
+
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "No address suggestions found."
 msgstr "Keine Adressvorschläge gefunden."
@@ -2713,6 +2717,10 @@ msgstr "Der Mindestrang kann nicht größer als der Höchstrang sein."
 msgid "Authentication"
 msgstr "Authentifizierung"
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Failed to load legal entities"
+msgstr "Rechtsträger konnten nicht geladen werden"
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -3010,6 +3018,10 @@ msgstr "Zur Überprüfung einreichen"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Optional sections"
 msgstr "Optionale Abschnitte"
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Select legal entity..."
+msgstr "Rechtsträger auswählen..."
 
 #: src/AuthenticatedApp.tsx
 #: src/components/RouteGuardState.tsx
@@ -3492,6 +3504,7 @@ msgid "Administratively Active"
 msgstr "Administrativ aktiv"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
+#: src/pages/Customers/CustomerCreate.tsx
 msgid "Legal Entity"
 msgstr "Rechtsträger"
 

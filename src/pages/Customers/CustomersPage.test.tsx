@@ -52,6 +52,7 @@ const mockCustomers: Customer[] = [
   {
     id: "cust-1",
     customer_number: "C001",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     name: "Acme Corp",
     billing_address: {
       street: "Main St",
@@ -66,6 +67,7 @@ const mockCustomers: Customer[] = [
   {
     id: "cust-2",
     customer_number: "C002",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     name: "Tech Solutions Ltd",
     billing_address: {
       street: "Tech Ave",

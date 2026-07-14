@@ -85,6 +85,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Required customers to carry a Legal Entity UUID in frontend customer create
+  payloads, added the narrow customer Legal Entity lookup client, and wired the
+  create form to load and submit only that minimal lookup shape (US-002).
 - Documented the blocked Legal Entity customer backfill decision, including
   tenant-consistency requirements and the prohibition on silent default
   assignment for existing customers (US-001).

@@ -8,6 +8,7 @@ import {
   listCustomers,
   getCustomer,
   createCustomer,
+  listCustomerLegalEntities,
   updateCustomer,
   listSites,
   getSite,
@@ -167,6 +168,7 @@ describe("customersApi", () => {
   describe("createCustomer", () => {
     it("creates customer successfully", async () => {
       const customerData = {
+        legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
         name: "New Customer",
         billing_address: {
           street: "New Street 1",
@@ -225,6 +227,7 @@ describe("customersApi", () => {
 
       await expect(
         createCustomer({
+          legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
           name: "",
           billing_address: {
             street: "",
@@ -238,6 +241,7 @@ describe("customersApi", () => {
 
     it("sends Content-Type header", async () => {
       const customerData = {
+        legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
         name: "Test",
         billing_address: {
           street: "Street",
@@ -265,6 +269,58 @@ describe("customersApi", () => {
             "Content-Type": "application/json",
           }),
         })
+      );
+    });
+  });
+
+  describe("listCustomerLegalEntities", () => {
+    it("fetches the narrow customer legal entity lookup", async () => {
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: [
+            {
+              id: "550e8400-e29b-41d4-a716-446655440001",
+              name: "SecPal GmbH",
+            },
+          ],
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      const result = await listCustomerLegalEntities();
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/customers/legal-entities`
+      );
+      expect(result).toEqual([
+        {
+          id: "550e8400-e29b-41d4-a716-446655440001",
+          name: "SecPal GmbH",
+        },
+      ]);
+    });
+
+    it("rejects legal entity lookup responses that include general organizational data", async () => {
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: [
+            {
+              id: "550e8400-e29b-41d4-a716-446655440001",
+              name: "SecPal GmbH",
+              type: "company",
+              parent_id: "550e8400-e29b-41d4-a716-446655440000",
+            },
+          ],
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      await expect(listCustomerLegalEntities()).rejects.toThrow(
+        /legal entity lookup response/i
       );
     });
   });
@@ -592,6 +648,7 @@ describe("customersApi", () => {
     const customer = {
       id: "customer-123",
       customer_number: "KD-2026-0001",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
       name: "Musterkunde GmbH",
       billing_address: {
         street: "Kundenweg 5",

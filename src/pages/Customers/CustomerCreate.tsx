@@ -6,7 +6,7 @@
  * Epic #210 - Customer & Site Management
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -15,11 +15,15 @@ import { Button } from "@/ui/button";
 import { Checkbox } from "@/ui/checkbox";
 import { Input } from "@/ui/input";
 import { Textarea } from "@/ui/textarea";
-import { createCustomer } from "../../services/customersApi";
+import {
+  createCustomer,
+  listCustomerLegalEntities,
+} from "../../services/customersApi";
 import type {
   CreateCustomerRequest,
   Address,
   Contact,
+  CustomerLegalEntityLookup,
 } from "../../types/customers";
 import {
   Alert,
@@ -35,6 +39,7 @@ import {
 type CustomerFormErrors = Partial<
   Record<
     | "name"
+    | "legal_entity_id"
     | "billing_address.street"
     | "billing_address.postal_code"
     | "billing_address.city"
@@ -49,9 +54,13 @@ export default function CustomerCreate() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [legalEntities, setLegalEntities] = useState<
+    CustomerLegalEntityLookup[]
+  >([]);
   const [fieldErrors, setFieldErrors] = useState<CustomerFormErrors>({});
 
   const [formData, setFormData] = useState<CreateCustomerRequest>({
+    legal_entity_id: "",
     name: "",
     billing_address: {
       street: "",
@@ -67,15 +76,42 @@ export default function CustomerCreate() {
     is_active: true,
   });
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadLegalEntities() {
+      try {
+        const entities = await listCustomerLegalEntities();
+        if (!cancelled) {
+          setLegalEntities(entities);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : _(msg`Failed to load legal entities`)
+          );
+        }
+      }
+    }
+
+    void loadLegalEntities();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [_]);
+
   function updateField(field: keyof CreateCustomerRequest, value: unknown) {
-    if (field === "name") {
+    if (field === "name" || field === "legal_entity_id") {
       setFieldErrors((current) => {
-        if (!current.name) {
+        if (!current[field]) {
           return current;
         }
 
         const next = { ...current };
-        delete next.name;
+        delete next[field];
         return next;
       });
     }
@@ -136,6 +172,10 @@ export default function CustomerCreate() {
       validationErrors.name = _(msg`Customer name is required.`);
     }
 
+    if (formData.legal_entity_id.trim().length === 0) {
+      validationErrors.legal_entity_id = _(msg`Legal entity is required.`);
+    }
+
     if (formData.billing_address.street.trim().length === 0) {
       validationErrors["billing_address.street"] = _(msg`Street is required.`);
     }
@@ -182,6 +222,7 @@ export default function CustomerCreate() {
     try {
       // Clean up the data before sending
       const dataToSend: CreateCustomerRequest = {
+        legal_entity_id: formData.legal_entity_id,
         name: formData.name,
         billing_address: formData.billing_address,
         is_active: formData.is_active,
@@ -252,6 +293,40 @@ export default function CustomerCreate() {
             {fieldErrors.name ? (
               <FieldError id="customer-name-error">
                 {fieldErrors.name}
+              </FieldError>
+            ) : null}
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="customer-legal-entity">
+              <Trans>Legal Entity</Trans> *
+            </FieldLabel>
+            <select
+              id="customer-legal-entity"
+              name="legal_entity_id"
+              required
+              value={formData.legal_entity_id}
+              aria-invalid={fieldErrors.legal_entity_id ? true : undefined}
+              aria-describedby={
+                fieldErrors.legal_entity_id
+                  ? "customer-legal-entity-error"
+                  : undefined
+              }
+              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              onChange={(e) =>
+                updateField("legal_entity_id", e.target.value)
+              }
+            >
+              <option value="">{_(msg`Select legal entity...`)}</option>
+              {legalEntities.map((legalEntity) => (
+                <option key={legalEntity.id} value={legalEntity.id}>
+                  {legalEntity.name}
+                </option>
+              ))}
+            </select>
+            {fieldErrors.legal_entity_id ? (
+              <FieldError id="customer-legal-entity-error">
+                {fieldErrors.legal_entity_id}
               </FieldError>
             ) : null}
           </Field>

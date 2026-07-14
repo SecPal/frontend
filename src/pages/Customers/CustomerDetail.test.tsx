@@ -62,6 +62,7 @@ describe("CustomerDetail", () => {
     id: "customer-123",
     name: "Test Customer GmbH",
     customer_number: "CUST-2025-001",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     billing_address: {
       street: "Teststrasse 42",
       city: "München",
@@ -541,12 +542,14 @@ describe("CustomerDetail", () => {
       id: "customer-A",
       name: "Customer A",
       customer_number: "CUST-A",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     };
     const customerB = {
       ...mockCustomer,
       id: "customer-B",
       name: "Customer B",
       customer_number: "CUST-B",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     };
 
     let resolveCustomerA:
@@ -599,12 +602,14 @@ describe("CustomerDetail", () => {
       id: "customer-A",
       name: "Customer A",
       customer_number: "CUST-A",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     };
     const customerB = {
       ...mockCustomer,
       id: "customer-B",
       name: "Customer B",
       customer_number: "CUST-B",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     };
 
     let resolveCustomerB:
