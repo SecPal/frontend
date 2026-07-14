@@ -95,167 +95,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fragment-suffixed host forms, while still ignoring the standalone key and
   `.context` workspace notes as forbidden domains.
 
-### Added
-
-- Added optional VAT ID input, editing, API payload support, and detail-page
-  display for customers.
-- Added synchronized customer API type aliases for `legal_entity_id` and a
-  dedicated customer Legal Entity lookup client that only reads
-  `/v1/customers/legal-entities` and validates the minimal `id`/`name`
-  response shape.
-- Integrated the dedicated customer Legal Entity lookup into the customer
-  create form with Radix selection, single-entity preselection, empty-state
-  blocking, and required `legal_entity_id` submit coverage (US-007).
-- Required customers to carry a Legal Entity UUID in frontend customer create
-  payloads, added the narrow customer Legal Entity lookup client, and wired the
-  create form to load and submit only that minimal lookup shape (US-002).
-- Documented the blocked Legal Entity customer backfill decision, including
-  tenant-consistency requirements and the prohibition on silent default
-  assignment for existing customers (US-001).
-- Added an Android-only OSS-notices control on the source-license screen that
-  opens the native notices activity when the `SecPalEnterprise` capability is
-  available.
-- Added independent administrative-active and assignment-eligibility controls
-  and status badges for organizational units, preserving both flags in offline
-  data and using assignment eligibility for new employee and site assignments.
-- Added independent Legal Entity and Establishment controls to the
-  organizational-unit create/edit dialog, including full request payloads,
-  response typing, fixtures, and German catalog translations (US-004).
-- Added explicit `android-mock` development, local preview build, and
-  Playwright override workflows, including README guidance for local and
-  Polyscope switching while keeping mock surfaces out of deployable
-  production build modes (US-007).
-- Added regression coverage for the Android shared frontend migration flow,
-  including a stable login instance-switch control hook used by Android
-  live-device smoke proof for returning configured runtimes to discovery
-  (US-006).
-- Added a frontend-rendered Android login instance hint and switch action that
-  shows the configured instance label/API origin, clears the native runtime
-  bootstrap, runs the shared sensitive logout cleanup path, and returns the app
-  to runtime discovery (US-004).
-- Added a frontend-owned Android runtime discovery flow that appears before
-  login when no runtime bootstrap is configured, validates secure instance
-  URLs through canonical `GET /v1/bootstrap` Android parameters, blocks
-  invalid/unavailable/incompatible/unsupported responses, and confirms the
-  resolved instance before applying it to the native runtime (US-003).
-- Added canonical `GET /v1/bootstrap` TypeScript models covering Android and
-  browser runtime discovery, per-channel notification metadata, and the
-  frontend-side `SecPalRuntimeBootstrap` native facade for runtime info,
-  bootstrap application, and bootstrap clearing (US-001).
-- Exposed Android runtime bootstrap bridge calls through the shared
-  `SecPalRuntimeBootstrap` facade, including current runtime bootstrap reads,
-  canonical-to-native payload mapping, and token-free regression coverage
-  (US-002).
-- Added `@capacitor/core` as a runtime dependency and introduced the
-  side-effect-free `src/platform/runtime.ts` platform abstraction for future
-  native integrations without adding Capacitor project scaffolding (US-001).
-- Added strict `VITE_APP_SURFACE` validation through
-  `src/platform/appSurface.ts`, covering web, Android mock/native, and iOS
-  mock/native frontend surfaces with production guards for mock surfaces
-  (US-002).
-- Added explicit `dev:*` and `build:*` package scripts for web, Android, and
-  iOS surfaces while preserving the default production web build path (US-003).
-- Documented the `VITE_APP_SURFACE` values, frontend source-of-truth rule,
-  PWA pipeline contract, and shared `src/ui`/shadcn/Radix/Lucide design-system
-  requirements for web, Android, and future iOS surfaces (US-004).
-- Protected the `/android-provisioning` product route and authenticated shell
-  navigation behind the Android app-surface flag in addition to the existing
-  `androidProvisioning` capability gate (US-005).
-- Added a minimal `src/native` facade surface with explicit
-  `SecPalDeviceState`, `SecPalEnterprise`, and `SecPalPush` typed stubs for
-  future native plugin integrations without introducing a generic native
-  command bridge or changing the existing auth bridge (US-006).
-- Added a central sensitive UI state helper and guarded-route privacy shield
-  flow so visual `privacy-shield` masking stays separate from the real
-  `vault-locked` offline-vault lock/unlock path (US-007).
-- Added a committed `.env.web`, pinned `build:web` / `dev:web` to web mode,
-  and tightened Playwright's default Android e2e surface so empty or parent
-  shell `VITE_APP_SURFACE` values cannot silently override the route surface;
-  Playwright now requires an explicit `PLAYWRIGHT_APP_SURFACE` override for
-  non-Android local or CI runs.
-- Forced `build:android` to export `VITE_APP_SURFACE=android-native` in the
-  command itself so Android-targeted builds stay deterministic even when CI or
-  a parent shell exports a conflicting app surface.
-- Forced every surface-specific `dev:*` and `build:*` script to export its
-  matching `VITE_APP_SURFACE` in the command itself so web, Android, and iOS
-  runs stay deterministic even when a parent shell or CI job exports a
-  conflicting surface value.
-- Cleared stale `privacy-shield` UI state during BFCache `pageshow`
-  reconciliation when the app restores into a real `vault-locked` state, so
-  the auth context no longer carries an outdated visual shield flag behind the
-  higher-priority offline-vault lock.
-- Centralized frontend surface resolution in a shared app-surface contract so
-  runtime modules, Vite build planning, and Playwright local dev-server
-  selection all validate the same surface rules and mode families.
-- Local Playwright runs now honor explicit `PLAYWRIGHT_APP_SURFACE` overrides
-  all the way through the spawned Vite command, and Vite build planning now
-  rejects `android-mock` / `ios-mock` before production artifacts can be
-  emitted.
-- Pinned the default `build` and `build:analyze` entrypoints to the web
-  surface as well, so generic production and analysis builds cannot emit
-  Android or iOS route surfaces from a leaked parent-shell
-  `VITE_APP_SURFACE`.
-- Raised the privacy shield over existing `document.body` portal siblings too,
-  so already-open Radix dialogs, dropdowns, and similar portal content are
-  hidden and inert while the shield is active.
-- The CI preview web-server path now builds the preview artifact with the same
-  resolved Playwright app surface that the suite expects, instead of routing
-  through the default web-pinned `build` script.
-- Remote HTTPS and workspace-preview Playwright targets now default to the web
-  surface for route assumptions, and the Android provisioning E2E proof skips
-  itself unless the current Playwright surface explicitly exposes the Android
-  route.
-- Local Playwright runs now disable dev-server reuse when
-  `PLAYWRIGHT_APP_SURFACE` explicitly switches surfaces, and SecPal-owned API
-  configuration examples now stay on approved `secpal.dev` hosts across env
-  samples, deployment docs, and config regression tests.
-- Production API base validation now keys off deployable build semantics
-  instead of the surface mode name alone, so `build:web`,
-  `build:android`, and `build:ios` still fail fast on missing, relative, or
-  loopback `VITE_API_URL` values.
-- Non-deployable Vite build modes such as `preview` and `analyze` now stay out
-  of that strict production API validation, so CI/local preview builds can keep
-  their loopback API base while deployable surface artifacts remain fail-fast.
-- Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
-  AGPL SPDX expressions to `AGPL-3.0-or-later AND
-LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to
-  state the additional attribution terms, preserve the required `Powered by
-SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
-  rather than mandatory license conditions.
-- Added deployment-backed `/source` metadata contracts so the public AGPL
-  source-offer page can consume immutable corresponding source URLs for the
-  deployed release set without exposing broader runtime diagnostics:
-  `/source-offer.json` now covers `frontend` / `contracts` plus optional
-  `android`, `GET /v1/release` provides the live `api` source URL, the
-  frontend tolerates mixed valid/invalid metadata sources without discarding
-  still-valid release links, and `docs/deployment-spa-routing.md` documents the
-  frontend versus deployment/API responsibilities.
-- Added the canonical shadcn `components.json` baseline for the frontend
-  (`new-york`, Tailwind v4 `src/index.css`, `zinc`, Lucide, and repo aliases)
-  plus a guardrail inventory test for the remaining non-canonical UI
-  compatibility layers.
-- Added mobile Playwright regression coverage for the authenticated shell's
-  nested sidebar-sheet user menu: `tests/e2e/auth.spec.ts` now proves that the
-  `mobile-chrome` flow can lock the app, unlock it again, and sign out from the
-  locked state without a page reload, so Radix `Sheet` + `DropdownMenu`
-  interaction regressions surface in automated browser runs instead of only in
-  manual mobile testing.
-- Standardized the authenticated app's loading experience around a shared `src/ui` skeleton layer (`Skeleton`, `PageSkeleton`, `SectionSkeleton`, `TableSkeleton`, `FormSkeleton`, `LoadingRegion`) and documented the contract in `src/ui/MIGRATION.md`. List pages (customers, sites, employees, activity logs, Android provisioning) now keep their table/header chrome mounted during the first load with skeleton rows, switch to row-level skeletons only when no rows are cached, and wrap subsequent refresh/pagination/filter cycles in `LoadingRegion` so previously rendered rows stay visible while the request is in flight. Detail/edit screens (customer, site, employee, employee contacts, employee create) keep page titles and action regions visible during initial entity loads and render `SectionSkeleton`/`FormSkeleton` only in the data region; `SiteDetail` renders the site record as soon as it loads and falls back to inline placeholders for customer and organizational-unit lookups (US-001..US-006).
-- Replaced the global route loader spinner with a shell-shaped `PageSkeleton` fallback, kept authenticated shell chrome mounted during persisted-session bootstrap revalidation, and routed authenticated route chunk loading through layout-owned `Suspense` boundaries that render `RouteContentFallback` instead of a full-screen guard loader. Route guards now share a single `routeGuardAuth` bootstrap check so `ProtectedRoute`, `FeatureRoute`, `PermissionRoute`, `OrganizationalRoute`, and `LoginRoute` no longer flash a guard-specific `Loading…` screen when a session snapshot exists (US-002, US-003).
-- Converted operational modules (`OrganizationalUnitTree`, `ActivityLogList`, `AndroidProvisioningPage`, `SettingsPage`) to keep their headers, filters, forms, and action controls mounted on first load. Loading-heavy panes now render `SectionSkeleton`/row skeletons inside the existing card/table chrome and fall back to `LoadingRegion` or inline busy indicators for safe refreshes such as activity-log manual refresh, organizational unit cache refreshes, Android revoke errors, and passkey post-registration list refreshes (US-007).
-- Kept the login card mounted during post-MFA/session completion via a card-local progress overlay and disabled credentials instead of swapping to a separate "completing" screen, and replaced the onboarding wizard initial/step-template loading with a stable wizard frame plus `FormSkeleton`. Token validation on `/onboarding/complete` now renders `FormSkeleton` inside the auth card instead of plain "Validating onboarding link" text (US-008).
-- Activated a shared route/data prefetch strategy backed by `src/routeModules.ts`: capability-gated shell idle warmups prefetch only route chunks (`scheduleRoutePrefetch` with `includeApi: false`) while `PrefetchLink` warms both the chunk and the matching API GET data on `mouseenter`/`focus`. Touch interactions now warm the route chunk only (`prefetchPathModuleOnly`) to avoid spurious API requests during scroll. The shared `usePrefetch` hook owns route plans for primary navigation and customer/site/employee detail paths, deduplicates in-flight and completed prefetches, caches only `Response.ok` results, and falls back to `console.warn` in dev for non-ok responses or rejected requests (US-009 plus audit fix-up).
-
-- Migrated the Login page from the legacy Catalyst component set to a new self-contained `src/pages/Auth/ui/primitives.tsx` design-system layer (`LoginShell`, `LoginCard`, `LoginCardHeader`, `LoginCardTitle`, `LoginForm`, `LoginButton`, `LoginInput`, `LoginField`, `LoginFieldGroup`, `LoginFieldLabel`, `LoginFieldDescription`, `LoginFieldError`, `LoginFieldSeparator`, `LoginStatusMessage`, `LoginDialog`, `LoginInputOtp`, `LoginInputOtpGroup`, `LoginInputOtpSlot`, `LoginOtpInput`, and related helpers), removing the dependency on external Catalyst primitives for the auth flow and aligning the visual language with the rest of the shadcn-based UI.
-- Restructured `/login` around the shadcn `login-05` block: a centered `max-w-sm` card with brand block on top, primary submit, `LoginFieldSeparator` "Or", and the passkey button as the secondary action, with the language switcher pinned to the shell's top-right and the legal footer rendered as a centered strip below the card.
-- Adopted the official shadcn `input-otp` library (`input-otp@1.4.2`) and wrapped it in route-local `LoginInputOtp` / `LoginInputOtpGroup` / `LoginInputOtpSlot` primitives styled to the existing zinc theme; `LoginOtpInput` is now a thin convenience wrapper over the new primitives with digits-only pattern enforcement (`REGEXP_ONLY_DIGITS`) for TOTP entry in the MFA challenge dialog.
-- Inlined `LoginLanguageSwitcher` and `LoginLegalFooter` into the Login page, removing the dependency on the shared `LanguageSwitcher` and `Footer` components for the auth flow.
-- Extended `INVALID_CREDENTIALS_PATTERN` to also match the short `"Invalid credentials"` backend message so both forms are localized consistently.
-- Added i18n coverage for previously hardcoded error strings in the Login page: passkey completion errors, MFA completion errors, unexpected submission errors, and the MFA verification failure message.
-- Added localized `login.title` ("Welcome to SecPal" / "Willkommen bei SecPal") and `login.separator` ("or" / "oder") strings for the new `login-05` brand block and separator.
-
-### Fixed
-
 - Restored the default Android Playwright surface for local HTTPS targets such
   as `https://localhost` and `*.ddev.site`, so `/android-provisioning` E2E
   coverage no longer skips itself on local HTTPS runs unless
@@ -264,192 +103,6 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   even when Vite marks the bundle as `PROD`, so preview smoke builds on
   localhost keep honoring their loopback `VITE_API_URL` instead of tripping
   deploy-only production API guards.
-
-### Changed
-
-- Added a guardrail test for `LICENSES/LicenseRef-SecPal-Attribution.txt` so
-  the repository attribution addendum stays aligned with the checked-in central
-  SecPal wording for the approved modified-version and preferred attribution
-  notices.
-- Extended `scripts/check-license-compatibility.sh` and the required
-  **Quality Checks / Check License Compatibility** workflow step to validate
-  both REUSE source-file SPDX metadata and dependency licenses recorded in
-  `package-lock.json`, fail closed on malformed lockfiles, and cover the
-  dependency license set already present in the repository, so incompatible npm
-  package licenses now fail the same CI guard tracked in issue #1321.
-- Standardized the German customer site-count copy on `CustomerDetail` to use
-  `Objekt` / `Objekte`, matching the rest of the Sites UI and keeping the zero
-  state on the natural "keine Objekte" wording.
-- Completed the remaining German Lingui catalog coverage for the frontend's
-  supported UI copy, translating the previously missing `de` entries and
-  adding a regression test that fails whenever any checked-in German catalog
-  message is left untranslated.
-- Moved the AGPL/license and source-code notices out of the authenticated and
-  login footers so those footers keep only the "Powered by SecPal" slogan; the
-  authenticated sidebar now exposes a collapsible `Legal` section above the
-  user menu with dedicated `AGPL v3+` and `Source Code` entries, and the
-  source entry preserves the current route in navigation state for the return
-  flow.
-- Hardened `/source` deployment manifests by trimming validated source URLs
-  before rendering them and by waiting for the manifest request to settle
-  before showing fallback repository guidance, so deployments do not flash
-  mutable fallback links ahead of immutable release URLs.
-- Kept `/source` deployment manifests effective when the separate live API
-  release fetch fails before returning an HTTP response, so valid same-origin
-  immutable frontend and contracts source links no longer fall back to mutable
-  repository URLs on mixed deployment/API outages.
-- Restored the `/source` fallback repository links while the
-  `/source-offer.json` request is still pending, so stalled manifest fetches
-  do not leave the corresponding-source section empty on the public AGPL page.
-- Narrowed the `/source` deployment notice so optional repositories that still
-  fall back to a public repository link are no longer described as immutable
-  deployment source, and added explicit short-cache delivery rules for
-  `/source-offer.json` to the shipped Apache/Nginx deployment templates.
-- Fixed the shipped Apache rewrite rule for `/source-offer.json` so deployed
-  manifests are served when present while missing manifests still return HTTP
-  404 instead of the SPA shell.
-- Stopped production builds from failing before first paint or reusing leaked
-  Polyscope preview API origins when they are opened on local loopback hosts
-  such as `localhost`, so static LHCI audits and other local production-build
-  checks stay same-origin instead of requiring deployment API metadata.
-- Limited that localhost preview-origin guard to production mode so local
-  development keeps honoring an explicit preview `VITE_API_URL` instead of
-  falling back to same-origin routing.
-- Updated the shipped `app.secpal.dev` Nginx template to use the current
-  `http2 on;` syntax and to drop the redundant `ssi_types text/html;`
-  override, so production config validation no longer emits known warnings for
-  the frontend host template.
-- Limited the `/source` Android repository block to deployments that publish an
-  explicit Android release entry in `/source-offer.json`, so frontend-only
-  deployments no longer advertise Android source links without a matching
-  released Android version.
-- Refined the `/source` explanatory copy in English and German so the
-  deployment and fallback notices read naturally while still describing the
-  source-offer behavior precisely.
-- Refined the new legal-menu follow-up so the collapsed desktop sidebar opens
-  `Legal` in a separate dropdown instead of expanding the whole sidebar, the
-  login `Legal` trigger keeps the same neutral surface styling as the language
-  picker in dark mode, the authenticated `Legal` triggers no longer compose
-  sidebar tooltips through Radix `asChild` wrappers, the `Legal` section now
-  lives in the scrollable sidebar content instead of the fixed footer, the
-  vault-locked login shell keeps bottom safe-area breathing room when no footer
-  is present, the user menu stays bounded for long profile names and email
-  addresses, and pointer dismissal now clears trigger focus for the shared
-  dropdown primitives used by both flows.
-- Fixed pointer-dismissed dropdown menus that use trigger-child composition so
-  Radix menu triggers rendered through shared `Button` and
-  `SidebarMenuButton` children still blur their restored focus ring instead of
-  staying visibly focused after pointer-driven close.
-- Limited pointer-dismiss blur handling to the dropdown or select trigger that
-  actually owns the closing overlay, so clicking a different menu trigger no
-  longer strips focus from the newly targeted control.
-- Aligned the remaining footer slogan with the standard `text-xs` type scale
-  and tightened the surrounding vertical spacing now that the legal-link row is
-  gone.
-- `AuthContext` now keeps new logins behind the full sensitive logout cleanup
-  completion path, so the five-second best-effort logout timeout no longer lets
-  a replacement session race the previous session's IndexedDB and cache
-  teardown.
-- Widened the shared authenticated shell content stage to a 1600px desktop cap
-  and aligned the shell footer, route loader, and update banner with the same
-  container so large desktop screens can use materially more horizontal space
-  while page-local form and detail views keep their narrower limits.
-- Rebuilt the authenticated application shell navigation on the canonical shadcn
-  `sidebar-07` composition: the old bespoke menu shell is replaced by shared
-  shadcn/Radix/Lucide `Sidebar`, `Collapsible`, `DropdownMenu`, `Sheet`,
-  `Breadcrumb`, `Separator`, and avatar primitives, with the desktop sidebar
-  collapsing to icons, the mobile menu using the matching sheet pattern, and
-  regression coverage updated to assert the real `sidebar-07` structure instead
-  of the removed custom grouping model.
-- Fixed the mobile authenticated shell so nested user-menu actions close the
-  sidebar sheet before navigation, lock, and logout side effects run. The user
-  menu and workspace switcher now disable Radix dropdown modality while they
-  live inside the mobile sidebar `Sheet`, which prevents the stale
-  `pointer-events: none` / scroll-lock state that previously trapped the app
-  behind the lock screen until a manual reload.
-- Tightened the authenticated shell's mobile/accessibility follow-up fixes: the
-  top-level authenticated-route loader now keeps the update prompt mounted while
-  lazy route modules are still loading, the mobile sidebar close button uses
-  localized labels with a touch-sized hit area, primary mobile nav items keep a
-  larger tap target, and the shell header now grows by the top safe-area inset
-  instead of only padding inside a fixed height.
-- Hardened the nested mobile sidebar overlays and logout cleanup lifecycle so
-  the user menu and team switcher portal into the active shell container, the
-  mobile trigger keeps the canonical touch target sizing, and logout cleanup
-  continues after bounded analytics or vault-cleanup waits instead of leaving
-  the authenticated shell trapped behind stale overlay or cleanup barriers.
-- Tightened the logout cleanup barrier follow-up so pre-timeout sensitive
-  cleanup failures are logged again instead of being swallowed by the timeout
-  wrapper, and stale barrier-owner reconciliation now runs before the current
-  logout cleanup owner token is removed from storage-backed barrier state.
-- Followed up the shell/auth review findings again by keeping the sidebar rail
-  hidden through the mobile sheet breakpoints and bounding post-logout login
-  waits to a second five-second best-effort timeout so a hung sensitive cleanup
-  cannot block the next successful session forever.
-- Followed up the auth/app-shell edge cases again by normalizing public
-  trailing-slash routes before suppressing the root `UpdatePrompt`, by keeping
-  new logins blocked on destructive logout cleanup even when trailing browser
-  push teardown is still bounded by the five-second best-effort handoff wait,
-  and by releasing the logout barrier owner as soon as destructive cleanup
-  finishes so later logouts do not inherit stale owner state.
-- Completed the shadcn/Radix/Lucide UI migration proof by tightening the
-  repo-wide legacy UI guardrail to a zero allowlist, removing the final shared
-  shell compatibility aliases, and documenting `src/ui` as the complete
-  canonical production UI layer (US-007).
-- Removed the remaining UI-surface holdouts that still only imitated the
-  canonical shared primitives: destructive load/error states now render through
-  shared `Alert*` slots instead of ad-hoc text blocks or route-local alert
-  shells, shared auth status messaging now composes the canonical `Alert`
-  primitive directly, and the repository documentation now describes the final
-  `src/ui` architecture instead of an in-progress migration state (US-007).
-- Moved the remaining Customers, Sites, Employees, and admin/domain surface UI
-  consumers onto direct `@/ui` imports, promoted the still-needed customer/site
-  and employee compositions to prefixed shared exports, and deleted the
-  route-local `CustomerSites` / `Employees` UI barrels plus obsolete generic
-  `src/components/*` wrapper files from the compatibility inventory (US-006).
-- Moved the auth and onboarding route-local primitive layers into the canonical
-  shared `@/ui` surface, updated login, MFA, onboarding wizard, completion, and
-  submitted screens to import shared primitives directly, and deleted
-  `src/pages/Auth/ui` plus `src/pages/Onboarding/ui` from the remaining
-  compatibility inventory while preserving command-popover Tab focus handoff
-  through the shared primitive (US-005).
-- Replaced the shared searchable/selectable control compatibility layer with
-  canonical shadcn `Command*` primitives backed by `cmdk`, migrated the
-  onboarding and employee command-popover adapters onto that pattern, and
-  removed the obsolete generic `combobox`, `listbox`, `select`, and
-  `src/ui/searchableControls.tsx` wrappers from the remaining legacy UI
-  inventory (US-004).
-- Migrated the authenticated application shell navigation from bespoke
-  app-shell sidebar, mobile drawer, and dropdown approximations to shadcn/Radix
-  `Sidebar`, `Sheet`, and `DropdownMenu` composition. The global user menu,
-  mobile navigation overlay, sidebar links, and shell layout now expose
-  canonical shadcn slot names with regression coverage for focusable menu and
-  sheet behavior (US-003).
-- Migrated the shared `src/ui` core primitives to canonical shadcn slot names,
-  CSS-variable theme tokens, and Radix-backed avatar structure. Buttons,
-  inputs, textareas, fields, selects, checkboxes, switches, radios, dialogs,
-  alerts, cards, badges, progress, avatars, tables, skeletons, and loading
-  states now share the shadcn token layer from `src/index.css`, and affected
-  primitive tests assert the canonical structure directly (US-002).
-- Replaced the repo-local `markdownlint-cli2` pre-commit and preflight path with pinned `markdownlint-cli@0.49.0` usage so markdown validation now matches the shared `.github` governance baseline
-- Included `.github/instructions/github-workflows.instructions.md` in the frontend AI-governance baseline so provider-neutral agents and Copilot-derived tooling load the same workflow-policy overlay when reviewing or editing GitHub automation.
-- Updated `docs/development/TDD_WORKFLOW.md` to keep the SPDX copyright year current after the 2026 governance-link refresh.
-- `/login` no longer renders the legacy split brand-panel layout on large viewports; the `login-05` centered card is now the single layout across breakpoints. The `LoginBrandPanel` primitive remains available in `src/pages/Auth/ui/primitives.tsx` for future use but is no longer composed on the login route.
-- Swapped the three icons on the login surface from the legacy outline icon package to `lucide-react`: passkey-action `KeyIcon` → `KeyRound`, AGPL-license `ScaleIcon` → `Scale`, source-code `CodeBracketIcon` → `Code2`.
-- Migrated every remaining non-shadcn surface on the login route to true Radix-backed shadcn primitives, fulfilling the "Login uses shadcn exclusively" requirement:
-  - `LoginDialog` (MFA challenge) now wraps `@radix-ui/react-dialog` with Portal + Overlay + Content + auto-focus + focus-trap + Esc/outside-click dismissal handled by Radix (the previous custom div + hand-rolled focus-trap is removed; `LoginDialogTitle` / `LoginDialogDescription` are thin wrappers around `DialogPrimitive.Title` / `DialogPrimitive.Description`).
-  - `LoginFieldLabel` wraps `@radix-ui/react-label` for proper `<button role="radio">` association.
-  - New `LoginRadioGroup` / `LoginRadioGroupItem` wrap `@radix-ui/react-radio-group` and replace the native `<fieldset>` + `<input type="radio">` MFA-method selector.
-  - New `LoginSelect` / `LoginSelectTrigger` / `LoginSelectValue` / `LoginSelectContent` / `LoginSelectItem` (plus internal `LoginSelectScrollUpButton` / `LoginSelectScrollDownButton`) wrap `@radix-ui/react-select` and replace the native `<select>` + `<option>` language switcher.
-  - The MFA dialog's inner `<form className="space-y-6">` is now `LoginForm`, consistent with the primary login form.
-- Upgraded the `cn` helper in `src/pages/Auth/ui/utils.ts` to compose `clsx` with `tailwind-merge` so conflicting Tailwind classes deduplicate predictably (matches the canonical shadcn `cn` implementation).
-- Added JSDOM stubs for `Element.prototype.hasPointerCapture` / `setPointerCapture` / `releasePointerCapture` / `scrollIntoView` in `tests/setup.ts` so Radix Select can be opened and interacted with in Vitest under JSDOM.
-- Refactored `LoginButton` in `src/pages/Auth/ui/primitives.tsx` to use `class-variance-authority` (`cva`) for variant management, matching the canonical shadcn stylistic approach: `loginButtonVariants` is now a `cva()` definition with a `variants.variant` map (`default` / `secondary` / `outline` / `ghost`) and `defaultVariants`; the public `LoginButtonVariant` type is derived from `VariantProps<typeof loginButtonVariants>`; the standalone `focusRing` helper class is inlined into the cva base so it is always applied without an extra `cn(...)` argument.
-- Replaced the native `<label>` element that wrapped each `LoginRadioGroupItem` "card" in the MFA-method selection (`src/pages/Login.tsx`) with `LoginFieldLabel` (Radix Label) bound to the radio via `htmlFor` / `id` (`mfa-method-${method}`), so the entire card click target is dispatched through Radix Label instead of a raw HTML label and the login route now contains zero native form-control HTML on the MFA flow.
-- Added the canonical shadcn `Spinner` + `Empty` primitives as `LoginSpinner`, `LoginEmpty`, `LoginEmptyHeader`, `LoginEmptyMedia` (with `default` / `icon` `cva` variants), `LoginEmptyTitle`, `LoginEmptyDescription`, and `LoginEmptyContent` in `src/pages/Auth/ui/primitives.tsx`. `LoginSpinner` wraps `Loader2` from `lucide-react` with `role="status"`, an overridable `aria-label`, and `animate-spin`; the Empty primitives mirror the shadcn `new-york-v4` registry, with `bg-muted` / `text-foreground` swapped for the existing zinc palette so the surface matches the rest of the auth chrome.
-- Added a successful-MFA completion UI on `/login`: after `verifyMfaChallenge` resolves, `Login.tsx` flips a new `isCompletingLogin` state, hides the credential card behind `hidden` + `aria-hidden`, hides the language switcher, and renders a centered `LoginEmpty` block (`aria-live="polite"`, `aria-busy="true"`) with `LoginSpinner` + `LoginEmptyTitle` ("Completing sign-in") + `LoginEmptyDescription` ("Please wait…") that stays on screen while `login()` and `navigate("/")` finish. The MFA dialog closes over this completion state, so the user never sees the login form re-flash between the dialog closing and the route transitioning. On failure during completion the state is reset and the credential form is restored with the surfaced error message intact.
-
-### Fixed
 
 - Added the committed `.env.android` mode override so `dev:android` and
   `build:android` load the `android-native` app surface instead of silently
@@ -610,15 +263,6 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 - Migrated `Select`, `Checkbox`, `RadioGroup`, `RadioGroupItem`, `Progress`, and `FieldLabel` in `src/pages/Onboarding/ui/primitives.tsx` from native HTML elements to Radix UI primitives (`@radix-ui/react-select`, `@radix-ui/react-checkbox`, `@radix-ui/react-radio-group`, `@radix-ui/react-progress`, `@radix-ui/react-label`, `@radix-ui/react-popover`).
 - Added `AutocompleteListbox` and `AutocompleteOption` components to `src/pages/Onboarding/ui/primitives.tsx` for accessible combobox autocomplete surfaces backed by `@radix-ui/react-popover`.
 
-### Changed
-
-- **Breaking:** `LoginOtpInput` `aria-label` prop is now required (no default). Callers that omitted `aria-label` must now pass an explicit localized label string.
-- **Breaking:** `LoginSpinner` `aria-label` prop is now required (no default `"Loading"`). Callers must pass an explicit localized label.
-- **Breaking:** `CommandPopover` props `placeholder`, `searchPlaceholder`, and `emptyMessage` are now required strings (previously optional with English defaults). All call sites must pass localized values.
-- `cn()` in the onboarding barrel now applies `tailwind-merge` (previously used bare `clsx` without conflict resolution). Class lists that previously preserved duplicate conflicting Tailwind utilities will now be deduplicated.
-
-### Fixed
-
 - Fixed `emailVerified` flag in the onboarding-complete auth session: the expression now requires an explicit `=== true` rather than `!== false`, preventing a missing or undefined `email_verified` field from silently granting email-verified status.
 - Fixed focus management in the onboarding wizard error flow: the `feedback`-error alert and the `error` alert now hold separate refs (`feedbackErrorRef` / `onboardingErrorRef`) so the focus effect always targets the correct element when both are present simultaneously.
 - Fixed `role="status"` / `aria-live` placement on the wizard loading state: the live-region attributes are now scoped to the inner `CardContent` element rather than the outer `Card` container, per the ARIA scoping rule for dynamic content regions.
@@ -631,8 +275,6 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 - Added `getCountrySelectOptions` in `src/lib/iso3166CountryOptions.ts` to generate a locale-sorted ISO 3166-1 alpha-2 country dropdown with per-code `Intl.DisplayNames` fallback for unsupported region identifiers.
 - Added shared `EmployeeAddressFields` component with OpenPLZ street/locality autocomplete, keyboard navigation, and a country combobox; adopted in the employee create, edit, contacts-edit, and inline postal-address dialog flows.
 - Added an opt-in live Playwright browser Web Push smoke plus operator runbook coverage for selected HTTPS deployments: the new `test:e2e:live:web-push` flow now runs in a headed persistent Chromium profile, auto-starts `Xvfb` on headless Linux hosts when available, and proves browser bootstrap metadata publication, same-origin service-worker prerequisites, authenticated `PUT /v1/me/notification-installations/{installationId}` registration, and sign-out driven `DELETE /v1/me/notification-installations/{installationId}` cleanup with explicit diagnostics for missing runtime metadata or rejected registration. Closes #1156.
-
-### Fixed
 
 - Fixed protected-route browser-session recovery so the app now performs one
   automatic bootstrap retry after a transient timeout or network failure before
@@ -668,48 +310,6 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 - Fixed template re-fetch after `handleWorkflowConflict` resolving to the same step: `applyLoadedSteps` now increments a `templateResetKey` counter so the template-loading effect re-runs even when `currentStepIndex` and `currentStepTemplateId` remain unchanged.
 - Fixed `isResidentialAddressHistoryFieldKey` to exclude bare aggregate keys (`current_address`, `previous_addresses`) from the inline-error set; only dot-notation nested keys and the three Bewacher leaf fields are rendered inline by `OnboardingResidentialAddressHistoryFields`, so whole-object API errors are no longer silently swallowed.
 - Removed dead `export` keywords from `fiveYearHistoryBoundaryIso` and `previousResidencesCoverFiveYearWindow` in `onboardingResidentialAddressHistory.ts`; both functions are internal helpers consumed only within the same module.
-
-### Changed
-
-- Raised the build-toolchain Node floor in `package.json` from `>=20.6.0` to `^22.19.0 || >=24.0.0`, matching the effective range already required by direct dependencies (`vite@8`, `@vitejs/plugin-react@6`, `eslint@10`, `lighthouse@13`, and `vite-plugin-static-copy@4`) and `.nvmrc`/CI (Node 22). Enabled `engine-strict=true` in `.npmrc` so unsupported Node versions fail `npm ci`/`npm install` instead of proceeding with non-fatal `EBADENGINE` warnings. Closes #1221.
-- Changed magic-link account setup so invited employees must re-enter their names and date of birth instead of seeing identity fields prefilled; name-similarity feedback now appears only after submit, and the completion request forwards `date_of_birth` for server-side identity verification.
-- Removed the optional `PasskeyLoginOptions { email?: string }` argument from the `AuthTransport.loginWithPasskey` and `NativeAuthBridge.loginWithPasskey` interfaces (and the matching native-bridge implementation in `src/services/authTransport.ts`) so the typed transport contract now matches the discoverable-only public passkey challenge surface. The `Login` call site already invoked `loginWithPasskey()` without arguments; the unused parameter could no longer be forwarded anywhere meaningful since the API rejects email-scoped public passkey challenges. Closes #1120.
-- Passkey sign-in now always starts a discoverable (resident-credential) challenge without sending an email hint to the server. The previous two-attempt fallback — try discoverable, then retry with an email-scoped `allow_credentials` list — has been removed. Browsers that do not support empty `allowCredentials` lists will now receive an error instead of a silent retry. The native-bridge `loginWithPasskey` call no longer forwards the typed email either.
-- Migrated employee contact and detail flows from flat `address_*` fields to the `addresses` relation: responses now use `addresses`, optional `current_address`, and `structured_address`; contact edit and inline postal edits send full replacement `addresses` payloads that keep historical rows and refresh the open-ended current row, with shared helpers in `src/lib/employeeAddresses.ts`.
-- Added an inline onboarding-wizard attachment upload section for editable steps, automatically creating a draft submission before the first upload when needed, surfacing upload success/failure inline, and wiring the flow to the current `/v1/onboarding/submissions/{submission}/files` API contract (closes #1029)
-- Renamed the onboarding review and Android provisioning frontend API clients to the neutral `/v1/onboarding-review/...` and `/v1/android-enrollment-sessions...` endpoints, and aligned supporting fixtures/examples with the removed Admin model.
-- Removed the frontend's role-list based elevated UI gating and obsolete `hasRole` auth-context helper: organization access now follows the authoritative `hasOrganizationalScopes` flag, customer/site/employee/android capability checks now depend on explicit permissions plus scope/access flags, and the obsolete `admin` organizational-scope access level was dropped from frontend types and tests to match the API's removed Admin model (breaking change, closes #1031)
-- Reframed the frontend `README.md` around the currently shipped workforce-operations routes and runtime guidance, removing stale Secrets-era password-vault, attachment-encryption, and migration-status sections that no longer matched the live app surface, resolving frontend issue #531.
-- Switched the Vite Lingui macro transform from an unfiltered Babel plugin run to a filtered Rolldown Babel preset around `@lingui/babel-plugin-lingui-macro`, reducing unnecessary production-build plugin work and hardening the frontend against renewed Rolldown `PLUGIN_TIMINGS` warnings during `npm run build` (frontend issue #901).
-- Migrated the frontend Lingui toolchain to the v6-compatible formatter and split macro entry points (`@lingui/core/macro`, `@lingui/react/macro`) so Dependabot Lingui update PRs no longer fail CI on mixed-version `I18n` types, stale `@lingui/macro` extraction, or the removed `format: "po"` setting.
-- Wired the central Copilot-instructions validator into `quality.yml` so frontend pull requests now fail automatically when known React AI-risk guardrails or generic AI-triage guidance are missing from the runtime baseline
-- Dropped restoration of legacy cleartext and pre-v2 encrypted `auth_user` localStorage payloads; unsupported auth-storage records are now purged instead of being restored, and frontend test fixtures now seed authenticated state through the encrypted storage path only
-- Dropped the legacy `template_id` alias in the onboarding submission client so runtime writes now require `form_template_id` only, matching the current API contract during the project's `0.x` line
-- Renamed the build test suite from `Build Output Verification` to `Build Configuration and Source Verification` to match the JSDoc comment on the describe block
-- Clarified the `manualChunks` comment in `vite.config.ts` to accurately describe the Rollup/Rolldown output API rather than attributing the requirement to Vite 8 specifically
-- Replaced `Buffer.from().toString("base64")` with a chunked `btoa` implementation in the Playwright auth storage utility for browser-compatible base64 encoding
-- Added `AUTH_STORAGE_KEY_MATERIAL_PREFIX` constant in the Playwright auth storage utility to avoid the `secpal-auth-storage:` magic string being duplicated between test utility and production code
-- Added `stableStringify` helper in the Playwright auth storage utility so the PBKDF2 cache key is deterministic regardless of property insertion order in the user object
-- Extracted `TEST_FILE_PATTERN` constant in the issue-889 lint regression test and decomposed `directAuthUserWritePattern` into named sub-pattern constants with an explanatory comment
-- Replaced the inline `makeFetchResponse` stub in `onboardingApi.test.ts` with a real `Response` constructor so the mock implements the full browser `Response` interface
-
-### Removed
-
-- Removed the archived performance worklog `docs/development/PERFORMANCE_QUICK_WINS.md`; the repository now keeps active performance guidance in current validation, build, and issue-tracking surfaces only.
-- Removed stale and historical documentation: DDEV-era PWA testing guide (`PWA_PHASE3_TESTING.md`), stale PR artefact (`.pr-body.md`), closed-issue implementation plans and summaries (`docs/IMPLEMENTATION_PLAN_ISSUE143.md`, `docs/IMPLEMENTATION_SUMMARY_OFFLINE_ORGANIZATION.md`), and historical performance snapshots (`docs/PERFORMANCE_ANALYSIS_2025-12-06.md`, `docs/PERFORMANCE_ISSUE319_PHASE2_PROFILING.md`, `docs/PERFORMANCE_TBT_ANALYSIS.md`)
-- Removed the stale offline follow-up notes `docs/OFFLINE_DATA_PROTECTION_ROADMAP.md` and `docs/OFFLINE_ORGANIZATIONAL_UNITS.md`; the active audit plus tracked issues now remain the source of truth for deferred offline-storage hardening and organization-cache follow-up work.
-
-### Security
-
-- Blocked unsafe server-provided customer and site contact email/phone values from becoming `mailto:` or `tel:` links unless they match the expected address/dial-string shape, preventing mail client query/header injection and dialer parameter abuse.
-- Blocked unsafe server-provided BWR export download URLs in the employee panel by allowing only HTTPS URLs, plus HTTP loopback URLs only for local development or loopback app origins, before rendering a download link.
-- Added the Phase-2 offline-vault baseline for persisted frontend PII: the authenticated profile now moves out of `auth_user` localStorage into wrapped vault-backed IndexedDB storage, legacy encrypted `auth_user` records are migrated one-way into the vault, and long-term offline analytics plus organizational-unit cache records now persist encrypted at rest with focused regression coverage for frontend issue #1005.
-- Added an optional native device-bound wrapper boundary for the offline vault so native-capable runtimes can prefer bridge-backed root-key wrapping while browser and unsupported runtimes keep the browser-session wrapper fallback; the missing Android bridge implementation is now tracked separately in `SecPal/android#191`, resolving the frontend-side scope of issue #1006.
-- Added a local offline-vault lock flow that clears in-memory access without deleting encrypted at-rest data, exposes a non-PII unlock screen across protected routes, propagates lock state across tabs, and keeps explicit sign-out destructive for device cleanup, resolving frontend issue #1007.
-- Updated the transitive `basic-ftp` dependency from `5.2.2` to `5.3.0` in `package-lock.json`, clearing the high-severity `GHSA-rp42-5vxx-qpwr` npm audit finding tracked in issue #893.
-- Extended the `package.json` `overrides` block to clear all 21 outstanding `npm audit` findings (17 moderate, 4 high) without falling back to `npm audit fix --force` (which would have downgraded `lighthouse` 13 → 12 and `@lingui/cli` 6 → 3): pinned `esbuild` to `^0.28.1` (GHSA-gv7w-rqvm-qjhr — high; affected both `@lingui/cli@6.3.0` and `vite@8.0.16` transitive copies of `esbuild@0.25.12`), bumped the existing `ws@^8.0.0` override from `^8.20.1` to `^8.21.0` and added a sibling `ws@^7.0.0` → `^7.5.11` override so the `lighthouse@13.4.0` direct `ws@^7.0.0` copy picks up the backported fix (GHSA-96hv-2xvq-fx4p — high; remote memory-exhaustion DoS), and pinned `@sentry/node` to `^10.54.0` (resolves to `10.58.0`) instead of a bare `@opentelemetry/core` bump. The `@sentry/node@10` line was built against OpenTelemetry 2.x natively (`@opentelemetry/core@^2.6.1`, `@opentelemetry/sdk-trace-base@^2.6.1`) and no longer pulls in the auto-instrumentation suite at the top level, so this single override clears GHSA-8988-4f7v-96qf (moderate; unbounded memory allocation in W3C Baggage propagation in `@opentelemetry/core <2.8.0`) together with the 14 transitive `@opentelemetry/instrumentation-*`, `@opentelemetry/resources`, `@opentelemetry/sdk-trace-base`, `@opentelemetry/sql-common`, `@sentry/node-core`, and `@sentry/opentelemetry` findings dragged in via `lighthouse@13.4.0` → `@sentry/node@9.47.1`. A standalone `@opentelemetry/core` override was rejected after a reviewer pointed out that it leaves `@opentelemetry/instrumentation-http@0.57.2` and `@opentelemetry/sdk-trace-base@1.30.1` calling `core.getEnv()` (removed in `@opentelemetry/core@2.x`); verified locally that `require('@sentry/node')` then crashed with `TypeError: Cannot read properties of undefined (reading 'AlwaysOn')` at `sdk-trace-base/build/src/config.js:25`, while the `@sentry/node@10` override imports cleanly and keeps the entire lighthouse `Sentry.init`/`captureException`/`captureMessage`/`addBreadcrumb`/`setTags`/`setExtras`/`withScope` surface intact (see `lighthouse/core/lib/sentry.js`). The override also dropped 47 packages from `node_modules` because the v10 sentry release moves the OpenTelemetry instrumentations behind opt-in extras. `npm audit` now reports `found 0 vulnerabilities`, and `npm run typecheck`, `npm run lint`, `npm run build`, plus the full Vitest suite (152 files, 2263 tests) stay green after the overrides take effect. Bumped the declared `engines.node` floor from `>=20.0.0` to `>=20.6.0` in the same change so the published package.json no longer advertises support for Node 20.0–20.5, which the newly pinned `@opentelemetry/core@2.8.0` (resolved transitively via `@sentry/node@10`; `engines.node: ^18.19.0 || >=20.6.0`) would surface as `EBADENGINE` warnings on those runtimes; the wider pre-existing floor mismatch (`vite@8` → `>=20.19.0`, `lighthouse@13` → `>=22.19`) is tracked separately.
-
-### Fixed
 
 - Made the current Polyscope workspace preview domains authoritative for Playwright and preview API routing: the active workspace now resolves to `https://frontend-<workspace>.preview.secpal.dev` plus `https://api-<workspace>.preview.secpal.dev`, generic `<workspace>.preview.secpal.dev` frontend inputs are canonicalized to the `frontend-` host, and preview runtime/API resolution now always rebinds stale preview, live, empty, loopback, or SPA-host origins to the current workspace instead of drifting toward unrelated domains.
 - Grouped coupled React, React DOM, and React type-package minor/patch Dependabot updates into one frontend pull request, aligned the shared React runtime bump on `react` plus `react-dom` `^19.2.6`, grouped non-breaking GitHub Actions updates, and relaxed the live Lighthouse workflow regression check to require commit pinning instead of one historical `setup-chrome` SHA so Dependabot workflow bumps no longer open red CI from stale version-skew or hard-coded action pins.
@@ -793,28 +393,6 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 - Passkey login and add-passkey buttons now show step-by-step progress so users can tell exactly where each flow is and whether the browser is waiting for their interaction: login uses challenge → browser prompt → verifying → confirming session, while add-passkey uses challenge → browser prompt → saving.
 - Added step-by-step `[SecPal]` console diagnostics to the passkey login and registration flows so real-browser failures can be traced through DevTools.
 
-### Added
-
-- Added a Playwright regression that rotates the `XSRF-TOKEN` cookie on mocked authenticated organization GET traffic and proves protected-route reloads stay authenticated without falling into `Offline vault is not available.`, resolving frontend issue #1020.
-- Added `docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md` as the accepted Phase 2 design record for frontend issue #495, documenting the target vault key hierarchy, device-bound key comparison, lock/unlock/logout semantics, and follow-up implementation slices for offline PII protection.
-- Added native Android passkey registration fallback in Settings so the shared passkey enrollment flow can delegate attestation creation to the injected Android bridge when the embedded WebView does not support browser WebAuthn registration, while keeping browser behavior unchanged.
-- Added native-bridge passkey sign-in to the shared login flow so Android can complete token-based passkey authentication through the injected native auth bridge while browsers keep the existing WebAuthn ceremony and progress states.
-- Added a Bewacherregister management panel to employee detail so authorized users can review BWR status and timestamps, generate the initial export, download the generated file, and move supported BWR states through the dedicated backend endpoints with inline validation feedback.
-- Added a permission-gated Android provisioning UI with backend-issued enrollment session creation, QR display, status visibility, and revoke controls for Epic SecPal/.github#327.
-- Added a live Playwright passkey proof that drives the real app.secpal.dev/api.secpal.dev stack through passkey registration, UI/API consistency checks, passkey removal, and a fresh email-first passkey login using a browser WebAuthn authenticator.
-- Added browser passkey sign-in to the login flow, including the WebAuthn challenge client and focused frontend coverage for supported browsers and failure handling.
-- Added passkey visibility to the settings page, including enrolled-passkey listing and an unsupported-browser notice that does not hide existing server-side passkey data.
-- Added passkey enrollment to the settings page, including user-provided credential labels, browser WebAuthn registration, server-side verification, and focused frontend coverage for successful and failing enrollment flows.
-- Added passkey removal to the settings page, including destructive controls for enrolled credentials, backend deletion, list refresh, and focused frontend coverage for successful and failing removal flows.
-- Added the missing MFA enrollment slice to the settings page so disabled accounts can start TOTP setup, scan a QR code or use the manual setup key, confirm the authenticator code, and immediately receive one-time recovery codes.
-- Added a reusable MFA QR-code component with browser-safe fallback messaging and focused component coverage so upcoming enrollment UI slices can render authenticator setup material without duplicating QR generation logic.
-- Added PWA offline persistence security and privacy [audit document](PWA_OFFLINE_PERSISTENCE_AUDIT.md) covering all client-side storage mechanisms (localStorage, sessionStorage, IndexedDB, Cache API, Service Worker state) with 10 findings, issue overlap analysis, and prioritized remediation recommendations.
-- Added a platform-aware frontend auth transport boundary that keeps browser/PWA flows on Sanctum session auth, sanitizes auth state before it enters React or local storage, and creates the explicit seam Android can later wire to a native bearer-token bridge without exposing raw tokens to JavaScript.
-- Added the first MFA settings management slice with live status loading plus self-service recovery-code regeneration and MFA disablement flows for accounts that already have MFA enabled.
-- Added the phase-1 browser-session MFA login challenge flow so the login page can pause after primary credentials, collect the second factor, and complete the session only after the backend challenge verification succeeds.
-
-### Fixed
-
 - Fixed passkey sign-in on browsers that reject discoverable WebAuthn requests without an `allowCredentials` list by retrying the flow with the entered email address, requesting an account-scoped challenge from the API, and showing an explicit prompt to enter an email address when that fallback is required.
 - Hardened the passkey browser ceremony helpers so both registration and sign-in now fail with a deterministic timeout even when the browser ignores the supplied `AbortSignal`, and the settings page now re-fetches `/v1/me/passkeys` after successful enrollment so the UI reflects persisted server state instead of relying only on optimistic local state.
 - Fixed passkey enrollment hanging on "Adding passkey..." by stripping null `authenticatorAttachment` values from `AuthenticatorSelectionCriteria`, picking only `id` and `name` from the `rp` object (omitting deprecated `icon: null`), and omitting empty `excludeCredentials` arrays before passing options to `navigator.credentials.create()`.
@@ -843,112 +421,6 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 - Added user-visible error message in `EmployeeEdit` when the form is submitted without a route `id`; previously the submission silently no-oped.
 - Replaced hardcoded locale-switched date validation error strings in `EmployeeEdit` with `i18n._(msg\`...\`)` calls so messages are properly translatable.
 - Added targeted Android provisioning access-control regressions for hidden navigation and denied route access so the permission-gated provisioning UI in #751 stays covered end-to-end.
-
-### Changed
-
-- Strengthened repo-local Copilot governance for AI findings: frontend work now requires proof of defect before merging AI-generated fix PRs, treats green CI alone as insufficient evidence for semantic UI refactors, and documents the known guardrails around async ordering, `<option>` translation strings, and separated error state.
-- Replaced raw Android provisioning rollout-channel and session-status enum values with human-readable labels and operator guidance, so stale, revoked, and already-used enrollment sessions are easier to interpret in the frontend UI.
-- Aligned the frontend lint toolchain back to the ESLint 9 line so `eslint-plugin-react-hooks` no longer leaves the repository in an invalid peer-dependency state during installs.
-- Made native-bridge login prefer the canonical `GET /v1/me` user payload immediately after authentication, so Android capability-gated navigation no longer depends on the potentially narrower token-login payload during first render.
-- Refreshed the Lingui locale catalogs for the Android provisioning UI so the German navigation no longer falls back to the raw message id `62KQbc` in shipped builds.
-- Aligned the frontend repo-local domain policy and validation script with the canonical Android artifact host `apk.secpal.app` so Android provisioning fixtures and runtime URLs pass governance checks.
-- Strengthened Copilot governance: require test-impact analysis and same-commit test updates when a fix alters observable behavior, explicitly recommend `PREFLIGHT_RUN_TESTS=1` in preflight guidance for behavioral, security, or state-lifecycle changes, and mandate `--body-file` for programmatic PR creation to prevent shell escaping issues.
-- Isolated authenticated `pre_contract` users into an onboarding-only shell, redirecting them away from normal app routes until activation and sending non-pre-contract users back to the canonical app entry when they hit `/onboarding`.
-- Aligned the public onboarding completion flow with the current backend runtime by removing the unsupported profile-photo bootstrap field, submitting the documented JSON payload to `POST /v1/onboarding/complete`, and accepting the session-based completion response without a frontend token assumption
-- Made browser-session login prefer the canonical `GET /v1/me` user payload immediately after authentication, so capability-gated navigation no longer comes up incomplete until the first manual refresh.
-- Aligned MFA recovery-code placeholders, frontend fixtures, and service mocks with the canonical API payload shape of raw 8-character uppercase alphanumeric codes so the browser UI no longer teaches a grouped `XXXX-XXXX` format that differs from what the backend stores and returns.
-- Made the checked-in Lingui `.po` catalogs the only frontend translation authority, removing the Translation.io-specific sync overlay so catalog maintenance now stays entirely repo-local.
-- Refreshed the shipped MFA/login locale artifacts from the repo-local Lingui catalogs so the new MFA settings UI no longer falls back to raw Lingui message IDs in production.
-- Removed the inset desktop content frame beneath the top navigation so the page surface now spans edge to edge without the previous side and bottom border effect.
-- Clarified the repo-local branch-start and post-merge readiness workflow so new frontend work must start from a clean, updated local `main`, and post-merge cleanup now explicitly returns the repo to `main`, refreshes dependencies with `npm ci` where applicable, runs `npm run build` when available, and confirms a clean working tree
-- Added a dedicated email-verification gate for protected routes, wired it to the backend resend-verification endpoint, and stopped surfacing the raw backend `Your email address is not verified.` error inside arbitrary app pages after login.
-- Restored explicit repo-local Copilot governance by making TDD-first, quality-first, one-topic-per-PR, immediate issue creation for out-of-scope findings, and EPIC-plus-sub-issue requirements always-on again; the frontend runtime overlay now auto-loads repo-wide so these rules remain present while working
-- Clarified the repo-local PR workflow so finished frontend work must be self-reviewed, committed, and pushed before any PR exists, and the first PR state must always be draft until the final PR-view self-review is clean
-- Scoped the frontend zero-knowledge documentation to attachment contents only, clarifying in `README.md` and `docs/CRYPTO_ARCHITECTURE.md` that broader application data uses server-side encryption at rest and that file metadata is still visible to the server.
-- Corrected the HKDF key-derivation documentation so `CRYPTO_ARCHITECTURE.md` matches the shipped frontend crypto code, which uses an empty HKDF `info` parameter for attachment file keys.
-- Replaced the remaining `@secpal.app` auth-service test fixture emails in `authState.test.ts` and `authTransport.test.ts` with `@secpal.dev` so those tests follow the repository domain policy for non-production addresses.
-- Aligned repo-local domain governance and validation with the renamed Android application identifier `app.secpal`, removing the old identifier-only exception from current policy text.
-- Replaced the raw backend `Server Error` text on login failures with a controlled temporary-unavailable message when the login API returns a `5xx`, so browser and PWA users no longer see the uncaught backend error string on the live login screen.
-- Replaced the remaining hand-written frontend auth response shapes with contract-aligned auth and MFA types under `@/types/api`, extended the auth API client to cover login MFA challenges plus the backend self-service MFA endpoints needed by the upcoming UI slices, updated the browser-session auth transport to surface the discriminated `authenticated | mfa_required` result, and added full unit coverage for all new API client methods and transport branches.
-
-- Aligned the frontend browser-session auth contract with the backend UUID-based user payload so successful login, current-user bootstrap, persisted auth state, and onboarding handoff now accept valid string user IDs instead of incorrectly rejecting them as unsafe.
-- Hardened the browser-session auth endpoint wiring so login, logout, CSRF bootstrapping, and `GET /v1/me` all build URLs from the same production-safe API resolver, which now requires an explicit absolute `VITE_API_URL` for every production deployment and fails fast on missing or relative API bases instead of guessing a host.
-- Aligned repo-local domain governance and validation with the current split of `secpal.app` for the public homepage and real email addresses, `api.secpal.dev` for the API, and `app.secpal.dev` for the PWA, while keeping `app.secpal` as the Android-only application identifier
-- Corrected the frontend production API fallback and related examples to use the canonical `https://api.secpal.dev` host.
-- Separated customer and site feature visibility from assignment-mutation and cross-resource permissions, so only explicit collection access (`hasCustomerAccess` / `hasSiteAccess` or the matching read permission) unlocks those frontend areas and future custom roles cannot drift into implicit half-authorized states.
-- Aligned customer and site feature gating with the backend collection policy by honoring explicit `hasCustomerAccess` and `hasSiteAccess` auth-context flags, so scoped-assignment users can enter the same areas the API intentionally exposes while users without any effective access continue to see the shared access-denied state.
-- Clarified the employee status rules in the create and edit UI by showing the full valid status set (`Applicant`, `Pre-Contract`, `Active`, `On Leave`, `Terminated`) and by explaining inline that onboarding invitations are only available in `Pre-Contract`.
-- Aligned the frontend auth client, integration tests, and migration guide with the canonical backend auth/self-service surface so browser sessions now use `POST /v1/auth/login`, `POST /v1/auth/logout`, and `GET /v1/me` instead of legacy or guessed paths
-- Pinned frontend TypeScript back to the supported `5.9.x` line so `@typescript-eslint` linting no longer runs outside its declared compatibility range while the repository waits for official TypeScript 6 support
-
-### Removed
-
-- Removed the stale `pendingSync` field and index from the offline organizational-unit schema so the reduced IndexedDB surface no longer carries leftover generic sync metadata.
-
-- Removed the stale sync-status translation entries from the Lingui catalogs so the frontend locale artifacts no longer carry messages for the deleted browser sync-status UI.
-
-- Removed the stale `getPendingSyncUnits` helper and its dead organizational-unit store tests so the frontend no longer advertises an unused pending-sync browser path.
-
-- Removed the unused `StorageQuotaIndicator` component and its dead test coverage so the frontend no longer ships that dormant browser-storage UI surface.
-
-- Removed the deleted legacy product module from the frontend, including its obsolete routes, navigation entries, offline caches, background sync wiring, and associated documentation so the repository no longer ships or documents that retired area in 0.x
-- Removed the remaining legacy test suites, stale documentation, and outdated frontend schema/cache references that only existed for the deleted module
-- Removed the stale `docs/PERFORMANCE_NEXT_STEPS.md` and `docs/PERFORMANCE_README.md` planning summaries because they only captured temporary 2025 performance follow-up plans
-- Removed the stale `docs/PROJECT_STATUS.md` snapshot because it no longer matched the current frontend state and duplicated newer repository history
-- Removed the stale `docs/PERFORMANCE_ISSUE319_STATUS.md` and `docs/PERFORMANCE_TBT_DEFER_IMPLEMENTATION.md` worklog documents because they no longer reflected the final outcome of the 2025 Issue #319 investigation
-- Removed the stale `docs/PERFORMANCE_DEPLOYMENT_STATUS.md` snapshot because it only documented a temporary 2025 deployment checkpoint and no longer reflected the repository's active guidance
-- Removed the obsolete `docs/PERFORMANCE_AGGRESSIVE_SPLITTING_RESULTS_ARCHIVED.md` archive because it only preserved a reverted implementation path and no longer served as useful active documentation
-- Removed the stale `docs/PERFORMANCE_OPTIMIZATIONS_IMPLEMENTED.md` worklog because it only tracked temporary 2025 optimization steps and duplicated more precise historical analysis records
-- Removed the obsolete `docs/PERFORMANCE_OPTIMIZATIONS_2025-12-06-AGGRESSIVE.md` note because it documented a superseded aggressive chunk-splitting experiment that was not retained as active guidance
-
-### Security
-
-- Added a versioned `deploy/nginx/app.secpal.dev.conf` production baseline plus a `test:live:pwa-headers` smoke check so the live PWA host can enforce CSP, Permissions-Policy, HSTS, Referrer-Policy, framing protection, and correct `sw.js` / `manifest.webmanifest` header delivery under Nginx instead of relying on Apache-only `.htaccess` rules.
-- Blocked the shipped Apache SPA fallback from answering `/v1/*`, `/sanctum/*`, and `/health*` with `index.html`, and documented the matching Nginx guard so API paths on `app.secpal.dev` now fail clearly instead of returning a misleading `200 text/html` shell.
-- Added a live frontend smoke script for auth-route separation so deployments can automatically fail when `app.secpal.dev/v1/me` regresses to the SPA shell or `api.secpal.dev/v1/me` stops returning JSON.
-- Hardened the browser/PWA response baseline by enforcing a production CSP without inline scripts, expanding `Permissions-Policy` and modern cross-origin headers, and serving `index.html`, `sw.js`, and `manifest.webmanifest` with update-safe cache rules so PWA security fixes propagate promptly.
-
-- Reduced the shipped PWA client surface further by removing the dormant sync-status path from the runtime app shell and narrowing `SecPalDB` plus logout fallback cleanup to the currently supported offline tables so the frontend no longer ships the unused generic queue/cache runtime.
-
-- Reduced the shipped PWA client surface further by stripping offline organizational-unit cache entries down to route/tree fields and removing dead manifest shortcuts that pointed to non-existent routes.
-
-- Reduced shared-device post-logout bleed further by clearing stored notification preferences during logout cleanup, and added regression coverage for the IndexedDB table-clearing fallback when deleting `SecPalDB` is blocked.
-
-- Minimized post-logout PWA persistence further by deleting `SecPalDB` instead of leaving cleared IndexedDB stores behind, reducing the service-worker offline auth cache to a bare `isAuthenticated` boolean, and preventing the logged-out sync-status UI from recreating offline session storage on the login screen.
-
-- Tightened the PWA post-logout cleanup path so authenticated analytics state is disabled and cleared on logout, `/v1/auth/*` and `/v1/me` requests explicitly bypass browser caches, and offline logout regressions now cover both `/profile` and `/settings` to prevent stale protected content from reappearing.
-
-- Tightened the PWA logout/offline privacy hardening by persisting an explicit logout barrier in local storage, scrubbing any stale `auth_user` payload that reappears after logout, and rejecting BFCache or cross-tab restoration paths until a fresh login writes a new authenticated state.
-
-- Hardened PWA logout/offline privacy by synchronizing explicit auth state to the service worker, redirecting logged-out offline navigation away from protected routes such as `/profile`, and reconciling restored or cross-tab client state so previously viewed user data cannot remain readable after logout.
-
-- Raised the frontend override floors for `brace-expansion` and `serialize-javascript` so `npm audit` now returns 0 vulnerabilities; the remaining install-time deprecation warnings still come from the upstream `vite-plugin-pwa` / `workbox-build` toolchain and remain documented as accepted build-time risk
-
-- Pinned the transitive `picomatch` resolution to `2.3.2` for 2.x consumers and
-  `4.0.4` for 4.x consumers via `overrides`, so the frontend no longer ships
-  the vulnerable glob-matching releases flagged by Dependabot security alerts for
-  CVE-2026-33672 / GHSA-3v7f-55p6-f55p; upstream major-version constraints remain
-  unchanged while the patched releases are enforced in the lockfile and the alerts
-  are tracked in #598
-- Pinned the transitive `glob` resolution to `^13.0.6` via `overrides` so the
-  deprecated `glob@11.1.0` (pulled in by `@lingui/cli` and `workbox-build`) is
-  replaced by a current, non-deprecated release; the remaining deprecated
-  transitive packages inside `workbox-build@7.4.0` (`sourcemap-codec@1.4.8`,
-  `source-map@0.8.0-beta.0`) are blocked upstream and tracked separately
-  (closes #558, remaining items blocked by upstream `vite-plugin-pwa` /
-  `workbox-build`)
-- Pinned third-party GitHub Actions in frontend workflows to immutable commit SHAs so Lighthouse and Codecov automation no longer depend on floating action tags at runtime
-- Pinned the transitive `flatted` resolution to `3.4.2` so Vitest UI and ESLint cache tooling no longer ship the vulnerable parser affected by CVE-2026-33228 / GHSA-rf6f-7fwh-wjgh
-
-- Pinned the transitive `yauzl` resolution to `3.2.1` so Lighthouse-related tooling no longer ships the vulnerable archive parser flagged by `npm audit` and Dependabot
-
-- **Phase 1 offline-data hardening**
-  - Removed PWA runtime caching for authenticated API routes to avoid persistent browser caching of sensitive `/v1/*` responses
-  - Added centralized sensitive client-state cleanup for logout and session-expiry flows
-  - Sensitive IndexedDB tables and legacy API cache names are now cleared when the client session ends
-  - Replaced invalid on-prem example domain in frontend config comments to stay within the `secpal.app` / `secpal.dev` domain policy
-
-### Fixed
 
 - Removed the unreachable inline error panel from `EmployeeEdit` that duplicated the full-screen error view already returned by the early-return guard, eliminating a logically dead conditional branch.
 - Aligned the employee detail actions with the onboarding runtime workflow so HR/compliance users can confirm submitted onboarding dossiers via the dedicated admin endpoint and activation is only offered once the backend marks the employee `ready_for_activation`.
@@ -981,74 +453,6 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 - Hardened the `EmployeeCreate` success-path test to wait for loaded organizational-unit options and async navigation, reducing full-suite timeout flakiness
 - Hardened additional full-suite-sensitive submit flows in `Login`, `ApplicationLayout`, and `CustomerCreate` tests to reduce timing-dependent Vitest failures
 
-### Added
-
-- Offline sync queue retry scheduling now persists `nextRetryAt` timestamps so pending operations can wait for their backoff window instead of retrying immediately on every local processing pass
-- Sync status UI now surfaces the next scheduled offline retry time and hides the manual sync trigger while pending operations are still in their backoff window
-- `.github/instructions/react-typescript.instructions.md` - targeted React and strict TypeScript guidance for frontend source and test files
-- `.github/instructions/github-workflows.instructions.md` - targeted workflow and Dependabot guidance for GitHub automation files in this repo
-- `.github/instructions/org-shared.instructions.md` — org-wide Copilot principles (TDD, quality gates, PR protocol); `applyTo: "**"` auto-loading was later removed during governance context cleanup
-
-### Changed
-
-- Updated `.npmrc` to document that `legacy-peer-deps=true` is specifically
-  required to suppress the `vite-plugin-pwa@1.2.0` peer-dependency conflict
-  with Vite 8; the plugin currently declares peer support only through Vite 7
-  (see #559 for status); the SPDX copyright year range was extended to `2025-2026`
-- `.github/copilot-instructions.md` now requires a branch hygiene check before any write action so frontend work never starts on local `main` and dirty non-`main` branches must be assessed before continuing
-- `.github/copilot-instructions.md` now requires stale `SPDX-FileCopyrightText` years in edited files and license sidecars to be normalized to `YYYY` or `YYYY-YYYY` without spaces
-- `.github/copilot-instructions.md` now clarifies that if an edited file has no inline SPDX header, its companion `.license` file must be checked and updated instead
-- repo-local frontend instructions and overlays now also restate Copilot review handling, signed-commit checks, EPIC/sub-issue requirements, REUSE checks, 4-pass review, and the `secpal.app` vs `secpal.dev` use-case split so project-wide governance is locally complete
-- repo-local frontend instructions and overlays now also require warning, audit, and deprecation notices from scripts and package managers to be reviewed and either fixed or tracked immediately
-- Changed the English login email field label from `Email` to `Email address` for clearer authentication microcopy without altering the rest of the screen
-- Changed the login-page heading from `Login` to `Log in` for consistent authentication microcopy while leaving the rest of the screen unchanged
-- Removed the login-page subtitle so the auth entrypoint shows only the product name and keeps the footer slogan as the sole claim treatment
-- Synchronized the frontend Lingui catalogs with Translation.io so the updated German login and tagline-related copy is reflected locally after the recent remote translation refresh
-- Standardized the frontend-visible SecPal tagline to `Powered by SecPal – A guard's best friend` across footer text, landing copy, tests, and generated locale catalogs; the tagline is intentionally identical in all locales (no translation)
-- Marked `docs/PERFORMANCE_ANALYSIS_2025-12-06.md` as historical reference material so it is not mistaken for the current frontend optimization plan
-- Marked `docs/IMPLEMENTATION_PLAN_ISSUE143.md` as a historical planning artifact so it is not mistaken for current implementation guidance
-- Marked the retained Issue #319 profiling and TBT analysis notes as historical reference material so they are not mistaken for active implementation instructions
-
-- Updated frontend package baselines to the latest currently compatible releases for `@lingui/core`, `@lingui/react`, `@lingui/macro`, and `vite-plugin-static-copy`
-
-- `.github/copilot-instructions.md` - replaced comment-based inheritance assumptions and long-form examples with a self-contained runtime baseline for this repository
-- `.github/instructions/org-shared.instructions.md` - reduced to a short repo-local overlay that reinforces the runtime baseline instead of duplicating org documents
-- **Git Hooks Diagnostic Tool** (#392)
-  - Created `scripts/diagnose-hooks.sh` to troubleshoot pre-push hook issues
-  - Comprehensive checks for hook installation, git config, shell environment
-  - Detects prompt/tool integrations that may trigger hooks unexpectedly
-  - Provides actionable recommendations for fixing hook problems
-  - Documentation: `docs/diagnose-hooks.md`
-  - Added "Troubleshooting" section to CONTRIBUTING.md with diagnostic guide, performance tips, and common fixes
-- **Employee Management & Onboarding Portal** (#332, Epic #211 Phase 7)
-  - **API Service Layers:**
-    - Employee API service layer (CRUD operations, activate, terminate)
-    - Qualification API service (system/custom qualifications, employee assignments)
-    - Onboarding API service (multi-step wizard, file upload, HR approval workflow)
-    - Employee Document API service (8 document types, policy-based visibility)
-  - **UI Components (Catalyst Framework):**
-    - Employee List page with Catalyst Table, Field, Input, Select components
-    - Employee Detail page with Catalyst Badge, DescriptionList, tabs with proper dark mode support
-    - Employee Create form using Catalyst Fieldset, Legend, FieldGroup, Field, Label, Input
-    - Employee Edit form (pre-populated data editing with Catalyst components)
-    - Pre-contract Onboarding Wizard (8-step process with Catalyst Button, Heading, Text)
-  - **Navigation & Access Control:**
-    - UserGroupIcon added to component library
-    - "Employees" navigation item in navbar and sidebar (conditional on organizational access)
-    - OrganizationalRoute wrapper component for RBAC enforcement
-    - All employee routes protected with `hasOrganizationalAccess()` permission checks
-  - **Routing Integration:**
-    - `/employees` - Employee list view
-    - `/employees/create` - Create new employee
-    - `/employees/:id` - Employee detail view
-    - `/employees/:id/edit` - Edit existing employee
-    - `/onboarding` - Pre-contract onboarding wizard
-  - **Internationalization:**
-    - Full i18n support with `<Trans>` and `msg` from @lingui/macro
-    - All UI text translatable (German/English)
-
-### Fixed
-
 - **Frontend build now stays compatible with Vite 8**
   - replaced object-based manual chunk configuration with a function-based variant so production builds and Lighthouse CI continue to work with Vite 8
   - switched the React Babel macro configuration to Lingui's dedicated Babel plugin so Lingui macros continue to compile correctly with `@vitejs/plugin-react` 6
@@ -1072,50 +476,6 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Eliminates need for manual page reload after network reconnection
   - Added test coverage for offline→online transitions
 
-### Changed
-
-- `.github/copilot-instructions.md` — removed dead `@EXTENDS`, `INHERITANCE`, and `applyTo` HTML comment blocks (replaced by `org-shared.instructions.md`)
-- **Migrated to Stacked Layout design** (#TBD)
-  - Switched from sidebar navigation to horizontal navbar (stacked layout)
-  - Navigation items now displayed in top navbar on desktop
-  - Mobile experience unchanged (sidebar drawer)
-  - Improved space utilization with horizontal navigation
-  - All Catalyst components and patterns maintained
-  - Footer integration preserved across both layouts
-- **Improved "Add Unit" button label in Organizational Unit Tree** (#300, Part of Epic #283)
-  - Renamed "Add Unit" button to "Add Root Unit" for clarity
-  - Makes it explicit that the button creates a root-level organizational unit
-  - Reduces confusion about where new units will be created
-  - Empty state button remains as "Create Organizational Unit" for first-time users
-  - **Enhanced with hierarchy-based type filtering**: When creating a child unit, the type dropdown now only shows valid child types based on the parent's hierarchy rank. Child units must be **lower** in the hierarchy than their parent (e.g., Division under Branch is valid, but Branch under Branch is not allowed). This prevents users from selecting invalid types upfront, improving UX by avoiding validation errors after submission.
-
-### Added
-
-- **Web Vitals monitoring with thresholds & development warnings** (#310)
-  - Performance threshold configuration aligned with Lighthouse CI and Google's Core Web Vitals
-  - Development-mode console warnings for poor metrics (zero runtime cost in production)
-  - Metrics export API for dashboards: `getPerformanceMetrics()`, `clearPerformanceMetrics()`
-  - Severity levels: "good", "needs-improvement", "poor"
-  - Full test coverage (14 passing tests)
-  - Documentation: `docs/web-vitals-monitoring.md`
-
-- **Playwright E2E testing infrastructure** (#309)
-  - Comprehensive E2E test suite with Playwright
-  - Three testing modes:
-    - Local development (localhost:5173 with DDEV backend proxy)
-    - Staging/performance tests (app.secpal.dev)
-    - CI smoke tests (localhost:4173 preview build)
-  - Test categories:
-    - Authentication flow tests (login, logout, session persistence)
-    - Smoke tests (page loading, navigation, accessibility basics)
-    - Organization management integration tests
-    - Lighthouse performance audits (Core Web Vitals)
-  - Global setup with session reuse to prevent rate-limiting
-  - Configurable test credentials via environment variables
-  - npm scripts: `test:e2e`, `test:e2e:staging`, `test:e2e:ci`, `test:e2e:ui`, `test:e2e:headed`
-
-### Fixed
-
 - **PWA Update: Fixed double page reload issue**
   - **Problem:** When clicking "Update now" for a PWA update, the page reloaded twice, causing a jarring user experience
   - **Root Cause:** `swUpdate(true)` already triggers a reload via `vite-plugin-pwa`, but we were also explicitly calling `window.location.reload()` immediately after
@@ -1135,47 +495,6 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
     - Web Vitals initialization failures
   - Removed verbose Web Vitals initialization log
 
-### Added
-
-- **Lighthouse CI for automated performance testing** (#308)
-  - GitHub Actions workflow runs Lighthouse audits on every PR and push to main
-  - Performance budgets based on Core Web Vitals thresholds:
-    - LCP (Largest Contentful Paint): < 2.5s (error threshold)
-    - CLS (Cumulative Layout Shift): < 0.1 (error threshold)
-    - TBT (Total Blocking Time): < 200ms (warning threshold)
-  - JavaScript console error detection (zero tolerance - fails on any JS error)
-  - Accessibility and Best Practices audits with 90% minimum score
-  - PR comments with Lighthouse scores and report links
-  - Temporary public storage for report sharing
-  - Tests for configuration validation
-
-- **Mobile-friendly action menu for organization tree** (Part of Epic #283)
-  - Replaced individual action buttons (Add Child, Edit, Move, Delete) with a compact dropdown menu (three dots icon)
-  - Actions are now accessible via a single button that expands to show all available options
-  - Saves horizontal space on mobile devices where action buttons previously overflowed
-  - Uses Catalyst Dropdown, DropdownButton, DropdownMenu, and DropdownItem components
-
-- **Detail panel close functionality** (#306, Part of Epic #283)
-  - Close button (×) in detail panel header for explicit panel closing
-  - ESC key support to close detail panel
-  - Toggle selection: clicking the same unit again deselects it
-  - Improved UX for organizational structure management
-
-### Changed
-
-- **Optimistic UI for organizational unit CRUD operations** (SecPal/api#303, Part of Epic #283)
-  - After creating a unit, it's immediately added to the tree without reload
-  - After updating a unit, changes appear instantly in the tree
-  - After moving/reparenting a unit, the tree structure updates immediately
-  - After deleting a unit, only the affected row is removed from the tree
-  - No full tree reload for any CRUD operation, improving perceived performance and UX
-  - Maintains tree state (expanded/collapsed nodes) after all operations
-  - New `createdUnit` and `updatedUnit` props for optimistic updates from parent
-  - Updated `MoveOrganizationalUnitDialog` to pass new parent ID on success
-  - 6 test cases for optimistic UI behavior (delete, create, update)
-
-### Fixed
-
 - **Move dialog UX improvements** (Part of Epic #283)
   - Type labels (Company, Holding, etc.) are now translated in the Move dialog dropdown
   - Options are now sorted hierarchically (matching tree order) with indentation based on depth
@@ -1190,19 +509,6 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Color mapping: blue (holding/company), green (department/division), purple (branch), orange (region), zinc (custom/unknown)
   - Added unit tests for `getTypeBadgeColor()`
 
-### Changed
-
-- **Permission-Filtered Organizational Unit Tree View** (#291, Part of Epic SecPal/api#280)
-  - Tree component now uses `root_unit_ids` from API response to determine tree roots
-  - Users see only organizational units they have access to (Need-to-Know principle)
-  - Changed header from "Organizational Structure" to "My Organization" (user-centric)
-  - Added `title` prop for customization when needed
-  - Updated types: `OrganizationalUnitPaginationMeta` and `OrganizationalUnitPaginatedResponse`
-  - 6 new test cases for permission filtering scenarios
-  - Implements ADR-007 Need-to-Know pattern
-
-### Fixed
-
 - **OfflineIndicator no longer blocks app interaction** (#283)
   - Replaced blocking modal dialog (`Alert`) with non-blocking toast banner
   - Banner auto-minimizes to icon after 5 seconds to reduce obstruction
@@ -1211,35 +517,6 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Added comprehensive test coverage (19 tests)
   - Improved accessibility with `role="status"`, `aria-live="polite"`
   - Used `ChevronDownIcon` from HeroIcons instead of inline SVG (DRY)
-
-### Added
-
-- **Organizational Hierarchy UI Components** (#241, Part of Epic #228)
-  - **API Services** - Four comprehensive API service modules with full CRUD support:
-    - `organizationalUnitApi.ts`: Manage organizational units (holding, company, region, branch, division, department, custom)
-    - `customerApi.ts`: Customer hierarchy management with parent-child relationships
-    - `objectApi.ts`: SecPal objects and object areas with geofence support
-    - `guardBookApi.ts`: Guard books and reports with status/report_type filtering
-  - **TypeScript Types** (`src/types/organizational.ts`):
-    - Complete type definitions for all organizational entities
-    - Request/response types following ADR-007 conventions
-    - Paginated response wrapper for list endpoints
-  - **React Components** - Four feature-rich tree/manager components:
-    - `OrganizationalUnitTree`: Hierarchical tree view with icons, badges, expand/collapse, and CRUD actions
-    - `CustomerTree`: Customer hierarchy with object count display and filtering
-    - `ObjectManager`: Split-panel object/area manager with detail view
-    - `GuardBookManager`: Guard book list with report generation and status badges
-  - **Features:**
-    - Hierarchical tree building from flat API responses
-    - Loading skeletons and error states
-    - Empty state with create action
-    - Type-specific icons and color-coded badges
-    - Accessible tree structure with proper ARIA roles
-    - Catalyst Design System integration (Button, Badge, Heading, Text)
-  - **Test Coverage:** 60 API tests + 49 component tests, all passing
-  - **Benefit:** Enables visual management of the organizational structure introduced in backend Epic #228
-
-### Fixed
 
 - **Centralized API Wrapper with Session Expiry for All Requests** (#263)
   - Created `apiFetch()` as centralized API wrapper function in `csrf.ts`
@@ -1274,7 +551,276 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - **Benefit:** Service worker cache patterns now correctly match local proxy configuration, fixing cache misses in development mode
   - Related to: PR #248 (Vite proxy configuration for local DDEV development)
 
+- **CI/CD**: Codecov upload now fully functional for Dependabot PRs
+  - Added `continue-on-error` for dependabot/renovate bots to prevent blocking
+  - Made `CODECOV_TOKEN` optional (tokenless uploads work for public repos)
+  - Upload step succeeds even without token access (Dependabot security restriction)
+  - Normal PRs still fail CI on codecov errors (security preserved)
+  - Fixes issue where Codecov checks remained pending/missing on Dependabot PRs
+- **Blank Page Issue**: Fixed blank page caused by incompatible module format in translation catalogs
+  - Changed Lingui compilation from CommonJS (`module.exports`) to ES modules (`export`)
+  - Updated `package.json` scripts to use `--namespace es` flag for `lingui compile`
+  - Changed imports in `i18n.ts` from `.js` to `.mjs` extension
+  - Added TypeScript declaration file for `.mjs` message catalogs
+  - Added safety checks for `localStorage` and `navigator` access in `detectLocale()`
+  - Issue occurred because Vite requires ES modules, but Lingui compiled to CommonJS by default
+- Pre-push hook no longer fails with exit code 1 when [Unreleased] is the last CHANGELOG section
+- Project automation now triggers on label changes for issues AND pull requests (labeled event)
+
 ### Added
+
+- Added optional VAT ID input, editing, API payload support, and detail-page
+  display for customers.
+- Added synchronized customer API type aliases for `legal_entity_id` and a
+  dedicated customer Legal Entity lookup client that only reads
+  `/v1/customers/legal-entities` and validates the minimal `id`/`name`
+  response shape.
+- Integrated the dedicated customer Legal Entity lookup into the customer
+  create form with Radix selection, single-entity preselection, empty-state
+  blocking, and required `legal_entity_id` submit coverage (US-007).
+- Required customers to carry a Legal Entity UUID in frontend customer create
+  payloads, added the narrow customer Legal Entity lookup client, and wired the
+  create form to load and submit only that minimal lookup shape (US-002).
+- Documented the blocked Legal Entity customer backfill decision, including
+  tenant-consistency requirements and the prohibition on silent default
+  assignment for existing customers (US-001).
+- Added an Android-only OSS-notices control on the source-license screen that
+  opens the native notices activity when the `SecPalEnterprise` capability is
+  available.
+- Added independent administrative-active and assignment-eligibility controls
+  and status badges for organizational units, preserving both flags in offline
+  data and using assignment eligibility for new employee and site assignments.
+- Added independent Legal Entity and Establishment controls to the
+  organizational-unit create/edit dialog, including full request payloads,
+  response typing, fixtures, and German catalog translations (US-004).
+- Added explicit `android-mock` development, local preview build, and
+  Playwright override workflows, including README guidance for local and
+  Polyscope switching while keeping mock surfaces out of deployable
+  production build modes (US-007).
+- Added regression coverage for the Android shared frontend migration flow,
+  including a stable login instance-switch control hook used by Android
+  live-device smoke proof for returning configured runtimes to discovery
+  (US-006).
+- Added a frontend-rendered Android login instance hint and switch action that
+  shows the configured instance label/API origin, clears the native runtime
+  bootstrap, runs the shared sensitive logout cleanup path, and returns the app
+  to runtime discovery (US-004).
+- Added a frontend-owned Android runtime discovery flow that appears before
+  login when no runtime bootstrap is configured, validates secure instance
+  URLs through canonical `GET /v1/bootstrap` Android parameters, blocks
+  invalid/unavailable/incompatible/unsupported responses, and confirms the
+  resolved instance before applying it to the native runtime (US-003).
+- Added canonical `GET /v1/bootstrap` TypeScript models covering Android and
+  browser runtime discovery, per-channel notification metadata, and the
+  frontend-side `SecPalRuntimeBootstrap` native facade for runtime info,
+  bootstrap application, and bootstrap clearing (US-001).
+- Exposed Android runtime bootstrap bridge calls through the shared
+  `SecPalRuntimeBootstrap` facade, including current runtime bootstrap reads,
+  canonical-to-native payload mapping, and token-free regression coverage
+  (US-002).
+- Added `@capacitor/core` as a runtime dependency and introduced the
+  side-effect-free `src/platform/runtime.ts` platform abstraction for future
+  native integrations without adding Capacitor project scaffolding (US-001).
+- Added strict `VITE_APP_SURFACE` validation through
+  `src/platform/appSurface.ts`, covering web, Android mock/native, and iOS
+  mock/native frontend surfaces with production guards for mock surfaces
+  (US-002).
+- Added explicit `dev:*` and `build:*` package scripts for web, Android, and
+  iOS surfaces while preserving the default production web build path (US-003).
+- Documented the `VITE_APP_SURFACE` values, frontend source-of-truth rule,
+  PWA pipeline contract, and shared `src/ui`/shadcn/Radix/Lucide design-system
+  requirements for web, Android, and future iOS surfaces (US-004).
+- Protected the `/android-provisioning` product route and authenticated shell
+  navigation behind the Android app-surface flag in addition to the existing
+  `androidProvisioning` capability gate (US-005).
+- Added a minimal `src/native` facade surface with explicit
+  `SecPalDeviceState`, `SecPalEnterprise`, and `SecPalPush` typed stubs for
+  future native plugin integrations without introducing a generic native
+  command bridge or changing the existing auth bridge (US-006).
+- Added a central sensitive UI state helper and guarded-route privacy shield
+  flow so visual `privacy-shield` masking stays separate from the real
+  `vault-locked` offline-vault lock/unlock path (US-007).
+- Added a committed `.env.web`, pinned `build:web` / `dev:web` to web mode,
+  and tightened Playwright's default Android e2e surface so empty or parent
+  shell `VITE_APP_SURFACE` values cannot silently override the route surface;
+  Playwright now requires an explicit `PLAYWRIGHT_APP_SURFACE` override for
+  non-Android local or CI runs.
+- Forced `build:android` to export `VITE_APP_SURFACE=android-native` in the
+  command itself so Android-targeted builds stay deterministic even when CI or
+  a parent shell exports a conflicting app surface.
+- Forced every surface-specific `dev:*` and `build:*` script to export its
+  matching `VITE_APP_SURFACE` in the command itself so web, Android, and iOS
+  runs stay deterministic even when a parent shell or CI job exports a
+  conflicting surface value.
+- Cleared stale `privacy-shield` UI state during BFCache `pageshow`
+  reconciliation when the app restores into a real `vault-locked` state, so
+  the auth context no longer carries an outdated visual shield flag behind the
+  higher-priority offline-vault lock.
+- Centralized frontend surface resolution in a shared app-surface contract so
+  runtime modules, Vite build planning, and Playwright local dev-server
+  selection all validate the same surface rules and mode families.
+- Local Playwright runs now honor explicit `PLAYWRIGHT_APP_SURFACE` overrides
+  all the way through the spawned Vite command, and Vite build planning now
+  rejects `android-mock` / `ios-mock` before production artifacts can be
+  emitted.
+- Pinned the default `build` and `build:analyze` entrypoints to the web
+  surface as well, so generic production and analysis builds cannot emit
+  Android or iOS route surfaces from a leaked parent-shell
+  `VITE_APP_SURFACE`.
+- Raised the privacy shield over existing `document.body` portal siblings too,
+  so already-open Radix dialogs, dropdowns, and similar portal content are
+  hidden and inert while the shield is active.
+- The CI preview web-server path now builds the preview artifact with the same
+  resolved Playwright app surface that the suite expects, instead of routing
+  through the default web-pinned `build` script.
+- Remote HTTPS and workspace-preview Playwright targets now default to the web
+  surface for route assumptions, and the Android provisioning E2E proof skips
+  itself unless the current Playwright surface explicitly exposes the Android
+  route.
+- Local Playwright runs now disable dev-server reuse when
+  `PLAYWRIGHT_APP_SURFACE` explicitly switches surfaces, and SecPal-owned API
+  configuration examples now stay on approved `secpal.dev` hosts across env
+  samples, deployment docs, and config regression tests.
+- Production API base validation now keys off deployable build semantics
+  instead of the surface mode name alone, so `build:web`,
+  `build:android`, and `build:ios` still fail fast on missing, relative, or
+  loopback `VITE_API_URL` values.
+- Non-deployable Vite build modes such as `preview` and `analyze` now stay out
+  of that strict production API validation, so CI/local preview builds can keep
+  their loopback API base while deployable surface artifacts remain fail-fast.
+- Added `LICENSES/LicenseRef-SecPal-Attribution.txt`, updated the frontend's
+  AGPL SPDX expressions to `AGPL-3.0-or-later AND
+LicenseRef-SecPal-Attribution`, and expanded `/source` plus the legal docs to
+  state the additional attribution terms, preserve the required `Powered by
+SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
+  rather than mandatory license conditions.
+- Added deployment-backed `/source` metadata contracts so the public AGPL
+  source-offer page can consume immutable corresponding source URLs for the
+  deployed release set without exposing broader runtime diagnostics:
+  `/source-offer.json` now covers `frontend` / `contracts` plus optional
+  `android`, `GET /v1/release` provides the live `api` source URL, the
+  frontend tolerates mixed valid/invalid metadata sources without discarding
+  still-valid release links, and `docs/deployment-spa-routing.md` documents the
+  frontend versus deployment/API responsibilities.
+- Added the canonical shadcn `components.json` baseline for the frontend
+  (`new-york`, Tailwind v4 `src/index.css`, `zinc`, Lucide, and repo aliases)
+  plus a guardrail inventory test for the remaining non-canonical UI
+  compatibility layers.
+- Added mobile Playwright regression coverage for the authenticated shell's
+  nested sidebar-sheet user menu: `tests/e2e/auth.spec.ts` now proves that the
+  `mobile-chrome` flow can lock the app, unlock it again, and sign out from the
+  locked state without a page reload, so Radix `Sheet` + `DropdownMenu`
+  interaction regressions surface in automated browser runs instead of only in
+  manual mobile testing.
+- Standardized the authenticated app's loading experience around a shared `src/ui` skeleton layer (`Skeleton`, `PageSkeleton`, `SectionSkeleton`, `TableSkeleton`, `FormSkeleton`, `LoadingRegion`) and documented the contract in `src/ui/MIGRATION.md`. List pages (customers, sites, employees, activity logs, Android provisioning) now keep their table/header chrome mounted during the first load with skeleton rows, switch to row-level skeletons only when no rows are cached, and wrap subsequent refresh/pagination/filter cycles in `LoadingRegion` so previously rendered rows stay visible while the request is in flight. Detail/edit screens (customer, site, employee, employee contacts, employee create) keep page titles and action regions visible during initial entity loads and render `SectionSkeleton`/`FormSkeleton` only in the data region; `SiteDetail` renders the site record as soon as it loads and falls back to inline placeholders for customer and organizational-unit lookups (US-001..US-006).
+- Replaced the global route loader spinner with a shell-shaped `PageSkeleton` fallback, kept authenticated shell chrome mounted during persisted-session bootstrap revalidation, and routed authenticated route chunk loading through layout-owned `Suspense` boundaries that render `RouteContentFallback` instead of a full-screen guard loader. Route guards now share a single `routeGuardAuth` bootstrap check so `ProtectedRoute`, `FeatureRoute`, `PermissionRoute`, `OrganizationalRoute`, and `LoginRoute` no longer flash a guard-specific `Loading…` screen when a session snapshot exists (US-002, US-003).
+- Converted operational modules (`OrganizationalUnitTree`, `ActivityLogList`, `AndroidProvisioningPage`, `SettingsPage`) to keep their headers, filters, forms, and action controls mounted on first load. Loading-heavy panes now render `SectionSkeleton`/row skeletons inside the existing card/table chrome and fall back to `LoadingRegion` or inline busy indicators for safe refreshes such as activity-log manual refresh, organizational unit cache refreshes, Android revoke errors, and passkey post-registration list refreshes (US-007).
+- Kept the login card mounted during post-MFA/session completion via a card-local progress overlay and disabled credentials instead of swapping to a separate "completing" screen, and replaced the onboarding wizard initial/step-template loading with a stable wizard frame plus `FormSkeleton`. Token validation on `/onboarding/complete` now renders `FormSkeleton` inside the auth card instead of plain "Validating onboarding link" text (US-008).
+- Activated a shared route/data prefetch strategy backed by `src/routeModules.ts`: capability-gated shell idle warmups prefetch only route chunks (`scheduleRoutePrefetch` with `includeApi: false`) while `PrefetchLink` warms both the chunk and the matching API GET data on `mouseenter`/`focus`. Touch interactions now warm the route chunk only (`prefetchPathModuleOnly`) to avoid spurious API requests during scroll. The shared `usePrefetch` hook owns route plans for primary navigation and customer/site/employee detail paths, deduplicates in-flight and completed prefetches, caches only `Response.ok` results, and falls back to `console.warn` in dev for non-ok responses or rejected requests (US-009 plus audit fix-up).
+
+- Migrated the Login page from the legacy Catalyst component set to a new self-contained `src/pages/Auth/ui/primitives.tsx` design-system layer (`LoginShell`, `LoginCard`, `LoginCardHeader`, `LoginCardTitle`, `LoginForm`, `LoginButton`, `LoginInput`, `LoginField`, `LoginFieldGroup`, `LoginFieldLabel`, `LoginFieldDescription`, `LoginFieldError`, `LoginFieldSeparator`, `LoginStatusMessage`, `LoginDialog`, `LoginInputOtp`, `LoginInputOtpGroup`, `LoginInputOtpSlot`, `LoginOtpInput`, and related helpers), removing the dependency on external Catalyst primitives for the auth flow and aligning the visual language with the rest of the shadcn-based UI.
+- Restructured `/login` around the shadcn `login-05` block: a centered `max-w-sm` card with brand block on top, primary submit, `LoginFieldSeparator` "Or", and the passkey button as the secondary action, with the language switcher pinned to the shell's top-right and the legal footer rendered as a centered strip below the card.
+- Adopted the official shadcn `input-otp` library (`input-otp@1.4.2`) and wrapped it in route-local `LoginInputOtp` / `LoginInputOtpGroup` / `LoginInputOtpSlot` primitives styled to the existing zinc theme; `LoginOtpInput` is now a thin convenience wrapper over the new primitives with digits-only pattern enforcement (`REGEXP_ONLY_DIGITS`) for TOTP entry in the MFA challenge dialog.
+- Inlined `LoginLanguageSwitcher` and `LoginLegalFooter` into the Login page, removing the dependency on the shared `LanguageSwitcher` and `Footer` components for the auth flow.
+- Extended `INVALID_CREDENTIALS_PATTERN` to also match the short `"Invalid credentials"` backend message so both forms are localized consistently.
+- Added i18n coverage for previously hardcoded error strings in the Login page: passkey completion errors, MFA completion errors, unexpected submission errors, and the MFA verification failure message.
+- Added localized `login.title` ("Welcome to SecPal" / "Willkommen bei SecPal") and `login.separator` ("or" / "oder") strings for the new `login-05` brand block and separator.
+
+- Added a Playwright regression that rotates the `XSRF-TOKEN` cookie on mocked authenticated organization GET traffic and proves protected-route reloads stay authenticated without falling into `Offline vault is not available.`, resolving frontend issue #1020.
+- Added `docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md` as the accepted Phase 2 design record for frontend issue #495, documenting the target vault key hierarchy, device-bound key comparison, lock/unlock/logout semantics, and follow-up implementation slices for offline PII protection.
+- Added native Android passkey registration fallback in Settings so the shared passkey enrollment flow can delegate attestation creation to the injected Android bridge when the embedded WebView does not support browser WebAuthn registration, while keeping browser behavior unchanged.
+- Added native-bridge passkey sign-in to the shared login flow so Android can complete token-based passkey authentication through the injected native auth bridge while browsers keep the existing WebAuthn ceremony and progress states.
+- Added a Bewacherregister management panel to employee detail so authorized users can review BWR status and timestamps, generate the initial export, download the generated file, and move supported BWR states through the dedicated backend endpoints with inline validation feedback.
+- Added a permission-gated Android provisioning UI with backend-issued enrollment session creation, QR display, status visibility, and revoke controls for Epic SecPal/.github#327.
+- Added a live Playwright passkey proof that drives the real app.secpal.dev/api.secpal.dev stack through passkey registration, UI/API consistency checks, passkey removal, and a fresh email-first passkey login using a browser WebAuthn authenticator.
+- Added browser passkey sign-in to the login flow, including the WebAuthn challenge client and focused frontend coverage for supported browsers and failure handling.
+- Added passkey visibility to the settings page, including enrolled-passkey listing and an unsupported-browser notice that does not hide existing server-side passkey data.
+- Added passkey enrollment to the settings page, including user-provided credential labels, browser WebAuthn registration, server-side verification, and focused frontend coverage for successful and failing enrollment flows.
+- Added passkey removal to the settings page, including destructive controls for enrolled credentials, backend deletion, list refresh, and focused frontend coverage for successful and failing removal flows.
+- Added the missing MFA enrollment slice to the settings page so disabled accounts can start TOTP setup, scan a QR code or use the manual setup key, confirm the authenticator code, and immediately receive one-time recovery codes.
+- Added a reusable MFA QR-code component with browser-safe fallback messaging and focused component coverage so upcoming enrollment UI slices can render authenticator setup material without duplicating QR generation logic.
+- Added PWA offline persistence security and privacy [audit document](PWA_OFFLINE_PERSISTENCE_AUDIT.md) covering all client-side storage mechanisms (localStorage, sessionStorage, IndexedDB, Cache API, Service Worker state) with 10 findings, issue overlap analysis, and prioritized remediation recommendations.
+- Added a platform-aware frontend auth transport boundary that keeps browser/PWA flows on Sanctum session auth, sanitizes auth state before it enters React or local storage, and creates the explicit seam Android can later wire to a native bearer-token bridge without exposing raw tokens to JavaScript.
+- Added the first MFA settings management slice with live status loading plus self-service recovery-code regeneration and MFA disablement flows for accounts that already have MFA enabled.
+- Added the phase-1 browser-session MFA login challenge flow so the login page can pause after primary credentials, collect the second factor, and complete the session only after the backend challenge verification succeeds.
+
+- Offline sync queue retry scheduling now persists `nextRetryAt` timestamps so pending operations can wait for their backoff window instead of retrying immediately on every local processing pass
+- Sync status UI now surfaces the next scheduled offline retry time and hides the manual sync trigger while pending operations are still in their backoff window
+- `.github/instructions/react-typescript.instructions.md` - targeted React and strict TypeScript guidance for frontend source and test files
+- `.github/instructions/github-workflows.instructions.md` - targeted workflow and Dependabot guidance for GitHub automation files in this repo
+- `.github/instructions/org-shared.instructions.md` — org-wide Copilot principles (TDD, quality gates, PR protocol); `applyTo: "**"` auto-loading was later removed during governance context cleanup
+
+- **Web Vitals monitoring with thresholds & development warnings** (#310)
+  - Performance threshold configuration aligned with Lighthouse CI and Google's Core Web Vitals
+  - Development-mode console warnings for poor metrics (zero runtime cost in production)
+  - Metrics export API for dashboards: `getPerformanceMetrics()`, `clearPerformanceMetrics()`
+  - Severity levels: "good", "needs-improvement", "poor"
+  - Full test coverage (14 passing tests)
+  - Documentation: `docs/web-vitals-monitoring.md`
+
+- **Playwright E2E testing infrastructure** (#309)
+  - Comprehensive E2E test suite with Playwright
+  - Three testing modes:
+    - Local development (localhost:5173 with DDEV backend proxy)
+    - Staging/performance tests (app.secpal.dev)
+    - CI smoke tests (localhost:4173 preview build)
+  - Test categories:
+    - Authentication flow tests (login, logout, session persistence)
+    - Smoke tests (page loading, navigation, accessibility basics)
+    - Organization management integration tests
+    - Lighthouse performance audits (Core Web Vitals)
+  - Global setup with session reuse to prevent rate-limiting
+  - Configurable test credentials via environment variables
+  - npm scripts: `test:e2e`, `test:e2e:staging`, `test:e2e:ci`, `test:e2e:ui`, `test:e2e:headed`
+
+- **Lighthouse CI for automated performance testing** (#308)
+  - GitHub Actions workflow runs Lighthouse audits on every PR and push to main
+  - Performance budgets based on Core Web Vitals thresholds:
+    - LCP (Largest Contentful Paint): < 2.5s (error threshold)
+    - CLS (Cumulative Layout Shift): < 0.1 (error threshold)
+    - TBT (Total Blocking Time): < 200ms (warning threshold)
+  - JavaScript console error detection (zero tolerance - fails on any JS error)
+  - Accessibility and Best Practices audits with 90% minimum score
+  - PR comments with Lighthouse scores and report links
+  - Temporary public storage for report sharing
+  - Tests for configuration validation
+
+- **Mobile-friendly action menu for organization tree** (Part of Epic #283)
+  - Replaced individual action buttons (Add Child, Edit, Move, Delete) with a compact dropdown menu (three dots icon)
+  - Actions are now accessible via a single button that expands to show all available options
+  - Saves horizontal space on mobile devices where action buttons previously overflowed
+  - Uses Catalyst Dropdown, DropdownButton, DropdownMenu, and DropdownItem components
+
+- **Detail panel close functionality** (#306, Part of Epic #283)
+  - Close button (×) in detail panel header for explicit panel closing
+  - ESC key support to close detail panel
+  - Toggle selection: clicking the same unit again deselects it
+  - Improved UX for organizational structure management
+
+- **Organizational Hierarchy UI Components** (#241, Part of Epic #228)
+  - **API Services** - Four comprehensive API service modules with full CRUD support:
+    - `organizationalUnitApi.ts`: Manage organizational units (holding, company, region, branch, division, department, custom)
+    - `customerApi.ts`: Customer hierarchy management with parent-child relationships
+    - `objectApi.ts`: SecPal objects and object areas with geofence support
+    - `guardBookApi.ts`: Guard books and reports with status/report_type filtering
+  - **TypeScript Types** (`src/types/organizational.ts`):
+    - Complete type definitions for all organizational entities
+    - Request/response types following ADR-007 conventions
+    - Paginated response wrapper for list endpoints
+  - **React Components** - Four feature-rich tree/manager components:
+    - `OrganizationalUnitTree`: Hierarchical tree view with icons, badges, expand/collapse, and CRUD actions
+    - `CustomerTree`: Customer hierarchy with object count display and filtering
+    - `ObjectManager`: Split-panel object/area manager with detail view
+    - `GuardBookManager`: Guard book list with report generation and status badges
+  - **Features:**
+    - Hierarchical tree building from flat API responses
+    - Loading skeletons and error states
+    - Empty state with create action
+    - Type-specific icons and color-coded badges
+    - Accessible tree structure with proper ARIA roles
+    - Catalyst Design System integration (Button, Badge, Heading, Text)
+  - **Test Coverage:** 60 API tests + 49 component tests, all passing
+  - **Benefit:** Enables visual management of the organizational structure introduced in backend Epic #228
 
 - **CSRF Token Integration & API Service Updates** (#224, Part of Epic #205)
   - All API services now properly include CSRF tokens via X-XSRF-TOKEN header
@@ -1540,7 +1086,348 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Documentation reference in README
   - SPDX license headers for REUSE compliance
 
+- Initial repository setup
+- React + TypeScript + Vite configuration
+- Testing setup with Vitest and React Testing Library
+- REUSE 3.3 compliance
+- Pre-commit and pre-push quality gates
+
 ### Changed
+
+- Added a guardrail test for `LICENSES/LicenseRef-SecPal-Attribution.txt` so
+  the repository attribution addendum stays aligned with the checked-in central
+  SecPal wording for the approved modified-version and preferred attribution
+  notices.
+- Extended `scripts/check-license-compatibility.sh` and the required
+  **Quality Checks / Check License Compatibility** workflow step to validate
+  both REUSE source-file SPDX metadata and dependency licenses recorded in
+  `package-lock.json`, fail closed on malformed lockfiles, and cover the
+  dependency license set already present in the repository, so incompatible npm
+  package licenses now fail the same CI guard tracked in issue #1321.
+- Standardized the German customer site-count copy on `CustomerDetail` to use
+  `Objekt` / `Objekte`, matching the rest of the Sites UI and keeping the zero
+  state on the natural "keine Objekte" wording.
+- Completed the remaining German Lingui catalog coverage for the frontend's
+  supported UI copy, translating the previously missing `de` entries and
+  adding a regression test that fails whenever any checked-in German catalog
+  message is left untranslated.
+- Moved the AGPL/license and source-code notices out of the authenticated and
+  login footers so those footers keep only the "Powered by SecPal" slogan; the
+  authenticated sidebar now exposes a collapsible `Legal` section above the
+  user menu with dedicated `AGPL v3+` and `Source Code` entries, and the
+  source entry preserves the current route in navigation state for the return
+  flow.
+- Hardened `/source` deployment manifests by trimming validated source URLs
+  before rendering them and by waiting for the manifest request to settle
+  before showing fallback repository guidance, so deployments do not flash
+  mutable fallback links ahead of immutable release URLs.
+- Kept `/source` deployment manifests effective when the separate live API
+  release fetch fails before returning an HTTP response, so valid same-origin
+  immutable frontend and contracts source links no longer fall back to mutable
+  repository URLs on mixed deployment/API outages.
+- Restored the `/source` fallback repository links while the
+  `/source-offer.json` request is still pending, so stalled manifest fetches
+  do not leave the corresponding-source section empty on the public AGPL page.
+- Narrowed the `/source` deployment notice so optional repositories that still
+  fall back to a public repository link are no longer described as immutable
+  deployment source, and added explicit short-cache delivery rules for
+  `/source-offer.json` to the shipped Apache/Nginx deployment templates.
+- Fixed the shipped Apache rewrite rule for `/source-offer.json` so deployed
+  manifests are served when present while missing manifests still return HTTP
+  404 instead of the SPA shell.
+- Stopped production builds from failing before first paint or reusing leaked
+  Polyscope preview API origins when they are opened on local loopback hosts
+  such as `localhost`, so static LHCI audits and other local production-build
+  checks stay same-origin instead of requiring deployment API metadata.
+- Limited that localhost preview-origin guard to production mode so local
+  development keeps honoring an explicit preview `VITE_API_URL` instead of
+  falling back to same-origin routing.
+- Updated the shipped `app.secpal.dev` Nginx template to use the current
+  `http2 on;` syntax and to drop the redundant `ssi_types text/html;`
+  override, so production config validation no longer emits known warnings for
+  the frontend host template.
+- Limited the `/source` Android repository block to deployments that publish an
+  explicit Android release entry in `/source-offer.json`, so frontend-only
+  deployments no longer advertise Android source links without a matching
+  released Android version.
+- Refined the `/source` explanatory copy in English and German so the
+  deployment and fallback notices read naturally while still describing the
+  source-offer behavior precisely.
+- Refined the new legal-menu follow-up so the collapsed desktop sidebar opens
+  `Legal` in a separate dropdown instead of expanding the whole sidebar, the
+  login `Legal` trigger keeps the same neutral surface styling as the language
+  picker in dark mode, the authenticated `Legal` triggers no longer compose
+  sidebar tooltips through Radix `asChild` wrappers, the `Legal` section now
+  lives in the scrollable sidebar content instead of the fixed footer, the
+  vault-locked login shell keeps bottom safe-area breathing room when no footer
+  is present, the user menu stays bounded for long profile names and email
+  addresses, and pointer dismissal now clears trigger focus for the shared
+  dropdown primitives used by both flows.
+- Fixed pointer-dismissed dropdown menus that use trigger-child composition so
+  Radix menu triggers rendered through shared `Button` and
+  `SidebarMenuButton` children still blur their restored focus ring instead of
+  staying visibly focused after pointer-driven close.
+- Limited pointer-dismiss blur handling to the dropdown or select trigger that
+  actually owns the closing overlay, so clicking a different menu trigger no
+  longer strips focus from the newly targeted control.
+- Aligned the remaining footer slogan with the standard `text-xs` type scale
+  and tightened the surrounding vertical spacing now that the legal-link row is
+  gone.
+- `AuthContext` now keeps new logins behind the full sensitive logout cleanup
+  completion path, so the five-second best-effort logout timeout no longer lets
+  a replacement session race the previous session's IndexedDB and cache
+  teardown.
+- Widened the shared authenticated shell content stage to a 1600px desktop cap
+  and aligned the shell footer, route loader, and update banner with the same
+  container so large desktop screens can use materially more horizontal space
+  while page-local form and detail views keep their narrower limits.
+- Rebuilt the authenticated application shell navigation on the canonical shadcn
+  `sidebar-07` composition: the old bespoke menu shell is replaced by shared
+  shadcn/Radix/Lucide `Sidebar`, `Collapsible`, `DropdownMenu`, `Sheet`,
+  `Breadcrumb`, `Separator`, and avatar primitives, with the desktop sidebar
+  collapsing to icons, the mobile menu using the matching sheet pattern, and
+  regression coverage updated to assert the real `sidebar-07` structure instead
+  of the removed custom grouping model.
+- Fixed the mobile authenticated shell so nested user-menu actions close the
+  sidebar sheet before navigation, lock, and logout side effects run. The user
+  menu and workspace switcher now disable Radix dropdown modality while they
+  live inside the mobile sidebar `Sheet`, which prevents the stale
+  `pointer-events: none` / scroll-lock state that previously trapped the app
+  behind the lock screen until a manual reload.
+- Tightened the authenticated shell's mobile/accessibility follow-up fixes: the
+  top-level authenticated-route loader now keeps the update prompt mounted while
+  lazy route modules are still loading, the mobile sidebar close button uses
+  localized labels with a touch-sized hit area, primary mobile nav items keep a
+  larger tap target, and the shell header now grows by the top safe-area inset
+  instead of only padding inside a fixed height.
+- Hardened the nested mobile sidebar overlays and logout cleanup lifecycle so
+  the user menu and team switcher portal into the active shell container, the
+  mobile trigger keeps the canonical touch target sizing, and logout cleanup
+  continues after bounded analytics or vault-cleanup waits instead of leaving
+  the authenticated shell trapped behind stale overlay or cleanup barriers.
+- Tightened the logout cleanup barrier follow-up so pre-timeout sensitive
+  cleanup failures are logged again instead of being swallowed by the timeout
+  wrapper, and stale barrier-owner reconciliation now runs before the current
+  logout cleanup owner token is removed from storage-backed barrier state.
+- Followed up the shell/auth review findings again by keeping the sidebar rail
+  hidden through the mobile sheet breakpoints and bounding post-logout login
+  waits to a second five-second best-effort timeout so a hung sensitive cleanup
+  cannot block the next successful session forever.
+- Followed up the auth/app-shell edge cases again by normalizing public
+  trailing-slash routes before suppressing the root `UpdatePrompt`, by keeping
+  new logins blocked on destructive logout cleanup even when trailing browser
+  push teardown is still bounded by the five-second best-effort handoff wait,
+  and by releasing the logout barrier owner as soon as destructive cleanup
+  finishes so later logouts do not inherit stale owner state.
+- Completed the shadcn/Radix/Lucide UI migration proof by tightening the
+  repo-wide legacy UI guardrail to a zero allowlist, removing the final shared
+  shell compatibility aliases, and documenting `src/ui` as the complete
+  canonical production UI layer (US-007).
+- Removed the remaining UI-surface holdouts that still only imitated the
+  canonical shared primitives: destructive load/error states now render through
+  shared `Alert*` slots instead of ad-hoc text blocks or route-local alert
+  shells, shared auth status messaging now composes the canonical `Alert`
+  primitive directly, and the repository documentation now describes the final
+  `src/ui` architecture instead of an in-progress migration state (US-007).
+- Moved the remaining Customers, Sites, Employees, and admin/domain surface UI
+  consumers onto direct `@/ui` imports, promoted the still-needed customer/site
+  and employee compositions to prefixed shared exports, and deleted the
+  route-local `CustomerSites` / `Employees` UI barrels plus obsolete generic
+  `src/components/*` wrapper files from the compatibility inventory (US-006).
+- Moved the auth and onboarding route-local primitive layers into the canonical
+  shared `@/ui` surface, updated login, MFA, onboarding wizard, completion, and
+  submitted screens to import shared primitives directly, and deleted
+  `src/pages/Auth/ui` plus `src/pages/Onboarding/ui` from the remaining
+  compatibility inventory while preserving command-popover Tab focus handoff
+  through the shared primitive (US-005).
+- Replaced the shared searchable/selectable control compatibility layer with
+  canonical shadcn `Command*` primitives backed by `cmdk`, migrated the
+  onboarding and employee command-popover adapters onto that pattern, and
+  removed the obsolete generic `combobox`, `listbox`, `select`, and
+  `src/ui/searchableControls.tsx` wrappers from the remaining legacy UI
+  inventory (US-004).
+- Migrated the authenticated application shell navigation from bespoke
+  app-shell sidebar, mobile drawer, and dropdown approximations to shadcn/Radix
+  `Sidebar`, `Sheet`, and `DropdownMenu` composition. The global user menu,
+  mobile navigation overlay, sidebar links, and shell layout now expose
+  canonical shadcn slot names with regression coverage for focusable menu and
+  sheet behavior (US-003).
+- Migrated the shared `src/ui` core primitives to canonical shadcn slot names,
+  CSS-variable theme tokens, and Radix-backed avatar structure. Buttons,
+  inputs, textareas, fields, selects, checkboxes, switches, radios, dialogs,
+  alerts, cards, badges, progress, avatars, tables, skeletons, and loading
+  states now share the shadcn token layer from `src/index.css`, and affected
+  primitive tests assert the canonical structure directly (US-002).
+- Replaced the repo-local `markdownlint-cli2` pre-commit and preflight path with pinned `markdownlint-cli@0.49.0` usage so markdown validation now matches the shared `.github` governance baseline
+- Included `.github/instructions/github-workflows.instructions.md` in the frontend AI-governance baseline so provider-neutral agents and Copilot-derived tooling load the same workflow-policy overlay when reviewing or editing GitHub automation.
+- Updated `docs/development/TDD_WORKFLOW.md` to keep the SPDX copyright year current after the 2026 governance-link refresh.
+- `/login` no longer renders the legacy split brand-panel layout on large viewports; the `login-05` centered card is now the single layout across breakpoints. The `LoginBrandPanel` primitive remains available in `src/pages/Auth/ui/primitives.tsx` for future use but is no longer composed on the login route.
+- Swapped the three icons on the login surface from the legacy outline icon package to `lucide-react`: passkey-action `KeyIcon` → `KeyRound`, AGPL-license `ScaleIcon` → `Scale`, source-code `CodeBracketIcon` → `Code2`.
+- Migrated every remaining non-shadcn surface on the login route to true Radix-backed shadcn primitives, fulfilling the "Login uses shadcn exclusively" requirement:
+  - `LoginDialog` (MFA challenge) now wraps `@radix-ui/react-dialog` with Portal + Overlay + Content + auto-focus + focus-trap + Esc/outside-click dismissal handled by Radix (the previous custom div + hand-rolled focus-trap is removed; `LoginDialogTitle` / `LoginDialogDescription` are thin wrappers around `DialogPrimitive.Title` / `DialogPrimitive.Description`).
+  - `LoginFieldLabel` wraps `@radix-ui/react-label` for proper `<button role="radio">` association.
+  - New `LoginRadioGroup` / `LoginRadioGroupItem` wrap `@radix-ui/react-radio-group` and replace the native `<fieldset>` + `<input type="radio">` MFA-method selector.
+  - New `LoginSelect` / `LoginSelectTrigger` / `LoginSelectValue` / `LoginSelectContent` / `LoginSelectItem` (plus internal `LoginSelectScrollUpButton` / `LoginSelectScrollDownButton`) wrap `@radix-ui/react-select` and replace the native `<select>` + `<option>` language switcher.
+  - The MFA dialog's inner `<form className="space-y-6">` is now `LoginForm`, consistent with the primary login form.
+- Upgraded the `cn` helper in `src/pages/Auth/ui/utils.ts` to compose `clsx` with `tailwind-merge` so conflicting Tailwind classes deduplicate predictably (matches the canonical shadcn `cn` implementation).
+- Added JSDOM stubs for `Element.prototype.hasPointerCapture` / `setPointerCapture` / `releasePointerCapture` / `scrollIntoView` in `tests/setup.ts` so Radix Select can be opened and interacted with in Vitest under JSDOM.
+- Refactored `LoginButton` in `src/pages/Auth/ui/primitives.tsx` to use `class-variance-authority` (`cva`) for variant management, matching the canonical shadcn stylistic approach: `loginButtonVariants` is now a `cva()` definition with a `variants.variant` map (`default` / `secondary` / `outline` / `ghost`) and `defaultVariants`; the public `LoginButtonVariant` type is derived from `VariantProps<typeof loginButtonVariants>`; the standalone `focusRing` helper class is inlined into the cva base so it is always applied without an extra `cn(...)` argument.
+- Replaced the native `<label>` element that wrapped each `LoginRadioGroupItem` "card" in the MFA-method selection (`src/pages/Login.tsx`) with `LoginFieldLabel` (Radix Label) bound to the radio via `htmlFor` / `id` (`mfa-method-${method}`), so the entire card click target is dispatched through Radix Label instead of a raw HTML label and the login route now contains zero native form-control HTML on the MFA flow.
+- Added the canonical shadcn `Spinner` + `Empty` primitives as `LoginSpinner`, `LoginEmpty`, `LoginEmptyHeader`, `LoginEmptyMedia` (with `default` / `icon` `cva` variants), `LoginEmptyTitle`, `LoginEmptyDescription`, and `LoginEmptyContent` in `src/pages/Auth/ui/primitives.tsx`. `LoginSpinner` wraps `Loader2` from `lucide-react` with `role="status"`, an overridable `aria-label`, and `animate-spin`; the Empty primitives mirror the shadcn `new-york-v4` registry, with `bg-muted` / `text-foreground` swapped for the existing zinc palette so the surface matches the rest of the auth chrome.
+- Added a successful-MFA completion UI on `/login`: after `verifyMfaChallenge` resolves, `Login.tsx` flips a new `isCompletingLogin` state, hides the credential card behind `hidden` + `aria-hidden`, hides the language switcher, and renders a centered `LoginEmpty` block (`aria-live="polite"`, `aria-busy="true"`) with `LoginSpinner` + `LoginEmptyTitle` ("Completing sign-in") + `LoginEmptyDescription` ("Please wait…") that stays on screen while `login()` and `navigate("/")` finish. The MFA dialog closes over this completion state, so the user never sees the login form re-flash between the dialog closing and the route transitioning. On failure during completion the state is reset and the credential form is restored with the surfaced error message intact.
+
+- **Breaking:** `LoginOtpInput` `aria-label` prop is now required (no default). Callers that omitted `aria-label` must now pass an explicit localized label string.
+- **Breaking:** `LoginSpinner` `aria-label` prop is now required (no default `"Loading"`). Callers must pass an explicit localized label.
+- **Breaking:** `CommandPopover` props `placeholder`, `searchPlaceholder`, and `emptyMessage` are now required strings (previously optional with English defaults). All call sites must pass localized values.
+- `cn()` in the onboarding barrel now applies `tailwind-merge` (previously used bare `clsx` without conflict resolution). Class lists that previously preserved duplicate conflicting Tailwind utilities will now be deduplicated.
+
+- Raised the build-toolchain Node floor in `package.json` from `>=20.6.0` to `^22.19.0 || >=24.0.0`, matching the effective range already required by direct dependencies (`vite@8`, `@vitejs/plugin-react@6`, `eslint@10`, `lighthouse@13`, and `vite-plugin-static-copy@4`) and `.nvmrc`/CI (Node 22). Enabled `engine-strict=true` in `.npmrc` so unsupported Node versions fail `npm ci`/`npm install` instead of proceeding with non-fatal `EBADENGINE` warnings. Closes #1221.
+- Changed magic-link account setup so invited employees must re-enter their names and date of birth instead of seeing identity fields prefilled; name-similarity feedback now appears only after submit, and the completion request forwards `date_of_birth` for server-side identity verification.
+- Removed the optional `PasskeyLoginOptions { email?: string }` argument from the `AuthTransport.loginWithPasskey` and `NativeAuthBridge.loginWithPasskey` interfaces (and the matching native-bridge implementation in `src/services/authTransport.ts`) so the typed transport contract now matches the discoverable-only public passkey challenge surface. The `Login` call site already invoked `loginWithPasskey()` without arguments; the unused parameter could no longer be forwarded anywhere meaningful since the API rejects email-scoped public passkey challenges. Closes #1120.
+- Passkey sign-in now always starts a discoverable (resident-credential) challenge without sending an email hint to the server. The previous two-attempt fallback — try discoverable, then retry with an email-scoped `allow_credentials` list — has been removed. Browsers that do not support empty `allowCredentials` lists will now receive an error instead of a silent retry. The native-bridge `loginWithPasskey` call no longer forwards the typed email either.
+- Migrated employee contact and detail flows from flat `address_*` fields to the `addresses` relation: responses now use `addresses`, optional `current_address`, and `structured_address`; contact edit and inline postal edits send full replacement `addresses` payloads that keep historical rows and refresh the open-ended current row, with shared helpers in `src/lib/employeeAddresses.ts`.
+- Added an inline onboarding-wizard attachment upload section for editable steps, automatically creating a draft submission before the first upload when needed, surfacing upload success/failure inline, and wiring the flow to the current `/v1/onboarding/submissions/{submission}/files` API contract (closes #1029)
+- Renamed the onboarding review and Android provisioning frontend API clients to the neutral `/v1/onboarding-review/...` and `/v1/android-enrollment-sessions...` endpoints, and aligned supporting fixtures/examples with the removed Admin model.
+- Removed the frontend's role-list based elevated UI gating and obsolete `hasRole` auth-context helper: organization access now follows the authoritative `hasOrganizationalScopes` flag, customer/site/employee/android capability checks now depend on explicit permissions plus scope/access flags, and the obsolete `admin` organizational-scope access level was dropped from frontend types and tests to match the API's removed Admin model (breaking change, closes #1031)
+- Reframed the frontend `README.md` around the currently shipped workforce-operations routes and runtime guidance, removing stale Secrets-era password-vault, attachment-encryption, and migration-status sections that no longer matched the live app surface, resolving frontend issue #531.
+- Switched the Vite Lingui macro transform from an unfiltered Babel plugin run to a filtered Rolldown Babel preset around `@lingui/babel-plugin-lingui-macro`, reducing unnecessary production-build plugin work and hardening the frontend against renewed Rolldown `PLUGIN_TIMINGS` warnings during `npm run build` (frontend issue #901).
+- Migrated the frontend Lingui toolchain to the v6-compatible formatter and split macro entry points (`@lingui/core/macro`, `@lingui/react/macro`) so Dependabot Lingui update PRs no longer fail CI on mixed-version `I18n` types, stale `@lingui/macro` extraction, or the removed `format: "po"` setting.
+- Wired the central Copilot-instructions validator into `quality.yml` so frontend pull requests now fail automatically when known React AI-risk guardrails or generic AI-triage guidance are missing from the runtime baseline
+- Dropped restoration of legacy cleartext and pre-v2 encrypted `auth_user` localStorage payloads; unsupported auth-storage records are now purged instead of being restored, and frontend test fixtures now seed authenticated state through the encrypted storage path only
+- Dropped the legacy `template_id` alias in the onboarding submission client so runtime writes now require `form_template_id` only, matching the current API contract during the project's `0.x` line
+- Renamed the build test suite from `Build Output Verification` to `Build Configuration and Source Verification` to match the JSDoc comment on the describe block
+- Clarified the `manualChunks` comment in `vite.config.ts` to accurately describe the Rollup/Rolldown output API rather than attributing the requirement to Vite 8 specifically
+- Replaced `Buffer.from().toString("base64")` with a chunked `btoa` implementation in the Playwright auth storage utility for browser-compatible base64 encoding
+- Added `AUTH_STORAGE_KEY_MATERIAL_PREFIX` constant in the Playwright auth storage utility to avoid the `secpal-auth-storage:` magic string being duplicated between test utility and production code
+- Added `stableStringify` helper in the Playwright auth storage utility so the PBKDF2 cache key is deterministic regardless of property insertion order in the user object
+- Extracted `TEST_FILE_PATTERN` constant in the issue-889 lint regression test and decomposed `directAuthUserWritePattern` into named sub-pattern constants with an explanatory comment
+- Replaced the inline `makeFetchResponse` stub in `onboardingApi.test.ts` with a real `Response` constructor so the mock implements the full browser `Response` interface
+
+- Strengthened repo-local Copilot governance for AI findings: frontend work now requires proof of defect before merging AI-generated fix PRs, treats green CI alone as insufficient evidence for semantic UI refactors, and documents the known guardrails around async ordering, `<option>` translation strings, and separated error state.
+- Replaced raw Android provisioning rollout-channel and session-status enum values with human-readable labels and operator guidance, so stale, revoked, and already-used enrollment sessions are easier to interpret in the frontend UI.
+- Aligned the frontend lint toolchain back to the ESLint 9 line so `eslint-plugin-react-hooks` no longer leaves the repository in an invalid peer-dependency state during installs.
+- Made native-bridge login prefer the canonical `GET /v1/me` user payload immediately after authentication, so Android capability-gated navigation no longer depends on the potentially narrower token-login payload during first render.
+- Refreshed the Lingui locale catalogs for the Android provisioning UI so the German navigation no longer falls back to the raw message id `62KQbc` in shipped builds.
+- Aligned the frontend repo-local domain policy and validation script with the canonical Android artifact host `apk.secpal.app` so Android provisioning fixtures and runtime URLs pass governance checks.
+- Strengthened Copilot governance: require test-impact analysis and same-commit test updates when a fix alters observable behavior, explicitly recommend `PREFLIGHT_RUN_TESTS=1` in preflight guidance for behavioral, security, or state-lifecycle changes, and mandate `--body-file` for programmatic PR creation to prevent shell escaping issues.
+- Isolated authenticated `pre_contract` users into an onboarding-only shell, redirecting them away from normal app routes until activation and sending non-pre-contract users back to the canonical app entry when they hit `/onboarding`.
+- Aligned the public onboarding completion flow with the current backend runtime by removing the unsupported profile-photo bootstrap field, submitting the documented JSON payload to `POST /v1/onboarding/complete`, and accepting the session-based completion response without a frontend token assumption
+- Made browser-session login prefer the canonical `GET /v1/me` user payload immediately after authentication, so capability-gated navigation no longer comes up incomplete until the first manual refresh.
+- Aligned MFA recovery-code placeholders, frontend fixtures, and service mocks with the canonical API payload shape of raw 8-character uppercase alphanumeric codes so the browser UI no longer teaches a grouped `XXXX-XXXX` format that differs from what the backend stores and returns.
+- Made the checked-in Lingui `.po` catalogs the only frontend translation authority, removing the Translation.io-specific sync overlay so catalog maintenance now stays entirely repo-local.
+- Refreshed the shipped MFA/login locale artifacts from the repo-local Lingui catalogs so the new MFA settings UI no longer falls back to raw Lingui message IDs in production.
+- Removed the inset desktop content frame beneath the top navigation so the page surface now spans edge to edge without the previous side and bottom border effect.
+- Clarified the repo-local branch-start and post-merge readiness workflow so new frontend work must start from a clean, updated local `main`, and post-merge cleanup now explicitly returns the repo to `main`, refreshes dependencies with `npm ci` where applicable, runs `npm run build` when available, and confirms a clean working tree
+- Added a dedicated email-verification gate for protected routes, wired it to the backend resend-verification endpoint, and stopped surfacing the raw backend `Your email address is not verified.` error inside arbitrary app pages after login.
+- Restored explicit repo-local Copilot governance by making TDD-first, quality-first, one-topic-per-PR, immediate issue creation for out-of-scope findings, and EPIC-plus-sub-issue requirements always-on again; the frontend runtime overlay now auto-loads repo-wide so these rules remain present while working
+- Clarified the repo-local PR workflow so finished frontend work must be self-reviewed, committed, and pushed before any PR exists, and the first PR state must always be draft until the final PR-view self-review is clean
+- Scoped the frontend zero-knowledge documentation to attachment contents only, clarifying in `README.md` and `docs/CRYPTO_ARCHITECTURE.md` that broader application data uses server-side encryption at rest and that file metadata is still visible to the server.
+- Corrected the HKDF key-derivation documentation so `CRYPTO_ARCHITECTURE.md` matches the shipped frontend crypto code, which uses an empty HKDF `info` parameter for attachment file keys.
+- Replaced the remaining `@secpal.app` auth-service test fixture emails in `authState.test.ts` and `authTransport.test.ts` with `@secpal.dev` so those tests follow the repository domain policy for non-production addresses.
+- Aligned repo-local domain governance and validation with the renamed Android application identifier `app.secpal`, removing the old identifier-only exception from current policy text.
+- Replaced the raw backend `Server Error` text on login failures with a controlled temporary-unavailable message when the login API returns a `5xx`, so browser and PWA users no longer see the uncaught backend error string on the live login screen.
+- Replaced the remaining hand-written frontend auth response shapes with contract-aligned auth and MFA types under `@/types/api`, extended the auth API client to cover login MFA challenges plus the backend self-service MFA endpoints needed by the upcoming UI slices, updated the browser-session auth transport to surface the discriminated `authenticated | mfa_required` result, and added full unit coverage for all new API client methods and transport branches.
+
+- Aligned the frontend browser-session auth contract with the backend UUID-based user payload so successful login, current-user bootstrap, persisted auth state, and onboarding handoff now accept valid string user IDs instead of incorrectly rejecting them as unsafe.
+- Hardened the browser-session auth endpoint wiring so login, logout, CSRF bootstrapping, and `GET /v1/me` all build URLs from the same production-safe API resolver, which now requires an explicit absolute `VITE_API_URL` for every production deployment and fails fast on missing or relative API bases instead of guessing a host.
+- Aligned repo-local domain governance and validation with the current split of `secpal.app` for the public homepage and real email addresses, `api.secpal.dev` for the API, and `app.secpal.dev` for the PWA, while keeping `app.secpal` as the Android-only application identifier
+- Corrected the frontend production API fallback and related examples to use the canonical `https://api.secpal.dev` host.
+- Separated customer and site feature visibility from assignment-mutation and cross-resource permissions, so only explicit collection access (`hasCustomerAccess` / `hasSiteAccess` or the matching read permission) unlocks those frontend areas and future custom roles cannot drift into implicit half-authorized states.
+- Aligned customer and site feature gating with the backend collection policy by honoring explicit `hasCustomerAccess` and `hasSiteAccess` auth-context flags, so scoped-assignment users can enter the same areas the API intentionally exposes while users without any effective access continue to see the shared access-denied state.
+- Clarified the employee status rules in the create and edit UI by showing the full valid status set (`Applicant`, `Pre-Contract`, `Active`, `On Leave`, `Terminated`) and by explaining inline that onboarding invitations are only available in `Pre-Contract`.
+- Aligned the frontend auth client, integration tests, and migration guide with the canonical backend auth/self-service surface so browser sessions now use `POST /v1/auth/login`, `POST /v1/auth/logout`, and `GET /v1/me` instead of legacy or guessed paths
+- Pinned frontend TypeScript back to the supported `5.9.x` line so `@typescript-eslint` linting no longer runs outside its declared compatibility range while the repository waits for official TypeScript 6 support
+
+- Updated `.npmrc` to document that `legacy-peer-deps=true` is specifically
+  required to suppress the `vite-plugin-pwa@1.2.0` peer-dependency conflict
+  with Vite 8; the plugin currently declares peer support only through Vite 7
+  (see #559 for status); the SPDX copyright year range was extended to `2025-2026`
+- `.github/copilot-instructions.md` now requires a branch hygiene check before any write action so frontend work never starts on local `main` and dirty non-`main` branches must be assessed before continuing
+- `.github/copilot-instructions.md` now requires stale `SPDX-FileCopyrightText` years in edited files and license sidecars to be normalized to `YYYY` or `YYYY-YYYY` without spaces
+- `.github/copilot-instructions.md` now clarifies that if an edited file has no inline SPDX header, its companion `.license` file must be checked and updated instead
+- repo-local frontend instructions and overlays now also restate Copilot review handling, signed-commit checks, EPIC/sub-issue requirements, REUSE checks, 4-pass review, and the `secpal.app` vs `secpal.dev` use-case split so project-wide governance is locally complete
+- repo-local frontend instructions and overlays now also require warning, audit, and deprecation notices from scripts and package managers to be reviewed and either fixed or tracked immediately
+- Changed the English login email field label from `Email` to `Email address` for clearer authentication microcopy without altering the rest of the screen
+- Changed the login-page heading from `Login` to `Log in` for consistent authentication microcopy while leaving the rest of the screen unchanged
+- Removed the login-page subtitle so the auth entrypoint shows only the product name and keeps the footer slogan as the sole claim treatment
+- Synchronized the frontend Lingui catalogs with Translation.io so the updated German login and tagline-related copy is reflected locally after the recent remote translation refresh
+- Standardized the frontend-visible SecPal tagline to `Powered by SecPal – A guard's best friend` across footer text, landing copy, tests, and generated locale catalogs; the tagline is intentionally identical in all locales (no translation)
+- Marked `docs/PERFORMANCE_ANALYSIS_2025-12-06.md` as historical reference material so it is not mistaken for the current frontend optimization plan
+- Marked `docs/IMPLEMENTATION_PLAN_ISSUE143.md` as a historical planning artifact so it is not mistaken for current implementation guidance
+- Marked the retained Issue #319 profiling and TBT analysis notes as historical reference material so they are not mistaken for active implementation instructions
+
+- Updated frontend package baselines to the latest currently compatible releases for `@lingui/core`, `@lingui/react`, `@lingui/macro`, and `vite-plugin-static-copy`
+
+- `.github/copilot-instructions.md` - replaced comment-based inheritance assumptions and long-form examples with a self-contained runtime baseline for this repository
+- `.github/instructions/org-shared.instructions.md` - reduced to a short repo-local overlay that reinforces the runtime baseline instead of duplicating org documents
+- **Git Hooks Diagnostic Tool** (#392)
+  - Created `scripts/diagnose-hooks.sh` to troubleshoot pre-push hook issues
+  - Comprehensive checks for hook installation, git config, shell environment
+  - Detects prompt/tool integrations that may trigger hooks unexpectedly
+  - Provides actionable recommendations for fixing hook problems
+  - Documentation: `docs/diagnose-hooks.md`
+  - Added "Troubleshooting" section to CONTRIBUTING.md with diagnostic guide, performance tips, and common fixes
+- **Employee Management & Onboarding Portal** (#332, Epic #211 Phase 7)
+  - **API Service Layers:**
+    - Employee API service layer (CRUD operations, activate, terminate)
+    - Qualification API service (system/custom qualifications, employee assignments)
+    - Onboarding API service (multi-step wizard, file upload, HR approval workflow)
+    - Employee Document API service (8 document types, policy-based visibility)
+  - **UI Components (Catalyst Framework):**
+    - Employee List page with Catalyst Table, Field, Input, Select components
+    - Employee Detail page with Catalyst Badge, DescriptionList, tabs with proper dark mode support
+    - Employee Create form using Catalyst Fieldset, Legend, FieldGroup, Field, Label, Input
+    - Employee Edit form (pre-populated data editing with Catalyst components)
+    - Pre-contract Onboarding Wizard (8-step process with Catalyst Button, Heading, Text)
+  - **Navigation & Access Control:**
+    - UserGroupIcon added to component library
+    - "Employees" navigation item in navbar and sidebar (conditional on organizational access)
+    - OrganizationalRoute wrapper component for RBAC enforcement
+    - All employee routes protected with `hasOrganizationalAccess()` permission checks
+  - **Routing Integration:**
+    - `/employees` - Employee list view
+    - `/employees/create` - Create new employee
+    - `/employees/:id` - Employee detail view
+    - `/employees/:id/edit` - Edit existing employee
+    - `/onboarding` - Pre-contract onboarding wizard
+  - **Internationalization:**
+    - Full i18n support with `<Trans>` and `msg` from @lingui/macro
+    - All UI text translatable (German/English)
+
+- `.github/copilot-instructions.md` — removed dead `@EXTENDS`, `INHERITANCE`, and `applyTo` HTML comment blocks (replaced by `org-shared.instructions.md`)
+- **Migrated to Stacked Layout design** (#TBD)
+  - Switched from sidebar navigation to horizontal navbar (stacked layout)
+  - Navigation items now displayed in top navbar on desktop
+  - Mobile experience unchanged (sidebar drawer)
+  - Improved space utilization with horizontal navigation
+  - All Catalyst components and patterns maintained
+  - Footer integration preserved across both layouts
+- **Improved "Add Unit" button label in Organizational Unit Tree** (#300, Part of Epic #283)
+  - Renamed "Add Unit" button to "Add Root Unit" for clarity
+  - Makes it explicit that the button creates a root-level organizational unit
+  - Reduces confusion about where new units will be created
+  - Empty state button remains as "Create Organizational Unit" for first-time users
+  - **Enhanced with hierarchy-based type filtering**: When creating a child unit, the type dropdown now only shows valid child types based on the parent's hierarchy rank. Child units must be **lower** in the hierarchy than their parent (e.g., Division under Branch is valid, but Branch under Branch is not allowed). This prevents users from selecting invalid types upfront, improving UX by avoiding validation errors after submission.
+
+- **Optimistic UI for organizational unit CRUD operations** (SecPal/api#303, Part of Epic #283)
+  - After creating a unit, it's immediately added to the tree without reload
+  - After updating a unit, changes appear instantly in the tree
+  - After moving/reparenting a unit, the tree structure updates immediately
+  - After deleting a unit, only the affected row is removed from the tree
+  - No full tree reload for any CRUD operation, improving perceived performance and UX
+  - Maintains tree state (expanded/collapsed nodes) after all operations
+  - New `createdUnit` and `updatedUnit` props for optimistic updates from parent
+  - Updated `MoveOrganizationalUnitDialog` to pass new parent ID on success
+  - 6 test cases for optimistic UI behavior (delete, create, update)
+
+- **Permission-Filtered Organizational Unit Tree View** (#291, Part of Epic SecPal/api#280)
+  - Tree component now uses `root_unit_ids` from API response to determine tree roots
+  - Users see only organizational units they have access to (Need-to-Know principle)
+  - Changed header from "Organizational Structure" to "My Organization" (user-centric)
+  - Added `title` prop for customization when needed
+  - Updated types: `OrganizationalUnitPaginationMeta` and `OrganizationalUnitPaginatedResponse`
+  - 6 new test cases for permission filtering scenarios
+  - Implements ADR-007 Need-to-Know pattern
 
 - **Authentication Migration to httpOnly Cookies** (#210, Part of Epic #208) - **XSS Protection Enhancement**
   - Migrated from localStorage-based token storage to httpOnly cookies for XSS protection
@@ -1561,30 +1448,83 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - git fetch: Cache for 5 minutes with 30s timeout to prevent hanging on slow networks
   - Expected improvement: 60s → 10s for small fixes, 90s → 25s for features without dependency changes
 
-### Fixed
+### Removed
 
-- **CI/CD**: Codecov upload now fully functional for Dependabot PRs
-  - Added `continue-on-error` for dependabot/renovate bots to prevent blocking
-  - Made `CODECOV_TOKEN` optional (tokenless uploads work for public repos)
-  - Upload step succeeds even without token access (Dependabot security restriction)
-  - Normal PRs still fail CI on codecov errors (security preserved)
-  - Fixes issue where Codecov checks remained pending/missing on Dependabot PRs
-- **Blank Page Issue**: Fixed blank page caused by incompatible module format in translation catalogs
-  - Changed Lingui compilation from CommonJS (`module.exports`) to ES modules (`export`)
-  - Updated `package.json` scripts to use `--namespace es` flag for `lingui compile`
-  - Changed imports in `i18n.ts` from `.js` to `.mjs` extension
-  - Added TypeScript declaration file for `.mjs` message catalogs
-  - Added safety checks for `localStorage` and `navigator` access in `detectLocale()`
-  - Issue occurred because Vite requires ES modules, but Lingui compiled to CommonJS by default
-- Pre-push hook no longer fails with exit code 1 when [Unreleased] is the last CHANGELOG section
-- Project automation now triggers on label changes for issues AND pull requests (labeled event)
+- Removed the archived performance worklog `docs/development/PERFORMANCE_QUICK_WINS.md`; the repository now keeps active performance guidance in current validation, build, and issue-tracking surfaces only.
+- Removed stale and historical documentation: DDEV-era PWA testing guide (`PWA_PHASE3_TESTING.md`), stale PR artefact (`.pr-body.md`), closed-issue implementation plans and summaries (`docs/IMPLEMENTATION_PLAN_ISSUE143.md`, `docs/IMPLEMENTATION_SUMMARY_OFFLINE_ORGANIZATION.md`), and historical performance snapshots (`docs/PERFORMANCE_ANALYSIS_2025-12-06.md`, `docs/PERFORMANCE_ISSUE319_PHASE2_PROFILING.md`, `docs/PERFORMANCE_TBT_ANALYSIS.md`)
+- Removed the stale offline follow-up notes `docs/OFFLINE_DATA_PROTECTION_ROADMAP.md` and `docs/OFFLINE_ORGANIZATIONAL_UNITS.md`; the active audit plus tracked issues now remain the source of truth for deferred offline-storage hardening and organization-cache follow-up work.
 
-### Added (Previous)
+- Removed the stale `pendingSync` field and index from the offline organizational-unit schema so the reduced IndexedDB surface no longer carries leftover generic sync metadata.
 
-- Initial repository setup
-- React + TypeScript + Vite configuration
-- Testing setup with Vitest and React Testing Library
-- REUSE 3.3 compliance
-- Pre-commit and pre-push quality gates
+- Removed the stale sync-status translation entries from the Lingui catalogs so the frontend locale artifacts no longer carry messages for the deleted browser sync-status UI.
+
+- Removed the stale `getPendingSyncUnits` helper and its dead organizational-unit store tests so the frontend no longer advertises an unused pending-sync browser path.
+
+- Removed the unused `StorageQuotaIndicator` component and its dead test coverage so the frontend no longer ships that dormant browser-storage UI surface.
+
+- Removed the deleted legacy product module from the frontend, including its obsolete routes, navigation entries, offline caches, background sync wiring, and associated documentation so the repository no longer ships or documents that retired area in 0.x
+- Removed the remaining legacy test suites, stale documentation, and outdated frontend schema/cache references that only existed for the deleted module
+- Removed the stale `docs/PERFORMANCE_NEXT_STEPS.md` and `docs/PERFORMANCE_README.md` planning summaries because they only captured temporary 2025 performance follow-up plans
+- Removed the stale `docs/PROJECT_STATUS.md` snapshot because it no longer matched the current frontend state and duplicated newer repository history
+- Removed the stale `docs/PERFORMANCE_ISSUE319_STATUS.md` and `docs/PERFORMANCE_TBT_DEFER_IMPLEMENTATION.md` worklog documents because they no longer reflected the final outcome of the 2025 Issue #319 investigation
+- Removed the stale `docs/PERFORMANCE_DEPLOYMENT_STATUS.md` snapshot because it only documented a temporary 2025 deployment checkpoint and no longer reflected the repository's active guidance
+- Removed the obsolete `docs/PERFORMANCE_AGGRESSIVE_SPLITTING_RESULTS_ARCHIVED.md` archive because it only preserved a reverted implementation path and no longer served as useful active documentation
+- Removed the stale `docs/PERFORMANCE_OPTIMIZATIONS_IMPLEMENTED.md` worklog because it only tracked temporary 2025 optimization steps and duplicated more precise historical analysis records
+- Removed the obsolete `docs/PERFORMANCE_OPTIMIZATIONS_2025-12-06-AGGRESSIVE.md` note because it documented a superseded aggressive chunk-splitting experiment that was not retained as active guidance
+
+### Security
+
+- Blocked unsafe server-provided customer and site contact email/phone values from becoming `mailto:` or `tel:` links unless they match the expected address/dial-string shape, preventing mail client query/header injection and dialer parameter abuse.
+- Blocked unsafe server-provided BWR export download URLs in the employee panel by allowing only HTTPS URLs, plus HTTP loopback URLs only for local development or loopback app origins, before rendering a download link.
+- Added the Phase-2 offline-vault baseline for persisted frontend PII: the authenticated profile now moves out of `auth_user` localStorage into wrapped vault-backed IndexedDB storage, legacy encrypted `auth_user` records are migrated one-way into the vault, and long-term offline analytics plus organizational-unit cache records now persist encrypted at rest with focused regression coverage for frontend issue #1005.
+- Added an optional native device-bound wrapper boundary for the offline vault so native-capable runtimes can prefer bridge-backed root-key wrapping while browser and unsupported runtimes keep the browser-session wrapper fallback; the missing Android bridge implementation is now tracked separately in `SecPal/android#191`, resolving the frontend-side scope of issue #1006.
+- Added a local offline-vault lock flow that clears in-memory access without deleting encrypted at-rest data, exposes a non-PII unlock screen across protected routes, propagates lock state across tabs, and keeps explicit sign-out destructive for device cleanup, resolving frontend issue #1007.
+- Updated the transitive `basic-ftp` dependency from `5.2.2` to `5.3.0` in `package-lock.json`, clearing the high-severity `GHSA-rp42-5vxx-qpwr` npm audit finding tracked in issue #893.
+- Extended the `package.json` `overrides` block to clear all 21 outstanding `npm audit` findings (17 moderate, 4 high) without falling back to `npm audit fix --force` (which would have downgraded `lighthouse` 13 → 12 and `@lingui/cli` 6 → 3): pinned `esbuild` to `^0.28.1` (GHSA-gv7w-rqvm-qjhr — high; affected both `@lingui/cli@6.3.0` and `vite@8.0.16` transitive copies of `esbuild@0.25.12`), bumped the existing `ws@^8.0.0` override from `^8.20.1` to `^8.21.0` and added a sibling `ws@^7.0.0` → `^7.5.11` override so the `lighthouse@13.4.0` direct `ws@^7.0.0` copy picks up the backported fix (GHSA-96hv-2xvq-fx4p — high; remote memory-exhaustion DoS), and pinned `@sentry/node` to `^10.54.0` (resolves to `10.58.0`) instead of a bare `@opentelemetry/core` bump. The `@sentry/node@10` line was built against OpenTelemetry 2.x natively (`@opentelemetry/core@^2.6.1`, `@opentelemetry/sdk-trace-base@^2.6.1`) and no longer pulls in the auto-instrumentation suite at the top level, so this single override clears GHSA-8988-4f7v-96qf (moderate; unbounded memory allocation in W3C Baggage propagation in `@opentelemetry/core <2.8.0`) together with the 14 transitive `@opentelemetry/instrumentation-*`, `@opentelemetry/resources`, `@opentelemetry/sdk-trace-base`, `@opentelemetry/sql-common`, `@sentry/node-core`, and `@sentry/opentelemetry` findings dragged in via `lighthouse@13.4.0` → `@sentry/node@9.47.1`. A standalone `@opentelemetry/core` override was rejected after a reviewer pointed out that it leaves `@opentelemetry/instrumentation-http@0.57.2` and `@opentelemetry/sdk-trace-base@1.30.1` calling `core.getEnv()` (removed in `@opentelemetry/core@2.x`); verified locally that `require('@sentry/node')` then crashed with `TypeError: Cannot read properties of undefined (reading 'AlwaysOn')` at `sdk-trace-base/build/src/config.js:25`, while the `@sentry/node@10` override imports cleanly and keeps the entire lighthouse `Sentry.init`/`captureException`/`captureMessage`/`addBreadcrumb`/`setTags`/`setExtras`/`withScope` surface intact (see `lighthouse/core/lib/sentry.js`). The override also dropped 47 packages from `node_modules` because the v10 sentry release moves the OpenTelemetry instrumentations behind opt-in extras. `npm audit` now reports `found 0 vulnerabilities`, and `npm run typecheck`, `npm run lint`, `npm run build`, plus the full Vitest suite (152 files, 2263 tests) stay green after the overrides take effect. Bumped the declared `engines.node` floor from `>=20.0.0` to `>=20.6.0` in the same change so the published package.json no longer advertises support for Node 20.0–20.5, which the newly pinned `@opentelemetry/core@2.8.0` (resolved transitively via `@sentry/node@10`; `engines.node: ^18.19.0 || >=20.6.0`) would surface as `EBADENGINE` warnings on those runtimes; the wider pre-existing floor mismatch (`vite@8` → `>=20.19.0`, `lighthouse@13` → `>=22.19`) is tracked separately.
+
+- Added a versioned `deploy/nginx/app.secpal.dev.conf` production baseline plus a `test:live:pwa-headers` smoke check so the live PWA host can enforce CSP, Permissions-Policy, HSTS, Referrer-Policy, framing protection, and correct `sw.js` / `manifest.webmanifest` header delivery under Nginx instead of relying on Apache-only `.htaccess` rules.
+- Blocked the shipped Apache SPA fallback from answering `/v1/*`, `/sanctum/*`, and `/health*` with `index.html`, and documented the matching Nginx guard so API paths on `app.secpal.dev` now fail clearly instead of returning a misleading `200 text/html` shell.
+- Added a live frontend smoke script for auth-route separation so deployments can automatically fail when `app.secpal.dev/v1/me` regresses to the SPA shell or `api.secpal.dev/v1/me` stops returning JSON.
+- Hardened the browser/PWA response baseline by enforcing a production CSP without inline scripts, expanding `Permissions-Policy` and modern cross-origin headers, and serving `index.html`, `sw.js`, and `manifest.webmanifest` with update-safe cache rules so PWA security fixes propagate promptly.
+
+- Reduced the shipped PWA client surface further by removing the dormant sync-status path from the runtime app shell and narrowing `SecPalDB` plus logout fallback cleanup to the currently supported offline tables so the frontend no longer ships the unused generic queue/cache runtime.
+
+- Reduced the shipped PWA client surface further by stripping offline organizational-unit cache entries down to route/tree fields and removing dead manifest shortcuts that pointed to non-existent routes.
+
+- Reduced shared-device post-logout bleed further by clearing stored notification preferences during logout cleanup, and added regression coverage for the IndexedDB table-clearing fallback when deleting `SecPalDB` is blocked.
+
+- Minimized post-logout PWA persistence further by deleting `SecPalDB` instead of leaving cleared IndexedDB stores behind, reducing the service-worker offline auth cache to a bare `isAuthenticated` boolean, and preventing the logged-out sync-status UI from recreating offline session storage on the login screen.
+
+- Tightened the PWA post-logout cleanup path so authenticated analytics state is disabled and cleared on logout, `/v1/auth/*` and `/v1/me` requests explicitly bypass browser caches, and offline logout regressions now cover both `/profile` and `/settings` to prevent stale protected content from reappearing.
+
+- Tightened the PWA logout/offline privacy hardening by persisting an explicit logout barrier in local storage, scrubbing any stale `auth_user` payload that reappears after logout, and rejecting BFCache or cross-tab restoration paths until a fresh login writes a new authenticated state.
+
+- Hardened PWA logout/offline privacy by synchronizing explicit auth state to the service worker, redirecting logged-out offline navigation away from protected routes such as `/profile`, and reconciling restored or cross-tab client state so previously viewed user data cannot remain readable after logout.
+
+- Raised the frontend override floors for `brace-expansion` and `serialize-javascript` so `npm audit` now returns 0 vulnerabilities; the remaining install-time deprecation warnings still come from the upstream `vite-plugin-pwa` / `workbox-build` toolchain and remain documented as accepted build-time risk
+
+- Pinned the transitive `picomatch` resolution to `2.3.2` for 2.x consumers and
+  `4.0.4` for 4.x consumers via `overrides`, so the frontend no longer ships
+  the vulnerable glob-matching releases flagged by Dependabot security alerts for
+  CVE-2026-33672 / GHSA-3v7f-55p6-f55p; upstream major-version constraints remain
+  unchanged while the patched releases are enforced in the lockfile and the alerts
+  are tracked in #598
+- Pinned the transitive `glob` resolution to `^13.0.6` via `overrides` so the
+  deprecated `glob@11.1.0` (pulled in by `@lingui/cli` and `workbox-build`) is
+  replaced by a current, non-deprecated release; the remaining deprecated
+  transitive packages inside `workbox-build@7.4.0` (`sourcemap-codec@1.4.8`,
+  `source-map@0.8.0-beta.0`) are blocked upstream and tracked separately
+  (closes #558, remaining items blocked by upstream `vite-plugin-pwa` /
+  `workbox-build`)
+- Pinned third-party GitHub Actions in frontend workflows to immutable commit SHAs so Lighthouse and Codecov automation no longer depend on floating action tags at runtime
+- Pinned the transitive `flatted` resolution to `3.4.2` so Vitest UI and ESLint cache tooling no longer ship the vulnerable parser affected by CVE-2026-33228 / GHSA-rf6f-7fwh-wjgh
+
+- Pinned the transitive `yauzl` resolution to `3.2.1` so Lighthouse-related tooling no longer ships the vulnerable archive parser flagged by `npm audit` and Dependabot
+
+- **Phase 1 offline-data hardening**
+  - Removed PWA runtime caching for authenticated API routes to avoid persistent browser caching of sensitive `/v1/*` responses
+  - Added centralized sensitive client-state cleanup for logout and session-expiry flows
+  - Sensitive IndexedDB tables and legacy API cache names are now cleared when the client session ends
+  - Replaced invalid on-prem example domain in frontend config comments to stay within the `secpal.app` / `secpal.dev` domain policy
 
 [unreleased]: https://github.com/SecPal/frontend/commits/main
