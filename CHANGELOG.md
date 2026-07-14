@@ -85,6 +85,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Documented the blocked Legal Entity customer backfill decision, including
+  tenant-consistency requirements and the prohibition on silent default
+  assignment for existing customers (US-001).
 - Added an Android-only OSS-notices control on the source-license screen that
   opens the native notices activity when the `SecPalEnterprise` capability is
   available.
