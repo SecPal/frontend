@@ -15,10 +15,8 @@ import { Button } from "@/ui/button";
 import { Checkbox } from "@/ui/checkbox";
 import { Input } from "@/ui/input";
 import { Textarea } from "@/ui/textarea";
-import {
-  createCustomer,
-  listCustomerLegalEntities,
-} from "../../services/customersApi";
+import { createCustomer } from "../../services/customersApi";
+import { listCustomerLegalEntities } from "../../services/customerLegalEntitiesApi";
 import type {
   CreateCustomerRequest,
   Address,

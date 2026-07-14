@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal Contributors
+// SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -8,9 +8,11 @@ import { BrowserRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import CustomerCreate from "./CustomerCreate";
+import * as customerLegalEntitiesApi from "../../services/customerLegalEntitiesApi";
 import * as customersApi from "../../services/customersApi";
 
 // Mock the API
+vi.mock("../../services/customerLegalEntitiesApi");
 vi.mock("../../services/customersApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
@@ -55,9 +57,9 @@ async function chooseFirstLegalEntity() {
 describe("CustomerCreate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(customersApi.listCustomerLegalEntities).mockResolvedValue(
-      legalEntities
-    );
+    vi.mocked(
+      customerLegalEntitiesApi.listCustomerLegalEntities
+    ).mockResolvedValue(legalEntities);
   });
 
   it("renders the form with all required fields", () => {

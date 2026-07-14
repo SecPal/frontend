@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added synchronized customer API type aliases for `legal_entity_id` and a
+  dedicated customer Legal Entity lookup client that only reads
+  `/v1/customers/legal-entities` and validates the minimal `id`/`name`
+  response shape.
+
 ### Fixed
 
 - Renamed the German `Legal Entity` label to `Rechtsträger` in the

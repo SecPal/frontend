@@ -129,5 +129,47 @@ export interface components {
       data: components["schemas"]["OrganizationalUnit"][];
       meta: components["schemas"]["OrganizationalUnitPaginationMeta"];
     };
+    Address: {
+      street: string;
+      city: string;
+      postal_code: string;
+      country: string;
+      latitude?: number | null;
+      longitude?: number | null;
+    };
+    Contact: {
+      name: string;
+      email?: string | null;
+      phone?: string | null;
+      position?: string | null;
+    };
+    Customer: {
+      id: string;
+      customer_number: string;
+      legal_entity_id: string;
+      name: string;
+      billing_address: components["schemas"]["Address"];
+      contact?: components["schemas"]["Contact"] | null;
+      is_active: boolean;
+      notes?: string | null;
+      metadata?: Record<string, unknown> | null;
+      sites_count?: number;
+      created_at: string;
+      updated_at: string;
+      deleted_at?: string | null;
+    };
+    CustomerLegalEntityLookup: {
+      id: string;
+      name: string;
+    };
+    CustomerCreateRequest: {
+      legal_entity_id: string;
+      name: string;
+      billing_address: components["schemas"]["Address"];
+      contact?: components["schemas"]["Contact"] | null;
+      is_active?: boolean;
+      notes?: string | null;
+      metadata?: Record<string, unknown> | null;
+    };
   };
 }
