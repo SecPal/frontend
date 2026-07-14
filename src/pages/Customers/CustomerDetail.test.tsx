@@ -63,6 +63,7 @@ describe("CustomerDetail", () => {
     name: "Test Customer GmbH",
     customer_number: "CUST-2025-001",
     legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
+    vat_id: "DE123456789",
     billing_address: {
       street: "Teststrasse 42",
       city: "München",
@@ -110,6 +111,21 @@ describe("CustomerDetail", () => {
     expect(screen.getByText("80331")).toBeInTheDocument();
     expect(screen.getByText("München")).toBeInTheDocument();
     expect(screen.getByText("DE")).toBeInTheDocument();
+    expect(screen.getByText("VAT ID")).toBeInTheDocument();
+    expect(screen.getByText("DE123456789")).toBeInTheDocument();
+  });
+
+  it("uses the full shell width without an extra detail-page max width", async () => {
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+
+    const { container } = renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
+    });
+
+    expect(container.firstElementChild).toHaveClass("w-full");
+    expect(container.firstElementChild).not.toHaveClass("max-w-4xl");
   });
 
   it("renders postal code and city on separate billing-address lines", async () => {

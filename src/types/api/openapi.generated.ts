@@ -147,6 +147,7 @@ export interface components {
       id: string;
       customer_number: string;
       legal_entity_id: string;
+      vat_id?: string | null;
       name: string;
       billing_address: components["schemas"]["Address"];
       contact?: components["schemas"]["Contact"] | null;
@@ -164,6 +165,7 @@ export interface components {
     };
     CustomerCreateRequest: {
       legal_entity_id: string;
+      vat_id?: string | null;
       name: string;
       billing_address: components["schemas"]["Address"];
       contact?: components["schemas"]["Contact"] | null;

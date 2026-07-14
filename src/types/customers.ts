@@ -34,6 +34,7 @@ export interface Customer {
   id: string;
   customer_number: string; // KD-YYYY-####
   legal_entity_id: string;
+  vat_id?: string | null;
   name: string;
   billing_address: Address;
   contact?: Contact | null;
@@ -59,6 +60,7 @@ export type SiteCustomer = Pick<
 
 export interface CreateCustomerRequest {
   legal_entity_id: string;
+  vat_id?: string | null;
   name: string;
   billing_address: Address;
   contact?: Contact | null;
@@ -69,6 +71,7 @@ export interface CreateCustomerRequest {
 
 export interface UpdateCustomerRequest {
   legal_entity_id?: string;
+  vat_id?: string | null;
   name?: string;
   billing_address?: Address;
   contact?: Contact | null;

@@ -49,6 +49,7 @@ describe("CustomerEdit", () => {
     name: "Existing Customer",
     customer_number: "CUST-2025-001",
     legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
+    vat_id: "DE123456789",
     billing_address: {
       street: "Old Street 10",
       city: "Old City",
@@ -88,6 +89,21 @@ describe("CustomerEdit", () => {
     expect(screen.getByLabelText(/postal code/i)).toHaveValue("54321");
     expect(screen.getByLabelText(/country/i)).toHaveValue("DE");
     expect(screen.getByLabelText(/notes/i)).toHaveValue("Existing notes");
+    expect(screen.getByLabelText(/vat id/i)).toHaveValue("DE123456789");
+  });
+
+  it("renders the VAT ID field directly before country", async () => {
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+
+    renderWithRouter();
+
+    await screen.findByLabelText(/vat id/i);
+
+    const labels = Array.from(document.querySelectorAll("label")).map((label) =>
+      label.textContent?.replace("*", "").trim()
+    );
+
+    expect(labels.indexOf("VAT ID")).toBe(labels.indexOf("Country") - 1);
   });
 
   it("keeps the edit frame visible while customer data loads", () => {

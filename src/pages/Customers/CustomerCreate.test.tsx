@@ -80,6 +80,7 @@ describe("CustomerCreate", () => {
     renderWithRouter(<CustomerCreate />);
 
     expect(screen.getByLabelText(/customer name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/vat id/i)).toBeInTheDocument();
     expect(
       screen.getByRole("combobox", { name: /legal entity/i })
     ).toHaveAttribute("data-slot", "select-trigger");
@@ -94,6 +95,76 @@ describe("CustomerCreate", () => {
       screen.getByRole("button", { name: /create customer/i })
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
+  });
+
+  it("renders legal entity as the first form field", () => {
+    renderWithRouter(<CustomerCreate />);
+
+    const legalEntityField = screen.getByRole("combobox", {
+      name: /legal entity/i,
+    });
+    const customerNameField = screen.getByLabelText(/customer name/i);
+
+    expect(
+      legalEntityField.compareDocumentPosition(customerNameField) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
+
+  it("renders the VAT ID field directly before country", () => {
+    renderWithRouter(<CustomerCreate />);
+
+    const labels = Array.from(document.querySelectorAll("label")).map((label) =>
+      label.textContent?.replace("*", "").trim()
+    );
+
+    expect(labels.indexOf("VAT ID")).toBe(labels.indexOf("Country") - 1);
+  });
+
+  it("submits the optional VAT ID when provided", async () => {
+    vi.mocked(customersApi.createCustomer).mockResolvedValue({
+      id: "customer-123",
+      legal_entity_id: firstLegalEntity.id,
+      customer_number: "KD-2026-0001",
+      name: "ACME GmbH",
+      vat_id: "DE123456789",
+      billing_address: {
+        street: "Main Street 1",
+        city: "Berlin",
+        postal_code: "10115",
+        country: "DE",
+      },
+      is_active: true,
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+    });
+
+    renderWithRouter(<CustomerCreate />);
+
+    await chooseFirstLegalEntity();
+    fireEvent.change(screen.getByLabelText(/customer name/i), {
+      target: { value: "ACME GmbH" },
+    });
+    fireEvent.change(screen.getByLabelText(/vat id/i), {
+      target: { value: "DE123456789" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Main Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "10115" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "Berlin" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /create customer/i }));
+
+    await waitFor(() => {
+      expect(customersApi.createCustomer).toHaveBeenCalledWith(
+        expect.objectContaining({ vat_id: "DE123456789" })
+      );
+    });
   });
 
   it("renders contact fields", () => {

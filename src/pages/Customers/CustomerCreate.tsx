@@ -69,6 +69,7 @@ export default function CustomerCreate() {
   const [formData, setFormData] = useState<CreateCustomerRequest>({
     legal_entity_id: "",
     name: "",
+    vat_id: null,
     billing_address: {
       street: "",
       city: "",
@@ -250,6 +251,11 @@ export default function CustomerCreate() {
         is_active: formData.is_active,
       };
 
+      const vatId = formData.vat_id?.trim();
+      if (vatId) {
+        dataToSend.vat_id = vatId;
+      }
+
       // Only include contact if at least one field is filled
       if (
         formData.contact &&
@@ -324,30 +330,6 @@ export default function CustomerCreate() {
         {/* Basic Information */}
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="customer-name">
-              <Trans>Customer Name</Trans> *
-            </FieldLabel>
-            <Input
-              id="customer-name"
-              name="name"
-              type="text"
-              required
-              autoComplete="organization"
-              value={formData.name}
-              aria-invalid={fieldErrors.name ? true : undefined}
-              aria-describedby={
-                fieldErrors.name ? "customer-name-error" : undefined
-              }
-              onChange={(e) => updateField("name", e.target.value)}
-            />
-            {fieldErrors.name ? (
-              <FieldError id="customer-name-error">
-                {fieldErrors.name}
-              </FieldError>
-            ) : null}
-          </Field>
-
-          <Field>
             <FieldLabel htmlFor="customer-legal-entity">
               <Trans>Legal Entity</Trans> *
             </FieldLabel>
@@ -381,6 +363,30 @@ export default function CustomerCreate() {
             {fieldErrors.legal_entity_id ? (
               <FieldError id="customer-legal-entity-error">
                 {fieldErrors.legal_entity_id}
+              </FieldError>
+            ) : null}
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="customer-name">
+              <Trans>Customer Name</Trans> *
+            </FieldLabel>
+            <Input
+              id="customer-name"
+              name="name"
+              type="text"
+              required
+              autoComplete="organization"
+              value={formData.name}
+              aria-invalid={fieldErrors.name ? true : undefined}
+              aria-describedby={
+                fieldErrors.name ? "customer-name-error" : undefined
+              }
+              onChange={(e) => updateField("name", e.target.value)}
+            />
+            {fieldErrors.name ? (
+              <FieldError id="customer-name-error">
+                {fieldErrors.name}
               </FieldError>
             ) : null}
           </Field>
@@ -479,6 +485,21 @@ export default function CustomerCreate() {
                 ) : null}
               </Field>
             </div>
+
+            <Field>
+              <FieldLabel htmlFor="customer-vat-id">
+                <Trans>VAT ID</Trans>
+              </FieldLabel>
+              <Input
+                id="customer-vat-id"
+                name="vat_id"
+                type="text"
+                maxLength={32}
+                autoComplete="off"
+                value={formData.vat_id ?? ""}
+                onChange={(e) => updateField("vat_id", e.target.value)}
+              />
+            </Field>
 
             <Field>
               <FieldLabel htmlFor="customer-country">

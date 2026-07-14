@@ -72,6 +72,7 @@ export default function CustomerEdit() {
         setCustomer(data);
         setFormData({
           name: data.name,
+          vat_id: data.vat_id ?? null,
           billing_address: data.billing_address,
           contact: data.contact,
           notes: data.notes,
@@ -243,6 +244,23 @@ export default function CustomerEdit() {
                     />
                   </Field>
                 </div>
+
+                <Field>
+                  <FieldLabel htmlFor="customer-vat-id">
+                    <Trans>VAT ID</Trans>
+                  </FieldLabel>
+                  <Input
+                    id="customer-vat-id"
+                    name="vat_id"
+                    type="text"
+                    maxLength={32}
+                    autoComplete="off"
+                    value={formData.vat_id ?? ""}
+                    onChange={(e) =>
+                      updateField("vat_id", e.target.value || null)
+                    }
+                  />
+                </Field>
 
                 <Field>
                   <FieldLabel htmlFor="customer-country">

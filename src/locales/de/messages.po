@@ -3219,6 +3219,12 @@ msgstr "Zurück zu den Kunden"
 msgid "We couldn't submit the form yet. Please review the highlighted fields."
 msgstr "Wir konnten das Formular noch nicht abschicken. Bitte überprüfen Sie die markierten Felder."
 
+#: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "VAT ID"
+msgstr "Umsatzsteuer-ID"
+
 #: src/pages/Login.tsx
 msgid "Switching instance..."
 msgstr "Instanz wird gewechselt..."

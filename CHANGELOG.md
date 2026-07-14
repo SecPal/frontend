@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added optional VAT ID input, editing, API payload support, and detail-page
+  display for customers.
 - Added synchronized customer API type aliases for `legal_entity_id` and a
   dedicated customer Legal Entity lookup client that only reads
   `/v1/customers/legal-entities` and validates the minimal `id`/`name`
@@ -24,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Moved the customer VAT ID field directly above the billing country field in
+  create and edit forms.
+- Removed the redundant max-width constraint from the customer detail page so
+  it uses the full shared application shell width.
+- Moved the Legal Entity selector to the first field in the customer create
+  form.
 - Renamed the German `Legal Entity` label to `Rechtsträger` in the
   organizational-unit form.
 - Kept the mobile sidebar's user footer above Android system navigation bars

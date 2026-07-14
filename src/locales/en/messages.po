@@ -3219,6 +3219,12 @@ msgstr "Back to Customers"
 msgid "We couldn't submit the form yet. Please review the highlighted fields."
 msgstr "We couldn't submit the form yet. Please review the highlighted fields."
 
+#: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "VAT ID"
+msgstr "VAT ID"
+
 #: src/pages/Login.tsx
 msgid "Switching instance..."
 msgstr "Switching instance..."
