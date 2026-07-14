@@ -128,7 +128,11 @@ export default function CustomerEdit() {
     setError(null);
 
     try {
-      await updateCustomer(id, formData);
+      const vatId = formData.vat_id?.trim();
+      await updateCustomer(id, {
+        ...formData,
+        vat_id: vatId || null,
+      });
       navigate(`/customers/${id}`);
     } catch (err) {
       setError(

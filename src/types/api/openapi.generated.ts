@@ -173,5 +173,15 @@ export interface components {
       notes?: string | null;
       metadata?: Record<string, unknown> | null;
     };
+    CustomerUpdateRequest: {
+      legal_entity_id?: string;
+      vat_id?: string | null;
+      name?: string;
+      billing_address?: components["schemas"]["Address"];
+      contact?: components["schemas"]["Contact"] | null;
+      is_active?: boolean;
+      notes?: string | null;
+      metadata?: Record<string, unknown> | null;
+    };
   };
 }

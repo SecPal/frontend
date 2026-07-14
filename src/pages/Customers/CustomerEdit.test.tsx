@@ -184,7 +184,7 @@ describe("CustomerEdit", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/customers/customer-123");
   });
 
-  it("updates the customer VAT ID", async () => {
+  it("trims the customer VAT ID before updating", async () => {
     const user = userEvent.setup();
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(customersApi.updateCustomer).mockResolvedValue({
@@ -196,7 +196,7 @@ describe("CustomerEdit", () => {
 
     const vatIdInput = await screen.findByLabelText(/vat id/i);
     await user.clear(vatIdInput);
-    await user.type(vatIdInput, "DE987654321");
+    await user.type(vatIdInput, " DE987654321 ");
     await user.click(screen.getByRole("button", { name: /save|update/i }));
 
     await waitFor(() => {
@@ -207,7 +207,7 @@ describe("CustomerEdit", () => {
     });
   });
 
-  it("clears the customer VAT ID with null", async () => {
+  it("maps a whitespace-only customer VAT ID to null", async () => {
     const user = userEvent.setup();
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(customersApi.updateCustomer).mockResolvedValue({
@@ -219,6 +219,7 @@ describe("CustomerEdit", () => {
 
     const vatIdInput = await screen.findByLabelText(/vat id/i);
     await user.clear(vatIdInput);
+    await user.type(vatIdInput, "   ");
     await user.click(screen.getByRole("button", { name: /save|update/i }));
 
     await waitFor(() => {
