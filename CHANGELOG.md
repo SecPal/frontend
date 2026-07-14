@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dedicated customer Legal Entity lookup client that only reads
   `/v1/customers/legal-entities` and validates the minimal `id`/`name`
   response shape.
+- Integrated the dedicated customer Legal Entity lookup into the customer
+  create form with Radix selection, single-entity preselection, empty-state
+  blocking, and required `legal_entity_id` submit coverage (US-007).
 
 ### Fixed
 

@@ -14,6 +14,13 @@ import { useLingui } from "@lingui/react";
 import { Button } from "@/ui/button";
 import { Checkbox } from "@/ui/checkbox";
 import { Input } from "@/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui/select";
 import { Textarea } from "@/ui/textarea";
 import { createCustomer } from "../../services/customersApi";
 import { listCustomerLegalEntities } from "../../services/customerLegalEntitiesApi";
@@ -51,7 +58,9 @@ export default function CustomerCreate() {
   const { _ } = useLingui();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [loadingLegalEntities, setLoadingLegalEntities] = useState(true);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [legalEntities, setLegalEntities] = useState<
     CustomerLegalEntityLookup[]
   >([]);
@@ -82,14 +91,17 @@ export default function CustomerCreate() {
         const entities = await listCustomerLegalEntities();
         if (!cancelled) {
           setLegalEntities(entities);
+          setLookupError(null);
+          setLoadingLegalEntities(false);
         }
       } catch (err) {
         if (!cancelled) {
-          setError(
+          setLookupError(
             err instanceof Error
               ? err.message
               : _(msg`Failed to load legal entities`)
           );
+          setLoadingLegalEntities(false);
         }
       }
     }
@@ -165,12 +177,16 @@ export default function CustomerCreate() {
 
   function validateForm(): CustomerFormErrors {
     const validationErrors: CustomerFormErrors = {};
+    const selectedLegalEntityId =
+      legalEntities.length === 1
+        ? legalEntities[0]!.id
+        : formData.legal_entity_id;
 
     if (formData.name.trim().length === 0) {
       validationErrors.name = _(msg`Customer name is required.`);
     }
 
-    if (formData.legal_entity_id.trim().length === 0) {
+    if (selectedLegalEntityId.trim().length === 0) {
       validationErrors.legal_entity_id = _(msg`Legal entity is required.`);
     }
 
@@ -206,7 +222,12 @@ export default function CustomerCreate() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
+    setSubmitError(null);
+
+    if (loadingLegalEntities || lookupError || legalEntities.length === 0) {
+      return;
+    }
+
     const validationErrors = validateForm();
 
     if (Object.keys(validationErrors).length > 0) {
@@ -220,7 +241,10 @@ export default function CustomerCreate() {
     try {
       // Clean up the data before sending
       const dataToSend: CreateCustomerRequest = {
-        legal_entity_id: formData.legal_entity_id,
+        legal_entity_id:
+          legalEntities.length === 1
+            ? legalEntities[0]!.id
+            : formData.legal_entity_id,
         name: formData.name,
         billing_address: formData.billing_address,
         is_active: formData.is_active,
@@ -244,13 +268,23 @@ export default function CustomerCreate() {
       const customer = await createCustomer(dataToSend);
       navigate(`/customers/${customer.id}`);
     } catch (err) {
-      setError(
+      setSubmitError(
         err instanceof Error ? err.message : _(msg`Failed to create customer`)
       );
     } finally {
       setLoading(false);
     }
   }
+
+  const hasLegalEntityOptions = legalEntities.length > 0;
+  const legalEntitySelectDisabled =
+    loadingLegalEntities || legalEntities.length <= 1;
+  const cannotCreateCustomer =
+    loading || loadingLegalEntities || !hasLegalEntityOptions || !!lookupError;
+  const selectedLegalEntityId =
+    legalEntities.length === 1
+      ? legalEntities[0]!.id
+      : formData.legal_entity_id;
 
   return (
     <div className="max-w-3xl">
@@ -260,10 +294,28 @@ export default function CustomerCreate() {
         </PageTitle>
       </div>
 
-      {error && (
+      {lookupError && (
         <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
           <AlertDescription className="text-destructive">
-            {error}
+            {lookupError}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!loadingLegalEntities && !lookupError && !hasLegalEntityOptions && (
+        <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+          <AlertDescription className="text-destructive">
+            <Trans>
+              No legal entities are available for customer creation.
+            </Trans>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {submitError && (
+        <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+          <AlertDescription className="text-destructive">
+            {submitError}
           </AlertDescription>
         </Alert>
       )}
@@ -299,27 +351,33 @@ export default function CustomerCreate() {
             <FieldLabel htmlFor="customer-legal-entity">
               <Trans>Legal Entity</Trans> *
             </FieldLabel>
-            <select
-              id="customer-legal-entity"
+            <Select
               name="legal_entity_id"
               required
-              value={formData.legal_entity_id}
-              aria-invalid={fieldErrors.legal_entity_id ? true : undefined}
-              aria-describedby={
-                fieldErrors.legal_entity_id
-                  ? "customer-legal-entity-error"
-                  : undefined
-              }
-              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-              onChange={(e) => updateField("legal_entity_id", e.target.value)}
+              value={selectedLegalEntityId}
+              onValueChange={(value) => updateField("legal_entity_id", value)}
             >
-              <option value="">{_(msg`Select legal entity...`)}</option>
-              {legalEntities.map((legalEntity) => (
-                <option key={legalEntity.id} value={legalEntity.id}>
-                  {legalEntity.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger
+                id="customer-legal-entity"
+                disabled={legalEntitySelectDisabled}
+                aria-required="true"
+                aria-invalid={fieldErrors.legal_entity_id ? true : undefined}
+                aria-describedby={
+                  fieldErrors.legal_entity_id
+                    ? "customer-legal-entity-error"
+                    : undefined
+                }
+              >
+                <SelectValue placeholder={_(msg`Select legal entity...`)} />
+              </SelectTrigger>
+              <SelectContent>
+                {legalEntities.map((legalEntity) => (
+                  <SelectItem key={legalEntity.id} value={legalEntity.id}>
+                    {legalEntity.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {fieldErrors.legal_entity_id ? (
               <FieldError id="customer-legal-entity-error">
                 {fieldErrors.legal_entity_id}
@@ -548,7 +606,7 @@ export default function CustomerCreate() {
 
         {/* Actions */}
         <div className="flex gap-4">
-          <Button type="submit" disabled={loading}>
+          <Button type="submit" disabled={cannotCreateCustomer}>
             {loading ? (
               <Trans>Creating...</Trans>
             ) : (

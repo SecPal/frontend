@@ -694,6 +694,10 @@ msgid "No passkeys enrolled yet."
 msgstr "Es sind noch keine Passkeys eingerichtet."
 
 #: src/pages/Customers/CustomerCreate.tsx
+msgid "No legal entities are available for customer creation."
+msgstr "Für die Kundenerstellung sind keine Rechtsträger verfügbar."
+
+#: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Customers/CustomersPage.tsx

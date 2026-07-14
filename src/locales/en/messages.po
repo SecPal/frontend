@@ -694,6 +694,10 @@ msgid "No passkeys enrolled yet."
 msgstr "No passkeys enrolled yet."
 
 #: src/pages/Customers/CustomerCreate.tsx
+msgid "No legal entities are available for customer creation."
+msgstr "No legal entities are available for customer creation."
+
+#: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Customers/CustomersPage.tsx
