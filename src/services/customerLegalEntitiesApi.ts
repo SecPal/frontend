@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { apiConfig } from "../config";
-import type { CustomerLegalEntityLookup } from "../types/customers";
+import type { CustomerLegalEntityLookup } from "@/types/api/customers";
 import { apiFetch } from "./csrf";
 
 const LEGAL_ENTITY_LOOKUP_KEYS = new Set(["id", "name"]);
@@ -45,10 +45,15 @@ export async function listCustomerLegalEntities(): Promise<
     throw new Error(error.message || "Failed to list legal entities");
   }
 
-  const data = (await response.json()) as { data?: unknown };
-  if (!Array.isArray(data.data)) {
+  const payload = (await response.json()) as unknown;
+  if (
+    typeof payload !== "object" ||
+    payload === null ||
+    !("data" in payload) ||
+    !Array.isArray(payload.data)
+  ) {
     throw new Error("Invalid legal entity lookup response");
   }
 
-  return data.data.map(parseCustomerLegalEntityLookup);
+  return payload.data.map(parseCustomerLegalEntityLookup);
 }

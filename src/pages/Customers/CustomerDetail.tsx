@@ -16,7 +16,7 @@ import { Button } from "@/ui/button";
 import { Skeleton } from "@/ui/skeleton";
 import { SectionSkeleton } from "@/ui";
 import { deleteCustomer, getCustomer } from "../../services/customersApi";
-import type { Customer } from "../../types/customers";
+import type { Customer } from "@/types/api/customers";
 import {
   Alert,
   AlertDescription,
@@ -41,10 +41,6 @@ import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
 
 function getCustomerSitesCount(customer: Customer): number | null {
-  if (Array.isArray(customer.sites)) {
-    return customer.sites.length;
-  }
-
   return typeof customer.sites_count === "number" ? customer.sites_count : null;
 }
 

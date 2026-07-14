@@ -25,11 +25,11 @@ import { Textarea } from "@/ui/textarea";
 import { createCustomer } from "../../services/customersApi";
 import { listCustomerLegalEntities } from "../../services/customerLegalEntitiesApi";
 import type {
-  CreateCustomerRequest,
   Address,
   Contact,
+  CreateCustomerRequest,
   CustomerLegalEntityLookup,
-} from "../../types/customers";
+} from "@/types/api/customers";
 import {
   Alert,
   AlertDescription,
@@ -60,6 +60,7 @@ export default function CustomerCreate() {
   const [loading, setLoading] = useState(false);
   const [loadingLegalEntities, setLoadingLegalEntities] = useState(true);
   const [lookupError, setLookupError] = useState<string | null>(null);
+  const [lookupAttempt, setLookupAttempt] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [legalEntities, setLegalEntities] = useState<
     CustomerLegalEntityLookup[]
@@ -88,6 +89,9 @@ export default function CustomerCreate() {
     let cancelled = false;
 
     async function loadLegalEntities() {
+      setLoadingLegalEntities(true);
+      setLookupError(null);
+
       try {
         const entities = await listCustomerLegalEntities();
         if (!cancelled) {
@@ -112,7 +116,11 @@ export default function CustomerCreate() {
     return () => {
       cancelled = true;
     };
-  }, [_]);
+  }, [_, lookupAttempt]);
+
+  function retryLegalEntityLookup() {
+    setLookupAttempt((attempt) => attempt + 1);
+  }
 
   function updateField(field: keyof CreateCustomerRequest, value: unknown) {
     if (field === "name" || field === "legal_entity_id") {
@@ -303,7 +311,14 @@ export default function CustomerCreate() {
       {lookupError && (
         <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
           <AlertDescription className="text-destructive">
-            {lookupError}
+            <span>{lookupError}</span>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={retryLegalEntityLookup}
+            >
+              <Trans>Retry</Trans>
+            </Button>
           </AlertDescription>
         </Alert>
       )}

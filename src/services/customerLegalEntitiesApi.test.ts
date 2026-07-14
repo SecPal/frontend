@@ -58,6 +58,19 @@ describe("customerLegalEntitiesApi", () => {
     );
   });
 
+  it("rejects a malformed top-level response consistently", async () => {
+    const mockResponse = {
+      ok: true,
+      json: vi.fn().mockResolvedValue(null),
+    };
+
+    vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+    await expect(listCustomerLegalEntities()).rejects.toThrow(
+      /legal entity lookup response/i
+    );
+  });
+
   it("rejects widened organizational unit responses", async () => {
     const mockResponse = {
       ok: true,

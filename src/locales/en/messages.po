@@ -521,6 +521,7 @@ msgstr "Emergency contact name is required."
 
 #: src/components/OrganizationalUnitTree.tsx
 #: src/components/RouteGuardState.tsx
+#: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Login.tsx
 msgid "Retry"
 msgstr "Retry"

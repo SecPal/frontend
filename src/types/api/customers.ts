@@ -8,3 +8,8 @@ type Schemas = components["schemas"];
 export type Customer = Schemas["Customer"];
 export type CreateCustomerRequest = Schemas["CustomerCreateRequest"];
 export type CustomerLegalEntityLookup = Schemas["CustomerLegalEntityLookup"];
+export type Address = Schemas["Address"];
+export type Contact = Schemas["Contact"];
+export type UpdateCustomerRequest = Partial<
+  Omit<CreateCustomerRequest, "legal_entity_id">
+>;

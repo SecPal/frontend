@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Added retry recovery for failed customer Legal Entity lookups and normalized
+  malformed lookup envelopes to the documented validation error.
+- Added regression coverage for updating and clearing customer VAT IDs.
+- Consolidated customer request and response types onto the generated OpenAPI
+  aliases and removed the obsolete uncontracted `sites` response fallback.
 - Corrected customer-form test label normalization so every required marker is removed.
 - Moved the customer VAT ID field directly above the billing country field in
   create and edit forms.

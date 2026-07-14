@@ -18,11 +18,11 @@ import { FormSkeleton } from "@/ui/loading";
 import { Textarea } from "@/ui/textarea";
 import { getCustomer, updateCustomer } from "../../services/customersApi";
 import type {
-  Customer,
-  UpdateCustomerRequest,
   Address,
   Contact,
-} from "../../types/customers";
+  Customer,
+  UpdateCustomerRequest,
+} from "@/types/api/customers";
 import {
   Alert,
   AlertDescription,

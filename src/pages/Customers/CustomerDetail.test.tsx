@@ -241,49 +241,6 @@ describe("CustomerDetail", () => {
     });
   });
 
-  it("prefers the loaded sites list over a stale zero sites_count", async () => {
-    vi.mocked(customersApi.getCustomer).mockResolvedValue({
-      ...mockCustomer,
-      sites_count: 0,
-      sites: [
-        {
-          id: "site-1",
-          customer_id: mockCustomer.id,
-          organizational_unit_id: "ou-1",
-          site_number: "OBJ-2025-0001",
-          name: "Alpha",
-          type: "permanent",
-          address: mockCustomer.billing_address,
-          is_active: true,
-          is_expired: false,
-          full_address: "Teststrasse 42, 80331 München, DE",
-          created_at: "2025-01-15T10:00:00Z",
-          updated_at: "2025-01-20T15:30:00Z",
-        },
-        {
-          id: "site-2",
-          customer_id: mockCustomer.id,
-          organizational_unit_id: "ou-1",
-          site_number: "OBJ-2025-0002",
-          name: "Beta",
-          type: "permanent",
-          address: mockCustomer.billing_address,
-          is_active: true,
-          is_expired: false,
-          full_address: "Teststrasse 42, 80331 München, DE",
-          created_at: "2025-01-15T10:00:00Z",
-          updated_at: "2025-01-20T15:30:00Z",
-        },
-      ],
-    });
-
-    renderWithRouter();
-
-    await waitFor(() => {
-      expect(screen.getByText(/This customer has 2 site/)).toBeInTheDocument();
-    });
-  });
-
   it("displays active status badge", async () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 

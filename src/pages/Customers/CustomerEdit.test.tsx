@@ -184,6 +184,51 @@ describe("CustomerEdit", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/customers/customer-123");
   });
 
+  it("updates the customer VAT ID", async () => {
+    const user = userEvent.setup();
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+    vi.mocked(customersApi.updateCustomer).mockResolvedValue({
+      ...mockCustomer,
+      vat_id: "DE987654321",
+    });
+
+    renderWithRouter();
+
+    const vatIdInput = await screen.findByLabelText(/vat id/i);
+    await user.clear(vatIdInput);
+    await user.type(vatIdInput, "DE987654321");
+    await user.click(screen.getByRole("button", { name: /save|update/i }));
+
+    await waitFor(() => {
+      expect(customersApi.updateCustomer).toHaveBeenCalledWith(
+        "customer-123",
+        expect.objectContaining({ vat_id: "DE987654321" })
+      );
+    });
+  });
+
+  it("clears the customer VAT ID with null", async () => {
+    const user = userEvent.setup();
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+    vi.mocked(customersApi.updateCustomer).mockResolvedValue({
+      ...mockCustomer,
+      vat_id: null,
+    });
+
+    renderWithRouter();
+
+    const vatIdInput = await screen.findByLabelText(/vat id/i);
+    await user.clear(vatIdInput);
+    await user.click(screen.getByRole("button", { name: /save|update/i }));
+
+    await waitFor(() => {
+      expect(customersApi.updateCustomer).toHaveBeenCalledWith(
+        "customer-123",
+        expect.objectContaining({ vat_id: null })
+      );
+    });
+  });
+
   it("updates billing address", async () => {
     const user = userEvent.setup();
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);

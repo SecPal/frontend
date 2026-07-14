@@ -452,6 +452,31 @@ describe("CustomerCreate", () => {
     expect(customersApi.createCustomer).not.toHaveBeenCalled();
   });
 
+  it("retries a failed legal entity lookup", async () => {
+    const user = userEvent.setup();
+    vi.mocked(customerLegalEntitiesApi.listCustomerLegalEntities)
+      .mockRejectedValueOnce(new Error("Lookup unavailable"))
+      .mockResolvedValueOnce(legalEntities);
+
+    renderWithRouter(<CustomerCreate />);
+
+    expect(await screen.findByText("Lookup unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /create customer/i })
+    ).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: /retry/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("combobox", { name: /legal entity/i })
+      ).toBeEnabled();
+    });
+    expect(
+      customerLegalEntitiesApi.listCustomerLegalEntities
+    ).toHaveBeenCalledTimes(2);
+  });
+
   it("does not render unauthorized legal entities in visible or hidden DOM", async () => {
     const unauthorizedName = "Foreign Tenant Holding GmbH";
     const { container } = renderWithRouter(<CustomerCreate />);
