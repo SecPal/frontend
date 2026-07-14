@@ -273,6 +273,40 @@ describe("customersApi", () => {
   });
 
   describe("updateCustomer", () => {
+    it("sends a legal entity reassignment payload", async () => {
+      const updateData = {
+        legal_entity_id: "550e8400-e29b-41d4-a716-446655440002",
+      };
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: {
+            id: "customer-123",
+            legal_entity_id: updateData.legal_entity_id,
+            name: "Existing Customer",
+            billing_address: {
+              street: "Street",
+              city: "City",
+              postal_code: "12345",
+              country: "DE",
+            },
+          },
+        }),
+      };
+
+      vi.mocked(csrf.apiFetch).mockResolvedValue(mockResponse as any);
+
+      await updateCustomer("customer-123", updateData);
+
+      expect(csrf.apiFetch).toHaveBeenCalledWith(
+        `${apiConfig.baseUrl}/v1/customers/customer-123`,
+        expect.objectContaining({
+          method: "PATCH",
+          body: JSON.stringify(updateData),
+        })
+      );
+    });
+
     it("updates customer successfully", async () => {
       const updateData = {
         name: "Updated Customer",
