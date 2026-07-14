@@ -288,6 +288,10 @@ msgstr "Keine organisatorischen Einheiten"
 msgid "This onboarding step uses a schema we cannot render yet."
 msgstr "Dieser Onboarding-Schritt verwendet ein Schema, das noch nicht dargestellt werden kann."
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Legal entity is required."
+msgstr "Rechtsträger ist erforderlich."
+
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "No address suggestions found."
 msgstr "Keine Adressvorschläge gefunden."
@@ -517,6 +521,7 @@ msgstr "Name des Notfallkontakts ist erforderlich."
 
 #: src/components/OrganizationalUnitTree.tsx
 #: src/components/RouteGuardState.tsx
+#: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Login.tsx
 msgid "Retry"
 msgstr "Wiederholen"
@@ -688,6 +693,10 @@ msgstr "Bitte versuchen Sie es in etwa 1 Minute erneut."
 #: src/pages/Settings/SettingsPage.tsx
 msgid "No passkeys enrolled yet."
 msgstr "Es sind noch keine Passkeys eingerichtet."
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "No legal entities are available for customer creation."
+msgstr "Für die Kundenerstellung sind keine Rechtsträger verfügbar."
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
@@ -2713,6 +2722,10 @@ msgstr "Der Mindestrang kann nicht größer als der Höchstrang sein."
 msgid "Authentication"
 msgstr "Authentifizierung"
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Failed to load legal entities"
+msgstr "Rechtsträger konnten nicht geladen werden"
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -3011,6 +3024,10 @@ msgstr "Zur Überprüfung einreichen"
 msgid "Optional sections"
 msgstr "Optionale Abschnitte"
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Select legal entity..."
+msgstr "Rechtsträger auswählen..."
+
 #: src/AuthenticatedApp.tsx
 #: src/components/RouteGuardState.tsx
 msgid "Back to Home"
@@ -3202,6 +3219,12 @@ msgstr "Zurück zu den Kunden"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "We couldn't submit the form yet. Please review the highlighted fields."
 msgstr "Wir konnten das Formular noch nicht abschicken. Bitte überprüfen Sie die markierten Felder."
+
+#: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "VAT ID"
+msgstr "Umsatzsteuer-ID"
 
 #: src/pages/Login.tsx
 msgid "Switching instance..."
@@ -3492,6 +3515,7 @@ msgid "Administratively Active"
 msgstr "Administrativ aktiv"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
+#: src/pages/Customers/CustomerCreate.tsx
 msgid "Legal Entity"
 msgstr "Rechtsträger"
 

@@ -6,45 +6,27 @@
  * Generated from contracts/docs/openapi.yaml (Epic #210)
  */
 
+import type {
+  Address as ApiAddress,
+  Contact as ApiContact,
+  CreateCustomerRequest as ApiCreateCustomerRequest,
+  Customer as ApiCustomer,
+  CustomerLegalEntityLookup as ApiCustomerLegalEntityLookup,
+  UpdateCustomerRequest as ApiUpdateCustomerRequest,
+} from "./api/customers";
+
 // ============================================================================
 // Common Schemas
 // ============================================================================
 
-export interface Address {
-  street: string;
-  city: string;
-  postal_code: string;
-  country: string; // ISO 3166-1 alpha-2
-  latitude?: number | null;
-  longitude?: number | null;
-}
-
-export interface Contact {
-  name: string;
-  email?: string | null;
-  phone?: string | null;
-  position?: string | null;
-}
+export type Address = ApiAddress;
+export type Contact = ApiContact;
 
 // ============================================================================
 // Customer
 // ============================================================================
 
-export interface Customer {
-  id: string;
-  customer_number: string; // KD-YYYY-####
-  name: string;
-  billing_address: Address;
-  contact?: Contact | null;
-  is_active: boolean;
-  notes?: string | null;
-  metadata?: Record<string, unknown> | null;
-  sites_count?: number;
-  sites?: Site[] | null;
-  created_at: string;
-  updated_at: string;
-  deleted_at?: string | null;
-}
+export type Customer = ApiCustomer;
 
 export type SiteCustomer = Pick<
   Customer,
@@ -56,23 +38,8 @@ export type SiteCustomer = Pick<
   | "is_active"
 >;
 
-export interface CreateCustomerRequest {
-  name: string;
-  billing_address: Address;
-  contact?: Contact | null;
-  notes?: string | null;
-  metadata?: Record<string, unknown> | null;
-  is_active?: boolean;
-}
-
-export interface UpdateCustomerRequest {
-  name?: string;
-  billing_address?: Address;
-  contact?: Contact | null;
-  notes?: string | null;
-  metadata?: Record<string, unknown> | null;
-  is_active?: boolean;
-}
+export type CreateCustomerRequest = ApiCreateCustomerRequest;
+export type UpdateCustomerRequest = ApiUpdateCustomerRequest;
 
 export interface CustomerFilters {
   search?: string;
@@ -80,6 +47,8 @@ export interface CustomerFilters {
   page?: number;
   per_page?: number;
 }
+
+export type CustomerLegalEntityLookup = ApiCustomerLegalEntityLookup;
 
 // ============================================================================
 // Site (de: Objekt)

@@ -48,6 +48,8 @@ describe("CustomerEdit", () => {
     id: "customer-123",
     name: "Existing Customer",
     customer_number: "CUST-2025-001",
+    legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
+    vat_id: "DE123456789",
     billing_address: {
       street: "Old Street 10",
       city: "Old City",
@@ -87,6 +89,21 @@ describe("CustomerEdit", () => {
     expect(screen.getByLabelText(/postal code/i)).toHaveValue("54321");
     expect(screen.getByLabelText(/country/i)).toHaveValue("DE");
     expect(screen.getByLabelText(/notes/i)).toHaveValue("Existing notes");
+    expect(screen.getByLabelText(/vat id/i)).toHaveValue("DE123456789");
+  });
+
+  it("renders the VAT ID field directly before country", async () => {
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+
+    renderWithRouter();
+
+    await screen.findByLabelText(/vat id/i);
+
+    const labels = Array.from(document.querySelectorAll("label")).map((label) =>
+      label.textContent?.replace(/\*/g, "").trim()
+    );
+
+    expect(labels.indexOf("VAT ID")).toBe(labels.indexOf("Country") - 1);
   });
 
   it("keeps the edit frame visible while customer data loads", () => {
@@ -165,6 +182,52 @@ describe("CustomerEdit", () => {
     });
 
     expect(mockNavigate).toHaveBeenCalledWith("/customers/customer-123");
+  });
+
+  it("trims the customer VAT ID before updating", async () => {
+    const user = userEvent.setup();
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+    vi.mocked(customersApi.updateCustomer).mockResolvedValue({
+      ...mockCustomer,
+      vat_id: "DE987654321",
+    });
+
+    renderWithRouter();
+
+    const vatIdInput = await screen.findByLabelText(/vat id/i);
+    await user.clear(vatIdInput);
+    await user.type(vatIdInput, " DE987654321 ");
+    await user.click(screen.getByRole("button", { name: /save|update/i }));
+
+    await waitFor(() => {
+      expect(customersApi.updateCustomer).toHaveBeenCalledWith(
+        "customer-123",
+        expect.objectContaining({ vat_id: "DE987654321" })
+      );
+    });
+  });
+
+  it("maps a whitespace-only customer VAT ID to null", async () => {
+    const user = userEvent.setup();
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+    vi.mocked(customersApi.updateCustomer).mockResolvedValue({
+      ...mockCustomer,
+      vat_id: null,
+    });
+
+    renderWithRouter();
+
+    const vatIdInput = await screen.findByLabelText(/vat id/i);
+    await user.clear(vatIdInput);
+    await user.type(vatIdInput, "   ");
+    await user.click(screen.getByRole("button", { name: /save|update/i }));
+
+    await waitFor(() => {
+      expect(customersApi.updateCustomer).toHaveBeenCalledWith(
+        "customer-123",
+        expect.objectContaining({ vat_id: null })
+      );
+    });
   });
 
   it("updates billing address", async () => {
@@ -368,12 +431,14 @@ describe("CustomerEdit", () => {
       id: "customer-A",
       name: "Customer A",
       customer_number: "CUST-A",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     };
     const customerB = {
       ...mockCustomer,
       id: "customer-B",
       name: "Customer B",
       customer_number: "CUST-B",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     };
 
     let resolveCustomerA:
@@ -421,12 +486,14 @@ describe("CustomerEdit", () => {
       id: "customer-A",
       name: "Customer A",
       customer_number: "CUST-A",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     };
     const customerB = {
       ...mockCustomer,
       id: "customer-B",
       name: "Customer B",
       customer_number: "CUST-B",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     };
 
     let resolveCustomerB:

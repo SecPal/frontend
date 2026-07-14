@@ -18,11 +18,11 @@ import { FormSkeleton } from "@/ui/loading";
 import { Textarea } from "@/ui/textarea";
 import { getCustomer, updateCustomer } from "../../services/customersApi";
 import type {
-  Customer,
-  UpdateCustomerRequest,
   Address,
   Contact,
-} from "../../types/customers";
+  Customer,
+  UpdateCustomerRequest,
+} from "@/types/api/customers";
 import {
   Alert,
   AlertDescription,
@@ -72,6 +72,7 @@ export default function CustomerEdit() {
         setCustomer(data);
         setFormData({
           name: data.name,
+          vat_id: data.vat_id ?? null,
           billing_address: data.billing_address,
           contact: data.contact,
           notes: data.notes,
@@ -127,7 +128,11 @@ export default function CustomerEdit() {
     setError(null);
 
     try {
-      await updateCustomer(id, formData);
+      const vatId = formData.vat_id?.trim();
+      await updateCustomer(id, {
+        ...formData,
+        vat_id: vatId || null,
+      });
       navigate(`/customers/${id}`);
     } catch (err) {
       setError(
@@ -243,6 +248,23 @@ export default function CustomerEdit() {
                     />
                   </Field>
                 </div>
+
+                <Field>
+                  <FieldLabel htmlFor="customer-vat-id">
+                    <Trans>VAT ID</Trans>
+                  </FieldLabel>
+                  <Input
+                    id="customer-vat-id"
+                    name="vat_id"
+                    type="text"
+                    maxLength={32}
+                    autoComplete="off"
+                    value={formData.vat_id ?? ""}
+                    onChange={(e) =>
+                      updateField("vat_id", e.target.value || null)
+                    }
+                  />
+                </Field>
 
                 <Field>
                   <FieldLabel htmlFor="customer-country">

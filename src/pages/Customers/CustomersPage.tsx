@@ -23,7 +23,8 @@ import {
 } from "@/ui/select";
 import { Skeleton } from "@/ui/skeleton";
 import { listCustomers } from "../../services/customersApi";
-import type { Customer, CustomerFilters } from "../../types/customers";
+import type { Customer } from "@/types/api/customers";
+import type { CustomerFilters } from "../../types/customers";
 import {
   Alert,
   AlertDescription,
@@ -58,10 +59,6 @@ function readUseDesktopTable(): boolean {
 }
 
 function getCustomerSitesSummary(customer: Customer): string {
-  if (Array.isArray(customer.sites)) {
-    return String(customer.sites.length);
-  }
-
   if (typeof customer.sites_count === "number" && customer.sites_count > 0) {
     return String(customer.sites_count);
   }

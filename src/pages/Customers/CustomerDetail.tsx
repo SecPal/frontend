@@ -16,7 +16,7 @@ import { Button } from "@/ui/button";
 import { Skeleton } from "@/ui/skeleton";
 import { SectionSkeleton } from "@/ui";
 import { deleteCustomer, getCustomer } from "../../services/customersApi";
-import type { Customer } from "../../types/customers";
+import type { Customer } from "@/types/api/customers";
 import {
   Alert,
   AlertDescription,
@@ -41,10 +41,6 @@ import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
 
 function getCustomerSitesCount(customer: Customer): number | null {
-  if (Array.isArray(customer.sites)) {
-    return customer.sites.length;
-  }
-
   return typeof customer.sites_count === "number" ? customer.sites_count : null;
 }
 
@@ -151,7 +147,7 @@ export default function CustomerDetail() {
   }
 
   return (
-    <div className="max-w-4xl">
+    <div className="w-full">
       <div className="flex items-start justify-between mb-6">
         <div>
           <PageTitle>
@@ -215,6 +211,15 @@ export default function CustomerDetail() {
               <DescriptionDetails>
                 {customer.billing_address.country}
               </DescriptionDetails>
+
+              {customer.vat_id ? (
+                <>
+                  <DescriptionTerm>
+                    <Trans>VAT ID</Trans>
+                  </DescriptionTerm>
+                  <DescriptionDetails>{customer.vat_id}</DescriptionDetails>
+                </>
+              ) : null}
             </DescriptionList>
           </div>
 
