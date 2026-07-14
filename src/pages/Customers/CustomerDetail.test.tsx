@@ -62,6 +62,8 @@ describe("CustomerDetail", () => {
     id: "customer-123",
     name: "Test Customer GmbH",
     customer_number: "CUST-2025-001",
+    legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
+    vat_id: "DE123456789",
     billing_address: {
       street: "Teststrasse 42",
       city: "München",
@@ -109,6 +111,21 @@ describe("CustomerDetail", () => {
     expect(screen.getByText("80331")).toBeInTheDocument();
     expect(screen.getByText("München")).toBeInTheDocument();
     expect(screen.getByText("DE")).toBeInTheDocument();
+    expect(screen.getByText("VAT ID")).toBeInTheDocument();
+    expect(screen.getByText("DE123456789")).toBeInTheDocument();
+  });
+
+  it("uses the full shell width without an extra detail-page max width", async () => {
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+
+    const { container } = renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByText("Test Customer GmbH")).toBeInTheDocument();
+    });
+
+    expect(container.firstElementChild).toHaveClass("w-full");
+    expect(container.firstElementChild).not.toHaveClass("max-w-4xl");
   });
 
   it("renders postal code and city on separate billing-address lines", async () => {
@@ -221,49 +238,6 @@ describe("CustomerDetail", () => {
       expect(
         screen.getByText("Dieser Kunde hat keine Objekte.")
       ).toBeInTheDocument();
-    });
-  });
-
-  it("prefers the loaded sites list over a stale zero sites_count", async () => {
-    vi.mocked(customersApi.getCustomer).mockResolvedValue({
-      ...mockCustomer,
-      sites_count: 0,
-      sites: [
-        {
-          id: "site-1",
-          customer_id: mockCustomer.id,
-          organizational_unit_id: "ou-1",
-          site_number: "OBJ-2025-0001",
-          name: "Alpha",
-          type: "permanent",
-          address: mockCustomer.billing_address,
-          is_active: true,
-          is_expired: false,
-          full_address: "Teststrasse 42, 80331 München, DE",
-          created_at: "2025-01-15T10:00:00Z",
-          updated_at: "2025-01-20T15:30:00Z",
-        },
-        {
-          id: "site-2",
-          customer_id: mockCustomer.id,
-          organizational_unit_id: "ou-1",
-          site_number: "OBJ-2025-0002",
-          name: "Beta",
-          type: "permanent",
-          address: mockCustomer.billing_address,
-          is_active: true,
-          is_expired: false,
-          full_address: "Teststrasse 42, 80331 München, DE",
-          created_at: "2025-01-15T10:00:00Z",
-          updated_at: "2025-01-20T15:30:00Z",
-        },
-      ],
-    });
-
-    renderWithRouter();
-
-    await waitFor(() => {
-      expect(screen.getByText(/This customer has 2 site/)).toBeInTheDocument();
     });
   });
 
@@ -541,12 +515,14 @@ describe("CustomerDetail", () => {
       id: "customer-A",
       name: "Customer A",
       customer_number: "CUST-A",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     };
     const customerB = {
       ...mockCustomer,
       id: "customer-B",
       name: "Customer B",
       customer_number: "CUST-B",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     };
 
     let resolveCustomerA:
@@ -599,12 +575,14 @@ describe("CustomerDetail", () => {
       id: "customer-A",
       name: "Customer A",
       customer_number: "CUST-A",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     };
     const customerB = {
       ...mockCustomer,
       id: "customer-B",
       name: "Customer B",
       customer_number: "CUST-B",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
     };
 
     let resolveCustomerB:

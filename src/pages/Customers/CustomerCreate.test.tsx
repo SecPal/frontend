@@ -1,16 +1,24 @@
-// SPDX-FileCopyrightText: 2025 SecPal Contributors
+// SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import CustomerCreate from "./CustomerCreate";
+import * as customerLegalEntitiesApi from "../../services/customerLegalEntitiesApi";
 import * as customersApi from "../../services/customersApi";
 
 // Mock the API
+vi.mock("../../services/customerLegalEntitiesApi");
 vi.mock("../../services/customersApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
@@ -33,15 +41,64 @@ function renderWithRouter(component: React.ReactElement) {
   );
 }
 
+async function renderCustomerCreate() {
+  const rendered = renderWithRouter(<CustomerCreate />);
+
+  await waitFor(() => {
+    expect(
+      screen.getByRole("combobox", { name: /legal entity/i })
+    ).not.toBeDisabled();
+  });
+
+  return rendered;
+}
+
+const legalEntities = [
+  {
+    id: "550e8400-e29b-41d4-a716-446655440001",
+    name: "SecPal GmbH",
+  },
+  {
+    id: "550e8400-e29b-41d4-a716-446655440002",
+    name: "SecPal Operations GmbH",
+  },
+];
+const firstLegalEntity = legalEntities[0]!;
+const secondLegalEntity = legalEntities[1]!;
+
+async function chooseFirstLegalEntity() {
+  await chooseLegalEntity(firstLegalEntity.name);
+}
+
+async function chooseLegalEntity(name: string) {
+  const user = userEvent.setup();
+  const trigger = await screen.findByRole("combobox", {
+    name: /legal entity/i,
+  });
+
+  await user.click(trigger);
+  await user.click(await screen.findByRole("option", { name }));
+}
+
 describe("CustomerCreate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(
+      customerLegalEntitiesApi.listCustomerLegalEntities
+    ).mockResolvedValue(legalEntities);
   });
 
-  it("renders the form with all required fields", () => {
-    renderWithRouter(<CustomerCreate />);
+  it("renders the form with all required fields", async () => {
+    await renderCustomerCreate();
 
     expect(screen.getByLabelText(/customer name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/vat id/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: /legal entity/i })
+    ).toHaveAttribute("data-slot", "select-trigger");
+    expect(
+      screen.getByRole("combobox", { name: /legal entity/i })
+    ).toHaveAttribute("aria-required", "true");
     expect(screen.getByLabelText(/street/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/postal code/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/city/i)).toBeInTheDocument();
@@ -52,16 +109,86 @@ describe("CustomerCreate", () => {
     expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
   });
 
-  it("renders contact fields", () => {
+  it("renders legal entity as the first form field", async () => {
+    await renderCustomerCreate();
+
+    const legalEntityField = screen.getByRole("combobox", {
+      name: /legal entity/i,
+    });
+    const customerNameField = screen.getByLabelText(/customer name/i);
+
+    expect(
+      legalEntityField.compareDocumentPosition(customerNameField) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
+
+  it("renders the VAT ID field directly before country", async () => {
+    await renderCustomerCreate();
+
+    const labels = Array.from(document.querySelectorAll("label")).map((label) =>
+      label.textContent?.replace(/\*/g, "").trim()
+    );
+
+    expect(labels.indexOf("VAT ID")).toBe(labels.indexOf("Country") - 1);
+  });
+
+  it("submits the optional VAT ID when provided", async () => {
+    vi.mocked(customersApi.createCustomer).mockResolvedValue({
+      id: "customer-123",
+      legal_entity_id: firstLegalEntity.id,
+      customer_number: "KD-2026-0001",
+      name: "ACME GmbH",
+      vat_id: "DE123456789",
+      billing_address: {
+        street: "Main Street 1",
+        city: "Berlin",
+        postal_code: "10115",
+        country: "DE",
+      },
+      is_active: true,
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+    });
+
     renderWithRouter(<CustomerCreate />);
+
+    await chooseFirstLegalEntity();
+    fireEvent.change(screen.getByLabelText(/customer name/i), {
+      target: { value: "ACME GmbH" },
+    });
+    fireEvent.change(screen.getByLabelText(/vat id/i), {
+      target: { value: "DE123456789" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Main Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "10115" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "Berlin" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /create customer/i }));
+
+    await waitFor(() => {
+      expect(customersApi.createCustomer).toHaveBeenCalledWith(
+        expect.objectContaining({ vat_id: "DE123456789" })
+      );
+    });
+  });
+
+  it("renders contact fields", async () => {
+    await renderCustomerCreate();
 
     expect(screen.getByLabelText(/^name$/i)).toBeInTheDocument(); // Contact name
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/phone/i)).toBeInTheDocument();
   });
 
-  it("renders notes and active checkbox", () => {
-    renderWithRouter(<CustomerCreate />);
+  it("renders notes and active checkbox", async () => {
+    await renderCustomerCreate();
 
     expect(screen.getByLabelText(/notes/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/active/i)).toBeInTheDocument();
@@ -75,6 +202,7 @@ describe("CustomerCreate", () => {
     const user = userEvent.setup();
     renderWithRouter(<CustomerCreate />);
 
+    await chooseFirstLegalEntity();
     fireEvent.change(screen.getByLabelText(/customer name/i), {
       target: { value: "Test Customer" },
     });
@@ -102,6 +230,7 @@ describe("CustomerCreate", () => {
     const user = userEvent.setup();
     renderWithRouter(<CustomerCreate />);
 
+    await chooseFirstLegalEntity();
     fireEvent.change(screen.getByLabelText(/customer name/i), {
       target: { value: "Test Customer" },
     });
@@ -141,6 +270,7 @@ describe("CustomerCreate", () => {
       id: "customer-123",
       name: "Test Customer",
       customer_number: "CUST-2025-001",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
       billing_address: {
         street: "Test Street 1",
         city: "Test City",
@@ -155,6 +285,8 @@ describe("CustomerCreate", () => {
     vi.mocked(customersApi.createCustomer).mockResolvedValue(mockCustomer);
 
     renderWithRouter(<CustomerCreate />);
+
+    await chooseFirstLegalEntity();
 
     // Fill required fields directly to keep the happy-path test fast in full-suite runs
     fireEvent.change(screen.getByLabelText(/customer name/i), {
@@ -180,6 +312,7 @@ describe("CustomerCreate", () => {
     await waitFor(() => {
       expect(customersApi.createCustomer).toHaveBeenCalledWith({
         name: "Test Customer",
+        legal_entity_id: firstLegalEntity.id,
         billing_address: {
           street: "Test Street 1",
           city: "Test City",
@@ -194,6 +327,214 @@ describe("CustomerCreate", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/customers/customer-123");
   });
 
+  it("submits the selected legal entity when multiple entities are available", async () => {
+    const user = userEvent.setup();
+    const mockCustomer = {
+      id: "customer-multiple-entity",
+      name: "Multi Entity Customer",
+      customer_number: "CUST-2026-001",
+      legal_entity_id: secondLegalEntity.id,
+      billing_address: {
+        street: "Street 1",
+        city: "City",
+        postal_code: "12345",
+        country: "DE",
+      },
+      is_active: true,
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+    };
+
+    vi.mocked(customersApi.createCustomer).mockResolvedValue(mockCustomer);
+
+    renderWithRouter(<CustomerCreate />);
+
+    await chooseLegalEntity(secondLegalEntity.name);
+    fireEvent.change(screen.getByLabelText(/customer name/i), {
+      target: { value: "Multi Entity Customer" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "City" },
+    });
+
+    await user.click(screen.getByRole("button", { name: /create customer/i }));
+
+    await waitFor(() => {
+      expect(customersApi.createCustomer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          legal_entity_id: secondLegalEntity.id,
+        })
+      );
+    });
+  });
+
+  it("preselects and disables the legal entity trigger when exactly one entity is available", async () => {
+    const user = userEvent.setup();
+    const mockCustomer = {
+      id: "customer-single-entity",
+      name: "Single Entity Customer",
+      customer_number: "CUST-2026-002",
+      legal_entity_id: firstLegalEntity.id,
+      billing_address: {
+        street: "Street 1",
+        city: "City",
+        postal_code: "12345",
+        country: "DE",
+      },
+      is_active: true,
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+    };
+
+    vi.mocked(
+      customerLegalEntitiesApi.listCustomerLegalEntities
+    ).mockResolvedValue([firstLegalEntity]);
+    vi.mocked(customersApi.createCustomer).mockResolvedValue(mockCustomer);
+
+    renderWithRouter(<CustomerCreate />);
+
+    const trigger = await screen.findByRole("combobox", {
+      name: /legal entity/i,
+    });
+    await waitFor(() => {
+      expect(trigger).toHaveTextContent(firstLegalEntity.name);
+    });
+    expect(trigger).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText(/customer name/i), {
+      target: { value: "Single Entity Customer" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "City" },
+    });
+
+    await user.click(screen.getByRole("button", { name: /create customer/i }));
+
+    await waitFor(() => {
+      expect(customersApi.createCustomer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          legal_entity_id: firstLegalEntity.id,
+        })
+      );
+    });
+  });
+
+  it("shows an empty state and cannot post when no legal entity is available", async () => {
+    const user = userEvent.setup();
+    vi.mocked(
+      customerLegalEntitiesApi.listCustomerLegalEntities
+    ).mockResolvedValue([]);
+
+    renderWithRouter(<CustomerCreate />);
+
+    expect(
+      await screen.findByText(/no legal entities are available/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /create customer/i })
+    ).toBeDisabled();
+
+    fireEvent.change(screen.getByLabelText(/customer name/i), {
+      target: { value: "Blocked Customer" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "City" },
+    });
+
+    await user.click(screen.getByRole("button", { name: /create customer/i }));
+
+    expect(customersApi.createCustomer).not.toHaveBeenCalled();
+  });
+
+  it("retries a failed legal entity lookup", async () => {
+    const user = userEvent.setup();
+    vi.mocked(customerLegalEntitiesApi.listCustomerLegalEntities)
+      .mockRejectedValueOnce(new Error("Lookup unavailable"))
+      .mockResolvedValueOnce(legalEntities);
+
+    renderWithRouter(<CustomerCreate />);
+
+    expect(await screen.findByText("Lookup unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /create customer/i })
+    ).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: /retry/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("combobox", { name: /legal entity/i })
+      ).toBeEnabled();
+    });
+    expect(
+      customerLegalEntitiesApi.listCustomerLegalEntities
+    ).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not render unauthorized legal entities in visible or hidden DOM", async () => {
+    const unauthorizedName = "Foreign Tenant Holding GmbH";
+    const { container } = renderWithRouter(<CustomerCreate />);
+
+    const trigger = await screen.findByRole("combobox", {
+      name: /legal entity/i,
+    });
+
+    expect(trigger).toHaveTextContent("Select legal entity...");
+    expect(container).not.toHaveTextContent(unauthorizedName);
+    expect(container.innerHTML).not.toContain(unauthorizedName);
+
+    await userEvent.click(trigger);
+    const listbox = await screen.findByRole("listbox");
+    expect(
+      within(listbox).getByRole("option", { name: firstLegalEntity.name })
+    ).toBeInTheDocument();
+    expect(screen.queryByText(unauthorizedName)).not.toBeInTheDocument();
+    expect(document.body.innerHTML).not.toContain(unauthorizedName);
+  });
+
+  it("requires a legal entity before creating a customer", async () => {
+    const user = userEvent.setup();
+    renderWithRouter(<CustomerCreate />);
+
+    fireEvent.change(screen.getByLabelText(/customer name/i), {
+      target: { value: "Test Customer" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Test Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "Test City" },
+    });
+
+    await user.click(screen.getByRole("button", { name: /create customer/i }));
+
+    expect(
+      await screen.findByText(/legal entity is required/i)
+    ).toBeInTheDocument();
+    expect(customersApi.createCustomer).not.toHaveBeenCalled();
+  });
+
   it(
     "submits form with contact information",
     async () => {
@@ -201,6 +542,7 @@ describe("CustomerCreate", () => {
         id: "customer-456",
         name: "Customer with Contact",
         customer_number: "CUST-2025-002",
+        legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
         billing_address: {
           street: "Street 1",
           city: "City",
@@ -221,6 +563,7 @@ describe("CustomerCreate", () => {
 
       renderWithRouter(<CustomerCreate />);
 
+      await chooseFirstLegalEntity();
       // Fill fields directly to keep this integration-style happy path within
       // suite timeout
       fireEvent.change(screen.getByLabelText(/customer name/i), {
@@ -264,6 +607,7 @@ describe("CustomerCreate", () => {
         () => {
           expect(customersApi.createCustomer).toHaveBeenCalledWith({
             name: "Customer with Contact",
+            legal_entity_id: firstLegalEntity.id,
             billing_address: {
               street: "Street 1",
               city: "City",
@@ -290,6 +634,7 @@ describe("CustomerCreate", () => {
       id: "customer-789",
       name: "Customer without Contact",
       customer_number: "CUST-2025-003",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
       billing_address: {
         street: "Street 1",
         city: "City",
@@ -305,6 +650,7 @@ describe("CustomerCreate", () => {
 
     renderWithRouter(<CustomerCreate />);
 
+    await chooseFirstLegalEntity();
     // Fill only required fields, leave contact empty
     fireEvent.change(screen.getByLabelText(/customer name/i), {
       target: { value: "Customer without Contact" },
@@ -335,6 +681,7 @@ describe("CustomerCreate", () => {
 
     renderWithRouter(<CustomerCreate />);
 
+    await chooseFirstLegalEntity();
     fireEvent.change(screen.getByLabelText(/customer name/i), {
       target: { value: "Test" },
     });
@@ -367,6 +714,7 @@ describe("CustomerCreate", () => {
 
     renderWithRouter(<CustomerCreate />);
 
+    await chooseFirstLegalEntity();
     // Fill minimal required fields to bypass HTML5 validation
     fireEvent.change(screen.getByLabelText(/customer name/i), {
       target: { value: "Test" },
@@ -396,6 +744,7 @@ describe("CustomerCreate", () => {
       id: "customer-country",
       name: "Test",
       customer_number: "CUST-001",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
       billing_address: {
         street: "Street",
         city: "City",
@@ -411,6 +760,7 @@ describe("CustomerCreate", () => {
 
     renderWithRouter(<CustomerCreate />);
 
+    await chooseFirstLegalEntity();
     fireEvent.change(screen.getByLabelText(/customer name/i), {
       target: { value: "Test" },
     });
@@ -437,6 +787,7 @@ describe("CustomerCreate", () => {
       id: "customer-notes",
       name: "Test",
       customer_number: "CUST-002",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
       billing_address: {
         street: "Street",
         city: "City",
@@ -453,6 +804,7 @@ describe("CustomerCreate", () => {
 
     renderWithRouter(<CustomerCreate />);
 
+    await chooseFirstLegalEntity();
     fireEvent.change(screen.getByLabelText(/customer name/i), {
       target: { value: "Test" },
     });
@@ -497,6 +849,7 @@ describe("CustomerCreate", () => {
 
     renderWithRouter(<CustomerCreate />);
 
+    await chooseFirstLegalEntity();
     fireEvent.change(screen.getByLabelText(/customer name/i), {
       target: { value: "Test" },
     });

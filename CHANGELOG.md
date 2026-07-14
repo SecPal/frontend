@@ -14,6 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Added retry recovery for failed customer Legal Entity lookups and normalized
+  malformed lookup envelopes to the documented validation error.
+- Added regression coverage for updating and clearing customer VAT IDs.
+- Consolidated customer request and response types onto the generated OpenAPI
+  aliases and removed the obsolete uncontracted `sites` response fallback.
+- Corrected customer-form test label normalization so every required marker is removed.
+- Moved the customer VAT ID field directly above the billing country field in
+  create and edit forms.
+- Removed the redundant max-width constraint from the customer detail page so
+  it uses the full shared application shell width.
+- Moved the Legal Entity selector to the first field in the customer create
+  form.
 - Renamed the German `Legal Entity` label to `Rechtsträger` in the
   organizational-unit form.
 - Kept the mobile sidebar's user footer above Android system navigation bars
@@ -86,6 +98,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added optional VAT ID input, editing, API payload support, and detail-page
+  display for customers.
+- Added synchronized customer API type aliases for `legal_entity_id` and a
+  dedicated customer Legal Entity lookup client that only reads
+  `/v1/customers/legal-entities` and validates the minimal `id`/`name`
+  response shape.
+- Integrated the dedicated customer Legal Entity lookup into the customer
+  create form with Radix selection, single-entity preselection, empty-state
+  blocking, and required `legal_entity_id` submit coverage (US-007).
+- Required customers to carry a Legal Entity UUID in frontend customer create
+  payloads, added the narrow customer Legal Entity lookup client, and wired the
+  create form to load and submit only that minimal lookup shape (US-002).
+- Documented the blocked Legal Entity customer backfill decision, including
+  tenant-consistency requirements and the prohibition on silent default
+  assignment for existing customers (US-001).
 - Added an Android-only OSS-notices control on the source-license screen that
   opens the native notices activity when the `SecPalEnterprise` capability is
   available.

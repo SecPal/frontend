@@ -167,6 +167,7 @@ describe("customersApi", () => {
   describe("createCustomer", () => {
     it("creates customer successfully", async () => {
       const customerData = {
+        legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
         name: "New Customer",
         billing_address: {
           street: "New Street 1",
@@ -225,6 +226,7 @@ describe("customersApi", () => {
 
       await expect(
         createCustomer({
+          legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
           name: "",
           billing_address: {
             street: "",
@@ -238,6 +240,7 @@ describe("customersApi", () => {
 
     it("sends Content-Type header", async () => {
       const customerData = {
+        legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
         name: "Test",
         billing_address: {
           street: "Street",
@@ -592,6 +595,7 @@ describe("customersApi", () => {
     const customer = {
       id: "customer-123",
       customer_number: "KD-2026-0001",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
       name: "Musterkunde GmbH",
       billing_address: {
         street: "Kundenweg 5",

@@ -72,6 +72,7 @@ describe("SiteEdit", () => {
       id: "customer-1",
       name: "Customer One",
       customer_number: "C001",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
       billing_address: {
         street: "Street",
         city: "City",
@@ -87,6 +88,7 @@ describe("SiteEdit", () => {
       id: "customer-2",
       name: "Customer Two",
       customer_number: "C002",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
       billing_address: {
         street: "Street 2",
         city: "City 2",

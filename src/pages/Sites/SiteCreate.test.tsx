@@ -62,6 +62,7 @@ describe("SiteCreate", () => {
       is_legal_entity: false,
       is_establishment: false,
       customer_number: "C001",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
       billing_address: {
         street: "Street 1",
         city: "City 1",
@@ -77,6 +78,7 @@ describe("SiteCreate", () => {
       id: "customer-2",
       name: "Customer Two",
       customer_number: "C002",
+      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
       billing_address: {
         street: "Street 2",
         city: "City 2",

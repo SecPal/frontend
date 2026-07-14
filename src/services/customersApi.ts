@@ -51,9 +51,6 @@ function handleApiValidationError(error: {
 }
 
 import type {
-  Customer,
-  CreateCustomerRequest,
-  UpdateCustomerRequest,
   CustomerFilters,
   Site,
   CreateSiteRequest,
@@ -71,6 +68,11 @@ import type {
   CostCenterFilters,
   PaginatedResponse,
 } from "../types/customers";
+import type {
+  CreateCustomerRequest,
+  Customer,
+  UpdateCustomerRequest,
+} from "@/types/api/customers";
 
 // ============================================================================
 // Customer API
