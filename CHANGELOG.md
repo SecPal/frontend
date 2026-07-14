@@ -12,18 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- Added optional VAT ID input, editing, API payload support, and detail-page
-  display for customers.
-- Added synchronized customer API type aliases for `legal_entity_id` and a
-  dedicated customer Legal Entity lookup client that only reads
-  `/v1/customers/legal-entities` and validates the minimal `id`/`name`
-  response shape.
-- Integrated the dedicated customer Legal Entity lookup into the customer
-  create form with Radix selection, single-entity preselection, empty-state
-  blocking, and required `legal_entity_id` submit coverage (US-007).
-
 ### Fixed
 
 - Added retry recovery for failed customer Legal Entity lookups and normalized
@@ -109,6 +97,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added optional VAT ID input, editing, API payload support, and detail-page
+  display for customers.
+- Added synchronized customer API type aliases for `legal_entity_id` and a
+  dedicated customer Legal Entity lookup client that only reads
+  `/v1/customers/legal-entities` and validates the minimal `id`/`name`
+  response shape.
+- Integrated the dedicated customer Legal Entity lookup into the customer
+  create form with Radix selection, single-entity preselection, empty-state
+  blocking, and required `legal_entity_id` submit coverage (US-007).
 - Required customers to carry a Legal Entity UUID in frontend customer create
   payloads, added the narrow customer Legal Entity lookup client, and wired the
   create form to load and submit only that minimal lookup shape (US-002).

@@ -41,6 +41,18 @@ function renderWithRouter(component: React.ReactElement) {
   );
 }
 
+async function renderCustomerCreate() {
+  const rendered = renderWithRouter(<CustomerCreate />);
+
+  await waitFor(() => {
+    expect(
+      screen.getByRole("combobox", { name: /legal entity/i })
+    ).not.toBeDisabled();
+  });
+
+  return rendered;
+}
+
 const legalEntities = [
   {
     id: "550e8400-e29b-41d4-a716-446655440001",
@@ -76,8 +88,8 @@ describe("CustomerCreate", () => {
     ).mockResolvedValue(legalEntities);
   });
 
-  it("renders the form with all required fields", () => {
-    renderWithRouter(<CustomerCreate />);
+  it("renders the form with all required fields", async () => {
+    await renderCustomerCreate();
 
     expect(screen.getByLabelText(/customer name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/vat id/i)).toBeInTheDocument();
@@ -97,8 +109,8 @@ describe("CustomerCreate", () => {
     expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
   });
 
-  it("renders legal entity as the first form field", () => {
-    renderWithRouter(<CustomerCreate />);
+  it("renders legal entity as the first form field", async () => {
+    await renderCustomerCreate();
 
     const legalEntityField = screen.getByRole("combobox", {
       name: /legal entity/i,
@@ -111,8 +123,8 @@ describe("CustomerCreate", () => {
     ).toBeTruthy();
   });
 
-  it("renders the VAT ID field directly before country", () => {
-    renderWithRouter(<CustomerCreate />);
+  it("renders the VAT ID field directly before country", async () => {
+    await renderCustomerCreate();
 
     const labels = Array.from(document.querySelectorAll("label")).map((label) =>
       label.textContent?.replace(/\*/g, "").trim()
@@ -167,16 +179,16 @@ describe("CustomerCreate", () => {
     });
   });
 
-  it("renders contact fields", () => {
-    renderWithRouter(<CustomerCreate />);
+  it("renders contact fields", async () => {
+    await renderCustomerCreate();
 
     expect(screen.getByLabelText(/^name$/i)).toBeInTheDocument(); // Contact name
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/phone/i)).toBeInTheDocument();
   });
 
-  it("renders notes and active checkbox", () => {
-    renderWithRouter(<CustomerCreate />);
+  it("renders notes and active checkbox", async () => {
+    await renderCustomerCreate();
 
     expect(screen.getByLabelText(/notes/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/active/i)).toBeInTheDocument();
