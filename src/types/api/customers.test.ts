@@ -23,8 +23,6 @@ describe("generated customer API types", () => {
       legal_entity_id: "550e8400-e29b-41d4-a716-446655440002",
     };
 
-    expect(update.legal_entity_id).toBe(
-      "550e8400-e29b-41d4-a716-446655440002"
-    );
+    expect(update.legal_entity_id).toBe("550e8400-e29b-41d4-a716-446655440002");
   });
 });
