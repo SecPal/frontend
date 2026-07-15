@@ -700,12 +700,21 @@ describe("Build Configuration and Source Verification", () => {
     );
   });
 
-  it("pins markdownlint-cli to the governed repo version", () => {
+  it("keeps declared Node support compatible with the Markdown toolchain", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
-      devDependencies?: Record<string, string>;
+      engines: { node: string };
     };
+    const packageLock = JSON.parse(readRepoFile("package-lock.json")) as {
+      packages: Record<string, { engines?: { node?: string } } | undefined>;
+    };
+    const markdownToolchainNodeRange =
+      packageLock.packages["node_modules/ini"]?.engines?.node;
 
-    expect(packageJson.devDependencies?.["markdownlint-cli"]).toBe("0.49.0");
+    expect(markdownToolchainNodeRange).toBeDefined();
+    expect(packageJson.engines.node).toBe(markdownToolchainNodeRange);
+    expect(readRepoFile("README.md")).toContain(
+      `Node.js \`${markdownToolchainNodeRange}\``
+    );
   });
 
   it("keeps PWA shortcuts limited to live routes", () => {

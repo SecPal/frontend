@@ -12,8 +12,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Raised the Node.js requirement to `^22.22.2 || ^24.15.0 || >=26.0.0`,
+  matching the effective requirement of the updated Markdown toolchain.
+
 ### Fixed
 
+- Derived the preflight Markdown linter version from `package.json`, keeping
+  dependency updates and local linting in sync without a duplicate version pin.
 - Added retry recovery for failed customer Legal Entity lookups and normalized
   malformed lookup envelopes to the documented validation error.
 - Added regression coverage for updating and clearing customer VAT IDs.
