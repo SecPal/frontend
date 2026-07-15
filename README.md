@@ -226,7 +226,7 @@ existing frontend primitive can express the interaction.
 
 ## 📋 Prerequisites
 
-- Node.js `^22.19.0 || >=24.0.0` (Node 22.19+ or 24+; `.nvmrc` pins major `22`; CI uses Node 22)
+- Node.js `^22.22.2 || ^24.15.0 || >=26.0.0` (`.nvmrc` pins major `22`; CI uses Node 22)
 - npm >= 10.0.0
 - Git with GPG signing configured
 

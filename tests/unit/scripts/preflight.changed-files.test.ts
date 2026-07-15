@@ -18,6 +18,11 @@ const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../../.."
 );
+const markdownlintCliVersion = (
+  JSON.parse(readFileSync(path.join(repoRoot, "package.json"), "utf8")) as {
+    devDependencies: Record<string, string>;
+  }
+).devDependencies["markdownlint-cli"];
 
 function run(
   command: string,
@@ -61,13 +66,23 @@ exit 0
   return binDir;
 }
 
-function prepareScript(tempDir: string) {
+function prepareScript(
+  tempDir: string,
+  markdownlintVersion = markdownlintCliVersion
+) {
   const scriptsDir = path.join(tempDir, "scripts");
   mkdirSync(scriptsDir, { recursive: true });
   const preflightScriptPath = path.join(scriptsDir, "preflight.sh");
   writeFileSync(
     preflightScriptPath,
     readFileSync(path.join(repoRoot, "scripts", "preflight.sh"), "utf8")
+  );
+  writeFileSync(
+    path.join(tempDir, "package.json"),
+    JSON.stringify({
+      devDependencies: { "markdownlint-cli": markdownlintVersion },
+    }),
+    "utf8"
   );
   run("chmod", ["+x", preflightScriptPath], tempDir);
   return preflightScriptPath;
@@ -78,7 +93,7 @@ describe("preflight changed-file detection", () => {
     const tempDir = mkdtempSync(path.join(os.tmpdir(), "secpal-preflight-"));
 
     try {
-      const preflightScriptPath = prepareScript(tempDir);
+      const preflightScriptPath = prepareScript(tempDir, "9.9.9");
       const binDir = installMockBinaries(tempDir);
 
       const npxLogPath = path.join(tempDir, "npx.log");
@@ -115,7 +130,7 @@ describe("preflight changed-file detection", () => {
 
       const npxLog = readFileSync(npxLogPath, "utf8");
       expect(npxLog).toContain("prettier");
-      expect(npxLog).toContain("markdownlint-cli@0.49.0");
+      expect(npxLog).toContain("markdownlint-cli@9.9.9");
       expect(preflight.stdout + preflight.stderr).not.toContain(
         "No markdown files changed, skipping markdownlint"
       );
@@ -178,7 +193,7 @@ describe("preflight changed-file detection", () => {
 
       const npxLog = readFileSync(npxLogPath, "utf8");
       expect(npxLog).toContain("prettier");
-      expect(npxLog).toContain("markdownlint-cli@0.49.0");
+      expect(npxLog).toContain(`markdownlint-cli@${markdownlintCliVersion}`);
       expect(preflight.stdout + preflight.stderr).not.toContain(
         "No markdown files changed, skipping markdownlint"
       );
@@ -253,7 +268,7 @@ describe("preflight changed-file detection", () => {
       expect(preflight.status, preflight.stderr).toBe(0);
 
       const npxLog = readFileSync(npxLogPath, "utf8");
-      expect(npxLog).toContain("markdownlint-cli@0.49.0");
+      expect(npxLog).toContain(`markdownlint-cli@${markdownlintCliVersion}`);
       expect(preflight.stdout + preflight.stderr).not.toContain(
         "No markdown files changed, skipping markdownlint"
       );

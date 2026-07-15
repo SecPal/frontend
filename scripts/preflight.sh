@@ -69,7 +69,15 @@ if command -v npx >/dev/null 2>&1; then
 
   # Only run markdownlint if .md files changed
   if echo "$CHANGED_FILES" | grep -q '\.md$'; then
-    npx --yes --package markdownlint-cli@0.49.0 markdownlint --config .markdownlint.json --dot '**/*.md' --ignore node_modules --ignore vendor --ignore storage --ignore build --ignore coverage --ignore dist --ignore .context --ignore .git || FORMAT_EXIT=1
+    MARKDOWNLINT_CLI_VERSION="$(node -p '
+      const packageJson = require("./package.json");
+      const version = packageJson.devDependencies?.["markdownlint-cli"];
+      if (typeof version !== "string" || !/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version)) {
+        process.exit(1);
+      }
+      version;
+    ')"
+    npx --yes --package "markdownlint-cli@${MARKDOWNLINT_CLI_VERSION}" markdownlint --config .markdownlint.json --dot '**/*.md' --ignore node_modules --ignore vendor --ignore storage --ignore build --ignore coverage --ignore dist --ignore .context --ignore .git || FORMAT_EXIT=1
   else
     echo "ℹ️  No markdown files changed, skipping markdownlint"
   fi
