@@ -80,7 +80,7 @@
     "lighthouse:ci": "npx --yes @lhci/cli@0.15.1 autorun --config=lighthouserc.cjs"
   },
   "dependencies": {
-    "@capacitor/core": "^8.4.1",
+    "@capacitor/core": "^8.4.2",
     "@lingui/core": "^6.5.0",
     "@lingui/react": "^6.5.0",
     "@radix-ui/react-avatar": "^1.2.2",
