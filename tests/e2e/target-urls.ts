@@ -189,9 +189,7 @@ function isLocalPlaywrightHost(hostname: string): boolean {
     hostname === "127.0.0.1" ||
     hostname.startsWith("127.") ||
     hostname === "::1" ||
-    hostname === "[::1]" ||
-    hostname === "ddev.site" ||
-    hostname.endsWith(".ddev.site")
+    hostname === "[::1]"
   );
 }
 

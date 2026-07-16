@@ -39,7 +39,7 @@ describe("vite config dev proxy", () => {
     });
   });
 
-  it("keeps the DDEV proxy defaults when no API base URL is configured", async () => {
+  it("uses the native Laravel server as the default proxy target when no API base URL is configured", async () => {
     const { buildDevServerProxyConfig } = await import("../vite.config");
 
     expect(buildDevServerProxyConfig("")).toEqual({
@@ -48,31 +48,23 @@ describe("vite config dev proxy", () => {
         "/health": {
           changeOrigin: true,
           secure: false,
-          target: "https://secpal-api.ddev.site",
+          target: "http://localhost:8000",
         },
         "/sanctum": {
           changeOrigin: true,
-          headers: {
-            Origin: "http://localhost:5173",
-            Referer: "http://localhost:5173/",
-          },
           secure: false,
-          target: "https://secpal-api.ddev.site",
+          target: "http://localhost:8000",
         },
         "/v1": {
           changeOrigin: true,
-          headers: {
-            Origin: "http://localhost:5173",
-            Referer: "http://localhost:5173/",
-          },
           secure: false,
-          target: "https://secpal-api.ddev.site",
+          target: "http://localhost:8000",
         },
       },
     });
   });
 
-  it("keeps the DDEV proxy defaults when the API base URL env is missing", async () => {
+  it("keeps the native Laravel proxy defaults when the API base URL env is missing", async () => {
     const { buildDevServerProxyConfig } = await import("../vite.config");
 
     expect(buildDevServerProxyConfig(undefined)).toEqual(

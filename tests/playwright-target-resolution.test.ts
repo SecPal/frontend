@@ -163,23 +163,20 @@ describe("playwright target resolution", () => {
     expect(supportsAndroidProvisioningE2E()).toBe(false);
   });
 
-  it.each(["https://localhost:5173", "https://frontend.ddev.site"] as const)(
-    "keeps local HTTPS target %s on the default Android surface",
-    async (baseUrl) => {
-      vi.stubEnv("PLAYWRIGHT_BASE_URL", baseUrl);
-      vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
-      vi.stubEnv("POLYSCOPE_WORKSPACE", "");
-      vi.stubEnv("PLAYWRIGHT_APP_SURFACE", "");
-      vi.stubEnv("CI", "");
-      mockNonPolyscopeCwd();
+  it("keeps local HTTPS localhost targets on the default Android surface", async () => {
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://localhost:5173");
+    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
+    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+    vi.stubEnv("PLAYWRIGHT_APP_SURFACE", "");
+    vi.stubEnv("CI", "");
+    mockNonPolyscopeCwd();
 
-      const { resolvePlaywrightAppSurface, supportsAndroidProvisioningE2E } =
-        await import("./e2e/target-urls.ts");
+    const { resolvePlaywrightAppSurface, supportsAndroidProvisioningE2E } =
+      await import("./e2e/target-urls.ts");
 
-      expect(resolvePlaywrightAppSurface()).toBe("android-native");
-      expect(supportsAndroidProvisioningE2E()).toBe(true);
-    }
-  );
+    expect(resolvePlaywrightAppSurface()).toBe("android-native");
+    expect(supportsAndroidProvisioningE2E()).toBe(true);
+  });
 
   it("honors an explicit Android Playwright app surface override on workspace previews", async () => {
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");

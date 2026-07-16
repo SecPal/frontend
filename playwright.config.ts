@@ -131,10 +131,9 @@ const LOCAL_E2E_BASE_URL =
 /**
  * Detect if we're running against a server that Playwright should NOT start
  * locally. `isRemotePlaywrightTarget` matches any `https://` target, which
- * covers both the Polyscope workspace preview (the primary "live" surface)
- * and local-HTTPS targets (e.g. `*.ddev.site`); both are served by an
- * external process that Playwright must not duplicate with its own
- * `webServer`.
+ * includes Polyscope workspace previews and explicitly configured local HTTPS
+ * targets; each is served by an external process that Playwright must not
+ * duplicate with its own `webServer`.
  */
 const isRemoteTarget = isRemotePlaywrightTarget(BASE_URL);
 const configuredAppSurface = resolvePlaywrightAppSurface();

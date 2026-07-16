@@ -59,9 +59,7 @@ function isLocalPlaywrightHost(hostname: string): boolean {
     hostname === "127.0.0.1" ||
     hostname.startsWith("127.") ||
     hostname === "::1" ||
-    hostname === "[::1]" ||
-    hostname === "ddev.site" ||
-    hostname.endsWith(".ddev.site")
+    hostname === "[::1]"
   );
 }
 
@@ -152,9 +150,8 @@ export function getAuthStateCachePath(
   let targetScope: string;
 
   try {
-    // Derive the scope from the URL host so different origins (ports, hostnames)
-    // always produce distinct cache files, including local-HTTPS targets such as
-    // *.ddev.site that isRemoteE2ETarget intentionally classifies as non-remote.
+    // Derive the scope from the URL host so different ports and hostnames
+    // always produce distinct cache files.
     targetScope = new URL(resolved).host;
   } catch {
     targetScope = isRemoteE2ETarget(resolved) ? "remote" : "local";
