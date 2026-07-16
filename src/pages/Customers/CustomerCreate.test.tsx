@@ -416,7 +416,7 @@ describe("CustomerCreate", () => {
         ).toHaveBeenCalledTimes(2);
       });
       await act(async () => {
-        resolveRefresh([firstLegalEntity, replacementLegalEntity]);
+        resolveRefresh([replacementLegalEntity]);
         await refreshPromise;
       });
       await waitFor(() => {

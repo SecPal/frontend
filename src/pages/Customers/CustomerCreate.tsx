@@ -184,14 +184,17 @@ export default function CustomerCreate() {
     }));
   }
 
-  const selectedLegalEntityId =
-    legalEntities.length === 1
+  const hasExplicitLegalEntitySelection =
+    formData.legal_entity_id.trim().length > 0;
+  const selectedLegalEntityId = hasExplicitLegalEntitySelection
+    ? legalEntities.some(
+        (legalEntity) => legalEntity.id === formData.legal_entity_id
+      )
+      ? formData.legal_entity_id
+      : ""
+    : legalEntities.length === 1
       ? legalEntities[0]!.id
-      : legalEntities.some(
-            (legalEntity) => legalEntity.id === formData.legal_entity_id
-          )
-        ? formData.legal_entity_id
-        : "";
+      : "";
 
   function validateForm(): CustomerFormErrors {
     const validationErrors: CustomerFormErrors = {};
