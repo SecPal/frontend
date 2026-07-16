@@ -9,6 +9,7 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import CustomersPage from "./CustomersPage";
 import * as customersApi from "../../services/customersApi";
+import * as customerLegalEntitiesApi from "../../services/customerLegalEntitiesApi";
 import type { Customer, PaginatedResponse } from "../../types/customers";
 
 const { mockUseUserCapabilities } = vi.hoisted(() => ({
@@ -17,6 +18,7 @@ const { mockUseUserCapabilities } = vi.hoisted(() => ({
 
 // Mock the customers API
 vi.mock("../../services/customersApi");
+vi.mock("../../services/customerLegalEntitiesApi");
 vi.mock("../../hooks/useUserCapabilities", () => ({
   useUserCapabilities: mockUseUserCapabilities,
 }));
@@ -106,6 +108,14 @@ describe("CustomersPage", () => {
     vi.clearAllMocks();
     setViewportMatchesDesktop(true);
     vi.mocked(customersApi.listCustomers).mockResolvedValue(mockResponse);
+    vi.mocked(
+      customerLegalEntitiesApi.listCustomerLegalEntities
+    ).mockResolvedValue([
+      {
+        id: "550e8400-e29b-41d4-a716-446655440001",
+        name: "SecPal GmbH",
+      },
+    ]);
     mockUseUserCapabilities.mockReturnValue({
       actions: {
         customers: { create: true, update: true, delete: true },
@@ -122,9 +132,55 @@ describe("CustomersPage", () => {
       })
     ).toBeInTheDocument();
     expect(screen.getByText("C001")).toBeInTheDocument();
+    expect(screen.getAllByText("SecPal GmbH").length).toBeGreaterThan(0);
+  });
+
+  it("shows only the visible establishment relationships and no contact fields", async () => {
+    vi.mocked(customersApi.listCustomers).mockResolvedValue({
+      ...mockResponse,
+      data: [
+        {
+          ...mockCustomers[0]!,
+          establishment_relationships: [
+            {
+              id: "relationship-visible",
+              customer_id: "cust-1",
+              establishment_id: "establishment-visible",
+              establishment: {
+                id: "establishment-visible",
+                name: "Visible Berlin Establishment",
+              },
+              contact: {
+                name: "Relationship Contact Must Stay Hidden",
+                email: "hidden-in-list@secpal.dev",
+                phone: "+49 30 1234",
+              },
+              notes: "Relationship note must stay hidden",
+              created_at: "2026-07-16T00:00:00Z",
+              updated_at: "2026-07-16T00:00:00Z",
+            },
+          ],
+        },
+      ],
+    });
+
+    renderWithProviders();
+
     expect(
-      screen.getAllByText(mockCustomers[0]!.legal_entity_id).length
-    ).toBeGreaterThan(0);
+      await screen.findByText("Visible Berlin Establishment")
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Hidden Munich Establishment")
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Relationship Contact Must Stay Hidden")
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("hidden-in-list@secpal.dev")
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Relationship note must stay hidden")
+    ).not.toBeInTheDocument();
   });
 
   it("renders customers as mobile cards on narrow viewports", async () => {

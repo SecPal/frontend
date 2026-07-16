@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Separated shared customer master data from Establishment-specific contacts
+  and notes across create, edit, detail, and list views; added authorized
+  relationship creation, Legal Entity names, and visible Establishment
+  summaries.
 - Regenerated Customer, Establishment relationship, and Site frontend contract
   types; added strict Establishment lookup and relationship API clients; and
   replaced Customer/Site organization-unit and global relationship data with

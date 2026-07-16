@@ -600,6 +600,90 @@ describe("CustomerCreate", () => {
     ).toHaveBeenCalledTimes(2);
   });
 
+  it("does not request establishments before a legal entity is selected", async () => {
+    await renderCustomerCreate();
+
+    expect(
+      customersApi.listCustomerEstablishmentOptions
+    ).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("combobox", { name: /establishment/i })
+    ).toBeDisabled();
+  });
+
+  it("resets the relationship fields and loads only the new legal entity establishments", async () => {
+    const user = userEvent.setup();
+    vi.mocked(customersApi.listCustomerEstablishmentOptions)
+      .mockResolvedValueOnce([
+        { id: "establishment-1", name: "Berlin Establishment" },
+      ])
+      .mockResolvedValueOnce([
+        { id: "establishment-2", name: "Hamburg Establishment" },
+      ]);
+
+    renderWithRouter(<CustomerCreate />);
+    await chooseFirstLegalEntity();
+
+    await user.type(screen.getByRole("textbox", { name: /^name$/i }), "Ada");
+    await user.type(
+      screen.getByRole("textbox", { name: /email/i }),
+      "ada@secpal.dev"
+    );
+    await user.type(screen.getByLabelText(/notes/i), "Berlin only");
+
+    const legalEntityTrigger = screen.getByRole("combobox", {
+      name: /legal entity/i,
+    });
+    await user.click(legalEntityTrigger);
+    await user.click(
+      await screen.findByRole("option", { name: secondLegalEntity.name })
+    );
+
+    expect(screen.getByRole("textbox", { name: /^name$/i })).toHaveValue("");
+    expect(screen.getByRole("textbox", { name: /email/i })).toHaveValue("");
+    expect(screen.getByLabelText(/notes/i)).toHaveValue("");
+    await waitFor(() => {
+      expect(
+        customersApi.listCustomerEstablishmentOptions
+      ).toHaveBeenLastCalledWith(secondLegalEntity.id);
+    });
+    const establishmentTrigger = screen.getByRole("combobox", {
+      name: /establishment/i,
+    });
+    expect(establishmentTrigger).toHaveTextContent("Select establishment...");
+    await user.click(establishmentTrigger);
+    expect(
+      await screen.findByRole("option", { name: "Hamburg Establishment" })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: "Berlin Establishment" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows an establishment lookup error without retaining relationship input", async () => {
+    const user = userEvent.setup();
+    vi.mocked(customersApi.listCustomerEstablishmentOptions).mockRejectedValue(
+      new Error("Establishment lookup failed")
+    );
+
+    renderWithRouter(<CustomerCreate />);
+    const legalEntityTrigger = await screen.findByRole("combobox", {
+      name: /legal entity/i,
+    });
+    await user.click(legalEntityTrigger);
+    await user.click(
+      await screen.findByRole("option", { name: firstLegalEntity.name })
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Establishment lookup failed"
+    );
+    expect(
+      screen.getByRole("combobox", { name: /establishment/i })
+    ).toBeDisabled();
+    expect(customersApi.createCustomer).not.toHaveBeenCalled();
+  });
+
   it("does not render unauthorized legal entities in visible or hidden DOM", async () => {
     const unauthorizedName = "Foreign Tenant Holding GmbH";
     const { container } = renderWithRouter(<CustomerCreate />);

@@ -76,6 +76,10 @@ msgstr "E-Mail des Notfallkontakts"
 msgid "Controls whether this unit is administratively active."
 msgstr "Legt fest, ob diese Einheit administrativ aktiv ist."
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Relationship Email"
+msgstr "E-Mail der Beziehung"
+
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
@@ -259,6 +263,10 @@ msgstr "Frühere Wohnorte"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Employee not found"
 msgstr "Mitarbeiter nicht gefunden"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Establishment relationships"
+msgstr "Betriebsstättenbeziehungen"
 
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
@@ -1232,6 +1240,7 @@ msgid "This session was revoked and can no longer be used for device setup."
 msgstr "Diese Sitzung wurde widerrufen und kann nicht mehr für die Geräteeinrichtung verwendet werden."
 
 #: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Failed to load establishments"
@@ -1323,6 +1332,10 @@ msgstr "E-Mail-Adresse bearbeiten"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "BWR Status"
 msgstr "BWR-Status"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Add relationship"
+msgstr "Beziehung hinzufügen"
 
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -1939,6 +1952,7 @@ msgid "Contact"
 msgstr "Kontakt"
 
 #: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Select establishment..."
@@ -2007,6 +2021,10 @@ msgstr "Wiederherstellungscode"
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "All logs"
 msgstr "Alle Protokolle"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Relationship Notes"
+msgstr "Notizen der Beziehung"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Processing..."
@@ -2835,6 +2853,10 @@ msgstr "Führungsebene ist erforderlich, wenn es eine Führungsposition ist"
 msgid "Description must be at most 1000 characters"
 msgstr "Die Beschreibung darf höchstens 1000 Zeichen lang sein"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Failed to add relationship"
+msgstr "Beziehung konnte nicht hinzugefügt werden"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Revocation reason is required."
 msgstr "Ein Widerrufsgrund ist erforderlich."
@@ -2916,6 +2938,10 @@ msgstr "Verursacher"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Try Again"
 msgstr "Erneut versuchen"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Adding relationship..."
+msgstr "Beziehung wird hinzugefügt..."
 
 #: src/components/RuntimeDiscoveryFlow.tsx
 msgid "Not sure which instance to use?"
@@ -3124,6 +3150,10 @@ msgstr "Österreich"
 msgid "Please enter a valid emergency contact email."
 msgstr "Bitte geben Sie eine gültige E-Mail-Adresse für den Notfallkontakt ein."
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Customer master data"
+msgstr "Kundenstammdaten"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please upload at least one residence title file before continuing."
 msgstr "Bitte laden Sie mindestens eine Datei zum Aufenthaltstitel hoch, bevor Sie fortfahren."
@@ -3197,6 +3227,10 @@ msgstr "Aufenthaltstitel gültig bis"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Save"
 msgstr "Speichern"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Relationship Contact Name"
+msgstr "Kontaktname der Beziehung"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No postal address stored yet."
@@ -3370,6 +3404,10 @@ msgstr "Über SecPal"
 #: src/components/UpdatePrompt.tsx
 msgid "Update application now"
 msgstr "Anwendung jetzt aktualisieren"
+
+#: src/pages/Customers/CustomersPage.tsx
+msgid "Establishments"
+msgstr "Betriebsstätten"
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
@@ -3550,9 +3588,17 @@ msgstr "Beziehung"
 msgid "User menu"
 msgstr "Benutzermenü"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "New Establishment"
+msgstr "Neue Betriebsstätte"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Bitte laden Sie Ihren Personalausweis hoch (PDF, JPG, JPEG, PNG; max. 10 MB)."
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Relationship Phone"
+msgstr "Telefonnummer der Beziehung"
 
 #: src/components/LoginLegalMenu.tsx
 #: src/components/RuntimeDiscoveryFlow.tsx

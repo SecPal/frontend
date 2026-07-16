@@ -8,6 +8,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
@@ -17,8 +18,15 @@ import CustomerEdit from "./CustomerEdit";
 import * as customerLegalEntitiesApi from "../../services/customerLegalEntitiesApi";
 import * as customersApi from "../../services/customersApi";
 
+const { mockUseUserCapabilities } = vi.hoisted(() => ({
+  mockUseUserCapabilities: vi.fn(),
+}));
+
 vi.mock("../../services/customersApi");
 vi.mock("../../services/customerLegalEntitiesApi");
+vi.mock("../../hooks/useUserCapabilities", () => ({
+  useUserCapabilities: mockUseUserCapabilities,
+}));
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
@@ -73,6 +81,14 @@ describe("CustomerEdit", () => {
       },
     ]);
     window.history.pushState({}, "", "/customers/customer-123/edit");
+    mockUseUserCapabilities.mockReturnValue({
+      actions: {
+        customers: { create: true, update: true, delete: true },
+      },
+    });
+    vi.mocked(customersApi.listCustomerEstablishmentOptions).mockResolvedValue([
+      { id: "establishment-456", name: "Hamburg Establishment" },
+    ]);
   });
 
   it("loads and displays customer data", async () => {
@@ -91,7 +107,11 @@ describe("CustomerEdit", () => {
     expect(screen.getByLabelText(/city/i)).toHaveValue("Old City");
     expect(screen.getByLabelText(/postal code/i)).toHaveValue("54321");
     expect(screen.getByLabelText(/country/i)).toHaveValue("DE");
-    expect(screen.queryByLabelText(/notes/i)).not.toBeInTheDocument();
+    expect(
+      within(
+        screen.getByRole("form", { name: /customer master data/i })
+      ).queryByLabelText(/notes/i)
+    ).not.toBeInTheDocument();
     expect(screen.getByLabelText(/vat id/i)).toHaveValue("DE123456789");
   });
 
@@ -255,9 +275,108 @@ describe("CustomerEdit", () => {
 
     await screen.findByLabelText(/customer name/i);
 
-    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/phone/i)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/notes/i)).not.toBeInTheDocument();
+    const masterDataForm = screen.getByRole("form", {
+      name: /customer master data/i,
+    });
+    expect(
+      within(masterDataForm).queryByLabelText(/email/i)
+    ).not.toBeInTheDocument();
+    expect(
+      within(masterDataForm).queryByLabelText(/phone/i)
+    ).not.toBeInTheDocument();
+    expect(
+      within(masterDataForm).queryByLabelText(/notes/i)
+    ).not.toBeInTheDocument();
+  });
+
+  it("adds a separate establishment relationship when update permission is present", async () => {
+    const user = userEvent.setup();
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+    vi.mocked(
+      customersApi.createCustomerEstablishmentRelationship
+    ).mockResolvedValue({
+      id: "relationship-456",
+      customer_id: mockCustomer.id,
+      establishment_id: "establishment-456",
+      establishment: {
+        id: "establishment-456",
+        name: "Hamburg Establishment",
+      },
+      contact: {
+        name: "Ada Lovelace",
+        email: "ada@secpal.dev",
+        phone: null,
+      },
+      notes: "Hamburg relationship",
+      created_at: "2026-07-16T00:00:00Z",
+      updated_at: "2026-07-16T00:00:00Z",
+    });
+
+    renderWithRouter();
+
+    const addButton = await screen.findByRole("button", {
+      name: /add relationship/i,
+    });
+    expect(customersApi.listCustomerEstablishmentOptions).toHaveBeenCalledWith(
+      mockCustomer.legal_entity_id
+    );
+    await user.click(
+      screen.getByRole("combobox", { name: /new establishment/i })
+    );
+    await user.click(
+      await screen.findByRole("option", { name: "Hamburg Establishment" })
+    );
+    await user.type(
+      screen.getByLabelText(/relationship contact name/i),
+      "Ada Lovelace"
+    );
+    await user.type(
+      screen.getByLabelText(/relationship email/i),
+      "ada@secpal.dev"
+    );
+    await user.type(
+      screen.getByLabelText(/relationship notes/i),
+      "Hamburg relationship"
+    );
+    await user.click(addButton);
+
+    await waitFor(() => {
+      expect(
+        customersApi.createCustomerEstablishmentRelationship
+      ).toHaveBeenCalledWith(mockCustomer.id, {
+        establishment_id: "establishment-456",
+        contact: {
+          name: "Ada Lovelace",
+          email: "ada@secpal.dev",
+        },
+        notes: "Hamburg relationship",
+      });
+    });
+    expect(
+      await screen.findByText("Hamburg Establishment")
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/customer name/i)).toHaveValue(
+      "Existing Customer"
+    );
+  });
+
+  it("does not offer relationship creation without update permission", async () => {
+    mockUseUserCapabilities.mockReturnValue({
+      actions: {
+        customers: { create: false, update: false, delete: false },
+      },
+    });
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+
+    renderWithRouter();
+
+    await screen.findByLabelText(/customer name/i);
+    expect(
+      screen.queryByRole("button", { name: /add relationship/i })
+    ).not.toBeInTheDocument();
+    expect(
+      customersApi.listCustomerEstablishmentOptions
+    ).not.toHaveBeenCalled();
   });
 
   it("updates customer with modified data", async () => {

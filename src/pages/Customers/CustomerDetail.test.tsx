@@ -225,6 +225,47 @@ describe("CustomerDetail", () => {
     });
   });
 
+  it("shows shared master data once and each visible establishment with its own relationship data", async () => {
+    vi.mocked(customersApi.getCustomer).mockResolvedValue({
+      ...mockCustomer,
+      establishment_relationships: [
+        ...mockCustomer.establishment_relationships,
+        {
+          id: "relationship-456",
+          customer_id: mockCustomer.id,
+          establishment_id: "establishment-456",
+          establishment: {
+            id: "establishment-456",
+            name: "Berlin Establishment",
+          },
+          contact: {
+            name: "Berlin Contact",
+            email: "berlin@test-customer.de",
+            phone: "+49 30 12345678",
+          },
+          notes: "Berlin-only note",
+          created_at: "2026-07-16T00:00:00Z",
+          updated_at: "2026-07-16T00:00:00Z",
+        },
+      ],
+    });
+
+    renderWithRouter();
+
+    expect(
+      (await screen.findAllByText("Berlin Establishment")).length
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByText("Munich Establishment").length).toBeGreaterThan(
+      0
+    );
+    expect(screen.getByText("Max Mustermann")).toBeInTheDocument();
+    expect(screen.getByText("Important VIP customer")).toBeInTheDocument();
+    expect(screen.getByText("Berlin Contact")).toBeInTheDocument();
+    expect(screen.getByText("Berlin-only note")).toBeInTheDocument();
+    expect(screen.getAllByText("Billing Address")).toHaveLength(1);
+    expect(screen.getAllByText("Teststrasse 42")).toHaveLength(1);
+  });
+
   it("displays active status badge", async () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 

@@ -23,6 +23,7 @@ import {
 } from "@/ui/select";
 import { Skeleton } from "@/ui/skeleton";
 import { listCustomers } from "../../services/customersApi";
+import { listCustomerLegalEntities } from "../../services/customerLegalEntitiesApi";
 import type { Customer } from "@/types/api/customers";
 import type { CustomerFilters } from "../../types/customers";
 import {
@@ -58,11 +59,19 @@ function readUseDesktopTable(): boolean {
   return window.matchMedia(CUSTOMERS_DESKTOP_MEDIA_QUERY).matches;
 }
 
-function getLegalEntitySummary(customer: Customer): string {
-  return typeof customer.legal_entity_id === "string" &&
-    customer.legal_entity_id.trim().length > 0
-    ? customer.legal_entity_id
-    : "—";
+function getLegalEntitySummary(
+  customer: Customer,
+  legalEntityNames: ReadonlyMap<string, string>
+): string {
+  return legalEntityNames.get(customer.legal_entity_id) ?? "—";
+}
+
+function getEstablishmentSummary(customer: Customer): string {
+  return (
+    customer.establishment_relationships
+      .map((relationship) => relationship.establishment.name)
+      .join(", ") || "—"
+  );
 }
 
 function CustomerTableSkeletonRows({
@@ -99,6 +108,9 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [legalEntityNames, setLegalEntityNames] = useState<
+    ReadonlyMap<string, string>
+  >(new Map());
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -131,14 +143,22 @@ export default function CustomersPage() {
   useEffect(() => {
     let active = true;
 
-    void listCustomers(filters)
-      .then((response) => {
+    void Promise.all([listCustomers(filters), listCustomerLegalEntities()])
+      .then(([response, legalEntities]) => {
         if (!active) {
           return;
         }
 
         setCustomers(response.data);
         setPagination(response.meta);
+        setLegalEntityNames(
+          new Map(
+            legalEntities.map((legalEntity) => [
+              legalEntity.id,
+              legalEntity.name,
+            ])
+          )
+        );
         setError(null);
       })
       .catch((err) => {
@@ -266,6 +286,9 @@ export default function CustomersPage() {
                     <Trans>Legal Entity</Trans>
                   </TableHeader>
                   <TableHeader>
+                    <Trans>Establishments</Trans>
+                  </TableHeader>
+                  <TableHeader>
                     <Trans>Status</Trans>
                   </TableHeader>
                   <TableHeader>
@@ -275,7 +298,7 @@ export default function CustomersPage() {
               </TableHead>
               <TableBody>
                 {loading && customers.length === 0 ? (
-                  <CustomerTableSkeletonRows columns={5} rows={5} />
+                  <CustomerTableSkeletonRows columns={6} rows={5} />
                 ) : null}
 
                 {customers.map((customer) => (
@@ -285,7 +308,10 @@ export default function CustomersPage() {
                     </TableCell>
                     <TableCell>{customer.name}</TableCell>
                     <TableCell className="text-muted-foreground break-all">
-                      {getLegalEntitySummary(customer)}
+                      {getLegalEntitySummary(customer, legalEntityNames)}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {getEstablishmentSummary(customer)}
                     </TableCell>
                     <TableCell>
                       <StatusBadge color={customer.is_active ? "lime" : "zinc"}>
@@ -307,7 +333,7 @@ export default function CustomersPage() {
 
                 {!loading && customers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-12 text-center">
+                    <TableCell colSpan={6} className="py-12 text-center">
                       <PageText className="text-muted-foreground">
                         <Trans>No customers found</Trans>
                       </PageText>
@@ -363,7 +389,15 @@ export default function CustomersPage() {
                       <Trans>Legal Entity</Trans>
                     </p>
                     <p className="text-foreground break-all">
-                      {getLegalEntitySummary(customer)}
+                      {getLegalEntitySummary(customer, legalEntityNames)}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">
+                      <Trans>Establishments</Trans>
+                    </p>
+                    <p className="text-foreground break-words">
+                      {getEstablishmentSummary(customer)}
                     </p>
                   </div>
                   <div className="col-span-2">

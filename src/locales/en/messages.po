@@ -76,6 +76,10 @@ msgstr "Emergency Contact Email"
 msgid "Controls whether this unit is administratively active."
 msgstr "Controls whether this unit is administratively active."
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Relationship Email"
+msgstr "Relationship Email"
+
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
@@ -259,6 +263,10 @@ msgstr "Previous Residences"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Employee not found"
 msgstr "Employee not found"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Establishment relationships"
+msgstr "Establishment relationships"
 
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
@@ -1232,6 +1240,7 @@ msgid "This session was revoked and can no longer be used for device setup."
 msgstr "This session was revoked and can no longer be used for device setup."
 
 #: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Failed to load establishments"
@@ -1323,6 +1332,10 @@ msgstr "Edit Email"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "BWR Status"
 msgstr "BWR Status"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Add relationship"
+msgstr "Add relationship"
 
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -1939,6 +1952,7 @@ msgid "Contact"
 msgstr "Contact"
 
 #: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Select establishment..."
@@ -2007,6 +2021,10 @@ msgstr "Recovery code"
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "All logs"
 msgstr "All logs"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Relationship Notes"
+msgstr "Relationship Notes"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Processing..."
@@ -2835,6 +2853,10 @@ msgstr "Management level is required when leadership position is enabled"
 msgid "Description must be at most 1000 characters"
 msgstr "Description must be at most 1000 characters"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Failed to add relationship"
+msgstr "Failed to add relationship"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Revocation reason is required."
 msgstr "Revocation reason is required."
@@ -2916,6 +2938,10 @@ msgstr "Causer"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Try Again"
 msgstr "Try Again"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Adding relationship..."
+msgstr "Adding relationship..."
 
 #: src/components/RuntimeDiscoveryFlow.tsx
 msgid "Not sure which instance to use?"
@@ -3124,6 +3150,10 @@ msgstr "Austria"
 msgid "Please enter a valid emergency contact email."
 msgstr "Please enter a valid emergency contact email."
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Customer master data"
+msgstr "Customer master data"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please upload at least one residence title file before continuing."
 msgstr "Please upload at least one residence title file before continuing."
@@ -3197,6 +3227,10 @@ msgstr "Residence title valid until"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Save"
 msgstr "Save"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Relationship Contact Name"
+msgstr "Relationship Contact Name"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No postal address stored yet."
@@ -3370,6 +3404,10 @@ msgstr "About SecPal"
 #: src/components/UpdatePrompt.tsx
 msgid "Update application now"
 msgstr "Update application now"
+
+#: src/pages/Customers/CustomersPage.tsx
+msgid "Establishments"
+msgstr "Establishments"
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
@@ -3550,9 +3588,17 @@ msgstr "Relationship"
 msgid "User menu"
 msgstr "User menu"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "New Establishment"
+msgstr "New Establishment"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Relationship Phone"
+msgstr "Relationship Phone"
 
 #: src/components/LoginLegalMenu.tsx
 #: src/components/RuntimeDiscoveryFlow.tsx

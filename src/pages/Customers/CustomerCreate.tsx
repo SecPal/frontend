@@ -74,6 +74,9 @@ export default function CustomerCreate() {
     CustomerEstablishmentLookup[]
   >([]);
   const [loadingEstablishments, setLoadingEstablishments] = useState(false);
+  const [establishmentLookupError, setEstablishmentLookupError] = useState<
+    string | null
+  >(null);
   const [fieldErrors, setFieldErrors] = useState<CustomerFormErrors>({});
 
   const [formData, setFormData] = useState<CreateCustomerRequest>({
@@ -142,17 +145,12 @@ export default function CustomerCreate() {
       .then((options) => {
         if (!cancelled) {
           setEstablishments(options);
-          if (options.length === 1) {
-            setFormData((current) => ({
-              ...current,
-              establishment_id: options[0]!.id,
-            }));
-          }
         }
       })
       .catch((err) => {
         if (!cancelled) {
-          setSubmitError(
+          setEstablishments([]);
+          setEstablishmentLookupError(
             err instanceof Error
               ? err.message
               : _(msg`Failed to load establishments`)
@@ -181,12 +179,15 @@ export default function CustomerCreate() {
         return next;
       });
       setSubmitError(null);
+      setEstablishmentLookupError(null);
       setEstablishments([]);
-      setLoadingEstablishments(true);
+      setLoadingEstablishments(Boolean(value));
       setFormData((currentFormData) => ({
         ...currentFormData,
         legal_entity_id: String(value),
         establishment_id: "",
+        contact: { name: "", email: "", phone: "" },
+        notes: null,
       }));
       return;
     }
@@ -380,6 +381,7 @@ export default function CustomerCreate() {
     loading ||
     loadingLegalEntities ||
     loadingEstablishments ||
+    !!establishmentLookupError ||
     !hasLegalEntityOptions ||
     !!lookupError;
 
@@ -420,6 +422,14 @@ export default function CustomerCreate() {
         <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
           <AlertDescription className="text-destructive">
             {submitError}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {establishmentLookupError && (
+        <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+          <AlertDescription className="text-destructive">
+            {establishmentLookupError}
           </AlertDescription>
         </Alert>
       )}
@@ -477,7 +487,11 @@ export default function CustomerCreate() {
             >
               <SelectTrigger
                 id="customer-establishment"
-                disabled={!selectedLegalEntityId || loadingEstablishments}
+                disabled={
+                  !selectedLegalEntityId ||
+                  loadingEstablishments ||
+                  !!establishmentLookupError
+                }
                 aria-required="true"
                 aria-invalid={fieldErrors.establishment_id ? true : undefined}
                 aria-describedby={

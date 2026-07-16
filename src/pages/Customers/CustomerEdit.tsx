@@ -14,15 +14,24 @@ import { useLingui } from "@lingui/react";
 import { Button } from "@/ui/button";
 import { Checkbox } from "@/ui/checkbox";
 import { Input } from "@/ui/input";
+import { Textarea } from "@/ui/textarea";
 import { FormSkeleton } from "@/ui/loading";
-import { getCustomer, updateCustomer } from "../../services/customersApi";
+import {
+  createCustomerEstablishmentRelationship,
+  getCustomer,
+  listCustomerEstablishmentOptions,
+  updateCustomer,
+} from "../../services/customersApi";
 import { listCustomerLegalEntities } from "../../services/customerLegalEntitiesApi";
 import type {
   Address,
+  Contact,
   Customer,
+  CustomerEstablishmentLookup,
   CustomerLegalEntityLookup,
   UpdateCustomerRequest,
 } from "@/types/api/customers";
+import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import {
   Alert,
   AlertDescription,
@@ -53,6 +62,7 @@ export default function CustomerEdit() {
   const { _ } = useLingui();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const capabilities = useUserCapabilities();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +76,21 @@ export default function CustomerEdit() {
   >(null);
   const [legalEntityLookupAttempt, setLegalEntityLookupAttempt] = useState(0);
   const [selectedLegalEntityId, setSelectedLegalEntityId] = useState("");
+  const [establishments, setEstablishments] = useState<
+    CustomerEstablishmentLookup[]
+  >([]);
+  const [relationshipLookupError, setRelationshipLookupError] = useState<
+    string | null
+  >(null);
+  const [addingRelationship, setAddingRelationship] = useState(false);
+  const [relationshipError, setRelationshipError] = useState<string | null>(
+    null
+  );
+  const [relationshipDraft, setRelationshipDraft] = useState({
+    establishment_id: "",
+    contact: { name: "", email: "", phone: "" },
+    notes: "",
+  });
 
   const [formData, setFormData] = useState<UpdateCustomerRequest>({});
 
@@ -89,6 +114,14 @@ export default function CustomerEdit() {
       setCustomer(null);
       setFormData({});
       setSelectedLegalEntityId("");
+      setEstablishments([]);
+      setRelationshipLookupError(null);
+      setRelationshipError(null);
+      setRelationshipDraft({
+        establishment_id: "",
+        contact: { name: "", email: "", phone: "" },
+        notes: "",
+      });
       setLoading(true);
       setError(null);
       try {
@@ -155,6 +188,45 @@ export default function CustomerEdit() {
     };
   }, [_, legalEntityLookupAttempt]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const legalEntityId = customer ? getLegalEntityId(customer) : null;
+
+    if (!capabilities.actions.customers.update || !legalEntityId) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const relatedIds = new Set(
+      customer?.establishment_relationships.map(
+        (relationship) => relationship.establishment_id
+      ) ?? []
+    );
+    void listCustomerEstablishmentOptions(legalEntityId)
+      .then((options) => {
+        if (!cancelled) {
+          setEstablishments(
+            options.filter((option) => !relatedIds.has(option.id))
+          );
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setEstablishments([]);
+          setRelationshipLookupError(
+            err instanceof Error
+              ? err.message
+              : _(msg`Failed to load establishments`)
+          );
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [_, capabilities.actions.customers.update, customer]);
+
   function retryLegalEntityLookup() {
     setLegalEntityLookupAttempt((attempt) => attempt + 1);
   }
@@ -212,6 +284,69 @@ export default function CustomerEdit() {
     }
   }
 
+  function updateRelationshipContact(field: keyof Contact, value: string) {
+    setRelationshipDraft((current) => ({
+      ...current,
+      contact: { ...current.contact, [field]: value },
+    }));
+  }
+
+  async function handleAddRelationship(e: React.FormEvent) {
+    e.preventDefault();
+    if (
+      !id ||
+      !customer ||
+      !capabilities.actions.customers.update ||
+      !relationshipDraft.establishment_id
+    ) {
+      return;
+    }
+
+    setAddingRelationship(true);
+    setRelationshipError(null);
+    try {
+      const name = relationshipDraft.contact.name.trim();
+      const email = relationshipDraft.contact.email.trim();
+      const phone = relationshipDraft.contact.phone.trim();
+      const contact =
+        name || email || phone
+          ? {
+              name,
+              ...(email ? { email } : {}),
+              ...(phone ? { phone } : {}),
+            }
+          : undefined;
+      const notes = relationshipDraft.notes.trim();
+      const relationship = await createCustomerEstablishmentRelationship(id, {
+        establishment_id: relationshipDraft.establishment_id,
+        ...(contact ? { contact } : {}),
+        ...(notes ? { notes } : {}),
+      });
+      setCustomer((current) =>
+        current
+          ? {
+              ...current,
+              establishment_relationships: [
+                ...current.establishment_relationships,
+                relationship,
+              ],
+            }
+          : current
+      );
+      setRelationshipDraft({
+        establishment_id: "",
+        contact: { name: "", email: "", phone: "" },
+        notes: "",
+      });
+    } catch (err) {
+      setRelationshipError(
+        err instanceof Error ? err.message : _(msg`Failed to add relationship`)
+      );
+    } finally {
+      setAddingRelationship(false);
+    }
+  }
+
   const isInitialLoading = loading && customer === null;
   const currentLegalEntityId = customer ? getLegalEntityId(customer) : null;
   const requiresLegalEntityAssignment =
@@ -247,7 +382,11 @@ export default function CustomerEdit() {
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+            aria-label={_(msg`Customer master data`)}
+          >
             {/* Basic Information */}
             <FieldGroup>
               <Field>
@@ -458,6 +597,152 @@ export default function CustomerEdit() {
               </Button>
             </div>
           </form>
+
+          <section
+            className="mt-8 border-t pt-6"
+            aria-labelledby="customer-relationships-heading"
+          >
+            <PageTitle
+              level={2}
+              id="customer-relationships-heading"
+              className="mb-4"
+            >
+              <Trans>Establishment relationships</Trans>
+            </PageTitle>
+            <div className="space-y-3">
+              {customer.establishment_relationships.map((relationship) => (
+                <div key={relationship.id} className="rounded-md border p-4">
+                  <p className="font-medium">
+                    {relationship.establishment.name}
+                  </p>
+                  {relationship.contact?.name ? (
+                    <p className="text-muted-foreground text-sm">
+                      {relationship.contact.name}
+                    </p>
+                  ) : null}
+                  {relationship.notes ? (
+                    <p className="text-muted-foreground whitespace-pre-wrap text-sm">
+                      {relationship.notes}
+                    </p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+
+            {capabilities.actions.customers.update ? (
+              <form onSubmit={handleAddRelationship} className="mt-6 space-y-4">
+                {relationshipLookupError || relationshipError ? (
+                  <Alert className="border-destructive/30 bg-destructive/10 text-foreground">
+                    <AlertDescription className="text-destructive">
+                      {relationshipLookupError ?? relationshipError}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+                <Field>
+                  <FieldLabel htmlFor="new-customer-establishment">
+                    <Trans>New Establishment</Trans> *
+                  </FieldLabel>
+                  <Select
+                    value={relationshipDraft.establishment_id}
+                    onValueChange={(value) =>
+                      setRelationshipDraft((current) => ({
+                        ...current,
+                        establishment_id: value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger
+                      id="new-customer-establishment"
+                      disabled={
+                        !!relationshipLookupError || establishments.length === 0
+                      }
+                    >
+                      <SelectValue
+                        placeholder={_(msg`Select establishment...`)}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {establishments.map((establishment) => (
+                        <SelectItem
+                          key={establishment.id}
+                          value={establishment.id}
+                        >
+                          {establishment.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="relationship-contact-name">
+                    <Trans>Relationship Contact Name</Trans>
+                  </FieldLabel>
+                  <Input
+                    id="relationship-contact-name"
+                    value={relationshipDraft.contact.name}
+                    onChange={(event) =>
+                      updateRelationshipContact("name", event.target.value)
+                    }
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="relationship-contact-email">
+                    <Trans>Relationship Email</Trans>
+                  </FieldLabel>
+                  <Input
+                    id="relationship-contact-email"
+                    type="email"
+                    value={relationshipDraft.contact.email}
+                    onChange={(event) =>
+                      updateRelationshipContact("email", event.target.value)
+                    }
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="relationship-contact-phone">
+                    <Trans>Relationship Phone</Trans>
+                  </FieldLabel>
+                  <Input
+                    id="relationship-contact-phone"
+                    type="tel"
+                    value={relationshipDraft.contact.phone}
+                    onChange={(event) =>
+                      updateRelationshipContact("phone", event.target.value)
+                    }
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="relationship-notes">
+                    <Trans>Relationship Notes</Trans>
+                  </FieldLabel>
+                  <Textarea
+                    id="relationship-notes"
+                    value={relationshipDraft.notes}
+                    onChange={(event) =>
+                      setRelationshipDraft((current) => ({
+                        ...current,
+                        notes: event.target.value,
+                      }))
+                    }
+                  />
+                </Field>
+                <Button
+                  type="submit"
+                  disabled={
+                    addingRelationship ||
+                    !relationshipDraft.establishment_id ||
+                    !!relationshipLookupError
+                  }
+                >
+                  {addingRelationship ? (
+                    <Trans>Adding relationship...</Trans>
+                  ) : (
+                    <Trans>Add relationship</Trans>
+                  )}
+                </Button>
+              </form>
+            ) : null}
+          </section>
         </>
       )}
     </div>
