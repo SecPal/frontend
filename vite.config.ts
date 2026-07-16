@@ -339,9 +339,9 @@ export default defineConfig(({ mode, command }) => {
       unstubEnvs: true,
       testTimeout: 20000, // 20 seconds per test to keep full-suite UI tests stable under CI load
       hookTimeout: 20000, // 20 seconds for beforeEach/afterEach hooks
-      // Hosted runners expose 2 vCPUs; under parallel workflow load, the default
-      // worker pool can thrash and stall the suite tail (frontend#1233).
-      ...(isCi ? { maxWorkers: 2 } : {}),
+      // Native validation and hosted runners can both expose constrained CPUs;
+      // the default worker pool can thrash and stall heavyweight build checks.
+      maxWorkers: 2,
       // Exclude Playwright E2E tests (run separately via npm run test:e2e)
       exclude: ["**/node_modules/**", "**/dist/**", "**/tests/e2e/**"],
       coverage: {
