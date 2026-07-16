@@ -186,10 +186,14 @@ export default function CustomerCreate() {
 
   const hasExplicitLegalEntitySelection =
     formData.legal_entity_id.trim().length > 0;
+  const isExplicitLegalEntitySelectionAuthorized = legalEntities.some(
+    (legalEntity) => legalEntity.id === formData.legal_entity_id
+  );
+  const hasStaleExplicitLegalEntitySelection =
+    hasExplicitLegalEntitySelection &&
+    !isExplicitLegalEntitySelectionAuthorized;
   const selectedLegalEntityId = hasExplicitLegalEntitySelection
-    ? legalEntities.some(
-        (legalEntity) => legalEntity.id === formData.legal_entity_id
-      )
+    ? isExplicitLegalEntitySelectionAuthorized
       ? formData.legal_entity_id
       : ""
     : legalEntities.length === 1
@@ -297,7 +301,8 @@ export default function CustomerCreate() {
 
   const hasLegalEntityOptions = legalEntities.length > 0;
   const legalEntitySelectDisabled =
-    loadingLegalEntities || legalEntities.length === 1;
+    loadingLegalEntities ||
+    (legalEntities.length === 1 && !hasStaleExplicitLegalEntitySelection);
   const cannotCreateCustomer =
     loading || loadingLegalEntities || !hasLegalEntityOptions || !!lookupError;
 

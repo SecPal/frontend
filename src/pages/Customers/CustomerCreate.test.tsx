@@ -375,7 +375,7 @@ describe("CustomerCreate", () => {
     });
   });
 
-  it("does not submit a stale legal entity after authorized options refresh", async () => {
+  it("requires selecting the lone replacement after an authorized options refresh", async () => {
     const user = userEvent.setup();
     const replacementLegalEntity = {
       id: "550e8400-e29b-41d4-a716-446655440003",
@@ -419,11 +419,17 @@ describe("CustomerCreate", () => {
         resolveRefresh([replacementLegalEntity]);
         await refreshPromise;
       });
-      await waitFor(() => {
-        expect(
-          screen.getByRole("combobox", { name: /legal entity/i })
-        ).toHaveTextContent("Select legal entity...");
+      const trigger = await screen.findByRole("combobox", {
+        name: /legal entity/i,
       });
+      await waitFor(() => {
+        expect(trigger).toBeEnabled();
+        expect(trigger).toHaveTextContent("Select legal entity...");
+      });
+      await user.click(trigger);
+      await user.click(
+        await screen.findByRole("option", { name: replacementLegalEntity.name })
+      );
 
       fireEvent.change(screen.getByLabelText(/customer name/i), {
         target: { value: "Refreshed Entity Customer" },
@@ -442,10 +448,13 @@ describe("CustomerCreate", () => {
         screen.getByRole("button", { name: /create customer/i })
       );
 
-      expect(
-        await screen.findByText(/legal entity is required/i)
-      ).toBeInTheDocument();
-      expect(customersApi.createCustomer).not.toHaveBeenCalled();
+      await waitFor(() => {
+        expect(customersApi.createCustomer).toHaveBeenCalledWith(
+          expect.objectContaining({
+            legal_entity_id: replacementLegalEntity.id,
+          })
+        );
+      });
     } finally {
       unmount();
       if (previousLocale) {
