@@ -56,6 +56,14 @@ function expectWarningFreeShippedNginxConfigSyntax(nginxConfig: string): void {
  * real build to verify emitted output paths.
  */
 describe("Build Configuration and Source Verification", () => {
+  it("keeps the hooks diagnostic SPDX copyright year current", () => {
+    const diagnosticScript = readRepoFile("scripts/diagnose-hooks.sh");
+
+    expect(diagnosticScript).toContain(
+      "# SPDX-FileCopyrightText: 2025-2026 SecPal Contributors"
+    );
+  });
+
   it("keeps the hooks diagnostic command literal with a scoped ShellCheck suppression", () => {
     const diagnosticScript = readRepoFile("scripts/diagnose-hooks.sh");
 
