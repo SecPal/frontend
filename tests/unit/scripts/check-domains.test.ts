@@ -18,6 +18,7 @@ const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../../.."
 );
+const assetLoadRecoveryStorageKey = ["secpal", "asset-load-recovery"].join(".");
 
 function runDomainCheck(
   files: Array<{ path: string; contents: string }>
@@ -48,9 +49,6 @@ function runDomainCheck(
 
 describe("check-domains", () => {
   it("keeps tracked storage-key documentation and fixtures in browser-storage contexts", () => {
-    const assetLoadRecoveryStorageKey = ["secpal", "asset-load-recovery"].join(
-      "."
-    );
     const changelog = readFileSync(path.join(repoRoot, "CHANGELOG.md"), "utf8");
     const themeColorBootstrapTests = readFileSync(
       path.join(repoRoot, "tests/theme-color-bootstrap.test.ts"),
@@ -68,7 +66,7 @@ describe("check-domains", () => {
     expect(changelog).toContain(
       `sessionStorage.setItem("${assetLoadRecoveryStorageKey}", "pending")`
     );
-    expect(domainCheckTests).toContain(
+    expect(domainCheckTests).not.toContain(
       `sessionStorage.setItem("${assetLoadRecoveryStorageKey}", "pending")`
     );
     expect(themeColorBootstrapTests).not.toContain(assetLoadRecoveryStorageKey);
@@ -79,13 +77,11 @@ describe("check-domains", () => {
     const result = runDomainCheck([
       {
         path: "public/theme-color.js",
-        contents:
-          'sessionStorage.setItem("secpal.asset-load-recovery", "pending");\n',
+        contents: `sessionStorage.setItem("${assetLoadRecoveryStorageKey}", "pending");\n`,
       },
       {
         path: ".context/notes.md",
-        contents:
-          '`sessionStorage.setItem("secpal.asset-load-recovery", "pending")` is a local workspace storage write.\n',
+        contents: `\`sessionStorage.setItem("${assetLoadRecoveryStorageKey}", "pending")\` is a local workspace storage write.\n`,
       },
     ]);
 
@@ -98,8 +94,7 @@ describe("check-domains", () => {
     const result = runDomainCheck([
       {
         path: "README.md",
-        contents:
-          'sessionStorage.setItem("secpal.asset-load-recovery", "pending");\n',
+        contents: `sessionStorage.setItem("${assetLoadRecoveryStorageKey}", "pending");\n`,
       },
     ]);
 
@@ -130,7 +125,7 @@ describe("check-domains", () => {
     const result = runDomainCheck([
       {
         path: "README.md",
-        contents: `sessionStorage.setItem("secpal.asset-load-recovery", "pending"); Inline note: storage use must not mask https://${forbiddenHostname}.\n`,
+        contents: `sessionStorage.setItem("${assetLoadRecoveryStorageKey}", "pending"); Inline note: storage use must not mask https://${forbiddenHostname}.\n`,
       },
     ]);
 
