@@ -178,6 +178,30 @@ export default function CustomerDetail() {
 
       {customer ? (
         <div className="space-y-8">
+          {/* Legal Entity */}
+          <div>
+            <PageTitle level={2} className="mb-4">
+              <Trans>Legal Entity</Trans>
+            </PageTitle>
+            <DescriptionList>
+              <DescriptionTerm>
+                <Trans>Legal Entity ID</Trans>
+              </DescriptionTerm>
+              <DescriptionDetails>
+                {typeof customer.legal_entity_id === "string" &&
+                customer.legal_entity_id.trim().length > 0 ? (
+                  customer.legal_entity_id
+                ) : (
+                  <span className="text-destructive">
+                    <Trans>
+                      This customer requires a Legal Entity assignment.
+                    </Trans>
+                  </span>
+                )}
+              </DescriptionDetails>
+            </DescriptionList>
+          </div>
+
           {/* Billing Address */}
           <div>
             <PageTitle level={2} className="mb-4">

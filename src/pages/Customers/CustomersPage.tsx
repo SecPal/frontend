@@ -66,6 +66,13 @@ function getCustomerSitesSummary(customer: Customer): string {
   return "—";
 }
 
+function getLegalEntitySummary(customer: Customer): string {
+  return typeof customer.legal_entity_id === "string" &&
+    customer.legal_entity_id.trim().length > 0
+    ? customer.legal_entity_id
+    : "—";
+}
+
 function CustomerTableSkeletonRows({
   columns,
   rows,
@@ -264,6 +271,9 @@ export default function CustomersPage() {
                     <Trans>Name</Trans>
                   </TableHeader>
                   <TableHeader>
+                    <Trans>Legal Entity</Trans>
+                  </TableHeader>
+                  <TableHeader>
                     <Trans>Contact</Trans>
                   </TableHeader>
                   <TableHeader>
@@ -279,7 +289,7 @@ export default function CustomersPage() {
               </TableHead>
               <TableBody>
                 {loading && customers.length === 0 ? (
-                  <CustomerTableSkeletonRows columns={6} rows={5} />
+                  <CustomerTableSkeletonRows columns={7} rows={5} />
                 ) : null}
 
                 {customers.map((customer) => (
@@ -288,6 +298,9 @@ export default function CustomersPage() {
                       {customer.customer_number}
                     </TableCell>
                     <TableCell>{customer.name}</TableCell>
+                    <TableCell className="text-muted-foreground break-all">
+                      {getLegalEntitySummary(customer)}
+                    </TableCell>
                     <TableCell className="text-muted-foreground">
                       {customer.contact?.email || "-"}
                     </TableCell>
@@ -314,7 +327,7 @@ export default function CustomersPage() {
 
                 {!loading && customers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-12 text-center">
+                    <TableCell colSpan={7} className="py-12 text-center">
                       <PageText className="text-muted-foreground">
                         <Trans>No customers found</Trans>
                       </PageText>
@@ -379,6 +392,14 @@ export default function CustomersPage() {
                     </p>
                     <p className="text-foreground">
                       {getCustomerSitesSummary(customer)}
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">
+                      <Trans>Legal Entity</Trans>
+                    </p>
+                    <p className="text-foreground break-all">
+                      {getLegalEntitySummary(customer)}
                     </p>
                   </div>
                   <div className="col-span-2">

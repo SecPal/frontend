@@ -522,6 +522,7 @@ msgstr "Name des Notfallkontakts ist erforderlich."
 #: src/components/OrganizationalUnitTree.tsx
 #: src/components/RouteGuardState.tsx
 #: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Login.tsx
 msgid "Retry"
 msgstr "Wiederholen"
@@ -1516,6 +1517,11 @@ msgstr "Aufenthaltstitel auswählen"
 msgid "Activate"
 msgstr "Aktivieren"
 
+#: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "This customer requires a Legal Entity assignment."
+msgstr "Dieser Kunde benötigt eine Zuweisung zu einem Rechtsträger."
+
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Select customer..."
@@ -1817,6 +1823,10 @@ msgstr "Datei hochladen"
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Controls whether this unit can receive new operational assignments."
 msgstr "Legt fest, ob diese Einheit neue operative Zuweisungen erhalten kann."
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Current Legal Entity:"
+msgstr "Aktueller Rechtsträger:"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "Cannot Delete \"{unitName}\""
@@ -2502,6 +2512,10 @@ msgstr "Herunterladen"
 msgid "BWR Registered At"
 msgstr "BWR registriert am"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "A legal entity must be selected before this customer can be updated."
+msgstr "Bevor dieser Kunde aktualisiert werden kann, muss ein Rechtsträger ausgewählt werden."
+
 #: src/pages/Employees/EmployeeList.tsx
 msgid "All"
 msgstr "Alle"
@@ -2723,6 +2737,7 @@ msgid "Authentication"
 msgstr "Authentifizierung"
 
 #: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 msgid "Failed to load legal entities"
 msgstr "Rechtsträger konnten nicht geladen werden"
 
@@ -3025,6 +3040,7 @@ msgid "Optional sections"
 msgstr "Optionale Abschnitte"
 
 #: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 msgid "Select legal entity..."
 msgstr "Rechtsträger auswählen..."
 
@@ -3379,6 +3395,10 @@ msgstr "Die Anzahl der Standorte dieses Kunden ist nicht verfügbar."
 msgid "Street"
 msgstr "Straße"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Reassign Legal Entity"
+msgstr "Rechtsträger neu zuweisen"
+
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This field is required."
@@ -3485,6 +3505,10 @@ msgstr "Die Passkey-Anmeldung wurde abgebrochen oder vom Browser nicht zugelasse
 msgid "Legal"
 msgstr "Rechtliches"
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Legal Entity ID"
+msgstr "Rechtsträger-ID"
+
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Assignment status"
 msgstr "Zuweisungsstatus"
@@ -3516,6 +3540,9 @@ msgstr "Administrativ aktiv"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Customers/CustomersPage.tsx
 msgid "Legal Entity"
 msgstr "Rechtsträger"
 

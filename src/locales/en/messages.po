@@ -522,6 +522,7 @@ msgstr "Emergency contact name is required."
 #: src/components/OrganizationalUnitTree.tsx
 #: src/components/RouteGuardState.tsx
 #: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Login.tsx
 msgid "Retry"
 msgstr "Retry"
@@ -1516,6 +1517,11 @@ msgstr "Select residence title"
 msgid "Activate"
 msgstr "Activate"
 
+#: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "This customer requires a Legal Entity assignment."
+msgstr "This customer requires a Legal Entity assignment."
+
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Select customer..."
@@ -1817,6 +1823,10 @@ msgstr "Upload File"
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Controls whether this unit can receive new operational assignments."
 msgstr "Controls whether this unit can receive new operational assignments."
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Current Legal Entity:"
+msgstr "Current Legal Entity:"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "Cannot Delete \"{unitName}\""
@@ -2502,6 +2512,10 @@ msgstr "Download"
 msgid "BWR Registered At"
 msgstr "BWR Registered At"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "A legal entity must be selected before this customer can be updated."
+msgstr "A legal entity must be selected before this customer can be updated."
+
 #: src/pages/Employees/EmployeeList.tsx
 msgid "All"
 msgstr "All"
@@ -2723,6 +2737,7 @@ msgid "Authentication"
 msgstr "Authentication"
 
 #: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 msgid "Failed to load legal entities"
 msgstr "Failed to load legal entities"
 
@@ -3025,6 +3040,7 @@ msgid "Optional sections"
 msgstr "Optional sections"
 
 #: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 msgid "Select legal entity..."
 msgstr "Select legal entity..."
 
@@ -3379,6 +3395,10 @@ msgstr "This customer's site count is unavailable."
 msgid "Street"
 msgstr "Street"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Reassign Legal Entity"
+msgstr "Reassign Legal Entity"
+
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This field is required."
@@ -3485,6 +3505,10 @@ msgstr "Passkey sign-in was cancelled or not permitted by the browser."
 msgid "Legal"
 msgstr "Legal"
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Legal Entity ID"
+msgstr "Legal Entity ID"
+
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Assignment status"
 msgstr "Assignment status"
@@ -3516,6 +3540,9 @@ msgstr "Administratively Active"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
+#: src/pages/Customers/CustomersPage.tsx
 msgid "Legal Entity"
 msgstr "Legal Entity"
 
