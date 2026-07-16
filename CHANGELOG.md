@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Kept the hooks diagnostic script's clean-shell command literal while making
+  the full pre-commit setup verification ShellCheck-clean.
 - Normalized generated locale catalogs and conflict-marker hook documentation
   so a first full pre-commit run completes without modifying tracked files.
 - Stabilized the custom Vite output-directory release-build regression test by
