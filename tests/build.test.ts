@@ -56,6 +56,15 @@ function expectWarningFreeShippedNginxConfigSyntax(nginxConfig: string): void {
  * real build to verify emitted output paths.
  */
 describe("Build Configuration and Source Verification", () => {
+  it("keeps the hooks diagnostic command literal with a scoped ShellCheck suppression", () => {
+    const diagnosticScript = readRepoFile("scripts/diagnose-hooks.sh");
+
+    expect(diagnosticScript).toContain(
+      "# shellcheck disable=SC2016 # The command is deliberately displayed literally.\n" +
+        "  echo '     env -i HOME=$HOME TERM=$TERM bash --norc --noprofile'"
+    );
+  });
+
   it("keeps the Apache SPA routing file in the build inputs", () => {
     expect(existsSync(path.join(repoRoot, "public/.htaccess"))).toBe(true);
     expect(existsSync(path.join(repoRoot, "index.html"))).toBe(true);
