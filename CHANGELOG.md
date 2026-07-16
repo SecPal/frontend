@@ -22,8 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Normalized generated locale catalogs and conflict-marker hook documentation
   so a first full pre-commit run completes without modifying tracked files.
 - Stabilized the custom Vite output-directory release-build regression test by
-  giving its full typecheck, Vite/PWA build, and SBOM-generation path a
-  load-tolerant timeout.
+  giving its full typecheck, Vite/PWA build, and SBOM-generation path enough
+  load-tolerant time to complete during full-suite runs.
 - Restored the mandatory Prettier pre-commit hook under npm 12 by running the
   repository's installed formatter as a local system hook and installing its
   locked dependencies during hook setup.
