@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Updated Site create and edit cascades to show the customer-derived Legal
+  Entity, require an explicit eligible Establishment selection, reset it on
+  customer changes, and keep Site contacts independent; Site detail and list
+  views now project Legal Entity and Establishment names without editable
+  organization-unit state.
 - Separated shared customer master data from Establishment-specific contacts
   and notes across create, edit, detail, and list views; added authorized
   relationship creation, Legal Entity names, and visible Establishment

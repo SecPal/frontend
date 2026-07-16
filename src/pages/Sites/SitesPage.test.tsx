@@ -9,6 +9,7 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import SitesPage from "./SitesPage";
 import * as customersApi from "../../services/customersApi";
+import * as customerLegalEntitiesApi from "../../services/customerLegalEntitiesApi";
 import type { Site, PaginatedResponse } from "../../types/customers";
 
 const { mockUseUserCapabilities } = vi.hoisted(() => ({
@@ -17,6 +18,7 @@ const { mockUseUserCapabilities } = vi.hoisted(() => ({
 
 // Mock the customers API
 vi.mock("../../services/customersApi");
+vi.mock("../../services/customerLegalEntitiesApi");
 vi.mock("../../hooks/useUserCapabilities", () => ({
   useUserCapabilities: mockUseUserCapabilities,
 }));
@@ -69,6 +71,7 @@ const mockSites: Site[] = [
     is_active: true,
     customer_id: "cust-1",
     establishment_id: "unit-1",
+    establishment: { id: "unit-1", name: "Berlin Establishment" },
     contact: {
       name: "Erika Muster",
       email: "erika@secpal.dev",
@@ -91,6 +94,7 @@ const mockSites: Site[] = [
     is_active: true,
     customer_id: "cust-2",
     establishment_id: "unit-2",
+    establishment: { id: "unit-2", name: "Munich Establishment" },
     contact: null,
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z",
@@ -117,6 +121,28 @@ describe("SitesPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(customersApi.listSites).mockResolvedValue(mockResponse);
+    vi.mocked(customersApi.getCustomer).mockImplementation(async (id) => ({
+      id,
+      customer_number: id === "cust-1" ? "C001" : "C002",
+      legal_entity_id: id === "cust-1" ? "legal-1" : "legal-2",
+      name: id === "cust-1" ? "Customer One" : "Customer Two",
+      billing_address: {
+        street: "Customer Street",
+        postal_code: "12345",
+        city: "Berlin",
+        country: "DE",
+      },
+      is_active: true,
+      establishment_relationships: [],
+      created_at: "2025-01-01T00:00:00Z",
+      updated_at: "2025-01-01T00:00:00Z",
+    }));
+    vi.mocked(
+      customerLegalEntitiesApi.listCustomerLegalEntities
+    ).mockResolvedValue([
+      { id: "legal-1", name: "SecPal Operations GmbH" },
+      { id: "legal-2", name: "SecPal Services GmbH" },
+    ]);
     mockUseUserCapabilities.mockReturnValue({
       actions: {
         sites: { create: true, update: true, delete: true },
@@ -154,12 +180,18 @@ describe("SitesPage", () => {
       screen.getByRole("columnheader", { name: /customer/i })
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("columnheader", { name: /legal entity/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /^establishment$/i })
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("columnheader", { name: /contact person/i })
     ).toBeInTheDocument();
     expect(
       screen.getByRole("status", { name: /loading sites table/i })
     ).toBeInTheDocument();
-    expect(container.querySelectorAll("tbody tr td")).toHaveLength(40);
+    expect(container.querySelectorAll("tbody tr td")).toHaveLength(50);
     expect(
       container.querySelectorAll('[data-slot="skeleton"]').length
     ).toBeGreaterThan(0);
@@ -310,6 +342,11 @@ describe("SitesPage", () => {
       "/customers/cust-1"
     );
     expect(screen.getByText("cust-2")).toBeInTheDocument();
+    expect(screen.getByText("SecPal Operations GmbH")).toBeInTheDocument();
+    expect(screen.getByText("SecPal Services GmbH")).toBeInTheDocument();
+    expect(screen.getByText("Berlin Establishment")).toBeInTheDocument();
+    expect(screen.getByText("Munich Establishment")).toBeInTheDocument();
+    expect(screen.queryByText("Organizational Unit")).not.toBeInTheDocument();
     expect(screen.getByText("Erika Muster")).toBeInTheDocument();
     expect(screen.getAllByText(/active/i).length).toBeGreaterThan(0);
   });

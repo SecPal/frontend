@@ -27,6 +27,7 @@ import {
   updateSite,
   listCustomers,
 } from "../../services/customersApi";
+import { listCustomerLegalEntities } from "../../services/customerLegalEntitiesApi";
 import type {
   Site,
   UpdateSiteRequest,
@@ -34,6 +35,7 @@ import type {
   Contact,
   Customer,
   CustomerEstablishmentLookup,
+  CustomerLegalEntityLookup,
 } from "../../types/customers";
 import {
   Alert,
@@ -57,9 +59,15 @@ export default function SiteEdit() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [site, setSite] = useState<Site | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [legalEntities, setLegalEntities] = useState<
+    CustomerLegalEntityLookup[]
+  >([]);
   const [establishments, setEstablishments] = useState<
     CustomerEstablishmentLookup[]
   >([]);
+  const [establishmentLookupError, setEstablishmentLookupError] = useState<
+    string | null
+  >(null);
 
   const [formData, setFormData] = useState<UpdateSiteRequest>({});
 
@@ -87,13 +95,15 @@ export default function SiteEdit() {
       setError(null);
       setFieldErrors({});
       try {
-        const [siteData, customersData] = await Promise.all([
+        const [siteData, customersData, legalEntitiesData] = await Promise.all([
           getSite(id),
           listCustomers({ per_page: 100 }),
+          listCustomerLegalEntities(),
         ]);
         if (cancelled) return;
         setSite(siteData);
         setCustomers(customersData.data);
+        setLegalEntities(legalEntitiesData);
         setFormData({
           customer_id: siteData.customer_id,
           establishment_id: siteData.establishment_id,
@@ -144,7 +154,11 @@ export default function SiteEdit() {
       .catch((err) => {
         if (!cancelled) {
           setEstablishments([]);
-          setError(
+          setFormData((current) => ({
+            ...current,
+            establishment_id: "",
+          }));
+          setEstablishmentLookupError(
             err instanceof Error
               ? err.message
               : _(msg`Failed to load establishments`)
@@ -160,6 +174,7 @@ export default function SiteEdit() {
   function updateField(field: keyof UpdateSiteRequest, value: unknown) {
     if (field === "customer_id") {
       setError(null);
+      setEstablishmentLookupError(null);
       setEstablishments([]);
       setFormData((currentFormData) => ({
         ...currentFormData,
@@ -242,6 +257,12 @@ export default function SiteEdit() {
   }
 
   const isInitialLoading = loading && site === null;
+  const selectedCustomer = customers.find(
+    (customer) => customer.id === formData.customer_id
+  );
+  const selectedLegalEntityName = legalEntities.find(
+    (legalEntity) => legalEntity.id === selectedCustomer?.legal_entity_id
+  )?.name;
 
   return (
     <div className="max-w-3xl">
@@ -313,12 +334,27 @@ export default function SiteEdit() {
               </Field>
 
               <Field>
+                <FieldLabel htmlFor="site-legal-entity">
+                  <Trans>Legal Entity</Trans>
+                </FieldLabel>
+                <Input
+                  id="site-legal-entity"
+                  value={selectedLegalEntityName ?? ""}
+                  placeholder="—"
+                  readOnly
+                />
+              </Field>
+
+              <Field>
                 <FieldLabel htmlFor="site-establishment">
                   <Trans>Establishment</Trans> *
                 </FieldLabel>
                 <Select
                   name="establishment_id"
                   required
+                  disabled={
+                    !selectedCustomer || Boolean(establishmentLookupError)
+                  }
                   value={formData.establishment_id || ""}
                   onValueChange={(value) =>
                     updateField("establishment_id", value)
@@ -332,7 +368,9 @@ export default function SiteEdit() {
                     aria-describedby={
                       fieldErrors.establishment_id
                         ? "site-establishment-error"
-                        : undefined
+                        : establishmentLookupError
+                          ? "site-establishment-lookup-error"
+                          : undefined
                     }
                   >
                     <SelectValue
@@ -353,6 +391,11 @@ export default function SiteEdit() {
                 {fieldErrors.establishment_id && (
                   <FieldError id="site-establishment-error">
                     {fieldErrors.establishment_id.join(", ")}
+                  </FieldError>
+                )}
+                {establishmentLookupError && (
+                  <FieldError id="site-establishment-lookup-error">
+                    {establishmentLookupError}
                   </FieldError>
                 )}
               </Field>

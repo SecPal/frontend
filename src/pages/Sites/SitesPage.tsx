@@ -23,7 +23,8 @@ import {
   SelectValue,
 } from "@/ui/select";
 import { Skeleton } from "@/ui/skeleton";
-import { listSites } from "../../services/customersApi";
+import { getCustomer, listSites } from "../../services/customersApi";
+import { listCustomerLegalEntities } from "../../services/customerLegalEntitiesApi";
 import type { Site, SiteFilters } from "../../types/customers";
 import {
   Alert,
@@ -79,7 +80,7 @@ function SiteTableSkeletonRows({
   );
 }
 
-const SITE_TABLE_COLUMN_COUNT = 8;
+const SITE_TABLE_COLUMN_COUNT = 10;
 const DEFAULT_PAGINATION = {
   current_page: 1,
   last_page: 1,
@@ -109,19 +110,50 @@ function SitesPageContent({ customerId }: { customerId?: string }) {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [legalEntityNamesByCustomer, setLegalEntityNamesByCustomer] = useState<
+    ReadonlyMap<string, string>
+  >(new Map());
   const [pagination, setPagination] = useState(DEFAULT_PAGINATION);
 
   useEffect(() => {
     let active = true;
 
-    void listSites(effectiveFilters)
-      .then((response) => {
+    void Promise.all([listSites(effectiveFilters), listCustomerLegalEntities()])
+      .then(async ([response, legalEntities]) => {
+        const customers = await Promise.all(
+          [...new Set(response.data.map((site) => site.customer_id))].map(
+            async (siteCustomerId) => {
+              try {
+                return await getCustomer(siteCustomerId);
+              } catch {
+                return null;
+              }
+            }
+          )
+        );
         if (!active) {
           return;
         }
 
         setSites(response.data);
         setPagination(response.meta);
+        const legalEntityNames = new Map(
+          legalEntities.map((legalEntity) => [legalEntity.id, legalEntity.name])
+        );
+        setLegalEntityNamesByCustomer(
+          new Map(
+            customers.flatMap((customer) =>
+              customer
+                ? [
+                    [
+                      customer.id,
+                      legalEntityNames.get(customer.legal_entity_id) ?? "—",
+                    ] as const,
+                  ]
+                : []
+            )
+          )
+        );
         setError(null);
       })
       .catch((err) => {
@@ -276,6 +308,12 @@ function SitesPageContent({ customerId }: { customerId?: string }) {
                   <Trans>Customer</Trans>
                 </TableHeader>
                 <TableHeader>
+                  <Trans>Legal Entity</Trans>
+                </TableHeader>
+                <TableHeader>
+                  <Trans>Establishment</Trans>
+                </TableHeader>
+                <TableHeader>
                   <Trans>Type</Trans>
                 </TableHeader>
                 <TableHeader>
@@ -311,6 +349,10 @@ function SitesPageContent({ customerId }: { customerId?: string }) {
                       {site.customer_id}
                     </PageLink>
                   </TableCell>
+                  <TableCell>
+                    {legalEntityNamesByCustomer.get(site.customer_id) ?? "—"}
+                  </TableCell>
+                  <TableCell>{site.establishment?.name ?? "—"}</TableCell>
                   <TableCell>
                     <StatusBadge
                       color={site.type === "permanent" ? "blue" : "amber"}

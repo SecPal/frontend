@@ -2653,6 +2653,7 @@ msgstr "I stored these recovery codes securely and understand they will not be s
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
+#: src/pages/Sites/SitesPage.tsx
 msgid "Establishment"
 msgstr "Establishment"
 
@@ -3568,6 +3569,10 @@ msgstr "Administratively Active"
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteDetail.tsx
+#: src/pages/Sites/SiteEdit.tsx
+#: src/pages/Sites/SitesPage.tsx
 msgid "Legal Entity"
 msgstr "Legal Entity"
 

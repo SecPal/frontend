@@ -16,6 +16,7 @@ import { Button } from "@/ui/button";
 import { LoadingRegion, SectionSkeleton } from "@/ui/loading";
 import { Skeleton } from "@/ui/skeleton";
 import { getSite, deleteSite, getCustomer } from "../../services/customersApi";
+import { listCustomerLegalEntities } from "../../services/customerLegalEntitiesApi";
 import type { Address, Customer, Site } from "../../types/customers";
 import {
   DescriptionList,
@@ -58,6 +59,7 @@ export default function SiteDetail() {
   const navigate = useNavigate();
   const [site, setSite] = useState<Site | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [legalEntityName, setLegalEntityName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -67,8 +69,8 @@ export default function SiteDetail() {
   useEffect(() => {
     // Per-`id` cancellation flag: if a slow `getSite(prevId)` finishes
     // after the user has navigated to a new `/sites/:id`, ignore its
-    // result instead of letting it overwrite `site`, `customer`, and
-    // `orgUnit` with the previous record's data under the new URL.
+    // result instead of letting it overwrite `site`, `customer`, and the
+    // Legal Entity label with the previous record's data under the new URL.
     let cancelled = false;
 
     async function loadData() {
@@ -77,20 +79,27 @@ export default function SiteDetail() {
       setLoadError(null);
       setSite(null);
       setCustomer(null);
+      setLegalEntityName(null);
       try {
         const siteData = await getSite(id);
         if (cancelled) return;
         setSite(siteData);
-        const customerResult = await Promise.resolve(
-          getCustomer(siteData.customer_id)
-        ).then(
-          (value) => ({ status: "fulfilled", value }) as const,
-          () => ({ status: "rejected" }) as const
-        );
+        const [customerResult, legalEntitiesResult] = await Promise.allSettled([
+          getCustomer(siteData.customer_id),
+          listCustomerLegalEntities(),
+        ]);
         if (cancelled) return;
 
         if (customerResult.status === "fulfilled") {
           setCustomer(customerResult.value);
+          if (legalEntitiesResult.status === "fulfilled") {
+            setLegalEntityName(
+              legalEntitiesResult.value.find(
+                (legalEntity) =>
+                  legalEntity.id === customerResult.value.legal_entity_id
+              )?.name ?? null
+            );
+          }
         }
       } catch (err) {
         if (cancelled) return;
@@ -371,6 +380,11 @@ export default function SiteDetail() {
             loadingLabel={_(msg`Loading site lookup data`)}
           >
             <DescriptionList>
+              <DescriptionTerm>
+                <Trans>Legal Entity</Trans>
+              </DescriptionTerm>
+              <DescriptionDetails>{legalEntityName ?? "—"}</DescriptionDetails>
+
               <DescriptionTerm>
                 <Trans>Establishment</Trans>
               </DescriptionTerm>

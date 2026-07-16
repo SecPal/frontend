@@ -9,13 +9,16 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import SiteEdit from "./SiteEdit";
 import * as customersApi from "../../services/customersApi";
+import * as customerLegalEntitiesApi from "../../services/customerLegalEntitiesApi";
 
 vi.mock("../../services/customersApi");
+vi.mock("../../services/customerLegalEntitiesApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
 
@@ -88,7 +91,7 @@ describe("SiteEdit", () => {
       id: "customer-2",
       name: "Customer Two",
       customer_number: "C002",
-      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
+      legal_entity_id: "legal-entity-2",
       billing_address: {
         street: "Street 2",
         city: "City 2",
@@ -122,6 +125,15 @@ describe("SiteEdit", () => {
     });
     vi.mocked(customersApi.listCustomerEstablishmentOptions).mockResolvedValue([
       { id: "org-1", name: "IT Department" },
+    ]);
+    vi.mocked(
+      customerLegalEntitiesApi.listCustomerLegalEntities
+    ).mockResolvedValue([
+      {
+        id: "550e8400-e29b-41d4-a716-446655440001",
+        name: "SecPal Operations GmbH",
+      },
+      { id: "legal-entity-2", name: "SecPal Services GmbH" },
     ]);
   });
 
@@ -173,7 +185,73 @@ describe("SiteEdit", () => {
     expect(screen.getByLabelText(/establishment/i)).toHaveTextContent(
       "IT Department"
     );
+    expect(screen.getByLabelText(/legal entity/i)).toHaveValue(
+      "SecPal Operations GmbH"
+    );
+    expect(
+      screen.queryByLabelText(/^organizational unit/i)
+    ).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/type/i)).not.toBeInTheDocument();
+  });
+
+  it("resets the Establishment but preserves the site contact when the customer changes", async () => {
+    vi.mocked(customersApi.listCustomerEstablishmentOptions).mockImplementation(
+      async (legalEntityId) =>
+        legalEntityId === "legal-entity-2"
+          ? [{ id: "org-2", name: "Hamburg Branch" }]
+          : [{ id: "org-1", name: "IT Department" }]
+    );
+    vi.mocked(customersApi.updateSite).mockResolvedValue(mockUpdatedSite);
+
+    renderWithRouter();
+
+    await screen.findByLabelText(/site name/i);
+    const user = userEvent.setup();
+    await user.click(screen.getByLabelText(/customer/i));
+    await user.click(
+      await screen.findByRole("option", { name: /C002 - Customer Two/i })
+    );
+
+    expect(screen.getByLabelText(/legal entity/i)).toHaveValue(
+      "SecPal Services GmbH"
+    );
+    expect(screen.getByLabelText(/establishment/i)).toHaveTextContent(
+      /select establishment/i
+    );
+    expect(screen.getByLabelText(/^name$/i)).toHaveValue("John Doe");
+
+    await user.click(screen.getByLabelText(/establishment/i));
+    await user.click(
+      await screen.findByRole("option", { name: "Hamburg Branch" })
+    );
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(customersApi.updateSite).toHaveBeenCalledWith(
+        "site-123",
+        expect.objectContaining({
+          customer_id: "customer-2",
+          establishment_id: "org-2",
+          contact: mockSite.contact,
+        })
+      );
+    });
+  });
+
+  it("clears Establishment options and reports lookup failures", async () => {
+    vi.mocked(customersApi.listCustomerEstablishmentOptions).mockRejectedValue(
+      new Error("Establishment lookup failed")
+    );
+
+    renderWithRouter();
+
+    expect(
+      await screen.findByText("Establishment lookup failed")
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/establishment/i)).toBeDisabled();
+    expect(screen.getByLabelText(/establishment/i)).toHaveTextContent(
+      /select establishment/i
+    );
   });
 
   it("keeps optional contact labels on canonical muted tokens", async () => {

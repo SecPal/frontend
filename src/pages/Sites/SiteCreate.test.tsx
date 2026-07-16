@@ -15,8 +15,10 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import SiteCreate from "./SiteCreate";
 import * as customersApi from "../../services/customersApi";
+import * as customerLegalEntitiesApi from "../../services/customerLegalEntitiesApi";
 
 vi.mock("../../services/customersApi");
+vi.mock("../../services/customerLegalEntitiesApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
 
@@ -76,7 +78,7 @@ describe("SiteCreate", () => {
       id: "customer-2",
       name: "Customer Two",
       customer_number: "C002",
-      legal_entity_id: "550e8400-e29b-41d4-a716-446655440001",
+      legal_entity_id: "legal-entity-2",
       billing_address: {
         street: "Street 2",
         city: "City 2",
@@ -123,6 +125,16 @@ describe("SiteCreate", () => {
     });
     vi.mocked(customersApi.listCustomerEstablishmentOptions).mockResolvedValue([
       { id: "org-1", name: "IT Department" },
+      { id: "org-2", name: "Berlin Branch" },
+    ]);
+    vi.mocked(
+      customerLegalEntitiesApi.listCustomerLegalEntities
+    ).mockResolvedValue([
+      {
+        id: "550e8400-e29b-41d4-a716-446655440001",
+        name: "SecPal Operations GmbH",
+      },
+      { id: "legal-entity-2", name: "SecPal Services GmbH" },
     ]);
   });
 
@@ -151,7 +163,11 @@ describe("SiteCreate", () => {
     ).toBeInTheDocument();
 
     expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/legal entity/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/establishment/i)).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/^organizational unit/i)
+    ).not.toBeInTheDocument();
     expect(screen.getByLabelText(/type/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/street/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/city/i)).toBeInTheDocument();
@@ -160,6 +176,90 @@ describe("SiteCreate", () => {
     expect(screen.getByLabelText(/^name$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/phone/i)).toBeInTheDocument();
+  });
+
+  it("shows the selected customer's Legal Entity and resets Establishment choices when the customer changes", async () => {
+    vi.mocked(customersApi.listCustomerEstablishmentOptions).mockImplementation(
+      async (legalEntityId) =>
+        legalEntityId === "legal-entity-2"
+          ? [{ id: "org-3", name: "Hamburg Branch" }]
+          : [
+              { id: "org-1", name: "IT Department" },
+              { id: "org-2", name: "Berlin Branch" },
+            ]
+    );
+
+    renderWithRouter();
+
+    await screen.findByLabelText(/customer/i);
+    await selectRadixOption(/customer/i, /C001 - Customer One/i);
+    expect(screen.getByLabelText(/legal entity/i)).toHaveValue(
+      "SecPal Operations GmbH"
+    );
+    await selectRadixOption(/establishment/i, /IT Department/i);
+
+    await selectRadixOption(/customer/i, /C002 - Customer Two/i);
+
+    expect(screen.getByLabelText(/legal entity/i)).toHaveValue(
+      "SecPal Services GmbH"
+    );
+    expect(screen.getByLabelText(/establishment/i)).toHaveTextContent(
+      /select establishment/i
+    );
+    await waitFor(() => {
+      expect(
+        customersApi.listCustomerEstablishmentOptions
+      ).toHaveBeenLastCalledWith("legal-entity-2");
+    });
+    await userEvent.setup().click(screen.getByLabelText(/establishment/i));
+    expect(
+      await screen.findByRole("option", { name: "Hamburg Branch" })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: "IT Department" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps Establishment empty and reports lookup failures", async () => {
+    vi.mocked(customersApi.listCustomerEstablishmentOptions).mockRejectedValue(
+      new Error("Establishment lookup failed")
+    );
+
+    renderWithRouter();
+
+    await screen.findByLabelText(/customer/i);
+    await selectRadixOption(/customer/i, /C001 - Customer One/i);
+
+    expect(
+      await screen.findByText("Establishment lookup failed")
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/establishment/i)).toBeDisabled();
+    expect(screen.getByLabelText(/establishment/i)).toHaveTextContent(
+      /select establishment/i
+    );
+  });
+
+  it("does not submit without an explicit Establishment selection", async () => {
+    renderWithRouter();
+
+    await screen.findByLabelText(/customer/i);
+    await selectRadixOption(/customer/i, /C001 - Customer One/i);
+    fireEvent.change(screen.getByLabelText(/site name/i), {
+      target: { value: "Site without Establishment" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Test Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "Test City" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /create site/i }));
+
+    expect(customersApi.createSite).not.toHaveBeenCalled();
   });
 
   it("keeps optional contact labels on canonical muted tokens", async () => {
