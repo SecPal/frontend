@@ -73,7 +73,7 @@ describe("native API development guidance", () => {
     const retiredEnvironmentPattern = new RegExp(
       ["\\bD", "DEV\\b|\\bd", "dev\\b|\\.d", "dev"].join("")
     );
-    const activeDdevReferences = listActiveGuidanceFiles()
+    const retiredEnvironmentReferences = listActiveGuidanceFiles()
       .filter((file) => file !== "CHANGELOG.md")
       .flatMap((file) =>
         readRepoFile(file)
@@ -82,6 +82,6 @@ describe("native API development guidance", () => {
       )
       .filter(({ line }) => retiredEnvironmentPattern.test(line));
 
-    expect(activeDdevReferences).toEqual([]);
+    expect(retiredEnvironmentReferences).toEqual([]);
   });
 });
