@@ -64,12 +64,11 @@ describe("Build Configuration and Source Verification", () => {
     );
   });
 
-  it("keeps the hooks diagnostic command literal with a scoped ShellCheck suppression", () => {
+  it("keeps the hooks diagnostic command literal without suppressing ShellCheck", () => {
     const diagnosticScript = readRepoFile("scripts/diagnose-hooks.sh");
 
     expect(diagnosticScript).toContain(
-      "# shellcheck disable=SC2016 # The command is deliberately displayed literally.\n" +
-        "  echo '     env -i HOME=$HOME TERM=$TERM bash --norc --noprofile'"
+      'echo "     env -i HOME=\\$HOME TERM=\\$TERM bash --norc --noprofile"'
     );
   });
 

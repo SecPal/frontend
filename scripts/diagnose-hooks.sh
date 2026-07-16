@@ -120,8 +120,7 @@ if [ -L .git/hooks/pre-push ] && [ -f .git/hooks/pre-push ]; then
   echo "     Look for git-related hooks, prompts, or directory change scripts"
   echo ""
   echo "  2. Try running in a clean shell:"
-  # shellcheck disable=SC2016 # The command is deliberately displayed literally.
-  echo '     env -i HOME=$HOME TERM=$TERM bash --norc --noprofile'
+  echo "     env -i HOME=\$HOME TERM=\$TERM bash --norc --noprofile"
   echo ""
   echo "  3. Check if tools like direnv or starship are executing git commands:"
   echo "     GIT_TRACE=1 git status 2>&1 | grep -i hook"
