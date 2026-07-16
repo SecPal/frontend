@@ -343,6 +343,15 @@ describe("Build Configuration and Source Verification", () => {
     expect(preCommitConfig).not.toContain("npx --no-install prettier");
   });
 
+  it("installs Node dependencies before verifying local pre-commit hooks", () => {
+    const setupPreCommit = readRepoFile("scripts/setup-pre-commit.sh");
+
+    expect(setupPreCommit).toContain("npm ci");
+    expect(setupPreCommit.indexOf("npm ci")).toBeLessThan(
+      setupPreCommit.indexOf("pre-commit install --install-hooks")
+    );
+  });
+
   it("keeps SecPal attribution off Lukas-owned locale sidecars", () => {
     for (const relativePath of [
       "src/locales/de/messages.js.license",

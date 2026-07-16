@@ -20,7 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Restored the mandatory Prettier pre-commit hook under npm 12 by running the
-  repository's installed formatter as a local system hook.
+  repository's installed formatter as a local system hook and installing its
+  locked dependencies during hook setup.
 - Derived the preflight Markdown linter version from `package.json`, keeping
   dependency updates and local linting in sync without a duplicate version pin.
 - Added retry recovery for failed customer Legal Entity lookups and normalized
