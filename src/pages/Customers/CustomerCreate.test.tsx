@@ -449,6 +449,14 @@ describe("CustomerCreate", () => {
       await user.click(
         await screen.findByRole("option", { name: replacementLegalEntity.name })
       );
+      const establishmentTrigger = screen.getByRole("combobox", {
+        name: /establishment/i,
+      });
+      await waitFor(() => expect(establishmentTrigger).toBeEnabled());
+      await user.click(establishmentTrigger);
+      await user.click(
+        await screen.findByRole("option", { name: "Berlin Establishment" })
+      );
 
       fireEvent.change(screen.getByLabelText(/customer name/i), {
         target: { value: "Refreshed Entity Customer" },
@@ -517,6 +525,14 @@ describe("CustomerCreate", () => {
       expect(trigger).toBeDisabled();
       expect(trigger).toHaveTextContent(firstLegalEntity.name);
     });
+    const establishmentTrigger = screen.getByRole("combobox", {
+      name: /establishment/i,
+    });
+    await waitFor(() => expect(establishmentTrigger).toBeEnabled());
+    await user.click(establishmentTrigger);
+    await user.click(
+      await screen.findByRole("option", { name: "Berlin Establishment" })
+    );
 
     fireEvent.change(screen.getByLabelText(/customer name/i), {
       target: { value: "Single Entity Customer" },

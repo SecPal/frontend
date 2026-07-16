@@ -133,7 +133,17 @@ export default function CustomerCreate() {
 
   useEffect(() => {
     let cancelled = false;
-    const legalEntityId = selectedLegalEntityId;
+    const hasExplicitSelection = formData.legal_entity_id.trim().length > 0;
+    const isExplicitSelectionAuthorized = legalEntities.some(
+      (legalEntity) => legalEntity.id === formData.legal_entity_id
+    );
+    const legalEntityId = hasExplicitSelection
+      ? isExplicitSelectionAuthorized
+        ? formData.legal_entity_id
+        : ""
+      : legalEntities.length === 1
+        ? legalEntities[0]!.id
+        : "";
 
     if (!legalEntityId) {
       return () => {
@@ -164,7 +174,7 @@ export default function CustomerCreate() {
     return () => {
       cancelled = true;
     };
-  }, [_, selectedLegalEntityId]);
+  }, [_, formData.legal_entity_id, legalEntities]);
 
   function retryLegalEntityLookup() {
     setLookupAttempt((attempt) => attempt + 1);
