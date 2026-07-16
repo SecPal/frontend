@@ -338,8 +338,9 @@ describe("Build Configuration and Source Verification", () => {
     expect(preCommitConfig).toContain("- id: prettier");
     expect(preCommitConfig).toContain("language: system");
     expect(preCommitConfig).toContain(
-      "entry: npx --no-install prettier --write"
+      "entry: ./node_modules/.bin/prettier --write"
     );
+    expect(preCommitConfig).not.toContain("npx --no-install prettier");
   });
 
   it("keeps SecPal attribution off Lukas-owned locale sidecars", () => {
