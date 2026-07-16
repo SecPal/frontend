@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Defined the server-authoritative Site-Establishment API contract, including
+  canonical request, filter, model, include, and resource naming; atomic
+  Customer–Legal-Entity–Establishment validation; authorization; and the
+  required tenant and permission feature-test matrix.
 - Defined the secure customer aggregate API service contract for eligible
   Establishment lookups, transactional identity resolution, atomic relationship
   writes, concurrent duplicate handling, authorization, and non-disclosing

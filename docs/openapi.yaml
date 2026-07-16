@@ -291,9 +291,32 @@ paths:
       tags:
         - Sites
       summary: List visible establishment-bound sites
-      description: Returns sites visible through the caller's establishment access.
+      description: >-
+        Returns sites visible through the caller's establishment access. Filters and includes are applied only after
+        tenant, site-policy, and establishment-visibility predicates.
       security:
         - BearerAuth: []
+      parameters:
+        - name: establishment_id
+          in: query
+          required: false
+          description: Restricts the already-visible result to one Establishment.
+          schema:
+            type: string
+            format: uuid
+        - name: include
+          in: query
+          required: false
+          description: Relationships to include after visibility filtering.
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - customer
+                - establishment
+                - assignments
+            uniqueItems: true
       responses:
         "200":
           description: Visible sites
@@ -315,7 +338,9 @@ paths:
       tags:
         - Sites
       summary: Create an establishment-bound site
-      description: Creates a site for a visible customer relationship and establishment.
+      description: >-
+        Creates a site only after deriving the Legal Entity from the persisted customer and proving the visible,
+        tenant-safe Customer-Establishment relationship. Client Legal Entity input is not accepted.
       security:
         - BearerAuth: []
       requestBody:
@@ -340,6 +365,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
         "422":
           $ref: "#/components/responses/ValidationError"
   /sites/{site}:
@@ -374,7 +401,9 @@ paths:
       tags:
         - Sites
       summary: Update an establishment-bound site
-      description: Updates site fields and validates access to any target establishment.
+      description: >-
+        Updates site fields only after atomically validating the effective customer and target Establishment against
+        the server-derived Customer Legal Entity, current and target scopes, and relationship eligibility.
       security:
         - BearerAuth: []
       parameters:
@@ -756,6 +785,8 @@ components:
         establishment_id:
           type: string
           format: uuid
+        establishment:
+          $ref: "#/components/schemas/CustomerEstablishmentLookup"
         site_number:
           type: string
         name:
