@@ -12,10 +12,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Raised the Node.js requirement to `^22.22.2 || ^24.15.0 || >=26.0.0`,
+  matching the effective requirement of the updated Markdown toolchain.
+
 ### Fixed
 
-- Added retry recovery for failed customer Legal Entity lookups and normalized
-  malformed lookup envelopes to the documented validation error.
+- Restored the mandatory Prettier pre-commit hook under npm 12 by running the
+  repository's installed formatter as a local system hook and installing its
+  locked dependencies during hook setup.
+- Derived the preflight Markdown linter version from `package.json`, keeping
+  dependency updates and local linting in sync without a duplicate version pin.
+- Customer creation now requires an explicit tenant-authorized Legal Entity
+  selection. Customer list, detail, and edit views display only the API-provided
+  assignment and prevent updates to unmigrated customers until an authorized
+  Legal Entity is explicitly selected.
+- Added retry recovery for failed customer Legal Entity lookups in create and
+  edit flows and normalized malformed lookup envelopes to the documented
+  validation error.
 - Added regression coverage for updating and clearing customer VAT IDs.
 - Consolidated customer request and response types onto the generated OpenAPI
   aliases and removed the obsolete uncontracted `sites` response fallback.

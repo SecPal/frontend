@@ -331,6 +331,27 @@ describe("Build Configuration and Source Verification", () => {
     }
   });
 
+  it("runs Prettier as a local system hook compatible with npm 12", () => {
+    const preCommitConfig = readRepoFile(".pre-commit-config.yaml");
+
+    expect(preCommitConfig).not.toContain("pre-commit/mirrors-prettier");
+    expect(preCommitConfig).toContain("- id: prettier");
+    expect(preCommitConfig).toContain("language: system");
+    expect(preCommitConfig).toContain(
+      "entry: ./node_modules/.bin/prettier --write"
+    );
+    expect(preCommitConfig).not.toContain("npx --no-install prettier");
+  });
+
+  it("installs Node dependencies before verifying local pre-commit hooks", () => {
+    const setupPreCommit = readRepoFile("scripts/setup-pre-commit.sh");
+
+    expect(setupPreCommit).toContain("npm ci");
+    expect(setupPreCommit.indexOf("npm ci")).toBeLessThan(
+      setupPreCommit.indexOf("pre-commit install --install-hooks")
+    );
+  });
+
   it("keeps SecPal attribution off Lukas-owned locale sidecars", () => {
     for (const relativePath of [
       "src/locales/de/messages.js.license",
@@ -703,12 +724,21 @@ describe("Build Configuration and Source Verification", () => {
     );
   });
 
-  it("pins markdownlint-cli to the governed repo version", () => {
+  it("keeps declared Node support compatible with the Markdown toolchain", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
-      devDependencies?: Record<string, string>;
+      engines: { node: string };
     };
+    const packageLock = JSON.parse(readRepoFile("package-lock.json")) as {
+      packages: Record<string, { engines?: { node?: string } } | undefined>;
+    };
+    const markdownToolchainNodeRange =
+      packageLock.packages["node_modules/ini"]?.engines?.node;
 
-    expect(packageJson.devDependencies?.["markdownlint-cli"]).toBe("0.49.0");
+    expect(markdownToolchainNodeRange).toBeDefined();
+    expect(packageJson.engines.node).toBe(markdownToolchainNodeRange);
+    expect(readRepoFile("README.md")).toContain(
+      `Node.js \`${markdownToolchainNodeRange}\``
+    );
   });
 
   it("keeps PWA shortcuts limited to live routes", () => {

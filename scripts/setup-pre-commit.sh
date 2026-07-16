@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SPDX-FileCopyrightText: 2025 SecPal Contributors
+# SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 # SPDX-License-Identifier: MIT
 
 set -euo pipefail
@@ -23,6 +23,17 @@ if ! command -v pre-commit &>/dev/null; then
 	echo ""
 	exit 1
 fi
+
+if ! command -v npm &>/dev/null; then
+	echo "❌ npm is not installed."
+	echo ""
+	echo "Install the supported Node.js and npm toolchain, then run this script again."
+	exit 1
+fi
+
+# Install the locked project dependencies required by local system hooks.
+echo "📦 Installing project dependencies..."
+npm ci
 
 # Install pre-commit hooks
 echo "📦 Installing pre-commit hooks..."
