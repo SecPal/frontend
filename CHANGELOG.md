@@ -30,6 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Made the Android mock login show its configured workspace instance in a
+  centered, unboxed section with a compact label and smaller API origin between
+  the login card and footer, while preserving the login card's page centering
+  and offering the instance-discovery flow through a confirmed switch action.
+- Localized Android instance-discovery errors, including unavailable-instance
+  messages, in the selected application language.
 - Capped the Vitest worker pool for every full-suite run, preventing concurrent
   release-build validation tests from timing out in native workflow validation.
 - Kept the hooks diagnostic script's clean-shell command literal while making

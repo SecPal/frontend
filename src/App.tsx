@@ -8,6 +8,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import {
@@ -36,19 +37,21 @@ import { SecPalRuntimeBootstrap, type SecPalRuntimeInfo } from "./native";
 import { Login, type LoginRuntimeBootstrapSummary } from "./pages/Login";
 import { SourcePage } from "./pages/SourcePage";
 import { getAuthTransport } from "./services/authTransport";
+import { getApiBaseUrl } from "./config";
+import { isAndroidMockSurface } from "./platform/appSurface";
 import type { BootstrapConfiguration } from "@/types/api";
 
 const LOGIN_ROUTE_BOOTSTRAP_INTERACTIVE_DELAY_MS = 1000;
 
 interface NativeRuntimeBootstrapContextValue {
   readonly loginRuntimeBootstrap: LoginRuntimeBootstrapSummary | null;
-  readonly returnToRuntimeDiscovery: () => Promise<void>;
+  readonly returnToRuntimeDiscovery?: () => Promise<void>;
 }
 
 const NativeRuntimeBootstrapContext =
   createContext<NativeRuntimeBootstrapContextValue>({
     loginRuntimeBootstrap: null,
-    returnToRuntimeDiscovery: async () => undefined,
+    returnToRuntimeDiscovery: undefined,
   });
 
 function useNativeRuntimeBootstrapContext() {
@@ -112,6 +115,10 @@ function LoginRoute() {
     unlock,
   } = auth;
   const handleSwitchRuntimeBootstrap = useCallback(async () => {
+    if (!returnToRuntimeDiscovery) {
+      return;
+    }
+
     await logout();
     await returnToRuntimeDiscovery();
   }, [logout, returnToRuntimeDiscovery]);
@@ -147,7 +154,9 @@ function LoginRoute() {
   return (
     <Login
       runtimeBootstrap={loginRuntimeBootstrap}
-      onSwitchRuntimeBootstrap={handleSwitchRuntimeBootstrap}
+      onSwitchRuntimeBootstrap={
+        returnToRuntimeDiscovery ? handleSwitchRuntimeBootstrap : undefined
+      }
     />
   );
 }
@@ -158,6 +167,10 @@ function LoginRouteBootstrapGate() {
   const { loginRuntimeBootstrap, returnToRuntimeDiscovery } =
     useNativeRuntimeBootstrapContext();
   const handleSwitchRuntimeBootstrap = useCallback(async () => {
+    if (!returnToRuntimeDiscovery) {
+      return;
+    }
+
     await logout();
     await returnToRuntimeDiscovery();
   }, [logout, returnToRuntimeDiscovery]);
@@ -175,7 +188,9 @@ function LoginRouteBootstrapGate() {
   return showInteractiveLogin ? (
     <Login
       runtimeBootstrap={loginRuntimeBootstrap}
-      onSwitchRuntimeBootstrap={handleSwitchRuntimeBootstrap}
+      onSwitchRuntimeBootstrap={
+        returnToRuntimeDiscovery ? handleSwitchRuntimeBootstrap : undefined
+      }
     />
   ) : (
     <LoginRouteLoadingState />
@@ -293,6 +308,33 @@ function toLoginRuntimeBootstrapSummaryFromConfiguration(
   };
 }
 
+function getAndroidMockRuntimeBootstrap(): LoginRuntimeBootstrapSummary | null {
+  if (!isAndroidMockSurface) {
+    return null;
+  }
+
+  try {
+    const apiOrigin = new URL(getApiBaseUrl()).origin;
+    const configuredInstanceName =
+      import.meta.env.VITE_ANDROID_MOCK_INSTANCE_DISPLAY_NAME?.trim();
+
+    return {
+      instanceDisplayName: configuredInstanceName || apiOrigin,
+      apiOrigin,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function getAndroidMockRuntimeInfo(): SecPalRuntimeInfo {
+  return {
+    clientPlatform: "android",
+    appVersion: "999.0.0-mock",
+    appBuild: 2_147_483_647,
+  };
+}
+
 function NativeRuntimeDiscoveryGate({
   children,
 }: {
@@ -307,6 +349,12 @@ function NativeRuntimeDiscoveryGate({
     useState<LoginRuntimeBootstrapSummary | null>(null);
   const [isDiscoveryRequired, setIsDiscoveryRequired] = useState(false);
   const [isCheckingRuntime, setIsCheckingRuntime] = useState(true);
+  const androidMockRuntimeBootstrap = useMemo(
+    () => getAndroidMockRuntimeBootstrap(),
+    []
+  );
+  const effectiveLoginRuntimeBootstrap =
+    loginRuntimeBootstrap ?? androidMockRuntimeBootstrap;
   const normalizedPathname = normalizePathname(pathname);
   const bypassRuntimeDiscovery =
     normalizedPathname === "/source" ||
@@ -329,6 +377,18 @@ function NativeRuntimeDiscoveryGate({
     }: {
       clearAuthState?: boolean;
     } = {}) => {
+      if (androidMockRuntimeBootstrap) {
+        setLoginRuntimeBootstrap(null);
+
+        if (clearAuthState) {
+          void logout();
+        }
+
+        setRuntimeInfo(getAndroidMockRuntimeInfo());
+        setIsDiscoveryRequired(true);
+        return;
+      }
+
       const nextRuntimeInfo = await SecPalRuntimeBootstrap.getRuntimeInfo();
 
       setLoginRuntimeBootstrap(null);
@@ -345,19 +405,34 @@ function NativeRuntimeDiscoveryGate({
         setIsDiscoveryRequired(false);
       }
     },
-    [logout]
+    [androidMockRuntimeBootstrap, logout]
   );
 
   const returnToRuntimeDiscovery = useCallback(async () => {
-    await revokeCurrentRuntimeSession();
-    await SecPalRuntimeBootstrap.clearRuntimeBootstrap();
+    if (!androidMockRuntimeBootstrap) {
+      await revokeCurrentRuntimeSession();
+      await SecPalRuntimeBootstrap.clearRuntimeBootstrap();
+    }
+
     await requireRuntimeDiscovery({ clearAuthState: false });
-  }, [requireRuntimeDiscovery, revokeCurrentRuntimeSession]);
+  }, [
+    androidMockRuntimeBootstrap,
+    requireRuntimeDiscovery,
+    revokeCurrentRuntimeSession,
+  ]);
 
   useEffect(() => {
     let isMounted = true;
 
     async function checkRuntimeBootstrap() {
+      if (androidMockRuntimeBootstrap) {
+        setLoginRuntimeBootstrap(androidMockRuntimeBootstrap);
+        setIsDiscoveryRequired(false);
+        setRuntimeInfo(null);
+        setIsCheckingRuntime(false);
+        return;
+      }
+
       try {
         const bootstrapState =
           await SecPalRuntimeBootstrap.getRuntimeBootstrap();
@@ -416,12 +491,15 @@ function NativeRuntimeDiscoveryGate({
     return () => {
       isMounted = false;
     };
-  }, [logout, requireRuntimeDiscovery]);
+  }, [androidMockRuntimeBootstrap, logout, requireRuntimeDiscovery]);
 
   if (bypassRuntimeDiscovery) {
     return (
       <NativeRuntimeBootstrapContext.Provider
-        value={{ loginRuntimeBootstrap, returnToRuntimeDiscovery }}
+        value={{
+          loginRuntimeBootstrap: effectiveLoginRuntimeBootstrap,
+          returnToRuntimeDiscovery,
+        }}
       >
         {children}
       </NativeRuntimeBootstrapContext.Provider>
@@ -449,7 +527,10 @@ function NativeRuntimeDiscoveryGate({
 
   return (
     <NativeRuntimeBootstrapContext.Provider
-      value={{ loginRuntimeBootstrap, returnToRuntimeDiscovery }}
+      value={{
+        loginRuntimeBootstrap: effectiveLoginRuntimeBootstrap,
+        returnToRuntimeDiscovery,
+      }}
     >
       {children}
     </NativeRuntimeBootstrapContext.Provider>

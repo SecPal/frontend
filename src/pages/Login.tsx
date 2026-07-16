@@ -21,12 +21,23 @@ import {
 } from "../services/nativePasskeyCapabilities";
 import { sanitizeAuthUser } from "../services/authState";
 import { Logo } from "../components/Logo";
+import { getApiBaseUrl } from "../config";
+import { isAndroidMockSurface } from "../platform/appSurface";
 import { loadLoginMfaDialogModule } from "../lib/lazyAppModules";
 import {
   isRecoverableLazyModuleError,
   isTransientModuleLoadError,
 } from "../lib/lazyModuleErrors";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Button,
   LoginButton,
   LoginCard,
   LoginCardHeader,
@@ -57,6 +68,16 @@ const TOTP_CODE_LENGTH = 6;
 // Backend issues 8-character alphanumeric recovery codes.
 // Source: SecPal/api config/two-factor.php `recovery.length = 8`.
 const RECOVERY_CODE_LENGTH = 8;
+
+const androidMockRuntimeBootstrap: LoginRuntimeBootstrapSummary | null =
+  isAndroidMockSurface
+    ? {
+        instanceDisplayName:
+          import.meta.env.VITE_ANDROID_MOCK_INSTANCE_DISPLAY_NAME?.trim() ||
+          "SecPal Android Mock",
+        apiOrigin: getApiBaseUrl(),
+      }
+    : null;
 
 type Translate = ReturnType<typeof useLingui>["_"];
 type HealthStatus = import("../services/healthApi").HealthStatus;
@@ -310,6 +331,8 @@ export function Login({
   runtimeBootstrap = null,
   onSwitchRuntimeBootstrap,
 }: LoginProps = {}) {
+  const displayedRuntimeBootstrap =
+    runtimeBootstrap ?? androidMockRuntimeBootstrap;
   const navigate = useNavigate();
   const { _ } = useLingui();
   const { login } = useAuth();
@@ -322,9 +345,9 @@ export function Login({
     [authTransport]
   );
   const isPasswordLoginEnabled =
-    runtimeBootstrap?.features?.passwordLoginEnabled ?? true;
+    displayedRuntimeBootstrap?.features?.passwordLoginEnabled ?? true;
   const isPasskeyLoginEnabled =
-    runtimeBootstrap?.features?.passkeyLoginEnabled ?? true;
+    displayedRuntimeBootstrap?.features?.passkeyLoginEnabled ?? true;
   const {
     remainingAttempts,
     isLocked,
@@ -366,6 +389,8 @@ export function Login({
   const [isVerifyingMfa, setIsVerifyingMfa] = useState(false);
   const [isCompletingLogin, setIsCompletingLogin] = useState(false);
   const [isSwitchingRuntimeBootstrap, setIsSwitchingRuntimeBootstrap] =
+    useState(false);
+  const [isRuntimeSwitchConfirmationOpen, setIsRuntimeSwitchConfirmationOpen] =
     useState(false);
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const normalizedMfaCode = mfaCode.trim();
@@ -830,7 +855,7 @@ export function Login({
         Together with a non-absolute footer this guarantees the card and
         footer never overlap on short landscape viewports.
       */}
-      <div className="flex w-full flex-1 items-center justify-center">
+      <div className="relative flex w-full flex-1 items-center justify-center">
         <LoginCard
           aria-labelledby="login-title"
           aria-busy={isCompletingLogin || undefined}
@@ -850,44 +875,6 @@ export function Login({
                   <Trans id="login.title">Welcome to SecPal</Trans>
                 </LoginCardTitle>
               </LoginCardHeader>
-
-              {runtimeBootstrap && onSwitchRuntimeBootstrap ? (
-                <LoginStatusMessage variant="neutral" live="off">
-                  <div className="space-y-3">
-                    <div className="space-y-1">
-                      <p>
-                        <Trans>
-                          Signed in to {runtimeBootstrap.instanceDisplayName}
-                        </Trans>
-                      </p>
-                      <p className="break-all text-muted-foreground">
-                        {runtimeBootstrap.apiOrigin}
-                      </p>
-                    </div>
-                    <LoginButton
-                      id="secpal-runtime-switch-instance"
-                      type="button"
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => void handleSwitchRuntimeBootstrap()}
-                      disabled={
-                        isSubmitting ||
-                        isSubmittingPasskey ||
-                        isMfaChallengeActive ||
-                        isCompletingLogin ||
-                        isSwitchingRuntimeBootstrap
-                      }
-                      aria-busy={isSwitchingRuntimeBootstrap}
-                    >
-                      {isSwitchingRuntimeBootstrap ? (
-                        <Trans>Switching instance...</Trans>
-                      ) : (
-                        <Trans>Switch instance</Trans>
-                      )}
-                    </LoginButton>
-                  </div>
-                </LoginStatusMessage>
-              ) : null}
 
               {!isOnline && (
                 <LoginStatusMessage
@@ -1090,6 +1077,7 @@ export function Login({
                   </LoginButton>
                 </LoginField>
               ) : null}
+
               {isPasskeyLoginEnabled &&
               nativePasskeyCapabilities?.passkeysAvailable === false ? (
                 <LoginStatusMessage
@@ -1129,6 +1117,86 @@ export function Login({
             </div>
           ) : null}
         </LoginCard>
+        {displayedRuntimeBootstrap ? (
+          <div
+            data-testid="runtime-instance-section"
+            className="absolute inset-x-0 top-[89%] flex -translate-y-1/2 justify-center px-6"
+          >
+            <div
+              data-testid="runtime-instance"
+              className="w-full max-w-sm space-y-1 text-center"
+            >
+              <div className="space-y-1">
+                <p className="text-sm">
+                  <Trans>
+                    Signed in to {displayedRuntimeBootstrap.instanceDisplayName}
+                  </Trans>
+                </p>
+                <p className="break-all text-xs text-muted-foreground">
+                  {displayedRuntimeBootstrap.apiOrigin}
+                </p>
+              </div>
+              {onSwitchRuntimeBootstrap ? (
+                <LoginButton
+                  id="secpal-runtime-switch-instance"
+                  type="button"
+                  variant="outline"
+                  className="mx-auto w-full"
+                  onClick={() => setIsRuntimeSwitchConfirmationOpen(true)}
+                  disabled={
+                    isSubmitting ||
+                    isSubmittingPasskey ||
+                    isMfaChallengeActive ||
+                    isCompletingLogin ||
+                    isSwitchingRuntimeBootstrap
+                  }
+                  aria-busy={isSwitchingRuntimeBootstrap}
+                >
+                  {isSwitchingRuntimeBootstrap ? (
+                    <Trans>Switching instance...</Trans>
+                  ) : (
+                    <Trans>Switch instance</Trans>
+                  )}
+                </LoginButton>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+        <AlertDialog
+          open={isRuntimeSwitchConfirmationOpen}
+          onOpenChange={(open) => {
+            if (!isSwitchingRuntimeBootstrap) {
+              setIsRuntimeSwitchConfirmationOpen(open);
+            }
+          }}
+        >
+          <AlertDialogContent size="sm">
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                <Trans>Switch instance?</Trans>
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                <Trans>
+                  You will be returned to the instance selection screen.
+                </Trans>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <Button asChild variant="outline">
+                <AlertDialogCancel>
+                  <Trans>Cancel</Trans>
+                </AlertDialogCancel>
+              </Button>
+              <Button asChild>
+                <AlertDialogAction
+                  onClick={() => void handleSwitchRuntimeBootstrap()}
+                >
+                  <Trans>Switch instance</Trans>
+                </AlertDialogAction>
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <LoginLegalFooter />

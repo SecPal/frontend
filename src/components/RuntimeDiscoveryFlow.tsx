@@ -56,16 +56,34 @@ function persistDiscoveryLocale(locale: RuntimeDiscoveryLocale): void {
   }
 }
 
-function getDiscoveryErrorMessage(error: unknown): string {
+function getDiscoveryErrorMessage(
+  error: unknown,
+  translate: (message: ReturnType<typeof msg>) => string
+): string {
   if (error instanceof RuntimeDiscoveryError) {
-    return error.message;
+    switch (error.code) {
+      case "INVALID_INSTANCE_URL":
+        return translate(msg`Enter a valid secure HTTPS instance URL.`);
+      case "RUNTIME_INFO_UNAVAILABLE":
+        return translate(msg`Android runtime information is unavailable.`);
+      case "BOOTSTRAP_UNAVAILABLE":
+        return translate(
+          msg`Could not reach that instance. Check the URL with your supervisor.`
+        );
+      case "BOOTSTRAP_STATE_INVALID":
+        return translate(msg`The bootstrap response is incomplete.`);
+      case "BOOTSTRAP_INCOMPATIBLE":
+        return translate(
+          msg`This instance must be verified by an administrator before it can be used.`
+        );
+      case "UNSUPPORTED_CLIENT_VERSION":
+        return translate(
+          msg`Update the Android app before using this instance.`
+        );
+    }
   }
 
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "The selected instance could not be checked.";
+  return translate(msg`The selected instance could not be checked.`);
 }
 
 function getApiOrigin(rawApiBaseUrl: string): string {
@@ -109,7 +127,7 @@ export function RuntimeDiscoveryFlow({
 
       setResolvedBootstrap(bootstrap);
     } catch (discoveryError) {
-      setError(getDiscoveryErrorMessage(discoveryError));
+      setError(getDiscoveryErrorMessage(discoveryError, _));
     } finally {
       setIsChecking(false);
     }
@@ -127,7 +145,7 @@ export function RuntimeDiscoveryFlow({
       await SecPalRuntimeBootstrap.setRuntimeBootstrap(resolvedBootstrap);
       onConfigured(resolvedBootstrap);
     } catch (confirmError) {
-      setError(getDiscoveryErrorMessage(confirmError));
+      setError(getDiscoveryErrorMessage(confirmError, _));
       setIsConfirming(false);
     }
   }

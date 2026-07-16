@@ -285,6 +285,17 @@ async function renderWithI18n(component: React.ReactElement) {
   return result;
 }
 
+async function confirmRuntimeInstanceSwitch(
+  user: ReturnType<typeof userEvent.setup>
+) {
+  await user.click(
+    await screen.findByRole("button", { name: /switch instance/i })
+  );
+  await user.click(
+    await screen.findByRole("button", { name: /switch instance/i })
+  );
+}
+
 async function waitForPathname(pathname: string) {
   await waitFor(
     () => {
@@ -489,6 +500,32 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows Android discovery errors in the selected language", async () => {
+    const user = userEvent.setup();
+    createAndroidRuntimeBootstrapBridge({ configured: false });
+    fetchSpy.mockRejectedValue(new TypeError("Failed to fetch"));
+
+    await renderWithI18n(<App />);
+
+    await user.selectOptions(screen.getByLabelText(/language/i), "de");
+    await user.type(
+      screen.getByLabelText(/instanz-url/i),
+      "https://api.secpal.dev"
+    );
+    await user.click(screen.getByRole("button", { name: /instanz prüfen/i }));
+
+    expect(
+      await screen.findByText(
+        "Die Instanz konnte nicht erreicht werden. Prüfen Sie die URL mit Ihrer Führungskraft."
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Could not reach that instance. Check the URL with your supervisor."
+      )
+    ).not.toBeInTheDocument();
+  });
+
   it("validates, summarizes, and confirms an Android runtime bootstrap before login", async () => {
     const user = userEvent.setup();
     const bridge = createAndroidRuntimeBootstrapBridge({ configured: false });
@@ -644,9 +681,7 @@ describe("App", () => {
       screen.getByRole("button", { name: /continue to login/i })
     ).toBeEnabled();
     expect(
-      screen.getByText(
-        /android runtime bootstrap apply is unavailable in this native shell/i
-      )
+      screen.getByText(/the selected instance could not be checked/i)
     ).toBeInTheDocument();
   });
 
@@ -716,9 +751,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await user.click(
-      await screen.findByRole("button", { name: /switch instance/i })
-    );
+    await confirmRuntimeInstanceSwitch(user);
 
     await waitFor(() => {
       expect(bridge.clearRuntimeBootstrap).toHaveBeenCalled();
@@ -744,9 +777,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await user.click(
-      await screen.findByRole("button", { name: /switch instance/i })
-    );
+    await confirmRuntimeInstanceSwitch(user);
 
     await waitFor(() => {
       expect(logoutSpy).toHaveBeenCalledTimes(1);
@@ -777,9 +808,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await user.click(
-      await screen.findByRole("button", { name: /switch instance/i })
-    );
+    await confirmRuntimeInstanceSwitch(user);
 
     await waitFor(() => {
       expect(bridge.clearRuntimeBootstrap).toHaveBeenCalled();
@@ -822,9 +851,7 @@ describe("App", () => {
     try {
       await renderWithI18n(<App />);
 
-      await user.click(
-        await screen.findByRole("button", { name: /switch instance/i })
-      );
+      await confirmRuntimeInstanceSwitch(user);
 
       await waitFor(() => {
         expect(bridge.clearRuntimeBootstrap).toHaveBeenCalled();

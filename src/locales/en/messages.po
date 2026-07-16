@@ -175,6 +175,10 @@ msgstr "Emergency Contacts"
 msgid "Loading organizational structure"
 msgstr "Loading organizational structure"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "The bootstrap response is incomplete."
+msgstr "The bootstrap response is incomplete."
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Failure Reason"
 msgstr "Invitation Failure Reason"
@@ -600,6 +604,10 @@ msgstr "Failed"
 msgid "Failed to confirm onboarding"
 msgstr "Failed to confirm onboarding"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Update the Android app before using this instance."
+msgstr "Update the Android app before using this instance."
+
 #: src/pages/Login.tsx
 msgid "SecPal could not switch instances. Please try again."
 msgstr "SecPal could not switch instances. Please try again."
@@ -734,6 +742,10 @@ msgstr "Password"
 #: src/pages/SourcePage.tsx
 msgid "Android Capacitor wrapper that reuses the shared frontend build and adds native Android-specific code."
 msgstr "Android Capacitor wrapper that reuses the shared frontend build and adds native Android-specific code."
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "The selected instance could not be checked."
+msgstr "The selected instance could not be checked."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Expires:"
@@ -885,6 +897,10 @@ msgstr "Not assignable"
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Customer Number"
 msgstr "Customer Number"
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Android runtime information is unavailable."
+msgstr "Android runtime information is unavailable."
 
 #: src/pages/Employees/EmployeeAddressFields.test.tsx
 #: src/pages/Employees/EmployeeAddressFields.tsx
@@ -1231,6 +1247,7 @@ msgstr "Thank you for submitting your onboarding information. Our HR team will r
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Login.tsx
 #: src/pages/Settings/SettingsPage.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -1871,6 +1888,10 @@ msgstr "Step 2: Configure assignment permissions"
 msgid "Identity card"
 msgstr "Identity card"
 
+#: src/pages/Login.tsx
+msgid "Switch instance?"
+msgstr "Switch instance?"
+
 #: src/components/NotificationPermissionPrompt.tsx
 #: src/components/NotificationPreferences.tsx
 msgid "Turn on notifications for this signed-in browser on the current SecPal deployment."
@@ -2384,6 +2405,10 @@ msgstr "The end date must be on or after the start date."
 msgid "These codes are shown only once. Store them securely before closing this dialog."
 msgstr "These codes are shown only once. Store them securely before closing this dialog."
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Could not reach that instance. Check the URL with your supervisor."
+msgstr "Could not reach that instance. Check the URL with your supervisor."
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Not requested"
 msgstr "Not requested"
@@ -2628,6 +2653,10 @@ msgstr "Emergency contact phone is required."
 msgid "Add Root Unit"
 msgstr "Add Root Unit"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Enter a valid secure HTTPS instance URL."
+msgstr "Enter a valid secure HTTPS instance URL."
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Merkle Batch ID"
 msgstr "Merkle Batch ID"
@@ -2639,6 +2668,10 @@ msgstr "I stored these recovery codes securely and understand they will not be s
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Establishment"
 msgstr "Establishment"
+
+#: src/pages/Login.tsx
+msgid "You will be returned to the instance selection screen."
+msgstr "You will be returned to the instance selection screen."
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Store your recovery codes now"
@@ -2871,6 +2904,10 @@ msgstr "You do not have permission to perform this action."
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Failed to delete passkey."
 msgstr "Failed to delete passkey."
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "This instance must be verified by an administrator before it can be used."
+msgstr "This instance must be verified by an administrator before it can be used."
 
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "Street is required."
@@ -3636,7 +3673,7 @@ msgstr "Edit Postal Address"
 msgid "Read the AGPL v3 license"
 msgstr "Read the AGPL v3 license"
 
-#. placeholder {0}: runtimeBootstrap.instanceDisplayName
+#. placeholder {0}: displayedRuntimeBootstrap.instanceDisplayName
 #: src/pages/Login.tsx
 msgid "Signed in to {0}"
 msgstr "Signed in to {0}"
