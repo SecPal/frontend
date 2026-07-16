@@ -71,7 +71,6 @@ describe("auth E2E helpers", () => {
     it("treats an explicit localhost target as non-remote", () => {
       expect(isRemoteE2ETarget("http://localhost:5173")).toBe(false);
       expect(isRemoteE2ETarget("https://localhost:5173")).toBe(false);
-      expect(isRemoteE2ETarget("https://frontend.ddev.site")).toBe(false);
     });
 
     it("treats the implicit default as non-remote when no Polyscope workspace is active", () => {
@@ -457,11 +456,11 @@ describe("auth E2E helpers", () => {
       );
     });
 
-    it("separates auth cache files for ddev and localhost targets", () => {
+    it("separates auth cache files for localhost and loopback IP targets", () => {
       expect(
         getAuthStateCachePath(
           { email: "test@example.com", password: "password" },
-          "https://frontend.ddev.site"
+          "http://127.0.0.1:5173"
         )
       ).not.toBe(
         getAuthStateCachePath(

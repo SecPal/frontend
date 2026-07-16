@@ -16,6 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Raised the Node.js requirement to `^22.22.2 || ^24.15.0 || >=26.0.0`,
   matching the effective requirement of the updated Markdown toolchain.
+- Local Vite development now proxies API traffic to the native Laravel server
+  at `http://localhost:8000` by default, removing the DDEV-specific proxy
+  headers and host allowances.
+- Frontend E2E target classification now models native localhost and Polyscope
+  workspace previews without treating `ddev.site` hosts as local HTTPS
+  exceptions.
+- Frontend development guidance now describes the native Laravel API workflow:
+  local Vite proxy comments point at the Laravel server, auth setup uses
+  `php artisan serve`, backend TDD examples use `php artisan test`, and active
+  DDEV-specific references were removed while historical changelog entries stay
+  intact.
 
 ### Fixed
 

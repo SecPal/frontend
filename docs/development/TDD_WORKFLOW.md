@@ -307,7 +307,7 @@ git log --oneline
 ## Tools & Resources
 
 - **Vitest** (frontend testing): `npm test`
-- **Pest** (backend testing): `ddev exec php artisan test`
+- **Pest** (backend testing): `php artisan test`
 - **Coverage reports**: Check Codecov bot comment on PR
 - **Git history**: `git log --oneline --name-status main..HEAD`
 

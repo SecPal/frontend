@@ -260,7 +260,7 @@ export const apiConfig = {
    * origin by accident.
    *
    * Examples:
-   * - Development with DDEV: (empty string, Vite proxy handles routing)
+   * - Development with local Vite proxy: (empty string, Vite handles routing)
    * - Development without proxy: http://localhost:8000
    * - Demo/Testing: https://api.secpal.dev
    * - Production: deployment-specific absolute API origin provided during deployment
@@ -275,7 +275,7 @@ export const apiConfig = {
    *
    * Local Development:
    * When VITE_API_URL is not set, we use empty string for same-origin requests.
-   * Vite's proxy (see vite.config.ts) forwards /v1/* and /sanctum/* to DDEV.
+   * Vite's proxy (see vite.config.ts) forwards /v1/* and /sanctum/* to the native Laravel server.
    */
   get baseUrl(): string {
     return resolveApiBaseUrl();

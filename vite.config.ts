@@ -38,12 +38,7 @@ const linguiMacroBabelPreset = defineRolldownBabelPreset({
   },
 });
 
-const ddevProxyHeaders = {
-  Origin: "http://localhost:5173",
-  Referer: "http://localhost:5173/",
-} as const;
-
-const defaultDevProxyTarget = "https://secpal-api.ddev.site";
+const defaultDevProxyTarget = "http://localhost:8000";
 
 function normalizeAbsoluteProxyTarget(
   value: string | undefined
@@ -76,7 +71,6 @@ export function buildDevServerProxyConfig(configuredApiBaseUrl?: string): {
 } {
   const resolvedProxyTarget =
     normalizeAbsoluteProxyTarget(configuredApiBaseUrl) ?? defaultDevProxyTarget;
-  const useDdevHeaders = resolvedProxyTarget === defaultDevProxyTarget;
 
   return {
     clientApiBaseUrl: "",
@@ -85,13 +79,11 @@ export function buildDevServerProxyConfig(configuredApiBaseUrl?: string): {
         target: resolvedProxyTarget,
         changeOrigin: true,
         secure: false,
-        ...(useDdevHeaders ? { headers: ddevProxyHeaders } : {}),
       },
       "/sanctum": {
         target: resolvedProxyTarget,
         changeOrigin: true,
         secure: false,
-        ...(useDdevHeaders ? { headers: ddevProxyHeaders } : {}),
       },
       "/health": {
         target: resolvedProxyTarget,
@@ -332,11 +324,8 @@ export default defineConfig(({ mode, command }) => {
       host: true,
       port: 4173,
       strictPort: true,
-      allowedHosts: [".ddev.site"],
     },
     server: {
-      // Allow DDEV hostnames for local development
-      allowedHosts: [".ddev.site"],
       // Local Vite serve mode always proxies API traffic so the browser stays
       // same-origin and never talks cross-origin to preview/customer APIs.
       proxy: devServerProxyConfig?.proxy,

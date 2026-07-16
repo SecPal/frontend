@@ -123,7 +123,7 @@ The SPA flow uses `POST /v1/auth/login`, `POST /v1/auth/logout`, and `GET /v1/me
 
 ```env
 # Development API endpoint (leave empty to use Vite proxy, or use https:// for a remote dev server)
-# VITE_API_URL=           # empty = Vite proxy → recommended for local DDEV
+# VITE_API_URL=           # empty = Vite proxy to the local Laravel API
 # VITE_API_URL=https://api.secpal.dev   # explicit remote dev/testing server
 
 # No token-related variables needed anymore!
@@ -156,7 +156,7 @@ CORS_ALLOWED_ORIGINS=https://app.secpal.dev
 
    ```bash
    cd api/
-   ddev start
+   php artisan serve
    ```
 
 2. **Start frontend dev server:**

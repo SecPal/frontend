@@ -219,9 +219,9 @@ describe("performance audit mode", () => {
     });
   });
 
-  it("keeps strict default Lighthouse thresholds for local HTTPS targets (e.g. *.ddev.site)", async () => {
+  it("keeps strict default Lighthouse thresholds for localhost HTTPS targets", async () => {
     vi.stubEnv("CI", "");
-    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://frontend.ddev.site");
+    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://localhost:5173");
     vi.stubEnv("POLYSCOPE_WORKSPACE", "");
     mockNonPolyscopeCwd();
     vi.resetModules();
