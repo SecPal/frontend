@@ -1,0 +1,825 @@
+---
+openapi: 3.1.0
+info:
+  title: SecPal Customer and Establishment Contract
+  version: 1.0.0
+  description: >-
+    Binding contract slice for shared customer master data, visible establishment relationships, and establishment-bound
+    sites.
+  contact:
+    name: SecPal
+    url: https://secpal.app
+servers:
+  - url: https://api.secpal.dev/api/v1
+tags:
+  - name: Customers
+  - name: Sites
+paths:
+  /customers:
+    get:
+      operationId: listCustomers
+      tags:
+        - Customers
+      summary: List visible customers
+      description: Returns customer master data and only establishment relationships visible to the caller.
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Visible customers
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Customer"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createCustomer
+      tags:
+        - Customers
+      summary: Create a customer and its initial establishment relationship
+      description: >-
+        Creates shared customer master data and one relationship. Contact and
+        notes belong to that relationship.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerCreateRequest"
+      responses:
+        "201":
+          description: Customer created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /customers/{customer}:
+    get:
+      operationId: getCustomer
+      tags:
+        - Customers
+      summary: Get a visible customer
+      description: >-
+        Returns customer master data and filters establishment_relationships to
+        relationships visible to the caller.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CustomerId"
+      responses:
+        "200":
+          description: Customer with visible relationships
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateCustomer
+      tags:
+        - Customers
+      summary: Update shared customer master data
+      description: Updates customer-level fields only; relationship contact and notes use the relationship endpoint.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CustomerId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerUpdateRequest"
+      responses:
+        "200":
+          description: Customer updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /customers/establishments:
+    get:
+      operationId: listCustomerEstablishmentOptions
+      tags:
+        - Customers
+      summary: List visible establishment options
+      description: >-
+        Returns only minimal, active establishment options visible to the caller. Omitted rows and authorization
+        failures must not disclose whether any non-visible establishment exists.
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Visible minimal establishment options
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CustomerEstablishmentLookup"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /customers/{customer}/establishments:
+    get:
+      operationId: listCustomerEstablishmentRelationships
+      tags:
+        - Customers
+      summary: List visible establishment relationships
+      description: >-
+        Returns only relationships whose establishments are visible to the caller and must not disclose non-visible
+        establishments through counts, metadata, or errors.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CustomerId"
+      responses:
+        "200":
+          description: Visible relationships
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CustomerEstablishmentRelationship"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      operationId: createCustomerEstablishmentRelationship
+      tags:
+        - Customers
+      summary: Create an establishment relationship
+      description: >-
+        Requires access to the customer and target establishment. A missing or inaccessible target returns the same
+        response and must not disclose whether a non-visible establishment exists.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CustomerId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerEstablishmentRelationshipCreateRequest"
+      responses:
+        "201":
+          description: Relationship created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerEstablishmentRelationshipResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /customers/{customer}/establishments/{relationship}:
+    patch:
+      operationId: updateCustomerEstablishmentRelationship
+      tags:
+        - Customers
+      summary: Update an establishment relationship
+      description: >-
+        Requires access to the customer, current establishment, and any target establishment. Not-found responses must
+        not disclose non-visible establishments or relationships.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CustomerId"
+        - $ref: "#/components/parameters/RelationshipId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerEstablishmentRelationshipUpdateRequest"
+      responses:
+        "200":
+          description: Relationship updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerEstablishmentRelationshipResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      operationId: deleteCustomerEstablishmentRelationship
+      tags:
+        - Customers
+      summary: Delete an establishment relationship
+      description: >-
+        Requires access to the customer and current establishment. Not-found responses must not disclose non-visible
+        establishments or relationships.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/CustomerId"
+        - $ref: "#/components/parameters/RelationshipId"
+      responses:
+        "204":
+          description: Relationship deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /sites:
+    get:
+      operationId: listSites
+      tags:
+        - Sites
+      summary: List visible establishment-bound sites
+      description: Returns sites visible through the caller's establishment access.
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Visible sites
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Site"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createSite
+      tags:
+        - Sites
+      summary: Create an establishment-bound site
+      description: Creates a site for a visible customer relationship and establishment.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiteCreateRequest"
+      responses:
+        "201":
+          description: Site created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Site"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /sites/{site}:
+    get:
+      operationId: getSite
+      tags:
+        - Sites
+      summary: Get a visible establishment-bound site
+      description: Returns a site only when its establishment is visible to the caller.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SiteId"
+      responses:
+        "200":
+          description: Visible site
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Site"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateSite
+      tags:
+        - Sites
+      summary: Update an establishment-bound site
+      description: Updates site fields and validates access to any target establishment.
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/SiteId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiteUpdateRequest"
+      responses:
+        "200":
+          description: Site updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Site"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    CustomerId:
+      name: customer
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RelationshipId:
+      name: relationship
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    SiteId:
+      name: site
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Unauthorized:
+      description: Authentication required
+    Forbidden:
+      description: Authenticated caller lacks permission
+    NotFound:
+      description: Resource is missing or is not visible to the caller
+    ValidationError:
+      description: Request validation failed
+  schemas:
+    Address:
+      type: object
+      additionalProperties: false
+      required:
+        - street
+        - city
+        - postal_code
+        - country
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        postal_code:
+          type: string
+        country:
+          type: string
+          minLength: 2
+          maxLength: 2
+    Contact:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        email:
+          type:
+            - string
+            - "null"
+          format: email
+        phone:
+          type:
+            - string
+            - "null"
+        position:
+          type:
+            - string
+            - "null"
+    CustomerEstablishmentLookup:
+      type: object
+      additionalProperties: false
+      description: >-
+        Minimal visible establishment option; no generic organizational-unit
+        hierarchy or metadata is exposed.
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 255
+    CustomerEstablishmentRelationship:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - customer_id
+        - establishment_id
+        - establishment
+        - contact
+        - notes
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+        establishment_id:
+          type: string
+          format: uuid
+        establishment:
+          $ref: "#/components/schemas/CustomerEstablishmentLookup"
+        contact:
+          oneOf:
+            - $ref: "#/components/schemas/Contact"
+            - type: "null"
+        notes:
+          type:
+            - string
+            - "null"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    CustomerEstablishmentRelationshipCreateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - establishment_id
+      properties:
+        establishment_id:
+          type: string
+          format: uuid
+        contact:
+          oneOf:
+            - $ref: "#/components/schemas/Contact"
+            - type: "null"
+        notes:
+          type:
+            - string
+            - "null"
+    CustomerEstablishmentRelationshipUpdateRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        establishment_id:
+          type: string
+          format: uuid
+        contact:
+          oneOf:
+            - $ref: "#/components/schemas/Contact"
+            - type: "null"
+        notes:
+          type:
+            - string
+            - "null"
+    Customer:
+      type: object
+      additionalProperties: false
+      description: Shared customer master data with only the caller-visible establishment relationships.
+      required:
+        - id
+        - customer_number
+        - legal_entity_id
+        - name
+        - billing_address
+        - is_active
+        - establishment_relationships
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        customer_number:
+          type: string
+        legal_entity_id:
+          type: string
+          format: uuid
+        vat_id:
+          type:
+            - string
+            - "null"
+          maxLength: 32
+        name:
+          type: string
+          maxLength: 255
+        billing_address:
+          $ref: "#/components/schemas/Address"
+        is_active:
+          type: boolean
+        metadata:
+          type:
+            - object
+            - "null"
+          additionalProperties: true
+        establishment_relationships:
+          type: array
+          description: Relationships filtered to establishments visible to the caller.
+          items:
+            $ref: "#/components/schemas/CustomerEstablishmentRelationship"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type:
+            - string
+            - "null"
+          format: date-time
+    CustomerCreateRequest:
+      type: object
+      additionalProperties: false
+      description: >-
+        Creates customer master data and the initial relationship; contact and
+        notes are stored on that relationship.
+      required:
+        - legal_entity_id
+        - establishment_id
+        - name
+        - billing_address
+      properties:
+        legal_entity_id:
+          type: string
+          format: uuid
+        establishment_id:
+          type: string
+          format: uuid
+          description: Visible establishment for the initial relationship.
+        vat_id:
+          type:
+            - string
+            - "null"
+          maxLength: 32
+        name:
+          type: string
+          maxLength: 255
+        billing_address:
+          $ref: "#/components/schemas/Address"
+        contact:
+          description: Contact data for the initial establishment relationship.
+          oneOf:
+            - $ref: "#/components/schemas/Contact"
+            - type: "null"
+        notes:
+          type:
+            - string
+            - "null"
+          description: Notes for the initial establishment relationship.
+        is_active:
+          type: boolean
+          default: true
+        metadata:
+          type:
+            - object
+            - "null"
+          additionalProperties: true
+    CustomerUpdateRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        legal_entity_id:
+          type: string
+          format: uuid
+        vat_id:
+          type:
+            - string
+            - "null"
+          maxLength: 32
+        name:
+          type: string
+          maxLength: 255
+        billing_address:
+          $ref: "#/components/schemas/Address"
+        is_active:
+          type: boolean
+        metadata:
+          type:
+            - object
+            - "null"
+          additionalProperties: true
+    CustomerResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/Customer"
+    CustomerEstablishmentRelationshipResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - data
+      properties:
+        data:
+          $ref: "#/components/schemas/CustomerEstablishmentRelationship"
+    SiteType:
+      type: string
+      enum:
+        - permanent
+        - temporary
+    Site:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - customer_id
+        - establishment_id
+        - site_number
+        - name
+        - type
+        - address
+        - is_active
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        customer_id:
+          type: string
+          format: uuid
+        establishment_id:
+          type: string
+          format: uuid
+        site_number:
+          type: string
+        name:
+          type: string
+          maxLength: 255
+        type:
+          $ref: "#/components/schemas/SiteType"
+        address:
+          $ref: "#/components/schemas/Address"
+        contact:
+          oneOf:
+            - $ref: "#/components/schemas/Contact"
+            - type: "null"
+        notes:
+          type:
+            - string
+            - "null"
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    SiteCreateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - customer_id
+        - establishment_id
+        - name
+        - type
+        - address
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+        establishment_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 255
+        type:
+          $ref: "#/components/schemas/SiteType"
+        address:
+          $ref: "#/components/schemas/Address"
+        contact:
+          oneOf:
+            - $ref: "#/components/schemas/Contact"
+            - type: "null"
+        notes:
+          type:
+            - string
+            - "null"
+        is_active:
+          type: boolean
+          default: true
+    SiteUpdateRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+        establishment_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 255
+        type:
+          $ref: "#/components/schemas/SiteType"
+        address:
+          $ref: "#/components/schemas/Address"
+        contact:
+          oneOf:
+            - $ref: "#/components/schemas/Contact"
+            - type: "null"
+        notes:
+          type:
+            - string
+            - "null"
+        is_active:
+          type: boolean

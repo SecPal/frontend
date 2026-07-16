@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Defined the customer-establishment OpenAPI contract for shared customer
+  master data, visible relationship-specific contact and notes, minimal
+  establishment lookups, protected relationship operations, and
+  establishment-bound sites.
 - Approved the binding customer identity, duplicate-resolution,
   Customer-Establishment authorization, and existing-data migration rules,
   including fail-closed handling for customers without VAT IDs and ambiguous
