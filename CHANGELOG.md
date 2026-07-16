@@ -44,10 +44,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   locked dependencies during hook setup.
 - Derived the preflight Markdown linter version from `package.json`, keeping
   dependency updates and local linting in sync without a duplicate version pin.
-- Customer creation now requires an explicit tenant-authorized Legal Entity
-  selection. Customer list, detail, and edit views display only the API-provided
-  assignment and prevent updates to unmigrated customers until an authorized
-  Legal Entity is explicitly selected.
+- Customer creation now requires a tenant-authorized Legal Entity, automatically
+  selects and disables the field when exactly one is available, and submits that
+  assignment. Selections that are no longer authorized are discarded after the
+  available options refresh. Customer list, detail, and edit views display only
+  the API-provided assignment and prevent updates to unmigrated customers until
+  an authorized Legal Entity is explicitly selected.
 - Added retry recovery for failed customer Legal Entity lookups in create and
   edit flows and normalized malformed lookup envelopes to the documented
   validation error.

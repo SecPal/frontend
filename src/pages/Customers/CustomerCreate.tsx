@@ -184,9 +184,24 @@ export default function CustomerCreate() {
     }));
   }
 
+  const hasExplicitLegalEntitySelection =
+    formData.legal_entity_id.trim().length > 0;
+  const isExplicitLegalEntitySelectionAuthorized = legalEntities.some(
+    (legalEntity) => legalEntity.id === formData.legal_entity_id
+  );
+  const hasStaleExplicitLegalEntitySelection =
+    hasExplicitLegalEntitySelection &&
+    !isExplicitLegalEntitySelectionAuthorized;
+  const selectedLegalEntityId = hasExplicitLegalEntitySelection
+    ? isExplicitLegalEntitySelectionAuthorized
+      ? formData.legal_entity_id
+      : ""
+    : legalEntities.length === 1
+      ? legalEntities[0]!.id
+      : "";
+
   function validateForm(): CustomerFormErrors {
     const validationErrors: CustomerFormErrors = {};
-    const selectedLegalEntityId = formData.legal_entity_id;
 
     if (formData.name.trim().length === 0) {
       validationErrors.name = _(msg`Customer name is required.`);
@@ -247,7 +262,7 @@ export default function CustomerCreate() {
     try {
       // Clean up the data before sending
       const dataToSend: CreateCustomerRequest = {
-        legal_entity_id: formData.legal_entity_id,
+        legal_entity_id: selectedLegalEntityId,
         name: formData.name,
         billing_address: formData.billing_address,
         is_active: formData.is_active,
@@ -285,10 +300,11 @@ export default function CustomerCreate() {
   }
 
   const hasLegalEntityOptions = legalEntities.length > 0;
-  const legalEntitySelectDisabled = loadingLegalEntities;
+  const legalEntitySelectDisabled =
+    loadingLegalEntities ||
+    (legalEntities.length === 1 && !hasStaleExplicitLegalEntitySelection);
   const cannotCreateCustomer =
     loading || loadingLegalEntities || !hasLegalEntityOptions || !!lookupError;
-  const selectedLegalEntityId = formData.legal_entity_id;
 
   return (
     <div className="max-w-3xl">

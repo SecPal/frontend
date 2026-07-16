@@ -3,6 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -374,7 +375,97 @@ describe("CustomerCreate", () => {
     });
   });
 
-  it("requires an explicit legal entity selection when exactly one entity is available", async () => {
+  it("requires selecting the lone replacement after an authorized options refresh", async () => {
+    const user = userEvent.setup();
+    const replacementLegalEntity = {
+      id: "550e8400-e29b-41d4-a716-446655440003",
+      name: "SecPal Services GmbH",
+    };
+    const previousLocale = i18n.locale;
+    const nextLocale = previousLocale === "de" ? "en" : "de";
+    let resolveRefresh: (
+      entities: Awaited<
+        ReturnType<typeof customerLegalEntitiesApi.listCustomerLegalEntities>
+      >
+    ) => void = () => {};
+    const refreshPromise = new Promise<
+      Awaited<
+        ReturnType<typeof customerLegalEntitiesApi.listCustomerLegalEntities>
+      >
+    >((resolve) => {
+      resolveRefresh = resolve;
+    });
+
+    vi.mocked(customerLegalEntitiesApi.listCustomerLegalEntities)
+      .mockResolvedValueOnce(legalEntities)
+      .mockReturnValueOnce(refreshPromise);
+
+    const { unmount } = renderWithRouter(<CustomerCreate />);
+
+    await chooseLegalEntity(secondLegalEntity.name);
+
+    try {
+      act(() => {
+        i18n.load(nextLocale, {});
+        i18n.activate(nextLocale);
+      });
+
+      await waitFor(() => {
+        expect(
+          customerLegalEntitiesApi.listCustomerLegalEntities
+        ).toHaveBeenCalledTimes(2);
+      });
+      await act(async () => {
+        resolveRefresh([replacementLegalEntity]);
+        await refreshPromise;
+      });
+      const trigger = await screen.findByRole("combobox", {
+        name: /legal entity/i,
+      });
+      await waitFor(() => {
+        expect(trigger).toBeEnabled();
+        expect(trigger).toHaveTextContent("Select legal entity...");
+      });
+      await user.click(trigger);
+      await user.click(
+        await screen.findByRole("option", { name: replacementLegalEntity.name })
+      );
+
+      fireEvent.change(screen.getByLabelText(/customer name/i), {
+        target: { value: "Refreshed Entity Customer" },
+      });
+      fireEvent.change(screen.getByLabelText(/street/i), {
+        target: { value: "Street 1" },
+      });
+      fireEvent.change(screen.getByLabelText(/postal code/i), {
+        target: { value: "12345" },
+      });
+      fireEvent.change(screen.getByLabelText(/city/i), {
+        target: { value: "City" },
+      });
+
+      await user.click(
+        screen.getByRole("button", { name: /create customer/i })
+      );
+
+      await waitFor(() => {
+        expect(customersApi.createCustomer).toHaveBeenCalledWith(
+          expect.objectContaining({
+            legal_entity_id: replacementLegalEntity.id,
+          })
+        );
+      });
+    } finally {
+      unmount();
+      if (previousLocale) {
+        act(() => {
+          i18n.activate(previousLocale);
+        });
+      }
+    }
+  });
+
+  it("selects, disables, and submits the only available legal entity", async () => {
     const user = userEvent.setup();
     const mockCustomer = {
       id: "customer-single-entity",
@@ -402,8 +493,10 @@ describe("CustomerCreate", () => {
     const trigger = await screen.findByRole("combobox", {
       name: /legal entity/i,
     });
-    expect(trigger).toBeEnabled();
-    expect(trigger).toHaveTextContent("Select legal entity...");
+    await waitFor(() => {
+      expect(trigger).toBeDisabled();
+      expect(trigger).toHaveTextContent(firstLegalEntity.name);
+    });
 
     fireEvent.change(screen.getByLabelText(/customer name/i), {
       target: { value: "Single Entity Customer" },
@@ -420,10 +513,13 @@ describe("CustomerCreate", () => {
 
     await user.click(screen.getByRole("button", { name: /create customer/i }));
 
-    expect(
-      await screen.findByText(/legal entity is required/i)
-    ).toBeInTheDocument();
-    expect(customersApi.createCustomer).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(customersApi.createCustomer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          legal_entity_id: firstLegalEntity.id,
+        })
+      );
+    });
   });
 
   it("shows an empty state and cannot post when no legal entity is available", async () => {
