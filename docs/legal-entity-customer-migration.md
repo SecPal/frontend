@@ -68,8 +68,8 @@ must deny by default if any permission, scope, or invariant is missing.
 
 An Establishment lookup returns only eligible, in-scope targets and only the
 minimal identifier and display name. Relationship access must not grant access
-to global customer contacts, notes, other Establishments, or organizational
-hierarchy data.
+to contacts or notes from other Establishment relationships, other
+Establishments, or organizational hierarchy data.
 
 ## Approved Migration Path
 
@@ -80,11 +80,13 @@ Migration proceeds in these ordered stages:
 2. Assign a Legal Entity only from explicit, auditable source data. Apply the
    identity rule within that Legal Entity, and route identity or master-data
    conflicts to review before consolidation.
-3. Keep each global contact and note on the canonical customer. Global data
-   must not be copied to Customer-Establishment relationships or individual
-   Establishments. Relationship-specific fields start empty and can be filled
-   only by an authorized user after migration. Users with only Establishment
-   access do not gain access to global customer data.
+3. Treat every non-null global contact and note as ambiguous legacy data. Its
+   Establishment meaning must not be guessed or copied. Route it to review, and
+   move it to one explicit relationship or discard it only after an authorized
+   reviewer records evidence. Relationship-specific fields otherwise start
+   empty. After all exceptions are resolved, the global fields are removed from
+   the Customer target model, so Establishment access cannot expose data from
+   another relationship.
 4. Create a relationship for an existing object only when its stored
    organizational-unit reference identifies exactly one same-tenant, active,
    assignable, non-deleted Establishment. Otherwise retain the object unchanged

@@ -39,7 +39,8 @@ describe("Legal Entity customer migration decision", () => {
     const decision = readFileSync(decisionDocumentPath, "utf8");
 
     expect(decision).toContain("Approved Migration Path");
-    expect(decision).toContain("must not be copied");
+    expect(decision).toContain("must not be guessed or copied");
+    expect(decision).toMatch(/removed from\s+the Customer target model/);
     expect(decision).toContain("unassigned migration exception queue");
     expect(decision).toContain("No silent default assignment");
     expect(decision).toContain("dry run");

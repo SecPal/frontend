@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Defined the tenant-safe Customer-Establishment persistence and migration
+  contract, including relationship-owned contact and notes, deterministic Site
+  reassignment, composite foreign keys, and fail-closed legacy-data preflight
+  requirements.
 - Defined the customer-establishment OpenAPI contract for shared customer
   master data, visible relationship-specific contact and notes, minimal
   establishment lookups, protected relationship operations, and
