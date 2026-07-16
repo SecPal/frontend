@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Capped the Vitest worker pool for every full-suite run, preventing concurrent
+  release-build validation tests from timing out in native workflow validation.
 - Kept the hooks diagnostic script's clean-shell command literal while making
   the full pre-commit setup verification ShellCheck-clean.
 - Normalized generated locale catalogs and conflict-marker hook documentation
