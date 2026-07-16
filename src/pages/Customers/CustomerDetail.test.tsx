@@ -262,6 +262,29 @@ describe("CustomerDetail", () => {
     });
   });
 
+  it("displays the legal entity identifier supplied by the customer response", async () => {
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+
+    renderWithRouter();
+
+    expect(
+      await screen.findByText(mockCustomer.legal_entity_id)
+    ).toBeInTheDocument();
+  });
+
+  it("does not invent an assignment for an unmigrated customer", async () => {
+    vi.mocked(customersApi.getCustomer).mockResolvedValue({
+      ...mockCustomer,
+      legal_entity_id: undefined,
+    } as unknown as typeof mockCustomer);
+
+    renderWithRouter();
+
+    expect(
+      await screen.findByText(/requires a legal entity assignment/i)
+    ).toBeInTheDocument();
+  });
+
   it("navigates to edit page when edit button clicked", async () => {
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 

@@ -120,6 +120,9 @@ describe("CustomersPage", () => {
       })
     ).toBeInTheDocument();
     expect(screen.getByText("C001")).toBeInTheDocument();
+    expect(
+      screen.getAllByText(mockCustomers[0]!.legal_entity_id).length
+    ).toBeGreaterThan(0);
   });
 
   it("renders customers as mobile cards on narrow viewports", async () => {

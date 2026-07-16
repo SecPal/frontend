@@ -14,9 +14,11 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import CustomerEdit from "./CustomerEdit";
+import * as customerLegalEntitiesApi from "../../services/customerLegalEntitiesApi";
 import * as customersApi from "../../services/customersApi";
 
 vi.mock("../../services/customersApi");
+vi.mock("../../services/customerLegalEntitiesApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
 
@@ -69,6 +71,14 @@ describe("CustomerEdit", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(
+      customerLegalEntitiesApi.listCustomerLegalEntities
+    ).mockResolvedValue([
+      {
+        id: mockCustomer.legal_entity_id,
+        name: "SecPal GmbH",
+      },
+    ]);
     window.history.pushState({}, "", "/customers/customer-123/edit");
   });
 
@@ -90,6 +100,62 @@ describe("CustomerEdit", () => {
     expect(screen.getByLabelText(/country/i)).toHaveValue("DE");
     expect(screen.getByLabelText(/notes/i)).toHaveValue("Existing notes");
     expect(screen.getByLabelText(/vat id/i)).toHaveValue("DE123456789");
+  });
+
+  it("blocks an unmigrated customer until an authorized legal entity is explicitly selected", async () => {
+    const user = userEvent.setup();
+    vi.mocked(customersApi.getCustomer).mockResolvedValue({
+      ...mockCustomer,
+      legal_entity_id: undefined,
+    } as unknown as typeof mockCustomer);
+
+    renderWithRouter();
+
+    expect(
+      await screen.findByText(/requires a legal entity assignment/i)
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+    expect(
+      await screen.findByText(/legal entity must be selected/i)
+    ).toBeInTheDocument();
+    expect(customersApi.updateCustomer).not.toHaveBeenCalled();
+  });
+
+  it("assigns an unmigrated customer only after selecting a tenant-authorized legal entity", async () => {
+    const user = userEvent.setup();
+    const legalEntity = {
+      id: "550e8400-e29b-41d4-a716-446655440002",
+      name: "SecPal Operations GmbH",
+    };
+    vi.mocked(
+      customerLegalEntitiesApi.listCustomerLegalEntities
+    ).mockResolvedValue([legalEntity]);
+    vi.mocked(customersApi.getCustomer).mockResolvedValue({
+      ...mockCustomer,
+      legal_entity_id: undefined,
+    } as unknown as typeof mockCustomer);
+    vi.mocked(customersApi.updateCustomer).mockResolvedValue({
+      ...mockCustomer,
+      legal_entity_id: legalEntity.id,
+    });
+
+    renderWithRouter();
+
+    const legalEntitySelect = await screen.findByRole("combobox", {
+      name: /legal entity/i,
+    });
+    await user.click(legalEntitySelect);
+    await user.click(
+      await screen.findByRole("option", { name: legalEntity.name })
+    );
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(customersApi.updateCustomer).toHaveBeenCalledWith(
+        "customer-123",
+        expect.objectContaining({ legal_entity_id: legalEntity.id })
+      );
+    });
   });
 
   it("renders the VAT ID field directly before country", async () => {
@@ -541,6 +607,68 @@ describe("CustomerEdit", () => {
 
     await waitFor(() => {
       expect(screen.getByLabelText(/customer name/i)).toHaveValue("Customer B");
+    });
+  });
+
+  it("does not carry a reassignment selection to a customer reached by param-only navigation", async () => {
+    const user = userEvent.setup();
+    const reassignmentLegalEntity = {
+      id: "550e8400-e29b-41d4-a716-446655440099",
+      name: "SecPal Operations GmbH",
+    };
+    const customerA = {
+      ...mockCustomer,
+      id: "customer-A",
+      name: "Customer A",
+    };
+    const customerB = {
+      ...mockCustomer,
+      id: "customer-B",
+      name: "Customer B",
+    };
+    vi.mocked(
+      customerLegalEntitiesApi.listCustomerLegalEntities
+    ).mockResolvedValue([
+      {
+        id: mockCustomer.legal_entity_id,
+        name: "SecPal GmbH",
+      },
+      reassignmentLegalEntity,
+    ]);
+    vi.mocked(customersApi.getCustomer).mockImplementation(async (id) =>
+      id === "customer-A" ? customerA : customerB
+    );
+    vi.mocked(customersApi.updateCustomer).mockResolvedValue(customerB);
+
+    window.history.pushState({}, "", "/customers/customer-A/edit");
+    renderWithRouter();
+
+    const legalEntitySelect = await screen.findByRole("combobox", {
+      name: /reassign legal entity/i,
+    });
+    await user.click(legalEntitySelect);
+    await user.click(
+      await screen.findByRole("option", {
+        name: reassignmentLegalEntity.name,
+      })
+    );
+
+    await act(async () => {
+      window.history.pushState({}, "", "/customers/customer-B/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      await Promise.resolve();
+    });
+
+    await screen.findByDisplayValue("Customer B");
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(customersApi.updateCustomer).toHaveBeenCalledWith(
+        "customer-B",
+        expect.not.objectContaining({
+          legal_entity_id: reassignmentLegalEntity.id,
+        })
+      );
     });
   });
 

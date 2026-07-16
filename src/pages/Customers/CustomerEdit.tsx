@@ -17,22 +17,39 @@ import { Input } from "@/ui/input";
 import { FormSkeleton } from "@/ui/loading";
 import { Textarea } from "@/ui/textarea";
 import { getCustomer, updateCustomer } from "../../services/customersApi";
+import { listCustomerLegalEntities } from "../../services/customerLegalEntitiesApi";
 import type {
   Address,
   Contact,
   Customer,
+  CustomerLegalEntityLookup,
   UpdateCustomerRequest,
 } from "@/types/api/customers";
 import {
   Alert,
   AlertDescription,
   Field,
+  FieldError,
   FieldGroup,
   FieldLabel,
   CustomerSiteFormCheckboxField as FormCheckboxField,
   CustomerSitePageText as PageText,
   CustomerSitePageTitle as PageTitle,
 } from "@/ui";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui/select";
+
+function getLegalEntityId(customer: Customer): string | null {
+  const legalEntityId = customer.legal_entity_id;
+  return typeof legalEntityId === "string" && legalEntityId.trim().length > 0
+    ? legalEntityId
+    : null;
+}
 
 export default function CustomerEdit() {
   const { _ } = useLingui();
@@ -42,6 +59,14 @@ export default function CustomerEdit() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [legalEntities, setLegalEntities] = useState<
+    CustomerLegalEntityLookup[]
+  >([]);
+  const [loadingLegalEntities, setLoadingLegalEntities] = useState(true);
+  const [legalEntityLookupError, setLegalEntityLookupError] = useState<
+    string | null
+  >(null);
+  const [selectedLegalEntityId, setSelectedLegalEntityId] = useState("");
 
   const [formData, setFormData] = useState<UpdateCustomerRequest>({});
 
@@ -64,6 +89,7 @@ export default function CustomerEdit() {
       // record's values to the new id.
       setCustomer(null);
       setFormData({});
+      setSelectedLegalEntityId("");
       setLoading(true);
       setError(null);
       try {
@@ -92,6 +118,38 @@ export default function CustomerEdit() {
       cancelled = true;
     };
   }, [_, id]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadLegalEntities() {
+      setLoadingLegalEntities(true);
+      setLegalEntityLookupError(null);
+      try {
+        const entities = await listCustomerLegalEntities();
+        if (!cancelled) {
+          setLegalEntities(entities);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setLegalEntityLookupError(
+            err instanceof Error
+              ? err.message
+              : _(msg`Failed to load legal entities`)
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingLegalEntities(false);
+        }
+      }
+    }
+
+    void loadLegalEntities();
+    return () => {
+      cancelled = true;
+    };
+  }, [_]);
 
   function updateField(field: keyof UpdateCustomerRequest, value: unknown) {
     setFormData((currentFormData) => ({
@@ -124,6 +182,16 @@ export default function CustomerEdit() {
     e.preventDefault();
     if (!id) return;
 
+    const legalEntityId = customer ? getLegalEntityId(customer) : null;
+    if (!legalEntityId && !selectedLegalEntityId) {
+      setError(
+        _(
+          msg`A legal entity must be selected before this customer can be updated.`
+        )
+      );
+      return;
+    }
+
     setSaving(true);
     setError(null);
 
@@ -131,6 +199,9 @@ export default function CustomerEdit() {
       const vatId = formData.vat_id?.trim();
       await updateCustomer(id, {
         ...formData,
+        ...(selectedLegalEntityId
+          ? { legal_entity_id: selectedLegalEntityId }
+          : {}),
         vat_id: vatId || null,
       });
       navigate(`/customers/${id}`);
@@ -144,6 +215,9 @@ export default function CustomerEdit() {
   }
 
   const isInitialLoading = loading && customer === null;
+  const currentLegalEntityId = customer ? getLegalEntityId(customer) : null;
+  const requiresLegalEntityAssignment =
+    customer !== null && !currentLegalEntityId;
 
   return (
     <div className="max-w-3xl">
@@ -178,6 +252,53 @@ export default function CustomerEdit() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="customer-legal-entity">
+                  {requiresLegalEntityAssignment ? (
+                    <>
+                      <Trans>Legal Entity</Trans> *
+                    </>
+                  ) : (
+                    <Trans>Reassign Legal Entity</Trans>
+                  )}
+                </FieldLabel>
+                {currentLegalEntityId ? (
+                  <p className="text-muted-foreground text-sm">
+                    <Trans>Current Legal Entity:</Trans> {currentLegalEntityId}
+                  </p>
+                ) : (
+                  <p className="text-destructive text-sm">
+                    <Trans>
+                      This customer requires a Legal Entity assignment.
+                    </Trans>
+                  </p>
+                )}
+                <Select
+                  name="legal_entity_id"
+                  value={selectedLegalEntityId}
+                  onValueChange={setSelectedLegalEntityId}
+                >
+                  <SelectTrigger
+                    id="customer-legal-entity"
+                    disabled={
+                      loadingLegalEntities || legalEntities.length === 0
+                    }
+                    aria-required={requiresLegalEntityAssignment || undefined}
+                  >
+                    <SelectValue placeholder={_(msg`Select legal entity...`)} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {legalEntities.map((legalEntity) => (
+                      <SelectItem key={legalEntity.id} value={legalEntity.id}>
+                        {legalEntity.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {legalEntityLookupError ? (
+                  <FieldError>{legalEntityLookupError}</FieldError>
+                ) : null}
+              </Field>
               <Field>
                 <FieldLabel htmlFor="customer-name">
                   <Trans>Customer Name</Trans> *

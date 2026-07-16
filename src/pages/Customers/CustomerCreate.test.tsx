@@ -374,7 +374,7 @@ describe("CustomerCreate", () => {
     });
   });
 
-  it("preselects and disables the legal entity trigger when exactly one entity is available", async () => {
+  it("requires an explicit legal entity selection when exactly one entity is available", async () => {
     const user = userEvent.setup();
     const mockCustomer = {
       id: "customer-single-entity",
@@ -402,10 +402,8 @@ describe("CustomerCreate", () => {
     const trigger = await screen.findByRole("combobox", {
       name: /legal entity/i,
     });
-    await waitFor(() => {
-      expect(trigger).toHaveTextContent(firstLegalEntity.name);
-    });
-    expect(trigger).toBeDisabled();
+    expect(trigger).toBeEnabled();
+    expect(trigger).toHaveTextContent("Select legal entity...");
 
     fireEvent.change(screen.getByLabelText(/customer name/i), {
       target: { value: "Single Entity Customer" },
@@ -422,13 +420,10 @@ describe("CustomerCreate", () => {
 
     await user.click(screen.getByRole("button", { name: /create customer/i }));
 
-    await waitFor(() => {
-      expect(customersApi.createCustomer).toHaveBeenCalledWith(
-        expect.objectContaining({
-          legal_entity_id: firstLegalEntity.id,
-        })
-      );
-    });
+    expect(
+      await screen.findByText(/legal entity is required/i)
+    ).toBeInTheDocument();
+    expect(customersApi.createCustomer).not.toHaveBeenCalled();
   });
 
   it("shows an empty state and cannot post when no legal entity is available", async () => {
