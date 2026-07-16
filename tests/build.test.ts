@@ -173,7 +173,10 @@ describe("Build Configuration and Source Verification", () => {
     } finally {
       rmSync(distRoot, { recursive: true, force: true });
     }
-  }, 30_000);
+    // This covers the full release build path (typecheck, Vite/PWA build, and
+    // SBOM generation). It took 26.8 seconds in isolation, so retain a
+    // load-tolerant timeout without changing the default for lightweight tests.
+  }, 60_000);
 
   it("keeps timeout-minutes only on runnable quality workflow jobs", () => {
     const qualityWorkflow = readRepoFile(".github/workflows/quality.yml");
