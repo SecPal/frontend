@@ -69,6 +69,9 @@ describe("check-domains", () => {
     expect(domainCheckTests).not.toContain(
       `sessionStorage.setItem("${assetLoadRecoveryStorageKey}", "pending")`
     );
+    expect(domainCheckTests).toContain(
+      'window.sessionStorage.setItem(assetLoadRecoveryStorageKey, "pending")'
+    );
     expect(themeColorBootstrapTests).not.toContain(assetLoadRecoveryStorageKey);
     expect(buildTests).not.toContain(assetLoadRecoveryStorageKey);
   });
@@ -77,7 +80,10 @@ describe("check-domains", () => {
     const result = runDomainCheck([
       {
         path: "public/theme-color.js",
-        contents: `sessionStorage.setItem("${assetLoadRecoveryStorageKey}", "pending");\n`,
+        contents: [
+          `var assetLoadRecoveryStorageKey = "${assetLoadRecoveryStorageKey}";`,
+          'window.sessionStorage.setItem(assetLoadRecoveryStorageKey, "pending");',
+        ].join("\n"),
       },
       {
         path: ".context/notes.md",
