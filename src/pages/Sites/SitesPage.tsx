@@ -46,10 +46,6 @@ import {
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
 function formatSiteAddress(site: Site): string {
-  if (site.full_address) {
-    return site.full_address;
-  }
-
   return [
     site.address.street,
     `${site.address.postal_code} ${site.address.city}`.trim(),
@@ -311,13 +307,9 @@ function SitesPageContent({ customerId }: { customerId?: string }) {
                   </TableCell>
                   <TableCell>{site.name}</TableCell>
                   <TableCell>
-                    {site.customer ? (
-                      <PageLink to={`/customers/${site.customer.id}`}>
-                        {site.customer.name}
-                      </PageLink>
-                    ) : (
-                      site.customer_id
-                    )}
+                    <PageLink to={`/customers/${site.customer_id}`}>
+                      {site.customer_id}
+                    </PageLink>
                   </TableCell>
                   <TableCell>
                     <StatusBadge

@@ -61,6 +61,7 @@ const mockCustomers: Customer[] = [
       country: "Germany",
     },
     is_active: true,
+    establishment_relationships: [],
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z",
   },
@@ -76,6 +77,7 @@ const mockCustomers: Customer[] = [
       country: "Germany",
     },
     is_active: true,
+    establishment_relationships: [],
     created_at: "2024-12-01T00:00:00Z",
     updated_at: "2024-12-01T00:00:00Z",
   },
@@ -139,14 +141,6 @@ describe("CustomersPage", () => {
     expect(
       screen.queryByRole("columnheader", { name: /customer number/i })
     ).not.toBeInTheDocument();
-  });
-
-  it("does not claim zero sites when the list response has no reliable count", async () => {
-    renderWithProviders();
-
-    expect(await screen.findByText("Acme Corp")).toBeInTheDocument();
-    expect(screen.getAllByText("—")).not.toHaveLength(0);
-    expect(screen.queryByText(/^0$/)).not.toBeInTheDocument();
   });
 
   it("renders page chrome and table skeleton rows while initially loading", () => {

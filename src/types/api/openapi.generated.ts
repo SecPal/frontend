@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 // OpenAPI component type output for frontend API aliases.
-// Source: contracts/docs/openapi.yaml
+// Source: the approved contracts in docs/openapi.yaml and contracts/docs/openapi.yaml.
 
 export interface components {
   schemas: {
@@ -150,11 +150,9 @@ export interface components {
       vat_id?: string | null;
       name: string;
       billing_address: components["schemas"]["Address"];
-      contact?: components["schemas"]["Contact"] | null;
       is_active: boolean;
-      notes?: string | null;
       metadata?: Record<string, unknown> | null;
-      sites_count?: number;
+      establishment_relationships: components["schemas"]["CustomerEstablishmentRelationship"][];
       created_at: string;
       updated_at: string;
       deleted_at?: string | null;
@@ -165,6 +163,7 @@ export interface components {
     };
     CustomerCreateRequest: {
       legal_entity_id: string;
+      establishment_id: string;
       vat_id?: string | null;
       name: string;
       billing_address: components["schemas"]["Address"];
@@ -178,10 +177,68 @@ export interface components {
       vat_id?: string | null;
       name?: string;
       billing_address?: components["schemas"]["Address"];
-      contact?: components["schemas"]["Contact"] | null;
       is_active?: boolean;
-      notes?: string | null;
       metadata?: Record<string, unknown> | null;
+    };
+    CustomerEstablishmentLookup: {
+      id: string;
+      name: string;
+    };
+    CustomerEstablishmentRelationship: {
+      id: string;
+      customer_id: string;
+      establishment_id: string;
+      establishment: components["schemas"]["CustomerEstablishmentLookup"];
+      contact: components["schemas"]["Contact"] | null;
+      notes: string | null;
+      created_at: string;
+      updated_at: string;
+    };
+    CustomerEstablishmentRelationshipCreateRequest: {
+      establishment_id: string;
+      contact?: components["schemas"]["Contact"] | null;
+      notes?: string | null;
+    };
+    CustomerEstablishmentRelationshipUpdateRequest: {
+      establishment_id?: string;
+      contact?: components["schemas"]["Contact"] | null;
+      notes?: string | null;
+    };
+    SiteType: "permanent" | "temporary";
+    Site: {
+      id: string;
+      customer_id: string;
+      establishment_id: string;
+      establishment?: components["schemas"]["CustomerEstablishmentLookup"];
+      site_number: string;
+      name: string;
+      type: components["schemas"]["SiteType"];
+      address: components["schemas"]["Address"];
+      contact?: components["schemas"]["Contact"] | null;
+      notes?: string | null;
+      is_active: boolean;
+      created_at: string;
+      updated_at: string;
+    };
+    SiteCreateRequest: {
+      customer_id: string;
+      establishment_id: string;
+      name: string;
+      type: components["schemas"]["SiteType"];
+      address: components["schemas"]["Address"];
+      contact?: components["schemas"]["Contact"] | null;
+      notes?: string | null;
+      is_active?: boolean;
+    };
+    SiteUpdateRequest: {
+      customer_id?: string;
+      establishment_id?: string;
+      name?: string;
+      type?: components["schemas"]["SiteType"];
+      address?: components["schemas"]["Address"];
+      contact?: components["schemas"]["Contact"] | null;
+      notes?: string | null;
+      is_active?: boolean;
     };
   };
 }

@@ -15,10 +15,8 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import SiteCreate from "./SiteCreate";
 import * as customersApi from "../../services/customersApi";
-import * as organizationalUnitApi from "../../services/organizationalUnitApi";
 
 vi.mock("../../services/customersApi");
-vi.mock("../../services/organizationalUnitApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
 
@@ -70,7 +68,7 @@ describe("SiteCreate", () => {
         country: "DE",
       },
       is_active: true,
-      sites_count: 0,
+      establishment_relationships: [],
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     },
@@ -86,28 +84,7 @@ describe("SiteCreate", () => {
         country: "DE",
       },
       is_active: true,
-      sites_count: 5,
-      created_at: "2025-01-01T00:00:00Z",
-      updated_at: "2025-01-01T00:00:00Z",
-    },
-  ];
-
-  const mockOrgUnits = [
-    {
-      id: "org-1",
-      type: "department" as const,
-      name: "IT Department",
-      is_legal_entity: false,
-      is_establishment: false,
-      created_at: "2025-01-01T00:00:00Z",
-      updated_at: "2025-01-01T00:00:00Z",
-    },
-    {
-      id: "org-2",
-      type: "division" as const,
-      name: "Security Team",
-      is_legal_entity: false,
-      is_establishment: false,
+      establishment_relationships: [],
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     },
@@ -119,7 +96,7 @@ describe("SiteCreate", () => {
     name: "new site",
     type: "permanent" as const,
     customer_id: "customer-1",
-    organizational_unit_id: "org-1",
+    establishment_id: "org-1",
     address: {
       street: "Test Street 1",
       city: "Test City",
@@ -144,19 +121,12 @@ describe("SiteCreate", () => {
         total: 2,
       },
     });
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
-      data: mockOrgUnits,
-      meta: {
-        current_page: 1,
-        last_page: 1,
-        per_page: 100,
-        total: 2,
-        root_unit_ids: [],
-      },
-    });
+    vi.mocked(customersApi.listCustomerEstablishmentOptions).mockResolvedValue([
+      { id: "org-1", name: "IT Department" },
+    ]);
   });
 
-  it("loads customers and organizational units on mount", async () => {
+  it("loads customers before the customer-scoped establishment lookup", async () => {
     renderWithRouter();
 
     await waitFor(() => {
@@ -164,11 +134,8 @@ describe("SiteCreate", () => {
         per_page: 100,
       });
       expect(
-        organizationalUnitApi.listOrganizationalUnits
-      ).toHaveBeenCalledWith({
-        is_assignable: true,
-        per_page: 100,
-      });
+        customersApi.listCustomerEstablishmentOptions
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -184,7 +151,7 @@ describe("SiteCreate", () => {
     ).toBeInTheDocument();
 
     expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/organizational unit/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/establishment/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/type/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/street/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/city/i)).toBeInTheDocument();
@@ -223,7 +190,7 @@ describe("SiteCreate", () => {
 
     await screen.findByLabelText(/customer/i);
     await selectRadixOption(/customer/i, /C001 - Customer One/i);
-    await selectRadixOption(/organizational unit/i, /IT Department/i);
+    await selectRadixOption(/establishment/i, /IT Department/i);
     fireEvent.change(screen.getByLabelText(/site name/i), {
       target: { value: "new site" },
     });
@@ -258,7 +225,7 @@ describe("SiteCreate", () => {
 
       // Fill form
       await selectRadixOption(/customer/i, /C001 - Customer One/i);
-      await selectRadixOption(/organizational unit/i, /IT Department/i);
+      await selectRadixOption(/establishment/i, /IT Department/i);
       fireEvent.change(screen.getByLabelText(/site name/i), {
         target: { value: "new site" },
       });
@@ -278,7 +245,7 @@ describe("SiteCreate", () => {
       await waitFor(() => {
         expect(customersApi.createSite).toHaveBeenCalledWith({
           customer_id: "customer-1",
-          organizational_unit_id: "org-1",
+          establishment_id: "org-1",
           name: "new site",
           type: "permanent",
           address: {
@@ -317,7 +284,7 @@ describe("SiteCreate", () => {
 
       // Fill all required fields to bypass HTML5 validation
       await selectRadixOption(/customer/i, /C001 - Customer One/i);
-      await selectRadixOption(/organizational unit/i, /IT Department/i);
+      await selectRadixOption(/establishment/i, /IT Department/i);
       fireEvent.change(screen.getByLabelText(/site name/i), {
         target: { value: "Test Site" },
       });
@@ -398,7 +365,7 @@ describe("SiteCreate", () => {
       });
 
       await selectRadixOption(/customer/i, /C001 - Customer One/i);
-      await selectRadixOption(/organizational unit/i, /IT Department/i);
+      await selectRadixOption(/establishment/i, /IT Department/i);
 
       // Fill fields with data that will trigger validation error
       fireEvent.change(screen.getByLabelText(/site name/i), {
@@ -450,15 +417,6 @@ describe("SiteCreate", () => {
           () => {}
         )
     );
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockImplementation(
-      () =>
-        new Promise<
-          Awaited<
-            ReturnType<typeof organizationalUnitApi.listOrganizationalUnits>
-          >
-        >(() => {})
-    );
-
     renderWithRouter();
 
     expect(
@@ -494,7 +452,7 @@ describe("SiteCreate", () => {
       });
 
       await selectRadixOption(/customer/i, /C001 - Customer One/i);
-      await selectRadixOption(/organizational unit/i, /IT Department/i);
+      await selectRadixOption(/establishment/i, /IT Department/i);
       fireEvent.change(screen.getByLabelText(/site name/i), {
         target: { value: "new site" },
       });
@@ -548,7 +506,7 @@ describe("SiteCreate", () => {
       });
 
       await selectRadixOption(/customer/i, /C001 - Customer One/i);
-      await selectRadixOption(/organizational unit/i, /IT Department/i);
+      await selectRadixOption(/establishment/i, /IT Department/i);
       fireEvent.change(screen.getByLabelText(/site name/i), {
         target: { value: "Race Safe Site" },
       });

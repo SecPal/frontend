@@ -70,14 +70,26 @@ describe("CustomerDetail", () => {
       postal_code: "80331",
       country: "DE",
     },
-    contact: {
-      name: "Max Mustermann",
-      email: "max@test-customer.de",
-      phone: "+49 89 12345678",
-    },
-    notes: "Important VIP customer",
+    establishment_relationships: [
+      {
+        id: "relationship-123",
+        customer_id: "customer-123",
+        establishment_id: "establishment-123",
+        establishment: {
+          id: "establishment-123",
+          name: "Munich Establishment",
+        },
+        contact: {
+          name: "Max Mustermann",
+          email: "max@test-customer.de",
+          phone: "+49 89 12345678",
+        },
+        notes: "Important VIP customer",
+        created_at: "2025-01-15T10:00:00Z",
+        updated_at: "2025-01-20T15:30:00Z",
+      },
+    ],
     is_active: true,
-    sites_count: 5,
     created_at: "2025-01-15T10:00:00Z",
     updated_at: "2025-01-20T15:30:00Z",
   };
@@ -167,11 +179,16 @@ describe("CustomerDetail", () => {
   it("renders unsafe contact email and phone as plain text", async () => {
     const unsafeCustomer = {
       ...mockCustomer,
-      contact: {
-        ...mockCustomer.contact,
-        email: "target@example.com?bcc=attacker@evil.com&subject=PWN",
-        phone: "+49?suffix=evil",
-      },
+      establishment_relationships: mockCustomer.establishment_relationships.map(
+        (relationship) => ({
+          ...relationship,
+          contact: {
+            ...relationship.contact,
+            email: "target@example.com?bcc=attacker@evil.com&subject=PWN",
+            phone: "+49?suffix=evil",
+          },
+        })
+      ),
     };
     vi.mocked(customersApi.getCustomer).mockResolvedValue(unsafeCustomer);
 
@@ -179,15 +196,21 @@ describe("CustomerDetail", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(unsafeCustomer.contact.email)
+        screen.getByText(
+          unsafeCustomer.establishment_relationships[0]!.contact.email
+        )
       ).toBeInTheDocument();
     });
 
     expect(
-      screen.getByText(unsafeCustomer.contact.email).closest("a")
+      screen
+        .getByText(unsafeCustomer.establishment_relationships[0]!.contact.email)
+        .closest("a")
     ).toBeNull();
     expect(
-      screen.getByText(unsafeCustomer.contact.phone).closest("a")
+      screen
+        .getByText(unsafeCustomer.establishment_relationships[0]!.contact.phone)
+        .closest("a")
     ).toBeNull();
     expectNoUnsafeContactHrefs(container);
   });
@@ -199,45 +222,6 @@ describe("CustomerDetail", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Important VIP customer")).toBeInTheDocument();
-    });
-  });
-
-  it("displays sites count", async () => {
-    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-
-    renderWithRouter();
-
-    await waitFor(() => {
-      expect(screen.getByText(/This customer has 5 site/)).toBeInTheDocument();
-    });
-  });
-
-  it("uses Objekt wording for German site counts", async () => {
-    i18n.activate("de");
-    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-
-    renderWithRouter();
-
-    await waitFor(() => {
-      expect(
-        screen.getByText("Dieser Kunde hat 5 Objekte.")
-      ).toBeInTheDocument();
-    });
-  });
-
-  it("uses the natural zero-state wording for German site counts", async () => {
-    i18n.activate("de");
-    vi.mocked(customersApi.getCustomer).mockResolvedValue({
-      ...mockCustomer,
-      sites_count: 0,
-    });
-
-    renderWithRouter();
-
-    await waitFor(() => {
-      expect(
-        screen.getByText("Dieser Kunde hat keine Objekte.")
-      ).toBeInTheDocument();
     });
   });
 
@@ -422,7 +406,12 @@ describe("CustomerDetail", () => {
   });
 
   it("handles customer without contact", async () => {
-    const customerWithoutContact = { ...mockCustomer, contact: null };
+    const customerWithoutContact = {
+      ...mockCustomer,
+      establishment_relationships: mockCustomer.establishment_relationships.map(
+        (relationship) => ({ ...relationship, contact: null })
+      ),
+    };
     vi.mocked(customersApi.getCustomer).mockResolvedValue(
       customerWithoutContact
     );
@@ -438,7 +427,12 @@ describe("CustomerDetail", () => {
   });
 
   it("handles customer without notes", async () => {
-    const customerWithoutNotes = { ...mockCustomer, notes: null };
+    const customerWithoutNotes = {
+      ...mockCustomer,
+      establishment_relationships: mockCustomer.establishment_relationships.map(
+        (relationship) => ({ ...relationship, notes: null })
+      ),
+    };
     vi.mocked(customersApi.getCustomer).mockResolvedValue(customerWithoutNotes);
 
     renderWithRouter();

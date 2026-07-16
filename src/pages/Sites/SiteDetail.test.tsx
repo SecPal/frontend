@@ -63,7 +63,11 @@ describe("SiteDetail", () => {
     name: "Munich Office",
     type: "permanent" as const,
     customer_id: "customer-123",
-    organizational_unit_id: "org-unit-123",
+    establishment_id: "org-unit-123",
+    establishment: {
+      id: "org-unit-123",
+      name: "IT Department",
+    },
     address: {
       street: "Teststrasse 42",
       city: "München",
@@ -94,7 +98,7 @@ describe("SiteDetail", () => {
       country: "DE",
     },
     is_active: true,
-    sites_count: 1,
+    establishment_relationships: [],
     created_at: "2025-01-15T10:00:00Z",
     updated_at: "2025-01-20T15:30:00Z",
   };
@@ -119,7 +123,7 @@ describe("SiteDetail", () => {
     });
   });
 
-  it("loads and displays site details with customer and org unit names", async () => {
+  it("loads customer details and displays the contracted establishment", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
@@ -146,7 +150,7 @@ describe("SiteDetail", () => {
     expect(screen.getByText("CUST-2025-001")).toBeInTheDocument();
     expect(screen.getByText("Street, 12345 City, DE")).toBeInTheDocument();
 
-    // Check org unit name is displayed (not ID)
+    // Check establishment name is displayed (not ID)
     expect(screen.getByText("IT Department")).toBeInTheDocument();
 
     // Check address
@@ -224,10 +228,9 @@ describe("SiteDetail", () => {
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 
-  it("uses the customer relation from the site response for customer navigation", async () => {
+  it("loads the customer for customer navigation", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue({
       ...mockSite,
-      customer: mockCustomer,
     });
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
     vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
@@ -242,7 +245,7 @@ describe("SiteDetail", () => {
 
     expect(customerLink).toHaveAttribute("href", "/customers/customer-123");
     expect(screen.getByText("CUST-2025-001")).toBeInTheDocument();
-    expect(customersApi.getCustomer).not.toHaveBeenCalled();
+    expect(customersApi.getCustomer).toHaveBeenCalledWith("customer-123");
   });
 
   it("displays badges for site type and status", async () => {
@@ -259,21 +262,6 @@ describe("SiteDetail", () => {
     });
 
     expect(screen.getByText("Active")).toBeInTheDocument();
-  });
-
-  it("shows expired badge when site is expired", async () => {
-    const expiredSite = { ...mockSite, is_expired: true };
-    vi.mocked(customersApi.getSite).mockResolvedValue(expiredSite);
-    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
-
-    renderWithRouter();
-
-    await waitFor(() => {
-      expect(screen.getByText("Expired")).toBeInTheDocument();
-    });
   });
 
   it("keeps detail heading secondary text and destructive states on canonical theme tokens", async () => {
@@ -461,7 +449,7 @@ describe("SiteDetail", () => {
     );
   });
 
-  it("falls back to IDs when customer or org unit loading fails", async () => {
+  it("falls back to the customer ID while retaining establishment projection", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockRejectedValue(
       new Error("Failed to load customer")
@@ -477,9 +465,9 @@ describe("SiteDetail", () => {
       expect(screen.getByText("Munich Office")).toBeInTheDocument();
     });
 
-    // Should display IDs as fallback
+    // The customer needs a fallback; the establishment is part of Site.
     expect(screen.getByText("customer-123")).toBeInTheDocument();
-    expect(screen.getByText("org-unit-123")).toBeInTheDocument();
+    expect(screen.getByText("IT Department")).toBeInTheDocument();
   });
 
   it("hides edit and delete actions without site management capabilities", async () => {

@@ -69,8 +69,12 @@ import type {
   PaginatedResponse,
 } from "../types/customers";
 import type {
+  CreateCustomerEstablishmentRelationshipRequest,
   CreateCustomerRequest,
   Customer,
+  CustomerEstablishmentLookup,
+  CustomerEstablishmentRelationship,
+  UpdateCustomerEstablishmentRelationshipRequest,
   UpdateCustomerRequest,
 } from "@/types/api/customers";
 
@@ -213,6 +217,165 @@ export async function deleteCustomer(id: string): Promise<void> {
   }
 }
 
+const ESTABLISHMENT_LOOKUP_KEYS = new Set(["id", "name"]);
+
+function parseCustomerEstablishmentLookup(
+  value: unknown
+): CustomerEstablishmentLookup {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("Invalid establishment lookup response");
+  }
+
+  const record = value as Record<string, unknown>;
+  if (
+    Object.keys(record).some((key) => !ESTABLISHMENT_LOOKUP_KEYS.has(key)) ||
+    typeof record.id !== "string" ||
+    typeof record.name !== "string"
+  ) {
+    throw new Error("Invalid establishment lookup response");
+  }
+
+  return { id: record.id, name: record.name };
+}
+
+async function readApiError(response: Response): Promise<{
+  message?: string;
+  errors?: Record<string, string[]>;
+}> {
+  return response
+    .json()
+    .catch(() => ({ message: response.statusText })) as Promise<{
+    message?: string;
+    errors?: Record<string, string[]>;
+  }>;
+}
+
+async function parseRelationshipResponse(
+  response: Response
+): Promise<CustomerEstablishmentRelationship> {
+  const payload = (await response.json()) as unknown;
+  if (
+    typeof payload !== "object" ||
+    payload === null ||
+    !("data" in payload) ||
+    typeof payload.data !== "object" ||
+    payload.data === null ||
+    Array.isArray(payload.data)
+  ) {
+    throw new Error("Failed to parse relationship response");
+  }
+
+  return payload.data as CustomerEstablishmentRelationship;
+}
+
+export async function listCustomerEstablishmentOptions(
+  legalEntityId: string
+): Promise<CustomerEstablishmentLookup[]> {
+  const searchParams = new URLSearchParams({
+    legal_entity_id: legalEntityId,
+  });
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/customers/establishments?${searchParams.toString()}`
+  );
+
+  if (!response.ok) {
+    const error = await readApiError(response);
+    throw new Error(error.message || "Failed to list establishments");
+  }
+
+  const payload = (await response.json()) as unknown;
+  if (
+    typeof payload !== "object" ||
+    payload === null ||
+    !("data" in payload) ||
+    !Array.isArray(payload.data)
+  ) {
+    throw new Error("Invalid establishment lookup response");
+  }
+
+  return payload.data.map(parseCustomerEstablishmentLookup);
+}
+
+export async function listCustomerEstablishmentRelationships(
+  customerId: string
+): Promise<CustomerEstablishmentRelationship[]> {
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/customers/${customerId}/establishments`
+  );
+
+  if (!response.ok) {
+    const error = await readApiError(response);
+    throw new Error(error.message || "Failed to list relationships");
+  }
+
+  const payload = (await response.json()) as unknown;
+  if (
+    typeof payload !== "object" ||
+    payload === null ||
+    !("data" in payload) ||
+    !Array.isArray(payload.data)
+  ) {
+    throw new Error("Failed to parse relationship response");
+  }
+
+  return payload.data as CustomerEstablishmentRelationship[];
+}
+
+export async function createCustomerEstablishmentRelationship(
+  customerId: string,
+  relationshipData: CreateCustomerEstablishmentRelationshipRequest
+): Promise<CustomerEstablishmentRelationship> {
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/customers/${customerId}/establishments`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(relationshipData),
+    }
+  );
+
+  if (!response.ok) {
+    throw handleApiValidationError(await readApiError(response));
+  }
+
+  return parseRelationshipResponse(response);
+}
+
+export async function updateCustomerEstablishmentRelationship(
+  customerId: string,
+  relationshipId: string,
+  relationshipData: UpdateCustomerEstablishmentRelationshipRequest
+): Promise<CustomerEstablishmentRelationship> {
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/customers/${customerId}/establishments/${relationshipId}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(relationshipData),
+    }
+  );
+
+  if (!response.ok) {
+    throw handleApiValidationError(await readApiError(response));
+  }
+
+  return parseRelationshipResponse(response);
+}
+
+export async function deleteCustomerEstablishmentRelationship(
+  customerId: string,
+  relationshipId: string
+): Promise<void> {
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/customers/${customerId}/establishments/${relationshipId}`,
+    { method: "DELETE" }
+  );
+
+  if (!response.ok) {
+    throw handleApiValidationError(await readApiError(response));
+  }
+}
+
 /**
  * Gets all sites for a specific customer
  */
@@ -274,11 +437,8 @@ export async function listSites(
   if (filters?.customer_id) {
     searchParams.append("customer_id", filters.customer_id.toString());
   }
-  if (filters?.organizational_unit_id) {
-    searchParams.append(
-      "organizational_unit_id",
-      filters.organizational_unit_id.toString()
-    );
+  if (filters?.establishment_id) {
+    searchParams.append("establishment_id", filters.establishment_id);
   }
   if (filters?.type) {
     searchParams.append("type", filters.type);

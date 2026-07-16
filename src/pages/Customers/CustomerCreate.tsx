@@ -22,12 +22,16 @@ import {
   SelectValue,
 } from "@/ui/select";
 import { Textarea } from "@/ui/textarea";
-import { createCustomer } from "../../services/customersApi";
+import {
+  createCustomer,
+  listCustomerEstablishmentOptions,
+} from "../../services/customersApi";
 import { listCustomerLegalEntities } from "../../services/customerLegalEntitiesApi";
 import type {
   Address,
   Contact,
   CreateCustomerRequest,
+  CustomerEstablishmentLookup,
   CustomerLegalEntityLookup,
 } from "@/types/api/customers";
 import {
@@ -45,6 +49,7 @@ type CustomerFormErrors = Partial<
   Record<
     | "name"
     | "legal_entity_id"
+    | "establishment_id"
     | "billing_address.street"
     | "billing_address.postal_code"
     | "billing_address.city"
@@ -65,10 +70,15 @@ export default function CustomerCreate() {
   const [legalEntities, setLegalEntities] = useState<
     CustomerLegalEntityLookup[]
   >([]);
+  const [establishments, setEstablishments] = useState<
+    CustomerEstablishmentLookup[]
+  >([]);
+  const [loadingEstablishments, setLoadingEstablishments] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<CustomerFormErrors>({});
 
   const [formData, setFormData] = useState<CreateCustomerRequest>({
     legal_entity_id: "",
+    establishment_id: "",
     name: "",
     vat_id: null,
     billing_address: {
@@ -118,12 +128,70 @@ export default function CustomerCreate() {
     };
   }, [_, lookupAttempt]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const legalEntityId = selectedLegalEntityId;
+
+    if (!legalEntityId) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void listCustomerEstablishmentOptions(legalEntityId)
+      .then((options) => {
+        if (!cancelled) {
+          setEstablishments(options);
+          if (options.length === 1) {
+            setFormData((current) => ({
+              ...current,
+              establishment_id: options[0]!.id,
+            }));
+          }
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setSubmitError(
+            err instanceof Error
+              ? err.message
+              : _(msg`Failed to load establishments`)
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingEstablishments(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [_, selectedLegalEntityId]);
+
   function retryLegalEntityLookup() {
     setLookupAttempt((attempt) => attempt + 1);
   }
 
   function updateField(field: keyof CreateCustomerRequest, value: unknown) {
-    if (field === "name" || field === "legal_entity_id") {
+    if (field === "legal_entity_id") {
+      setFieldErrors((current) => {
+        if (!current.legal_entity_id) return current;
+        const next = { ...current };
+        delete next.legal_entity_id;
+        return next;
+      });
+      setSubmitError(null);
+      setEstablishments([]);
+      setLoadingEstablishments(true);
+      setFormData((currentFormData) => ({
+        ...currentFormData,
+        legal_entity_id: String(value),
+        establishment_id: "",
+      }));
+      return;
+    }
+
+    if (field === "name" || field === "establishment_id") {
       setFieldErrors((current) => {
         if (!current[field]) {
           return current;
@@ -211,6 +279,10 @@ export default function CustomerCreate() {
       validationErrors.legal_entity_id = _(msg`Legal entity is required.`);
     }
 
+    if (formData.establishment_id.trim().length === 0) {
+      validationErrors.establishment_id = _(msg`Establishment is required.`);
+    }
+
     if (formData.billing_address.street.trim().length === 0) {
       validationErrors["billing_address.street"] = _(msg`Street is required.`);
     }
@@ -263,6 +335,7 @@ export default function CustomerCreate() {
       // Clean up the data before sending
       const dataToSend: CreateCustomerRequest = {
         legal_entity_id: selectedLegalEntityId,
+        establishment_id: formData.establishment_id,
         name: formData.name,
         billing_address: formData.billing_address,
         is_active: formData.is_active,
@@ -304,7 +377,11 @@ export default function CustomerCreate() {
     loadingLegalEntities ||
     (legalEntities.length === 1 && !hasStaleExplicitLegalEntitySelection);
   const cannotCreateCustomer =
-    loading || loadingLegalEntities || !hasLegalEntityOptions || !!lookupError;
+    loading ||
+    loadingLegalEntities ||
+    loadingEstablishments ||
+    !hasLegalEntityOptions ||
+    !!lookupError;
 
   return (
     <div className="max-w-3xl">
@@ -384,6 +461,44 @@ export default function CustomerCreate() {
             {fieldErrors.legal_entity_id ? (
               <FieldError id="customer-legal-entity-error">
                 {fieldErrors.legal_entity_id}
+              </FieldError>
+            ) : null}
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="customer-establishment">
+              <Trans>Establishment</Trans> *
+            </FieldLabel>
+            <Select
+              name="establishment_id"
+              required
+              value={formData.establishment_id}
+              onValueChange={(value) => updateField("establishment_id", value)}
+            >
+              <SelectTrigger
+                id="customer-establishment"
+                disabled={!selectedLegalEntityId || loadingEstablishments}
+                aria-required="true"
+                aria-invalid={fieldErrors.establishment_id ? true : undefined}
+                aria-describedby={
+                  fieldErrors.establishment_id
+                    ? "customer-establishment-error"
+                    : undefined
+                }
+              >
+                <SelectValue placeholder={_(msg`Select establishment...`)} />
+              </SelectTrigger>
+              <SelectContent>
+                {establishments.map((establishment) => (
+                  <SelectItem key={establishment.id} value={establishment.id}>
+                    {establishment.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {fieldErrors.establishment_id ? (
+              <FieldError id="customer-establishment-error">
+                {fieldErrors.establishment_id}
               </FieldError>
             ) : null}
           </Field>

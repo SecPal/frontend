@@ -58,14 +58,6 @@ function readUseDesktopTable(): boolean {
   return window.matchMedia(CUSTOMERS_DESKTOP_MEDIA_QUERY).matches;
 }
 
-function getCustomerSitesSummary(customer: Customer): string {
-  if (typeof customer.sites_count === "number" && customer.sites_count > 0) {
-    return String(customer.sites_count);
-  }
-
-  return "—";
-}
-
 function getLegalEntitySummary(customer: Customer): string {
   return typeof customer.legal_entity_id === "string" &&
     customer.legal_entity_id.trim().length > 0
@@ -274,12 +266,6 @@ export default function CustomersPage() {
                     <Trans>Legal Entity</Trans>
                   </TableHeader>
                   <TableHeader>
-                    <Trans>Contact</Trans>
-                  </TableHeader>
-                  <TableHeader>
-                    <Trans>Sites</Trans>
-                  </TableHeader>
-                  <TableHeader>
                     <Trans>Status</Trans>
                   </TableHeader>
                   <TableHeader>
@@ -289,7 +275,7 @@ export default function CustomersPage() {
               </TableHead>
               <TableBody>
                 {loading && customers.length === 0 ? (
-                  <CustomerTableSkeletonRows columns={7} rows={5} />
+                  <CustomerTableSkeletonRows columns={5} rows={5} />
                 ) : null}
 
                 {customers.map((customer) => (
@@ -300,12 +286,6 @@ export default function CustomersPage() {
                     <TableCell>{customer.name}</TableCell>
                     <TableCell className="text-muted-foreground break-all">
                       {getLegalEntitySummary(customer)}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {customer.contact?.email || "-"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {getCustomerSitesSummary(customer)}
                     </TableCell>
                     <TableCell>
                       <StatusBadge color={customer.is_active ? "lime" : "zinc"}>
@@ -327,7 +307,7 @@ export default function CustomersPage() {
 
                 {!loading && customers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-12 text-center">
+                    <TableCell colSpan={5} className="py-12 text-center">
                       <PageText className="text-muted-foreground">
                         <Trans>No customers found</Trans>
                       </PageText>
@@ -378,22 +358,6 @@ export default function CustomersPage() {
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">
-                      <Trans>Contact</Trans>
-                    </p>
-                    <p className="text-foreground break-words">
-                      {customer.contact?.email || "-"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">
-                      <Trans>Sites</Trans>
-                    </p>
-                    <p className="text-foreground">
-                      {getCustomerSitesSummary(customer)}
-                    </p>
-                  </div>
                   <div className="col-span-2">
                     <p className="text-muted-foreground">
                       <Trans>Legal Entity</Trans>

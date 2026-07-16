@@ -9,9 +9,16 @@
 import type {
   Address as ApiAddress,
   Contact as ApiContact,
+  CreateSiteRequest as ApiCreateSiteRequest,
   CreateCustomerRequest as ApiCreateCustomerRequest,
   Customer as ApiCustomer,
+  CustomerEstablishmentLookup as ApiCustomerEstablishmentLookup,
+  CustomerEstablishmentRelationship as ApiCustomerEstablishmentRelationship,
   CustomerLegalEntityLookup as ApiCustomerLegalEntityLookup,
+  Site as ApiSite,
+  SiteFilters as ApiSiteFilters,
+  SiteType as ApiSiteType,
+  UpdateSiteRequest as ApiUpdateSiteRequest,
   UpdateCustomerRequest as ApiUpdateCustomerRequest,
 } from "./api/customers";
 
@@ -28,16 +35,6 @@ export type Contact = ApiContact;
 
 export type Customer = ApiCustomer;
 
-export type SiteCustomer = Pick<
-  Customer,
-  | "id"
-  | "customer_number"
-  | "name"
-  | "billing_address"
-  | "contact"
-  | "is_active"
->;
-
 export type CreateCustomerRequest = ApiCreateCustomerRequest;
 export type UpdateCustomerRequest = ApiUpdateCustomerRequest;
 
@@ -49,76 +46,19 @@ export interface CustomerFilters {
 }
 
 export type CustomerLegalEntityLookup = ApiCustomerLegalEntityLookup;
+export type CustomerEstablishmentLookup = ApiCustomerEstablishmentLookup;
+export type CustomerEstablishmentRelationship =
+  ApiCustomerEstablishmentRelationship;
 
 // ============================================================================
 // Site (de: Objekt)
 // ============================================================================
 
-export type SiteType = "permanent" | "temporary";
-
-export interface Site {
-  id: string;
-  customer_id: string;
-  customer?: SiteCustomer | null;
-  organizational_unit_id: string;
-  site_number: string; // OBJ-YYYY-####
-  name: string;
-  type: SiteType;
-  address: Address;
-  contact?: Contact | null;
-  access_instructions?: string | null;
-  notes?: string | null;
-  metadata?: Record<string, unknown> | null;
-  is_active: boolean;
-  valid_from?: string | null; // ISO 8601 date
-  valid_until?: string | null; // ISO 8601 date
-  is_expired: boolean;
-  full_address: string;
-  created_at: string;
-  updated_at: string;
-  deleted_at?: string | null;
-}
-
-export interface CreateSiteRequest {
-  customer_id: string;
-  organizational_unit_id: string;
-  name: string;
-  type: SiteType;
-  address: Address;
-  contact?: Contact | null;
-  access_instructions?: string | null;
-  notes?: string | null;
-  metadata?: Record<string, unknown> | null;
-  is_active?: boolean;
-  valid_from?: string | null;
-  valid_until?: string | null;
-}
-
-export interface UpdateSiteRequest {
-  customer_id?: string;
-  organizational_unit_id?: string;
-  name?: string;
-  type?: SiteType;
-  address?: Address;
-  contact?: Contact | null;
-  access_instructions?: string | null;
-  notes?: string | null;
-  metadata?: Record<string, unknown> | null;
-  is_active?: boolean;
-  valid_from?: string | null;
-  valid_until?: string | null;
-}
-
-export interface SiteFilters {
-  customer_id?: string;
-  organizational_unit_id?: string;
-  type?: SiteType;
-  is_active?: boolean;
-  currently_valid?: boolean;
-  search?: string;
-  page?: number;
-  per_page?: number;
-}
+export type SiteType = ApiSiteType;
+export type Site = ApiSite;
+export type CreateSiteRequest = ApiCreateSiteRequest;
+export type UpdateSiteRequest = ApiUpdateSiteRequest;
+export type SiteFilters = ApiSiteFilters;
 
 // ============================================================================
 // Customer Assignment

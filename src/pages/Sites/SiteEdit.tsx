@@ -23,6 +23,7 @@ import {
 } from "@/ui/select";
 import {
   getSite,
+  listCustomerEstablishmentOptions,
   updateSite,
   listCustomers,
 } from "../../services/customersApi";
@@ -32,6 +33,7 @@ import type {
   Address,
   Contact,
   Customer,
+  CustomerEstablishmentLookup,
 } from "../../types/customers";
 import {
   Alert,
@@ -55,6 +57,9 @@ export default function SiteEdit() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [site, setSite] = useState<Site | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [establishments, setEstablishments] = useState<
+    CustomerEstablishmentLookup[]
+  >([]);
 
   const [formData, setFormData] = useState<UpdateSiteRequest>({});
 
@@ -91,6 +96,7 @@ export default function SiteEdit() {
         setCustomers(customersData.data);
         setFormData({
           customer_id: siteData.customer_id,
+          establishment_id: siteData.establishment_id,
           name: siteData.name,
           address: siteData.address,
           contact: siteData.contact,
@@ -110,7 +116,59 @@ export default function SiteEdit() {
     };
   }, [_, id]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const customer = customers.find(
+      (candidate) => candidate.id === formData.customer_id
+    );
+    if (!customer) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void listCustomerEstablishmentOptions(customer.legal_entity_id)
+      .then((options) => {
+        if (!cancelled) {
+          setEstablishments(options);
+          setFormData((current) => ({
+            ...current,
+            establishment_id: options.some(
+              (option) => option.id === current.establishment_id
+            )
+              ? current.establishment_id
+              : "",
+          }));
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setEstablishments([]);
+          setError(
+            err instanceof Error
+              ? err.message
+              : _(msg`Failed to load establishments`)
+          );
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [_, customers, formData.customer_id]);
+
   function updateField(field: keyof UpdateSiteRequest, value: unknown) {
+    if (field === "customer_id") {
+      setError(null);
+      setEstablishments([]);
+      setFormData((currentFormData) => ({
+        ...currentFormData,
+        customer_id: String(value),
+        establishment_id: "",
+      }));
+      return;
+    }
+
     setFormData((currentFormData) => ({
       ...currentFormData,
       [field]: value,
@@ -144,6 +202,7 @@ export default function SiteEdit() {
   function buildUpdatePayload(): UpdateSiteRequest {
     const payload: UpdateSiteRequest = {
       customer_id: formData.customer_id,
+      establishment_id: formData.establishment_id,
       name: formData.name,
       address: formData.address,
     };
@@ -249,6 +308,51 @@ export default function SiteEdit() {
                 {fieldErrors.customer_id && (
                   <FieldError id="site-customer-error">
                     {fieldErrors.customer_id.join(", ")}
+                  </FieldError>
+                )}
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="site-establishment">
+                  <Trans>Establishment</Trans> *
+                </FieldLabel>
+                <Select
+                  name="establishment_id"
+                  required
+                  value={formData.establishment_id || ""}
+                  onValueChange={(value) =>
+                    updateField("establishment_id", value)
+                  }
+                >
+                  <SelectTrigger
+                    id="site-establishment"
+                    aria-invalid={
+                      fieldErrors.establishment_id ? true : undefined
+                    }
+                    aria-describedby={
+                      fieldErrors.establishment_id
+                        ? "site-establishment-error"
+                        : undefined
+                    }
+                  >
+                    <SelectValue
+                      placeholder={_(msg`Select establishment...`)}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {establishments.map((establishment) => (
+                      <SelectItem
+                        key={establishment.id}
+                        value={establishment.id}
+                      >
+                        {establishment.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {fieldErrors.establishment_id && (
+                  <FieldError id="site-establishment-error">
+                    {fieldErrors.establishment_id.join(", ")}
                   </FieldError>
                 )}
               </Field>

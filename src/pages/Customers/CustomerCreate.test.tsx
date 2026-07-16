@@ -79,6 +79,18 @@ async function chooseLegalEntity(name: string) {
 
   await user.click(trigger);
   await user.click(await screen.findByRole("option", { name }));
+
+  const establishmentTrigger = screen.getByRole("combobox", {
+    name: /establishment/i,
+  });
+  await waitFor(() => expect(establishmentTrigger).toBeEnabled());
+
+  if (!establishmentTrigger.textContent?.includes("Berlin Establishment")) {
+    await user.click(establishmentTrigger);
+    await user.click(
+      await screen.findByRole("option", { name: "Berlin Establishment" })
+    );
+  }
 }
 
 describe("CustomerCreate", () => {
@@ -87,6 +99,9 @@ describe("CustomerCreate", () => {
     vi.mocked(
       customerLegalEntitiesApi.listCustomerLegalEntities
     ).mockResolvedValue(legalEntities);
+    vi.mocked(customersApi.listCustomerEstablishmentOptions).mockResolvedValue([
+      { id: "establishment-1", name: "Berlin Establishment" },
+    ]);
   });
 
   it("renders the form with all required fields", async () => {
@@ -148,6 +163,7 @@ describe("CustomerCreate", () => {
         country: "DE",
       },
       is_active: true,
+      establishment_relationships: [],
       created_at: "2026-01-01T00:00:00Z",
       updated_at: "2026-01-01T00:00:00Z",
     });
@@ -279,6 +295,7 @@ describe("CustomerCreate", () => {
         country: "DE",
       },
       is_active: true,
+      establishment_relationships: [],
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     };
@@ -314,6 +331,7 @@ describe("CustomerCreate", () => {
       expect(customersApi.createCustomer).toHaveBeenCalledWith({
         name: "Test Customer",
         legal_entity_id: firstLegalEntity.id,
+        establishment_id: "establishment-1",
         billing_address: {
           street: "Test Street 1",
           city: "Test City",
@@ -342,6 +360,7 @@ describe("CustomerCreate", () => {
         country: "DE",
       },
       is_active: true,
+      establishment_relationships: [],
       created_at: "2026-01-01T00:00:00Z",
       updated_at: "2026-01-01T00:00:00Z",
     };
@@ -479,6 +498,7 @@ describe("CustomerCreate", () => {
         country: "DE",
       },
       is_active: true,
+      establishment_relationships: [],
       created_at: "2026-01-01T00:00:00Z",
       updated_at: "2026-01-01T00:00:00Z",
     };
@@ -646,6 +666,7 @@ describe("CustomerCreate", () => {
           phone: "+49 123 456789",
         },
         is_active: true,
+        establishment_relationships: [],
         created_at: "2025-01-01T00:00:00Z",
         updated_at: "2025-01-01T00:00:00Z",
       };
@@ -699,6 +720,7 @@ describe("CustomerCreate", () => {
           expect(customersApi.createCustomer).toHaveBeenCalledWith({
             name: "Customer with Contact",
             legal_entity_id: firstLegalEntity.id,
+            establishment_id: "establishment-1",
             billing_address: {
               street: "Street 1",
               city: "City",
@@ -733,6 +755,7 @@ describe("CustomerCreate", () => {
         country: "DE",
       },
       is_active: true,
+      establishment_relationships: [],
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     };
@@ -843,6 +866,7 @@ describe("CustomerCreate", () => {
         country: "DE",
       },
       is_active: true,
+      establishment_relationships: [],
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     };
@@ -887,6 +911,7 @@ describe("CustomerCreate", () => {
       },
       notes: "Important customer",
       is_active: true,
+      establishment_relationships: [],
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     };

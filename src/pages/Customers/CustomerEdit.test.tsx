@@ -20,8 +20,6 @@ import * as customersApi from "../../services/customersApi";
 vi.mock("../../services/customersApi");
 vi.mock("../../services/customerLegalEntitiesApi");
 
-const SLOW_TEST_TIMEOUT = 20000;
-
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
@@ -58,12 +56,7 @@ describe("CustomerEdit", () => {
       postal_code: "54321",
       country: "DE",
     },
-    contact: {
-      name: "Jane Doe",
-      email: "jane@secpal.dev",
-      phone: "+49 987 654321",
-    },
-    notes: "Existing notes",
+    establishment_relationships: [],
     is_active: true,
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z",
@@ -98,7 +91,7 @@ describe("CustomerEdit", () => {
     expect(screen.getByLabelText(/city/i)).toHaveValue("Old City");
     expect(screen.getByLabelText(/postal code/i)).toHaveValue("54321");
     expect(screen.getByLabelText(/country/i)).toHaveValue("DE");
-    expect(screen.getByLabelText(/notes/i)).toHaveValue("Existing notes");
+    expect(screen.queryByLabelText(/notes/i)).not.toBeInTheDocument();
     expect(screen.getByLabelText(/vat id/i)).toHaveValue("DE123456789");
   });
 
@@ -255,27 +248,17 @@ describe("CustomerEdit", () => {
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 
-  it(
-    "loads contact information",
-    async () => {
-      vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+  it("does not expose relationship fields on the customer master-data form", async () => {
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
 
-      renderWithRouter();
+    renderWithRouter();
 
-      await waitFor(() => {
-        expect(screen.getByLabelText(/customer name/i)).toHaveValue(
-          "Existing Customer"
-        );
-      });
+    await screen.findByLabelText(/customer name/i);
 
-      expect(screen.getByRole("textbox", { name: /^name$/i })).toHaveValue(
-        "Jane Doe"
-      );
-      expect(screen.getByLabelText(/email/i)).toHaveValue("jane@secpal.dev");
-      expect(screen.getByLabelText(/phone/i)).toHaveValue("+49 987 654321");
-    },
-    SLOW_TEST_TIMEOUT
-  );
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/phone/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/notes/i)).not.toBeInTheDocument();
+  });
 
   it("updates customer with modified data", async () => {
     const user = userEvent.setup();
@@ -391,37 +374,6 @@ describe("CustomerEdit", () => {
     });
   });
 
-  it("updates contact information", async () => {
-    const user = userEvent.setup();
-    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(customersApi.updateCustomer).mockResolvedValue(mockCustomer);
-
-    renderWithRouter();
-
-    await waitFor(() => {
-      expect(screen.getByLabelText(/email/i)).toHaveValue("jane@secpal.dev");
-    });
-
-    // Modify email
-    const emailInput = screen.getByLabelText(/email/i);
-    fireEvent.change(emailInput, {
-      target: { value: "newemail@secpal.dev" },
-    });
-
-    await user.click(screen.getByRole("button", { name: /save|update/i }));
-
-    await waitFor(() => {
-      expect(customersApi.updateCustomer).toHaveBeenCalledWith(
-        "customer-123",
-        expect.objectContaining({
-          contact: expect.objectContaining({
-            email: "newemail@secpal.dev",
-          }),
-        })
-      );
-    });
-  });
-
   it("displays error message on load failure", async () => {
     vi.mocked(customersApi.getCustomer).mockRejectedValue(
       new Error("Customer not found")
@@ -513,46 +465,6 @@ describe("CustomerEdit", () => {
 
     expect(submitButton).toBeDisabled();
     expect(screen.getByText(/saving/i)).toBeInTheDocument();
-  });
-
-  it("handles customer without contact", async () => {
-    const customerWithoutContact = {
-      ...mockCustomer,
-      contact: null,
-    };
-
-    vi.mocked(customersApi.getCustomer).mockResolvedValue(
-      customerWithoutContact
-    );
-
-    renderWithRouter();
-
-    await waitFor(() => {
-      expect(screen.getByLabelText(/customer name/i)).toHaveValue(
-        "Existing Customer"
-      );
-    });
-
-    // Contact fields should be empty
-    const contactNameInput = screen.getByRole("textbox", { name: /^name$/i });
-    expect(contactNameInput).toHaveValue("");
-    expect(screen.getByLabelText(/email/i)).toHaveValue("");
-    expect(screen.getByLabelText(/phone/i)).toHaveValue("");
-  });
-
-  it("handles customer without notes", async () => {
-    const customerWithoutNotes = {
-      ...mockCustomer,
-      notes: null,
-    };
-
-    vi.mocked(customersApi.getCustomer).mockResolvedValue(customerWithoutNotes);
-
-    renderWithRouter();
-
-    await waitFor(() => {
-      expect(screen.getByLabelText(/notes/i)).toHaveValue("");
-    });
   });
 
   it("ignores a late-resolving fetch for the previous customer after navigating between /customers/:id/edit routes", async () => {

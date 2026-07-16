@@ -48,7 +48,7 @@ describe("SiteEdit", () => {
     name: "Test Site",
     type: "permanent" as const,
     customer_id: "customer-1",
-    organizational_unit_id: "org-1",
+    establishment_id: "org-1",
     address: {
       street: "Old Street 1",
       city: "Old City",
@@ -80,7 +80,7 @@ describe("SiteEdit", () => {
         country: "DE",
       },
       is_active: true,
-      sites_count: 1,
+      establishment_relationships: [],
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     },
@@ -96,7 +96,7 @@ describe("SiteEdit", () => {
         country: "DE",
       },
       is_active: true,
-      sites_count: 0,
+      establishment_relationships: [],
       created_at: "2025-01-01T00:00:00Z",
       updated_at: "2025-01-01T00:00:00Z",
     },
@@ -120,6 +120,9 @@ describe("SiteEdit", () => {
         total: 2,
       },
     });
+    vi.mocked(customersApi.listCustomerEstablishmentOptions).mockResolvedValue([
+      { id: "org-1", name: "IT Department" },
+    ]);
   });
 
   it("loads site data and customers on mount", async () => {
@@ -167,9 +170,9 @@ describe("SiteEdit", () => {
       ).toHaveTextContent("C001 - Customer One");
     });
 
-    expect(
-      screen.queryByLabelText(/organizational unit/i)
-    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/establishment/i)).toHaveTextContent(
+      "IT Department"
+    );
     expect(screen.queryByLabelText(/type/i)).not.toBeInTheDocument();
   });
 
@@ -207,6 +210,7 @@ describe("SiteEdit", () => {
       await waitFor(() => {
         expect(customersApi.updateSite).toHaveBeenCalledWith("site-123", {
           customer_id: "customer-1",
+          establishment_id: "org-1",
           name: "Updated site name",
           address: {
             street: "Old Street 1",
@@ -393,6 +397,7 @@ describe("SiteEdit", () => {
     await waitFor(() => {
       expect(customersApi.updateSite).toHaveBeenCalledWith("site-123", {
         customer_id: "customer-1",
+        establishment_id: "org-1",
         name: "Updated site name",
         address: {
           street: "Old Street 1",

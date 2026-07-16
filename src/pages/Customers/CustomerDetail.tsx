@@ -9,7 +9,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
-import { Plural, Trans } from "@lingui/react/macro";
+import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { ArrowLeft, Edit, List, MapPinned, Trash2 } from "lucide-react";
 import { Button } from "@/ui/button";
@@ -39,10 +39,6 @@ import {
 } from "@/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
-
-function getCustomerSitesCount(customer: Customer): number | null {
-  return typeof customer.sites_count === "number" ? customer.sites_count : null;
-}
 
 function CustomerDetailSkeleton({ loadingLabel }: { loadingLabel: string }) {
   return (
@@ -128,7 +124,6 @@ export default function CustomerDetail() {
   }
 
   const isInitialLoading = loading && customer === null;
-  const sitesCount = customer ? getCustomerSitesCount(customer) : null;
 
   if (!isInitialLoading && (loadError || !customer)) {
     return (
@@ -247,92 +242,80 @@ export default function CustomerDetail() {
             </DescriptionList>
           </div>
 
-          {/* Contact Information */}
-          {customer.contact && (
-            <div>
+          {/* Establishment relationships */}
+          {customer.establishment_relationships.map((relationship) => (
+            <div key={relationship.id}>
               <PageTitle level={2} className="mb-4">
-                <Trans>Contact Person</Trans>
+                {relationship.establishment.name}
               </PageTitle>
               <DescriptionList>
-                {customer.contact.name && (
+                <DescriptionTerm>
+                  <Trans>Establishment</Trans>
+                </DescriptionTerm>
+                <DescriptionDetails>
+                  {relationship.establishment.name}
+                </DescriptionDetails>
+                {relationship.contact?.name ? (
                   <>
                     <DescriptionTerm>
-                      <Trans>Name</Trans>
+                      <Trans>Contact</Trans>
                     </DescriptionTerm>
                     <DescriptionDetails>
-                      {customer.contact.name}
+                      {relationship.contact.name}
                     </DescriptionDetails>
                   </>
-                )}
-
-                {customer.contact.email && (
+                ) : null}
+                {relationship.contact?.email ? (
                   <>
                     <DescriptionTerm>
                       <Trans>Email</Trans>
                     </DescriptionTerm>
                     <DescriptionDetails>
-                      {isSafeMailtoTarget(customer.contact.email) ? (
-                        <PageLink to={`mailto:${customer.contact.email}`}>
-                          {customer.contact.email}
+                      {isSafeMailtoTarget(relationship.contact.email) ? (
+                        <PageLink to={`mailto:${relationship.contact.email}`}>
+                          {relationship.contact.email}
                         </PageLink>
                       ) : (
-                        customer.contact.email
+                        relationship.contact.email
                       )}
                     </DescriptionDetails>
                   </>
-                )}
-
-                {customer.contact.phone && (
+                ) : null}
+                {relationship.contact?.phone ? (
                   <>
                     <DescriptionTerm>
                       <Trans>Phone</Trans>
                     </DescriptionTerm>
                     <DescriptionDetails>
-                      {isSafeTelTarget(customer.contact.phone) ? (
-                        <PageLink to={`tel:${customer.contact.phone}`}>
-                          {customer.contact.phone}
+                      {isSafeTelTarget(relationship.contact.phone) ? (
+                        <PageLink to={`tel:${relationship.contact.phone}`}>
+                          {relationship.contact.phone}
                         </PageLink>
                       ) : (
-                        customer.contact.phone
+                        relationship.contact.phone
                       )}
                     </DescriptionDetails>
                   </>
-                )}
+                ) : null}
+                {relationship.notes ? (
+                  <>
+                    <DescriptionTerm>
+                      <Trans>Notes</Trans>
+                    </DescriptionTerm>
+                    <DescriptionDetails className="whitespace-pre-wrap">
+                      {relationship.notes}
+                    </DescriptionDetails>
+                  </>
+                ) : null}
               </DescriptionList>
             </div>
-          )}
-
-          {/* Notes */}
-          {customer.notes && (
-            <div>
-              <PageTitle level={2} className="mb-4">
-                <Trans>Notes</Trans>
-              </PageTitle>
-              <PageText className="whitespace-pre-wrap">
-                {customer.notes}
-              </PageText>
-            </div>
-          )}
+          ))}
 
           {/* Sites */}
           <div>
             <PageTitle level={2} className="mb-4">
               <Trans>Sites</Trans>
             </PageTitle>
-            {sitesCount === null ? (
-              <PageText className="mb-4">
-                <Trans>This customer's site count is unavailable.</Trans>
-              </PageText>
-            ) : (
-              <PageText className="mb-4">
-                <Plural
-                  value={sitesCount}
-                  zero="This customer has no sites."
-                  one="This customer has # site."
-                  other="This customer has # sites."
-                />
-              </PageText>
-            )}
             <LinkButton to={`/sites/customer/${customer.id}`} variant="outline">
               <MapPinned className="size-4" aria-hidden="true" />
               <Trans>View Sites</Trans>

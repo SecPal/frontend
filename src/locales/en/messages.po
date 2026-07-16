@@ -158,10 +158,6 @@ msgstr "To remove rank from employee, user must have permission to assign that r
 msgid "Still loading your secure session"
 msgstr "Still loading your secure session"
 
-#: src/pages/Sites/SiteDetail.tsx
-msgid "Valid Until"
-msgstr "Valid Until"
-
 #: src/components/RouteLoader.tsx
 msgid "Loading application"
 msgstr "Loading application"
@@ -205,7 +201,6 @@ msgstr "Enable browser notifications"
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -570,8 +565,6 @@ msgstr "Edit Emergency Contacts"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -937,10 +930,6 @@ msgstr "Login form"
 msgid "Pre-Contract is the only status that allows onboarding invitations."
 msgstr "Pre-Contract is the only status that allows onboarding invitations."
 
-#: src/pages/Sites/SiteDetail.tsx
-msgid "Valid From"
-msgstr "Valid From"
-
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Document uploads are only shown where a specific document is required for the current onboarding step."
 msgstr "Document uploads are only shown where a specific document is required for the current onboarding step."
@@ -1242,6 +1231,12 @@ msgstr "Cancel"
 msgid "This session was revoked and can no longer be used for device setup."
 msgstr "This session was revoked and can no longer be used for device setup."
 
+#: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Failed to load establishments"
+msgstr "Failed to load establishments"
+
 #: src/pages/ActivityLog/ActivityLogList.tsx
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeList.tsx
@@ -1336,13 +1331,15 @@ msgstr "BWR Status"
 msgid "Address"
 msgstr "Address"
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Establishment is required."
+msgstr "Establishment is required."
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Missing email address. Please use the link from your email."
 msgstr "Missing email address. Please use the link from your email."
 
 #: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -1935,11 +1932,17 @@ msgstr "Switch instance"
 msgid "Emergency Contact Notes"
 msgstr "Emergency Contact Notes"
 
-#: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Contact"
 msgstr "Contact"
+
+#: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Select establishment..."
+msgstr "Select establishment..."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
@@ -1980,10 +1983,6 @@ msgstr "Failed to register passkey."
 msgid "View"
 msgstr "View"
 
-#: src/pages/Sites/SiteDetail.tsx
-msgid "Validity Period"
-msgstr "Validity Period"
-
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Authenticator app QR code"
 msgstr "Authenticator app QR code"
@@ -2016,10 +2015,6 @@ msgstr "Processing..."
 #: src/pages/SourcePage.tsx
 msgid "AGPL source offer for the SecPal components made available through this service."
 msgstr "AGPL source offer for the SecPal components made available through this service."
-
-#: src/pages/Customers/CustomerDetail.tsx
-msgid "{sitesCount, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
-msgstr "{sitesCount, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Last Updated"
@@ -2438,7 +2433,6 @@ msgid "Add Contact"
 msgstr "Add Contact"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-#: src/pages/Sites/SiteDetail.tsx
 msgid "Expired"
 msgstr "Expired"
 
@@ -2603,7 +2597,6 @@ msgstr "Checking passkey availability..."
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -2637,6 +2630,11 @@ msgid "I stored these recovery codes securely and understand they will not be sh
 msgstr "I stored these recovery codes securely and understand they will not be shown again."
 
 #: src/components/OrganizationalUnitFormDialog.tsx
+#: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteDetail.tsx
+#: src/pages/Sites/SiteEdit.tsx
 msgid "Establishment"
 msgstr "Establishment"
 
@@ -2747,8 +2745,6 @@ msgstr "Failed to load legal entities"
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Employees/EmployeeList.tsx
-#: src/pages/Sites/SiteCreate.tsx
-#: src/pages/Sites/SiteDetail.tsx
 msgid "Organizational Unit"
 msgstr "Organizational Unit"
 
@@ -2908,7 +2904,6 @@ msgstr "SecPal could not confirm your session quickly enough. Retry the session 
 
 #: src/components/application-layout.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Sites"
 msgstr "Sites"
@@ -3060,10 +3055,6 @@ msgstr "Enabled"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Files can only be uploaded while this onboarding step is still editable."
 msgstr "Files can only be uploaded while this onboarding step is still editable."
-
-#: src/pages/Sites/SiteDetail.tsx
-msgid "Access Instructions"
-msgstr "Access Instructions"
 
 #: src/pages/Profile/ProfilePage.tsx
 msgid "View your account information."
@@ -3379,10 +3370,6 @@ msgstr "About SecPal"
 #: src/components/UpdatePrompt.tsx
 msgid "Update application now"
 msgstr "Update application now"
-
-#: src/pages/Customers/CustomerDetail.tsx
-msgid "This customer's site count is unavailable."
-msgstr "This customer's site count is unavailable."
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
@@ -3970,10 +3957,6 @@ msgstr "Deleting organizational units is not possible while offline. Please reco
 msgid "Password must include both uppercase and lowercase letters"
 msgstr "Password must include both uppercase and lowercase letters"
 
-#: src/pages/Sites/SiteCreate.tsx
-msgid "Select organizational unit..."
-msgstr "Select organizational unit..."
-
 #. placeholder {0}: unit.name
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "\"{0}\" updated successfully"
@@ -3985,7 +3968,6 @@ msgstr "Create enrollment session"
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx

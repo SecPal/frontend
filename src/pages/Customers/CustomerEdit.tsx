@@ -15,12 +15,10 @@ import { Button } from "@/ui/button";
 import { Checkbox } from "@/ui/checkbox";
 import { Input } from "@/ui/input";
 import { FormSkeleton } from "@/ui/loading";
-import { Textarea } from "@/ui/textarea";
 import { getCustomer, updateCustomer } from "../../services/customersApi";
 import { listCustomerLegalEntities } from "../../services/customerLegalEntitiesApi";
 import type {
   Address,
-  Contact,
   Customer,
   CustomerLegalEntityLookup,
   UpdateCustomerRequest,
@@ -101,8 +99,6 @@ export default function CustomerEdit() {
           name: data.name,
           vat_id: data.vat_id ?? null,
           billing_address: data.billing_address,
-          contact: data.contact,
-          notes: data.notes,
           is_active: data.is_active,
         });
       } catch (err) {
@@ -177,16 +173,6 @@ export default function CustomerEdit() {
         ...(currentFormData.billing_address || {}),
         [field]: value,
       } as Address,
-    }));
-  }
-
-  function updateContact(field: keyof Contact, value: string) {
-    setFormData((currentFormData) => ({
-      ...currentFormData,
-      contact: {
-        ...(currentFormData.contact || {}),
-        [field]: value,
-      } as Contact,
     }));
   }
 
@@ -439,70 +425,6 @@ export default function CustomerEdit() {
                 </Field>
               </FieldGroup>
             </div>
-
-            {/* Contact Information */}
-            <div>
-              <PageTitle level={2} className="mb-4">
-                <Trans>Contact Person</Trans>
-              </PageTitle>
-              <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="customer-contact-name">
-                    <Trans>Name</Trans>
-                  </FieldLabel>
-                  <Input
-                    id="customer-contact-name"
-                    name="contact_name"
-                    type="text"
-                    autoComplete="name"
-                    value={formData.contact?.name || ""}
-                    onChange={(e) => updateContact("name", e.target.value)}
-                  />
-                </Field>
-
-                <Field>
-                  <FieldLabel htmlFor="customer-contact-email">
-                    <Trans>Email</Trans>
-                  </FieldLabel>
-                  <Input
-                    id="customer-contact-email"
-                    name="contact_email"
-                    type="email"
-                    autoComplete="email"
-                    value={formData.contact?.email || ""}
-                    onChange={(e) => updateContact("email", e.target.value)}
-                  />
-                </Field>
-
-                <Field>
-                  <FieldLabel htmlFor="customer-contact-phone">
-                    <Trans>Phone</Trans>
-                  </FieldLabel>
-                  <Input
-                    id="customer-contact-phone"
-                    name="contact_phone"
-                    type="tel"
-                    autoComplete="tel"
-                    value={formData.contact?.phone || ""}
-                    onChange={(e) => updateContact("phone", e.target.value)}
-                  />
-                </Field>
-              </FieldGroup>
-            </div>
-
-            {/* Additional Information */}
-            <Field>
-              <FieldLabel htmlFor="customer-notes">
-                <Trans>Notes</Trans>
-              </FieldLabel>
-              <Textarea
-                id="customer-notes"
-                name="notes"
-                rows={4}
-                value={formData.notes || ""}
-                onChange={(e) => updateField("notes", e.target.value)}
-              />
-            </Field>
 
             <FormCheckboxField>
               <Checkbox

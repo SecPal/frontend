@@ -21,16 +21,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/select";
-import { createSite, listCustomers } from "../../services/customersApi";
-import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
+import {
+  createSite,
+  listCustomerEstablishmentOptions,
+  listCustomers,
+} from "../../services/customersApi";
 import type {
   CreateSiteRequest,
   Address,
   Contact,
   SiteType,
   Customer,
+  CustomerEstablishmentLookup,
 } from "../../types/customers";
-import type { OrganizationalUnit } from "../../types/organizational";
 import {
   Alert,
   AlertDescription,
@@ -50,12 +53,14 @@ export default function SiteCreate() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [orgUnits, setOrgUnits] = useState<OrganizationalUnit[]>([]);
+  const [establishments, setEstablishments] = useState<
+    CustomerEstablishmentLookup[]
+  >([]);
   const [loadingData, setLoadingData] = useState(true);
 
   const [formData, setFormData] = useState<CreateSiteRequest>({
     customer_id: customerId || "",
-    organizational_unit_id: "",
+    establishment_id: "",
     name: "",
     type: "permanent",
     address: {
@@ -71,14 +76,8 @@ export default function SiteCreate() {
     async function loadData() {
       setLoadingData(true);
       try {
-        const [customersData, orgUnitsData] = await Promise.all([
-          listCustomers({ per_page: 100 }),
-          listOrganizationalUnits({ is_assignable: true, per_page: 100 }),
-        ]);
+        const customersData = await listCustomers({ per_page: 100 });
         setCustomers(customersData.data);
-        setOrgUnits(
-          orgUnitsData.data.filter((unit) => unit.is_assignable !== false)
-        );
       } catch (err) {
         setError(
           err instanceof Error
@@ -92,7 +91,57 @@ export default function SiteCreate() {
     loadData();
   }, [_]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const customer = customers.find(
+      (candidate) => candidate.id === formData.customer_id
+    );
+
+    if (!customer) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void listCustomerEstablishmentOptions(customer.legal_entity_id)
+      .then((options) => {
+        if (!cancelled) {
+          setEstablishments(options);
+          if (options.length === 1) {
+            setFormData((current) => ({
+              ...current,
+              establishment_id: options[0]!.id,
+            }));
+          }
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : _(msg`Failed to load establishments`)
+          );
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [_, customers, formData.customer_id]);
+
   function updateField(field: keyof CreateSiteRequest, value: unknown) {
+    if (field === "customer_id") {
+      setError(null);
+      setEstablishments([]);
+      setFormData((currentFormData) => ({
+        ...currentFormData,
+        customer_id: String(value),
+        establishment_id: "",
+      }));
+      return;
+    }
+
     setFormData((currentFormData) => ({
       ...currentFormData,
       [field]: value,
@@ -129,7 +178,7 @@ export default function SiteCreate() {
       // Clean up the data before sending
       const dataToSend: CreateSiteRequest = {
         customer_id: formData.customer_id,
-        organizational_unit_id: formData.organizational_unit_id,
+        establishment_id: formData.establishment_id,
         name: formData.name,
         type: formData.type,
         address: formData.address,
@@ -231,43 +280,37 @@ export default function SiteCreate() {
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="site-organizational-unit">
-              <Trans>Organizational Unit</Trans> *
+            <FieldLabel htmlFor="site-establishment">
+              <Trans>Establishment</Trans> *
             </FieldLabel>
             <Select
-              name="organizational_unit_id"
+              name="establishment_id"
               required
-              value={formData.organizational_unit_id}
-              onValueChange={(value) =>
-                updateField("organizational_unit_id", value)
-              }
+              value={formData.establishment_id}
+              onValueChange={(value) => updateField("establishment_id", value)}
             >
               <SelectTrigger
-                id="site-organizational-unit"
-                aria-invalid={
-                  fieldErrors.organizational_unit_id ? true : undefined
-                }
+                id="site-establishment"
+                aria-invalid={fieldErrors.establishment_id ? true : undefined}
                 aria-describedby={
-                  fieldErrors.organizational_unit_id
-                    ? "site-organizational-unit-error"
+                  fieldErrors.establishment_id
+                    ? "site-establishment-error"
                     : undefined
                 }
               >
-                <SelectValue
-                  placeholder={_(msg`Select organizational unit...`)}
-                />
+                <SelectValue placeholder={_(msg`Select establishment...`)} />
               </SelectTrigger>
               <SelectContent>
-                {orgUnits.map((unit) => (
-                  <SelectItem key={unit.id} value={unit.id}>
-                    {unit.name}
+                {establishments.map((establishment) => (
+                  <SelectItem key={establishment.id} value={establishment.id}>
+                    {establishment.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {fieldErrors.organizational_unit_id && (
-              <FieldError id="site-organizational-unit-error">
-                {fieldErrors.organizational_unit_id.join(", ")}
+            {fieldErrors.establishment_id && (
+              <FieldError id="site-establishment-error">
+                {fieldErrors.establishment_id.join(", ")}
               </FieldError>
             )}
           </Field>

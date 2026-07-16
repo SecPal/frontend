@@ -68,26 +68,12 @@ const mockSites: Site[] = [
     },
     is_active: true,
     customer_id: "cust-1",
-    customer: {
-      id: "cust-1",
-      customer_number: "CUST-001",
-      name: "Acme GmbH",
-      billing_address: {
-        street: "Billing St",
-        postal_code: "10115",
-        city: "Berlin",
-        country: "DE",
-      },
-      is_active: true,
-    },
-    organizational_unit_id: "unit-1",
+    establishment_id: "unit-1",
     contact: {
       name: "Erika Muster",
       email: "erika@secpal.dev",
       phone: "+49 30 123456",
     },
-    is_expired: false,
-    full_address: "Main St, 12345 Berlin, Germany",
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z",
   },
@@ -104,24 +90,8 @@ const mockSites: Site[] = [
     },
     is_active: true,
     customer_id: "cust-2",
-    customer: {
-      id: "cust-2",
-      customer_number: "CUST-002",
-      name: "Beta AG",
-      billing_address: {
-        street: "Invoice Rd",
-        postal_code: "80331",
-        city: "Munich",
-        country: "DE",
-      },
-      is_active: true,
-    },
-    organizational_unit_id: "unit-2",
+    establishment_id: "unit-2",
     contact: null,
-    valid_from: "2025-01-01",
-    valid_until: "2025-12-31",
-    is_expired: false,
-    full_address: "Project Rd, 54321 Munich, Germany",
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z",
   },
@@ -335,11 +305,11 @@ describe("SitesPage", () => {
     expect(
       screen.getByText("Project Rd, 54321 Munich, Germany")
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Acme GmbH" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "cust-1" })).toHaveAttribute(
       "href",
       "/customers/cust-1"
     );
-    expect(screen.getByText("Beta AG")).toBeInTheDocument();
+    expect(screen.getByText("cust-2")).toBeInTheDocument();
     expect(screen.getByText("Erika Muster")).toBeInTheDocument();
     expect(screen.getAllByText(/active/i).length).toBeGreaterThan(0);
   });

@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Regenerated Customer, Establishment relationship, and Site frontend contract
+  types; added strict Establishment lookup and relationship API clients; and
+  replaced Customer/Site organization-unit and global relationship data with
+  contract-backed `establishment_id` flows.
 - Defined the server-authoritative Site-Establishment API contract, including
   canonical request, filter, model, include, and resource naming; atomic
   Customer–Legal-Entity–Establishment validation; authorization; and the

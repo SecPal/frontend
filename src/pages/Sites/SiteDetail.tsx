@@ -16,14 +16,7 @@ import { Button } from "@/ui/button";
 import { LoadingRegion, SectionSkeleton } from "@/ui/loading";
 import { Skeleton } from "@/ui/skeleton";
 import { getSite, deleteSite, getCustomer } from "../../services/customersApi";
-import { getOrganizationalUnit } from "../../services/organizationalUnitApi";
-import type {
-  Address,
-  Customer,
-  Site,
-  SiteCustomer,
-} from "../../types/customers";
-import type { OrganizationalUnit } from "../../types/organizational";
+import type { Address, Customer, Site } from "../../types/customers";
 import {
   DescriptionList,
   DescriptionDetails,
@@ -64,10 +57,7 @@ export default function SiteDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [site, setSite] = useState<Site | null>(null);
-  const [customer, setCustomer] = useState<Customer | SiteCustomer | null>(
-    null
-  );
-  const [orgUnit, setOrgUnit] = useState<OrganizationalUnit | null>(null);
+  const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -87,29 +77,20 @@ export default function SiteDetail() {
       setLoadError(null);
       setSite(null);
       setCustomer(null);
-      setOrgUnit(null);
       try {
         const siteData = await getSite(id);
         if (cancelled) return;
         setSite(siteData);
-        if (siteData.customer) {
-          setCustomer(siteData.customer);
-        }
-
-        // Load customer and org unit in parallel, but don't fail if they error
-        const [customerResult, orgUnitResult] = await Promise.allSettled([
-          siteData.customer
-            ? Promise.resolve(siteData.customer)
-            : getCustomer(siteData.customer_id),
-          getOrganizationalUnit(siteData.organizational_unit_id),
-        ]);
+        const customerResult = await Promise.resolve(
+          getCustomer(siteData.customer_id)
+        ).then(
+          (value) => ({ status: "fulfilled", value }) as const,
+          () => ({ status: "rejected" }) as const
+        );
         if (cancelled) return;
 
         if (customerResult.status === "fulfilled") {
           setCustomer(customerResult.value);
-        }
-        if (orgUnitResult.status === "fulfilled") {
-          setOrgUnit(orgUnitResult.value);
         }
       } catch (err) {
         if (cancelled) return;
@@ -226,11 +207,6 @@ export default function SiteDetail() {
           <StatusBadge color={site.is_active ? "lime" : "zinc"}>
             {site.is_active ? <Trans>Active</Trans> : <Trans>Inactive</Trans>}
           </StatusBadge>
-          {site.is_expired && (
-            <StatusBadge color="red">
-              <Trans>Expired</Trans>
-            </StatusBadge>
-          )}
         </div>
       </div>
 
@@ -375,50 +351,6 @@ export default function SiteDetail() {
           </div>
         )}
 
-        {/* Validity Period */}
-        {(site.valid_from || site.valid_until) && (
-          <div>
-            <PageTitle level={2} className="mb-4">
-              <Trans>Validity Period</Trans>
-            </PageTitle>
-            <DescriptionList>
-              {site.valid_from && (
-                <>
-                  <DescriptionTerm>
-                    <Trans>Valid From</Trans>
-                  </DescriptionTerm>
-                  <DescriptionDetails>
-                    {formatDate(site.valid_from, i18n.locale)}
-                  </DescriptionDetails>
-                </>
-              )}
-
-              {site.valid_until && (
-                <>
-                  <DescriptionTerm>
-                    <Trans>Valid Until</Trans>
-                  </DescriptionTerm>
-                  <DescriptionDetails>
-                    {formatDate(site.valid_until, i18n.locale)}
-                  </DescriptionDetails>
-                </>
-              )}
-            </DescriptionList>
-          </div>
-        )}
-
-        {/* Access Instructions */}
-        {site.access_instructions && (
-          <div>
-            <PageTitle level={2} className="mb-4">
-              <Trans>Access Instructions</Trans>
-            </PageTitle>
-            <PageText className="whitespace-pre-wrap">
-              {site.access_instructions}
-            </PageText>
-          </div>
-        )}
-
         {/* Notes */}
         {site.notes && (
           <div>
@@ -440,16 +372,10 @@ export default function SiteDetail() {
           >
             <DescriptionList>
               <DescriptionTerm>
-                <Trans>Organizational Unit</Trans>
+                <Trans>Establishment</Trans>
               </DescriptionTerm>
               <DescriptionDetails>
-                {orgUnit ? (
-                  orgUnit.name
-                ) : isAssociationLoading ? (
-                  <Skeleton className="h-4 w-40" />
-                ) : (
-                  site.organizational_unit_id
-                )}
+                {site.establishment?.name ?? site.establishment_id}
               </DescriptionDetails>
 
               <DescriptionTerm>
