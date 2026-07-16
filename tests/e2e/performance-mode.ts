@@ -51,9 +51,9 @@ export const getConfiguredLighthouseBrowserPath = () => {
 export const getPerformanceAuditThresholds = (
   baseUrl = resolvePlaywrightBaseUrl()
 ) =>
-  // Only Polyscope workspace previews receive the relaxed threshold; localhost
-  // targets keep the stricter default so they don't mask regressions that CI
-  // would catch.
+  // Only Polyscope workspace previews receive the relaxed threshold; every
+  // other target keeps the stricter default so it does not mask regressions
+  // that CI would catch.
   isWorkspacePreviewTarget(baseUrl)
     ? LIVE_LIGHTHOUSE_THRESHOLDS
     : DEFAULT_LIGHTHOUSE_THRESHOLDS;

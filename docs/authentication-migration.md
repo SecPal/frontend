@@ -134,13 +134,13 @@ The SPA flow uses `POST /v1/auth/login`, `POST /v1/auth/logout`, and `GET /v1/me
 
 ```env
 # Sanctum Configuration
-SANCTUM_STATEFUL_DOMAINS=localhost:5173,app.secpal.dev
+SANCTUM_STATEFUL_DOMAINS=localhost:5173,localhost:4174,app.secpal.dev
 SESSION_DOMAIN=localhost
 SESSION_SECURE_COOKIE=false  # true in production
 SESSION_DRIVER=cookie
 
 # CORS Configuration
-CORS_ALLOWED_ORIGINS=http://localhost:5173,https://app.secpal.dev
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:4174,https://app.secpal.dev
 ```
 
 Production SPA baseline:
@@ -155,7 +155,7 @@ CORS_ALLOWED_ORIGINS=https://app.secpal.dev
 1. **Start backend API:**
 
    ```bash
-   cd api/
+   # In the SecPal/api checkout
    php artisan serve
    ```
 
