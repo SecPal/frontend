@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal Contributors
+// SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -154,6 +154,70 @@ describe("CustomerEdit", () => {
       expect(customersApi.updateCustomer).toHaveBeenCalledWith(
         "customer-123",
         expect.objectContaining({ legal_entity_id: legalEntity.id })
+      );
+    });
+  });
+
+  it("recovers an unmigrated customer after a legal entity lookup failure", async () => {
+    const user = userEvent.setup();
+    const legalEntity = {
+      id: "550e8400-e29b-41d4-a716-446655440002",
+      name: "SecPal Operations GmbH",
+    };
+    vi.mocked(customersApi.getCustomer).mockResolvedValue({
+      ...mockCustomer,
+      legal_entity_id: undefined,
+    } as unknown as typeof mockCustomer);
+    vi.mocked(customerLegalEntitiesApi.listCustomerLegalEntities)
+      .mockRejectedValueOnce(new Error("Legal entity lookup failed"))
+      .mockResolvedValueOnce([legalEntity]);
+    vi.mocked(customersApi.updateCustomer).mockResolvedValue({
+      ...mockCustomer,
+      name: "Edited before retry",
+      legal_entity_id: legalEntity.id,
+    });
+
+    renderWithRouter();
+
+    const customerName = await screen.findByLabelText(/customer name/i);
+    await user.clear(customerName);
+    await user.type(customerName, "Edited before retry");
+
+    const lookupError = await screen.findByRole("alert");
+    expect(lookupError).toHaveTextContent("Legal entity lookup failed");
+
+    const legalEntitySelect = screen.getByRole("combobox", {
+      name: /legal entity/i,
+    });
+    expect(legalEntitySelect).toBeDisabled();
+    expect(legalEntitySelect).toHaveAttribute(
+      "aria-describedby",
+      "customer-legal-entity-lookup-error"
+    );
+
+    await user.click(screen.getByRole("button", { name: /retry/i }));
+
+    await waitFor(() => {
+      expect(
+        customerLegalEntitiesApi.listCustomerLegalEntities
+      ).toHaveBeenCalledTimes(2);
+      expect(legalEntitySelect).toBeEnabled();
+    });
+    expect(customerName).toHaveValue("Edited before retry");
+
+    await user.click(legalEntitySelect);
+    await user.click(
+      await screen.findByRole("option", { name: legalEntity.name })
+    );
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(customersApi.updateCustomer).toHaveBeenCalledWith(
+        "customer-123",
+        expect.objectContaining({
+          name: "Edited before retry",
+          legal_entity_id: legalEntity.id,
+        })
       );
     });
   });

@@ -66,6 +66,7 @@ export default function CustomerEdit() {
   const [legalEntityLookupError, setLegalEntityLookupError] = useState<
     string | null
   >(null);
+  const [legalEntityLookupAttempt, setLegalEntityLookupAttempt] = useState(0);
   const [selectedLegalEntityId, setSelectedLegalEntityId] = useState("");
 
   const [formData, setFormData] = useState<UpdateCustomerRequest>({});
@@ -129,9 +130,16 @@ export default function CustomerEdit() {
         const entities = await listCustomerLegalEntities();
         if (!cancelled) {
           setLegalEntities(entities);
+          setSelectedLegalEntityId((selectedId) =>
+            entities.some((entity) => entity.id === selectedId)
+              ? selectedId
+              : ""
+          );
         }
       } catch (err) {
         if (!cancelled) {
+          setLegalEntities([]);
+          setSelectedLegalEntityId("");
           setLegalEntityLookupError(
             err instanceof Error
               ? err.message
@@ -149,7 +157,11 @@ export default function CustomerEdit() {
     return () => {
       cancelled = true;
     };
-  }, [_]);
+  }, [_, legalEntityLookupAttempt]);
+
+  function retryLegalEntityLookup() {
+    setLegalEntityLookupAttempt((attempt) => attempt + 1);
+  }
 
   function updateField(field: keyof UpdateCustomerRequest, value: unknown) {
     setFormData((currentFormData) => ({
@@ -284,6 +296,12 @@ export default function CustomerEdit() {
                       loadingLegalEntities || legalEntities.length === 0
                     }
                     aria-required={requiresLegalEntityAssignment || undefined}
+                    aria-invalid={legalEntityLookupError ? true : undefined}
+                    aria-describedby={
+                      legalEntityLookupError
+                        ? "customer-legal-entity-lookup-error"
+                        : undefined
+                    }
                   >
                     <SelectValue placeholder={_(msg`Select legal entity...`)} />
                   </SelectTrigger>
@@ -296,7 +314,21 @@ export default function CustomerEdit() {
                   </SelectContent>
                 </Select>
                 {legalEntityLookupError ? (
-                  <FieldError>{legalEntityLookupError}</FieldError>
+                  <>
+                    <FieldError
+                      id="customer-legal-entity-lookup-error"
+                      role="alert"
+                    >
+                      {legalEntityLookupError}
+                    </FieldError>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={retryLegalEntityLookup}
+                    >
+                      <Trans>Retry</Trans>
+                    </Button>
+                  </>
                 ) : null}
               </Field>
               <Field>
