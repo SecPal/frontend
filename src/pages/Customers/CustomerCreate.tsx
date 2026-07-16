@@ -187,7 +187,11 @@ export default function CustomerCreate() {
   const selectedLegalEntityId =
     legalEntities.length === 1
       ? legalEntities[0]!.id
-      : formData.legal_entity_id;
+      : legalEntities.some(
+            (legalEntity) => legalEntity.id === formData.legal_entity_id
+          )
+        ? formData.legal_entity_id
+        : "";
 
   function validateForm(): CustomerFormErrors {
     const validationErrors: CustomerFormErrors = {};

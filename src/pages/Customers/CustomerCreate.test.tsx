@@ -3,6 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -372,6 +373,87 @@ describe("CustomerCreate", () => {
         })
       );
     });
+  });
+
+  it("does not submit a stale legal entity after authorized options refresh", async () => {
+    const user = userEvent.setup();
+    const replacementLegalEntity = {
+      id: "550e8400-e29b-41d4-a716-446655440003",
+      name: "SecPal Services GmbH",
+    };
+    const previousLocale = i18n.locale;
+    const nextLocale = previousLocale === "de" ? "en" : "de";
+    let resolveRefresh: (
+      entities: Awaited<
+        ReturnType<typeof customerLegalEntitiesApi.listCustomerLegalEntities>
+      >
+    ) => void = () => {};
+    const refreshPromise = new Promise<
+      Awaited<
+        ReturnType<typeof customerLegalEntitiesApi.listCustomerLegalEntities>
+      >
+    >((resolve) => {
+      resolveRefresh = resolve;
+    });
+
+    vi.mocked(customerLegalEntitiesApi.listCustomerLegalEntities)
+      .mockResolvedValueOnce(legalEntities)
+      .mockReturnValueOnce(refreshPromise);
+
+    const { unmount } = renderWithRouter(<CustomerCreate />);
+
+    await chooseLegalEntity(secondLegalEntity.name);
+
+    try {
+      act(() => {
+        i18n.load(nextLocale, {});
+        i18n.activate(nextLocale);
+      });
+
+      await waitFor(() => {
+        expect(
+          customerLegalEntitiesApi.listCustomerLegalEntities
+        ).toHaveBeenCalledTimes(2);
+      });
+      await act(async () => {
+        resolveRefresh([firstLegalEntity, replacementLegalEntity]);
+        await refreshPromise;
+      });
+      await waitFor(() => {
+        expect(
+          screen.getByRole("combobox", { name: /legal entity/i })
+        ).toHaveTextContent("Select legal entity...");
+      });
+
+      fireEvent.change(screen.getByLabelText(/customer name/i), {
+        target: { value: "Refreshed Entity Customer" },
+      });
+      fireEvent.change(screen.getByLabelText(/street/i), {
+        target: { value: "Street 1" },
+      });
+      fireEvent.change(screen.getByLabelText(/postal code/i), {
+        target: { value: "12345" },
+      });
+      fireEvent.change(screen.getByLabelText(/city/i), {
+        target: { value: "City" },
+      });
+
+      await user.click(
+        screen.getByRole("button", { name: /create customer/i })
+      );
+
+      expect(
+        await screen.findByText(/legal entity is required/i)
+      ).toBeInTheDocument();
+      expect(customersApi.createCustomer).not.toHaveBeenCalled();
+    } finally {
+      unmount();
+      if (previousLocale) {
+        act(() => {
+          i18n.activate(previousLocale);
+        });
+      }
+    }
   });
 
   it("selects, disables, and submits the only available legal entity", async () => {
