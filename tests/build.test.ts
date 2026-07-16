@@ -331,6 +331,17 @@ describe("Build Configuration and Source Verification", () => {
     }
   });
 
+  it("runs Prettier as a local system hook compatible with npm 12", () => {
+    const preCommitConfig = readRepoFile(".pre-commit-config.yaml");
+
+    expect(preCommitConfig).not.toContain("pre-commit/mirrors-prettier");
+    expect(preCommitConfig).toContain("- id: prettier");
+    expect(preCommitConfig).toContain("language: system");
+    expect(preCommitConfig).toContain(
+      "entry: npx --no-install prettier --write"
+    );
+  });
+
   it("keeps SecPal attribution off Lukas-owned locale sidecars", () => {
     for (const relativePath of [
       "src/locales/de/messages.js.license",
