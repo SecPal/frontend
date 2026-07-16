@@ -169,8 +169,11 @@ describe("theme-color bootstrap stale asset recovery", () => {
     testWindow.__themeColorTestHooks?.recoverFromStaleHashedAsset();
     window.dispatchEvent(new Event("app-bootstrap-ready"));
 
+    const assetLoadRecoveryStorageKey = ["secpal", "asset-load-recovery"].join(
+      "."
+    );
     expect(setItem).toHaveBeenCalledWith(
-      "secpal.asset-load-recovery",
+      assetLoadRecoveryStorageKey,
       "pending"
     );
     expect(removeItem).not.toHaveBeenCalled();

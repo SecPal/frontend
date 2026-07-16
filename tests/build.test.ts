@@ -604,10 +604,13 @@ describe("Build Configuration and Source Verification", () => {
 
   it("keeps stale hashed-entry recovery in the early bootstrap script", () => {
     const themeColorJs = readRepoFile("public/theme-color.js");
+    const assetLoadRecoveryStorageKey = ["secpal", "asset-load-recovery"].join(
+      "."
+    );
 
     expect(themeColorJs).toContain("window.addEventListener(");
     expect(themeColorJs).toContain('"error"');
-    expect(themeColorJs).toContain("secpal.asset-load-recovery");
+    expect(themeColorJs).toContain(assetLoadRecoveryStorageKey);
     expect(themeColorJs).toContain("navigator.serviceWorker.getRegistrations");
     expect(themeColorJs).toContain("window.caches.keys");
     expect(themeColorJs).toContain("window.location.reload()");
