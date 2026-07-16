@@ -46,8 +46,10 @@ paths:
         - Customers
       summary: Create a customer and its initial establishment relationship
       description: >-
-        Creates shared customer master data and one relationship. Contact and
-        notes belong to that relationship.
+        Atomically locks and validates the Legal Entity and Establishment,
+        applies the approved identity rule, and creates shared customer master
+        data or an additional relationship. Contact and notes belong to that
+        relationship.
       security:
         - BearerAuth: []
       requestBody:
@@ -67,6 +69,8 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/DuplicateConflict"
         "422":
           $ref: "#/components/responses/ValidationError"
   /customers/{customer}:
@@ -135,6 +139,8 @@ paths:
         failures must not disclose whether any non-visible establishment exists.
       security:
         - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/LegalEntityIdQuery"
       responses:
         "200":
           description: Visible minimal establishment options
@@ -216,6 +222,8 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/DuplicateConflict"
         "422":
           $ref: "#/components/responses/ValidationError"
   /customers/{customer}/establishments/{relationship}:
@@ -404,6 +412,14 @@ components:
       scheme: bearer
       bearerFormat: JWT
   parameters:
+    LegalEntityIdQuery:
+      name: legal_entity_id
+      in: query
+      required: true
+      description: Selected visible Legal Entity whose writable Establishments are eligible.
+      schema:
+        type: string
+        format: uuid
     CustomerId:
       name: customer
       in: path
@@ -432,6 +448,10 @@ components:
       description: Authenticated caller lacks permission
     NotFound:
       description: Resource is missing or is not visible to the caller
+    DuplicateConflict:
+      description: >-
+        A visible customer identity or establishment relationship conflicts
+        with the request; hidden resources use the standard not-found response.
     ValidationError:
       description: Request validation failed
   schemas:

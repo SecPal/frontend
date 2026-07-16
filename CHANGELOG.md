@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Defined the secure customer aggregate API service contract for eligible
+  Establishment lookups, transactional identity resolution, atomic relationship
+  writes, concurrent duplicate handling, authorization, and non-disclosing
+  customer projections and errors.
 - Defined the tenant-safe Customer-Establishment persistence and migration
   contract, including relationship-owned contact and notes, deterministic Site
   reassignment, composite foreign keys, and fail-closed legacy-data preflight
