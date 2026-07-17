@@ -10,7 +10,8 @@ import { messages as enMessages } from "../../locales/en/messages.mjs";
 import type { Employee, EmployeeListResponse } from "@/types/api";
 import { EmployeeList } from "./EmployeeList";
 import * as employeeApi from "../../services/employeeApi";
-import * as organizationalUnitApi from "../../services/organizationalUnitApi";
+import * as legalEntityApi from "../../services/customerLegalEntitiesApi";
+import * as domainApi from "../../services/customerDomainApi";
 
 const { mockUseUserCapabilities } = vi.hoisted(() => ({
   mockUseUserCapabilities: vi.fn(),
@@ -18,7 +19,8 @@ const { mockUseUserCapabilities } = vi.hoisted(() => ({
 
 // Mock the employee API
 vi.mock("../../services/employeeApi");
-vi.mock("../../services/organizationalUnitApi");
+vi.mock("../../services/customerLegalEntitiesApi");
+vi.mock("../../services/customerDomainApi");
 vi.mock("../../hooks/useUserCapabilities", () => ({
   useUserCapabilities: mockUseUserCapabilities,
 }));
@@ -113,10 +115,8 @@ const mockEmployees: Employee[] = [
     status: "active",
     contract_type: "full_time",
     management_level: 0,
-    organizational_unit: {
-      id: "unit-1",
-      name: "Engineering",
-    },
+    legal_entity_id: "legal-entity-1",
+    establishment_id: "establishment-1",
     created_at: "2025-01-01T00:00:00Z",
     updated_at: "2025-01-01T00:00:00Z",
   },
@@ -134,10 +134,8 @@ const mockEmployees: Employee[] = [
     contract_start_date: "2024-06-01",
     status: "active",
     contract_type: "full_time",
-    organizational_unit: {
-      id: "unit-2",
-      name: "Design",
-    },
+    legal_entity_id: "legal-entity-1",
+    establishment_id: "establishment-1",
     created_at: "2024-06-01T00:00:00Z",
     updated_at: "2024-06-01T00:00:00Z",
   },
@@ -170,41 +168,14 @@ describe("EmployeeList", () => {
       },
     });
     vi.mocked(employeeApi.fetchEmployees).mockResolvedValue(mockResponse);
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
-      data: [
-        {
-          id: "unit-1",
-          name: "Engineering",
-          is_legal_entity: false,
-          is_establishment: false,
-          type: "department",
-          description: null,
-          parent: null,
-          children: [],
-          created_at: "2025-01-01T00:00:00Z",
-          updated_at: "2025-01-01T00:00:00Z",
-        },
-        {
-          id: "unit-2",
-          name: "Design",
-          is_legal_entity: false,
-          is_establishment: false,
-          type: "department",
-          description: null,
-          parent: null,
-          children: [],
-          created_at: "2025-01-01T00:00:00Z",
-          updated_at: "2025-01-01T00:00:00Z",
-        },
-      ],
-      meta: {
-        current_page: 1,
-        last_page: 1,
-        per_page: 100,
-        total: 2,
-        root_unit_ids: [],
-      },
-    });
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
+      { id: "legal-entity-1", name: "SecPal GmbH" },
+    ]);
+    vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue([
+      { id: "establishment-1", name: "Engineering" },
+      { id: "establishment-2", name: "Design" },
+    ]);
+    vi.mocked(domainApi.listCustomerLookups).mockResolvedValue([]);
   });
 
   it("should render employee list with table", async () => {
@@ -220,13 +191,13 @@ describe("EmployeeList", () => {
     expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
     expect(screen.getByText("E001")).toBeInTheDocument();
     expect(screen.getByText("Developer")).toBeInTheDocument();
-    expect(screen.getByText("Engineering")).toBeInTheDocument();
+    expect(screen.getAllByText("legal-entity-1").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("establishment-1").length).toBeGreaterThan(0);
 
     expect(screen.getByText("Jane Smith")).toBeInTheDocument();
     expect(screen.getByText("jane.smith@secpal.dev")).toBeInTheDocument();
     expect(screen.getByText("E002")).toBeInTheDocument();
     expect(screen.getByText("Designer")).toBeInTheDocument();
-    expect(screen.getByText("Design")).toBeInTheDocument();
   });
 
   it("renders employees as mobile cards on narrow viewports", async () => {
@@ -236,7 +207,8 @@ describe("EmployeeList", () => {
 
     expect(await screen.findByText("John Doe")).toBeInTheDocument();
     expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
-    expect(screen.getByText("Engineering")).toBeInTheDocument();
+    expect(screen.getAllByText("legal-entity-1").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("establishment-1").length).toBeGreaterThan(0);
     expect(
       screen.getByRole("link", { name: /view john doe/i })
     ).toHaveAttribute("href", "/employees/emp-1");
@@ -297,9 +269,11 @@ describe("EmployeeList", () => {
     ).toBeInTheDocument();
   });
 
-  it("should render a placeholder when the organizational unit is missing", async () => {
+  it("should render placeholders when domain assignments are missing", async () => {
     vi.mocked(employeeApi.fetchEmployees).mockResolvedValue({
-      data: [{ ...mockEmployees[0]!, organizational_unit: null }],
+      data: [
+        { ...mockEmployees[0]!, legal_entity_id: "", establishment_id: "" },
+      ],
       meta: {
         current_page: 1,
         last_page: 1,
@@ -314,7 +288,7 @@ describe("EmployeeList", () => {
       expect(screen.getByText("John Doe")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("-")).toBeInTheDocument();
+    expect(screen.getAllByText("-").length).toBeGreaterThanOrEqual(2);
   });
 
   it("should have Add Employee button", async () => {
@@ -357,7 +331,7 @@ describe("EmployeeList", () => {
   });
 
   it("keeps list feedback and pagination on canonical theme tokens", async () => {
-    vi.mocked(employeeApi.fetchEmployees).mockRejectedValueOnce(
+    vi.mocked(employeeApi.fetchEmployees).mockRejectedValue(
       new Error("API Error")
     );
 
@@ -377,7 +351,7 @@ describe("EmployeeList", () => {
     vi.mocked(employeeApi.fetchEmployees).mockImplementation(
       () => new Promise(() => {})
     );
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockImplementation(
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockImplementation(
       () => new Promise(() => {})
     );
 
@@ -433,18 +407,22 @@ describe("EmployeeList", () => {
     });
   });
 
-  it("should filter by organizational unit", async () => {
+  it("should filter by authorized establishment", async () => {
     renderWithProviders();
 
     await waitFor(() => {
       expect(screen.getByText("John Doe")).toBeInTheDocument();
     });
 
-    await selectRadixOption(/^organizational unit$/i, /design/i);
+    await selectRadixOption(/^establishment$/i, /design/i);
 
     await waitFor(() => {
       expect(employeeApi.fetchEmployees).toHaveBeenCalledWith(
-        expect.objectContaining({ organizational_unit_id: "unit-2", page: 1 })
+        expect.objectContaining({
+          legal_entity_id: "legal-entity-1",
+          establishment_id: "establishment-2",
+          page: 1,
+        })
       );
     });
   });

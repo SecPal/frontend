@@ -21,18 +21,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/select";
-import {
-  getSite,
-  updateSite,
-  listCustomers,
-} from "../../services/customersApi";
+import { getSite, updateSite } from "../../services/customersApi";
 import type {
   Site,
   UpdateSiteRequest,
   Address,
   Contact,
-  Customer,
 } from "../../types/customers";
+import { DomainAssignmentFields } from "../../components/DomainAssignmentFields";
 import {
   Alert,
   AlertDescription,
@@ -54,7 +50,6 @@ export default function SiteEdit() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [site, setSite] = useState<Site | null>(null);
-  const [customers, setCustomers] = useState<Customer[]>([]);
 
   const [formData, setFormData] = useState<UpdateSiteRequest>({});
 
@@ -82,15 +77,13 @@ export default function SiteEdit() {
       setError(null);
       setFieldErrors({});
       try {
-        const [siteData, customersData] = await Promise.all([
-          getSite(id),
-          listCustomers({ per_page: 100 }),
-        ]);
+        const siteData = await getSite(id);
         if (cancelled) return;
         setSite(siteData);
-        setCustomers(customersData.data);
         setFormData({
           customer_id: siteData.customer_id,
+          legal_entity_id: siteData.legal_entity_id,
+          establishment_id: siteData.establishment_id,
           name: siteData.name,
           address: siteData.address,
           contact: siteData.contact,
@@ -144,6 +137,8 @@ export default function SiteEdit() {
   function buildUpdatePayload(): UpdateSiteRequest {
     const payload: UpdateSiteRequest = {
       customer_id: formData.customer_id,
+      legal_entity_id: formData.legal_entity_id,
+      establishment_id: formData.establishment_id,
       name: formData.name,
       address: formData.address,
     };
@@ -217,41 +212,26 @@ export default function SiteEdit() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="site-customer">
-                  <Trans>Customer</Trans> *
-                </FieldLabel>
-                <Select
-                  name="customer_id"
-                  required
-                  value={formData.customer_id || ""}
-                  onValueChange={(value) => updateField("customer_id", value)}
-                >
-                  <SelectTrigger
-                    id="site-customer"
-                    aria-invalid={fieldErrors.customer_id ? true : undefined}
-                    aria-describedby={
-                      fieldErrors.customer_id
-                        ? "site-customer-error"
-                        : undefined
-                    }
-                  >
-                    <SelectValue placeholder={_(msg`Select customer...`)} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customers.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.customer_number} - {customer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {fieldErrors.customer_id && (
-                  <FieldError id="site-customer-error">
-                    {fieldErrors.customer_id.join(", ")}
-                  </FieldError>
-                )}
-              </Field>
+              <DomainAssignmentFields
+                idPrefix="site"
+                includeCustomer
+                value={{
+                  legal_entity_id: formData.legal_entity_id ?? "",
+                  establishment_id: formData.establishment_id ?? "",
+                  customer_id: formData.customer_id ?? "",
+                }}
+                onChange={(assignment) =>
+                  setFormData((current) => ({ ...current, ...assignment }))
+                }
+                errors={fieldErrors}
+                onClearErrors={(fields) =>
+                  setFieldErrors((current) => {
+                    const next = { ...current };
+                    for (const field of fields) delete next[field];
+                    return next;
+                  })
+                }
+              />
 
               <Field>
                 <FieldLabel htmlFor="site-name">

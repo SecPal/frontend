@@ -10,12 +10,14 @@ import { messages as deMessages } from "../../locales/de/messages.mjs";
 import { messages as enMessages } from "../../locales/en/messages.mjs";
 import { EmployeeCreate } from "./EmployeeCreate";
 import * as employeeApi from "../../services/employeeApi";
-import * as organizationalUnitApi from "../../services/organizationalUnitApi";
+import * as legalEntityApi from "../../services/customerLegalEntitiesApi";
+import * as domainApi from "../../services/customerDomainApi";
 import { ApiError } from "../../services/ApiError";
 
 // Mock the API modules
 vi.mock("../../services/employeeApi");
-vi.mock("../../services/organizationalUnitApi");
+vi.mock("../../services/customerLegalEntitiesApi");
+vi.mock("../../services/customerDomainApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
 const VERY_SLOW_TEST_TIMEOUT = 30000;
@@ -51,6 +53,7 @@ async function selectRadixOption(
   optionName: RegExp | string
 ) {
   const trigger = screen.getByRole("combobox", { name: triggerName });
+  await waitFor(() => expect(trigger).not.toBeDisabled());
   fireEvent.pointerDown(trigger, {
     button: 0,
     pointerId: 1,
@@ -77,27 +80,11 @@ async function selectRadixOption(
   fireEvent.click(option, { button: 0 });
 }
 
-const mockOrganizationalUnits = [
-  {
-    id: "unit-1",
-    name: "Main Office",
-    is_legal_entity: false,
-    is_establishment: false,
-    type: "branch" as const,
-    parent: null,
-    created_at: "2025-01-01T00:00:00Z",
-    updated_at: "2025-01-01T00:00:00Z",
-  },
-  {
-    id: "unit-2",
-    name: "Remote Team",
-    is_legal_entity: false,
-    is_establishment: false,
-    type: "branch" as const,
-    parent: null,
-    created_at: "2025-01-01T00:00:00Z",
-    updated_at: "2025-01-01T00:00:00Z",
-  },
+const mockLegalEntities = [{ id: "legal-entity-1", name: "SecPal GmbH" }];
+
+const mockEstablishments = [
+  { id: "establishment-1", name: "Main Office" },
+  { id: "establishment-2", name: "Remote Team" },
 ];
 
 describe("EmployeeCreate", () => {
@@ -107,17 +94,13 @@ describe("EmployeeCreate", () => {
     i18n.load("de", deMessages);
     i18n.activate("en");
 
-    // Mock organizational units loading
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
-      data: mockOrganizationalUnits,
-      meta: {
-        current_page: 1,
-        last_page: 1,
-        per_page: 100,
-        total: 2,
-        root_unit_ids: ["unit-1", "unit-2"],
-      },
-    });
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue(
+      mockLegalEntities
+    );
+    vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue(
+      mockEstablishments
+    );
+    vi.mocked(domainApi.listCustomerLookups).mockResolvedValue([]);
   });
 
   it("should render create form with all fields", async () => {
@@ -134,62 +117,39 @@ describe("EmployeeCreate", () => {
     expect(screen.getByLabelText(/date of birth/i)).toBeInTheDocument();
     expect(screen.getAllByLabelText(/position/i)[0]).toBeInTheDocument();
     expect(screen.getByLabelText(/contract start date/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/organizational unit/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/legal entity/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/establishment/i)).toBeInTheDocument();
   });
 
-  it("uses is_assignable, not is_active, for organizational-unit assignments", async () => {
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
-      data: [
-        {
-          ...mockOrganizationalUnits[0]!,
-          name: "Inactive but assignable",
-          is_active: false,
-          is_assignable: true,
-        },
-        {
-          ...mockOrganizationalUnits[1]!,
-          name: "Active but unavailable",
-          is_active: true,
-          is_assignable: false,
-        },
-      ],
-      meta: {
-        current_page: 1,
-        last_page: 1,
-        per_page: 100,
-        total: 2,
-        root_unit_ids: ["unit-1", "unit-2"],
-      },
-    });
-
+  it("loads only authorized legal entities and establishments", async () => {
     renderWithProviders(<EmployeeCreate />);
 
-    expect(organizationalUnitApi.listOrganizationalUnits).toHaveBeenCalledWith({
-      is_assignable: true,
-      per_page: 100,
-    });
-
-    expect(await screen.findByText("Inactive but assignable")).toBeVisible();
-    expect(
-      screen.queryByText("Active but unavailable")
-    ).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(domainApi.listEstablishmentLookups).toHaveBeenCalledWith(
+        "legal-entity-1"
+      )
+    );
+    expect(legalEntityApi.listCustomerLegalEntities).toHaveBeenCalledTimes(1);
+    await selectRadixOption(/establishment/i, "Main Office");
   });
 
-  it("should load organizational units on mount", async () => {
+  it("should load establishments after the legal entity", async () => {
     renderWithProviders(<EmployeeCreate />);
 
     await waitFor(() => {
-      expect(organizationalUnitApi.listOrganizationalUnits).toHaveBeenCalled();
+      expect(domainApi.listEstablishmentLookups).toHaveBeenCalledWith(
+        "legal-entity-1"
+      );
     });
 
     await waitFor(() => {
-      const select = screen.getByLabelText(/organizational unit/i);
+      const select = screen.getByLabelText(/establishment/i);
       expect(select).toBeInTheDocument();
       expect(select).not.toBeDisabled();
     });
 
     fireEvent.pointerDown(
-      screen.getByRole("combobox", { name: /organizational unit/i }),
+      screen.getByRole("combobox", { name: /establishment/i }),
       {
         button: 0,
         pointerId: 1,
@@ -198,10 +158,10 @@ describe("EmployeeCreate", () => {
     );
     expect(
       await screen.findByRole("option", { name: "Main Office" })
-    ).toHaveAttribute("data-value", "unit-1");
+    ).toHaveAttribute("data-value", "establishment-1");
     expect(screen.getByRole("option", { name: "Remote Team" })).toHaveAttribute(
       "data-value",
-      "unit-2"
+      "establishment-2"
     );
   });
 
@@ -214,7 +174,7 @@ describe("EmployeeCreate", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByRole("combobox", { name: /organizational unit/i })
+        screen.getByRole("combobox", { name: /establishment/i })
       ).not.toBeDisabled();
     });
 
@@ -238,7 +198,7 @@ describe("EmployeeCreate", () => {
       target: { value: "01/01/2025" },
     });
     fireEvent.blur(screen.getByLabelText(/contract start date/i));
-    await selectRadixOption(/organizational unit/i, "Main Office");
+    await selectRadixOption(/establishment/i, "Main Office");
 
     submitEmployeeCreateForm();
 
@@ -276,10 +236,8 @@ describe("EmployeeCreate", () => {
           mail_failed_at: null,
           failure_reason: null,
         },
-        organizational_unit: {
-          id: "unit-1",
-          name: "Main Office",
-        },
+        legal_entity_id: "legal-entity-1",
+        establishment_id: "establishment-1",
         user: undefined,
         created_at: "2025-01-01T00:00:00Z",
         updated_at: "2025-01-01T00:00:00Z",
@@ -288,20 +246,16 @@ describe("EmployeeCreate", () => {
       renderWithProviders(<EmployeeCreate />);
 
       await waitFor(() => {
-        expect(
-          organizationalUnitApi.listOrganizationalUnits
-        ).toHaveBeenCalled();
+        expect(domainApi.listEstablishmentLookups).toHaveBeenCalled();
       });
 
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
-        expect(
-          screen.getByLabelText(/organizational unit/i)
-        ).not.toBeDisabled();
+        expect(screen.getByLabelText(/establishment/i)).not.toBeDisabled();
       });
 
       // Fill in form
@@ -340,7 +294,7 @@ describe("EmployeeCreate", () => {
         target: { value: "01/01/2025" },
       });
       fireEvent.blur(screen.getByLabelText(/contract start date/i));
-      await selectRadixOption(/organizational unit/i, "Main Office");
+      await selectRadixOption(/establishment/i, "Main Office");
 
       // Submit
       submitEmployeeCreateForm();
@@ -355,7 +309,8 @@ describe("EmployeeCreate", () => {
             date_of_birth: "1990-01-01",
             position: "Developer",
             contract_start_date: "2025-01-01",
-            organizational_unit_id: "unit-1",
+            legal_entity_id: "legal-entity-1",
+            establishment_id: "establishment-1",
             management_level: 0,
             status: "pre_contract",
             contract_type: "full_time",
@@ -399,7 +354,7 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
       });
@@ -425,7 +380,7 @@ describe("EmployeeCreate", () => {
         target: { value: "01/01/2025" },
       });
       fireEvent.blur(screen.getByLabelText(/contract start date/i));
-      await selectRadixOption(/organizational unit/i, "Main Office");
+      await selectRadixOption(/establishment/i, "Main Office");
 
       // Submit
       submitEmployeeCreateForm();
@@ -445,7 +400,7 @@ describe("EmployeeCreate", () => {
     await waitFor(() => {
       expect(
         screen.getByRole("combobox", {
-          name: /organizational unit|organisatorische einheit/i,
+          name: /establishment|betriebsstätte/i,
         })
       ).not.toBeDisabled();
     });
@@ -455,22 +410,20 @@ describe("EmployeeCreate", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/employees");
   });
 
-  it("should show loading state for organizational units", () => {
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockImplementation(
+  it("should disable establishments while their authorized options load", async () => {
+    vi.mocked(domainApi.listEstablishmentLookups).mockImplementation(
       () => new Promise(() => {}) // Never resolves
     );
 
-    const { container } = renderWithProviders(<EmployeeCreate />);
+    renderWithProviders(<EmployeeCreate />);
 
-    const select = screen.getByLabelText(/organizational unit/i);
-    expect(select).toBeDisabled();
+    await waitFor(() =>
+      expect(domainApi.listEstablishmentLookups).toHaveBeenCalledWith(
+        "legal-entity-1"
+      )
+    );
+    expect(screen.getByLabelText(/establishment/i)).toBeDisabled();
     expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("status", { name: /loading unit options/i })
-    ).toBeInTheDocument();
-    expect(
-      container.querySelectorAll('[data-slot="skeleton"]').length
-    ).toBeGreaterThan(0);
   });
 
   it("should show a visible submit summary, inline errors, and focus the first invalid field", async () => {
@@ -479,7 +432,7 @@ describe("EmployeeCreate", () => {
     await waitFor(() => {
       expect(
         screen.getByRole("combobox", {
-          name: /organizational unit|organisatorische einheit/i,
+          name: /establishment|betriebsstätte/i,
         })
       ).not.toBeDisabled();
     });
@@ -498,7 +451,7 @@ describe("EmployeeCreate", () => {
       screen.getAllByText(/first name is required/i).length
     ).toBeGreaterThan(0);
     expect(
-      screen.getAllByText(/organizational unit is required/i).length
+      screen.getAllByText(/establishment is required/i).length
     ).toBeGreaterThan(0);
     expect(screen.getByLabelText(/first name/i)).toHaveFocus();
     expect(vi.mocked(employeeApi.createEmployee)).not.toHaveBeenCalled();
@@ -510,7 +463,7 @@ describe("EmployeeCreate", () => {
     await waitFor(() => {
       expect(
         screen.getByRole("combobox", {
-          name: /organizational unit|organisatorische einheit/i,
+          name: /establishment|betriebsstätte/i,
         })
       ).not.toBeDisabled();
     });
@@ -535,7 +488,7 @@ describe("EmployeeCreate", () => {
       target: { value: "01/01/2025" },
     });
     fireEvent.blur(screen.getByLabelText(/contract start date/i));
-    await selectRadixOption(/organizational unit/i, "Main Office");
+    await selectRadixOption(/establishment/i, "Main Office");
 
     fireEvent.click(screen.getByRole("switch", { name: /leadership/i }));
     submitEmployeeCreateForm();
@@ -557,7 +510,8 @@ describe("EmployeeCreate", () => {
     mockCreateEmployee.mockRejectedValue(
       new ApiError("Validation failed", 422, {
         email: ["Email address is already in use"],
-        organizational_unit_id: ["Please select an organizational unit"],
+        legal_entity_id: ["Please select a legal entity"],
+        establishment_id: ["Please select an establishment"],
       })
     );
 
@@ -566,7 +520,7 @@ describe("EmployeeCreate", () => {
     await waitFor(() => {
       expect(
         screen.getByRole("combobox", {
-          name: /organizational unit|organisatorische einheit/i,
+          name: /establishment|betriebsstätte/i,
         })
       ).not.toBeDisabled();
     });
@@ -591,7 +545,7 @@ describe("EmployeeCreate", () => {
       target: { value: "01/01/2025" },
     });
     fireEvent.blur(screen.getByLabelText(/contract start date/i));
-    await selectRadixOption(/organizational unit/i, "Main Office");
+    await selectRadixOption(/establishment/i, "Main Office");
 
     submitEmployeeCreateForm();
 
@@ -602,20 +556,20 @@ describe("EmployeeCreate", () => {
     });
 
     expect(
-      screen.getByText(/please select an organizational unit/i)
+      screen.getByText(/please select an establishment/i)
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toHaveFocus();
   });
 
-  it("should handle organizational units loading error gracefully", async () => {
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockRejectedValue(
+  it("should handle establishments loading error gracefully", async () => {
+    vi.mocked(domainApi.listEstablishmentLookups).mockRejectedValue(
       new Error("Failed to load units")
     );
 
     renderWithProviders(<EmployeeCreate />);
 
     await waitFor(() => {
-      const select = screen.getByLabelText(/organizational unit/i);
+      const select = screen.getByLabelText(/establishment/i);
       expect(select).not.toBeDisabled();
     });
 
@@ -632,7 +586,7 @@ describe("EmployeeCreate", () => {
     await waitFor(() => {
       expect(
         screen.getByRole("combobox", {
-          name: /organizational unit|organisatorische einheit/i,
+          name: /establishment|betriebsstätte/i,
         })
       ).not.toBeDisabled();
     });
@@ -656,7 +610,7 @@ describe("EmployeeCreate", () => {
     fireEvent.change(screen.getByLabelText(/contract start date/i), {
       target: { value: "2025-01-01" },
     });
-    await selectRadixOption(/organizational unit/i, "Main Office");
+    await selectRadixOption(/establishment/i, "Main Office");
 
     fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
 
@@ -671,7 +625,7 @@ describe("EmployeeCreate", () => {
     await waitFor(() => {
       expect(
         screen.getByRole("combobox", {
-          name: /organizational unit|organisatorische einheit/i,
+          name: /establishment|betriebsstätte/i,
         })
       ).not.toBeDisabled();
     });
@@ -693,7 +647,7 @@ describe("EmployeeCreate", () => {
     await waitFor(() => {
       expect(
         screen.getByRole("combobox", {
-          name: /organizational unit|organisatorische einheit/i,
+          name: /establishment|betriebsstätte/i,
         })
       ).not.toBeDisabled();
     });
@@ -725,7 +679,7 @@ describe("EmployeeCreate", () => {
     await waitFor(() => {
       expect(
         screen.getByRole("combobox", {
-          name: /organizational unit|organisatorische einheit/i,
+          name: /establishment|betriebsstätte/i,
         })
       ).not.toBeDisabled();
     });
@@ -758,7 +712,7 @@ describe("EmployeeCreate", () => {
     await waitFor(() => {
       expect(
         screen.getByRole("combobox", {
-          name: /organizational unit|organisatorische einheit/i,
+          name: /establishment|betriebsstätte/i,
         })
       ).not.toBeDisabled();
     });
@@ -783,7 +737,7 @@ describe("EmployeeCreate", () => {
       target: { value: "01/01/2025" },
     });
     fireEvent.blur(screen.getByLabelText(/contract start date/i));
-    await selectRadixOption(/organizational unit/i, "Main Office");
+    await selectRadixOption(/establishment/i, "Main Office");
 
     submitEmployeeCreateForm();
 
@@ -808,7 +762,7 @@ describe("EmployeeCreate", () => {
     await waitFor(() => {
       expect(
         screen.getByRole("combobox", {
-          name: /organizational unit|organisatorische einheit/i,
+          name: /establishment|betriebsstätte/i,
         })
       ).not.toBeDisabled();
     });
@@ -821,16 +775,9 @@ describe("EmployeeCreate", () => {
   });
 
   it("should clear error message when user changes input", async () => {
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
-      data: mockOrganizationalUnits,
-      meta: {
-        current_page: 1,
-        last_page: 1,
-        per_page: 100,
-        total: mockOrganizationalUnits.length,
-        root_unit_ids: ["unit-1", "unit-2"],
-      },
-    });
+    vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue(
+      mockEstablishments
+    );
     vi.mocked(employeeApi.createEmployee).mockRejectedValue(
       new Error("Validation error: email already exists")
     );
@@ -840,7 +787,7 @@ describe("EmployeeCreate", () => {
     await waitFor(() => {
       expect(
         screen.getByRole("combobox", {
-          name: /organizational unit|organisatorische einheit/i,
+          name: /establishment|betriebsstätte/i,
         })
       ).not.toBeDisabled();
     });
@@ -864,7 +811,7 @@ describe("EmployeeCreate", () => {
     fireEvent.change(screen.getByLabelText(/contract start date/i), {
       target: { value: "2025-01-01" },
     });
-    await selectRadixOption(/organizational unit/i, "Main Office");
+    await selectRadixOption(/establishment/i, "Main Office");
 
     // Submit form to trigger error
     fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
@@ -896,7 +843,7 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
       });
@@ -921,7 +868,7 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
       });
@@ -951,7 +898,7 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
       });
@@ -983,7 +930,7 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
       });
@@ -1027,10 +974,8 @@ describe("EmployeeCreate", () => {
           status: "active",
           contract_type: "full_time",
           management_level: 1,
-          organizational_unit: {
-            id: "unit-1",
-            name: "Main Office",
-          },
+          legal_entity_id: "legal-entity-1",
+          establishment_id: "establishment-1",
           user: undefined,
           created_at: "2025-01-01T00:00:00Z",
           updated_at: "2025-01-01T00:00:00Z",
@@ -1041,7 +986,7 @@ describe("EmployeeCreate", () => {
         await waitFor(() => {
           expect(
             screen.getByRole("combobox", {
-              name: /organizational unit|organisatorische einheit/i,
+              name: /establishment|betriebsstätte/i,
             })
           ).not.toBeDisabled();
         });
@@ -1067,7 +1012,7 @@ describe("EmployeeCreate", () => {
           target: { value: "01/01/2025" },
         });
         fireEvent.blur(screen.getByLabelText(/contract start date/i));
-        await selectRadixOption(/organizational unit/i, "Main Office");
+        await selectRadixOption(/establishment/i, "Main Office");
 
         // Enable leadership and set management level
         const leadershipSwitch = screen.getByRole("switch", {
@@ -1102,7 +1047,7 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
       });
@@ -1126,7 +1071,7 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
       });
@@ -1150,7 +1095,7 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
       });
@@ -1175,7 +1120,7 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
       });
@@ -1213,10 +1158,8 @@ describe("EmployeeCreate", () => {
         status: "pre_contract",
         contract_type: "full_time",
         management_level: 0,
-        organizational_unit: {
-          id: "unit-1",
-          name: "Main Office",
-        },
+        legal_entity_id: "legal-entity-1",
+        establishment_id: "establishment-1",
         user: undefined,
         created_at: "2025-01-01T00:00:00Z",
         updated_at: "2025-01-01T00:00:00Z",
@@ -1227,7 +1170,7 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
       });
@@ -1250,7 +1193,7 @@ describe("EmployeeCreate", () => {
       fireEvent.change(screen.getByLabelText(/datum des vertragsbeginns/i), {
         target: { value: "1.6." },
       });
-      await selectRadixOption(/organisatorische einheit/i, "Main Office");
+      await selectRadixOption(/betriebsstätte/i, "Main Office");
 
       submitEmployeeCreateForm();
 
@@ -1271,7 +1214,7 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
       });
@@ -1295,7 +1238,7 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
       });
@@ -1324,7 +1267,7 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
       });
@@ -1354,7 +1297,7 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
       });
@@ -1376,7 +1319,7 @@ describe("EmployeeCreate", () => {
       await waitFor(() => {
         expect(
           screen.getByRole("combobox", {
-            name: /organizational unit|organisatorische einheit/i,
+            name: /establishment|betriebsstätte/i,
           })
         ).not.toBeDisabled();
       });

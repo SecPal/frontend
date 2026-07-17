@@ -77,6 +77,10 @@ msgid "Controls whether this unit is administratively active."
 msgstr "Legt fest, ob diese Einheit administrativ aktiv ist."
 
 #: src/pages/Employees/EmployeeCreate.tsx
+msgid "Establishment is required"
+msgstr "Betriebsstätte ist erforderlich"
+
+#: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Contract Start Date"
@@ -646,10 +650,9 @@ msgstr "Geben Sie eine Bezeichnung für diesen Passkey ein."
 msgid "Maximum Assignable Rank"
 msgstr "Maximal zuordenbarer Rang"
 
+#: src/components/DomainAssignmentFields.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Customer"
 msgstr "Kunde"
@@ -856,10 +859,6 @@ msgstr "Die Passkey-Registrierung ist auf diesem Gerät nicht verfügbar."
 msgid "Sending verification email..."
 msgstr "Senden einer Bestätigungs-E-Mail..."
 
-#: src/pages/Employees/EmployeeList.tsx
-msgid "Unit"
-msgstr "Einheit"
-
 #: src/components/OrganizationalUnitTree.tsx
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Not assignable"
@@ -996,6 +995,10 @@ msgstr "BWR-Export erstellt. Laden Sie die Datei unten herunter."
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "e.g., Berlin Branch"
 msgstr "z.B. Niederlassung Berlin"
+
+#: src/pages/Employees/EmployeeCreate.tsx
+msgid "Legal entity is required"
+msgstr "Rechtsträger ist erforderlich"
 
 #: src/pages/Employees/EmployeeList.tsx
 msgid "Loading employees table"
@@ -1141,10 +1144,6 @@ msgstr "Objekttabelle wird geladen"
 msgid "Required documents for this step"
 msgstr "Erforderliche Dokumente für diesen Schritt"
 
-#: src/pages/Employees/EmployeeCreate.tsx
-msgid "Organizational units are still loading. Please wait a moment and try again."
-msgstr "Organisatorische Einheiten werden noch geladen. Bitte warten Sie einen Moment und versuchen Sie es erneut."
-
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Not registered"
@@ -1221,6 +1220,10 @@ msgstr "Abbrechen"
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "This session was revoked and can no longer be used for device setup."
 msgstr "Diese Sitzung wurde widerrufen und kann nicht mehr für die Geräteeinrichtung verwendet werden."
+
+#: src/components/DomainAssignmentFields.tsx
+msgid "Failed to load establishments"
+msgstr "Betriebsstätten konnten nicht geladen werden"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 #: src/pages/Customers/CustomersPage.tsx
@@ -1498,8 +1501,7 @@ msgstr "Aktivieren"
 msgid "This customer requires a Legal Entity assignment."
 msgstr "Dieser Kunde benötigt eine Zuweisung zu einem Rechtsträger."
 
-#: src/pages/Sites/SiteCreate.tsx
-#: src/pages/Sites/SiteEdit.tsx
+#: src/components/DomainAssignmentFields.tsx
 msgid "Select customer..."
 msgstr "Kunde auswählen..."
 
@@ -1736,8 +1738,6 @@ msgid "Home"
 msgstr "Startseite"
 
 #: src/components/OrganizationalUnitPicker.tsx
-#: src/pages/Employees/EmployeeCreate.tsx
-#: src/pages/Employees/EmployeeEdit.tsx
 msgid "Select organizational unit"
 msgstr "Organisationseinheit auswählen"
 
@@ -1908,6 +1908,10 @@ msgstr "Notizen zum Notfallkontakt"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Contact"
 msgstr "Kontakt"
+
+#: src/components/DomainAssignmentFields.tsx
+msgid "Select establishment..."
+msgstr "Betriebsstätte auswählen..."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
@@ -2335,7 +2339,6 @@ msgstr "Willkommen bei SecPal"
 msgid "Minijob"
 msgstr "Minijob"
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Loading site lookup data"
 msgstr "Objekt-Stammdaten werden geladen"
@@ -2605,7 +2608,11 @@ msgstr "Merkle Batch ID"
 msgid "I stored these recovery codes securely and understand they will not be shown again."
 msgstr "Ich habe diese Wiederherstellungscodes sicher gespeichert und weiß, dass sie nicht mehr angezeigt werden."
 
+#: src/components/DomainAssignmentFields.tsx
 #: src/components/OrganizationalUnitFormDialog.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Employees/EmployeeList.tsx
+#: src/pages/Sites/SiteDetail.tsx
 msgid "Establishment"
 msgstr "Betriebsstätte"
 
@@ -2697,14 +2704,12 @@ msgstr "Der Mindestrang kann nicht größer als der Höchstrang sein."
 msgid "Authentication"
 msgstr "Authentifizierung"
 
+#: src/components/DomainAssignmentFields.tsx
+msgid "Failed to load legal entities"
+msgstr "Rechtsträger konnten nicht geladen werden"
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
-#: src/pages/Employees/EmployeeCreate.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
-#: src/pages/Employees/EmployeeEdit.tsx
-#: src/pages/Employees/EmployeeList.tsx
-#: src/pages/Sites/SiteCreate.tsx
-#: src/pages/Sites/SiteDetail.tsx
 msgid "Organizational Unit"
 msgstr "Organisatorische Einheit"
 
@@ -2991,6 +2996,10 @@ msgstr "Zur Überprüfung einreichen"
 msgid "Optional sections"
 msgstr "Optionale Abschnitte"
 
+#: src/components/DomainAssignmentFields.tsx
+msgid "Select legal entity..."
+msgstr "Rechtsträger auswählen..."
+
 #: src/AuthenticatedApp.tsx
 #: src/components/RouteGuardState.tsx
 msgid "Back to Home"
@@ -3119,6 +3128,7 @@ msgstr "\"{0}\" erfolgreich erstellt"
 msgid "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Bitte laden Sie Ihren Personalausweis oder Reisepass hoch (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
+#: src/components/DomainAssignmentFields.tsx
 #: src/pages/Customers/CustomersPage.tsx
 msgid "Failed to load customers"
 msgstr "Kunden konnten nicht geladen werden"
@@ -3249,10 +3259,6 @@ msgstr "Passkey-Verfügbarkeit wird geprüft…"
 #: src/lib/errorUtils.ts
 msgid "This action could not be completed because the data changed in the meantime. Please reload and try again."
 msgstr "Diese Aktion konnte nicht abgeschlossen werden, weil sich die Daten inzwischen geändert haben. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
-
-#: src/pages/Employees/EmployeeCreate.tsx
-msgid "Organizational unit is required"
-msgstr "Organisatorische Einheit ist erforderlich"
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Site:"
@@ -3476,10 +3482,14 @@ msgstr "Wird entsperrt..."
 msgid "Administratively Active"
 msgstr "Administrativ aktiv"
 
+#: src/components/DomainAssignmentFields.tsx
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Employees/EmployeeList.tsx
+#: src/pages/Sites/SiteDetail.tsx
 msgid "Legal Entity"
 msgstr "Rechtsträger"
 
@@ -3842,10 +3852,6 @@ msgstr "Details zum Aktivitätsprotokoll"
 msgid "View Profile"
 msgstr "Profil ansehen"
 
-#: src/pages/Sites/SiteCreate.tsx
-msgid "Failed to load required data"
-msgstr "Erforderliche Daten konnten nicht geladen werden"
-
 #. placeholder {0}: err.statusCode
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "File upload failed with HTTP status {0}."
@@ -3866,8 +3872,6 @@ msgid "Please choose whether you want to upload your identity document now."
 msgstr "Bitte wählen Sie aus, ob Sie Ihr Ausweisdokument jetzt hochladen möchten."
 
 #: src/pages/Employees/EmployeeAddressFields.tsx
-#: src/pages/Employees/EmployeeCreate.tsx
-#: src/pages/Employees/EmployeeEdit.tsx
 msgid "Loading..."
 msgstr "Laden..."
 
@@ -3893,11 +3897,6 @@ msgstr "Entwurf gespeichert. Sie können später fortfahren."
 msgid "OK"
 msgstr "OK"
 
-#: src/pages/Employees/EmployeeCreate.tsx
-#: src/pages/Employees/EmployeeEdit.tsx
-msgid "Loading unit options"
-msgstr "Optionen für Organisationseinheiten werden geladen"
-
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "Deleting organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Das Löschen von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
@@ -3905,10 +3904,6 @@ msgstr "Das Löschen von Organisationseinheiten ist im Offline-Modus nicht mögl
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Password must include both uppercase and lowercase letters"
 msgstr "Das Passwort muss Groß- und Kleinbuchstaben enthalten"
-
-#: src/pages/Sites/SiteCreate.tsx
-msgid "Select organizational unit..."
-msgstr "Organisationseinheit auswählen..."
 
 #. placeholder {0}: unit.name
 #: src/pages/Organization/OrganizationPage.tsx

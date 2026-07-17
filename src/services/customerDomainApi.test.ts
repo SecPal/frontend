@@ -10,6 +10,7 @@ import {
   createCustomerEstablishment,
   DuplicateResourceError,
   listCustomerEstablishments,
+  listCustomerLookups,
   listEstablishmentLookups,
 } from "./customerDomainApi";
 
@@ -50,6 +51,22 @@ describe("customerDomainApi", () => {
 
     await expect(listEstablishmentLookups("legal-entity-1")).rejects.toThrow(
       /lookup response/i
+    );
+  });
+
+  it("loads minimal customer lookups for the selected establishment", async () => {
+    vi.mocked(csrf.apiFetch).mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        data: [{ id: "customer-1", name: "ACME GmbH" }],
+      }),
+    } as any);
+
+    await expect(listCustomerLookups("establishment-1")).resolves.toEqual([
+      { id: "customer-1", name: "ACME GmbH" },
+    ]);
+    expect(csrf.apiFetch).toHaveBeenCalledWith(
+      `${apiConfig.baseUrl}/v1/lookups/establishments/establishment-1/customers`
     );
   });
 

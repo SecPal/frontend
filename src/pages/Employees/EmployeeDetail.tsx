@@ -216,10 +216,15 @@ function ProfileTab({ employee }: { employee: Employee }) {
       </DescriptionDetails>
 
       <DescriptionTerm>
-        <Trans>Organizational Unit</Trans>
+        <Trans>Legal Entity</Trans>
+      </DescriptionTerm>
+      <DescriptionDetails>{employee.legal_entity_id || "-"}</DescriptionDetails>
+
+      <DescriptionTerm>
+        <Trans>Establishment</Trans>
       </DescriptionTerm>
       <DescriptionDetails>
-        {employee.organizational_unit?.name || "-"}
+        {employee.establishment_id || "-"}
       </DescriptionDetails>
 
       <DescriptionTerm>

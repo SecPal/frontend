@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replaced Site and Employee organizational-unit assignments with authorized
+  Legal Entity and Establishment cascades; Site forms additionally restrict
+  Customer choices to the selected Establishment, reset descendants
+  deterministically, and ignore stale lookup responses.
 - Separated customer legal-entity master data from establishment-specific
   contact assignments across customer create, edit, detail, API clients, and
   minimal privacy-preserving lookups.

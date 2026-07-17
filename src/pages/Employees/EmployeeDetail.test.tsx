@@ -122,10 +122,8 @@ const mockEmployee: Employee = {
     mail_failed_at: null,
     failure_reason: null,
   },
-  organizational_unit: {
-    id: "unit-1",
-    name: "Engineering",
-  },
+  legal_entity_id: "legal-entity-1",
+  establishment_id: "establishment-1",
   addresses: [
     {
       id: "addr-default",
@@ -184,7 +182,8 @@ describe("EmployeeDetail", () => {
 
     expect(screen.getAllByText("E001").length).toBeGreaterThan(0);
     expect(screen.getByText("Developer")).toBeInTheDocument();
-    expect(screen.getByText("Engineering")).toBeInTheDocument();
+    expect(screen.getByText("legal-entity-1")).toBeInTheDocument();
+    expect(screen.getByText("establishment-1")).toBeInTheDocument();
     expect(screen.getByText("Sent")).toBeInTheDocument();
   });
 
@@ -750,7 +749,8 @@ describe("EmployeeDetail", () => {
       ...mockEmployee,
       date_of_birth: null,
       contract_start_date: null,
-      organizational_unit: null,
+      legal_entity_id: "legal-entity-1",
+      establishment_id: "establishment-1",
     });
 
     renderWithProviders("emp-1");

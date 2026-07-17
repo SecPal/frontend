@@ -9,14 +9,12 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import SiteDetail from "./SiteDetail";
 import * as customersApi from "../../services/customersApi";
-import * as organizationalUnitApi from "../../services/organizationalUnitApi";
 
 const { mockUseUserCapabilities } = vi.hoisted(() => ({
   mockUseUserCapabilities: vi.fn(),
 }));
 
 vi.mock("../../services/customersApi");
-vi.mock("../../services/organizationalUnitApi");
 vi.mock("../../hooks/useUserCapabilities", () => ({
   useUserCapabilities: mockUseUserCapabilities,
 }));
@@ -63,7 +61,8 @@ describe("SiteDetail", () => {
     name: "Munich Office",
     type: "permanent" as const,
     customer_id: "customer-123",
-    organizational_unit_id: "org-unit-123",
+    legal_entity_id: "org-unit-123",
+    establishment_id: "establishment-1",
     address: {
       street: "Teststrasse 42",
       city: "München",
@@ -99,16 +98,6 @@ describe("SiteDetail", () => {
     updated_at: "2025-01-20T15:30:00Z",
   };
 
-  const mockOrgUnit = {
-    id: "org-unit-123",
-    type: "department" as const,
-    name: "IT Department",
-    is_legal_entity: false,
-    is_establishment: false,
-    created_at: "2025-01-15T10:00:00Z",
-    updated_at: "2025-01-20T15:30:00Z",
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
     window.history.pushState({}, "", "/sites/site-123");
@@ -119,12 +108,9 @@ describe("SiteDetail", () => {
     });
   });
 
-  it("loads and displays site details with customer and org unit names", async () => {
+  it("loads and displays site details with customer and domain assignments", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -146,8 +132,9 @@ describe("SiteDetail", () => {
     expect(screen.getByText("CUST-2025-001")).toBeInTheDocument();
     expect(screen.getByText("Street, 12345 City, DE")).toBeInTheDocument();
 
-    // Check org unit name is displayed (not ID)
-    expect(screen.getByText("IT Department")).toBeInTheDocument();
+    // Domain assignments are displayed without an OU lookup.
+    expect(screen.getByText("org-unit-123")).toBeInTheDocument();
+    expect(screen.getByText("establishment-1")).toBeInTheDocument();
 
     // Check address
     expect(screen.getByText("Teststrasse 42")).toBeInTheDocument();
@@ -158,9 +145,6 @@ describe("SiteDetail", () => {
   it("renders postal code and city on separate site-address lines", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -197,21 +181,13 @@ describe("SiteDetail", () => {
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 
-  it("renders site details while customer and org unit lookup data loads", async () => {
+  it("renders site details while customer lookup data loads", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockImplementation(
       () =>
         new Promise<Awaited<ReturnType<typeof customersApi.getCustomer>>>(
           () => {}
         )
-    );
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockImplementation(
-      () =>
-        new Promise<
-          Awaited<
-            ReturnType<typeof organizationalUnitApi.getOrganizationalUnit>
-          >
-        >(() => {})
     );
 
     renderWithRouter();
@@ -230,9 +206,6 @@ describe("SiteDetail", () => {
       customer: mockCustomer,
     });
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -248,9 +221,6 @@ describe("SiteDetail", () => {
   it("displays badges for site type and status", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -265,9 +235,6 @@ describe("SiteDetail", () => {
     const expiredSite = { ...mockSite, is_expired: true };
     vi.mocked(customersApi.getSite).mockResolvedValue(expiredSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -279,9 +246,6 @@ describe("SiteDetail", () => {
   it("keeps detail heading secondary text and destructive states on canonical theme tokens", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -292,9 +256,6 @@ describe("SiteDetail", () => {
   it("keeps delete-site errors on canonical destructive tokens", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
     vi.mocked(customersApi.deleteSite).mockRejectedValueOnce(
       new Error("Delete failed")
     );
@@ -323,9 +284,6 @@ describe("SiteDetail", () => {
   it("displays contact information", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -356,9 +314,6 @@ describe("SiteDetail", () => {
     };
     vi.mocked(customersApi.getSite).mockResolvedValue(unsafeSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     const { container } = renderWithRouter();
 
@@ -374,9 +329,6 @@ describe("SiteDetail", () => {
   it("shows edit and delete buttons", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -391,9 +343,6 @@ describe("SiteDetail", () => {
     const user = userEvent.setup();
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -412,9 +361,6 @@ describe("SiteDetail", () => {
     const user = userEvent.setup();
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
     vi.mocked(customersApi.deleteSite).mockResolvedValue(undefined);
 
     renderWithRouter();
@@ -461,13 +407,10 @@ describe("SiteDetail", () => {
     );
   });
 
-  it("falls back to IDs when customer or org unit loading fails", async () => {
+  it("falls back to IDs when customer loading fails", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockRejectedValue(
       new Error("Failed to load customer")
-    );
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockRejectedValue(
-      new Error("Failed to load org unit")
     );
 
     renderWithRouter();
@@ -490,9 +433,6 @@ describe("SiteDetail", () => {
     });
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -534,9 +474,6 @@ describe("SiteDetail", () => {
       return siteB;
     });
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     window.history.pushState({}, "", "/sites/site-A");
     renderWithRouter();

@@ -5,6 +5,7 @@ import { apiConfig } from "../config";
 import type {
   CreateCustomerEstablishmentRequest,
   CustomerEstablishment,
+  CustomerLookup,
   EstablishmentLookup,
   UpdateCustomerEstablishmentRequest,
 } from "@/types/api/customers";
@@ -75,6 +76,26 @@ export async function listEstablishmentLookups(
     !Array.isArray(payload.data)
   ) {
     throw new Error("Invalid establishment lookup response");
+  }
+  return payload.data.map(parseLookup);
+}
+
+export async function listCustomerLookups(
+  establishmentId: string
+): Promise<CustomerLookup[]> {
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/lookups/establishments/${encodeURIComponent(establishmentId)}/customers`
+  );
+  if (!response.ok)
+    throw await parseError(response, "Failed to list customers");
+  const payload = (await response.json()) as unknown;
+  if (
+    typeof payload !== "object" ||
+    payload === null ||
+    !("data" in payload) ||
+    !Array.isArray(payload.data)
+  ) {
+    throw new Error("Invalid customer lookup response");
   }
   return payload.data.map(parseLookup);
 }

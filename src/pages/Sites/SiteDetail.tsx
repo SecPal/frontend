@@ -16,14 +16,12 @@ import { Button } from "@/ui/button";
 import { LoadingRegion, SectionSkeleton } from "@/ui/loading";
 import { Skeleton } from "@/ui/skeleton";
 import { getSite, deleteSite, getCustomer } from "../../services/customersApi";
-import { getOrganizationalUnit } from "../../services/organizationalUnitApi";
 import type {
   Address,
   Customer,
   Site,
   SiteCustomer,
 } from "../../types/customers";
-import type { OrganizationalUnit } from "../../types/organizational";
 import {
   DescriptionList,
   DescriptionDetails,
@@ -67,7 +65,6 @@ export default function SiteDetail() {
   const [customer, setCustomer] = useState<Customer | SiteCustomer | null>(
     null
   );
-  const [orgUnit, setOrgUnit] = useState<OrganizationalUnit | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -78,7 +75,7 @@ export default function SiteDetail() {
     // Per-`id` cancellation flag: if a slow `getSite(prevId)` finishes
     // after the user has navigated to a new `/sites/:id`, ignore its
     // result instead of letting it overwrite `site`, `customer`, and
-    // `orgUnit` with the previous record's data under the new URL.
+    // association data with the previous record's data under the new URL.
     let cancelled = false;
 
     async function loadData() {
@@ -87,7 +84,6 @@ export default function SiteDetail() {
       setLoadError(null);
       setSite(null);
       setCustomer(null);
-      setOrgUnit(null);
       try {
         const siteData = await getSite(id);
         if (cancelled) return;
@@ -96,20 +92,16 @@ export default function SiteDetail() {
           setCustomer(siteData.customer);
         }
 
-        // Load customer and org unit in parallel, but don't fail if they error
-        const [customerResult, orgUnitResult] = await Promise.allSettled([
+        // Load the customer relation, but don't fail the page if it errors.
+        const [customerResult] = await Promise.allSettled([
           siteData.customer
             ? Promise.resolve(siteData.customer)
             : getCustomer(siteData.customer_id),
-          getOrganizationalUnit(siteData.organizational_unit_id),
         ]);
         if (cancelled) return;
 
         if (customerResult.status === "fulfilled") {
           setCustomer(customerResult.value);
-        }
-        if (orgUnitResult.status === "fulfilled") {
-          setOrgUnit(orgUnitResult.value);
         }
       } catch (err) {
         if (cancelled) return;
@@ -440,17 +432,14 @@ export default function SiteDetail() {
           >
             <DescriptionList>
               <DescriptionTerm>
-                <Trans>Organizational Unit</Trans>
+                <Trans>Legal Entity</Trans>
               </DescriptionTerm>
-              <DescriptionDetails>
-                {orgUnit ? (
-                  orgUnit.name
-                ) : isAssociationLoading ? (
-                  <Skeleton className="h-4 w-40" />
-                ) : (
-                  site.organizational_unit_id
-                )}
-              </DescriptionDetails>
+              <DescriptionDetails>{site.legal_entity_id}</DescriptionDetails>
+
+              <DescriptionTerm>
+                <Trans>Establishment</Trans>
+              </DescriptionTerm>
+              <DescriptionDetails>{site.establishment_id}</DescriptionDetails>
 
               <DescriptionTerm>
                 <Trans>Created</Trans>

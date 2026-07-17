@@ -284,12 +284,10 @@ export async function listSites(
   if (filters?.customer_id) {
     searchParams.append("customer_id", filters.customer_id.toString());
   }
-  if (filters?.organizational_unit_id) {
-    searchParams.append(
-      "organizational_unit_id",
-      filters.organizational_unit_id.toString()
-    );
-  }
+  if (filters?.legal_entity_id)
+    searchParams.append("legal_entity_id", filters.legal_entity_id);
+  if (filters?.establishment_id)
+    searchParams.append("establishment_id", filters.establishment_id);
   if (filters?.type) {
     searchParams.append("type", filters.type);
   }

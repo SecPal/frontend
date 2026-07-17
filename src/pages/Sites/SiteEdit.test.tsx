@@ -14,8 +14,12 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import SiteEdit from "./SiteEdit";
 import * as customersApi from "../../services/customersApi";
+import * as legalEntityApi from "../../services/customerLegalEntitiesApi";
+import * as domainApi from "../../services/customerDomainApi";
 
 vi.mock("../../services/customersApi");
+vi.mock("../../services/customerLegalEntitiesApi");
+vi.mock("../../services/customerDomainApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
 
@@ -48,7 +52,8 @@ describe("SiteEdit", () => {
     name: "Test Site",
     type: "permanent" as const,
     customer_id: "customer-1",
-    organizational_unit_id: "org-1",
+    legal_entity_id: "org-1",
+    establishment_id: "establishment-1",
     address: {
       street: "Old Street 1",
       city: "Old City",
@@ -111,25 +116,27 @@ describe("SiteEdit", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
-    vi.mocked(customersApi.listCustomers).mockResolvedValue({
-      data: mockCustomers,
-      meta: {
-        current_page: 1,
-        last_page: 1,
-        per_page: 100,
-        total: 2,
-      },
-    });
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
+      { id: "org-1", name: "SecPal GmbH" },
+      { id: "org-2", name: "SecPal Operations GmbH" },
+    ]);
+    vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue([
+      { id: "establishment-1", name: "Berlin" },
+    ]);
+    vi.mocked(domainApi.listCustomerLookups).mockResolvedValue(
+      mockCustomers.map(({ id, name }) => ({ id, name }))
+    );
   });
 
-  it("loads site data and customers on mount", async () => {
+  it("loads site data and its authorized domain cascade", async () => {
     renderWithRouter();
 
     await waitFor(() => {
       expect(customersApi.getSite).toHaveBeenCalledWith("site-123");
-      expect(customersApi.listCustomers).toHaveBeenCalledWith({
-        per_page: 100,
-      });
+      expect(domainApi.listEstablishmentLookups).toHaveBeenCalledWith("org-1");
+      expect(domainApi.listCustomerLookups).toHaveBeenCalledWith(
+        "establishment-1"
+      );
     });
   });
 
@@ -164,12 +171,11 @@ describe("SiteEdit", () => {
     await waitFor(() => {
       expect(
         screen.getByRole("combobox", { name: /customer/i })
-      ).toHaveTextContent("C001 - Customer One");
+      ).toHaveTextContent("Customer One");
     });
 
-    expect(
-      screen.queryByLabelText(/organizational unit/i)
-    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/legal entity/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/establishment/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/type/i)).not.toBeInTheDocument();
   });
 
@@ -207,6 +213,8 @@ describe("SiteEdit", () => {
       await waitFor(() => {
         expect(customersApi.updateSite).toHaveBeenCalledWith("site-123", {
           customer_id: "customer-1",
+          legal_entity_id: "org-1",
+          establishment_id: "establishment-1",
           name: "Updated site name",
           address: {
             street: "Old Street 1",
@@ -230,12 +238,6 @@ describe("SiteEdit", () => {
     vi.mocked(customersApi.getSite).mockImplementation(
       () =>
         new Promise<Awaited<ReturnType<typeof customersApi.getSite>>>(() => {})
-    );
-    vi.mocked(customersApi.listCustomers).mockImplementation(
-      () =>
-        new Promise<Awaited<ReturnType<typeof customersApi.listCustomers>>>(
-          () => {}
-        )
     );
     renderWithRouter();
 
@@ -393,6 +395,8 @@ describe("SiteEdit", () => {
     await waitFor(() => {
       expect(customersApi.updateSite).toHaveBeenCalledWith("site-123", {
         customer_id: "customer-1",
+        legal_entity_id: "org-1",
+        establishment_id: "establishment-1",
         name: "Updated site name",
         address: {
           street: "Old Street 1",

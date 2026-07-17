@@ -9,18 +9,10 @@ import { useLingui } from "@lingui/react";
 import type { Employee, EmployeeAddress, EmployeeFormData } from "@/types/api";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/ui/select";
-import { FormSkeleton, LoadingRegion } from "@/ui/loading";
-import { Skeleton } from "@/ui/skeleton";
+import { Select, SelectContent, SelectTrigger, SelectValue } from "@/ui/select";
+import { FormSkeleton } from "@/ui/loading";
 import { fetchEmployee, updateEmployee } from "../../services/employeeApi";
-import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
-import type { OrganizationalUnit } from "../../types/organizational";
+import { DomainAssignmentFields } from "../../components/DomainAssignmentFields";
 import {
   Alert,
   AlertDescription,
@@ -81,10 +73,6 @@ export function EmployeeEdit() {
   const [error, setError] = useState<string | null>(
     id === undefined ? i18n._(msg`Employee ID is missing.`) : null
   );
-  const [organizationalUnits, setOrganizationalUnits] = useState<
-    OrganizationalUnit[]
-  >([]);
-  const [unitsLoading, setUnitsLoading] = useState(true);
   const [isLeadership, setIsLeadership] = useState(false);
   const [addressDraft, setAddressDraft] = useState<PostalAddressDraft>(
     emptyPostalAddressDraft
@@ -100,35 +88,12 @@ export function EmployeeEdit() {
     date_of_birth: "",
     position: "",
     contract_start_date: "",
-    organizational_unit_id: "",
+    legal_entity_id: "",
+    establishment_id: "",
     management_level: 0,
     status: "pre_contract",
     contract_type: "full_time",
   });
-  const [currentOrganizationalUnit, setCurrentOrganizationalUnit] = useState<
-    Employee["organizational_unit"] | null
-  >(null);
-
-  useEffect(() => {
-    async function loadOrganizationalUnits() {
-      try {
-        const response = await listOrganizationalUnits({
-          is_assignable: true,
-          per_page: 100,
-        });
-        setOrganizationalUnits(
-          response.data.filter((unit) => unit.is_assignable !== false)
-        );
-      } catch (err) {
-        console.error("Failed to load organizational units:", err);
-      } finally {
-        setUnitsLoading(false);
-      }
-    }
-
-    loadOrganizationalUnits();
-  }, []);
-
   useEffect(() => {
     if (!id) {
       return;
@@ -151,12 +116,12 @@ export function EmployeeEdit() {
           date_of_birth: employee.date_of_birth || "",
           position: employee.position || "",
           contract_start_date: employee.contract_start_date || "",
-          organizational_unit_id: employee.organizational_unit?.id || "",
+          legal_entity_id: employee.legal_entity_id,
+          establishment_id: employee.establishment_id,
           management_level: employee.management_level,
           status: employee.status,
           contract_type: employee.contract_type || "full_time",
         });
-        setCurrentOrganizationalUnit(employee.organizational_unit ?? null);
         const addressRows = mergeAddressBaseList(
           employee.addresses,
           employee.current_address
@@ -590,60 +555,16 @@ export function EmployeeEdit() {
                       )}
                     </Field>
 
-                    <Field>
-                      <FieldLabel htmlFor="organizational_unit_id">
-                        <Trans>Organizational Unit</Trans> *
-                      </FieldLabel>
-                      <LoadingRegion
-                        loading={unitsLoading}
-                        loadingLabel={i18n._(msg`Loading unit options`)}
-                      >
-                        <Select
-                          value={
-                            unitsLoading ? "" : formData.organizational_unit_id
-                          }
-                          onValueChange={(value) =>
-                            handleChange("organizational_unit_id", value)
-                          }
-                          disabled={unitsLoading}
-                        >
-                          <SelectTrigger id="organizational_unit_id">
-                            <SelectValue
-                              placeholder={
-                                unitsLoading
-                                  ? i18n._(msg`Loading...`)
-                                  : i18n._(msg`Select organizational unit`)
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {currentOrganizationalUnit &&
-                            !organizationalUnits.some(
-                              (unit) => unit.id === currentOrganizationalUnit.id
-                            ) ? (
-                              <SelectItem
-                                value={currentOrganizationalUnit.id}
-                                data-value={currentOrganizationalUnit.id}
-                              >
-                                {currentOrganizationalUnit.name}
-                              </SelectItem>
-                            ) : null}
-                            {organizationalUnits.map((unit) => (
-                              <SelectItem
-                                key={unit.id}
-                                value={unit.id}
-                                data-value={unit.id}
-                              >
-                                {unit.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {unitsLoading ? (
-                          <Skeleton className="mt-2 h-4 w-48 max-w-full" />
-                        ) : null}
-                      </LoadingRegion>
-                    </Field>
+                    <DomainAssignmentFields
+                      idPrefix="employee"
+                      value={formData}
+                      onChange={(assignment) =>
+                        setFormData((current) => ({
+                          ...current,
+                          ...assignment,
+                        }))
+                      }
+                    />
 
                     <EmployeeManagementLevelField
                       checked={isLeadership}

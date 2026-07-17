@@ -48,10 +48,8 @@ const mockEmployee: Employee = {
     mail_failed_at: null,
     failure_reason: null,
   },
-  organizational_unit: {
-    id: "unit-1",
-    name: "Engineering",
-  },
+  legal_entity_id: "legal-entity-1",
+  establishment_id: "establishment-1",
   addresses: [],
   structured_address: null,
   created_at: "2025-01-01T00:00:00Z",

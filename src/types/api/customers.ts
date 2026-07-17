@@ -10,6 +10,7 @@ export type CreateCustomerRequest = Schemas["CustomerCreateRequest"];
 export type LegalEntityLookup = Schemas["LegalEntityLookup"];
 export type CustomerLegalEntityLookup = LegalEntityLookup;
 export type EstablishmentLookup = Schemas["EstablishmentLookup"];
+export type CustomerLookup = Pick<Customer, "id" | "name">;
 export type CustomerEstablishment = Schemas["CustomerEstablishment"];
 export type CreateCustomerEstablishmentRequest =
   Schemas["CustomerEstablishmentCreateRequest"];

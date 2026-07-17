@@ -17,11 +17,13 @@ import { messages as enMessages } from "../../locales/en/messages.mjs";
 import type { Employee } from "@/types/api";
 import { EmployeeEdit } from "./EmployeeEdit";
 import * as employeeApi from "../../services/employeeApi";
-import * as organizationalUnitApi from "../../services/organizationalUnitApi";
+import * as legalEntityApi from "../../services/customerLegalEntitiesApi";
+import * as domainApi from "../../services/customerDomainApi";
 
 // Mock the API modules
 vi.mock("../../services/employeeApi");
-vi.mock("../../services/organizationalUnitApi");
+vi.mock("../../services/customerLegalEntitiesApi");
+vi.mock("../../services/customerDomainApi");
 
 // Mock useNavigate
 const mockNavigate = vi.fn();
@@ -51,6 +53,7 @@ async function selectRadixOption(
   optionName: RegExp | string
 ) {
   const trigger = screen.getByRole("combobox", { name: triggerName });
+  await waitFor(() => expect(trigger).not.toBeDisabled());
   fireEvent.pointerDown(trigger, {
     button: 0,
     pointerId: 1,
@@ -91,35 +94,20 @@ const mockEmployee: Employee = {
   status: "active",
   contract_type: "full_time",
   management_level: 0,
-  organizational_unit: {
-    id: "unit-1",
-    name: "Engineering",
-  },
+  legal_entity_id: "legal-entity-1",
+  establishment_id: "establishment-1",
   created_at: "2025-01-01T00:00:00Z",
   updated_at: "2025-01-01T00:00:00Z",
 };
 
-const mockOrganizationalUnits = [
-  {
-    id: "unit-1",
-    name: "Engineering",
-    is_legal_entity: false,
-    is_establishment: false,
-    type: "branch" as const,
-    parent: null,
-    created_at: "2025-01-01T00:00:00Z",
-    updated_at: "2025-01-01T00:00:00Z",
-  },
-  {
-    id: "unit-2",
-    name: "Marketing",
-    is_legal_entity: false,
-    is_establishment: false,
-    type: "branch" as const,
-    parent: null,
-    created_at: "2025-01-01T00:00:00Z",
-    updated_at: "2025-01-01T00:00:00Z",
-  },
+const mockLegalEntities = [
+  { id: "legal-entity-1", name: "SecPal GmbH" },
+  { id: "legal-entity-2", name: "SecPal Operations GmbH" },
+];
+
+const mockEstablishments = [
+  { id: "establishment-1", name: "Engineering" },
+  { id: "establishment-2", name: "Marketing" },
 ];
 
 describe("EmployeeEdit", () => {
@@ -129,16 +117,13 @@ describe("EmployeeEdit", () => {
     i18n.load("de", deMessages);
     i18n.activate("en");
     vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(mockEmployee);
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
-      data: mockOrganizationalUnits,
-      meta: {
-        current_page: 1,
-        last_page: 1,
-        per_page: 50,
-        total: 2,
-        root_unit_ids: [],
-      },
-    });
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue(
+      mockLegalEntities
+    );
+    vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue(
+      mockEstablishments
+    );
+    vi.mocked(domainApi.listCustomerLookups).mockResolvedValue([]);
   });
 
   it("should load and pre-populate form with employee data", async () => {
@@ -158,34 +143,21 @@ describe("EmployeeEdit", () => {
     );
   });
 
-  it("keeps the current organizational unit visible when it is no longer assignable", async () => {
-    vi.mocked(
-      organizationalUnitApi.listOrganizationalUnits
-    ).mockResolvedValueOnce({
-      data: [
-        {
-          ...mockOrganizationalUnits[1]!,
-          is_assignable: true,
-        },
-      ],
-      meta: {
-        current_page: 1,
-        last_page: 1,
-        per_page: 100,
-        total: 1,
-        root_unit_ids: [],
-      },
-    });
+  it("loads authorized establishments for the employee legal entity", async () => {
+    vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValueOnce([
+      mockEstablishments[0]!,
+    ]);
 
     renderWithProviders("emp-1");
 
-    expect(organizationalUnitApi.listOrganizationalUnits).toHaveBeenCalledWith({
-      is_assignable: true,
-      per_page: 100,
-    });
-    expect(
-      await screen.findByRole("combobox", { name: /organizational unit/i })
-    ).toHaveTextContent("Engineering");
+    await waitFor(() =>
+      expect(domainApi.listEstablishmentLookups).toHaveBeenCalledWith(
+        "legal-entity-1"
+      )
+    );
+    expect(await screen.findByLabelText(/establishment/i)).toHaveTextContent(
+      "Engineering"
+    );
   });
 
   it("keeps edit load errors on canonical theme tokens", async () => {
@@ -417,7 +389,8 @@ describe("EmployeeEdit", () => {
       ...mockEmployee,
       date_of_birth: null,
       contract_start_date: null,
-      organizational_unit: null,
+      legal_entity_id: "legal-entity-1",
+      establishment_id: "establishment-1",
     });
 
     renderWithProviders("emp-1");
@@ -428,22 +401,24 @@ describe("EmployeeEdit", () => {
 
     expect(screen.getByLabelText(/date of birth/i)).toHaveValue("");
     expect(screen.getByLabelText(/contract start date/i)).toHaveValue("");
-    expect(
-      screen.getByRole("combobox", { name: /organizational unit/i })
-    ).toHaveTextContent(/select organizational unit/i);
+    await waitFor(() =>
+      expect(
+        screen.getByRole("combobox", { name: /establishment/i })
+      ).toHaveTextContent("Engineering")
+    );
   });
 
-  it("should load organizational units into dropdown", async () => {
+  it("should load establishments into dropdown", async () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
       expect(
-        screen.getByRole("combobox", { name: /organizational unit/i })
+        screen.getByRole("combobox", { name: /establishment/i })
       ).not.toBeDisabled();
     });
 
     const trigger = screen.getByRole("combobox", {
-      name: /organizational unit/i,
+      name: /establishment/i,
     });
     fireEvent.pointerDown(trigger, {
       button: 0,
@@ -459,10 +434,10 @@ describe("EmployeeEdit", () => {
 
     expect(
       await screen.findByRole("option", { name: "Engineering" })
-    ).toHaveAttribute("data-value", "unit-1");
+    ).toHaveAttribute("data-value", "establishment-1");
     expect(screen.getByRole("option", { name: "Marketing" })).toHaveAttribute(
       "data-value",
-      "unit-2"
+      "establishment-2"
     );
   });
 
@@ -511,7 +486,8 @@ describe("EmployeeEdit", () => {
         date_of_birth: "1990-01-01",
         position: "Developer",
         contract_start_date: "2025-01-01",
-        organizational_unit_id: "unit-1",
+        legal_entity_id: "legal-entity-1",
+        establishment_id: "establishment-1",
         management_level: 0,
         contract_type: "full_time",
       });
@@ -556,11 +532,12 @@ describe("EmployeeEdit", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/employees/emp-1");
   });
 
-  it("should handle organizational unit change", async () => {
+  it("should handle establishment change", async () => {
     const mockUpdateEmployee = vi.mocked(employeeApi.updateEmployee);
     mockUpdateEmployee.mockResolvedValue({
       ...mockEmployee,
-      organizational_unit: { id: "unit-2", name: "Marketing" },
+      legal_entity_id: "legal-entity-1",
+      establishment_id: "establishment-1",
     });
 
     renderWithProviders("emp-1");
@@ -569,7 +546,7 @@ describe("EmployeeEdit", () => {
       expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
     });
 
-    await selectRadixOption(/organizational unit/i, "Marketing");
+    await selectRadixOption(/establishment/i, "Marketing");
 
     // Submit
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
@@ -578,7 +555,8 @@ describe("EmployeeEdit", () => {
       expect(mockUpdateEmployee).toHaveBeenCalledWith(
         "emp-1",
         expect.objectContaining({
-          organizational_unit_id: "unit-2",
+          legal_entity_id: "legal-entity-1",
+          establishment_id: "establishment-2",
         })
       );
     });
@@ -625,8 +603,8 @@ describe("EmployeeEdit", () => {
     await waitFor(() => {}, { timeout: 100 }).catch(() => {});
   });
 
-  it("should show loading state for organizational units", async () => {
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockImplementation(
+  it("should show loading state for establishments", async () => {
+    vi.mocked(domainApi.listEstablishmentLookups).mockImplementation(
       () => new Promise(() => {})
     );
 
@@ -636,8 +614,7 @@ describe("EmployeeEdit", () => {
       expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
     });
 
-    const orgUnitSelect = screen.getByLabelText(/organizational unit/i);
-    expect(orgUnitSelect).toHaveTextContent(/loading/i);
+    expect(screen.getByLabelText(/establishment/i)).toBeDisabled();
   });
 
   it("should handle non-Error object errors on fetch", async () => {
@@ -674,8 +651,8 @@ describe("EmployeeEdit", () => {
     });
   });
 
-  it("should handle organizational units loading error", async () => {
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockRejectedValue(
+  it("should handle establishments loading error", async () => {
+    vi.mocked(domainApi.listEstablishmentLookups).mockRejectedValue(
       new Error("Failed to load units")
     );
 

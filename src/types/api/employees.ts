@@ -57,11 +57,6 @@ export interface EmployeeUserSummary {
   email: string;
 }
 
-export interface EmployeeOrganizationalUnitSummary {
-  id: string;
-  name: string;
-}
-
 export type EmployeeOnboardingInvitationStatus =
   "not_requested" | "sent" | "created_not_sent" | "failed";
 
@@ -117,8 +112,8 @@ export interface Employee {
   bwr_notes?: string | null;
   status: EmployeeStatus;
   contract_type: EmployeeContractType;
-  organizational_unit_id?: string | null;
-  organizational_unit: EmployeeOrganizationalUnitSummary | null;
+  legal_entity_id: string;
+  establishment_id: string;
   management_level: number;
   user?: EmployeeUserSummary | null;
   user_id?: string | null;
@@ -153,7 +148,8 @@ export interface EmployeeFormData {
   date_of_birth: string;
   contract_start_date: string;
   position: string;
-  organizational_unit_id: string;
+  legal_entity_id: string;
+  establishment_id: string;
   management_level: number;
   hire_date?: string;
   status: EmployeeStatus;
@@ -181,7 +177,8 @@ export interface EmployeeBwrStatusUpdatePayload {
 
 export interface EmployeeFilters {
   status?: EmployeeStatus;
-  organizational_unit_id?: string;
+  legal_entity_id?: string;
+  establishment_id?: string;
   search?: string;
   page?: number;
   per_page?: number;

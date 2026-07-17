@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -16,13 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/select";
-import { LoadingRegion } from "@/ui/loading";
-import { Skeleton } from "@/ui/skeleton";
 import { Switch } from "@/ui/switch";
 import { createEmployee } from "../../services/employeeApi";
 import { ApiError } from "../../services/ApiError";
-import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
-import type { OrganizationalUnit } from "../../types/organizational";
+import { DomainAssignmentFields } from "../../components/DomainAssignmentFields";
 import {
   Alert,
   AlertDescription,
@@ -62,7 +59,8 @@ const fieldOrder: EmployeeFormField[] = [
   "date_of_birth",
   "position",
   "contract_start_date",
-  "organizational_unit_id",
+  "legal_entity_id",
+  "establishment_id",
   "management_level",
   "status",
   "send_invitation",
@@ -83,10 +81,6 @@ export function EmployeeCreate() {
   const [fieldErrors, setFieldErrors] = useState<EmployeeFormErrors>({});
   const [submitFeedback, setSubmitFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [organizationalUnits, setOrganizationalUnits] = useState<
-    OrganizationalUnit[]
-  >([]);
-  const [unitsLoading, setUnitsLoading] = useState(true);
   const [isLeadership, setIsLeadership] = useState(false);
   const [addressDraft, setAddressDraft] = useState<PostalAddressDraft>(
     emptyPostalAddressDraft
@@ -102,7 +96,8 @@ export function EmployeeCreate() {
     date_of_birth: "",
     position: "",
     contract_start_date: "",
-    organizational_unit_id: "",
+    legal_entity_id: "",
+    establishment_id: "",
     management_level: 0,
     status: "pre_contract",
     contract_type: "full_time",
@@ -185,7 +180,8 @@ export function EmployeeCreate() {
       email: formData.email.trim(),
       phone: formData.phone?.trim() ?? "",
       position: formData.position?.trim() ?? "",
-      organizational_unit_id: formData.organizational_unit_id.trim(),
+      legal_entity_id: formData.legal_entity_id.trim(),
+      establishment_id: formData.establishment_id.trim(),
       management_level: isLeadership ? formData.management_level : 0,
       send_invitation:
         formData.status === "pre_contract"
@@ -268,15 +264,10 @@ export function EmployeeCreate() {
       }
     }
 
-    if (unitsLoading) {
-      errors.organizational_unit_id = i18n._(
-        msg`Organizational units are still loading. Please wait a moment and try again.`
-      );
-    } else if (!normalizedData.organizational_unit_id) {
-      errors.organizational_unit_id = i18n._(
-        msg`Organizational unit is required`
-      );
-    }
+    if (!normalizedData.legal_entity_id)
+      errors.legal_entity_id = i18n._(msg`Legal entity is required`);
+    if (!normalizedData.establishment_id)
+      errors.establishment_id = i18n._(msg`Establishment is required`);
 
     if (!normalizedData.status) {
       errors.status = i18n._(msg`Status is required`);
@@ -308,26 +299,6 @@ export function EmployeeCreate() {
       normalizedContractDateDisplay,
     };
   }
-
-  useEffect(() => {
-    async function loadOrganizationalUnits() {
-      try {
-        const response = await listOrganizationalUnits({
-          is_assignable: true,
-          per_page: 100,
-        });
-        setOrganizationalUnits(
-          response.data.filter((unit) => unit.is_assignable !== false)
-        );
-      } catch (err) {
-        console.error("Failed to load organizational units:", err);
-      } finally {
-        setUnitsLoading(false);
-      }
-    }
-
-    loadOrganizationalUnits();
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -694,72 +665,23 @@ export function EmployeeCreate() {
                     )}
                   </Field>
 
-                  <Field>
-                    <FieldLabel htmlFor="organizational_unit_id">
-                      <Trans>Organizational Unit</Trans> *
-                    </FieldLabel>
-                    <LoadingRegion
-                      loading={unitsLoading}
-                      loadingLabel={i18n._(msg`Loading unit options`)}
-                    >
-                      <Select
-                        value={formData.organizational_unit_id}
-                        onValueChange={(value) =>
-                          handleChange("organizational_unit_id", value)
+                  <DomainAssignmentFields
+                    idPrefix="employee"
+                    value={formData}
+                    onChange={(assignment) =>
+                      setFormData((current) => ({ ...current, ...assignment }))
+                    }
+                    errors={fieldErrors}
+                    onClearErrors={(fields) =>
+                      setFieldErrors((current) => {
+                        const next = { ...current };
+                        for (const field of fields) {
+                          if (field !== "customer_id") delete next[field];
                         }
-                        disabled={unitsLoading}
-                      >
-                        <SelectTrigger
-                          id="organizational_unit_id"
-                          ref={(element) =>
-                            setFieldRef("organizational_unit_id", element)
-                          }
-                          aria-invalid={
-                            fieldErrors.organizational_unit_id
-                              ? true
-                              : undefined
-                          }
-                          aria-describedby={getAriaDescribedBy(
-                            "organizational_unit_id"
-                          )}
-                          data-invalid={
-                            fieldErrors.organizational_unit_id
-                              ? true
-                              : undefined
-                          }
-                        >
-                          <SelectValue
-                            placeholder={
-                              unitsLoading
-                                ? i18n._(msg`Loading...`)
-                                : i18n._(msg`Select organizational unit`)
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {organizationalUnits.map((unit) => (
-                            <SelectItem
-                              key={unit.id}
-                              value={unit.id}
-                              data-value={unit.id}
-                            >
-                              {unit.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {unitsLoading ? (
-                        <Skeleton className="mt-2 h-4 w-48 max-w-full" />
-                      ) : null}
-                    </LoadingRegion>
-                    {fieldErrors.organizational_unit_id && (
-                      <FieldError
-                        id={getFieldErrorId("organizational_unit_id")}
-                      >
-                        {fieldErrors.organizational_unit_id}
-                      </FieldError>
-                    )}
-                  </Field>
+                        return next;
+                      })
+                    }
+                  />
 
                   <EmployeeManagementLevelField
                     checked={isLeadership}
