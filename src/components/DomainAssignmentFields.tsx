@@ -41,6 +41,12 @@ interface DomainAssignmentFieldsProps {
   required?: boolean;
   onClearErrors?: (fields: Array<keyof DomainAssignmentValue>) => void;
   fixedCustomerId?: string;
+  triggerRefs?: Partial<
+    Record<
+      keyof DomainAssignmentValue,
+      (element: HTMLButtonElement | null) => void
+    >
+  >;
 }
 
 export function DomainAssignmentFields({
@@ -53,6 +59,7 @@ export function DomainAssignmentFields({
   required = true,
   onClearErrors,
   fixedCustomerId,
+  triggerRefs,
 }: DomainAssignmentFieldsProps) {
   const { _ } = useLingui();
   const [legalEntities, setLegalEntities] = useState<LegalEntityLookup[]>([]);
@@ -244,6 +251,7 @@ export function DomainAssignmentFields({
           }}
         >
           <SelectTrigger
+            ref={triggerRefs?.legal_entity_id}
             id={`${idPrefix}-legal-entity`}
             aria-required={required || undefined}
             aria-invalid={Boolean(errors.legal_entity_id) || undefined}
@@ -292,6 +300,7 @@ export function DomainAssignmentFields({
           }}
         >
           <SelectTrigger
+            ref={triggerRefs?.establishment_id}
             id={`${idPrefix}-establishment`}
             aria-required={required || undefined}
             aria-invalid={Boolean(errors.establishment_id) || undefined}
@@ -335,6 +344,7 @@ export function DomainAssignmentFields({
             }}
           >
             <SelectTrigger
+              ref={triggerRefs?.customer_id}
               id={`${idPrefix}-customer`}
               aria-required={required || undefined}
               aria-invalid={Boolean(errors.customer_id) || undefined}

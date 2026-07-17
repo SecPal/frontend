@@ -23,17 +23,19 @@ import { CustomerEstablishmentFields } from "@/components/CustomerEstablishmentF
 import type { CustomerEstablishmentFormValue } from "@/components/CustomerEstablishmentFields";
 import type {
   Customer,
+  CustomerEstablishment,
   EstablishmentLookup,
   UpdateCustomerRequest,
 } from "@/types/api/customers";
 import { getCustomer, updateCustomer } from "../../services/customersApi";
 import {
-  createCustomerEstablishment,
-  deleteCustomerEstablishment,
   listCustomerEstablishments,
   listEstablishmentLookups,
-  updateCustomerEstablishment,
 } from "../../services/customerDomainApi";
+import {
+  CustomerEstablishmentRecoveryError,
+  reconcileCustomerEstablishments,
+} from "./customerEstablishmentReconciliation";
 
 function emptyAssignment(): CustomerEstablishmentFormValue {
   return {
@@ -59,33 +61,38 @@ export default function CustomerEdit() {
   const [assignments, setAssignments] = useState<
     CustomerEstablishmentFormValue[]
   >([]);
-  const [originalEstablishments, setOriginalEstablishments] = useState<
-    Record<string, string>
-  >({});
+  const [originalAssignments, setOriginalAssignments] = useState<
+    CustomerEstablishment[]
+  >([]);
   const [establishments, setEstablishments] = useState<EstablishmentLookup[]>(
     []
   );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(
     typeof recoveryError === "string" ? recoveryError : null
   );
 
   useEffect(() => {
     let cancelled = false;
-    if (!id) return;
-    Promise.resolve()
-      .then(() => {
-        if (cancelled) return null;
-        setLoading(true);
-        return Promise.all([
+
+    async function loadCustomer() {
+      setCustomer(null);
+      setAssignments([]);
+      setOriginalAssignments([]);
+      setEstablishments([]);
+      setLoadError(null);
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        const [loadedCustomer, links] = await Promise.all([
           getCustomer(id),
           listCustomerEstablishments({ customer_id: id, per_page: 100 }),
         ]);
-      })
-      .then(async (result) => {
-        if (!result) return;
-        const [loadedCustomer, links] = result;
         const options = await listEstablishmentLookups(
           loadedCustomer.legal_entity_id
         );
@@ -107,24 +114,20 @@ export default function CustomerEdit() {
           comments: link.comments ?? "",
         }));
         setAssignments(values.length ? values : [emptyAssignment()]);
-        setOriginalEstablishments(
-          Object.fromEntries(
-            values.map((value) => [value.id!, value.establishment_id])
-          )
-        );
+        setOriginalAssignments(links.data);
         setEstablishments(options);
-      })
-      .catch((reason: unknown) => {
+      } catch (reason: unknown) {
         if (!cancelled)
-          setError(
+          setLoadError(
             reason instanceof Error
               ? reason.message
               : _(msg`Failed to load customer`)
           );
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    }
+    void loadCustomer();
     return () => {
       cancelled = true;
     };
@@ -138,81 +141,31 @@ export default function CustomerEdit() {
       selected.some((value) => !value) ||
       new Set(selected).size !== selected.length
     ) {
-      setError(_(msg`Select each establishment once.`));
+      setSubmitError(_(msg`Select each establishment once.`));
       return;
     }
     setSaving(true);
-    setError(null);
+    setSubmitError(null);
     try {
       await updateCustomer(id, {
         ...form,
         vat_id: optional(form.vat_id ?? ""),
       });
-      const unchangedIds = assignments.flatMap((item) =>
-        item.id && originalEstablishments[item.id] === item.establishment_id
-          ? [item.id]
-          : []
-      );
-      const contactsFor = (item: CustomerEstablishmentFormValue) => ({
-        contact_name: optional(item.contact_name),
-        email: optional(item.email),
-        phone: optional(item.phone),
-        comments: optional(item.comments),
-      });
-      await Promise.all(
-        assignments
-          .filter((item) => item.id && unchangedIds.includes(item.id))
-          .map((item) =>
-            updateCustomerEstablishment(item.id!, contactsFor(item))
-          )
-      );
-
-      const pendingCreations = assignments.filter(
-        (item) => !item.id || !unchangedIds.includes(item.id)
-      );
-      const created = [];
-      try {
-        for (const item of pendingCreations) {
-          created.push({
-            item,
-            link: await createCustomerEstablishment({
-              customer_id: id,
-              establishment_id: item.establishment_id,
-              ...contactsFor(item),
-            }),
-          });
-        }
-      } catch (creationError) {
-        await Promise.allSettled(
-          created.map(({ link }) => deleteCustomerEstablishment(link.id))
-        );
-        throw creationError;
-      }
-
-      for (const { item, link } of created) {
-        if (!item.id) continue;
-        try {
-          await deleteCustomerEstablishment(item.id);
-        } catch (deletionError) {
-          await deleteCustomerEstablishment(link.id).catch(() => undefined);
-          throw deletionError;
-        }
-      }
-
-      const retainedOriginalIds = new Set(
-        assignments.flatMap((item) => (item.id ? [item.id] : []))
-      );
-      await Promise.all(
-        Object.keys(originalEstablishments)
-          .filter((linkId) => !retainedOriginalIds.has(linkId))
-          .map((linkId) => deleteCustomerEstablishment(linkId))
+      await reconcileCustomerEstablishments(
+        id,
+        assignments,
+        originalAssignments
       );
       navigate(`/customers/${id}`);
     } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : _(msg`Failed to update customer`)
+      setSubmitError(
+        reason instanceof CustomerEstablishmentRecoveryError
+          ? _(
+              msg`The establishment assignments could not be fully restored. Reload the page before making further changes.`
+            )
+          : reason instanceof Error
+            ? reason.message
+            : _(msg`Failed to update customer`)
       );
     } finally {
       setSaving(false);
@@ -230,17 +183,17 @@ export default function CustomerEdit() {
       {isRouteLoading ? (
         <FormSkeleton loadingLabel={_(msg`Loading customer form`)} fields={8} />
       ) : !activeCustomer ? (
-        <Alert>
+        <Alert role="alert">
           <AlertDescription>
-            {error ?? <Trans>Customer not found</Trans>}
+            {loadError ?? <Trans>Customer not found</Trans>}
           </AlertDescription>
         </Alert>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
+          {submitError && (
             <Alert className="border-destructive/30 bg-destructive/10">
               <AlertDescription className="text-destructive">
-                {error}
+                {submitError}
               </AlertDescription>
             </Alert>
           )}

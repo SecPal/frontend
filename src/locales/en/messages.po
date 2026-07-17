@@ -1858,6 +1858,10 @@ msgstr "All units"
 msgid "Legal-entity master data"
 msgstr "Legal-entity master data"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "The establishment assignments could not be fully restored. Reload the page before making further changes."
+msgstr "The establishment assignments could not be fully restored. Reload the page before making further changes."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload File"
 msgstr "Upload File"

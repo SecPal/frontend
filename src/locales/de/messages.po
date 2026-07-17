@@ -1858,6 +1858,10 @@ msgstr "Alle Einheiten"
 msgid "Legal-entity master data"
 msgstr "Rechtsträger-Stammdaten"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "The establishment assignments could not be fully restored. Reload the page before making further changes."
+msgstr "Die Betriebsstättenzuordnungen konnten nicht vollständig wiederhergestellt werden. Laden Sie die Seite neu, bevor Sie weitere Änderungen vornehmen."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload File"
 msgstr "Datei hochladen"

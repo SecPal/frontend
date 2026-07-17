@@ -9,7 +9,7 @@ import {
   fireEvent,
   waitFor,
 } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { Link, MemoryRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { messages as deMessages } from "../../locales/de/messages.mjs";
@@ -185,6 +185,44 @@ describe("EmployeeDetail", () => {
     expect(screen.getByText("legal-entity-1")).toBeInTheDocument();
     expect(screen.getByText("establishment-1")).toBeInTheDocument();
     expect(screen.getByText("Sent")).toBeInTheDocument();
+  });
+
+  it("hides the previous employee while a new detail route is loading", async () => {
+    let rejectNextEmployee!: (reason: Error) => void;
+    vi.mocked(employeeApi.fetchEmployee).mockImplementation((id) =>
+      id === "emp-1"
+        ? Promise.resolve(mockEmployee)
+        : new Promise((_, reject) => {
+            rejectNextEmployee = reject;
+          })
+    );
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/employees/emp-1"]}>
+          <Link to="/employees/emp-2">Next employee</Link>
+          <Routes>
+            <Route path="/employees/:id" element={<EmployeeDetail />} />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+    expect(
+      await screen.findByRole("heading", { name: "John Doe" })
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("link", { name: /next employee/i }));
+
+    expect(
+      await screen.findByText(/loading employee details/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "John Doe" })
+    ).not.toBeInTheDocument();
+
+    await act(async () => {
+      rejectNextEmployee(new Error("Employee 2 failed to load"));
+    });
+    expect(await screen.findByText("Employee 2 failed to load")).toBeVisible();
   });
 
   it("renders the migrated shadcn/Radix detail surface with dark-mode classes", async () => {

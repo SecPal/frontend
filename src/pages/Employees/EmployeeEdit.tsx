@@ -100,9 +100,13 @@ export function EmployeeEdit() {
     }
 
     let active = true;
-
-    void fetchEmployee(id)
-      .then((employee: Employee) => {
+    async function loadEmployee() {
+      setFetchLoading(true);
+      setError(null);
+      setBirthDateError(null);
+      setContractDateError(null);
+      try {
+        const employee: Employee = await fetchEmployee(id!);
         if (!active) {
           return;
         }
@@ -136,8 +140,7 @@ export function EmployeeEdit() {
 
         setBirthDateDirty(false);
         setContractDateDirty(false);
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!active) {
           return;
         }
@@ -156,12 +159,13 @@ export function EmployeeEdit() {
         }
 
         setError(errorMessage);
-      })
-      .finally(() => {
+      } finally {
         if (active) {
           setFetchLoading(false);
         }
-      });
+      }
+    }
+    void loadEmployee();
 
     return () => {
       active = false;

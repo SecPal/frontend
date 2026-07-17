@@ -41,6 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fail, kept customer-scoped Site creation fixed to its route customer, made
   optional Employee domain filters clearable, and localized the new
   establishment-contact controls.
+- Preserved customer assignment integrity during establishment swaps, surfaced
+  failed customer route transitions instead of leaving the edit form loading,
+  restored focus movement to invalid Employee domain selectors, and removed
+  stale Employee forms and actions during parameter-only route transitions.
 - Made the Android mock login show its configured workspace instance in a
   centered, unboxed section with a compact label and smaller API origin between
   the login card and footer, while preserving the login card's page centering

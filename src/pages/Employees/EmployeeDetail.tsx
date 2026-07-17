@@ -731,17 +731,22 @@ export function EmployeeDetail() {
     }
 
     let active = true;
-
-    void fetchEmployee(id)
-      .then((data) => {
+    async function loadEmployee() {
+      setLoading(true);
+      setEmployee(null);
+      setError(null);
+      setEditingContactField(null);
+      setContactSaveError(null);
+      setContactInvalidField(null);
+      setContactEmergencyInvalidField(null);
+      try {
+        const data = await fetchEmployee(id!);
         if (!active) {
           return;
         }
 
         setEmployee(data);
-        setError(null);
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!active) {
           return;
         }
@@ -760,12 +765,13 @@ export function EmployeeDetail() {
         }
 
         setError(errorMessage);
-      })
-      .finally(() => {
+      } finally {
         if (active) {
           setLoading(false);
         }
-      });
+      }
+    }
+    void loadEmployee();
 
     return () => {
       active = false;

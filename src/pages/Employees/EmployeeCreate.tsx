@@ -668,6 +668,12 @@ export function EmployeeCreate() {
                   <DomainAssignmentFields
                     idPrefix="employee"
                     value={formData}
+                    triggerRefs={{
+                      legal_entity_id: (element) =>
+                        setFieldRef("legal_entity_id", element),
+                      establishment_id: (element) =>
+                        setFieldRef("establishment_id", element),
+                    }}
                     onChange={(assignment) =>
                       setFormData((current) => ({ ...current, ...assignment }))
                     }

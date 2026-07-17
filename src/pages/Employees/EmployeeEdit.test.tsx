@@ -9,7 +9,7 @@ import {
   fireEvent,
   waitFor,
 } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { Link, MemoryRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { messages as deMessages } from "../../locales/de/messages.mjs";
@@ -176,6 +176,40 @@ describe("EmployeeEdit", () => {
     expect(alert.closest('[data-slot="alert"]')).toHaveClass("text-foreground");
     expect(alertTitle).toHaveAttribute("data-slot", "alert-title");
     expect(screen.queryByText("❌")).not.toBeInTheDocument();
+  });
+
+  it("hides the previous employee while a new route is loading", async () => {
+    let rejectNextEmployee!: (reason: Error) => void;
+    vi.mocked(employeeApi.fetchEmployee).mockImplementation((id) =>
+      id === "emp-1"
+        ? Promise.resolve(mockEmployee)
+        : new Promise((_, reject) => {
+            rejectNextEmployee = reject;
+          })
+    );
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/employees/emp-1/edit"]}>
+          <Link to="/employees/emp-2/edit">Next employee</Link>
+          <Routes>
+            <Route path="/employees/:id/edit" element={<EmployeeEdit />} />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+    expect(await screen.findByLabelText(/first name/i)).toHaveValue("John");
+
+    fireEvent.click(screen.getByRole("link", { name: /next employee/i }));
+
+    expect(
+      await screen.findByRole("status", { name: /loading employee form/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText(/first name/i)).not.toBeInTheDocument();
+
+    await act(async () => {
+      rejectNextEmployee(new Error("Employee 2 failed to load"));
+    });
+    expect(await screen.findByText("Employee 2 failed to load")).toBeVisible();
   });
 
   it("should prefill and update the current address", async () => {

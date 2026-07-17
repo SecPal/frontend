@@ -457,6 +457,49 @@ describe("EmployeeCreate", () => {
     expect(vi.mocked(employeeApi.createEmployee)).not.toHaveBeenCalled();
   });
 
+  it("should focus the establishment trigger when it is the first invalid field", async () => {
+    renderWithProviders(<EmployeeCreate />);
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("combobox", {
+          name: /establishment|betriebsstätte/i,
+        })
+      ).not.toBeDisabled()
+    );
+    fireEvent.change(screen.getByLabelText(/first name/i), {
+      target: { value: "John" },
+    });
+    fireEvent.change(screen.getByLabelText(/last name/i), {
+      target: { value: "Doe" },
+    });
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: "john@secpal.dev" },
+    });
+    fireEvent.change(screen.getByLabelText(/date of birth/i), {
+      target: { value: "01/01/1990" },
+    });
+    fireEvent.blur(screen.getByLabelText(/date of birth/i));
+    fireEvent.change(screen.getByLabelText("Position *"), {
+      target: { value: "Developer" },
+    });
+    fireEvent.change(screen.getByLabelText(/contract start date/i), {
+      target: { value: "01/01/2025" },
+    });
+    fireEvent.blur(screen.getByLabelText(/contract start date/i));
+
+    submitEmployeeCreateForm();
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("combobox", {
+          name: /establishment|betriebsstätte/i,
+        })
+      ).toHaveFocus()
+    );
+    expect(vi.mocked(employeeApi.createEmployee)).not.toHaveBeenCalled();
+  });
+
   it("should require management level when leadership is enabled", async () => {
     renderWithProviders(<EmployeeCreate />);
 
