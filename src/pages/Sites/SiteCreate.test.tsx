@@ -444,6 +444,31 @@ describe("SiteCreate", () => {
     expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
   });
 
+  it("blocks submission while the required domain assignment is unresolved", async () => {
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockImplementation(
+      () => new Promise(() => {})
+    );
+
+    renderWithRouter();
+    fireEvent.change(screen.getByLabelText(/site name/i), {
+      target: { value: "Pending Assignment Site" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Test Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "Test City" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+
+    const submit = screen.getByRole("button", { name: /create site/i });
+    expect(submit).toBeDisabled();
+    fireEvent.click(submit);
+    expect(customersApi.createSite).not.toHaveBeenCalled();
+  });
+
   it("displays error when data loading fails", async () => {
     vi.mocked(legalEntityApi.listCustomerLegalEntities).mockRejectedValue(
       new Error("Failed to load legal entities")
@@ -456,6 +481,36 @@ describe("SiteCreate", () => {
         screen.getByText(/failed to load legal entities/i)
       ).toBeInTheDocument();
     });
+  });
+
+  it("does not call the API after required domain lookups fail", async () => {
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockRejectedValue(
+      new Error("Failed to load legal entities")
+    );
+
+    renderWithRouter();
+    await screen.findByText(/failed to load legal entities/i);
+    fireEvent.change(screen.getByLabelText(/site name/i), {
+      target: { value: "Unavailable Assignment Site" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Test Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "Test City" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+
+    const submit = screen.getByRole("button", { name: /create site/i });
+    await waitFor(() => expect(submit).not.toBeDisabled());
+    fireEvent.click(submit);
+
+    expect(customersApi.createSite).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /domain assignment options could not be loaded/i
+    );
   });
 
   it(

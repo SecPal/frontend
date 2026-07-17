@@ -9,12 +9,16 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import SiteDetail from "./SiteDetail";
 import * as customersApi from "../../services/customersApi";
+import * as legalEntityApi from "../../services/customerLegalEntitiesApi";
+import * as domainApi from "../../services/customerDomainApi";
 
 const { mockUseUserCapabilities } = vi.hoisted(() => ({
   mockUseUserCapabilities: vi.fn(),
 }));
 
 vi.mock("../../services/customersApi");
+vi.mock("../../services/customerLegalEntitiesApi");
+vi.mock("../../services/customerDomainApi");
 vi.mock("../../hooks/useUserCapabilities", () => ({
   useUserCapabilities: mockUseUserCapabilities,
 }));
@@ -61,7 +65,7 @@ describe("SiteDetail", () => {
     name: "Munich Office",
     type: "permanent" as const,
     customer_id: "customer-123",
-    legal_entity_id: "org-unit-123",
+    legal_entity_id: "legal-entity-123",
     establishment_id: "establishment-1",
     address: {
       street: "Teststrasse 42",
@@ -106,6 +110,12 @@ describe("SiteDetail", () => {
         sites: { create: true, update: true, delete: true },
       },
     });
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
+      { id: "legal-entity-123", name: "SecPal GmbH" },
+    ]);
+    vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue([
+      { id: "establishment-1", name: "Munich Establishment" },
+    ]);
   });
 
   it("loads and displays site details with customer and domain assignments", async () => {
@@ -132,14 +142,29 @@ describe("SiteDetail", () => {
     expect(screen.getByText("CUST-2025-001")).toBeInTheDocument();
     expect(screen.getByText("Street, 12345 City, DE")).toBeInTheDocument();
 
-    // Domain assignments are displayed without an OU lookup.
-    expect(screen.getByText("org-unit-123")).toBeInTheDocument();
-    expect(screen.getByText("establishment-1")).toBeInTheDocument();
+    expect(await screen.findByText("SecPal GmbH")).toBeInTheDocument();
+    expect(screen.getByText("Munich Establishment")).toBeInTheDocument();
+    expect(screen.queryByText("legal-entity-123")).not.toBeInTheDocument();
+    expect(screen.queryByText("establishment-1")).not.toBeInTheDocument();
 
     // Check address
     expect(screen.getByText("Teststrasse 42")).toBeInTheDocument();
     expect(screen.getByText("80331")).toBeInTheDocument();
     expect(screen.getByText("München")).toBeInTheDocument();
+  });
+
+  it("keeps site details visible when an establishment name lookup fails", async () => {
+    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+    vi.mocked(domainApi.listEstablishmentLookups).mockRejectedValue(
+      new Error("Establishment names unavailable")
+    );
+
+    renderWithRouter();
+
+    expect(await screen.findByText("Munich Office")).toBeInTheDocument();
+    expect(await screen.findByText("SecPal GmbH")).toBeInTheDocument();
+    expect(screen.getByText("establishment-1")).toBeInTheDocument();
   });
 
   it("renders postal code and city on separate site-address lines", async () => {
@@ -457,9 +482,9 @@ describe("SiteDetail", () => {
       expect(screen.getByText("Munich Office")).toBeInTheDocument();
     });
 
-    // Should display IDs as fallback
+    // Customer data falls back independently while domain names remain usable.
     expect(screen.getByText("customer-123")).toBeInTheDocument();
-    expect(screen.getByText("org-unit-123")).toBeInTheDocument();
+    expect(await screen.findByText("SecPal GmbH")).toBeInTheDocument();
   });
 
   it("hides edit and delete actions without site management capabilities", async () => {

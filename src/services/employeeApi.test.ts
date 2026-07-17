@@ -46,7 +46,7 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
         EmployeeFormData,
         "contract_start_date"
       > = false;
-      const organizationalUnitIdIsOptional: IsOptional<
+      const legalEntityIdIsOptional: IsOptional<
         EmployeeFormData,
         "legal_entity_id"
       > = false;
@@ -54,7 +54,7 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
       expect(dateOfBirthIsOptional).toBe(false);
       expect(positionIsOptional).toBe(false);
       expect(contractStartDateIsOptional).toBe(false);
-      expect(organizationalUnitIdIsOptional).toBe(false);
+      expect(legalEntityIdIsOptional).toBe(false);
     });
 
     it("should throw error when JSON parsing fails on success response", async () => {

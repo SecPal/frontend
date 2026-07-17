@@ -27,6 +27,7 @@ function Harness({
   withErrors = false,
   required = true,
   fixedCustomerId,
+  onStatusChange,
   initialValue = {
     legal_entity_id: "",
     establishment_id: "",
@@ -37,6 +38,7 @@ function Harness({
   withErrors?: boolean;
   required?: boolean;
   fixedCustomerId?: string;
+  onStatusChange?: (status: string) => void;
   initialValue?: {
     legal_entity_id: string;
     establishment_id: string;
@@ -61,6 +63,7 @@ function Harness({
         includeCustomer={customer}
         required={required}
         fixedCustomerId={fixedCustomerId}
+        onStatusChange={onStatusChange}
         errors={errors}
         onClearErrors={(fields) =>
           setErrors((current) => {
@@ -102,6 +105,35 @@ describe("DomainAssignmentFields", () => {
       screen.getByRole("combobox", { name: /establishment/i })
     ).toHaveAttribute("aria-required", "true");
     expect(screen.getByRole("combobox", { name: /customer/i })).toBeDisabled();
+  });
+
+  it("reports readiness only after every required selection is authorized", async () => {
+    const onStatusChange = vi.fn();
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
+      { id: "legal-1", name: "SecPal GmbH" },
+    ]);
+    vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue([
+      { id: "est-1", name: "Berlin" },
+    ]);
+    vi.mocked(domainApi.listCustomerLookups).mockResolvedValue([
+      { id: "customer-1", name: "Customer One" },
+    ]);
+
+    render(
+      <Harness
+        onStatusChange={onStatusChange}
+        initialValue={{
+          legal_entity_id: "legal-1",
+          establishment_id: "est-1",
+          customer_id: "customer-1",
+        }}
+      />
+    );
+
+    expect(onStatusChange).toHaveBeenCalledWith("loading");
+    await waitFor(() =>
+      expect(onStatusChange).toHaveBeenLastCalledWith("ready")
+    );
   });
 
   it("replaces a stale legal entity with the sole authorized option", async () => {

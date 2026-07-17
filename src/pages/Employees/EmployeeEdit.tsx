@@ -12,7 +12,10 @@ import { Input } from "@/ui/input";
 import { Select, SelectContent, SelectTrigger, SelectValue } from "@/ui/select";
 import { FormSkeleton } from "@/ui/loading";
 import { fetchEmployee, updateEmployee } from "../../services/employeeApi";
-import { DomainAssignmentFields } from "../../components/DomainAssignmentFields";
+import {
+  DomainAssignmentFields,
+  type DomainAssignmentStatus,
+} from "../../components/DomainAssignmentFields";
 import {
   Alert,
   AlertDescription,
@@ -70,9 +73,15 @@ export function EmployeeEdit() {
     null
   );
   const [fetchLoading, setFetchLoading] = useState(id !== undefined);
-  const [error, setError] = useState<string | null>(
+  const [loadError, setLoadError] = useState<string | null>(
     id === undefined ? i18n._(msg`Employee ID is missing.`) : null
   );
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [domainErrors, setDomainErrors] = useState<
+    Partial<Record<"legal_entity_id" | "establishment_id", string>>
+  >({});
+  const [domainStatus, setDomainStatus] =
+    useState<DomainAssignmentStatus>("loading");
   const [isLeadership, setIsLeadership] = useState(false);
   const [addressDraft, setAddressDraft] = useState<PostalAddressDraft>(
     emptyPostalAddressDraft
@@ -102,7 +111,9 @@ export function EmployeeEdit() {
     let active = true;
     async function loadEmployee() {
       setFetchLoading(true);
-      setError(null);
+      setLoadError(null);
+      setSubmitError(null);
+      setDomainErrors({});
       setBirthDateError(null);
       setContractDateError(null);
       try {
@@ -111,7 +122,7 @@ export function EmployeeEdit() {
           return;
         }
 
-        setError(null);
+        setLoadError(null);
         setFormData({
           first_name: employee.first_name || "",
           last_name: employee.last_name || "",
@@ -158,7 +169,7 @@ export function EmployeeEdit() {
           errorMessage = String(err.message);
         }
 
-        setError(errorMessage);
+        setLoadError(errorMessage);
       } finally {
         if (active) {
           setFetchLoading(false);
@@ -187,7 +198,7 @@ export function EmployeeEdit() {
     e.preventDefault();
     if (!id) {
       console.error("Cannot submit employee form: missing employee ID.");
-      setError(i18n._(msg`Employee ID is missing. Cannot submit form.`));
+      setSubmitError(i18n._(msg`Employee ID is missing. Cannot submit form.`));
       return;
     }
 
@@ -245,9 +256,31 @@ export function EmployeeEdit() {
       );
     }
 
+    if (domainStatus !== "ready") {
+      const nextDomainErrors: typeof domainErrors = {};
+      if (!formData.legal_entity_id)
+        nextDomainErrors.legal_entity_id = i18n._(
+          msg`Legal entity is required`
+        );
+      if (!formData.establishment_id)
+        nextDomainErrors.establishment_id = i18n._(
+          msg`Establishment is required`
+        );
+      setDomainErrors(nextDomainErrors);
+      setSubmitError(
+        domainStatus === "loading"
+          ? i18n._(msg`The domain assignment is still loading.`)
+          : domainStatus === "error"
+            ? i18n._(msg`The domain assignment options could not be loaded.`)
+            : i18n._(msg`Select an authorized legal entity and establishment.`)
+      );
+      return;
+    }
+
     try {
       setLoading(true);
-      setError(null);
+      setSubmitError(null);
+      setDomainErrors({});
       setBirthDateDisplay(normalizedBirthDateDisplay);
       setContractDateDisplay(normalizedContractDateDisplay);
       setBirthDateError(null);
@@ -283,7 +316,7 @@ export function EmployeeEdit() {
         errorMessage = String(err.message);
       }
 
-      setError(errorMessage);
+      setSubmitError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -300,7 +333,7 @@ export function EmployeeEdit() {
     setAddressDraft((prev) => ({ ...prev, [field]: value }));
   }
 
-  if (error) {
+  if (loadError) {
     return (
       <div className="flex items-center justify-center py-16">
         <Alert className="max-w-md border-destructive/30 bg-destructive/10 p-6 text-center text-foreground">
@@ -308,7 +341,7 @@ export function EmployeeEdit() {
             <Trans>Error Loading Employee</Trans>
           </AlertTitle>
           <AlertDescription className="text-destructive mt-2">
-            {error}
+            {loadError}
           </AlertDescription>
           <div className="mt-4">
             <LinkButton to="/employees" variant="destructive">
@@ -341,6 +374,19 @@ export function EmployeeEdit() {
             />
           ) : (
             <form onSubmit={handleSubmit} className="space-y-8">
+              {submitError && (
+                <Alert
+                  role="alert"
+                  className="border-destructive/30 bg-destructive/10 text-foreground"
+                >
+                  <AlertTitle className="text-destructive">
+                    <Trans>Error Updating Employee</Trans>
+                  </AlertTitle>
+                  <AlertDescription className="text-destructive">
+                    {submitError}
+                  </AlertDescription>
+                </Alert>
+              )}
               {/* Personal Information */}
               <Fieldset>
                 <Legend>
@@ -562,12 +608,28 @@ export function EmployeeEdit() {
                     <DomainAssignmentFields
                       idPrefix="employee"
                       value={formData}
-                      onChange={(assignment) =>
+                      onStatusChange={setDomainStatus}
+                      errors={domainErrors}
+                      onClearErrors={(fields) =>
+                        setDomainErrors((current) => {
+                          const next = { ...current };
+                          for (const field of fields) {
+                            if (
+                              field === "legal_entity_id" ||
+                              field === "establishment_id"
+                            )
+                              delete next[field];
+                          }
+                          return next;
+                        })
+                      }
+                      onChange={(assignment) => {
                         setFormData((current) => ({
                           ...current,
                           ...assignment,
-                        }))
-                      }
+                        }));
+                        setSubmitError(null);
+                      }}
                     />
 
                     <EmployeeManagementLevelField
@@ -624,7 +686,10 @@ export function EmployeeEdit() {
                 >
                   <Trans>Cancel</Trans>
                 </Button>
-                <Button type="submit" disabled={loading}>
+                <Button
+                  type="submit"
+                  disabled={loading || domainStatus === "loading"}
+                >
                   {loading ? (
                     <Trans>Saving...</Trans>
                   ) : (

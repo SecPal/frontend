@@ -40,6 +40,7 @@ import {
   EmployeeTableRow as TableRow,
 } from "@/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
+import { useDomainAssignmentNames } from "../../hooks/useDomainAssignmentNames";
 
 const EMPLOYEES_DESKTOP_MEDIA_QUERY = "(min-width: 40rem)";
 
@@ -126,6 +127,7 @@ export function EmployeeList() {
     total: 0,
   });
   const [useDesktopTable, setUseDesktopTable] = useState(readUseDesktopTable);
+  const domainNames = useDomainAssignmentNames(employees);
 
   useEffect(() => {
     if (
@@ -396,10 +398,14 @@ export function EmployeeList() {
                       <StatusBadge status={employee.status} />
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {employee.legal_entity_id || "-"}
+                      {(domainNames.legalEntities[employee.legal_entity_id] ??
+                        employee.legal_entity_id) ||
+                        "-"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {employee.establishment_id || "-"}
+                      {(domainNames.establishments[employee.establishment_id] ??
+                        employee.establishment_id) ||
+                        "-"}
                     </TableCell>
                     <TableCell>
                       <LinkButton
@@ -473,7 +479,9 @@ export function EmployeeList() {
                       <Trans>Legal Entity</Trans>
                     </p>
                     <p className="text-foreground">
-                      {employee.legal_entity_id || "-"}
+                      {(domainNames.legalEntities[employee.legal_entity_id] ??
+                        employee.legal_entity_id) ||
+                        "-"}
                     </p>
                   </div>
                   <div>
@@ -481,7 +489,9 @@ export function EmployeeList() {
                       <Trans>Establishment</Trans>
                     </p>
                     <p className="text-foreground">
-                      {employee.establishment_id || "-"}
+                      {(domainNames.establishments[employee.establishment_id] ??
+                        employee.establishment_id) ||
+                        "-"}
                     </p>
                   </div>
                   <div className="col-span-2">

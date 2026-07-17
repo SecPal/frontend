@@ -85,6 +85,9 @@ msgid "Clear domain filters"
 msgstr "Clear domain filters"
 
 #: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
 msgid "Establishment is required"
 msgstr "Establishment is required"
 
@@ -236,6 +239,12 @@ msgstr "Notes"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload front and back as separate files if available."
 msgstr "Upload front and back as separate files if available."
+
+#: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "The domain assignment options could not be loaded."
+msgstr "The domain assignment options could not be loaded."
 
 #: src/components/OrganizationalUnitTree.tsx
 msgid "Organizational structure"
@@ -701,6 +710,10 @@ msgstr "Welcome to SecPal! Let's complete your profile."
 msgid "Update the organizational unit details."
 msgstr "Update the organizational unit details."
 
+#: src/pages/Employees/EmployeeEdit.tsx
+msgid "Error Updating Employee"
+msgstr "Error Updating Employee"
+
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Current Residential Address"
@@ -1046,6 +1059,9 @@ msgid "e.g., Berlin Branch"
 msgstr "e.g., Berlin Branch"
 
 #: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
 msgid "Legal entity is required"
 msgstr "Legal entity is required"
 
@@ -2091,6 +2107,11 @@ msgstr "Moving..."
 msgid "Category-specific notification preferences are not available yet. SecPal currently manages browser notifications at the browser and deployment level."
 msgstr "Category-specific notification preferences are not available yet. SecPal currently manages browser notifications at the browser and deployment level."
 
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Select an authorized legal entity, establishment, and customer."
+msgstr "Select an authorized legal entity, establishment, and customer."
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Try again"
 msgstr "Try again"
@@ -2978,6 +2999,11 @@ msgid "Saving BWR Status..."
 msgstr "Saving BWR Status..."
 
 #: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Customer is required"
+msgstr "Customer is required"
+
+#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "New Site"
 msgstr "New Site"
@@ -3264,6 +3290,10 @@ msgstr "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 
 #: src/pages/Customers/CustomersPage.tsx
 msgid "Failed to load customers"
 msgstr "Failed to load customers"
+
+#: src/pages/Employees/EmployeeEdit.tsx
+msgid "Select an authorized legal entity and establishment."
+msgstr "Select an authorized legal entity and establishment."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "We could not verify your identity with the details provided. For security reasons this onboarding link has been deactivated. Please contact HR for a new invitation."
@@ -3590,10 +3620,6 @@ msgstr "Passkey sign-in was cancelled or not permitted by the browser."
 msgid "Legal"
 msgstr "Legal"
 
-#: src/pages/Customers/CustomerDetail.tsx
-msgid "Legal Entity ID"
-msgstr "Legal Entity ID"
-
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Assignment status"
 msgstr "Assignment status"
@@ -3788,6 +3814,12 @@ msgstr "Check your device…"
 #: src/pages/SourcePage.tsx
 msgid "If this deployment does not publish source releases here, the project repositories below remain linked as the preferred form for making modifications."
 msgstr "If this deployment does not publish source releases here, the project repositories below remain linked as the preferred form for making modifications."
+
+#: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "The domain assignment is still loading."
+msgstr "The domain assignment is still loading."
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Merkle Root"

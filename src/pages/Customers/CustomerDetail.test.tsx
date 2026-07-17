@@ -10,9 +10,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import CustomerDetail from "./CustomerDetail";
 import * as customersApi from "../../services/customersApi";
 import * as domainApi from "../../services/customerDomainApi";
+import * as legalEntityApi from "../../services/customerLegalEntitiesApi";
 
 vi.mock("../../services/customersApi");
 vi.mock("../../services/customerDomainApi");
+vi.mock("../../services/customerLegalEntitiesApi");
 const { mockUseUserCapabilities } = vi.hoisted(() => ({
   mockUseUserCapabilities: vi.fn(),
 }));
@@ -60,24 +62,24 @@ describe("CustomerDetail", () => {
       created_at: "2026-01-01T00:00:00Z",
       updated_at: "2026-01-01T00:00:00Z",
     });
-    vi.mocked(domainApi.listCustomerEstablishments).mockResolvedValue({
-      data: [
-        {
-          id: "link-1",
-          customer_id: "customer-1",
-          establishment_id: "est-1",
-          contact_name: "Berlin Contact",
-          email: "berlin@secpal.dev",
-          phone: "+49 30 123",
-          comments: "Service entrance",
-          created_at: "2026-01-01T00:00:00Z",
-          updated_at: "2026-01-01T00:00:00Z",
-        },
-      ],
-      meta: { current_page: 1, last_page: 1, per_page: 100, total: 1 },
-    });
+    vi.mocked(domainApi.listAllCustomerEstablishments).mockResolvedValue([
+      {
+        id: "link-1",
+        customer_id: "customer-1",
+        establishment_id: "est-1",
+        contact_name: "Berlin Contact",
+        email: "berlin@secpal.dev",
+        phone: "+49 30 123",
+        comments: "Service entrance",
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      },
+    ]);
     vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue([
       { id: "est-1", name: "Berlin Establishment" },
+    ]);
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
+      { id: "legal-1", name: "SecPal GmbH" },
     ]);
   });
 
@@ -89,6 +91,9 @@ describe("CustomerDetail", () => {
     expect(
       screen.getByRole("heading", { name: /legal entity/i })
     ).toBeInTheDocument();
+    expect(await screen.findByText("SecPal GmbH")).toBeInTheDocument();
+    expect(screen.queryByText("legal-1")).not.toBeInTheDocument();
+    expect(screen.queryByText("Legal Entity ID")).not.toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
         name: /establishments and local contacts/i,
@@ -106,7 +111,7 @@ describe("CustomerDetail", () => {
   });
 
   it("keeps customer master data visible when assignment loading fails", async () => {
-    vi.mocked(domainApi.listCustomerEstablishments).mockRejectedValue(
+    vi.mocked(domainApi.listAllCustomerEstablishments).mockRejectedValue(
       new Error("Assignments unavailable")
     );
 

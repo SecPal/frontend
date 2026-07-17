@@ -37,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Loaded every customer-establishment assignment page, resolved authorized
+  Legal Entity and Establishment names in read views, blocked Site and Employee
+  saves until domain-assignment authorization settles, and removed broad
+  organizational-unit prefetches from Site and Employee routes.
 - Revalidated every Site and Employee domain-assignment level after authorized
   lookup refreshes, degraded customer detail pages only where auxiliary
   establishment data fails, compensated partial customer and contact updates,

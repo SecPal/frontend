@@ -28,7 +28,10 @@ import type {
   Address,
   Contact,
 } from "../../types/customers";
-import { DomainAssignmentFields } from "../../components/DomainAssignmentFields";
+import {
+  DomainAssignmentFields,
+  type DomainAssignmentStatus,
+} from "../../components/DomainAssignmentFields";
 import {
   Alert,
   AlertDescription,
@@ -49,6 +52,8 @@ export default function SiteEdit() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [domainStatus, setDomainStatus] =
+    useState<DomainAssignmentStatus>("loading");
   const [site, setSite] = useState<Site | null>(null);
 
   const [formData, setFormData] = useState<UpdateSiteRequest>({});
@@ -57,9 +62,9 @@ export default function SiteEdit() {
     // Per-`id` cancellation flag: if a slow `getSite(prevId)` finishes
     // after the user has navigated to a new `/sites/:id/edit`, ignore
     // its result instead of refilling the form with the previous site's
-    // values under the new URL. The same Bugbot HIGH severity finding
-    // that flagged CustomerDetail, CustomerEdit, and SiteDetail applies
-    // to this file: a Save click before the lagging fetch resolves
+    // values under the new URL. The same route-lifecycle invariant used by
+    // CustomerDetail, CustomerEdit, and SiteDetail applies here: a Save click
+    // before the lagging fetch resolves
     // would have written the prior site's data to the new id.
     let cancelled = false;
 
@@ -156,6 +161,27 @@ export default function SiteEdit() {
     e.preventDefault();
     if (!id) return;
 
+    const domainErrors: Record<string, string[]> = {};
+    if (!formData.legal_entity_id)
+      domainErrors.legal_entity_id = [_(msg`Legal entity is required`)];
+    if (!formData.establishment_id)
+      domainErrors.establishment_id = [_(msg`Establishment is required`)];
+    if (!formData.customer_id)
+      domainErrors.customer_id = [_(msg`Customer is required`)];
+    if (domainStatus !== "ready") {
+      setFieldErrors(domainErrors);
+      setError(
+        domainStatus === "loading"
+          ? _(msg`The domain assignment is still loading.`)
+          : domainStatus === "error"
+            ? _(msg`The domain assignment options could not be loaded.`)
+            : _(
+                msg`Select an authorized legal entity, establishment, and customer.`
+              )
+      );
+      return;
+    }
+
     setSaving(true);
     setError(null);
     setFieldErrors({});
@@ -202,7 +228,10 @@ export default function SiteEdit() {
       ) : (
         <>
           {error && (
-            <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+            <Alert
+              role="alert"
+              className="mb-4 border-destructive/30 bg-destructive/10 text-foreground"
+            >
               <AlertDescription className="text-destructive">
                 {error}
               </AlertDescription>
@@ -215,6 +244,7 @@ export default function SiteEdit() {
               <DomainAssignmentFields
                 idPrefix="site"
                 includeCustomer
+                onStatusChange={setDomainStatus}
                 value={{
                   legal_entity_id: formData.legal_entity_id ?? "",
                   establishment_id: formData.establishment_id ?? "",
@@ -481,7 +511,10 @@ export default function SiteEdit() {
 
             {/* Actions */}
             <div className="flex gap-4 pt-4 border-t">
-              <Button type="submit" disabled={saving}>
+              <Button
+                type="submit"
+                disabled={saving || domainStatus === "loading"}
+              >
                 {saving ? (
                   <Trans>Saving...</Trans>
                 ) : (

@@ -19,7 +19,10 @@ import {
 import { Switch } from "@/ui/switch";
 import { createEmployee } from "../../services/employeeApi";
 import { ApiError } from "../../services/ApiError";
-import { DomainAssignmentFields } from "../../components/DomainAssignmentFields";
+import {
+  DomainAssignmentFields,
+  type DomainAssignmentStatus,
+} from "../../components/DomainAssignmentFields";
 import {
   Alert,
   AlertDescription,
@@ -81,6 +84,8 @@ export function EmployeeCreate() {
   const [fieldErrors, setFieldErrors] = useState<EmployeeFormErrors>({});
   const [submitFeedback, setSubmitFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [domainStatus, setDomainStatus] =
+    useState<DomainAssignmentStatus>("loading");
   const [isLeadership, setIsLeadership] = useState(false);
   const [addressDraft, setAddressDraft] = useState<PostalAddressDraft>(
     emptyPostalAddressDraft
@@ -668,6 +673,7 @@ export function EmployeeCreate() {
                   <DomainAssignmentFields
                     idPrefix="employee"
                     value={formData}
+                    onStatusChange={setDomainStatus}
                     triggerRefs={{
                       legal_entity_id: (element) =>
                         setFieldRef("legal_entity_id", element),
@@ -875,7 +881,10 @@ export function EmployeeCreate() {
               >
                 <Trans>Cancel</Trans>
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button
+                type="submit"
+                disabled={loading || domainStatus === "loading"}
+              >
                 {loading ? (
                   <Trans>Creating...</Trans>
                 ) : (

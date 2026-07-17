@@ -192,13 +192,35 @@ describe("EmployeeList", () => {
     expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
     expect(screen.getByText("E001")).toBeInTheDocument();
     expect(screen.getByText("Developer")).toBeInTheDocument();
-    expect(screen.getAllByText("legal-entity-1").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("establishment-1").length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("SecPal GmbH")).length).toBeGreaterThan(
+      0
+    );
+    expect((await screen.findAllByText("Engineering")).length).toBeGreaterThan(
+      0
+    );
+    expect(screen.queryByText("legal-entity-1")).not.toBeInTheDocument();
+    expect(screen.queryByText("establishment-1")).not.toBeInTheDocument();
 
     expect(screen.getByText("Jane Smith")).toBeInTheDocument();
     expect(screen.getByText("jane.smith@secpal.dev")).toBeInTheDocument();
     expect(screen.getByText("E002")).toBeInTheDocument();
     expect(screen.getByText("Designer")).toBeInTheDocument();
+  });
+
+  it("keeps employee rows visible with ID fallbacks when names fail", async () => {
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockRejectedValue(
+      new Error("Names unavailable")
+    );
+
+    renderWithProviders();
+
+    expect(await screen.findByText("John Doe")).toBeInTheDocument();
+    expect(
+      (await screen.findAllByText("legal-entity-1")).length
+    ).toBeGreaterThan(0);
+    expect(
+      (await screen.findAllByText("establishment-1")).length
+    ).toBeGreaterThan(0);
   });
 
   it("renders employees as mobile cards on narrow viewports", async () => {
@@ -208,8 +230,12 @@ describe("EmployeeList", () => {
 
     expect(await screen.findByText("John Doe")).toBeInTheDocument();
     expect(screen.getByText("john.doe@secpal.dev")).toBeInTheDocument();
-    expect(screen.getAllByText("legal-entity-1").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("establishment-1").length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("SecPal GmbH")).length).toBeGreaterThan(
+      0
+    );
+    expect((await screen.findAllByText("Engineering")).length).toBeGreaterThan(
+      0
+    );
     expect(
       screen.getByRole("link", { name: /view john doe/i })
     ).toHaveAttribute("href", "/employees/emp-1");

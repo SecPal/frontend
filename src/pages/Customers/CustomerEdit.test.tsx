@@ -10,9 +10,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import CustomerEdit from "./CustomerEdit";
 import * as customersApi from "../../services/customersApi";
 import * as domainApi from "../../services/customerDomainApi";
+import * as legalEntityApi from "../../services/customerLegalEntitiesApi";
 
 vi.mock("../../services/customersApi");
 vi.mock("../../services/customerDomainApi");
+vi.mock("../../services/customerLegalEntitiesApi");
 const navigate = vi.fn();
 vi.mock("react-router-dom", async () => ({
   ...(await vi.importActual("react-router-dom")),
@@ -52,23 +54,23 @@ describe("CustomerEdit", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(customersApi.getCustomer).mockResolvedValue(customer);
-    vi.mocked(domainApi.listCustomerEstablishments).mockResolvedValue({
-      data: [
-        {
-          id: "link-1",
-          customer_id: "customer-1",
-          establishment_id: "est-1",
-          contact_name: "Local Contact",
-          email: "local@secpal.dev",
-          created_at: "2026-01-01T00:00:00Z",
-          updated_at: "2026-01-01T00:00:00Z",
-        },
-      ],
-      meta: { current_page: 1, last_page: 1, per_page: 100, total: 1 },
-    });
+    vi.mocked(domainApi.listAllCustomerEstablishments).mockResolvedValue([
+      {
+        id: "link-1",
+        customer_id: "customer-1",
+        establishment_id: "est-1",
+        contact_name: "Local Contact",
+        email: "local@secpal.dev",
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      },
+    ]);
     vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue([
       { id: "est-1", name: "Berlin" },
       { id: "est-2", name: "Hamburg" },
+    ]);
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
+      { id: "legal-1", name: "SecPal GmbH" },
     ]);
     vi.mocked(customersApi.updateCustomer).mockResolvedValue(customer);
     vi.mocked(domainApi.updateCustomerEstablishment).mockResolvedValue({
@@ -89,6 +91,10 @@ describe("CustomerEdit", () => {
       "local@secpal.dev"
     );
     expect(screen.queryByText(/organizational unit/i)).not.toBeInTheDocument();
+    expect(await screen.findByText(/SecPal GmbH/)).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Legal Entity:\s*legal-1/)
+    ).not.toBeInTheDocument();
   });
 
   it("updates customer master data separately from the local assignment", async () => {
@@ -247,27 +253,24 @@ describe("CustomerEdit", () => {
 
   it("restores earlier contact updates when a later contact update fails", async () => {
     const user = userEvent.setup();
-    vi.mocked(domainApi.listCustomerEstablishments).mockResolvedValue({
-      data: [
-        {
-          id: "link-1",
-          customer_id: "customer-1",
-          establishment_id: "est-1",
-          contact_name: "Berlin Contact",
-          created_at: "2026-01-01T00:00:00Z",
-          updated_at: "2026-01-01T00:00:00Z",
-        },
-        {
-          id: "link-2",
-          customer_id: "customer-1",
-          establishment_id: "est-2",
-          contact_name: "Hamburg Contact",
-          created_at: "2026-01-01T00:00:00Z",
-          updated_at: "2026-01-01T00:00:00Z",
-        },
-      ],
-      meta: { current_page: 1, last_page: 1, per_page: 100, total: 2 },
-    });
+    vi.mocked(domainApi.listAllCustomerEstablishments).mockResolvedValue([
+      {
+        id: "link-1",
+        customer_id: "customer-1",
+        establishment_id: "est-1",
+        contact_name: "Berlin Contact",
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      },
+      {
+        id: "link-2",
+        customer_id: "customer-1",
+        establishment_id: "est-2",
+        contact_name: "Hamburg Contact",
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      },
+    ]);
     vi.mocked(domainApi.updateCustomerEstablishment)
       .mockResolvedValueOnce({
         id: "link-1",
@@ -311,27 +314,24 @@ describe("CustomerEdit", () => {
 
   it("requires a reload when an earlier contact update cannot be restored", async () => {
     const user = userEvent.setup();
-    vi.mocked(domainApi.listCustomerEstablishments).mockResolvedValue({
-      data: [
-        {
-          id: "link-1",
-          customer_id: "customer-1",
-          establishment_id: "est-1",
-          contact_name: "Berlin Contact",
-          created_at: "2026-01-01T00:00:00Z",
-          updated_at: "2026-01-01T00:00:00Z",
-        },
-        {
-          id: "link-2",
-          customer_id: "customer-1",
-          establishment_id: "est-2",
-          contact_name: "Hamburg Contact",
-          created_at: "2026-01-01T00:00:00Z",
-          updated_at: "2026-01-01T00:00:00Z",
-        },
-      ],
-      meta: { current_page: 1, last_page: 1, per_page: 100, total: 2 },
-    });
+    vi.mocked(domainApi.listAllCustomerEstablishments).mockResolvedValue([
+      {
+        id: "link-1",
+        customer_id: "customer-1",
+        establishment_id: "est-1",
+        contact_name: "Berlin Contact",
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      },
+      {
+        id: "link-2",
+        customer_id: "customer-1",
+        establishment_id: "est-2",
+        contact_name: "Hamburg Contact",
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      },
+    ]);
     vi.mocked(domainApi.updateCustomerEstablishment)
       .mockResolvedValueOnce({
         id: "link-1",
@@ -358,27 +358,24 @@ describe("CustomerEdit", () => {
 
   it("frees occupied establishments before swapping assignments", async () => {
     const user = userEvent.setup();
-    vi.mocked(domainApi.listCustomerEstablishments).mockResolvedValue({
-      data: [
-        {
-          id: "link-1",
-          customer_id: "customer-1",
-          establishment_id: "est-1",
-          contact_name: "Berlin Contact",
-          created_at: "2026-01-01T00:00:00Z",
-          updated_at: "2026-01-01T00:00:00Z",
-        },
-        {
-          id: "link-2",
-          customer_id: "customer-1",
-          establishment_id: "est-2",
-          contact_name: "Hamburg Contact",
-          created_at: "2026-01-01T00:00:00Z",
-          updated_at: "2026-01-01T00:00:00Z",
-        },
-      ],
-      meta: { current_page: 1, last_page: 1, per_page: 100, total: 2 },
-    });
+    vi.mocked(domainApi.listAllCustomerEstablishments).mockResolvedValue([
+      {
+        id: "link-1",
+        customer_id: "customer-1",
+        establishment_id: "est-1",
+        contact_name: "Berlin Contact",
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      },
+      {
+        id: "link-2",
+        customer_id: "customer-1",
+        establishment_id: "est-2",
+        contact_name: "Hamburg Contact",
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      },
+    ]);
     vi.mocked(domainApi.deleteCustomerEstablishment).mockResolvedValue();
     vi.mocked(domainApi.createCustomerEstablishment).mockImplementation(
       async (request) => ({
@@ -415,27 +412,24 @@ describe("CustomerEdit", () => {
 
   it("restores original assignments when a swap creation fails", async () => {
     const user = userEvent.setup();
-    vi.mocked(domainApi.listCustomerEstablishments).mockResolvedValue({
-      data: [
-        {
-          id: "link-1",
-          customer_id: "customer-1",
-          establishment_id: "est-1",
-          contact_name: "Berlin Contact",
-          created_at: "2026-01-01T00:00:00Z",
-          updated_at: "2026-01-01T00:00:00Z",
-        },
-        {
-          id: "link-2",
-          customer_id: "customer-1",
-          establishment_id: "est-2",
-          contact_name: "Hamburg Contact",
-          created_at: "2026-01-01T00:00:00Z",
-          updated_at: "2026-01-01T00:00:00Z",
-        },
-      ],
-      meta: { current_page: 1, last_page: 1, per_page: 100, total: 2 },
-    });
+    vi.mocked(domainApi.listAllCustomerEstablishments).mockResolvedValue([
+      {
+        id: "link-1",
+        customer_id: "customer-1",
+        establishment_id: "est-1",
+        contact_name: "Berlin Contact",
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      },
+      {
+        id: "link-2",
+        customer_id: "customer-1",
+        establishment_id: "est-2",
+        contact_name: "Hamburg Contact",
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: "2026-01-01T00:00:00Z",
+      },
+    ]);
     vi.mocked(domainApi.deleteCustomerEstablishment).mockResolvedValue();
     vi.mocked(domainApi.createCustomerEstablishment)
       .mockResolvedValueOnce({

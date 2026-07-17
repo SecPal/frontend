@@ -128,6 +128,28 @@ export async function listCustomerEstablishments(
   return (await response.json()) as PaginatedResponse<CustomerEstablishment>;
 }
 
+export async function listAllCustomerEstablishments(
+  filters: Omit<CustomerEstablishmentFilters, "page" | "per_page"> = {}
+): Promise<CustomerEstablishment[]> {
+  const firstPage = await listCustomerEstablishments({
+    ...filters,
+    page: 1,
+    per_page: 100,
+  });
+  const assignments = [...firstPage.data];
+
+  for (let page = 2; page <= firstPage.meta.last_page; page += 1) {
+    const nextPage = await listCustomerEstablishments({
+      ...filters,
+      page,
+      per_page: 100,
+    });
+    assignments.push(...nextPage.data);
+  }
+
+  return assignments;
+}
+
 export async function createCustomerEstablishment(
   request: CreateCustomerEstablishmentRequest
 ): Promise<CustomerEstablishment> {

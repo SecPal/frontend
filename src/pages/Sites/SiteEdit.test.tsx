@@ -45,6 +45,14 @@ function renderWithRouter() {
   );
 }
 
+async function waitForDomainAssignmentReady() {
+  await waitFor(() =>
+    expect(
+      screen.getByRole("button", { name: /save changes/i })
+    ).not.toBeDisabled()
+  );
+}
+
 describe("SiteEdit", () => {
   const mockSite = {
     id: "site-123",
@@ -208,6 +216,7 @@ describe("SiteEdit", () => {
       });
 
       // Submit
+      await waitForDomainAssignmentReady();
       fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
       await waitFor(() => {
@@ -299,6 +308,7 @@ describe("SiteEdit", () => {
         expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
       });
 
+      await waitForDomainAssignmentReady();
       fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
       await waitFor(() => {
@@ -362,6 +372,7 @@ describe("SiteEdit", () => {
       target: { value: "jane@secpal.dev" },
     });
 
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -390,6 +401,7 @@ describe("SiteEdit", () => {
       target: { value: "Updated site name" },
     });
 
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -422,6 +434,7 @@ describe("SiteEdit", () => {
       target: { value: "+49 987 654321" },
     });
 
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -458,6 +471,7 @@ describe("SiteEdit", () => {
       target: { value: "" },
     });
 
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -604,6 +618,7 @@ describe("SiteEdit", () => {
       });
     });
 
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -618,5 +633,48 @@ describe("SiteEdit", () => {
         })
       );
     });
+  });
+
+  it("blocks submission after authorization invalidates the loaded assignment", async () => {
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
+      { id: "org-2", name: "SecPal Operations GmbH" },
+    ]);
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/legal entity/i)).toHaveTextContent(
+        "SecPal Operations GmbH"
+      );
+      expect(screen.getByLabelText(/establishment/i)).toHaveTextContent(
+        /select establishment/i
+      );
+    });
+
+    await waitForDomainAssignmentReady();
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(customersApi.updateSite).not.toHaveBeenCalled();
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        /select.*establishment/i
+      );
+    });
+  });
+
+  it("blocks submission when assignment authorization cannot be verified", async () => {
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockRejectedValue(
+      new Error("Legal entities unavailable")
+    );
+
+    renderWithRouter();
+    await screen.findByText("Legal entities unavailable");
+    await waitForDomainAssignmentReady();
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    expect(customersApi.updateSite).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /domain assignment options could not be loaded/i
+    );
   });
 });

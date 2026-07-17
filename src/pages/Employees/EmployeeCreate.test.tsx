@@ -426,6 +426,19 @@ describe("EmployeeCreate", () => {
     expect(screen.getByLabelText(/first name/i)).toBeInTheDocument();
   });
 
+  it("blocks creation while the domain assignment is still loading", () => {
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockImplementation(
+      () => new Promise(() => {})
+    );
+
+    renderWithProviders(<EmployeeCreate />);
+
+    expect(
+      screen.getByRole("button", { name: /create employee/i })
+    ).toBeDisabled();
+    expect(vi.mocked(employeeApi.createEmployee)).not.toHaveBeenCalled();
+  });
+
   it("should show a visible submit summary, inline errors, and focus the first invalid field", async () => {
     renderWithProviders(<EmployeeCreate />);
 

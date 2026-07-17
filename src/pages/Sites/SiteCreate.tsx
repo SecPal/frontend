@@ -27,7 +27,10 @@ import type {
   Contact,
   SiteType,
 } from "../../types/customers";
-import { DomainAssignmentFields } from "../../components/DomainAssignmentFields";
+import {
+  DomainAssignmentFields,
+  type DomainAssignmentStatus,
+} from "../../components/DomainAssignmentFields";
 import {
   Alert,
   AlertDescription,
@@ -46,6 +49,8 @@ export default function SiteCreate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [domainStatus, setDomainStatus] =
+    useState<DomainAssignmentStatus>("loading");
 
   const [formData, setFormData] = useState<CreateSiteRequest>({
     customer_id: customerId || "",
@@ -91,6 +96,26 @@ export default function SiteCreate() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const domainErrors: Record<string, string[]> = {};
+    if (!formData.legal_entity_id)
+      domainErrors.legal_entity_id = [_(msg`Legal entity is required`)];
+    if (!formData.establishment_id)
+      domainErrors.establishment_id = [_(msg`Establishment is required`)];
+    if (!formData.customer_id)
+      domainErrors.customer_id = [_(msg`Customer is required`)];
+    if (domainStatus !== "ready") {
+      setFieldErrors(domainErrors);
+      setError(
+        domainStatus === "loading"
+          ? _(msg`The domain assignment is still loading.`)
+          : domainStatus === "error"
+            ? _(msg`The domain assignment options could not be loaded.`)
+            : _(
+                msg`Select an authorized legal entity, establishment, and customer.`
+              )
+      );
+      return;
+    }
     setLoading(true);
     setError(null);
     setFieldErrors({});
@@ -141,7 +166,10 @@ export default function SiteCreate() {
       </div>
 
       {error && (
-        <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+        <Alert
+          role="alert"
+          className="mb-4 border-destructive/30 bg-destructive/10 text-foreground"
+        >
           <AlertDescription className="text-destructive">
             {error}
           </AlertDescription>
@@ -155,6 +183,7 @@ export default function SiteCreate() {
             idPrefix="site"
             includeCustomer
             fixedCustomerId={customerId}
+            onStatusChange={setDomainStatus}
             value={formData}
             onChange={(assignment) =>
               setFormData((current) => ({ ...current, ...assignment }))
@@ -423,7 +452,10 @@ export default function SiteCreate() {
 
         {/* Actions */}
         <div className="flex gap-4 pt-4 border-t">
-          <Button type="submit" disabled={loading}>
+          <Button
+            type="submit"
+            disabled={loading || domainStatus === "loading"}
+          >
             {loading ? <Trans>Creating...</Trans> : <Trans>Create Site</Trans>}
           </Button>
           <LinkButton to="/sites" variant="outline">

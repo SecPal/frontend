@@ -45,6 +45,7 @@ import {
 import { formatDate } from "../../lib/dateUtils";
 import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
+import { useDomainAssignmentNames } from "../../hooks/useDomainAssignmentNames";
 
 function formatAddress(address: Address): string {
   return [
@@ -71,6 +72,7 @@ export default function SiteDetail() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const domainNames = useDomainAssignmentNames(site ? [site] : []);
 
   useLayoutEffect(() => {
     activeRouteId.current = id;
@@ -445,12 +447,18 @@ export default function SiteDetail() {
               <DescriptionTerm>
                 <Trans>Legal Entity</Trans>
               </DescriptionTerm>
-              <DescriptionDetails>{site.legal_entity_id}</DescriptionDetails>
+              <DescriptionDetails>
+                {domainNames.legalEntities[site.legal_entity_id] ??
+                  site.legal_entity_id}
+              </DescriptionDetails>
 
               <DescriptionTerm>
                 <Trans>Establishment</Trans>
               </DescriptionTerm>
-              <DescriptionDetails>{site.establishment_id}</DescriptionDetails>
+              <DescriptionDetails>
+                {domainNames.establishments[site.establishment_id] ??
+                  site.establishment_id}
+              </DescriptionDetails>
 
               <DescriptionTerm>
                 <Trans>Created</Trans>

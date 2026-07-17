@@ -20,6 +20,8 @@ import { ApiError } from "../../services/ApiError";
 import * as employeeApi from "../../services/employeeApi";
 import * as qualificationApi from "../../services/qualificationApi";
 import * as documentApi from "../../services/employeeDocumentApi";
+import * as legalEntityApi from "../../services/customerLegalEntitiesApi";
+import * as domainApi from "../../services/customerDomainApi";
 
 const { mockUseUserCapabilities } = vi.hoisted(() => ({
   mockUseUserCapabilities: vi.fn(),
@@ -33,6 +35,8 @@ vi.mock("../../services/addressApi", () => ({
   fetchAddressLocalitySuggestions: vi.fn().mockResolvedValue([]),
 }));
 vi.mock("../../services/employeeDocumentApi");
+vi.mock("../../services/customerLegalEntitiesApi");
+vi.mock("../../services/customerDomainApi");
 vi.mock("../../hooks/useUserCapabilities", () => ({
   useUserCapabilities: mockUseUserCapabilities,
 }));
@@ -169,6 +173,12 @@ describe("EmployeeDetail", () => {
       []
     );
     vi.mocked(documentApi.fetchEmployeeDocuments).mockResolvedValue([]);
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
+      { id: "legal-entity-1", name: "SecPal GmbH" },
+    ]);
+    vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue([
+      { id: "establishment-1", name: "Engineering" },
+    ]);
   });
 
   it("should render employee details", async () => {
@@ -182,9 +192,25 @@ describe("EmployeeDetail", () => {
 
     expect(screen.getAllByText("E001").length).toBeGreaterThan(0);
     expect(screen.getByText("Developer")).toBeInTheDocument();
-    expect(screen.getByText("legal-entity-1")).toBeInTheDocument();
-    expect(screen.getByText("establishment-1")).toBeInTheDocument();
+    expect(await screen.findByText("SecPal GmbH")).toBeInTheDocument();
+    expect(screen.getByText("Engineering")).toBeInTheDocument();
+    expect(screen.queryByText("legal-entity-1")).not.toBeInTheDocument();
+    expect(screen.queryByText("establishment-1")).not.toBeInTheDocument();
     expect(screen.getByText("Sent")).toBeInTheDocument();
+  });
+
+  it("keeps employee details visible with ID fallbacks when names fail", async () => {
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockRejectedValue(
+      new Error("Names unavailable")
+    );
+
+    renderWithProviders("emp-1");
+
+    expect(
+      await screen.findByRole("heading", { name: "John Doe" })
+    ).toBeInTheDocument();
+    expect(await screen.findByText("legal-entity-1")).toBeInTheDocument();
+    expect(screen.getByText("establishment-1")).toBeInTheDocument();
   });
 
   it("hides the previous employee while a new detail route is loading", async () => {

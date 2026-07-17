@@ -31,6 +31,8 @@ export interface DomainAssignmentValue {
   customer_id?: string;
 }
 
+export type DomainAssignmentStatus = "loading" | "error" | "invalid" | "ready";
+
 interface DomainAssignmentFieldsProps {
   value: DomainAssignmentValue;
   onChange: (value: DomainAssignmentValue) => void;
@@ -47,6 +49,7 @@ interface DomainAssignmentFieldsProps {
       (element: HTMLButtonElement | null) => void
     >
   >;
+  onStatusChange?: (status: DomainAssignmentStatus) => void;
 }
 
 export function DomainAssignmentFields({
@@ -60,6 +63,7 @@ export function DomainAssignmentFields({
   onClearErrors,
   fixedCustomerId,
   triggerRefs,
+  onStatusChange,
 }: DomainAssignmentFieldsProps) {
   const { _ } = useLingui();
   const [legalEntities, setLegalEntities] = useState<LegalEntityLookup[]>([]);
@@ -138,6 +142,32 @@ export function DomainAssignmentFields({
   );
   const displayedLegalEntityId =
     value.legal_entity_id || (required ? soleLegalEntityId : "");
+  const hasRelevantLookupError = Boolean(
+    legalEntityError ||
+    (effectiveLegalEntityId && establishmentError) ||
+    (includeCustomer && effectiveEstablishmentId && customerError)
+  );
+  const hasRelevantPendingLookup = Boolean(
+    loadingLegalEntities || loadingEstablishments || loadingCustomers
+  );
+  const requiredSelectionIsAuthorized = Boolean(
+    legalEntityIsAuthorized &&
+    establishmentIsAuthorized &&
+    (!includeCustomer || customerIsAuthorized)
+  );
+  const status: DomainAssignmentStatus = hasRelevantPendingLookup
+    ? "loading"
+    : hasRelevantLookupError
+      ? "error"
+      : required && !requiredSelectionIsAuthorized
+        ? "invalid"
+        : "ready";
+  const onStatusChangeRef = useRef(onStatusChange);
+  onStatusChangeRef.current = onStatusChange;
+
+  useEffect(() => {
+    onStatusChangeRef.current?.(status);
+  }, [status]);
 
   useEffect(() => {
     let active = true;
@@ -376,6 +406,7 @@ export function DomainAssignmentFields({
         <Select
           value={displayedLegalEntityId}
           onValueChange={(legal_entity_id) => {
+            onStatusChangeRef.current?.("loading");
             establishmentRequest.current += 1;
             customerRequest.current += 1;
             invalidateEstablishmentLookup();
@@ -436,6 +467,7 @@ export function DomainAssignmentFields({
         <Select
           value={value.establishment_id}
           onValueChange={(establishment_id) => {
+            onStatusChangeRef.current?.(includeCustomer ? "loading" : "ready");
             customerRequest.current += 1;
             invalidateCustomerLookup();
             onClearErrors?.(["establishment_id", "customer_id"]);
@@ -489,6 +521,7 @@ export function DomainAssignmentFields({
           <Select
             value={selectedCustomerId}
             onValueChange={(customer_id) => {
+              onStatusChangeRef.current?.("ready");
               onClearErrors?.(["customer_id"]);
               onChange({
                 ...value,

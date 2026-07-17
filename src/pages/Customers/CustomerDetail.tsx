@@ -17,7 +17,7 @@ import { Skeleton } from "@/ui/skeleton";
 import { SectionSkeleton } from "@/ui";
 import { deleteCustomer, getCustomer } from "../../services/customersApi";
 import {
-  listCustomerEstablishments,
+  listAllCustomerEstablishments,
   listEstablishmentLookups,
 } from "../../services/customerDomainApi";
 import type {
@@ -47,6 +47,7 @@ import {
 } from "@/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
+import { useDomainAssignmentNames } from "../../hooks/useDomainAssignmentNames";
 
 function getCustomerSitesCount(customer: Customer): number | null {
   return typeof customer.sites_count === "number" ? customer.sites_count : null;
@@ -84,6 +85,9 @@ export default function CustomerDetail() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const domainNames = useDomainAssignmentNames(
+    customer ? [{ legal_entity_id: customer.legal_entity_id }] : []
+  );
 
   useLayoutEffect(() => {
     activeRouteId.current = id;
@@ -128,12 +132,12 @@ export default function CustomerDetail() {
         setAssignmentLoading(true);
 
         const [links, lookups] = await Promise.allSettled([
-          listCustomerEstablishments({ customer_id: id, per_page: 100 }),
+          listAllCustomerEstablishments({ customer_id: id }),
           listEstablishmentLookups(data.legal_entity_id),
         ]);
         if (cancelled) return;
         if (links.status === "fulfilled") {
-          setCustomerEstablishments(links.value.data);
+          setCustomerEstablishments(links.value);
         }
         if (lookups.status === "fulfilled") {
           setEstablishmentLookups(lookups.value);
@@ -240,12 +244,13 @@ export default function CustomerDetail() {
             </PageTitle>
             <DescriptionList>
               <DescriptionTerm>
-                <Trans>Legal Entity ID</Trans>
+                <Trans>Legal Entity</Trans>
               </DescriptionTerm>
               <DescriptionDetails>
                 {typeof customer.legal_entity_id === "string" &&
                 customer.legal_entity_id.trim().length > 0 ? (
-                  customer.legal_entity_id
+                  (domainNames.legalEntities[customer.legal_entity_id] ??
+                  customer.legal_entity_id)
                 ) : (
                   <span className="text-destructive">
                     <Trans>

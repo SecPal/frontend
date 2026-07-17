@@ -48,6 +48,16 @@ const renderWithProviders = (employeeId: string) => {
   );
 };
 
+async function waitForDomainAssignmentReady() {
+  await waitFor(() =>
+    expect(
+      screen.getByRole("button", {
+        name: /save changes|änderungen speichern/i,
+      })
+    ).not.toBeDisabled()
+  );
+}
+
 async function selectRadixOption(
   triggerName: RegExp,
   optionName: RegExp | string
@@ -258,6 +268,7 @@ describe("EmployeeEdit", () => {
       target: { value: "9" },
     });
 
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -315,6 +326,7 @@ describe("EmployeeEdit", () => {
     fireEvent.change(screen.getByLabelText(/phone/i), {
       target: { value: "+49123456789" },
     });
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -376,6 +388,7 @@ describe("EmployeeEdit", () => {
     fireEvent.change(screen.getByLabelText(/phone/i), {
       target: { value: "+49123456789" },
     });
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -509,6 +522,7 @@ describe("EmployeeEdit", () => {
     });
 
     // Submit
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -530,6 +544,49 @@ describe("EmployeeEdit", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/employees/emp-1");
   });
 
+  it("blocks submission after authorization invalidates the loaded assignment", async () => {
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
+      { id: "legal-entity-2", name: "SecPal Operations GmbH" },
+    ]);
+
+    renderWithProviders("emp-1");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/legal entity/i)).toHaveTextContent(
+        "SecPal Operations GmbH"
+      );
+      expect(screen.getByLabelText(/establishment/i)).toHaveTextContent(
+        /select establishment/i
+      );
+    });
+
+    await waitForDomainAssignmentReady();
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(employeeApi.updateEmployee).not.toHaveBeenCalled();
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        /select.*establishment/i
+      );
+    });
+  });
+
+  it("blocks submission when assignment authorization cannot be verified", async () => {
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockRejectedValue(
+      new Error("Legal entities unavailable")
+    );
+
+    renderWithProviders("emp-1");
+    await screen.findByText("Legal entities unavailable");
+    await waitForDomainAssignmentReady();
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    expect(employeeApi.updateEmployee).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /domain assignment options could not be loaded/i
+    );
+  });
+
   it("should display error on update failure", async () => {
     const mockUpdateEmployee = vi.mocked(employeeApi.updateEmployee);
     mockUpdateEmployee.mockRejectedValue(new Error("Update failed"));
@@ -541,6 +598,7 @@ describe("EmployeeEdit", () => {
     });
 
     // Submit
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -583,6 +641,7 @@ describe("EmployeeEdit", () => {
     await selectRadixOption(/establishment/i, "Marketing");
 
     // Submit
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -610,6 +669,7 @@ describe("EmployeeEdit", () => {
     expect(statusSelect).toBeDisabled();
     expect(statusSelect).toHaveTextContent("Active");
 
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -678,6 +738,7 @@ describe("EmployeeEdit", () => {
       target: { value: "Jane" },
     });
 
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -798,6 +859,7 @@ describe("EmployeeEdit", () => {
       fireEvent.change(managementLevelInput, { target: { value: "2" } });
 
       // Submit
+      await waitForDomainAssignmentReady();
       fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
       await waitFor(() => {
@@ -865,6 +927,7 @@ describe("EmployeeEdit", () => {
       fireEvent.click(leadershipSwitch);
 
       // Submit
+      await waitForDomainAssignmentReady();
       fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
       await waitFor(() => {
@@ -944,6 +1007,7 @@ describe("EmployeeEdit", () => {
 
       const birthDateInput = screen.getByLabelText(/date of birth/i);
       fireEvent.change(birthDateInput, { target: { value: "06/15/1985" } });
+      await waitForDomainAssignmentReady();
       fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
       await waitFor(() => {
@@ -968,6 +1032,7 @@ describe("EmployeeEdit", () => {
 
       const birthDateInput = screen.getByLabelText(/date of birth/i);
       fireEvent.change(birthDateInput, { target: { value: "invalid" } });
+      await waitForDomainAssignmentReady();
       fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
       await waitFor(() => {
@@ -1035,6 +1100,7 @@ describe("EmployeeEdit", () => {
         expect(screen.queryByText(/ungültiges datum/i)).not.toBeInTheDocument();
       });
 
+      await waitForDomainAssignmentReady();
       fireEvent.click(
         screen.getByRole("button", {
           name: /save changes|änderungen speichern/i,
@@ -1077,6 +1143,7 @@ describe("EmployeeEdit", () => {
       );
 
       fireEvent.change(contractStartDateInput, { target: { value: "1.6." } });
+      await waitForDomainAssignmentReady();
       fireEvent.click(
         screen.getByRole("button", {
           name: /save changes|änderungen speichern/i,
@@ -1116,6 +1183,7 @@ describe("EmployeeEdit", () => {
       fireEvent.change(screen.getByLabelText(/datum des vertragsbeginns/i), {
         target: { value: "invalid" },
       });
+      await waitForDomainAssignmentReady();
       fireEvent.click(
         screen.getByRole("button", {
           name: /save changes|änderungen speichern/i,

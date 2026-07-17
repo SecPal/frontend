@@ -9,6 +9,7 @@ import * as csrf from "./csrf";
 import {
   createCustomerEstablishment,
   DuplicateResourceError,
+  listAllCustomerEstablishments,
   listCustomerEstablishments,
   listCustomerLookups,
   listEstablishmentLookups,
@@ -17,7 +18,7 @@ import {
 vi.mock("./csrf");
 
 describe("customerDomainApi", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => vi.resetAllMocks());
 
   it("loads minimal establishment lookups for the selected legal entity", async () => {
     vi.mocked(csrf.apiFetch).mockResolvedValue({
@@ -94,6 +95,59 @@ describe("customerDomainApi", () => {
     expect(csrf.apiFetch).toHaveBeenCalledWith(
       `${apiConfig.baseUrl}/v1/customer-establishments?customer_id=customer-1`
     );
+  });
+
+  it("loads every customer-establishment page before returning assignments", async () => {
+    vi.mocked(csrf.apiFetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: [{ id: "link-1", establishment_id: "establishment-1" }],
+          meta: { current_page: 1, last_page: 2, per_page: 100, total: 2 },
+        }),
+      } as any)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: [{ id: "link-2", establishment_id: "establishment-2" }],
+          meta: { current_page: 2, last_page: 2, per_page: 100, total: 2 },
+        }),
+      } as any);
+
+    await expect(
+      listAllCustomerEstablishments({ customer_id: "customer-1" })
+    ).resolves.toEqual([
+      { id: "link-1", establishment_id: "establishment-1" },
+      { id: "link-2", establishment_id: "establishment-2" },
+    ]);
+    expect(csrf.apiFetch).toHaveBeenNthCalledWith(
+      1,
+      `${apiConfig.baseUrl}/v1/customer-establishments?customer_id=customer-1&page=1&per_page=100`
+    );
+    expect(csrf.apiFetch).toHaveBeenNthCalledWith(
+      2,
+      `${apiConfig.baseUrl}/v1/customer-establishments?customer_id=customer-1&page=2&per_page=100`
+    );
+  });
+
+  it("rejects the complete assignment load when a later page fails", async () => {
+    vi.mocked(csrf.apiFetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: [{ id: "link-1", establishment_id: "establishment-1" }],
+          meta: { current_page: 1, last_page: 2, per_page: 100, total: 2 },
+        }),
+      } as any)
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: vi.fn().mockResolvedValue({ message: "Page unavailable" }),
+      } as any);
+
+    await expect(
+      listAllCustomerEstablishments({ customer_id: "customer-1" })
+    ).rejects.toThrow("Page unavailable");
   });
 
   it("replaces duplicate details with the neutral domain error", async () => {

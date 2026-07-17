@@ -48,6 +48,7 @@ import {
   EmployeeStatusBadge,
 } from "@/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
+import { useDomainAssignmentNames } from "../../hooks/useDomainAssignmentNames";
 import { formatDate, formatDateTime } from "../../lib/dateUtils";
 import {
   fetchEmployeeDocuments,
@@ -147,7 +148,15 @@ function BwrStatusLabel({ status }: { status: Employee["bwr_status"] }) {
   }
 }
 
-function ProfileTab({ employee }: { employee: Employee }) {
+function ProfileTab({
+  employee,
+  legalEntityName,
+  establishmentName,
+}: {
+  employee: Employee;
+  legalEntityName: string;
+  establishmentName: string;
+}) {
   const { i18n } = useLingui();
   const onboardingInvitation = employee.onboarding_invitation;
 
@@ -218,14 +227,12 @@ function ProfileTab({ employee }: { employee: Employee }) {
       <DescriptionTerm>
         <Trans>Legal Entity</Trans>
       </DescriptionTerm>
-      <DescriptionDetails>{employee.legal_entity_id || "-"}</DescriptionDetails>
+      <DescriptionDetails>{legalEntityName}</DescriptionDetails>
 
       <DescriptionTerm>
         <Trans>Establishment</Trans>
       </DescriptionTerm>
-      <DescriptionDetails>
-        {employee.establishment_id || "-"}
-      </DescriptionDetails>
+      <DescriptionDetails>{establishmentName}</DescriptionDetails>
 
       <DescriptionTerm>
         <Trans>Onboarding Invitation</Trans>
@@ -708,6 +715,17 @@ export function EmployeeDetail() {
   const [contactEmergencyInvalidField, setContactEmergencyInvalidField] =
     useState<EmergencyContactValidationError | null>(null);
   const activeTab = selectedTab;
+  const domainNames = useDomainAssignmentNames(employee ? [employee] : []);
+  const legalEntityName = employee
+    ? (domainNames.legalEntities[employee.legal_entity_id] ??
+        employee.legal_entity_id) ||
+      "-"
+    : "-";
+  const establishmentName = employee
+    ? (domainNames.establishments[employee.establishment_id] ??
+        employee.establishment_id) ||
+      "-"
+    : "-";
 
   async function refreshEmployee(): Promise<Employee | null> {
     if (!id) {
@@ -1177,7 +1195,13 @@ export function EmployeeDetail() {
         </div>
 
         <div className="p-6">
-          {activeTab === "profile" && <ProfileTab employee={employee} />}
+          {activeTab === "profile" && (
+            <ProfileTab
+              employee={employee}
+              legalEntityName={legalEntityName}
+              establishmentName={establishmentName}
+            />
+          )}
           {activeTab === "contacts" && (
             <ContactsTab
               employee={employee}

@@ -85,6 +85,9 @@ msgid "Clear domain filters"
 msgstr "Zuordnungsfilter zurücksetzen"
 
 #: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
 msgid "Establishment is required"
 msgstr "Betriebsstätte ist erforderlich"
 
@@ -236,6 +239,12 @@ msgstr "Anmerkungen"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload front and back as separate files if available."
 msgstr "Laden Sie Vorder- und Rückseite als separate Dateien hoch, falls vorhanden."
+
+#: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "The domain assignment options could not be loaded."
+msgstr "Die Optionen für die Domänenzuordnung konnten nicht geladen werden."
 
 #: src/components/OrganizationalUnitTree.tsx
 msgid "Organizational structure"
@@ -701,6 +710,10 @@ msgstr "Willkommen bei SecPal! Lassen Sie uns Ihr Profil vervollständigen."
 msgid "Update the organizational unit details."
 msgstr "Aktualisieren Sie die Details der Organisationseinheit."
 
+#: src/pages/Employees/EmployeeEdit.tsx
+msgid "Error Updating Employee"
+msgstr "Fehler beim Aktualisieren des Mitarbeiters"
+
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Current Residential Address"
@@ -1046,6 +1059,9 @@ msgid "e.g., Berlin Branch"
 msgstr "z.B. Niederlassung Berlin"
 
 #: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
 msgid "Legal entity is required"
 msgstr "Rechtsträger ist erforderlich"
 
@@ -2091,6 +2107,11 @@ msgstr "Verschiebe..."
 msgid "Category-specific notification preferences are not available yet. SecPal currently manages browser notifications at the browser and deployment level."
 msgstr "Kategoriespezifische Benachrichtigungseinstellungen sind noch nicht verfügbar. SecPal verwaltet Browser-Benachrichtigungen derzeit auf Browser- und Deployment-Ebene."
 
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Select an authorized legal entity, establishment, and customer."
+msgstr "Wählen Sie einen berechtigten Rechtsträger, eine Betriebsstätte und einen Kunden aus."
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Try again"
 msgstr "Erneut versuchen"
@@ -2978,6 +2999,11 @@ msgid "Saving BWR Status..."
 msgstr "BWR-Status wird gespeichert..."
 
 #: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Customer is required"
+msgstr "Kunde ist erforderlich"
+
+#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "New Site"
 msgstr "Neues Objekt"
@@ -3264,6 +3290,10 @@ msgstr "Bitte laden Sie Ihren Personalausweis oder Reisepass hoch (PDF, JPG, JPE
 #: src/pages/Customers/CustomersPage.tsx
 msgid "Failed to load customers"
 msgstr "Kunden konnten nicht geladen werden"
+
+#: src/pages/Employees/EmployeeEdit.tsx
+msgid "Select an authorized legal entity and establishment."
+msgstr "Wählen Sie einen berechtigten Rechtsträger und eine Betriebsstätte aus."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "We could not verify your identity with the details provided. For security reasons this onboarding link has been deactivated. Please contact HR for a new invitation."
@@ -3590,10 +3620,6 @@ msgstr "Die Passkey-Anmeldung wurde abgebrochen oder vom Browser nicht zugelasse
 msgid "Legal"
 msgstr "Rechtliches"
 
-#: src/pages/Customers/CustomerDetail.tsx
-msgid "Legal Entity ID"
-msgstr "Rechtsträger-ID"
-
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Assignment status"
 msgstr "Zuweisungsstatus"
@@ -3788,6 +3814,12 @@ msgstr "Auf Ihrem Gerät prüfen…"
 #: src/pages/SourcePage.tsx
 msgid "If this deployment does not publish source releases here, the project repositories below remain linked as the preferred form for making modifications."
 msgstr "Wenn diese Bereitstellung hier keine Quellcode-Releases veröffentlicht, bleiben die unten verlinkten Projekt-Repositories als bevorzugte Form für Änderungen verfügbar."
+
+#: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "The domain assignment is still loading."
+msgstr "Die Domänenzuordnung wird noch geladen."
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Merkle Root"

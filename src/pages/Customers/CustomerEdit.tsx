@@ -29,13 +29,14 @@ import type {
 } from "@/types/api/customers";
 import { getCustomer, updateCustomer } from "../../services/customersApi";
 import {
-  listCustomerEstablishments,
+  listAllCustomerEstablishments,
   listEstablishmentLookups,
 } from "../../services/customerDomainApi";
 import {
   CustomerEstablishmentRecoveryError,
   reconcileCustomerEstablishments,
 } from "./customerEstablishmentReconciliation";
+import { useDomainAssignmentNames } from "../../hooks/useDomainAssignmentNames";
 
 function emptyAssignment(): CustomerEstablishmentFormValue {
   return {
@@ -82,6 +83,9 @@ export default function CustomerEdit() {
   const [submitError, setSubmitError] = useState<string | null>(
     typeof recoveryError === "string" ? recoveryError : null
   );
+  const domainNames = useDomainAssignmentNames(
+    customer ? [{ legal_entity_id: customer.legal_entity_id }] : []
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -100,7 +104,7 @@ export default function CustomerEdit() {
       try {
         const [loadedCustomer, links] = await Promise.all([
           getCustomer(id),
-          listCustomerEstablishments({ customer_id: id, per_page: 100 }),
+          listAllCustomerEstablishments({ customer_id: id }),
         ]);
         const options = await listEstablishmentLookups(
           loadedCustomer.legal_entity_id
@@ -113,7 +117,7 @@ export default function CustomerEdit() {
           billing_address: loadedCustomer.billing_address,
           is_active: loadedCustomer.is_active,
         });
-        const values = links.data.map((link) => ({
+        const values = links.map((link) => ({
           key: link.id,
           id: link.id,
           establishment_id: link.establishment_id,
@@ -123,7 +127,7 @@ export default function CustomerEdit() {
           comments: link.comments ?? "",
         }));
         setAssignments(values.length ? values : [emptyAssignment()]);
-        setOriginalAssignments(links.data);
+        setOriginalAssignments(links);
         setEstablishments(options);
       } catch (reason: unknown) {
         if (!cancelled)
@@ -225,7 +229,9 @@ export default function CustomerEdit() {
               <Trans>Legal-entity master data</Trans>
             </PageTitle>
             <p className="mb-4 text-sm text-muted-foreground">
-              <Trans>Legal Entity:</Trans> {activeCustomer.legal_entity_id}
+              <Trans>Legal Entity:</Trans>{" "}
+              {domainNames.legalEntities[activeCustomer.legal_entity_id] ??
+                activeCustomer.legal_entity_id}
             </p>
             <FieldGroup>
               <Field>
