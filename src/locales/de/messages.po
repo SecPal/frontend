@@ -175,6 +175,10 @@ msgstr "Notfallkontakte"
 msgid "Loading organizational structure"
 msgstr "Organisationsstruktur wird geladen"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "The bootstrap response is incomplete."
+msgstr "Die Bootstrap-Antwort ist unvollständig."
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Failure Reason"
 msgstr "Grund für das Scheitern der Einladung"
@@ -182,6 +186,10 @@ msgstr "Grund für das Scheitern der Einladung"
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "Search or select country"
 msgstr "Land suchen oder auswählen"
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "This instance is not compatible with Android discovery."
+msgstr "Diese Instanz ist nicht mit der Android-Instanzsuche kompatibel."
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Create Employee"
@@ -600,6 +608,10 @@ msgstr "Fehlgeschlagen"
 msgid "Failed to confirm onboarding"
 msgstr "Onboarding konnte nicht bestätigt werden"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Update the Android app before using this instance."
+msgstr "Aktualisieren Sie die Android-App, bevor Sie diese Instanz verwenden."
+
 #: src/pages/Login.tsx
 msgid "SecPal could not switch instances. Please try again."
 msgstr "SecPal konnte die Instanz nicht wechseln. Bitte versuchen Sie es erneut."
@@ -734,6 +746,10 @@ msgstr "Passwort"
 #: src/pages/SourcePage.tsx
 msgid "Android Capacitor wrapper that reuses the shared frontend build and adds native Android-specific code."
 msgstr "Android-Capacitor-Wrapper, der den gemeinsamen Frontend-Build wiederverwendet und nativen Android-spezifischen Code hinzufügt."
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "The selected instance could not be checked."
+msgstr "Die ausgewählte Instanz konnte nicht geprüft werden."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Expires:"
@@ -886,6 +902,10 @@ msgstr "Nicht zuweisbar"
 msgid "Customer Number"
 msgstr "Kundennummer"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Android runtime information is unavailable."
+msgstr "Android-Laufzeitinformationen sind nicht verfügbar."
+
 #: src/pages/Employees/EmployeeAddressFields.test.tsx
 #: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
@@ -1031,7 +1051,6 @@ msgid "Complete each earlier residence until your history reaches five years bef
 msgstr "Vervollständigen Sie jeden früheren Wohnort, bis Ihre Angaben bis fünf Jahre vor heute reichen, oder setzen Sie das „Wohnhaft seit“-Datum der aktuellen Adresse weiter zurück."
 
 #: src/components/LoginLegalMenu.tsx
-#: src/components/RuntimeDiscoveryFlow.tsx
 msgid "Failed to change language. Please try again."
 msgstr "Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut."
 
@@ -1231,6 +1250,7 @@ msgstr "Vielen Dank für die Einreichung Ihrer Onboarding-Angaben. Unser HR-Team
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Login.tsx
 #: src/pages/Settings/SettingsPage.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -1397,6 +1417,10 @@ msgstr "Meldebestätigung, nur wenn Ihre aktuelle Adresse nicht auf dem Ausweisd
 #: src/pages/Sites/SitesPage.tsx
 msgid "All Types"
 msgstr "Alle Typen"
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "The selected instance could not be applied. Please try again."
+msgstr "Die ausgewählte Instanz konnte nicht angewendet werden. Bitte versuchen Sie es erneut."
 
 #: src/components/VerificationDots.tsx
 msgid "{label}: Pending"
@@ -1870,6 +1894,10 @@ msgstr "Schritt 2: Konfigurieren der Zuweisungsberechtigungen"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Identity card"
 msgstr "Personalausweis"
+
+#: src/pages/Login.tsx
+msgid "Switch instance?"
+msgstr "Instanz wechseln?"
 
 #: src/components/NotificationPermissionPrompt.tsx
 #: src/components/NotificationPreferences.tsx
@@ -2384,6 +2412,10 @@ msgstr "Das Enddatum muss am Startdatum liegen oder danach."
 msgid "These codes are shown only once. Store them securely before closing this dialog."
 msgstr "Diese Codes werden nur einmal angezeigt. Bewahren Sie sie sicher auf, bevor Sie diesen Dialog schließen."
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Could not reach that instance. Check the URL with your supervisor."
+msgstr "Die Instanz konnte nicht erreicht werden. Prüfen Sie die URL mit Ihrer Führungskraft."
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Not requested"
 msgstr "Nicht angefordert"
@@ -2628,6 +2660,10 @@ msgstr "Telefonnummer des Notfallkontakts ist erforderlich."
 msgid "Add Root Unit"
 msgstr "Stammeinheit hinzufügen"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "Enter a valid secure HTTPS instance URL."
+msgstr "Geben Sie eine gültige sichere HTTPS-Instanz-URL ein."
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Merkle Batch ID"
 msgstr "Merkle Batch ID"
@@ -2639,6 +2675,10 @@ msgstr "Ich habe diese Wiederherstellungscodes sicher gespeichert und weiß, das
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Establishment"
 msgstr "Betriebsstätte"
+
+#: src/pages/Login.tsx
+msgid "You will be returned to the instance selection screen."
+msgstr "Sie kehren zur Instanzauswahl zurück."
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Store your recovery codes now"
@@ -2871,6 +2911,10 @@ msgstr "Sie haben keine Berechtigung, diese Aktion auszufuehren."
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Failed to delete passkey."
 msgstr "Passkey konnte nicht gelöscht werden."
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "This instance must be verified by an administrator before it can be used."
+msgstr "Diese Instanz muss vor der Verwendung von einem Administrator verifiziert werden."
 
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "Street is required."
@@ -3568,7 +3612,6 @@ msgid "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Bitte laden Sie Ihren Personalausweis hoch (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
 #: src/components/LoginLegalMenu.tsx
-#: src/components/RuntimeDiscoveryFlow.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Language"
 msgstr "Sprache"
@@ -3636,7 +3679,7 @@ msgstr "Postanschrift bearbeiten"
 msgid "Read the AGPL v3 license"
 msgstr "AGPL-v3-Lizenz lesen"
 
-#. placeholder {0}: runtimeBootstrap.instanceDisplayName
+#. placeholder {0}: displayedRuntimeBootstrap.instanceDisplayName
 #: src/pages/Login.tsx
 msgid "Signed in to {0}"
 msgstr "Angemeldet bei {0}"
@@ -3832,8 +3875,8 @@ msgid "← Back to Employees"
 msgstr "← Zurück zu Mitarbeitern"
 
 #: src/components/Footer.tsx
+#: src/components/LoginLegalMenu.tsx
 #: src/components/LoginRouteState.tsx
-#: src/pages/Login.tsx
 msgid "Powered by SecPal – A guard's best friend"
 msgstr "Powered by SecPal – A guard's best friend"
 

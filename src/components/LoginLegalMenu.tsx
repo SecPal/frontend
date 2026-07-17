@@ -156,6 +156,23 @@ export function LoginHeaderControls() {
   );
 }
 
+export function LoginLegalFooter() {
+  return (
+    <footer className="mt-auto w-full max-w-sm pt-3 pb-[var(--app-footer-padding-bottom)] text-center text-xs [@media(max-height:42rem)]:pt-6">
+      <div className="text-muted-foreground">
+        <a
+          href="https://secpal.app"
+          target="_blank"
+          rel="noopener"
+          className="text-foreground hover:text-foreground/80 inline-block text-xs font-semibold"
+        >
+          <Trans>Powered by SecPal – A guard's best friend</Trans>
+        </a>
+      </div>
+    </footer>
+  );
+}
+
 export function LoginTopControlsSkeleton() {
   return (
     <LoginTopControls>

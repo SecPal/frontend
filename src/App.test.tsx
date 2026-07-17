@@ -137,6 +137,17 @@ vi.mock("./components/UpdatePrompt", () => ({
   UpdatePrompt: mockUpdatePrompt,
 }));
 
+vi.mock("./platform/appSurface", async () => {
+  const actual = await vi.importActual<typeof import("./platform/appSurface")>(
+    "./platform/appSurface"
+  );
+
+  return {
+    ...actual,
+    isAndroidMockSurface: false,
+  };
+});
+
 // Block all real network requests: lazy-loaded page components call their
 // data APIs on mount, and those pending fetch Promises accumulate in the
 // Node.js event loop, stalling the microtask queue and pushing the auth
@@ -223,6 +234,14 @@ function createAndroidRuntimeBootstrapBridge({
   return bridge;
 }
 
+async function selectDiscoveryLanguage(
+  user: ReturnType<typeof userEvent.setup>,
+  language: "English" | "Deutsch"
+) {
+  await user.click(screen.getByLabelText(/select language/i));
+  await user.click(await screen.findByRole("option", { name: language }));
+}
+
 function createBootstrapResponse(overrides: Record<string, unknown> = {}) {
   return {
     data: {
@@ -283,6 +302,17 @@ async function renderWithI18n(component: React.ReactElement) {
   });
 
   return result;
+}
+
+async function confirmRuntimeInstanceSwitch(
+  user: ReturnType<typeof userEvent.setup>
+) {
+  await user.click(
+    await screen.findByRole("button", { name: /switch instance/i })
+  );
+  await user.click(
+    await screen.findByRole("button", { name: /switch instance/i })
+  );
 }
 
 async function waitForPathname(pathname: string) {
@@ -385,6 +415,15 @@ describe("App", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/instance url/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/language/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /legal/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", {
+        name: "Powered by SecPal – A guard's best friend",
+      })
+    ).toBeInTheDocument();
+    expect(
+      document.getElementById("secpal-instance-discovery-locale")
+    ).toBeNull();
     expect(
       screen.getByRole("button", { name: /continue to login/i })
     ).toBeDisabled();
@@ -476,7 +515,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await user.selectOptions(screen.getByLabelText(/language/i), "de");
+    await selectDiscoveryLanguage(user, "Deutsch");
 
     expect(
       await screen.findByRole("heading", { name: /instanz-url eingeben/i })
@@ -487,6 +526,32 @@ describe("App", () => {
     expect(
       screen.getByRole("button", { name: /weiter zur anmeldung/i })
     ).toBeInTheDocument();
+  });
+
+  it("shows Android discovery errors in the selected language", async () => {
+    const user = userEvent.setup();
+    createAndroidRuntimeBootstrapBridge({ configured: false });
+    fetchSpy.mockRejectedValue(new TypeError("Failed to fetch"));
+
+    await renderWithI18n(<App />);
+
+    await selectDiscoveryLanguage(user, "Deutsch");
+    await user.type(
+      screen.getByLabelText(/instanz-url/i),
+      "https://api.secpal.dev"
+    );
+    await user.click(screen.getByRole("button", { name: /instanz prüfen/i }));
+
+    expect(
+      await screen.findByText(
+        "Die Instanz konnte nicht erreicht werden. Prüfen Sie die URL mit Ihrer Führungskraft."
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "Could not reach that instance. Check the URL with your supervisor."
+      )
+    ).not.toBeInTheDocument();
   });
 
   it("validates, summarizes, and confirms an Android runtime bootstrap before login", async () => {
@@ -505,7 +570,7 @@ describe("App", () => {
       await screen.findByLabelText(/instance url/i),
       "https://api.secpal.dev"
     );
-    await user.selectOptions(screen.getByLabelText(/language/i), "de");
+    await selectDiscoveryLanguage(user, "Deutsch");
     await user.click(
       screen.getByRole("button", { name: /check instance|instanz prüfen/i })
     );
@@ -644,9 +709,7 @@ describe("App", () => {
       screen.getByRole("button", { name: /continue to login/i })
     ).toBeEnabled();
     expect(
-      screen.getByText(
-        /android runtime bootstrap apply is unavailable in this native shell/i
-      )
+      screen.getByText(/the selected instance could not be applied/i)
     ).toBeInTheDocument();
   });
 
@@ -716,9 +779,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await user.click(
-      await screen.findByRole("button", { name: /switch instance/i })
-    );
+    await confirmRuntimeInstanceSwitch(user);
 
     await waitFor(() => {
       expect(bridge.clearRuntimeBootstrap).toHaveBeenCalled();
@@ -744,9 +805,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await user.click(
-      await screen.findByRole("button", { name: /switch instance/i })
-    );
+    await confirmRuntimeInstanceSwitch(user);
 
     await waitFor(() => {
       expect(logoutSpy).toHaveBeenCalledTimes(1);
@@ -777,9 +836,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await user.click(
-      await screen.findByRole("button", { name: /switch instance/i })
-    );
+    await confirmRuntimeInstanceSwitch(user);
 
     await waitFor(() => {
       expect(bridge.clearRuntimeBootstrap).toHaveBeenCalled();
@@ -822,9 +879,7 @@ describe("App", () => {
     try {
       await renderWithI18n(<App />);
 
-      await user.click(
-        await screen.findByRole("button", { name: /switch instance/i })
-      );
+      await confirmRuntimeInstanceSwitch(user);
 
       await waitFor(() => {
         expect(bridge.clearRuntimeBootstrap).toHaveBeenCalled();
