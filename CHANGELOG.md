@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Aligned generated customer response types with the required
+  caller-visible `customer_establishments` array.
 - Loaded every customer-establishment assignment page, resolved authorized
   Legal Entity and Establishment names in read views, blocked Site and Employee
   saves until domain-assignment authorization settles, and removed broad
