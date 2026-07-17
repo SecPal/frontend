@@ -152,6 +152,7 @@ export interface components {
       billing_address: components["schemas"]["Address"];
       is_active: boolean;
       sites_count?: number;
+      customer_establishments: components["schemas"]["CustomerEstablishment"][];
       created_at: string;
       updated_at: string;
       deleted_at?: string | null;
