@@ -43,6 +43,7 @@ class variants identified the following adapted files.
 
 - `src/lib/utils.ts`
 - `src/ui/alert.tsx`
+- `src/ui/alert-dialog.tsx`
 - `src/ui/avatar.tsx`
 - `src/ui/breadcrumb.tsx`
 - `src/ui/button.tsx`

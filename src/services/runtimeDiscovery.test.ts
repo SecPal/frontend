@@ -138,6 +138,27 @@ describe("runtime discovery", () => {
         instanceUrl: "https://api.secpal.dev",
         locale: "en",
         runtimeInfo,
+        fetchBootstrap: vi
+          .fn()
+          .mockResolvedValue(
+            new Response(
+              JSON.stringify(
+                createBootstrapPayload({ client_platform: "browser" })
+              ),
+              { status: 200 }
+            )
+          ),
+      })
+    ).rejects.toMatchObject({
+      code: "BOOTSTRAP_PLATFORM_INCOMPATIBLE",
+      message: "This instance is not compatible with Android discovery.",
+    });
+
+    await expect(
+      discoverAndroidRuntimeBootstrap({
+        instanceUrl: "https://api.secpal.dev",
+        locale: "en",
+        runtimeInfo,
         fetchBootstrap: vi.fn().mockResolvedValue(
           new Response(
             JSON.stringify(

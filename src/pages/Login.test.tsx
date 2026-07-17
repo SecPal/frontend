@@ -326,6 +326,133 @@ describe("Login", () => {
     expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument();
   });
 
+  it("shows the configured instance when no switch handler is available", async () => {
+    renderLogin({
+      runtimeBootstrap: {
+        instanceDisplayName: "Tiny Pony",
+        apiOrigin: "https://api-tiny-pony.preview.secpal.dev",
+        features: {
+          passwordLoginEnabled: true,
+          passkeyLoginEnabled: true,
+        },
+      },
+    });
+
+    expect(
+      await screen.findByText(/signed in to tiny pony/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /switch instance/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows the configured instance below the passkey sign-in action", async () => {
+    mockBrowserPasskeySupport(true);
+
+    renderLogin({
+      runtimeBootstrap: {
+        instanceDisplayName: "Tiny Pony",
+        apiOrigin: "https://api-tiny-pony.preview.secpal.dev",
+        features: {
+          passwordLoginEnabled: true,
+          passkeyLoginEnabled: true,
+        },
+      },
+      onSwitchRuntimeBootstrap: vi.fn(),
+    });
+
+    const passkeyButton = await screen.findByRole("button", {
+      name: /sign in with passkey/i,
+    });
+    const instanceSection = screen.getByTestId("runtime-instance-section");
+    const instanceStatus = screen.getByTestId("runtime-instance");
+    const instanceLabel = screen.getByText(/signed in to tiny pony/i);
+    const instanceUrl = screen.getByText(
+      "https://api-tiny-pony.preview.secpal.dev"
+    );
+
+    expect(instanceStatus).toHaveClass("text-center");
+    expect(instanceStatus).not.toHaveClass("bg-muted");
+    expect(instanceStatus).not.toHaveAttribute("role", "status");
+    expect(instanceLabel).toHaveClass("text-sm");
+    expect(instanceUrl).toHaveClass("text-xs");
+    expect(instanceSection).toHaveClass(
+      "row-start-3",
+      "justify-center",
+      "self-center",
+      "[@media(max-height:42rem)]:mt-6",
+      "[@media(max-height:42rem)]:self-start"
+    );
+    expect(instanceSection).not.toHaveClass("absolute", "top-[89%]");
+    expect(passkeyButton.closest("form")?.contains(instanceStatus)).toBe(false);
+    expect(
+      passkeyButton.compareDocumentPosition(instanceStatus) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  });
+
+  it("asks for confirmation before switching the configured instance", async () => {
+    const user = userEvent.setup();
+    const onSwitchRuntimeBootstrap = vi.fn().mockResolvedValue(undefined);
+
+    renderLogin({
+      runtimeBootstrap: {
+        instanceDisplayName: "Tiny Pony",
+        apiOrigin: "https://api-tiny-pony.preview.secpal.dev",
+        features: {
+          passwordLoginEnabled: true,
+          passkeyLoginEnabled: true,
+        },
+      },
+      onSwitchRuntimeBootstrap,
+    });
+
+    await user.click(
+      await screen.findByRole("button", { name: /switch instance/i })
+    );
+
+    expect(onSwitchRuntimeBootstrap).not.toHaveBeenCalled();
+    expect(
+      await screen.findByRole("alertdialog", {
+        name: /switch instance\?/i,
+      })
+    ).toHaveAttribute("data-size", "sm");
+
+    await user.click(screen.getByRole("button", { name: /cancel/i }));
+    expect(onSwitchRuntimeBootstrap).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: /switch instance/i })
+    ).toHaveFocus();
+  });
+
+  it("switches the configured instance after confirmation", async () => {
+    const user = userEvent.setup();
+    const onSwitchRuntimeBootstrap = vi.fn().mockResolvedValue(undefined);
+
+    renderLogin({
+      runtimeBootstrap: {
+        instanceDisplayName: "Tiny Pony",
+        apiOrigin: "https://api-tiny-pony.preview.secpal.dev",
+        features: {
+          passwordLoginEnabled: true,
+          passkeyLoginEnabled: true,
+        },
+      },
+      onSwitchRuntimeBootstrap,
+    });
+
+    await user.click(
+      await screen.findByRole("button", { name: /switch instance/i })
+    );
+    await user.click(
+      await screen.findByRole("button", { name: /switch instance/i })
+    );
+
+    await waitFor(() => {
+      expect(onSwitchRuntimeBootstrap).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it("hides passkey login when the configured runtime disables passkey login", async () => {
     mockBrowserPasskeySupport(true);
 
@@ -3597,6 +3724,7 @@ describe("Login", () => {
       expect(footer).toHaveClass(
         "mt-auto",
         "pt-3",
+        "[@media(max-height:42rem)]:pt-6",
         "pb-[var(--app-footer-padding-bottom)]"
       );
       const footerContent = footer.querySelector("div");

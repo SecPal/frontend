@@ -137,7 +137,24 @@ export async function apiFetch(
 
   // Only add CSRF token for state-changing methods
   if (needsCsrf) {
-    const csrfToken = getCsrfTokenFromCookie();
+    let csrfToken = getCsrfTokenFromCookie();
+    const requestOrigin = new URL(url, window.location.href).origin;
+
+    if (requestOrigin !== window.location.origin && !csrfToken) {
+      try {
+        await fetchCsrfToken();
+        csrfToken = getCsrfTokenFromCookie();
+      } catch {
+        // The explicit error below describes the browser-side requirement.
+      }
+
+      if (!csrfToken) {
+        throw new CsrfError(
+          "Cross-origin state-changing requests require an accessible CSRF token."
+        );
+      }
+    }
+
     if (csrfToken) {
       headers.set("X-XSRF-TOKEN", csrfToken);
     }

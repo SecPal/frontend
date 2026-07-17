@@ -5,6 +5,7 @@ export * from "./primitives";
 export * from "./auth";
 export * from "./avatar";
 export * from "./alert";
+export * from "./alert-dialog";
 export * from "./breadcrumb";
 export * from "./button";
 export * from "./card";
