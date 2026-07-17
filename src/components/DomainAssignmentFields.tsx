@@ -11,6 +11,7 @@ import type {
   LegalEntityLookup,
 } from "@/types/api/customers";
 import { Field, FieldError, FieldLabel } from "@/ui";
+import { Button } from "@/ui/button";
 import {
   Select,
   SelectContent,
@@ -39,6 +40,7 @@ interface DomainAssignmentFieldsProps {
   idPrefix?: string;
   required?: boolean;
   onClearErrors?: (fields: Array<keyof DomainAssignmentValue>) => void;
+  fixedCustomerId?: string;
 }
 
 export function DomainAssignmentFields({
@@ -50,6 +52,7 @@ export function DomainAssignmentFields({
   idPrefix = "domain-assignment",
   required = true,
   onClearErrors,
+  fixedCustomerId,
 }: DomainAssignmentFieldsProps) {
   const { _ } = useLingui();
   const [legalEntities, setLegalEntities] = useState<LegalEntityLookup[]>([]);
@@ -69,7 +72,8 @@ export function DomainAssignmentFields({
   const customerRequest = useRef(0);
   const soleLegalEntityId =
     legalEntities.length === 1 ? legalEntities[0]!.id : "";
-  const effectiveLegalEntityId = value.legal_entity_id || soleLegalEntityId;
+  const effectiveLegalEntityId =
+    value.legal_entity_id || (required ? soleLegalEntityId : "");
   const establishments =
     establishmentResult.legalEntityId === effectiveLegalEntityId
       ? establishmentResult.items
@@ -123,11 +127,13 @@ export function DomainAssignmentFields({
   }, []);
 
   useEffect(() => {
-    if (!value.legal_entity_id && soleLegalEntityId) {
+    if (required && !value.legal_entity_id && soleLegalEntityId) {
       onChange({
         legal_entity_id: soleLegalEntityId,
         establishment_id: "",
-        customer_id: includeCustomer ? "" : value.customer_id,
+        customer_id: includeCustomer
+          ? (fixedCustomerId ?? "")
+          : value.customer_id,
       });
     }
     // `onChange` is intentionally omitted: this synchronization is driven by
@@ -135,6 +141,8 @@ export function DomainAssignmentFields({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     includeCustomer,
+    fixedCustomerId,
+    required,
     soleLegalEntityId,
     value.customer_id,
     value.legal_entity_id,
@@ -229,7 +237,9 @@ export function DomainAssignmentFields({
             onChange({
               legal_entity_id,
               establishment_id: "",
-              customer_id: includeCustomer ? "" : value.customer_id,
+              customer_id: includeCustomer
+                ? (fixedCustomerId ?? "")
+                : value.customer_id,
             });
           }}
         >
@@ -239,7 +249,9 @@ export function DomainAssignmentFields({
             aria-invalid={Boolean(errors.legal_entity_id) || undefined}
             aria-describedby={errorId("legal_entity_id")}
             disabled={
-              disabled || loadingLegalEntities || legalEntities.length === 1
+              disabled ||
+              loadingLegalEntities ||
+              (required && legalEntities.length === 1)
             }
           >
             <SelectValue placeholder={_(msg`Select legal entity...`)} />
@@ -273,7 +285,9 @@ export function DomainAssignmentFields({
               ...value,
               legal_entity_id: effectiveLegalEntityId,
               establishment_id,
-              customer_id: includeCustomer ? "" : value.customer_id,
+              customer_id: includeCustomer
+                ? (fixedCustomerId ?? "")
+                : value.customer_id,
             });
           }}
         >
@@ -310,7 +324,7 @@ export function DomainAssignmentFields({
             {required && " *"}
           </FieldLabel>
           <Select
-            value={value.customer_id ?? ""}
+            value={fixedCustomerId ?? value.customer_id ?? ""}
             onValueChange={(customer_id) => {
               onClearErrors?.(["customer_id"]);
               onChange({
@@ -325,7 +339,12 @@ export function DomainAssignmentFields({
               aria-required={required || undefined}
               aria-invalid={Boolean(errors.customer_id) || undefined}
               aria-describedby={errorId("customer_id")}
-              disabled={disabled || loadingCustomers || !value.establishment_id}
+              disabled={
+                disabled ||
+                loadingCustomers ||
+                !value.establishment_id ||
+                Boolean(fixedCustomerId)
+              }
             >
               <SelectValue placeholder={_(msg`Select customer...`)} />
             </SelectTrigger>
@@ -344,6 +363,28 @@ export function DomainAssignmentFields({
             </FieldError>
           )}
         </Field>
+      )}
+      {!required && (value.legal_entity_id || value.establishment_id) && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            establishmentRequest.current += 1;
+            customerRequest.current += 1;
+            onClearErrors?.([
+              "legal_entity_id",
+              "establishment_id",
+              "customer_id",
+            ]);
+            onChange({
+              legal_entity_id: "",
+              establishment_id: "",
+              customer_id: includeCustomer ? "" : value.customer_id,
+            });
+          }}
+        >
+          <Trans>Clear domain filters</Trans>
+        </Button>
       )}
     </>
   );

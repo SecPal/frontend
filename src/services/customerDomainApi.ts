@@ -22,9 +22,13 @@ export class DuplicateResourceError extends Error {
   }
 }
 
-function parseLookup(value: unknown): EstablishmentLookup {
+function parseLookup(
+  value: unknown,
+  resource: "establishment" | "customer"
+): EstablishmentLookup {
+  const errorMessage = `Invalid ${resource} lookup response`;
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new Error("Invalid establishment lookup response");
+    throw new Error(errorMessage);
   }
   const record = value as Record<string, unknown>;
   if (
@@ -32,7 +36,7 @@ function parseLookup(value: unknown): EstablishmentLookup {
     typeof record.id !== "string" ||
     typeof record.name !== "string"
   ) {
-    throw new Error("Invalid establishment lookup response");
+    throw new Error(errorMessage);
   }
   return { id: record.id, name: record.name };
 }
@@ -77,7 +81,7 @@ export async function listEstablishmentLookups(
   ) {
     throw new Error("Invalid establishment lookup response");
   }
-  return payload.data.map(parseLookup);
+  return payload.data.map((value) => parseLookup(value, "establishment"));
 }
 
 export async function listCustomerLookups(
@@ -97,7 +101,7 @@ export async function listCustomerLookups(
   ) {
     throw new Error("Invalid customer lookup response");
   }
-  return payload.data.map(parseLookup);
+  return payload.data.map((value) => parseLookup(value, "customer"));
 }
 
 export interface CustomerEstablishmentFilters {

@@ -3,7 +3,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
+import { useLingui } from "@lingui/react";
 import { Button } from "@/ui/button";
 import { Checkbox } from "@/ui/checkbox";
 import { Input } from "@/ui/input";
@@ -30,7 +32,7 @@ import type {
   EstablishmentLookup,
   LegalEntityLookup,
 } from "@/types/api/customers";
-import { createCustomer } from "../../services/customersApi";
+import { createCustomer, deleteCustomer } from "../../services/customersApi";
 import { listCustomerLegalEntities } from "../../services/customerLegalEntitiesApi";
 import {
   createCustomerEstablishment,
@@ -54,6 +56,7 @@ function optional(value: string): string | null {
 
 export default function CustomerCreate() {
   const navigate = useNavigate();
+  const { _ } = useLingui();
   const [legalEntities, setLegalEntities] = useState<LegalEntityLookup[]>([]);
   const [establishments, setEstablishments] = useState<EstablishmentLookup[]>(
     []
@@ -90,7 +93,7 @@ export default function CustomerCreate() {
           setLookupError(
             error instanceof Error
               ? error.message
-              : "Failed to load legal entities"
+              : _(msg`Failed to load legal entities`)
           );
       })
       .finally(() => {
@@ -99,7 +102,7 @@ export default function CustomerCreate() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [_]);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,7 +119,7 @@ export default function CustomerCreate() {
           setLookupError(
             error instanceof Error
               ? error.message
-              : "Failed to load establishments"
+              : _(msg`Failed to load establishments`)
           );
       })
       .finally(() => {
@@ -125,7 +128,7 @@ export default function CustomerCreate() {
     return () => {
       cancelled = true;
     };
-  }, [selectedLegalEntityId]);
+  }, [_, selectedLegalEntityId]);
 
   const assignmentIds = useMemo(
     () =>
@@ -139,11 +142,13 @@ export default function CustomerCreate() {
     event.preventDefault();
     setSubmitError(null);
     if (!selectedLegalEntityId || assignmentIds.length !== assignments.length) {
-      setSubmitError("Select a legal entity and at least one establishment.");
+      setSubmitError(
+        _(msg`Select a legal entity and at least one establishment.`)
+      );
       return;
     }
     if (new Set(assignmentIds).size !== assignmentIds.length) {
-      setSubmitError("Each establishment can only be assigned once.");
+      setSubmitError(_(msg`Each establishment can only be assigned once.`));
       return;
     }
     setSaving(true);
@@ -154,22 +159,38 @@ export default function CustomerCreate() {
         name: form.name.trim(),
         vat_id: optional(form.vat_id ?? ""),
       });
-      await Promise.all(
-        assignments.map((assignment) =>
-          createCustomerEstablishment({
+      try {
+        for (const assignment of assignments) {
+          await createCustomerEstablishment({
             customer_id: customer.id,
             establishment_id: assignment.establishment_id,
             contact_name: optional(assignment.contact_name),
             email: optional(assignment.email),
             phone: optional(assignment.phone),
             comments: optional(assignment.comments),
-          })
-        )
-      );
+          });
+        }
+      } catch (assignmentError) {
+        try {
+          await deleteCustomer(customer.id);
+        } catch {
+          navigate(`/customers/${customer.id}/edit`, {
+            state: {
+              recoveryError: _(
+                msg`The customer was created, but its establishment assignments could not be completed. Review and save the assignments again.`
+              ),
+            },
+          });
+          return;
+        }
+        throw assignmentError;
+      }
       navigate(`/customers/${customer.id}`);
     } catch (error) {
       setSubmitError(
-        error instanceof Error ? error.message : "Failed to create customer"
+        error instanceof Error
+          ? error.message
+          : _(msg`Failed to create customer`)
       );
     } finally {
       setSaving(false);
@@ -208,7 +229,7 @@ export default function CustomerCreate() {
                 aria-required="true"
                 disabled={loadingLookups || legalEntities.length === 1}
               >
-                <SelectValue placeholder="Select legal entity..." />
+                <SelectValue placeholder={_(msg`Select legal entity...`)} />
               </SelectTrigger>
               <SelectContent>
                 {legalEntities.map((item) => (
@@ -341,8 +362,10 @@ export default function CustomerCreate() {
             <Trans>Establishments and local contacts</Trans>
           </PageTitle>
           <p className="mb-4 text-sm text-muted-foreground">
-            Contact details entered here apply only to the selected
-            establishment.
+            <Trans>
+              Contact details entered here apply only to the selected
+              establishment.
+            </Trans>
           </p>
           <CustomerEstablishmentFields
             assignments={assignments}
@@ -380,7 +403,11 @@ export default function CustomerCreate() {
         </FormCheckboxField>
         <div className="flex gap-4">
           <Button type="submit" disabled={saving || loadingLookups}>
-            {saving ? "Creating..." : "Create Customer"}
+            {saving ? (
+              <Trans>Creating...</Trans>
+            ) : (
+              <Trans>Create Customer</Trans>
+            )}
           </Button>
           <Button
             type="button"

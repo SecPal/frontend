@@ -70,6 +70,19 @@ describe("customerDomainApi", () => {
     );
   });
 
+  it("identifies malformed customer lookup payloads accurately", async () => {
+    vi.mocked(csrf.apiFetch).mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        data: [{ id: "customer-1", name: "ACME GmbH", tenant_id: "private" }],
+      }),
+    } as any);
+
+    await expect(listCustomerLookups("establishment-1")).rejects.toThrow(
+      "Invalid customer lookup response"
+    );
+  });
+
   it("filters assignments by customer without OU parameters", async () => {
     vi.mocked(csrf.apiFetch).mockResolvedValue({
       ok: true,

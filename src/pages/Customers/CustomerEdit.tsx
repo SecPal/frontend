@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
+import { useLingui } from "@lingui/react";
 import { Button } from "@/ui/button";
 import { Checkbox } from "@/ui/checkbox";
 import { Input } from "@/ui/input";
@@ -48,6 +50,10 @@ const optional = (value: string) => value.trim() || null;
 export default function CustomerEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { _ } = useLingui();
+  const recoveryError = (location.state as { recoveryError?: unknown } | null)
+    ?.recoveryError;
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [form, setForm] = useState<UpdateCustomerRequest>({});
   const [assignments, setAssignments] = useState<
@@ -61,7 +67,9 @@ export default function CustomerEdit() {
   );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    typeof recoveryError === "string" ? recoveryError : null
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -109,7 +117,9 @@ export default function CustomerEdit() {
       .catch((reason: unknown) => {
         if (!cancelled)
           setError(
-            reason instanceof Error ? reason.message : "Failed to load customer"
+            reason instanceof Error
+              ? reason.message
+              : _(msg`Failed to load customer`)
           );
       })
       .finally(() => {
@@ -118,7 +128,7 @@ export default function CustomerEdit() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [_, id]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -128,7 +138,7 @@ export default function CustomerEdit() {
       selected.some((value) => !value) ||
       new Set(selected).size !== selected.length
     ) {
-      setError("Select each establishment once.");
+      setError(_(msg`Select each establishment once.`));
       return;
     }
     setSaving(true);
@@ -143,32 +153,66 @@ export default function CustomerEdit() {
           ? [item.id]
           : []
       );
+      const contactsFor = (item: CustomerEstablishmentFormValue) => ({
+        contact_name: optional(item.contact_name),
+        email: optional(item.email),
+        phone: optional(item.phone),
+        comments: optional(item.comments),
+      });
       await Promise.all(
-        Object.keys(originalEstablishments)
-          .filter((linkId) => !unchangedIds.includes(linkId))
-          .map((linkId) => deleteCustomerEstablishment(linkId))
+        assignments
+          .filter((item) => item.id && unchangedIds.includes(item.id))
+          .map((item) =>
+            updateCustomerEstablishment(item.id!, contactsFor(item))
+          )
+      );
+
+      const pendingCreations = assignments.filter(
+        (item) => !item.id || !unchangedIds.includes(item.id)
+      );
+      const created = [];
+      try {
+        for (const item of pendingCreations) {
+          created.push({
+            item,
+            link: await createCustomerEstablishment({
+              customer_id: id,
+              establishment_id: item.establishment_id,
+              ...contactsFor(item),
+            }),
+          });
+        }
+      } catch (creationError) {
+        await Promise.allSettled(
+          created.map(({ link }) => deleteCustomerEstablishment(link.id))
+        );
+        throw creationError;
+      }
+
+      for (const { item, link } of created) {
+        if (!item.id) continue;
+        try {
+          await deleteCustomerEstablishment(item.id);
+        } catch (deletionError) {
+          await deleteCustomerEstablishment(link.id).catch(() => undefined);
+          throw deletionError;
+        }
+      }
+
+      const retainedOriginalIds = new Set(
+        assignments.flatMap((item) => (item.id ? [item.id] : []))
       );
       await Promise.all(
-        assignments.map((item) => {
-          const contacts = {
-            contact_name: optional(item.contact_name),
-            email: optional(item.email),
-            phone: optional(item.phone),
-            comments: optional(item.comments),
-          };
-          return item.id && unchangedIds.includes(item.id)
-            ? updateCustomerEstablishment(item.id, contacts)
-            : createCustomerEstablishment({
-                customer_id: id,
-                establishment_id: item.establishment_id,
-                ...contacts,
-              });
-        })
+        Object.keys(originalEstablishments)
+          .filter((linkId) => !retainedOriginalIds.has(linkId))
+          .map((linkId) => deleteCustomerEstablishment(linkId))
       );
       navigate(`/customers/${id}`);
     } catch (reason) {
       setError(
-        reason instanceof Error ? reason.message : "Failed to update customer"
+        reason instanceof Error
+          ? reason.message
+          : _(msg`Failed to update customer`)
       );
     } finally {
       setSaving(false);
@@ -184,10 +228,12 @@ export default function CustomerEdit() {
         <Trans>Edit Customer</Trans>
       </PageTitle>
       {isRouteLoading ? (
-        <FormSkeleton loadingLabel="Loading customer form" fields={8} />
+        <FormSkeleton loadingLabel={_(msg`Loading customer form`)} fields={8} />
       ) : !activeCustomer ? (
         <Alert>
-          <AlertDescription>{error ?? "Customer not found"}</AlertDescription>
+          <AlertDescription>
+            {error ?? <Trans>Customer not found</Trans>}
+          </AlertDescription>
         </Alert>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -200,10 +246,10 @@ export default function CustomerEdit() {
           )}
           <section aria-labelledby="master-data-heading">
             <PageTitle id="master-data-heading" level={2} className="mb-4">
-              Legal-entity master data
+              <Trans>Legal-entity master data</Trans>
             </PageTitle>
             <p className="mb-4 text-sm text-muted-foreground">
-              Legal Entity: {activeCustomer.legal_entity_id}
+              <Trans>Legal Entity:</Trans> {activeCustomer.legal_entity_id}
             </p>
             <FieldGroup>
               <Field>
@@ -324,11 +370,13 @@ export default function CustomerEdit() {
           </section>
           <section aria-labelledby="establishments-heading">
             <PageTitle id="establishments-heading" level={2} className="mb-2">
-              Establishments and local contacts
+              <Trans>Establishments and local contacts</Trans>
             </PageTitle>
             <p className="mb-4 text-sm text-muted-foreground">
-              Contact details entered here apply only to the selected
-              establishment.
+              <Trans>
+                Contact details entered here apply only to the selected
+                establishment.
+              </Trans>
             </p>
             <CustomerEstablishmentFields
               assignments={assignments}
@@ -365,7 +413,7 @@ export default function CustomerEdit() {
           </FormCheckboxField>
           <div className="flex gap-4">
             <Button type="submit" disabled={saving}>
-              {saving ? "Saving..." : "Save Changes"}
+              {saving ? <Trans>Saving...</Trans> : <Trans>Save Changes</Trans>}
             </Button>
             <Button
               type="button"

@@ -59,6 +59,7 @@ async function selectRadixOption(
   optionName: RegExp | string
 ) {
   const trigger = screen.getByRole("combobox", { name: triggerName });
+  await waitFor(() => expect(trigger).not.toBeDisabled());
   fireEvent.pointerDown(trigger, {
     button: 0,
     pointerId: 1,
@@ -414,6 +415,7 @@ describe("EmployeeList", () => {
       expect(screen.getByText("John Doe")).toBeInTheDocument();
     });
 
+    await selectRadixOption(/^legal entity$/i, /SecPal GmbH/i);
     await selectRadixOption(/^establishment$/i, /design/i);
 
     await waitFor(() => {
@@ -422,6 +424,28 @@ describe("EmployeeList", () => {
           legal_entity_id: "legal-entity-1",
           establishment_id: "establishment-2",
           page: 1,
+        })
+      );
+    });
+  });
+
+  it("clears optional domain filters without reloading the page", async () => {
+    renderWithProviders();
+
+    await waitFor(() =>
+      expect(screen.getByText("John Doe")).toBeInTheDocument()
+    );
+    await selectRadixOption(/^legal entity$/i, /SecPal GmbH/i);
+    await selectRadixOption(/^establishment$/i, /Design/i);
+    fireEvent.click(
+      screen.getByRole("button", { name: /clear domain filters/i })
+    );
+
+    await waitFor(() => {
+      expect(employeeApi.fetchEmployees).toHaveBeenLastCalledWith(
+        expect.not.objectContaining({
+          legal_entity_id: expect.anything(),
+          establishment_id: expect.anything(),
         })
       );
     });

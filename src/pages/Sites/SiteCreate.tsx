@@ -154,6 +154,7 @@ export default function SiteCreate() {
           <DomainAssignmentFields
             idPrefix="site"
             includeCustomer
+            fixedCustomerId={customerId}
             value={formData}
             onChange={(assignment) =>
               setFormData((current) => ({ ...current, ...assignment }))

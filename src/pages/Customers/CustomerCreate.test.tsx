@@ -183,4 +183,49 @@ describe("CustomerCreate", () => {
     expect(alert).toHaveTextContent("A matching record already exists.");
     expect(alert).not.toHaveTextContent(/existing customer|vat/i);
   });
+
+  it("rolls back the customer master record when assignment creation fails", async () => {
+    const user = userEvent.setup();
+    vi.mocked(domainApi.createCustomerEstablishment).mockRejectedValue(
+      new Error("Assignment failed")
+    );
+    vi.mocked(customersApi.deleteCustomer).mockResolvedValue();
+    renderPage();
+    await fillMasterData(user);
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: /^establishment 1/i }),
+      "est-1"
+    );
+    await user.click(screen.getByRole("button", { name: /create customer/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Assignment failed"
+    );
+    expect(customersApi.deleteCustomer).toHaveBeenCalledWith("customer-1");
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("navigates to recovery editing when customer rollback also fails", async () => {
+    const user = userEvent.setup();
+    vi.mocked(domainApi.createCustomerEstablishment).mockRejectedValue(
+      new Error("Assignment failed")
+    );
+    vi.mocked(customersApi.deleteCustomer).mockRejectedValue(
+      new Error("Rollback failed")
+    );
+    renderPage();
+    await fillMasterData(user);
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: /^establishment 1/i }),
+      "est-1"
+    );
+    await user.click(screen.getByRole("button", { name: /create customer/i }));
+
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith(
+        "/customers/customer-1/edit",
+        expect.objectContaining({ state: expect.any(Object) })
+      )
+    );
+  });
 });

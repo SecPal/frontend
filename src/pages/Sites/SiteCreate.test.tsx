@@ -194,6 +194,14 @@ describe("SiteCreate", () => {
       )
     );
     expect(screen.getByRole("combobox", { name: /customer/i })).toBeDisabled();
+
+    await selectRadixOption(/establishment/i, /IT Department/i);
+    await waitFor(() =>
+      expect(
+        screen.getByRole("combobox", { name: /customer/i })
+      ).toHaveTextContent("Customer One")
+    );
+    expect(screen.getByRole("combobox", { name: /customer/i })).toBeDisabled();
   });
 
   it("keeps the create error alert on canonical theme tokens", async () => {

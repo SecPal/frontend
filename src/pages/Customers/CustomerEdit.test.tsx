@@ -146,5 +146,31 @@ describe("CustomerEdit", () => {
       })
     );
     expect(domainApi.updateCustomerEstablishment).not.toHaveBeenCalled();
+    expect(
+      vi.mocked(domainApi.createCustomerEstablishment).mock
+        .invocationCallOrder[0]
+    ).toBeLessThan(
+      vi.mocked(domainApi.deleteCustomerEstablishment).mock
+        .invocationCallOrder[0]!
+    );
+  });
+
+  it("keeps the original assignment when replacement creation fails", async () => {
+    const user = userEvent.setup();
+    vi.mocked(domainApi.createCustomerEstablishment).mockRejectedValue(
+      new Error("Replacement failed")
+    );
+    renderPage();
+
+    await user.selectOptions(
+      await screen.findByRole("combobox", { name: /^establishment 1/i }),
+      "est-2"
+    );
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Replacement failed"
+    );
+    expect(domainApi.deleteCustomerEstablishment).not.toHaveBeenCalled();
   });
 });

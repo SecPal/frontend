@@ -37,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Preserved customer and site assignment integrity when dependent requests
+  fail, kept customer-scoped Site creation fixed to its route customer, made
+  optional Employee domain filters clearable, and localized the new
+  establishment-contact controls.
 - Made the Android mock login show its configured workspace instance in a
   centered, unboxed section with a compact label and smaller API origin between
   the login card and footer, while preserving the login card's page centering

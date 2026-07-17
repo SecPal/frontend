@@ -26,6 +26,10 @@ msgstr "Vollständiger Name"
 msgid "Enabling..."
 msgstr "Aktiviere ..."
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Legal Entity:"
+msgstr "Rechtsträger:"
+
 #: src/pages/Login.tsx
 msgid "Second factor required"
 msgstr "Zweiter Faktor erforderlich"
@@ -75,6 +79,10 @@ msgstr "E-Mail des Notfallkontakts"
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Controls whether this unit is administratively active."
 msgstr "Legt fest, ob diese Einheit administrativ aktiv ist."
+
+#: src/components/DomainAssignmentFields.tsx
+msgid "Clear domain filters"
+msgstr "Zuordnungsfilter zurücksetzen"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Establishment is required"
@@ -183,6 +191,10 @@ msgstr "Organisationsstruktur wird geladen"
 msgid "The bootstrap response is incomplete."
 msgstr "Die Bootstrap-Antwort ist unvollständig."
 
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Local phone {number}"
+msgstr "Lokale Telefonnummer {number}"
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Failure Reason"
 msgstr "Grund für das Scheitern der Einladung"
@@ -261,6 +273,10 @@ msgstr "Global"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Confirm with your authenticator app or one recovery code to disable MFA for this account."
 msgstr "Bestätigen Sie mit Ihrer Authenticator-App oder einem Wiederherstellungscode, dass Sie MFA für dieses Konto deaktivieren möchten."
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Each establishment can only be assigned once."
+msgstr "Jede Betriebsstätte kann nur einmal zugewiesen werden."
 
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Previous Residences"
@@ -520,6 +536,10 @@ msgstr "Instanz-URL eingeben"
 msgid "Emergency contact name is required."
 msgstr "Name des Notfallkontakts ist erforderlich."
 
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Local contact name {number}"
+msgstr "Name des lokalen Kontakts {number}"
+
 #: src/components/OrganizationalUnitTree.tsx
 #: src/components/RouteGuardState.tsx
 #: src/pages/Login.tsx
@@ -735,6 +755,7 @@ msgstr "Die ausgewählte Instanz konnte nicht geprüft werden."
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 msgid "Establishments and local contacts"
 msgstr "Betriebsstätten und lokale Kontakte"
 
@@ -875,6 +896,10 @@ msgstr "Die Passkey-Registrierung ist auf diesem Gerät nicht verfügbar."
 msgid "Sending verification email..."
 msgstr "Senden einer Bestätigungs-E-Mail..."
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Select each establishment once."
+msgstr "Wählen Sie jede Betriebsstätte nur einmal aus."
+
 #: src/components/OrganizationalUnitTree.tsx
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Not assignable"
@@ -926,6 +951,10 @@ msgstr "Ihre aktuellen Antworten werden vor dem ersten Dateiupload als Entwurf g
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This field"
 msgstr "Dieses Feld"
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Select a legal entity and at least one establishment."
+msgstr "Wählen Sie einen Rechtsträger und mindestens eine Betriebsstätte aus."
 
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -1242,6 +1271,7 @@ msgid "This session was revoked and can no longer be used for device setup."
 msgstr "Diese Sitzung wurde widerrufen und kann nicht mehr für die Geräteeinrichtung verwendet werden."
 
 #: src/components/DomainAssignmentFields.tsx
+#: src/pages/Customers/CustomerCreate.tsx
 msgid "Failed to load establishments"
 msgstr "Betriebsstätten konnten nicht geladen werden"
 
@@ -1562,6 +1592,10 @@ msgstr "Erforderliche Angaben"
 msgid "We couldn't prepare this step for file uploads. Please try saving your draft again."
 msgstr "Wir konnten diesen Schritt nicht für Dateiuploads vorbereiten. Bitte versuchen Sie erneut, Ihren Entwurf zu speichern."
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "The customer was created, but its establishment assignments could not be completed. Review and save the assignments again."
+msgstr "Der Kunde wurde angelegt, aber seine Betriebsstättenzuordnungen konnten nicht abgeschlossen werden. Überprüfen und speichern Sie die Zuordnungen erneut."
+
 #: src/components/EncryptionProgress.tsx
 msgid "Encrypting files..."
 msgstr "Dateien verschlüsseln..."
@@ -1711,6 +1745,7 @@ msgstr "Adresszusatz"
 msgid "Loading enrollment sessions..."
 msgstr "Enrollment-Sitzungen werden geladen..."
 
+#: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Sites/SiteCreate.tsx
 msgid "Creating..."
@@ -1757,6 +1792,10 @@ msgstr "App anzeigen"
 msgid "Passkey label"
 msgstr "Passkey-Bezeichnung"
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Failed to create customer"
+msgstr "Kunde konnte nicht angelegt werden"
+
 #: src/components/application-layout.tsx
 msgid "Home"
 msgstr "Startseite"
@@ -1794,6 +1833,7 @@ msgid "No activity logs found."
 msgstr "Keine Aktivitätsprotokolle gefunden."
 
 #: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 msgid "Failed to load customer"
 msgstr "Kunde konnte nicht geladen werden"
 
@@ -1814,6 +1854,10 @@ msgstr "Wählen Sie Ihre bevorzugte Sprache für die Anwendung."
 msgid "All units"
 msgstr "Alle Einheiten"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Legal-entity master data"
+msgstr "Rechtsträger-Stammdaten"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload File"
 msgstr "Datei hochladen"
@@ -1827,6 +1871,7 @@ msgid "Cannot Delete \"{unitName}\""
 msgstr "Löschen von \"{unitName}\" nicht möglich"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Save Changes"
@@ -1937,6 +1982,7 @@ msgstr "Notizen zum Notfallkontakt"
 msgid "Contact"
 msgstr "Kontakt"
 
+#: src/components/CustomerEstablishmentFields.tsx
 #: src/components/DomainAssignmentFields.tsx
 msgid "Select establishment..."
 msgstr "Betriebsstätte auswählen..."
@@ -2100,6 +2146,10 @@ msgstr "Diese Kontaktdaten gelten nur für die jeweilige Betriebsstätte."
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Contract"
 msgstr "Vertrag"
+
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Add establishment"
+msgstr "Betriebsstätte hinzufügen"
 
 #: src/components/nav-user.tsx
 msgid "Lock app"
@@ -2375,6 +2425,10 @@ msgstr "Objekt-Stammdaten werden geladen"
 msgid "Passwords do not match"
 msgstr "Passwörter stimmen nicht überein"
 
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Remove establishment {number}"
+msgstr "Betriebsstätte {number} entfernen"
+
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "The end date must be on or after the start date."
 msgstr "Das Enddatum muss am Startdatum liegen oder danach."
@@ -2398,6 +2452,10 @@ msgstr "<0>Hash-Kette:</0> Überprüft die sequentielle Integrität von Aktivit�
 #: src/pages/Login.tsx
 msgid "An unexpected passkey sign-in error occurred. Please try again."
 msgstr "Bei der Passkey-Anmeldung ist ein unerwarteter Fehler aufgetreten. Bitte versuchen Sie es erneut."
+
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Establishment {number}"
+msgstr "Betriebsstätte {number}"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/OrganizationalUnitTree.tsx
@@ -2439,6 +2497,10 @@ msgstr "Personalausweis oder Reisepass"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Add Contact"
 msgstr "Kontakt hinzufügen"
+
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Local comments {number}"
+msgstr "Lokale Anmerkungen {number}"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -2664,6 +2726,10 @@ msgstr "Speichern Sie jetzt Ihre Wiederherstellungscodes"
 msgid "Revoke enrollment session"
 msgstr "Registrierungssitzung widerrufen"
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Create Customer"
+msgstr "Kunde anlegen"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Revocation reason"
 msgstr "Widerrufsgrund"
@@ -2745,6 +2811,7 @@ msgid "Authentication"
 msgstr "Authentifizierung"
 
 #: src/components/DomainAssignmentFields.tsx
+#: src/pages/Customers/CustomerCreate.tsx
 msgid "Failed to load legal entities"
 msgstr "Rechtsträger konnten nicht geladen werden"
 
@@ -2885,6 +2952,10 @@ msgstr "Keine Qualifikationen zugewiesen"
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "← Back to Employee"
 msgstr "← Zurück zum Mitarbeiter"
+
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Local email {number}"
+msgstr "Lokale E-Mail {number}"
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Saving BWR Status..."
@@ -3041,6 +3112,7 @@ msgid "Optional sections"
 msgstr "Optionale Abschnitte"
 
 #: src/components/DomainAssignmentFields.tsx
+#: src/pages/Customers/CustomerCreate.tsx
 msgid "Select legal entity..."
 msgstr "Rechtsträger auswählen..."
 
@@ -3185,6 +3257,10 @@ msgstr "Ihre Identität konnte mit den angegebenen Daten nicht bestätigt werden
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Remove"
 msgstr "Entfernen"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Failed to update customer"
+msgstr "Kunde konnte nicht aktualisiert werden"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Viewing cached data. Some units may be outdated."
@@ -3349,6 +3425,10 @@ msgstr "Laden des MFA-Status..."
 msgid "You're offline - showing cached data"
 msgstr "Sie sind offline - Anzeige von Daten im Cache"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Loading customer form"
+msgstr "Kundenformular wird geladen"
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Additional Properties"
 msgstr "Zusätzliche Eigenschaften"
@@ -3416,6 +3496,7 @@ msgid "BWR Notes"
 msgstr "BWR-Notizen"
 
 #: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 msgid "Customer not found"
 msgstr "Kunde nicht gefunden"
 
@@ -3596,6 +3677,11 @@ msgstr "Beziehung des Notfallkontakts"
 msgid "0 or empty for non-leadership only"
 msgstr "0 oder leer nur für Nicht-Führungskräfte"
 
+#: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Contact details entered here apply only to the selected establishment."
+msgstr "Die hier eingegebenen Kontaktdaten gelten nur für die ausgewählte Betriebsstätte."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "File removed successfully."
 msgstr "Datei erfolgreich entfernt."
@@ -3771,6 +3857,7 @@ msgstr "Deutschland"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx

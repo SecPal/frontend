@@ -4,6 +4,8 @@
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
 import { Textarea } from "@/ui/textarea";
+import { msg } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react";
 import type { EstablishmentLookup } from "@/types/api/customers";
 
 export interface CustomerEstablishmentFormValue {
@@ -33,10 +35,16 @@ export function CustomerEstablishmentFields({
   onAdd,
   onRemove,
 }: Props) {
+  const { _ } = useLingui();
   return (
     <div className="space-y-4">
       {assignments.map((assignment, index) => {
         const number = index + 1;
+        const establishmentLabel = _(msg`Establishment ${number}`);
+        const localContactLabel = _(msg`Local contact name ${number}`);
+        const localEmailLabel = _(msg`Local email ${number}`);
+        const localPhoneLabel = _(msg`Local phone ${number}`);
+        const localCommentsLabel = _(msg`Local comments ${number}`);
         const update = (
           field: keyof CustomerEstablishmentFormValue,
           value: string
@@ -46,11 +54,11 @@ export function CustomerEstablishmentFields({
             key={assignment.key}
             className="space-y-4 rounded-md border border-border p-4"
           >
-            <legend className="px-1 font-medium">Establishment {number}</legend>
+            <legend className="px-1 font-medium">{establishmentLabel}</legend>
             <label className="grid gap-2">
-              <span>Establishment {number} *</span>
+              <span>{establishmentLabel} *</span>
               <select
-                aria-label={`Establishment ${number}`}
+                aria-label={establishmentLabel}
                 value={assignment.establishment_id}
                 required
                 disabled={disabled}
@@ -59,7 +67,7 @@ export function CustomerEstablishmentFields({
                 }
                 className="border-input bg-background h-10 rounded-md border px-3"
               >
-                <option value="">Select establishment...</option>
+                <option value="">{_(msg`Select establishment...`)}</option>
                 {establishments.map((establishment) => (
                   <option key={establishment.id} value={establishment.id}>
                     {establishment.name}
@@ -69,9 +77,9 @@ export function CustomerEstablishmentFields({
             </label>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2">
-                <span>Local contact name {number}</span>
+                <span>{localContactLabel}</span>
                 <Input
-                  aria-label={`Local contact name ${number}`}
+                  aria-label={localContactLabel}
                   value={assignment.contact_name}
                   onChange={(event) =>
                     update("contact_name", event.target.value)
@@ -79,27 +87,27 @@ export function CustomerEstablishmentFields({
                 />
               </label>
               <label className="grid gap-2">
-                <span>Local email {number}</span>
+                <span>{localEmailLabel}</span>
                 <Input
-                  aria-label={`Local email ${number}`}
+                  aria-label={localEmailLabel}
                   type="email"
                   value={assignment.email}
                   onChange={(event) => update("email", event.target.value)}
                 />
               </label>
               <label className="grid gap-2">
-                <span>Local phone {number}</span>
+                <span>{localPhoneLabel}</span>
                 <Input
-                  aria-label={`Local phone ${number}`}
+                  aria-label={localPhoneLabel}
                   type="tel"
                   value={assignment.phone}
                   onChange={(event) => update("phone", event.target.value)}
                 />
               </label>
               <label className="grid gap-2 sm:col-span-2">
-                <span>Local comments {number}</span>
+                <span>{localCommentsLabel}</span>
                 <Textarea
-                  aria-label={`Local comments ${number}`}
+                  aria-label={localCommentsLabel}
                   value={assignment.comments}
                   onChange={(event) => update("comments", event.target.value)}
                 />
@@ -111,7 +119,7 @@ export function CustomerEstablishmentFields({
                 variant="outline"
                 onClick={() => onRemove(assignment.key)}
               >
-                Remove establishment {number}
+                {_(msg`Remove establishment ${number}`)}
               </Button>
             ) : null}
           </fieldset>
@@ -123,7 +131,7 @@ export function CustomerEstablishmentFields({
         onClick={onAdd}
         disabled={disabled}
       >
-        Add establishment
+        {_(msg`Add establishment`)}
       </Button>
     </div>
   );

@@ -26,6 +26,10 @@ msgstr "Full Name"
 msgid "Enabling..."
 msgstr "Enabling..."
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Legal Entity:"
+msgstr "Legal Entity:"
+
 #: src/pages/Login.tsx
 msgid "Second factor required"
 msgstr "Second factor required"
@@ -75,6 +79,10 @@ msgstr "Emergency Contact Email"
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Controls whether this unit is administratively active."
 msgstr "Controls whether this unit is administratively active."
+
+#: src/components/DomainAssignmentFields.tsx
+msgid "Clear domain filters"
+msgstr "Clear domain filters"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Establishment is required"
@@ -183,6 +191,10 @@ msgstr "Loading organizational structure"
 msgid "The bootstrap response is incomplete."
 msgstr "The bootstrap response is incomplete."
 
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Local phone {number}"
+msgstr "Local phone {number}"
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Failure Reason"
 msgstr "Invitation Failure Reason"
@@ -261,6 +273,10 @@ msgstr "Global"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Confirm with your authenticator app or one recovery code to disable MFA for this account."
 msgstr "Confirm with your authenticator app or one recovery code to disable MFA for this account."
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Each establishment can only be assigned once."
+msgstr "Each establishment can only be assigned once."
 
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Previous Residences"
@@ -520,6 +536,10 @@ msgstr "Enter your instance URL"
 msgid "Emergency contact name is required."
 msgstr "Emergency contact name is required."
 
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Local contact name {number}"
+msgstr "Local contact name {number}"
+
 #: src/components/OrganizationalUnitTree.tsx
 #: src/components/RouteGuardState.tsx
 #: src/pages/Login.tsx
@@ -735,6 +755,7 @@ msgstr "The selected instance could not be checked."
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 msgid "Establishments and local contacts"
 msgstr "Establishments and local contacts"
 
@@ -875,6 +896,10 @@ msgstr "Passkey registration is not available on this device."
 msgid "Sending verification email..."
 msgstr "Sending verification email..."
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Select each establishment once."
+msgstr "Select each establishment once."
+
 #: src/components/OrganizationalUnitTree.tsx
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Not assignable"
@@ -926,6 +951,10 @@ msgstr "Your current answers will be saved as a draft before the first file uplo
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This field"
 msgstr "This field"
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Select a legal entity and at least one establishment."
+msgstr "Select a legal entity and at least one establishment."
 
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -1242,6 +1271,7 @@ msgid "This session was revoked and can no longer be used for device setup."
 msgstr "This session was revoked and can no longer be used for device setup."
 
 #: src/components/DomainAssignmentFields.tsx
+#: src/pages/Customers/CustomerCreate.tsx
 msgid "Failed to load establishments"
 msgstr "Failed to load establishments"
 
@@ -1562,6 +1592,10 @@ msgstr "Required information"
 msgid "We couldn't prepare this step for file uploads. Please try saving your draft again."
 msgstr "We couldn't prepare this step for file uploads. Please try saving your draft again."
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "The customer was created, but its establishment assignments could not be completed. Review and save the assignments again."
+msgstr "The customer was created, but its establishment assignments could not be completed. Review and save the assignments again."
+
 #: src/components/EncryptionProgress.tsx
 msgid "Encrypting files..."
 msgstr "Encrypting files..."
@@ -1711,6 +1745,7 @@ msgstr "Address Supplement"
 msgid "Loading enrollment sessions..."
 msgstr "Loading enrollment sessions..."
 
+#: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Sites/SiteCreate.tsx
 msgid "Creating..."
@@ -1757,6 +1792,10 @@ msgstr "Show app"
 msgid "Passkey label"
 msgstr "Passkey label"
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Failed to create customer"
+msgstr "Failed to create customer"
+
 #: src/components/application-layout.tsx
 msgid "Home"
 msgstr "Home"
@@ -1794,6 +1833,7 @@ msgid "No activity logs found."
 msgstr "No activity logs found."
 
 #: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 msgid "Failed to load customer"
 msgstr "Failed to load customer"
 
@@ -1814,6 +1854,10 @@ msgstr "Choose your preferred language for the application."
 msgid "All units"
 msgstr "All units"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Legal-entity master data"
+msgstr "Legal-entity master data"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload File"
 msgstr "Upload File"
@@ -1827,6 +1871,7 @@ msgid "Cannot Delete \"{unitName}\""
 msgstr "Cannot Delete \"{unitName}\""
 
 #: src/components/OrganizationalUnitFormDialog.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Save Changes"
@@ -1937,6 +1982,7 @@ msgstr "Emergency Contact Notes"
 msgid "Contact"
 msgstr "Contact"
 
+#: src/components/CustomerEstablishmentFields.tsx
 #: src/components/DomainAssignmentFields.tsx
 msgid "Select establishment..."
 msgstr "Select establishment..."
@@ -2100,6 +2146,10 @@ msgstr "These contact details apply only to their establishment."
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Contract"
 msgstr "Contract"
+
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Add establishment"
+msgstr "Add establishment"
 
 #: src/components/nav-user.tsx
 msgid "Lock app"
@@ -2375,6 +2425,10 @@ msgstr "Loading site lookup data"
 msgid "Passwords do not match"
 msgstr "Passwords do not match"
 
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Remove establishment {number}"
+msgstr "Remove establishment {number}"
+
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "The end date must be on or after the start date."
 msgstr "The end date must be on or after the start date."
@@ -2398,6 +2452,10 @@ msgstr "<0>Hash Chain:</0> Verifies the sequential integrity of activity logs. \
 #: src/pages/Login.tsx
 msgid "An unexpected passkey sign-in error occurred. Please try again."
 msgstr "An unexpected passkey sign-in error occurred. Please try again."
+
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Establishment {number}"
+msgstr "Establishment {number}"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/OrganizationalUnitTree.tsx
@@ -2439,6 +2497,10 @@ msgstr "Identity card or passport"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Add Contact"
 msgstr "Add Contact"
+
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Local comments {number}"
+msgstr "Local comments {number}"
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -2664,6 +2726,10 @@ msgstr "Store your recovery codes now"
 msgid "Revoke enrollment session"
 msgstr "Revoke enrollment session"
 
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Create Customer"
+msgstr "Create Customer"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Revocation reason"
 msgstr "Revocation reason"
@@ -2745,6 +2811,7 @@ msgid "Authentication"
 msgstr "Authentication"
 
 #: src/components/DomainAssignmentFields.tsx
+#: src/pages/Customers/CustomerCreate.tsx
 msgid "Failed to load legal entities"
 msgstr "Failed to load legal entities"
 
@@ -2885,6 +2952,10 @@ msgstr "No qualifications assigned"
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "← Back to Employee"
 msgstr "← Back to Employee"
+
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Local email {number}"
+msgstr "Local email {number}"
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Saving BWR Status..."
@@ -3041,6 +3112,7 @@ msgid "Optional sections"
 msgstr "Optional sections"
 
 #: src/components/DomainAssignmentFields.tsx
+#: src/pages/Customers/CustomerCreate.tsx
 msgid "Select legal entity..."
 msgstr "Select legal entity..."
 
@@ -3185,6 +3257,10 @@ msgstr "We could not verify your identity with the details provided. For securit
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Remove"
 msgstr "Remove"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Failed to update customer"
+msgstr "Failed to update customer"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Viewing cached data. Some units may be outdated."
@@ -3349,6 +3425,10 @@ msgstr "Loading MFA status..."
 msgid "You're offline - showing cached data"
 msgstr "You're offline - showing cached data"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Loading customer form"
+msgstr "Loading customer form"
+
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Additional Properties"
 msgstr "Additional Properties"
@@ -3416,6 +3496,7 @@ msgid "BWR Notes"
 msgstr "BWR Notes"
 
 #: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 msgid "Customer not found"
 msgstr "Customer not found"
 
@@ -3596,6 +3677,11 @@ msgstr "Emergency Contact Relationship"
 msgid "0 or empty for non-leadership only"
 msgstr "0 or empty for non-leadership only"
 
+#: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Contact details entered here apply only to the selected establishment."
+msgstr "Contact details entered here apply only to the selected establishment."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "File removed successfully."
 msgstr "File removed successfully."
@@ -3771,6 +3857,7 @@ msgstr "Germany"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx

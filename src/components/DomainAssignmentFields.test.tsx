@@ -25,9 +25,13 @@ function deferred<T>() {
 function Harness({
   customer = true,
   withErrors = false,
+  required = true,
+  fixedCustomerId,
 }: {
   customer?: boolean;
   withErrors?: boolean;
+  required?: boolean;
+  fixedCustomerId?: string;
 }) {
   const [value, setValue] = React.useState({
     legal_entity_id: "",
@@ -49,6 +53,8 @@ function Harness({
         value={value}
         onChange={(next) => setValue({ ...value, ...next })}
         includeCustomer={customer}
+        required={required}
+        fixedCustomerId={fixedCustomerId}
         errors={errors}
         onClearErrors={(fields) =>
           setErrors((current) => {
@@ -182,5 +188,50 @@ describe("DomainAssignmentFields", () => {
         screen.queryByRole("option", { name: "Stale Customer" })
       ).not.toBeInTheDocument()
     );
+  });
+
+  it("clears optional domain filters back to an unfiltered value", async () => {
+    vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue([
+      { id: "est-1", name: "Berlin" },
+    ]);
+    const user = userEvent.setup();
+    render(<Harness customer={false} required={false} />);
+
+    await user.click(
+      await screen.findByRole("combobox", { name: /legal entity/i })
+    );
+    await user.click(screen.getByRole("option", { name: "SecPal GmbH" }));
+    await user.click(screen.getByRole("combobox", { name: /establishment/i }));
+    await user.click(await screen.findByRole("option", { name: "Berlin" }));
+    await user.click(
+      screen.getByRole("button", { name: /clear domain filters/i })
+    );
+
+    expect(screen.getByTestId("assignment-value")).toHaveTextContent(
+      '"legal_entity_id":"","establishment_id":""'
+    );
+  });
+
+  it("preserves and locks a route-scoped customer across parent changes", async () => {
+    vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue([
+      { id: "est-1", name: "Berlin" },
+    ]);
+    vi.mocked(domainApi.listCustomerLookups).mockResolvedValue([
+      { id: "customer-1", name: "Route Customer" },
+    ]);
+    const user = userEvent.setup();
+    render(<Harness fixedCustomerId="customer-1" />);
+
+    await user.click(
+      await screen.findByRole("combobox", { name: /legal entity/i })
+    );
+    await user.click(screen.getByRole("option", { name: "SecPal GmbH" }));
+    await user.click(screen.getByRole("combobox", { name: /establishment/i }));
+    await user.click(await screen.findByRole("option", { name: "Berlin" }));
+
+    expect(screen.getByTestId("assignment-value")).toHaveTextContent(
+      '"customer_id":"customer-1"'
+    );
+    expect(screen.getByRole("combobox", { name: /customer/i })).toBeDisabled();
   });
 });
