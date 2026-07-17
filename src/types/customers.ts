@@ -11,7 +11,7 @@ import type {
   Contact as ApiContact,
   CreateCustomerRequest as ApiCreateCustomerRequest,
   Customer as ApiCustomer,
-  CustomerLegalEntityLookup as ApiCustomerLegalEntityLookup,
+  LegalEntityLookup as ApiCustomerLegalEntityLookup,
   UpdateCustomerRequest as ApiUpdateCustomerRequest,
 } from "./api/customers";
 
@@ -30,12 +30,7 @@ export type Customer = ApiCustomer;
 
 export type SiteCustomer = Pick<
   Customer,
-  | "id"
-  | "customer_number"
-  | "name"
-  | "billing_address"
-  | "contact"
-  | "is_active"
+  "id" | "customer_number" | "name" | "billing_address" | "is_active"
 >;
 
 export type CreateCustomerRequest = ApiCreateCustomerRequest;

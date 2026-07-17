@@ -35,7 +35,7 @@ export async function listCustomerLegalEntities(): Promise<
   CustomerLegalEntityLookup[]
 > {
   const response = await apiFetch(
-    `${apiConfig.baseUrl}/v1/customers/legal-entities`
+    `${apiConfig.baseUrl}/v1/lookups/legal-entities`
   );
 
   if (!response.ok) {

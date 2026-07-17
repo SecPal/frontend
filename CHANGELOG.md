@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Separated customer legal-entity master data from establishment-specific
+  contact assignments across customer create, edit, detail, API clients, and
+  minimal privacy-preserving lookups.
 - Raised the Node.js requirement to `^22.22.2 || ^24.15.0 || >=26.0.0`,
   matching the effective requirement of the updated Markdown toolchain.
 - Local Vite development now proxies API traffic to the native Laravel server

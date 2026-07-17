@@ -33,7 +33,7 @@ describe("customerLegalEntitiesApi", () => {
     const result = await listCustomerLegalEntities();
 
     expect(csrf.apiFetch).toHaveBeenCalledWith(
-      `${apiConfig.baseUrl}/v1/customers/legal-entities`
+      `${apiConfig.baseUrl}/v1/lookups/legal-entities`
     );
     expect(result).toEqual([
       {

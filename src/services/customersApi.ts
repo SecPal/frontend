@@ -50,6 +50,15 @@ function handleApiValidationError(error: {
   return errorObj;
 }
 
+function neutralizeDuplicateError(
+  response: Response,
+  error: { code?: unknown }
+): Error | null {
+  return response.status === 409 || error.code === "DUPLICATE_RESOURCE"
+    ? new Error("A matching record already exists.")
+    : null;
+}
+
 import type {
   CustomerFilters,
   Site,
@@ -152,7 +161,8 @@ export async function createCustomer(
     const error = await response
       .json()
       .catch(() => ({ message: response.statusText }));
-
+    const duplicateError = neutralizeDuplicateError(response, error);
+    if (duplicateError) throw duplicateError;
     throw new Error(
       formatValidationErrors(error) || "Failed to create customer"
     );

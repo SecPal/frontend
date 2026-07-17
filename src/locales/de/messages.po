@@ -203,9 +203,6 @@ msgstr "Der Aufenthaltstitel muss über den Vertragsbeginn hinaus gültig sein."
 msgid "Enable browser notifications"
 msgstr "Browser-Benachrichtigungen aktivieren"
 
-#: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -240,10 +237,6 @@ msgstr "Nein"
 #: src/pages/SourcePage.tsx
 msgid "SecPal is licensed under AGPL-3.0-or-later with additional SecPal attribution terms. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the links below."
 msgstr "SecPal ist unter AGPL-3.0-or-later mit zusätzlichen SecPal-Attributionsbedingungen lizenziert. Wenn Sie diesen Dienst über ein Netzwerk nutzen, können Sie den entsprechenden Quellcode für die über diesen Dienst bereitgestellten SecPal-Komponenten kostenlos über die nachstehenden Links beziehen."
-
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "City is required."
-msgstr "Ort ist erforderlich."
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Verification method"
@@ -287,10 +280,6 @@ msgstr "Keine organisatorischen Einheiten"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This onboarding step uses a schema we cannot render yet."
 msgstr "Dieser Onboarding-Schritt verwendet ein Schema, das noch nicht dargestellt werden kann."
-
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "Legal entity is required."
-msgstr "Rechtsträger ist erforderlich."
 
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "No address suggestions found."
@@ -521,8 +510,6 @@ msgstr "Name des Notfallkontakts ist erforderlich."
 
 #: src/components/OrganizationalUnitTree.tsx
 #: src/components/RouteGuardState.tsx
-#: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Login.tsx
 msgid "Retry"
 msgstr "Wiederholen"
@@ -569,9 +556,6 @@ msgid "Edit Emergency Contacts"
 msgstr "Notfallkontakte bearbeiten"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
-#: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -696,12 +680,7 @@ msgid "No passkeys enrolled yet."
 msgstr "Es sind noch keine Passkeys eingerichtet."
 
 #: src/pages/Customers/CustomerCreate.tsx
-msgid "No legal entities are available for customer creation."
-msgstr "Für die Kundenerstellung sind keine Rechtsträger verfügbar."
-
-#: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Billing Address"
@@ -734,6 +713,11 @@ msgstr "Passwort"
 #: src/pages/SourcePage.tsx
 msgid "Android Capacitor wrapper that reuses the shared frontend build and adds native Android-specific code."
 msgstr "Android-Capacitor-Wrapper, der den gemeinsamen Frontend-Build wiederverwendet und nativen Android-spezifischen Code hinzufügt."
+
+#: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Establishments and local contacts"
+msgstr "Betriebsstätten und lokale Kontakte"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Expires:"
@@ -990,10 +974,6 @@ msgstr "Geben Sie die Instanz-URL ein, die Sie von Ihrem Vorgesetzten erhalten h
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "House Number"
 msgstr "Hausnummer"
-
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "Country must use a 2-letter code."
-msgstr "Das Land muss einen zweistelligen Ländercode verwenden."
 
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Unnamed Android enrollment session"
@@ -1340,9 +1320,6 @@ msgstr "Adresse"
 msgid "Missing email address. Please use the link from your email."
 msgstr "Fehlende E-Mail-Adresse. Bitte verwenden Sie den Link in Ihrer E-Mail."
 
-#: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -1518,7 +1495,6 @@ msgid "Activate"
 msgstr "Aktivieren"
 
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 msgid "This customer requires a Legal Entity assignment."
 msgstr "Dieser Kunde benötigt eine Zuweisung zu einem Rechtsträger."
 
@@ -1689,6 +1665,10 @@ msgstr "Zurück zur Liste"
 msgid "Your onboarding state changed on the server while you were editing. The wizard was refreshed to the current server state."
 msgstr "Ihr Onboarding-Status hat sich auf dem Server geändert, während Sie bearbeitet haben. Der Assistent wurde auf den aktuellen Serverstand aktualisiert."
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Local contact"
+msgstr "Lokaler Kontakt"
+
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "New parent"
 msgstr "neue übergeordnete Einheit"
@@ -1705,7 +1685,6 @@ msgstr "Adresszusatz"
 msgid "Loading enrollment sessions..."
 msgstr "Enrollment-Sitzungen werden geladen..."
 
-#: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Sites/SiteCreate.tsx
 msgid "Creating..."
@@ -1752,10 +1731,6 @@ msgstr "App anzeigen"
 msgid "Passkey label"
 msgstr "Passkey-Bezeichnung"
 
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "Failed to create customer"
-msgstr "Kunde konnte nicht angelegt werden"
-
 #: src/components/application-layout.tsx
 msgid "Home"
 msgstr "Startseite"
@@ -1795,7 +1770,6 @@ msgid "No activity logs found."
 msgstr "Keine Aktivitätsprotokolle gefunden."
 
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 msgid "Failed to load customer"
 msgstr "Kunde konnte nicht geladen werden"
 
@@ -1824,16 +1798,11 @@ msgstr "Datei hochladen"
 msgid "Controls whether this unit can receive new operational assignments."
 msgstr "Legt fest, ob diese Einheit neue operative Zuweisungen erhalten kann."
 
-#: src/pages/Customers/CustomerEdit.tsx
-msgid "Current Legal Entity:"
-msgstr "Aktueller Rechtsträger:"
-
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "Cannot Delete \"{unitName}\""
 msgstr "Löschen von \"{unitName}\" nicht möglich"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Save Changes"
@@ -1935,7 +1904,6 @@ msgstr "Instanz wechseln"
 msgid "Emergency Contact Notes"
 msgstr "Notizen zum Notfallkontakt"
 
-#: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Contact"
@@ -2059,10 +2027,6 @@ msgstr "Browser-Benachrichtigungen sind für diesen angemeldeten Browser auf die
 msgid "Failed to update contact field."
 msgstr "Kontaktfeld konnte nicht aktualisiert werden."
 
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "Postal code is required."
-msgstr "Postleitzahl ist erforderlich."
-
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Generating BWR Export..."
 msgstr "BWR-Export wird erstellt..."
@@ -2096,6 +2060,10 @@ msgstr "Läuft ab"
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "First Name"
 msgstr "Vorname"
+
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "These contact details apply only to their establishment."
+msgstr "Diese Kontaktdaten gelten nur für die jeweilige Betriebsstätte."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Contract"
@@ -2446,6 +2414,10 @@ msgstr "Abgelaufen"
 msgid "Error Loading Employees"
 msgstr "Fehler beim Laden von Mitarbeitern"
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Local email"
+msgstr "Lokale E-Mail-Adresse"
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Removing..."
 msgstr "Wird entfernt..."
@@ -2480,6 +2452,10 @@ msgstr "Administrativer Status"
 msgid "Moving organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Das Verschieben von Organisationseinheiten ist im Offline-Modus nicht möglich. Bitte stellen Sie die Verbindung wieder her, um Änderungen vorzunehmen."
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Local comments"
+msgstr "Lokale Anmerkungen"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Password must include at least one number"
 msgstr "Das Passwort muss mindestens eine Zahl enthalten"
@@ -2511,10 +2487,6 @@ msgstr "Herunterladen"
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR Registered At"
 msgstr "BWR registriert am"
-
-#: src/pages/Customers/CustomerEdit.tsx
-msgid "A legal entity must be selected before this customer can be updated."
-msgstr "Bevor dieser Kunde aktualisiert werden kann, muss ein Rechtsträger ausgewählt werden."
 
 #: src/pages/Employees/EmployeeList.tsx
 msgid "All"
@@ -2601,9 +2573,6 @@ msgstr "Open Source"
 msgid "Checking passkey availability..."
 msgstr "Passkey-Verfügbarkeit wird geprüft..."
 
-#: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -2648,10 +2617,6 @@ msgstr "Speichern Sie jetzt Ihre Wiederherstellungscodes"
 msgid "Revoke enrollment session"
 msgstr "Registrierungssitzung widerrufen"
 
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "Create Customer"
-msgstr "Kunde anlegen"
-
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Revocation reason"
 msgstr "Widerrufsgrund"
@@ -2667,10 +2632,6 @@ msgstr "Obtainium"
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Organization Structure"
 msgstr "Organisationsstruktur"
-
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "Customer name is required."
-msgstr "Kundenname ist erforderlich."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -2735,11 +2696,6 @@ msgstr "Der Mindestrang kann nicht größer als der Höchstrang sein."
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Authentication"
 msgstr "Authentifizierung"
-
-#: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerEdit.tsx
-msgid "Failed to load legal entities"
-msgstr "Rechtsträger konnten nicht geladen werden"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
@@ -2871,10 +2827,6 @@ msgstr "Sie haben keine Berechtigung, diese Aktion auszufuehren."
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Failed to delete passkey."
 msgstr "Passkey konnte nicht gelöscht werden."
-
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "Street is required."
-msgstr "Straße ist erforderlich."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No qualifications assigned"
@@ -3039,11 +2991,6 @@ msgstr "Zur Überprüfung einreichen"
 msgid "Optional sections"
 msgstr "Optionale Abschnitte"
 
-#: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerEdit.tsx
-msgid "Select legal entity..."
-msgstr "Rechtsträger auswählen..."
-
 #: src/AuthenticatedApp.tsx
 #: src/components/RouteGuardState.tsx
 msgid "Back to Home"
@@ -3185,10 +3132,6 @@ msgstr "Ihre Identität konnte mit den angegebenen Daten nicht bestätigt werden
 msgid "Remove"
 msgstr "Entfernen"
 
-#: src/pages/Customers/CustomerEdit.tsx
-msgid "Failed to update customer"
-msgstr "Kunde konnte nicht aktualisiert werden"
-
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "Viewing cached data. Some units may be outdated."
 msgstr "Zeige zwischengespeicherte Daten. Einige Einheiten können veraltet sein."
@@ -3210,6 +3153,10 @@ msgstr "Speichern"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No postal address stored yet."
 msgstr "Noch keine Postanschrift hinterlegt."
+
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "No establishments assigned."
+msgstr "Keine Betriebsstätten zugeordnet."
 
 #: src/components/RuntimeDiscoveryFlow.tsx
 msgid "API origin"
@@ -3352,10 +3299,6 @@ msgstr "Laden des MFA-Status..."
 msgid "You're offline - showing cached data"
 msgstr "Sie sind offline - Anzeige von Daten im Cache"
 
-#: src/pages/Customers/CustomerEdit.tsx
-msgid "Loading customer form"
-msgstr "Kundenformular wird geladen"
-
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Additional Properties"
 msgstr "Zusätzliche Eigenschaften"
@@ -3395,10 +3338,6 @@ msgstr "Die Anzahl der Standorte dieses Kunden ist nicht verfügbar."
 msgid "Street"
 msgstr "Straße"
 
-#: src/pages/Customers/CustomerEdit.tsx
-msgid "Reassign Legal Entity"
-msgstr "Rechtsträger neu zuweisen"
-
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This field is required."
@@ -3427,7 +3366,6 @@ msgid "BWR Notes"
 msgstr "BWR-Notizen"
 
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 msgid "Customer not found"
 msgstr "Kunde nicht gefunden"
 
@@ -3541,7 +3479,6 @@ msgstr "Administrativ aktiv"
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Customers/CustomersPage.tsx
 msgid "Legal Entity"
 msgstr "Rechtsträger"
@@ -3615,6 +3552,10 @@ msgstr "Datei erfolgreich entfernt."
 msgid "Employee ID is missing."
 msgstr "Mitarbeiter-ID fehlt."
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Local phone"
+msgstr "Lokale Telefonnummer"
+
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "No unit selected"
 msgstr "Keine Einheit ausgewählt"
@@ -3644,10 +3585,6 @@ msgstr "Angemeldet bei {0}"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please select a file to upload."
 msgstr "Bitte wählen Sie eine Datei zum Hochladen aus."
-
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "Please enter a valid email address."
-msgstr "Bitte geben Sie eine gültige E-Mail-Adresse ein."
 
 #: src/pages/SourcePage.tsx
 msgid "Source code and license"
@@ -3781,7 +3718,6 @@ msgstr "Deutschland"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
@@ -3983,9 +3919,6 @@ msgstr "\"{0}\" erfolgreich aktualisiert"
 msgid "Create enrollment session"
 msgstr "Enrollment-Sitzung erstellen"
 
-#: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx

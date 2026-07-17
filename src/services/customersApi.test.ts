@@ -317,23 +317,20 @@ describe("customersApi", () => {
     });
 
     it("updates partial fields", async () => {
-      const updateData = {
-        notes: "New notes only",
-      };
+      const updateData = { name: "New name" };
 
       const mockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue({
           data: {
             id: "customer-123",
-            name: "Existing Name",
             billing_address: {
               street: "Street",
               city: "City",
               postal_code: "12345",
               country: "DE",
             },
-            notes: "New notes only",
+            name: "New name",
             is_active: true,
             created_at: "2025-01-01T00:00:00Z",
             updated_at: "2025-01-02T00:00:00Z",
@@ -345,7 +342,7 @@ describe("customersApi", () => {
 
       const result = await updateCustomer("customer-123", updateData);
 
-      expect(result.notes).toBe("New notes only");
+      expect(result.name).toBe("New name");
     });
 
     it("handles validation errors", async () => {

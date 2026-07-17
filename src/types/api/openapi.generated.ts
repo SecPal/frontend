@@ -150,38 +150,58 @@ export interface components {
       vat_id?: string | null;
       name: string;
       billing_address: components["schemas"]["Address"];
-      contact?: components["schemas"]["Contact"] | null;
       is_active: boolean;
-      notes?: string | null;
-      metadata?: Record<string, unknown> | null;
       sites_count?: number;
       created_at: string;
       updated_at: string;
       deleted_at?: string | null;
     };
-    CustomerLegalEntityLookup: {
+    LegalEntityLookup: {
       id: string;
       name: string;
+    };
+    EstablishmentLookup: {
+      id: string;
+      name: string;
+    };
+    CustomerEstablishment: {
+      id: string;
+      customer_id: string;
+      establishment_id: string;
+      contact_name?: string | null;
+      phone?: string | null;
+      email?: string | null;
+      comments?: string | null;
+      created_at: string;
+      updated_at: string;
+    };
+    CustomerEstablishmentCreateRequest: {
+      customer_id: string;
+      establishment_id: string;
+      contact_name?: string | null;
+      phone?: string | null;
+      email?: string | null;
+      comments?: string | null;
+    };
+    CustomerEstablishmentUpdateRequest: {
+      contact_name?: string | null;
+      phone?: string | null;
+      email?: string | null;
+      comments?: string | null;
     };
     CustomerCreateRequest: {
       legal_entity_id: string;
       vat_id?: string | null;
       name: string;
       billing_address: components["schemas"]["Address"];
-      contact?: components["schemas"]["Contact"] | null;
       is_active?: boolean;
-      notes?: string | null;
-      metadata?: Record<string, unknown> | null;
     };
     CustomerUpdateRequest: {
       legal_entity_id?: string;
       vat_id?: string | null;
       name?: string;
       billing_address?: components["schemas"]["Address"];
-      contact?: components["schemas"]["Contact"] | null;
       is_active?: boolean;
-      notes?: string | null;
-      metadata?: Record<string, unknown> | null;
     };
   };
 }

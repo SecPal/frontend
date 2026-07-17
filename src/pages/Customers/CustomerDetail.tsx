@@ -16,7 +16,15 @@ import { Button } from "@/ui/button";
 import { Skeleton } from "@/ui/skeleton";
 import { SectionSkeleton } from "@/ui";
 import { deleteCustomer, getCustomer } from "../../services/customersApi";
-import type { Customer } from "@/types/api/customers";
+import {
+  listCustomerEstablishments,
+  listEstablishmentLookups,
+} from "../../services/customerDomainApi";
+import type {
+  Customer,
+  CustomerEstablishment,
+  EstablishmentLookup,
+} from "@/types/api/customers";
 import {
   Alert,
   AlertDescription,
@@ -60,6 +68,12 @@ export default function CustomerDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [customerEstablishments, setCustomerEstablishments] = useState<
+    CustomerEstablishment[]
+  >([]);
+  const [establishmentLookups, setEstablishmentLookups] = useState<
+    EstablishmentLookup[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -92,8 +106,14 @@ export default function CustomerDetail() {
       }
       try {
         const data = await getCustomer(id);
+        const [links, lookups] = await Promise.all([
+          listCustomerEstablishments({ customer_id: id, per_page: 100 }),
+          listEstablishmentLookups(data.legal_entity_id),
+        ]);
         if (cancelled) return;
         setCustomer(data);
+        setCustomerEstablishments(links.data);
+        setEstablishmentLookups(lookups);
       } catch (err) {
         if (cancelled) return;
         setLoadError(
@@ -247,72 +267,98 @@ export default function CustomerDetail() {
             </DescriptionList>
           </div>
 
-          {/* Contact Information */}
-          {customer.contact && (
-            <div>
-              <PageTitle level={2} className="mb-4">
-                <Trans>Contact Person</Trans>
-              </PageTitle>
-              <DescriptionList>
-                {customer.contact.name && (
-                  <>
-                    <DescriptionTerm>
-                      <Trans>Name</Trans>
-                    </DescriptionTerm>
-                    <DescriptionDetails>
-                      {customer.contact.name}
-                    </DescriptionDetails>
-                  </>
-                )}
-
-                {customer.contact.email && (
-                  <>
-                    <DescriptionTerm>
-                      <Trans>Email</Trans>
-                    </DescriptionTerm>
-                    <DescriptionDetails>
-                      {isSafeMailtoTarget(customer.contact.email) ? (
-                        <PageLink to={`mailto:${customer.contact.email}`}>
-                          {customer.contact.email}
-                        </PageLink>
-                      ) : (
-                        customer.contact.email
-                      )}
-                    </DescriptionDetails>
-                  </>
-                )}
-
-                {customer.contact.phone && (
-                  <>
-                    <DescriptionTerm>
-                      <Trans>Phone</Trans>
-                    </DescriptionTerm>
-                    <DescriptionDetails>
-                      {isSafeTelTarget(customer.contact.phone) ? (
-                        <PageLink to={`tel:${customer.contact.phone}`}>
-                          {customer.contact.phone}
-                        </PageLink>
-                      ) : (
-                        customer.contact.phone
-                      )}
-                    </DescriptionDetails>
-                  </>
-                )}
-              </DescriptionList>
-            </div>
-          )}
-
-          {/* Notes */}
-          {customer.notes && (
-            <div>
-              <PageTitle level={2} className="mb-4">
-                <Trans>Notes</Trans>
-              </PageTitle>
-              <PageText className="whitespace-pre-wrap">
-                {customer.notes}
+          <div>
+            <PageTitle level={2} className="mb-2">
+              <Trans>Establishments and local contacts</Trans>
+            </PageTitle>
+            <PageText className="mb-4 text-muted-foreground">
+              <Trans>
+                These contact details apply only to their establishment.
+              </Trans>
+            </PageText>
+            {customerEstablishments.length === 0 ? (
+              <PageText>
+                <Trans>No establishments assigned.</Trans>
               </PageText>
-            </div>
-          )}
+            ) : (
+              <div className="space-y-4">
+                {customerEstablishments.map((assignment) => {
+                  const establishmentName =
+                    establishmentLookups.find(
+                      (lookup) => lookup.id === assignment.establishment_id
+                    )?.name ?? assignment.establishment_id;
+                  return (
+                    <section
+                      key={assignment.id}
+                      aria-labelledby={`establishment-${assignment.id}`}
+                      className="rounded-md border border-border p-4"
+                    >
+                      <h3
+                        id={`establishment-${assignment.id}`}
+                        className="mb-3 font-semibold"
+                      >
+                        {establishmentName}
+                      </h3>
+                      <DescriptionList>
+                        {assignment.contact_name ? (
+                          <>
+                            <DescriptionTerm>
+                              <Trans>Local contact</Trans>
+                            </DescriptionTerm>
+                            <DescriptionDetails>
+                              {assignment.contact_name}
+                            </DescriptionDetails>
+                          </>
+                        ) : null}
+                        {assignment.email ? (
+                          <>
+                            <DescriptionTerm>
+                              <Trans>Local email</Trans>
+                            </DescriptionTerm>
+                            <DescriptionDetails>
+                              {isSafeMailtoTarget(assignment.email) ? (
+                                <PageLink to={`mailto:${assignment.email}`}>
+                                  {assignment.email}
+                                </PageLink>
+                              ) : (
+                                assignment.email
+                              )}
+                            </DescriptionDetails>
+                          </>
+                        ) : null}
+                        {assignment.phone ? (
+                          <>
+                            <DescriptionTerm>
+                              <Trans>Local phone</Trans>
+                            </DescriptionTerm>
+                            <DescriptionDetails>
+                              {isSafeTelTarget(assignment.phone) ? (
+                                <PageLink to={`tel:${assignment.phone}`}>
+                                  {assignment.phone}
+                                </PageLink>
+                              ) : (
+                                assignment.phone
+                              )}
+                            </DescriptionDetails>
+                          </>
+                        ) : null}
+                        {assignment.comments ? (
+                          <>
+                            <DescriptionTerm>
+                              <Trans>Local comments</Trans>
+                            </DescriptionTerm>
+                            <DescriptionDetails className="whitespace-pre-wrap">
+                              {assignment.comments}
+                            </DescriptionDetails>
+                          </>
+                        ) : null}
+                      </DescriptionList>
+                    </section>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Sites */}
           <div>
