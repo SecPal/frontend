@@ -6,7 +6,6 @@ import { buildApiUrl } from "@/config";
 import type { PublicApiReleaseResponse } from "@/types/api";
 
 const SOURCE_OFFER_URL = "/source-offer.json";
-const API_RELEASE_URL = buildApiUrl("/v1/release");
 
 export type SourceRepositoryId = "frontend" | "api" | "contracts" | "android";
 
@@ -338,7 +337,7 @@ export async function loadSourceOffer(
     requestInit
   ).catch(() => null);
   const apiReleaseResponsePromise = fetchImplementation(
-    API_RELEASE_URL,
+    buildApiUrl("/v1/release"),
     requestInit
   ).catch(() => null);
 

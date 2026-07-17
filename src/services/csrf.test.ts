@@ -137,12 +137,12 @@ describe("csrf", () => {
         json: async () => ({ success: true }),
       } as Response);
 
-      await fetchWithCsrf("http://api.secpal.dev/test", {
+      await fetchWithCsrf(`${window.location.origin}/test`, {
         method: "POST",
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "http://api.secpal.dev/test",
+        `${window.location.origin}/test`,
         expect.objectContaining({
           method: "POST",
           credentials: "include",
@@ -159,13 +159,28 @@ describe("csrf", () => {
       }
     });
 
+    it("rejects cross-origin state changes without an accessible CSRF token", async () => {
+      document.cookie =
+        "XSRF-TOKEN=;expires=" + new Date().toUTCString() + ";path=/";
+
+      await expect(
+        fetchWithCsrf("https://api.secpal.dev/v1/auth/login", {
+          method: "POST",
+        })
+      ).rejects.toThrow(
+        "Cross-origin state-changing requests require an accessible CSRF token."
+      );
+
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
     it("merges existing headers with X-XSRF-TOKEN", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
       } as Response);
 
-      await fetchWithCsrf("http://api.secpal.dev/test", {
+      await fetchWithCsrf("http://localhost/test", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -203,7 +218,7 @@ describe("csrf", () => {
         status: 200,
       } as Response);
 
-      await fetchWithCsrf("http://api.secpal.dev/test", {
+      await fetchWithCsrf(`${window.location.origin}/test`, {
         method: "POST",
       });
 

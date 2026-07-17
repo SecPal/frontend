@@ -422,8 +422,8 @@ describe("App", () => {
       })
     ).toBeInTheDocument();
     expect(
-      screen.queryByLabelText("secpal-instance-discovery-locale")
-    ).not.toBeInTheDocument();
+      document.getElementById("secpal-instance-discovery-locale")
+    ).toBeNull();
     expect(
       screen.getByRole("button", { name: /continue to login/i })
     ).toBeDisabled();

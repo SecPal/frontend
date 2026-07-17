@@ -44,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   route subsequent health and authentication requests to the selected secure
   API origin. The local same-origin mock runner can now enter discovery without
   an inert switch action.
+- Prevented cross-origin state-changing requests without an accessible CSRF
+  token after Android mock runtime changes.
 - Restored confirmation-dialog focus to the instance switch button and kept the
   instance details in non-overlapping grid flow at narrow viewport heights.
 - Made Android instance discovery use the same top legal and language controls
