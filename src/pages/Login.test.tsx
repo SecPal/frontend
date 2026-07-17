@@ -377,14 +377,13 @@ describe("Login", () => {
     expect(instanceLabel).toHaveClass("text-sm");
     expect(instanceUrl).toHaveClass("text-xs");
     expect(instanceSection).toHaveClass(
-      "absolute",
-      "top-[89%]",
-      "-translate-y-1/2",
+      "row-start-3",
       "justify-center",
-      "[@media(max-height:42rem)]:static",
+      "self-center",
       "[@media(max-height:42rem)]:mt-6",
-      "[@media(max-height:42rem)]:translate-y-0"
+      "[@media(max-height:42rem)]:self-start"
     );
+    expect(instanceSection).not.toHaveClass("absolute", "top-[89%]");
     expect(passkeyButton.closest("form")?.contains(instanceStatus)).toBe(false);
     expect(
       passkeyButton.compareDocumentPosition(instanceStatus) &
@@ -421,6 +420,9 @@ describe("Login", () => {
 
     await user.click(screen.getByRole("button", { name: /cancel/i }));
     expect(onSwitchRuntimeBootstrap).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: /switch instance/i })
+    ).toHaveFocus();
   });
 
   it("switches the configured instance after confirmation", async () => {

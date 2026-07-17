@@ -187,6 +187,10 @@ msgstr "Invitation Failure Reason"
 msgid "Search or select country"
 msgstr "Search or select country"
 
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "This instance is not compatible with Android discovery."
+msgstr "This instance is not compatible with Android discovery."
+
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Create Employee"
 msgstr "Create Employee"
@@ -1414,6 +1418,10 @@ msgstr "Proof of residence registration (Meldebestätigung), only if your ID doe
 #: src/pages/Sites/SitesPage.tsx
 msgid "All Types"
 msgstr "All Types"
+
+#: src/components/RuntimeDiscoveryFlow.tsx
+msgid "The selected instance could not be applied. Please try again."
+msgstr "The selected instance could not be applied. Please try again."
 
 #: src/components/VerificationDots.tsx
 msgid "{label}: Pending"

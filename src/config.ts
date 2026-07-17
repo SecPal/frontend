@@ -22,6 +22,7 @@ export class ApiBaseUrlConfigurationError extends Error {
 
 const LIVE_APP_HOSTNAME = "app.secpal.dev";
 const LIVE_API_ORIGIN = "https://api.secpal.dev";
+let runtimeApiBaseUrlOverride: string | null = null;
 
 function stripTrailingSlashes(value: string): string {
   return value.replace(/\/+$/, "");
@@ -278,7 +279,7 @@ export const apiConfig = {
    * Vite's proxy (see vite.config.ts) forwards /v1/* and /sanctum/* to the native Laravel server.
    */
   get baseUrl(): string {
-    return resolveApiBaseUrl();
+    return runtimeApiBaseUrlOverride ?? resolveApiBaseUrl();
   },
 
   /**
@@ -324,6 +325,30 @@ export function getApiBaseUrl(): string {
   return apiConfig.baseUrl;
 }
 
+export function setRuntimeApiBaseUrlOverride(value: string): void {
+  let url: URL;
+
+  try {
+    url = new URL(value.trim());
+  } catch {
+    throw new ApiBaseUrlConfigurationError(
+      "Runtime API base URL must be an absolute HTTPS URL."
+    );
+  }
+
+  if (url.protocol !== "https:") {
+    throw new ApiBaseUrlConfigurationError(
+      "Runtime API base URL must use HTTPS."
+    );
+  }
+
+  runtimeApiBaseUrlOverride = url.origin;
+}
+
+export function clearRuntimeApiBaseUrlOverride(): void {
+  runtimeApiBaseUrlOverride = null;
+}
+
 export function buildApiUrl(
   path: string,
   options?: {
@@ -334,7 +359,7 @@ export function buildApiUrl(
   }
 ): string {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const baseUrl = resolveApiBaseUrl(options);
+  const baseUrl = options ? resolveApiBaseUrl(options) : getApiBaseUrl();
 
   return baseUrl ? `${baseUrl}${normalizedPath}` : normalizedPath;
 }

@@ -5,43 +5,113 @@ import * as React from "react";
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 import { cn } from "@/lib/utils";
 
-export function AlertDialog(
-  props: React.ComponentProps<typeof AlertDialogPrimitive.Root>
-) {
+export interface AlertDialogProps extends React.ComponentPropsWithoutRef<
+  typeof AlertDialogPrimitive.Root
+> {
+  readonly open?: boolean;
+}
+
+export interface AlertDialogTriggerProps extends React.ComponentPropsWithoutRef<
+  typeof AlertDialogPrimitive.Trigger
+> {
+  readonly asChild?: boolean;
+}
+
+export interface AlertDialogPortalProps extends React.ComponentPropsWithoutRef<
+  typeof AlertDialogPrimitive.Portal
+> {
+  readonly container?: HTMLElement | null;
+}
+
+export interface AlertDialogCancelProps extends React.ComponentPropsWithoutRef<
+  typeof AlertDialogPrimitive.Cancel
+> {
+  readonly className?: string;
+}
+
+export interface AlertDialogActionProps extends React.ComponentPropsWithoutRef<
+  typeof AlertDialogPrimitive.Action
+> {
+  readonly className?: string;
+}
+
+export interface AlertDialogOverlayProps extends React.ComponentPropsWithoutRef<
+  typeof AlertDialogPrimitive.Overlay
+> {
+  readonly className?: string;
+}
+
+export interface AlertDialogContentProps extends React.ComponentPropsWithoutRef<
+  typeof AlertDialogPrimitive.Content
+> {
+  readonly size?: "default" | "sm";
+}
+
+export interface AlertDialogHeaderProps extends React.ComponentPropsWithoutRef<"div"> {
+  readonly className?: string;
+}
+
+export interface AlertDialogFooterProps extends React.ComponentPropsWithoutRef<"div"> {
+  readonly className?: string;
+}
+
+export interface AlertDialogTitleProps extends React.ComponentPropsWithoutRef<
+  typeof AlertDialogPrimitive.Title
+> {
+  readonly className?: string;
+}
+
+export interface AlertDialogDescriptionProps extends React.ComponentPropsWithoutRef<
+  typeof AlertDialogPrimitive.Description
+> {
+  readonly className?: string;
+}
+
+export function AlertDialog(props: AlertDialogProps) {
   return <AlertDialogPrimitive.Root data-slot="alert-dialog" {...props} />;
 }
 
-export function AlertDialogTrigger(
-  props: React.ComponentProps<typeof AlertDialogPrimitive.Trigger>
-) {
+export function AlertDialogTrigger(props: AlertDialogTriggerProps) {
   return (
     <AlertDialogPrimitive.Trigger data-slot="alert-dialog-trigger" {...props} />
   );
 }
 
-export function AlertDialogPortal(
-  props: React.ComponentProps<typeof AlertDialogPrimitive.Portal>
-) {
-  return <AlertDialogPrimitive.Portal {...props} />;
+export function AlertDialogPortal(props: AlertDialogPortalProps) {
+  return (
+    <AlertDialogPrimitive.Portal data-slot="alert-dialog-portal" {...props} />
+  );
 }
 
 export const AlertDialogCancel = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Cancel>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Cancel>
+  AlertDialogCancelProps
 >(function AlertDialogCancel(props, ref) {
-  return <AlertDialogPrimitive.Cancel ref={ref} {...props} />;
+  return (
+    <AlertDialogPrimitive.Cancel
+      ref={ref}
+      data-slot="alert-dialog-cancel"
+      {...props}
+    />
+  );
 });
 
 export const AlertDialogAction = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Action>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>
+  AlertDialogActionProps
 >(function AlertDialogAction(props, ref) {
-  return <AlertDialogPrimitive.Action ref={ref} {...props} />;
+  return (
+    <AlertDialogPrimitive.Action
+      ref={ref}
+      data-slot="alert-dialog-action"
+      {...props}
+    />
+  );
 });
 
 export const AlertDialogOverlay = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>
+  AlertDialogOverlayProps
 >(function AlertDialogOverlay({ className, ...props }, ref) {
   return (
     <AlertDialogPrimitive.Overlay
@@ -58,9 +128,7 @@ export const AlertDialogOverlay = React.forwardRef<
 
 export const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content> & {
-    size?: "default" | "sm";
-  }
+  AlertDialogContentProps
 >(function AlertDialogContent(
   { className, children, size = "default", ...props },
   ref
@@ -88,7 +156,7 @@ export const AlertDialogContent = React.forwardRef<
 export function AlertDialogHeader({
   className,
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+}: AlertDialogHeaderProps) {
   return (
     <div
       data-slot="alert-dialog-header"
@@ -101,7 +169,7 @@ export function AlertDialogHeader({
 export function AlertDialogFooter({
   className,
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+}: AlertDialogFooterProps) {
   return (
     <div
       data-slot="alert-dialog-footer"
@@ -116,7 +184,7 @@ export function AlertDialogFooter({
 
 export const AlertDialogTitle = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Title>
+  AlertDialogTitleProps
 >(function AlertDialogTitle({ className, ...props }, ref) {
   return (
     <AlertDialogPrimitive.Title
@@ -130,7 +198,7 @@ export const AlertDialogTitle = React.forwardRef<
 
 export const AlertDialogDescription = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Description>
+  AlertDialogDescriptionProps
 >(function AlertDialogDescription({ className, ...props }, ref) {
   return (
     <AlertDialogPrimitive.Description

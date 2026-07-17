@@ -37,7 +37,11 @@ import { SecPalRuntimeBootstrap, type SecPalRuntimeInfo } from "./native";
 import { Login, type LoginRuntimeBootstrapSummary } from "./pages/Login";
 import { SourcePage } from "./pages/SourcePage";
 import { getAuthTransport } from "./services/authTransport";
-import { getApiBaseUrl } from "./config";
+import {
+  clearRuntimeApiBaseUrlOverride,
+  getApiBaseUrl,
+  setRuntimeApiBaseUrlOverride,
+} from "./config";
 import { isAndroidMockSurface } from "./platform/appSurface";
 import type { BootstrapConfiguration } from "@/types/api";
 
@@ -314,7 +318,11 @@ function getAndroidMockRuntimeBootstrap(): LoginRuntimeBootstrapSummary | null {
   }
 
   try {
-    const apiOrigin = new URL(getApiBaseUrl()).origin;
+    const configuredApiBaseUrl = getApiBaseUrl();
+    const runtimeBaseUrl =
+      typeof window === "undefined" ? undefined : window.location.href;
+    const apiOrigin = new URL(configuredApiBaseUrl || "/", runtimeBaseUrl)
+      .origin;
     const configuredInstanceName =
       import.meta.env.VITE_ANDROID_MOCK_INSTANCE_DISPLAY_NAME?.trim();
 
@@ -409,8 +417,11 @@ function NativeRuntimeDiscoveryGate({
   );
 
   const returnToRuntimeDiscovery = useCallback(async () => {
-    if (!androidMockRuntimeBootstrap) {
-      await revokeCurrentRuntimeSession();
+    await revokeCurrentRuntimeSession();
+
+    if (androidMockRuntimeBootstrap) {
+      clearRuntimeApiBaseUrlOverride();
+    } else {
       await SecPalRuntimeBootstrap.clearRuntimeBootstrap();
     }
 
@@ -515,6 +526,10 @@ function NativeRuntimeDiscoveryGate({
       <RuntimeDiscoveryFlow
         runtimeInfo={runtimeInfo}
         onConfigured={(bootstrap) => {
+          if (androidMockRuntimeBootstrap) {
+            setRuntimeApiBaseUrlOverride(bootstrap.api_base_url);
+          }
+
           setLoginRuntimeBootstrap(
             toLoginRuntimeBootstrapSummaryFromConfiguration(bootstrap)
           );

@@ -17,6 +17,7 @@ export type RuntimeDiscoveryErrorCode =
   | "RUNTIME_INFO_UNAVAILABLE"
   | "BOOTSTRAP_UNAVAILABLE"
   | "BOOTSTRAP_STATE_INVALID"
+  | "BOOTSTRAP_PLATFORM_INCOMPATIBLE"
   | "BOOTSTRAP_INCOMPATIBLE"
   | "UNSUPPORTED_CLIENT_VERSION";
 
@@ -244,7 +245,7 @@ function validateBootstrapPayload(
 
   if (data.client_platform !== "android") {
     throw new RuntimeDiscoveryError(
-      "BOOTSTRAP_INCOMPATIBLE",
+      "BOOTSTRAP_PLATFORM_INCOMPATIBLE",
       "This instance is not compatible with Android discovery."
     );
   }

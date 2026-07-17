@@ -84,6 +84,7 @@ SPDX-License-Identifier = "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution"
 path = [
   "src/lib/utils.ts",
   "src/ui/alert.tsx",
+  "src/ui/alert-dialog.tsx",
   "src/ui/avatar.tsx",
   "src/ui/breadcrumb.tsx",
   "src/ui/button.tsx",

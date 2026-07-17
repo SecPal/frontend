@@ -21,8 +21,6 @@ import {
 } from "../services/nativePasskeyCapabilities";
 import { sanitizeAuthUser } from "../services/authState";
 import { Logo } from "../components/Logo";
-import { getApiBaseUrl } from "../config";
-import { isAndroidMockSurface } from "../platform/appSurface";
 import { loadLoginMfaDialogModule } from "../lib/lazyAppModules";
 import {
   isRecoverableLazyModuleError,
@@ -37,6 +35,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
   Button,
   LoginButton,
   LoginCard,
@@ -68,16 +67,6 @@ const TOTP_CODE_LENGTH = 6;
 // Backend issues 8-character alphanumeric recovery codes.
 // Source: SecPal/api config/two-factor.php `recovery.length = 8`.
 const RECOVERY_CODE_LENGTH = 8;
-
-const androidMockRuntimeBootstrap: LoginRuntimeBootstrapSummary | null =
-  isAndroidMockSurface
-    ? {
-        instanceDisplayName:
-          import.meta.env.VITE_ANDROID_MOCK_INSTANCE_DISPLAY_NAME?.trim() ||
-          "SecPal Android Mock",
-        apiOrigin: getApiBaseUrl(),
-      }
-    : null;
 
 type Translate = ReturnType<typeof useLingui>["_"];
 type HealthStatus = import("../services/healthApi").HealthStatus;
@@ -331,8 +320,7 @@ export function Login({
   runtimeBootstrap = null,
   onSwitchRuntimeBootstrap,
 }: LoginProps = {}) {
-  const displayedRuntimeBootstrap =
-    runtimeBootstrap ?? androidMockRuntimeBootstrap;
+  const displayedRuntimeBootstrap = runtimeBootstrap;
   const navigate = useNavigate();
   const { _ } = useLingui();
   const { login } = useAuth();
@@ -849,17 +837,15 @@ export function Login({
       {!isCompletingLogin && <LoginHeaderControls />}
 
       {/*
-        Centered card region. `flex-1` lets it grow to fill the space between
-        the shell's top edge and the natural-flow footer; `items-center
-        justify-center` centers the card/empty within that grown region.
-        Together with a non-absolute footer this guarantees the card and
-        footer never overlap on short landscape viewports.
+        Equal outer grid rows keep the card centered while the instance details
+        occupy normal flow beneath it. Content can grow the rows on short
+        displays, so neither the card, instance details, nor footer overlap.
       */}
-      <div className="relative flex w-full flex-1 items-center justify-center [@media(max-height:42rem)]:flex-col">
+      <div className="grid w-full flex-1 grid-rows-[1fr_auto_1fr] justify-items-center">
         <LoginCard
           aria-labelledby="login-title"
           aria-busy={isCompletingLogin || undefined}
-          className="relative"
+          className="relative row-start-2"
         >
           <LoginForm
             onSubmit={handleSubmit}
@@ -1118,85 +1104,87 @@ export function Login({
           ) : null}
         </LoginCard>
         {displayedRuntimeBootstrap ? (
-          <div
-            data-testid="runtime-instance-section"
-            className="absolute inset-x-0 top-[89%] flex -translate-y-1/2 justify-center px-6 [@media(max-height:42rem)]:static [@media(max-height:42rem)]:mt-6 [@media(max-height:42rem)]:translate-y-0"
+          <AlertDialog
+            open={isRuntimeSwitchConfirmationOpen}
+            onOpenChange={(open) => {
+              if (!isSwitchingRuntimeBootstrap) {
+                setIsRuntimeSwitchConfirmationOpen(open);
+              }
+            }}
           >
             <div
-              data-testid="runtime-instance"
-              className="w-full max-w-sm space-y-1 text-center"
+              data-testid="runtime-instance-section"
+              className="row-start-3 flex w-full self-center justify-center px-6 [@media(max-height:42rem)]:mt-6 [@media(max-height:42rem)]:self-start"
             >
-              <div className="space-y-1">
-                <p className="text-sm">
-                  <Trans>
-                    Signed in to {displayedRuntimeBootstrap.instanceDisplayName}
-                  </Trans>
-                </p>
-                <p className="break-all text-xs text-muted-foreground">
-                  {displayedRuntimeBootstrap.apiOrigin}
-                </p>
+              <div
+                data-testid="runtime-instance"
+                className="w-full max-w-sm space-y-1 text-center"
+              >
+                <div className="space-y-1">
+                  <p className="text-sm">
+                    <Trans>
+                      Signed in to{" "}
+                      {displayedRuntimeBootstrap.instanceDisplayName}
+                    </Trans>
+                  </p>
+                  <p className="break-all text-xs text-muted-foreground">
+                    {displayedRuntimeBootstrap.apiOrigin}
+                  </p>
+                </div>
+                {onSwitchRuntimeBootstrap ? (
+                  <AlertDialogTrigger asChild>
+                    <LoginButton
+                      id="secpal-runtime-switch-instance"
+                      type="button"
+                      variant="outline"
+                      className="mx-auto w-full"
+                      disabled={
+                        isSubmitting ||
+                        isSubmittingPasskey ||
+                        isMfaChallengeActive ||
+                        isCompletingLogin ||
+                        isSwitchingRuntimeBootstrap
+                      }
+                      aria-busy={isSwitchingRuntimeBootstrap}
+                    >
+                      {isSwitchingRuntimeBootstrap ? (
+                        <Trans>Switching instance...</Trans>
+                      ) : (
+                        <Trans>Switch instance</Trans>
+                      )}
+                    </LoginButton>
+                  </AlertDialogTrigger>
+                ) : null}
               </div>
-              {onSwitchRuntimeBootstrap ? (
-                <LoginButton
-                  id="secpal-runtime-switch-instance"
-                  type="button"
-                  variant="outline"
-                  className="mx-auto w-full"
-                  onClick={() => setIsRuntimeSwitchConfirmationOpen(true)}
-                  disabled={
-                    isSubmitting ||
-                    isSubmittingPasskey ||
-                    isMfaChallengeActive ||
-                    isCompletingLogin ||
-                    isSwitchingRuntimeBootstrap
-                  }
-                  aria-busy={isSwitchingRuntimeBootstrap}
-                >
-                  {isSwitchingRuntimeBootstrap ? (
-                    <Trans>Switching instance...</Trans>
-                  ) : (
-                    <Trans>Switch instance</Trans>
-                  )}
-                </LoginButton>
-              ) : null}
             </div>
-          </div>
+            <AlertDialogContent size="sm">
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  <Trans>Switch instance?</Trans>
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  <Trans>
+                    You will be returned to the instance selection screen.
+                  </Trans>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <Button asChild variant="outline">
+                  <AlertDialogCancel>
+                    <Trans>Cancel</Trans>
+                  </AlertDialogCancel>
+                </Button>
+                <Button asChild>
+                  <AlertDialogAction
+                    onClick={() => void handleSwitchRuntimeBootstrap()}
+                  >
+                    <Trans>Switch instance</Trans>
+                  </AlertDialogAction>
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         ) : null}
-        <AlertDialog
-          open={isRuntimeSwitchConfirmationOpen}
-          onOpenChange={(open) => {
-            if (!isSwitchingRuntimeBootstrap) {
-              setIsRuntimeSwitchConfirmationOpen(open);
-            }
-          }}
-        >
-          <AlertDialogContent size="sm">
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                <Trans>Switch instance?</Trans>
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                <Trans>
-                  You will be returned to the instance selection screen.
-                </Trans>
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <Button asChild variant="outline">
-                <AlertDialogCancel>
-                  <Trans>Cancel</Trans>
-                </AlertDialogCancel>
-              </Button>
-              <Button asChild>
-                <AlertDialogAction
-                  onClick={() => void handleSwitchRuntimeBootstrap()}
-                >
-                  <Trans>Switch instance</Trans>
-                </AlertDialogAction>
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
 
       <LoginLegalFooter />

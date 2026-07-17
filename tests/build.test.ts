@@ -137,7 +137,7 @@ describe("Build Configuration and Source Verification", () => {
 
   it("forwards custom Vite output directories to the build artifact and SBOM", () => {
     const distRoot = mkdtempSync(path.join(tmpdir(), "secpal-build-output-"));
-    const safeEnv = { ...process.env };
+    const safeEnv = { ...process.env, VITE_APP_SURFACE: "web" };
     delete safeEnv.NODE_V8_COVERAGE;
 
     try {
@@ -442,7 +442,7 @@ describe("Build Configuration and Source Verification", () => {
   it("emits assetlinks.json at the deployed root and .well-known paths", () => {
     const distRoot = mkdtempSync(path.join(tmpdir(), "secpal-assetlinks-"));
 
-    const safeEnv = { ...process.env };
+    const safeEnv = { ...process.env, VITE_APP_SURFACE: "web" };
     delete safeEnv.NODE_V8_COVERAGE;
 
     try {

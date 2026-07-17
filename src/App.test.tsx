@@ -137,6 +137,17 @@ vi.mock("./components/UpdatePrompt", () => ({
   UpdatePrompt: mockUpdatePrompt,
 }));
 
+vi.mock("./platform/appSurface", async () => {
+  const actual = await vi.importActual<typeof import("./platform/appSurface")>(
+    "./platform/appSurface"
+  );
+
+  return {
+    ...actual,
+    isAndroidMockSurface: false,
+  };
+});
+
 // Block all real network requests: lazy-loaded page components call their
 // data APIs on mount, and those pending fetch Promises accumulate in the
 // Node.js event loop, stalling the microtask queue and pushing the auth
@@ -681,7 +692,7 @@ describe("App", () => {
       screen.getByRole("button", { name: /continue to login/i })
     ).toBeEnabled();
     expect(
-      screen.getByText(/the selected instance could not be checked/i)
+      screen.getByText(/the selected instance could not be applied/i)
     ).toBeInTheDocument();
   });
 

@@ -86,6 +86,37 @@ describe("config", () => {
     expect(getApiBaseUrl()).toBe("https://tenant.secpal.dev");
   });
 
+  it("routes API requests through a validated runtime override until it is cleared", async () => {
+    vi.stubEnv("MODE", "development");
+    vi.stubEnv("VITE_API_URL", "https://configured.secpal.dev");
+
+    const {
+      buildApiUrl,
+      clearRuntimeApiBaseUrlOverride,
+      getApiBaseUrl,
+      setRuntimeApiBaseUrlOverride,
+    } = await import("./config");
+
+    setRuntimeApiBaseUrlOverride("https://selected.secpal.dev/v1");
+
+    expect(getApiBaseUrl()).toBe("https://selected.secpal.dev");
+    expect(buildApiUrl("/v1/auth/login")).toBe(
+      "https://selected.secpal.dev/v1/auth/login"
+    );
+
+    clearRuntimeApiBaseUrlOverride();
+
+    expect(getApiBaseUrl()).toBe("https://configured.secpal.dev");
+  });
+
+  it("rejects insecure runtime API overrides", async () => {
+    const { setRuntimeApiBaseUrlOverride } = await import("./config");
+
+    expect(() =>
+      setRuntimeApiBaseUrlOverride("http://selected.secpal.dev")
+    ).toThrow("Runtime API base URL must use HTTPS");
+  });
+
   it("does not allow production auth/API traffic to fall back to relative routing", async () => {
     vi.stubEnv("MODE", "production");
     vi.stubEnv("VITE_API_URL", "/api");

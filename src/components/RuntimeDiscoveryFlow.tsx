@@ -72,6 +72,10 @@ function getDiscoveryErrorMessage(
         );
       case "BOOTSTRAP_STATE_INVALID":
         return translate(msg`The bootstrap response is incomplete.`);
+      case "BOOTSTRAP_PLATFORM_INCOMPATIBLE":
+        return translate(
+          msg`This instance is not compatible with Android discovery.`
+        );
       case "BOOTSTRAP_INCOMPATIBLE":
         return translate(
           msg`This instance must be verified by an administrator before it can be used.`
@@ -84,6 +88,19 @@ function getDiscoveryErrorMessage(
   }
 
   return translate(msg`The selected instance could not be checked.`);
+}
+
+function getDiscoveryApplyErrorMessage(
+  error: unknown,
+  translate: (message: ReturnType<typeof msg>) => string
+): string {
+  if (error instanceof RuntimeDiscoveryError) {
+    return getDiscoveryErrorMessage(error, translate);
+  }
+
+  return translate(
+    msg`The selected instance could not be applied. Please try again.`
+  );
 }
 
 function getApiOrigin(rawApiBaseUrl: string): string {
@@ -145,7 +162,7 @@ export function RuntimeDiscoveryFlow({
       await SecPalRuntimeBootstrap.setRuntimeBootstrap(resolvedBootstrap);
       onConfigured(resolvedBootstrap);
     } catch (confirmError) {
-      setError(getDiscoveryErrorMessage(confirmError, _));
+      setError(getDiscoveryApplyErrorMessage(confirmError, _));
       setIsConfirming(false);
     }
   }
