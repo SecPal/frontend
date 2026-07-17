@@ -171,7 +171,10 @@ describe("csrf", () => {
         "Cross-origin state-changing requests require an accessible CSRF token."
       );
 
-      expect(mockFetch).not.toHaveBeenCalled();
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/sanctum/csrf-cookie",
+        expect.objectContaining({ credentials: "include" })
+      );
     });
 
     it("merges existing headers with X-XSRF-TOKEN", async () => {
