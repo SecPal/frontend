@@ -18,9 +18,7 @@ import {
 } from "@/ui/select";
 import { Skeleton } from "@/ui/skeleton";
 import { fetchEmployees } from "../../services/employeeApi";
-import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
-import type { OrganizationalUnit } from "../../types/organizational";
-import { OrganizationalUnitPicker } from "../../components/OrganizationalUnitPicker";
+import { DomainAssignmentFields } from "../../components/DomainAssignmentFields";
 import {
   Alert,
   AlertDescription,
@@ -42,6 +40,7 @@ import {
   EmployeeTableRow as TableRow,
 } from "@/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
+import { useDomainAssignmentNames } from "../../hooks/useDomainAssignmentNames";
 
 const EMPLOYEES_DESKTOP_MEDIA_QUERY = "(min-width: 40rem)";
 
@@ -127,11 +126,8 @@ export function EmployeeList() {
     per_page: 15,
     total: 0,
   });
-  const [organizationalUnits, setOrganizationalUnits] = useState<
-    OrganizationalUnit[]
-  >([]);
-  const [unitsLoading, setUnitsLoading] = useState(true);
   const [useDesktopTable, setUseDesktopTable] = useState(readUseDesktopTable);
+  const domainNames = useDomainAssignmentNames(employees);
 
   useEffect(() => {
     if (
@@ -152,23 +148,6 @@ export function EmployeeList() {
     return () => {
       mediaQuery.removeEventListener("change", updateLayout);
     };
-  }, []);
-
-  // Load organizational units on mount
-  useEffect(() => {
-    async function loadUnits() {
-      try {
-        setUnitsLoading(true);
-        const response = await listOrganizationalUnits();
-        setOrganizationalUnits(response.data);
-      } catch (err) {
-        console.error("Failed to load organizational units:", err);
-        // Don't block the UI if units fail to load
-      } finally {
-        setUnitsLoading(false);
-      }
-    }
-    loadUnits();
   }, []);
 
   useEffect(() => {
@@ -222,12 +201,18 @@ export function EmployeeList() {
     setFilters({ ...filters, status, page: 1 });
   }
 
-  function handleOrganizationalUnitFilter(
-    organizational_unit_id: string | undefined
-  ) {
+  function handleDomainFilter(assignment: {
+    legal_entity_id: string;
+    establishment_id: string;
+  }) {
     setLoading(true);
     setError(null);
-    setFilters({ ...filters, organizational_unit_id, page: 1 });
+    setFilters({
+      ...filters,
+      legal_entity_id: assignment.legal_entity_id || undefined,
+      establishment_id: assignment.establishment_id || undefined,
+      page: 1,
+    });
   }
 
   function handleSearch(search: string) {
@@ -275,21 +260,15 @@ export function EmployeeList() {
               />
             </Field>
 
-            <Field>
-              <FieldLabel htmlFor="employee-organizational-unit">
-                <Trans>Organizational Unit</Trans>
-              </FieldLabel>
-              <OrganizationalUnitPicker
-                id="employee-organizational-unit"
-                units={organizationalUnits}
-                value={filters.organizational_unit_id ?? ""}
-                onChange={(unitId) =>
-                  handleOrganizationalUnitFilter(unitId || undefined)
-                }
-                disabled={unitsLoading}
-                ariaLabel={_(msg`Organizational Unit`)}
-              />
-            </Field>
+            <DomainAssignmentFields
+              idPrefix="employee-filter"
+              required={false}
+              value={{
+                legal_entity_id: filters.legal_entity_id ?? "",
+                establishment_id: filters.establishment_id ?? "",
+              }}
+              onChange={handleDomainFilter}
+            />
 
             <Field>
               <FieldLabel htmlFor="employee-status-filter">
@@ -368,7 +347,10 @@ export function EmployeeList() {
                     <Trans>Status</Trans>
                   </TableHeader>
                   <TableHeader>
-                    <Trans>Unit</Trans>
+                    <Trans>Legal Entity</Trans>
+                  </TableHeader>
+                  <TableHeader>
+                    <Trans>Establishment</Trans>
                   </TableHeader>
                   <TableHeader>
                     <span className="sr-only">
@@ -379,7 +361,7 @@ export function EmployeeList() {
               </TableHead>
               <TableBody>
                 {loading && employees.length === 0 ? (
-                  <EmployeeTableSkeletonRows columns={6} rows={5} />
+                  <EmployeeTableSkeletonRows columns={7} rows={5} />
                 ) : null}
 
                 {employees.map((employee) => (
@@ -416,7 +398,14 @@ export function EmployeeList() {
                       <StatusBadge status={employee.status} />
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {employee.organizational_unit?.name || "-"}
+                      {(domainNames.legalEntities[employee.legal_entity_id] ??
+                        employee.legal_entity_id) ||
+                        "-"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {(domainNames.establishments[employee.establishment_id] ??
+                        employee.establishment_id) ||
+                        "-"}
                     </TableCell>
                     <TableCell>
                       <LinkButton
@@ -432,7 +421,7 @@ export function EmployeeList() {
 
                 {!loading && !error && employees.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-12 text-center">
+                    <TableCell colSpan={7} className="py-12 text-center">
                       <PageText className="text-muted-foreground">
                         <Trans>No employees found</Trans>
                       </PageText>
@@ -487,10 +476,22 @@ export function EmployeeList() {
                   </div>
                   <div>
                     <p className="text-muted-foreground">
-                      <Trans>Unit</Trans>
+                      <Trans>Legal Entity</Trans>
                     </p>
                     <p className="text-foreground">
-                      {employee.organizational_unit?.name || "-"}
+                      {(domainNames.legalEntities[employee.legal_entity_id] ??
+                        employee.legal_entity_id) ||
+                        "-"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">
+                      <Trans>Establishment</Trans>
+                    </p>
+                    <p className="text-foreground">
+                      {(domainNames.establishments[employee.establishment_id] ??
+                        employee.establishment_id) ||
+                        "-"}
                     </p>
                   </div>
                   <div className="col-span-2">

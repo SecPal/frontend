@@ -6,14 +6,13 @@
  * Epic #210 - Customer & Site Management
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
-import { FormSkeleton } from "@/ui/loading";
 import {
   Select,
   SelectContent,
@@ -21,16 +20,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/select";
-import { createSite, listCustomers } from "../../services/customersApi";
-import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
+import { createSite } from "../../services/customersApi";
 import type {
   CreateSiteRequest,
   Address,
   Contact,
   SiteType,
-  Customer,
 } from "../../types/customers";
-import type { OrganizationalUnit } from "../../types/organizational";
+import {
+  DomainAssignmentFields,
+  type DomainAssignmentStatus,
+} from "../../components/DomainAssignmentFields";
 import {
   Alert,
   AlertDescription,
@@ -49,13 +49,13 @@ export default function SiteCreate() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [orgUnits, setOrgUnits] = useState<OrganizationalUnit[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const [domainStatus, setDomainStatus] =
+    useState<DomainAssignmentStatus>("loading");
 
   const [formData, setFormData] = useState<CreateSiteRequest>({
     customer_id: customerId || "",
-    organizational_unit_id: "",
+    legal_entity_id: "",
+    establishment_id: "",
     name: "",
     type: "permanent",
     address: {
@@ -66,31 +66,6 @@ export default function SiteCreate() {
     },
     is_active: true,
   });
-
-  useEffect(() => {
-    async function loadData() {
-      setLoadingData(true);
-      try {
-        const [customersData, orgUnitsData] = await Promise.all([
-          listCustomers({ per_page: 100 }),
-          listOrganizationalUnits({ is_assignable: true, per_page: 100 }),
-        ]);
-        setCustomers(customersData.data);
-        setOrgUnits(
-          orgUnitsData.data.filter((unit) => unit.is_assignable !== false)
-        );
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : _(msg`Failed to load required data`)
-        );
-      } finally {
-        setLoadingData(false);
-      }
-    }
-    loadData();
-  }, [_]);
 
   function updateField(field: keyof CreateSiteRequest, value: unknown) {
     setFormData((currentFormData) => ({
@@ -121,6 +96,26 @@ export default function SiteCreate() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const domainErrors: Record<string, string[]> = {};
+    if (!formData.legal_entity_id)
+      domainErrors.legal_entity_id = [_(msg`Legal entity is required`)];
+    if (!formData.establishment_id)
+      domainErrors.establishment_id = [_(msg`Establishment is required`)];
+    if (!formData.customer_id)
+      domainErrors.customer_id = [_(msg`Customer is required`)];
+    if (domainStatus !== "ready") {
+      setFieldErrors(domainErrors);
+      setError(
+        domainStatus === "loading"
+          ? _(msg`The domain assignment is still loading.`)
+          : domainStatus === "error"
+            ? _(msg`The domain assignment options could not be loaded.`)
+            : _(
+                msg`Select an authorized legal entity, establishment, and customer.`
+              )
+      );
+      return;
+    }
     setLoading(true);
     setError(null);
     setFieldErrors({});
@@ -129,7 +124,8 @@ export default function SiteCreate() {
       // Clean up the data before sending
       const dataToSend: CreateSiteRequest = {
         customer_id: formData.customer_id,
-        organizational_unit_id: formData.organizational_unit_id,
+        legal_entity_id: formData.legal_entity_id,
+        establishment_id: formData.establishment_id,
         name: formData.name,
         type: formData.type,
         address: formData.address,
@@ -161,22 +157,6 @@ export default function SiteCreate() {
     }
   }
 
-  if (loadingData) {
-    return (
-      <div className="max-w-3xl">
-        <div className="mb-6">
-          <PageTitle>
-            <Trans>New Site</Trans>
-          </PageTitle>
-        </div>
-        <FormSkeleton
-          loadingLabel={_(msg`Loading site lookup data`)}
-          fields={10}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-3xl">
       <div className="mb-6">
@@ -186,7 +166,10 @@ export default function SiteCreate() {
       </div>
 
       {error && (
-        <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+        <Alert
+          role="alert"
+          className="mb-4 border-destructive/30 bg-destructive/10 text-foreground"
+        >
           <AlertDescription className="text-destructive">
             {error}
           </AlertDescription>
@@ -196,81 +179,24 @@ export default function SiteCreate() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
         <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor="site-customer">
-              <Trans>Customer</Trans> *
-            </FieldLabel>
-            <Select
-              name="customer_id"
-              required
-              value={formData.customer_id}
-              onValueChange={(value) => updateField("customer_id", value)}
-            >
-              <SelectTrigger
-                id="site-customer"
-                aria-invalid={fieldErrors.customer_id ? true : undefined}
-                aria-describedby={
-                  fieldErrors.customer_id ? "site-customer-error" : undefined
-                }
-              >
-                <SelectValue placeholder={_(msg`Select customer...`)} />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {customer.customer_number} - {customer.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {fieldErrors.customer_id && (
-              <FieldError id="site-customer-error">
-                {fieldErrors.customer_id.join(", ")}
-              </FieldError>
-            )}
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="site-organizational-unit">
-              <Trans>Organizational Unit</Trans> *
-            </FieldLabel>
-            <Select
-              name="organizational_unit_id"
-              required
-              value={formData.organizational_unit_id}
-              onValueChange={(value) =>
-                updateField("organizational_unit_id", value)
-              }
-            >
-              <SelectTrigger
-                id="site-organizational-unit"
-                aria-invalid={
-                  fieldErrors.organizational_unit_id ? true : undefined
-                }
-                aria-describedby={
-                  fieldErrors.organizational_unit_id
-                    ? "site-organizational-unit-error"
-                    : undefined
-                }
-              >
-                <SelectValue
-                  placeholder={_(msg`Select organizational unit...`)}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {orgUnits.map((unit) => (
-                  <SelectItem key={unit.id} value={unit.id}>
-                    {unit.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {fieldErrors.organizational_unit_id && (
-              <FieldError id="site-organizational-unit-error">
-                {fieldErrors.organizational_unit_id.join(", ")}
-              </FieldError>
-            )}
-          </Field>
+          <DomainAssignmentFields
+            idPrefix="site"
+            includeCustomer
+            fixedCustomerId={customerId}
+            onStatusChange={setDomainStatus}
+            value={formData}
+            onChange={(assignment) =>
+              setFormData((current) => ({ ...current, ...assignment }))
+            }
+            errors={fieldErrors}
+            onClearErrors={(fields) =>
+              setFieldErrors((current) => {
+                const next = { ...current };
+                for (const field of fields) delete next[field];
+                return next;
+              })
+            }
+          />
 
           <Field>
             <FieldLabel htmlFor="site-name">
@@ -526,7 +452,10 @@ export default function SiteCreate() {
 
         {/* Actions */}
         <div className="flex gap-4 pt-4 border-t">
-          <Button type="submit" disabled={loading}>
+          <Button
+            type="submit"
+            disabled={loading || domainStatus === "loading"}
+          >
             {loading ? <Trans>Creating...</Trans> : <Trans>Create Site</Trans>}
           </Button>
           <LinkButton to="/sites" variant="outline">

@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replaced Site and Employee organizational-unit assignments with authorized
+  Legal Entity and Establishment cascades; Site forms additionally restrict
+  Customer choices to the selected Establishment, reset descendants
+  deterministically, and ignore stale lookup responses.
+- Separated customer legal-entity master data from establishment-specific
+  contact assignments across customer create, edit, detail, API clients, and
+  minimal privacy-preserving lookups.
 - Raised the Node.js requirement to `^22.22.2 || ^24.15.0 || >=26.0.0`,
   matching the effective requirement of the updated Markdown toolchain.
 - Local Vite development now proxies API traffic to the native Laravel server
@@ -30,6 +37,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Loaded every customer-establishment assignment page, resolved authorized
+  Legal Entity and Establishment names in read views, blocked Site and Employee
+  saves until domain-assignment authorization settles, and removed broad
+  organizational-unit prefetches from Site and Employee routes.
+- Revalidated every Site and Employee domain-assignment level after authorized
+  lookup refreshes, degraded customer detail pages only where auxiliary
+  establishment data fails, compensated partial customer and contact updates,
+  and prevented route changes from reusing stale customer or site deletion
+  state.
+- Preserved customer and site assignment integrity when dependent requests
+  fail, kept customer-scoped Site creation fixed to its route customer, made
+  optional Employee domain filters clearable, and localized the new
+  establishment-contact controls.
+- Preserved customer assignment integrity during establishment swaps, surfaced
+  failed customer route transitions instead of leaving the edit form loading,
+  restored focus movement to invalid Employee domain selectors, and removed
+  stale Employee forms and actions during parameter-only route transitions.
 - Made the Android mock login show its configured workspace instance in a
   centered, unboxed section with a compact label and smaller API origin between
   the login card and footer, while preserving the login card's page centering

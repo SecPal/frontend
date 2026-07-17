@@ -15,10 +15,12 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import SiteCreate from "./SiteCreate";
 import * as customersApi from "../../services/customersApi";
-import * as organizationalUnitApi from "../../services/organizationalUnitApi";
+import * as legalEntityApi from "../../services/customerLegalEntitiesApi";
+import * as domainApi from "../../services/customerDomainApi";
 
 vi.mock("../../services/customersApi");
-vi.mock("../../services/organizationalUnitApi");
+vi.mock("../../services/customerLegalEntitiesApi");
+vi.mock("../../services/customerDomainApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
 
@@ -50,8 +52,20 @@ function renderWithRouter(initialRoute = "/sites/new") {
 
 async function selectRadixOption(label: RegExp, optionName: RegExp) {
   const user = userEvent.setup();
-  await user.click(screen.getByRole("combobox", { name: label }));
+  const trigger = screen.getByRole("combobox", { name: label });
+  await waitFor(() => expect(trigger).not.toBeDisabled());
+  await user.click(trigger);
   await user.click(await screen.findByRole("option", { name: optionName }));
+}
+
+async function selectSiteAssignment() {
+  await waitFor(() =>
+    expect(domainApi.listEstablishmentLookups).toHaveBeenCalledWith(
+      "legal-entity-1"
+    )
+  );
+  await selectRadixOption(/establishment/i, /IT Department/i);
+  await selectRadixOption(/customer/i, /Customer One/i);
 }
 
 describe("SiteCreate", () => {
@@ -92,34 +106,14 @@ describe("SiteCreate", () => {
     },
   ];
 
-  const mockOrgUnits = [
-    {
-      id: "org-1",
-      type: "department" as const,
-      name: "IT Department",
-      is_legal_entity: false,
-      is_establishment: false,
-      created_at: "2025-01-01T00:00:00Z",
-      updated_at: "2025-01-01T00:00:00Z",
-    },
-    {
-      id: "org-2",
-      type: "division" as const,
-      name: "Security Team",
-      is_legal_entity: false,
-      is_establishment: false,
-      created_at: "2025-01-01T00:00:00Z",
-      updated_at: "2025-01-01T00:00:00Z",
-    },
-  ];
-
   const mockCreatedSite = {
     id: "site-new",
     site_number: "SITE-2025-001",
     name: "new site",
     type: "permanent" as const,
     customer_id: "customer-1",
-    organizational_unit_id: "org-1",
+    legal_entity_id: "legal-entity-1",
+    establishment_id: "establishment-1",
     address: {
       street: "Test Street 1",
       city: "Test City",
@@ -135,40 +129,26 @@ describe("SiteCreate", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(customersApi.listCustomers).mockResolvedValue({
-      data: mockCustomers,
-      meta: {
-        current_page: 1,
-        last_page: 1,
-        per_page: 100,
-        total: 2,
-      },
-    });
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockResolvedValue({
-      data: mockOrgUnits,
-      meta: {
-        current_page: 1,
-        last_page: 1,
-        per_page: 100,
-        total: 2,
-        root_unit_ids: [],
-      },
-    });
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
+      { id: "legal-entity-1", name: "SecPal GmbH" },
+    ]);
+    vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue([
+      { id: "establishment-1", name: "IT Department" },
+      { id: "establishment-2", name: "Security Team" },
+    ]);
+    vi.mocked(domainApi.listCustomerLookups).mockResolvedValue(
+      mockCustomers.map(({ id, name }) => ({ id, name }))
+    );
   });
 
-  it("loads customers and organizational units on mount", async () => {
+  it("loads the authorized domain cascade on mount", async () => {
     renderWithRouter();
 
     await waitFor(() => {
-      expect(customersApi.listCustomers).toHaveBeenCalledWith({
-        per_page: 100,
-      });
-      expect(
-        organizationalUnitApi.listOrganizationalUnits
-      ).toHaveBeenCalledWith({
-        is_assignable: true,
-        per_page: 100,
-      });
+      expect(legalEntityApi.listCustomerLegalEntities).toHaveBeenCalledTimes(1);
+      expect(domainApi.listEstablishmentLookups).toHaveBeenCalledWith(
+        "legal-entity-1"
+      );
     });
   });
 
@@ -184,7 +164,8 @@ describe("SiteCreate", () => {
     ).toBeInTheDocument();
 
     expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/organizational unit/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/legal entity/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/establishment/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/type/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/street/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/city/i)).toBeInTheDocument();
@@ -204,14 +185,23 @@ describe("SiteCreate", () => {
     expect(optionalLabel).toHaveClass("text-muted-foreground");
   });
 
-  it("pre-selects customer when customerId is in URL", async () => {
+  it("keeps the route customer pending until its establishment is selected", async () => {
     renderWithRouter("/sites/new/customer/customer-1");
 
-    await waitFor(() => {
+    await waitFor(() =>
+      expect(domainApi.listEstablishmentLookups).toHaveBeenCalledWith(
+        "legal-entity-1"
+      )
+    );
+    expect(screen.getByRole("combobox", { name: /customer/i })).toBeDisabled();
+
+    await selectRadixOption(/establishment/i, /IT Department/i);
+    await waitFor(() =>
       expect(
         screen.getByRole("combobox", { name: /customer/i })
-      ).toHaveTextContent("C001 - Customer One");
-    });
+      ).toHaveTextContent("Customer One")
+    );
+    expect(screen.getByRole("combobox", { name: /customer/i })).toBeDisabled();
   });
 
   it("keeps the create error alert on canonical theme tokens", async () => {
@@ -222,8 +212,7 @@ describe("SiteCreate", () => {
     renderWithRouter();
 
     await screen.findByLabelText(/customer/i);
-    await selectRadixOption(/customer/i, /C001 - Customer One/i);
-    await selectRadixOption(/organizational unit/i, /IT Department/i);
+    await selectSiteAssignment();
     fireEvent.change(screen.getByLabelText(/site name/i), {
       target: { value: "new site" },
     });
@@ -257,8 +246,7 @@ describe("SiteCreate", () => {
       await screen.findByLabelText(/customer/i);
 
       // Fill form
-      await selectRadixOption(/customer/i, /C001 - Customer One/i);
-      await selectRadixOption(/organizational unit/i, /IT Department/i);
+      await selectSiteAssignment();
       fireEvent.change(screen.getByLabelText(/site name/i), {
         target: { value: "new site" },
       });
@@ -278,7 +266,8 @@ describe("SiteCreate", () => {
       await waitFor(() => {
         expect(customersApi.createSite).toHaveBeenCalledWith({
           customer_id: "customer-1",
-          organizational_unit_id: "org-1",
+          legal_entity_id: "legal-entity-1",
+          establishment_id: "establishment-1",
           name: "new site",
           type: "permanent",
           address: {
@@ -316,8 +305,7 @@ describe("SiteCreate", () => {
       });
 
       // Fill all required fields to bypass HTML5 validation
-      await selectRadixOption(/customer/i, /C001 - Customer One/i);
-      await selectRadixOption(/organizational unit/i, /IT Department/i);
+      await selectSiteAssignment();
       fireEvent.change(screen.getByLabelText(/site name/i), {
         target: { value: "Test Site" },
       });
@@ -397,8 +385,7 @@ describe("SiteCreate", () => {
         expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
       });
 
-      await selectRadixOption(/customer/i, /C001 - Customer One/i);
-      await selectRadixOption(/organizational unit/i, /IT Department/i);
+      await selectSiteAssignment();
 
       // Fill fields with data that will trigger validation error
       fireEvent.change(screen.getByLabelText(/site name/i), {
@@ -443,20 +430,9 @@ describe("SiteCreate", () => {
     SLOW_TEST_TIMEOUT
   );
 
-  it("displays loading state while loading data", () => {
-    vi.mocked(customersApi.listCustomers).mockImplementation(
-      () =>
-        new Promise<Awaited<ReturnType<typeof customersApi.listCustomers>>>(
-          () => {}
-        )
-    );
-    vi.mocked(organizationalUnitApi.listOrganizationalUnits).mockImplementation(
-      () =>
-        new Promise<
-          Awaited<
-            ReturnType<typeof organizationalUnitApi.listOrganizationalUnits>
-          >
-        >(() => {})
+  it("disables the cascade while legal entities load", () => {
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockImplementation(
+      () => new Promise(() => {})
     );
 
     renderWithRouter();
@@ -464,22 +440,77 @@ describe("SiteCreate", () => {
     expect(
       screen.getByRole("heading", { name: /new site/i })
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("status", { name: "Loading site lookup data" })
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/legal entity/i)).toBeDisabled();
+    expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
+  });
+
+  it("blocks submission while the required domain assignment is unresolved", async () => {
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockImplementation(
+      () => new Promise(() => {})
+    );
+
+    renderWithRouter();
+    fireEvent.change(screen.getByLabelText(/site name/i), {
+      target: { value: "Pending Assignment Site" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Test Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "Test City" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+
+    const submit = screen.getByRole("button", { name: /create site/i });
+    expect(submit).toBeDisabled();
+    fireEvent.click(submit);
+    expect(customersApi.createSite).not.toHaveBeenCalled();
   });
 
   it("displays error when data loading fails", async () => {
-    vi.mocked(customersApi.listCustomers).mockRejectedValue(
-      new Error("Failed to load customers")
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockRejectedValue(
+      new Error("Failed to load legal entities")
     );
 
     renderWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByText(/failed to load customers/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/failed to load legal entities/i)
+      ).toBeInTheDocument();
     });
+  });
+
+  it("does not call the API after required domain lookups fail", async () => {
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockRejectedValue(
+      new Error("Failed to load legal entities")
+    );
+
+    renderWithRouter();
+    await screen.findByText(/failed to load legal entities/i);
+    fireEvent.change(screen.getByLabelText(/site name/i), {
+      target: { value: "Unavailable Assignment Site" },
+    });
+    fireEvent.change(screen.getByLabelText(/street/i), {
+      target: { value: "Test Street 1" },
+    });
+    fireEvent.change(screen.getByLabelText(/city/i), {
+      target: { value: "Test City" },
+    });
+    fireEvent.change(screen.getByLabelText(/postal code/i), {
+      target: { value: "12345" },
+    });
+
+    const submit = screen.getByRole("button", { name: /create site/i });
+    await waitFor(() => expect(submit).not.toBeDisabled());
+    fireEvent.click(submit);
+
+    expect(customersApi.createSite).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /domain assignment options could not be loaded/i
+    );
   });
 
   it(
@@ -493,8 +524,7 @@ describe("SiteCreate", () => {
         expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
       });
 
-      await selectRadixOption(/customer/i, /C001 - Customer One/i);
-      await selectRadixOption(/organizational unit/i, /IT Department/i);
+      await selectSiteAssignment();
       fireEvent.change(screen.getByLabelText(/site name/i), {
         target: { value: "new site" },
       });
@@ -547,8 +577,7 @@ describe("SiteCreate", () => {
         expect(screen.getByLabelText(/customer/i)).toBeInTheDocument();
       });
 
-      await selectRadixOption(/customer/i, /C001 - Customer One/i);
-      await selectRadixOption(/organizational unit/i, /IT Department/i);
+      await selectSiteAssignment();
       fireEvent.change(screen.getByLabelText(/site name/i), {
         target: { value: "Race Safe Site" },
       });

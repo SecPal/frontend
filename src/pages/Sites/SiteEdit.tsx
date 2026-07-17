@@ -21,18 +21,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/select";
-import {
-  getSite,
-  updateSite,
-  listCustomers,
-} from "../../services/customersApi";
+import { getSite, updateSite } from "../../services/customersApi";
 import type {
   Site,
   UpdateSiteRequest,
   Address,
   Contact,
-  Customer,
 } from "../../types/customers";
+import {
+  DomainAssignmentFields,
+  type DomainAssignmentStatus,
+} from "../../components/DomainAssignmentFields";
 import {
   Alert,
   AlertDescription,
@@ -53,8 +52,9 @@ export default function SiteEdit() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [domainStatus, setDomainStatus] =
+    useState<DomainAssignmentStatus>("loading");
   const [site, setSite] = useState<Site | null>(null);
-  const [customers, setCustomers] = useState<Customer[]>([]);
 
   const [formData, setFormData] = useState<UpdateSiteRequest>({});
 
@@ -62,9 +62,9 @@ export default function SiteEdit() {
     // Per-`id` cancellation flag: if a slow `getSite(prevId)` finishes
     // after the user has navigated to a new `/sites/:id/edit`, ignore
     // its result instead of refilling the form with the previous site's
-    // values under the new URL. The same Bugbot HIGH severity finding
-    // that flagged CustomerDetail, CustomerEdit, and SiteDetail applies
-    // to this file: a Save click before the lagging fetch resolves
+    // values under the new URL. The same route-lifecycle invariant used by
+    // CustomerDetail, CustomerEdit, and SiteDetail applies here: a Save click
+    // before the lagging fetch resolves
     // would have written the prior site's data to the new id.
     let cancelled = false;
 
@@ -82,15 +82,13 @@ export default function SiteEdit() {
       setError(null);
       setFieldErrors({});
       try {
-        const [siteData, customersData] = await Promise.all([
-          getSite(id),
-          listCustomers({ per_page: 100 }),
-        ]);
+        const siteData = await getSite(id);
         if (cancelled) return;
         setSite(siteData);
-        setCustomers(customersData.data);
         setFormData({
           customer_id: siteData.customer_id,
+          legal_entity_id: siteData.legal_entity_id,
+          establishment_id: siteData.establishment_id,
           name: siteData.name,
           address: siteData.address,
           contact: siteData.contact,
@@ -144,6 +142,8 @@ export default function SiteEdit() {
   function buildUpdatePayload(): UpdateSiteRequest {
     const payload: UpdateSiteRequest = {
       customer_id: formData.customer_id,
+      legal_entity_id: formData.legal_entity_id,
+      establishment_id: formData.establishment_id,
       name: formData.name,
       address: formData.address,
     };
@@ -160,6 +160,27 @@ export default function SiteEdit() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!id) return;
+
+    const domainErrors: Record<string, string[]> = {};
+    if (!formData.legal_entity_id)
+      domainErrors.legal_entity_id = [_(msg`Legal entity is required`)];
+    if (!formData.establishment_id)
+      domainErrors.establishment_id = [_(msg`Establishment is required`)];
+    if (!formData.customer_id)
+      domainErrors.customer_id = [_(msg`Customer is required`)];
+    if (domainStatus !== "ready") {
+      setFieldErrors(domainErrors);
+      setError(
+        domainStatus === "loading"
+          ? _(msg`The domain assignment is still loading.`)
+          : domainStatus === "error"
+            ? _(msg`The domain assignment options could not be loaded.`)
+            : _(
+                msg`Select an authorized legal entity, establishment, and customer.`
+              )
+      );
+      return;
+    }
 
     setSaving(true);
     setError(null);
@@ -207,7 +228,10 @@ export default function SiteEdit() {
       ) : (
         <>
           {error && (
-            <Alert className="mb-4 border-destructive/30 bg-destructive/10 text-foreground">
+            <Alert
+              role="alert"
+              className="mb-4 border-destructive/30 bg-destructive/10 text-foreground"
+            >
               <AlertDescription className="text-destructive">
                 {error}
               </AlertDescription>
@@ -217,41 +241,27 @@ export default function SiteEdit() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="site-customer">
-                  <Trans>Customer</Trans> *
-                </FieldLabel>
-                <Select
-                  name="customer_id"
-                  required
-                  value={formData.customer_id || ""}
-                  onValueChange={(value) => updateField("customer_id", value)}
-                >
-                  <SelectTrigger
-                    id="site-customer"
-                    aria-invalid={fieldErrors.customer_id ? true : undefined}
-                    aria-describedby={
-                      fieldErrors.customer_id
-                        ? "site-customer-error"
-                        : undefined
-                    }
-                  >
-                    <SelectValue placeholder={_(msg`Select customer...`)} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customers.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.customer_number} - {customer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {fieldErrors.customer_id && (
-                  <FieldError id="site-customer-error">
-                    {fieldErrors.customer_id.join(", ")}
-                  </FieldError>
-                )}
-              </Field>
+              <DomainAssignmentFields
+                idPrefix="site"
+                includeCustomer
+                onStatusChange={setDomainStatus}
+                value={{
+                  legal_entity_id: formData.legal_entity_id ?? "",
+                  establishment_id: formData.establishment_id ?? "",
+                  customer_id: formData.customer_id ?? "",
+                }}
+                onChange={(assignment) =>
+                  setFormData((current) => ({ ...current, ...assignment }))
+                }
+                errors={fieldErrors}
+                onClearErrors={(fields) =>
+                  setFieldErrors((current) => {
+                    const next = { ...current };
+                    for (const field of fields) delete next[field];
+                    return next;
+                  })
+                }
+              />
 
               <Field>
                 <FieldLabel htmlFor="site-name">
@@ -501,7 +511,10 @@ export default function SiteEdit() {
 
             {/* Actions */}
             <div className="flex gap-4 pt-4 border-t">
-              <Button type="submit" disabled={saving}>
+              <Button
+                type="submit"
+                disabled={saving || domainStatus === "loading"}
+              >
                 {saving ? (
                   <Trans>Saving...</Trans>
                 ) : (

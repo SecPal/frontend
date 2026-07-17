@@ -2,21 +2,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import SiteDetail from "./SiteDetail";
 import * as customersApi from "../../services/customersApi";
-import * as organizationalUnitApi from "../../services/organizationalUnitApi";
+import * as legalEntityApi from "../../services/customerLegalEntitiesApi";
+import * as domainApi from "../../services/customerDomainApi";
 
 const { mockUseUserCapabilities } = vi.hoisted(() => ({
   mockUseUserCapabilities: vi.fn(),
 }));
 
 vi.mock("../../services/customersApi");
-vi.mock("../../services/organizationalUnitApi");
+vi.mock("../../services/customerLegalEntitiesApi");
+vi.mock("../../services/customerDomainApi");
 vi.mock("../../hooks/useUserCapabilities", () => ({
   useUserCapabilities: mockUseUserCapabilities,
 }));
@@ -63,7 +65,8 @@ describe("SiteDetail", () => {
     name: "Munich Office",
     type: "permanent" as const,
     customer_id: "customer-123",
-    organizational_unit_id: "org-unit-123",
+    legal_entity_id: "legal-entity-123",
+    establishment_id: "establishment-1",
     address: {
       street: "Teststrasse 42",
       city: "München",
@@ -99,16 +102,6 @@ describe("SiteDetail", () => {
     updated_at: "2025-01-20T15:30:00Z",
   };
 
-  const mockOrgUnit = {
-    id: "org-unit-123",
-    type: "department" as const,
-    name: "IT Department",
-    is_legal_entity: false,
-    is_establishment: false,
-    created_at: "2025-01-15T10:00:00Z",
-    updated_at: "2025-01-20T15:30:00Z",
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
     window.history.pushState({}, "", "/sites/site-123");
@@ -117,14 +110,17 @@ describe("SiteDetail", () => {
         sites: { create: true, update: true, delete: true },
       },
     });
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
+      { id: "legal-entity-123", name: "SecPal GmbH" },
+    ]);
+    vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue([
+      { id: "establishment-1", name: "Munich Establishment" },
+    ]);
   });
 
-  it("loads and displays site details with customer and org unit names", async () => {
+  it("loads and displays site details with customer and domain assignments", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -146,8 +142,10 @@ describe("SiteDetail", () => {
     expect(screen.getByText("CUST-2025-001")).toBeInTheDocument();
     expect(screen.getByText("Street, 12345 City, DE")).toBeInTheDocument();
 
-    // Check org unit name is displayed (not ID)
-    expect(screen.getByText("IT Department")).toBeInTheDocument();
+    expect(await screen.findByText("SecPal GmbH")).toBeInTheDocument();
+    expect(screen.getByText("Munich Establishment")).toBeInTheDocument();
+    expect(screen.queryByText("legal-entity-123")).not.toBeInTheDocument();
+    expect(screen.queryByText("establishment-1")).not.toBeInTheDocument();
 
     // Check address
     expect(screen.getByText("Teststrasse 42")).toBeInTheDocument();
@@ -155,12 +153,23 @@ describe("SiteDetail", () => {
     expect(screen.getByText("München")).toBeInTheDocument();
   });
 
+  it("keeps site details visible when an establishment name lookup fails", async () => {
+    vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
+    vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
+    vi.mocked(domainApi.listEstablishmentLookups).mockRejectedValue(
+      new Error("Establishment names unavailable")
+    );
+
+    renderWithRouter();
+
+    expect(await screen.findByText("Munich Office")).toBeInTheDocument();
+    expect(await screen.findByText("SecPal GmbH")).toBeInTheDocument();
+    expect(screen.getByText("establishment-1")).toBeInTheDocument();
+  });
+
   it("renders postal code and city on separate site-address lines", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -197,21 +206,13 @@ describe("SiteDetail", () => {
     expect(screen.queryByText(/^Loading\.\.\.$/i)).not.toBeInTheDocument();
   });
 
-  it("renders site details while customer and org unit lookup data loads", async () => {
+  it("renders site details while customer lookup data loads", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockImplementation(
       () =>
         new Promise<Awaited<ReturnType<typeof customersApi.getCustomer>>>(
           () => {}
         )
-    );
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockImplementation(
-      () =>
-        new Promise<
-          Awaited<
-            ReturnType<typeof organizationalUnitApi.getOrganizationalUnit>
-          >
-        >(() => {})
     );
 
     renderWithRouter();
@@ -230,9 +231,6 @@ describe("SiteDetail", () => {
       customer: mockCustomer,
     });
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -248,9 +246,6 @@ describe("SiteDetail", () => {
   it("displays badges for site type and status", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -265,9 +260,6 @@ describe("SiteDetail", () => {
     const expiredSite = { ...mockSite, is_expired: true };
     vi.mocked(customersApi.getSite).mockResolvedValue(expiredSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -279,9 +271,6 @@ describe("SiteDetail", () => {
   it("keeps detail heading secondary text and destructive states on canonical theme tokens", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -292,9 +281,6 @@ describe("SiteDetail", () => {
   it("keeps delete-site errors on canonical destructive tokens", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
     vi.mocked(customersApi.deleteSite).mockRejectedValueOnce(
       new Error("Delete failed")
     );
@@ -320,12 +306,46 @@ describe("SiteDetail", () => {
     );
   });
 
+  it("drops destructive state and late delete completion on a route change", async () => {
+    const user = userEvent.setup();
+    let resolveDelete: (() => void) | undefined;
+    vi.mocked(customersApi.deleteSite).mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveDelete = resolve;
+        })
+    );
+    vi.mocked(customersApi.getSite).mockImplementation(async (id) => ({
+      ...mockSite,
+      id,
+      name: id === "site-123" ? "Munich Office" : "Berlin Office",
+      customer: mockCustomer,
+    }));
+
+    renderWithRouter();
+    await screen.findByRole("heading", { name: "Munich Office" });
+    await user.click(screen.getByRole("button", { name: /^delete$/i }));
+    await user.click(
+      within(await screen.findByRole("dialog")).getByRole("button", {
+        name: /^delete$/i,
+      })
+    );
+
+    await act(async () => {
+      window.history.pushState({}, "", "/sites/site-456");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    await waitFor(() =>
+      expect(screen.getAllByText("Berlin Office")).not.toHaveLength(0)
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await act(async () => resolveDelete?.());
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
   it("displays contact information", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -356,9 +376,6 @@ describe("SiteDetail", () => {
     };
     vi.mocked(customersApi.getSite).mockResolvedValue(unsafeSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     const { container } = renderWithRouter();
 
@@ -374,9 +391,6 @@ describe("SiteDetail", () => {
   it("shows edit and delete buttons", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -391,9 +405,6 @@ describe("SiteDetail", () => {
     const user = userEvent.setup();
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -412,9 +423,6 @@ describe("SiteDetail", () => {
     const user = userEvent.setup();
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
     vi.mocked(customersApi.deleteSite).mockResolvedValue(undefined);
 
     renderWithRouter();
@@ -461,13 +469,10 @@ describe("SiteDetail", () => {
     );
   });
 
-  it("falls back to IDs when customer or org unit loading fails", async () => {
+  it("falls back to IDs when customer loading fails", async () => {
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockRejectedValue(
       new Error("Failed to load customer")
-    );
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockRejectedValue(
-      new Error("Failed to load org unit")
     );
 
     renderWithRouter();
@@ -477,9 +482,9 @@ describe("SiteDetail", () => {
       expect(screen.getByText("Munich Office")).toBeInTheDocument();
     });
 
-    // Should display IDs as fallback
+    // Customer data falls back independently while domain names remain usable.
     expect(screen.getByText("customer-123")).toBeInTheDocument();
-    expect(screen.getByText("org-unit-123")).toBeInTheDocument();
+    expect(await screen.findByText("SecPal GmbH")).toBeInTheDocument();
   });
 
   it("hides edit and delete actions without site management capabilities", async () => {
@@ -490,9 +495,6 @@ describe("SiteDetail", () => {
     });
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     renderWithRouter();
 
@@ -534,9 +536,6 @@ describe("SiteDetail", () => {
       return siteB;
     });
     vi.mocked(customersApi.getCustomer).mockResolvedValue(mockCustomer);
-    vi.mocked(organizationalUnitApi.getOrganizationalUnit).mockResolvedValue(
-      mockOrgUnit
-    );
 
     window.history.pushState({}, "", "/sites/site-A");
     renderWithRouter();

@@ -274,9 +274,6 @@ export default function CustomersPage() {
                     <Trans>Legal Entity</Trans>
                   </TableHeader>
                   <TableHeader>
-                    <Trans>Contact</Trans>
-                  </TableHeader>
-                  <TableHeader>
                     <Trans>Sites</Trans>
                   </TableHeader>
                   <TableHeader>
@@ -289,7 +286,7 @@ export default function CustomersPage() {
               </TableHead>
               <TableBody>
                 {loading && customers.length === 0 ? (
-                  <CustomerTableSkeletonRows columns={7} rows={5} />
+                  <CustomerTableSkeletonRows columns={6} rows={5} />
                 ) : null}
 
                 {customers.map((customer) => (
@@ -300,9 +297,6 @@ export default function CustomersPage() {
                     <TableCell>{customer.name}</TableCell>
                     <TableCell className="text-muted-foreground break-all">
                       {getLegalEntitySummary(customer)}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {customer.contact?.email || "-"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {getCustomerSitesSummary(customer)}
@@ -327,7 +321,7 @@ export default function CustomersPage() {
 
                 {!loading && customers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-12 text-center">
+                    <TableCell colSpan={6} className="py-12 text-center">
                       <PageText className="text-muted-foreground">
                         <Trans>No customers found</Trans>
                       </PageText>
@@ -378,14 +372,6 @@ export default function CustomersPage() {
                 </div>
 
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">
-                      <Trans>Contact</Trans>
-                    </p>
-                    <p className="text-foreground break-words">
-                      {customer.contact?.email || "-"}
-                    </p>
-                  </div>
                   <div>
                     <p className="text-muted-foreground">
                       <Trans>Sites</Trans>

@@ -317,23 +317,20 @@ describe("customersApi", () => {
     });
 
     it("updates partial fields", async () => {
-      const updateData = {
-        notes: "New notes only",
-      };
+      const updateData = { name: "New name" };
 
       const mockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue({
           data: {
             id: "customer-123",
-            name: "Existing Name",
             billing_address: {
               street: "Street",
               city: "City",
               postal_code: "12345",
               country: "DE",
             },
-            notes: "New notes only",
+            name: "New name",
             is_active: true,
             created_at: "2025-01-01T00:00:00Z",
             updated_at: "2025-01-02T00:00:00Z",
@@ -345,7 +342,7 @@ describe("customersApi", () => {
 
       const result = await updateCustomer("customer-123", updateData);
 
-      expect(result.notes).toBe("New notes only");
+      expect(result.name).toBe("New name");
     });
 
     it("handles validation errors", async () => {
@@ -417,7 +414,8 @@ describe("customersApi", () => {
     it("creates a site with the Objekt MVP payload", async () => {
       const siteData = {
         customer_id: "customer-123",
-        organizational_unit_id: "internal-default-unit",
+        legal_entity_id: "internal-default-unit",
+        establishment_id: "establishment-1",
         name: "Objekt Alpha",
         type: "permanent" as const,
         address: minimalAddress,
@@ -479,7 +477,8 @@ describe("customersApi", () => {
           data: {
             id: "site-123",
             site_number: "OBJ-2026-0001",
-            organizational_unit_id: "internal-default-unit",
+            legal_entity_id: "internal-default-unit",
+            establishment_id: "establishment-1",
             type: "permanent",
             is_active: true,
             is_expired: false,
@@ -531,7 +530,8 @@ describe("customersApi", () => {
       await expect(
         createSite({
           customer_id: "",
-          organizational_unit_id: "",
+          legal_entity_id: "",
+          establishment_id: "",
           name: "",
           type: "permanent",
           address: {
@@ -615,7 +615,8 @@ describe("customersApi", () => {
       id: "site-123",
       customer_id: customer.id,
       customer,
-      organizational_unit_id: "internal-default-unit",
+      legal_entity_id: "internal-default-unit",
+      establishment_id: "establishment-1",
       site_number: "OBJ-2026-0001",
       name: "Objekt Alpha",
       type: "permanent",

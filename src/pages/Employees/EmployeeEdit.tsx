@@ -9,18 +9,13 @@ import { useLingui } from "@lingui/react";
 import type { Employee, EmployeeAddress, EmployeeFormData } from "@/types/api";
 import { Button } from "@/ui/button";
 import { Input } from "@/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/ui/select";
-import { FormSkeleton, LoadingRegion } from "@/ui/loading";
-import { Skeleton } from "@/ui/skeleton";
+import { Select, SelectContent, SelectTrigger, SelectValue } from "@/ui/select";
+import { FormSkeleton } from "@/ui/loading";
 import { fetchEmployee, updateEmployee } from "../../services/employeeApi";
-import { listOrganizationalUnits } from "../../services/organizationalUnitApi";
-import type { OrganizationalUnit } from "../../types/organizational";
+import {
+  DomainAssignmentFields,
+  type DomainAssignmentStatus,
+} from "../../components/DomainAssignmentFields";
 import {
   Alert,
   AlertDescription,
@@ -78,13 +73,15 @@ export function EmployeeEdit() {
     null
   );
   const [fetchLoading, setFetchLoading] = useState(id !== undefined);
-  const [error, setError] = useState<string | null>(
+  const [loadError, setLoadError] = useState<string | null>(
     id === undefined ? i18n._(msg`Employee ID is missing.`) : null
   );
-  const [organizationalUnits, setOrganizationalUnits] = useState<
-    OrganizationalUnit[]
-  >([]);
-  const [unitsLoading, setUnitsLoading] = useState(true);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [domainErrors, setDomainErrors] = useState<
+    Partial<Record<"legal_entity_id" | "establishment_id", string>>
+  >({});
+  const [domainStatus, setDomainStatus] =
+    useState<DomainAssignmentStatus>("loading");
   const [isLeadership, setIsLeadership] = useState(false);
   const [addressDraft, setAddressDraft] = useState<PostalAddressDraft>(
     emptyPostalAddressDraft
@@ -100,49 +97,32 @@ export function EmployeeEdit() {
     date_of_birth: "",
     position: "",
     contract_start_date: "",
-    organizational_unit_id: "",
+    legal_entity_id: "",
+    establishment_id: "",
     management_level: 0,
     status: "pre_contract",
     contract_type: "full_time",
   });
-  const [currentOrganizationalUnit, setCurrentOrganizationalUnit] = useState<
-    Employee["organizational_unit"] | null
-  >(null);
-
-  useEffect(() => {
-    async function loadOrganizationalUnits() {
-      try {
-        const response = await listOrganizationalUnits({
-          is_assignable: true,
-          per_page: 100,
-        });
-        setOrganizationalUnits(
-          response.data.filter((unit) => unit.is_assignable !== false)
-        );
-      } catch (err) {
-        console.error("Failed to load organizational units:", err);
-      } finally {
-        setUnitsLoading(false);
-      }
-    }
-
-    loadOrganizationalUnits();
-  }, []);
-
   useEffect(() => {
     if (!id) {
       return;
     }
 
     let active = true;
-
-    void fetchEmployee(id)
-      .then((employee: Employee) => {
+    async function loadEmployee() {
+      setFetchLoading(true);
+      setLoadError(null);
+      setSubmitError(null);
+      setDomainErrors({});
+      setBirthDateError(null);
+      setContractDateError(null);
+      try {
+        const employee: Employee = await fetchEmployee(id!);
         if (!active) {
           return;
         }
 
-        setError(null);
+        setLoadError(null);
         setFormData({
           first_name: employee.first_name || "",
           last_name: employee.last_name || "",
@@ -151,12 +131,12 @@ export function EmployeeEdit() {
           date_of_birth: employee.date_of_birth || "",
           position: employee.position || "",
           contract_start_date: employee.contract_start_date || "",
-          organizational_unit_id: employee.organizational_unit?.id || "",
+          legal_entity_id: employee.legal_entity_id,
+          establishment_id: employee.establishment_id,
           management_level: employee.management_level,
           status: employee.status,
           contract_type: employee.contract_type || "full_time",
         });
-        setCurrentOrganizationalUnit(employee.organizational_unit ?? null);
         const addressRows = mergeAddressBaseList(
           employee.addresses,
           employee.current_address
@@ -171,8 +151,7 @@ export function EmployeeEdit() {
 
         setBirthDateDirty(false);
         setContractDateDirty(false);
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!active) {
           return;
         }
@@ -190,13 +169,14 @@ export function EmployeeEdit() {
           errorMessage = String(err.message);
         }
 
-        setError(errorMessage);
-      })
-      .finally(() => {
+        setLoadError(errorMessage);
+      } finally {
         if (active) {
           setFetchLoading(false);
         }
-      });
+      }
+    }
+    void loadEmployee();
 
     return () => {
       active = false;
@@ -218,7 +198,7 @@ export function EmployeeEdit() {
     e.preventDefault();
     if (!id) {
       console.error("Cannot submit employee form: missing employee ID.");
-      setError(i18n._(msg`Employee ID is missing. Cannot submit form.`));
+      setSubmitError(i18n._(msg`Employee ID is missing. Cannot submit form.`));
       return;
     }
 
@@ -276,9 +256,31 @@ export function EmployeeEdit() {
       );
     }
 
+    if (domainStatus !== "ready") {
+      const nextDomainErrors: typeof domainErrors = {};
+      if (!formData.legal_entity_id)
+        nextDomainErrors.legal_entity_id = i18n._(
+          msg`Legal entity is required`
+        );
+      if (!formData.establishment_id)
+        nextDomainErrors.establishment_id = i18n._(
+          msg`Establishment is required`
+        );
+      setDomainErrors(nextDomainErrors);
+      setSubmitError(
+        domainStatus === "loading"
+          ? i18n._(msg`The domain assignment is still loading.`)
+          : domainStatus === "error"
+            ? i18n._(msg`The domain assignment options could not be loaded.`)
+            : i18n._(msg`Select an authorized legal entity and establishment.`)
+      );
+      return;
+    }
+
     try {
       setLoading(true);
-      setError(null);
+      setSubmitError(null);
+      setDomainErrors({});
       setBirthDateDisplay(normalizedBirthDateDisplay);
       setContractDateDisplay(normalizedContractDateDisplay);
       setBirthDateError(null);
@@ -314,7 +316,7 @@ export function EmployeeEdit() {
         errorMessage = String(err.message);
       }
 
-      setError(errorMessage);
+      setSubmitError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -331,7 +333,7 @@ export function EmployeeEdit() {
     setAddressDraft((prev) => ({ ...prev, [field]: value }));
   }
 
-  if (error) {
+  if (loadError) {
     return (
       <div className="flex items-center justify-center py-16">
         <Alert className="max-w-md border-destructive/30 bg-destructive/10 p-6 text-center text-foreground">
@@ -339,7 +341,7 @@ export function EmployeeEdit() {
             <Trans>Error Loading Employee</Trans>
           </AlertTitle>
           <AlertDescription className="text-destructive mt-2">
-            {error}
+            {loadError}
           </AlertDescription>
           <div className="mt-4">
             <LinkButton to="/employees" variant="destructive">
@@ -372,6 +374,19 @@ export function EmployeeEdit() {
             />
           ) : (
             <form onSubmit={handleSubmit} className="space-y-8">
+              {submitError && (
+                <Alert
+                  role="alert"
+                  className="border-destructive/30 bg-destructive/10 text-foreground"
+                >
+                  <AlertTitle className="text-destructive">
+                    <Trans>Error Updating Employee</Trans>
+                  </AlertTitle>
+                  <AlertDescription className="text-destructive">
+                    {submitError}
+                  </AlertDescription>
+                </Alert>
+              )}
               {/* Personal Information */}
               <Fieldset>
                 <Legend>
@@ -590,60 +605,32 @@ export function EmployeeEdit() {
                       )}
                     </Field>
 
-                    <Field>
-                      <FieldLabel htmlFor="organizational_unit_id">
-                        <Trans>Organizational Unit</Trans> *
-                      </FieldLabel>
-                      <LoadingRegion
-                        loading={unitsLoading}
-                        loadingLabel={i18n._(msg`Loading unit options`)}
-                      >
-                        <Select
-                          value={
-                            unitsLoading ? "" : formData.organizational_unit_id
+                    <DomainAssignmentFields
+                      idPrefix="employee"
+                      value={formData}
+                      onStatusChange={setDomainStatus}
+                      errors={domainErrors}
+                      onClearErrors={(fields) =>
+                        setDomainErrors((current) => {
+                          const next = { ...current };
+                          for (const field of fields) {
+                            if (
+                              field === "legal_entity_id" ||
+                              field === "establishment_id"
+                            )
+                              delete next[field];
                           }
-                          onValueChange={(value) =>
-                            handleChange("organizational_unit_id", value)
-                          }
-                          disabled={unitsLoading}
-                        >
-                          <SelectTrigger id="organizational_unit_id">
-                            <SelectValue
-                              placeholder={
-                                unitsLoading
-                                  ? i18n._(msg`Loading...`)
-                                  : i18n._(msg`Select organizational unit`)
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {currentOrganizationalUnit &&
-                            !organizationalUnits.some(
-                              (unit) => unit.id === currentOrganizationalUnit.id
-                            ) ? (
-                              <SelectItem
-                                value={currentOrganizationalUnit.id}
-                                data-value={currentOrganizationalUnit.id}
-                              >
-                                {currentOrganizationalUnit.name}
-                              </SelectItem>
-                            ) : null}
-                            {organizationalUnits.map((unit) => (
-                              <SelectItem
-                                key={unit.id}
-                                value={unit.id}
-                                data-value={unit.id}
-                              >
-                                {unit.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {unitsLoading ? (
-                          <Skeleton className="mt-2 h-4 w-48 max-w-full" />
-                        ) : null}
-                      </LoadingRegion>
-                    </Field>
+                          return next;
+                        })
+                      }
+                      onChange={(assignment) => {
+                        setFormData((current) => ({
+                          ...current,
+                          ...assignment,
+                        }));
+                        setSubmitError(null);
+                      }}
+                    />
 
                     <EmployeeManagementLevelField
                       checked={isLeadership}
@@ -699,7 +686,10 @@ export function EmployeeEdit() {
                 >
                   <Trans>Cancel</Trans>
                 </Button>
-                <Button type="submit" disabled={loading}>
+                <Button
+                  type="submit"
+                  disabled={loading || domainStatus === "loading"}
+                >
                   {loading ? (
                     <Trans>Saving...</Trans>
                   ) : (

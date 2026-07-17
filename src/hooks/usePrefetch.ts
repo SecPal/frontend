@@ -91,20 +91,17 @@ export function getRoutePrefetchPlan(
         [listApiPath("sites", { page: "1", per_page: "15" })]
       );
     case "/sites/new":
-      return routePlan(
-        ["siteCreate"],
-        [listApiPath("organizational-units", { per_page: "100" })]
-      );
+      return routePlan(["siteCreate"], ["/v1/lookups/legal-entities"]);
     case "/employees":
       return routePlan(
         ["employeeList"],
         [
           listApiPath("employees", { page: "1", per_page: "15" }),
-          "/v1/organizational-units",
+          "/v1/lookups/legal-entities",
         ]
       );
     case "/employees/create":
-      return routePlan(["employeeCreate"], ["/v1/organizational-units"]);
+      return routePlan(["employeeCreate"], ["/v1/lookups/legal-entities"]);
     case "/activity-logs":
       return routePlan(
         ["activityLogs"],
@@ -159,17 +156,17 @@ export function getRoutePrefetchPlan(
     const customerId = encodePathSegment(customerSiteCreateMatch[1] ?? "");
     return routePlan(
       ["siteCreate"],
-      [
-        `/v1/customers/${customerId}`,
-        listApiPath("organizational-units", { per_page: "100" }),
-      ]
+      [`/v1/customers/${customerId}`, "/v1/lookups/legal-entities"]
     );
   }
 
   const siteMatch = pathname.match(/^\/sites\/([^/]+)$/);
   if (siteMatch) {
     const id = encodePathSegment(siteMatch[1] ?? "");
-    return routePlan(["siteDetail"], [`/v1/sites/${id}`]);
+    return routePlan(
+      ["siteDetail"],
+      [`/v1/sites/${id}`, "/v1/lookups/legal-entities"]
+    );
   }
 
   const siteEditMatch = pathname.match(/^\/sites\/([^/]+)\/edit$/);
@@ -177,10 +174,7 @@ export function getRoutePrefetchPlan(
     const id = encodePathSegment(siteEditMatch[1] ?? "");
     return routePlan(
       ["siteEdit"],
-      [
-        `/v1/sites/${id}`,
-        listApiPath("organizational-units", { per_page: "100" }),
-      ]
+      [`/v1/sites/${id}`, "/v1/lookups/legal-entities"]
     );
   }
 
@@ -197,14 +191,17 @@ export function getRoutePrefetchPlan(
     const id = encodePathSegment(employeeEditMatch[1] ?? "");
     return routePlan(
       ["employeeEdit"],
-      [`/v1/employees/${id}`, "/v1/organizational-units"]
+      [`/v1/employees/${id}`, "/v1/lookups/legal-entities"]
     );
   }
 
   const employeeMatch = pathname.match(/^\/employees\/([^/]+)$/);
   if (employeeMatch) {
     const id = encodePathSegment(employeeMatch[1] ?? "");
-    return routePlan(["employeeDetail"], [`/v1/employees/${id}`]);
+    return routePlan(
+      ["employeeDetail"],
+      [`/v1/employees/${id}`, "/v1/lookups/legal-entities"]
+    );
   }
 
   return null;

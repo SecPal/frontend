@@ -47,8 +47,10 @@ export async function fetchEmployees(
   const params = new URLSearchParams();
 
   if (filters?.status) params.append("status", filters.status);
-  if (filters?.organizational_unit_id)
-    params.append("organizational_unit_id", filters.organizational_unit_id);
+  if (filters?.legal_entity_id)
+    params.append("legal_entity_id", filters.legal_entity_id);
+  if (filters?.establishment_id)
+    params.append("establishment_id", filters.establishment_id);
   if (filters?.search) params.append("search", filters.search);
   if (filters?.page) params.append("page", filters.page.toString());
   if (filters?.per_page) params.append("per_page", filters.per_page.toString());

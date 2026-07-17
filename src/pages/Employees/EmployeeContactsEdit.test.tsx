@@ -60,7 +60,8 @@ const mockEmployee: Employee = {
   contract_start_date: "2025-01-01",
   status: "active",
   contract_type: "full_time",
-  organizational_unit: null,
+  legal_entity_id: "legal-entity-1",
+  establishment_id: "establishment-1",
   management_level: 0,
   addresses: [
     {

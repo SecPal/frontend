@@ -14,8 +14,12 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import SiteEdit from "./SiteEdit";
 import * as customersApi from "../../services/customersApi";
+import * as legalEntityApi from "../../services/customerLegalEntitiesApi";
+import * as domainApi from "../../services/customerDomainApi";
 
 vi.mock("../../services/customersApi");
+vi.mock("../../services/customerLegalEntitiesApi");
+vi.mock("../../services/customerDomainApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
 
@@ -41,6 +45,14 @@ function renderWithRouter() {
   );
 }
 
+async function waitForDomainAssignmentReady() {
+  await waitFor(() =>
+    expect(
+      screen.getByRole("button", { name: /save changes/i })
+    ).not.toBeDisabled()
+  );
+}
+
 describe("SiteEdit", () => {
   const mockSite = {
     id: "site-123",
@@ -48,7 +60,8 @@ describe("SiteEdit", () => {
     name: "Test Site",
     type: "permanent" as const,
     customer_id: "customer-1",
-    organizational_unit_id: "org-1",
+    legal_entity_id: "org-1",
+    establishment_id: "establishment-1",
     address: {
       street: "Old Street 1",
       city: "Old City",
@@ -111,25 +124,27 @@ describe("SiteEdit", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(customersApi.getSite).mockResolvedValue(mockSite);
-    vi.mocked(customersApi.listCustomers).mockResolvedValue({
-      data: mockCustomers,
-      meta: {
-        current_page: 1,
-        last_page: 1,
-        per_page: 100,
-        total: 2,
-      },
-    });
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
+      { id: "org-1", name: "SecPal GmbH" },
+      { id: "org-2", name: "SecPal Operations GmbH" },
+    ]);
+    vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue([
+      { id: "establishment-1", name: "Berlin" },
+    ]);
+    vi.mocked(domainApi.listCustomerLookups).mockResolvedValue(
+      mockCustomers.map(({ id, name }) => ({ id, name }))
+    );
   });
 
-  it("loads site data and customers on mount", async () => {
+  it("loads site data and its authorized domain cascade", async () => {
     renderWithRouter();
 
     await waitFor(() => {
       expect(customersApi.getSite).toHaveBeenCalledWith("site-123");
-      expect(customersApi.listCustomers).toHaveBeenCalledWith({
-        per_page: 100,
-      });
+      expect(domainApi.listEstablishmentLookups).toHaveBeenCalledWith("org-1");
+      expect(domainApi.listCustomerLookups).toHaveBeenCalledWith(
+        "establishment-1"
+      );
     });
   });
 
@@ -164,12 +179,11 @@ describe("SiteEdit", () => {
     await waitFor(() => {
       expect(
         screen.getByRole("combobox", { name: /customer/i })
-      ).toHaveTextContent("C001 - Customer One");
+      ).toHaveTextContent("Customer One");
     });
 
-    expect(
-      screen.queryByLabelText(/organizational unit/i)
-    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/legal entity/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/establishment/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/type/i)).not.toBeInTheDocument();
   });
 
@@ -202,11 +216,14 @@ describe("SiteEdit", () => {
       });
 
       // Submit
+      await waitForDomainAssignmentReady();
       fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
       await waitFor(() => {
         expect(customersApi.updateSite).toHaveBeenCalledWith("site-123", {
           customer_id: "customer-1",
+          legal_entity_id: "org-1",
+          establishment_id: "establishment-1",
           name: "Updated site name",
           address: {
             street: "Old Street 1",
@@ -230,12 +247,6 @@ describe("SiteEdit", () => {
     vi.mocked(customersApi.getSite).mockImplementation(
       () =>
         new Promise<Awaited<ReturnType<typeof customersApi.getSite>>>(() => {})
-    );
-    vi.mocked(customersApi.listCustomers).mockImplementation(
-      () =>
-        new Promise<Awaited<ReturnType<typeof customersApi.listCustomers>>>(
-          () => {}
-        )
     );
     renderWithRouter();
 
@@ -297,6 +308,7 @@ describe("SiteEdit", () => {
         expect(screen.getByLabelText(/site name/i)).toBeInTheDocument();
       });
 
+      await waitForDomainAssignmentReady();
       fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
       await waitFor(() => {
@@ -360,6 +372,7 @@ describe("SiteEdit", () => {
       target: { value: "jane@secpal.dev" },
     });
 
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -388,11 +401,14 @@ describe("SiteEdit", () => {
       target: { value: "Updated site name" },
     });
 
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
       expect(customersApi.updateSite).toHaveBeenCalledWith("site-123", {
         customer_id: "customer-1",
+        legal_entity_id: "org-1",
+        establishment_id: "establishment-1",
         name: "Updated site name",
         address: {
           street: "Old Street 1",
@@ -418,6 +434,7 @@ describe("SiteEdit", () => {
       target: { value: "+49 987 654321" },
     });
 
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -454,6 +471,7 @@ describe("SiteEdit", () => {
       target: { value: "" },
     });
 
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -600,6 +618,7 @@ describe("SiteEdit", () => {
       });
     });
 
+    await waitForDomainAssignmentReady();
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
 
     await waitFor(() => {
@@ -614,5 +633,48 @@ describe("SiteEdit", () => {
         })
       );
     });
+  });
+
+  it("blocks submission after authorization invalidates the loaded assignment", async () => {
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
+      { id: "org-2", name: "SecPal Operations GmbH" },
+    ]);
+
+    renderWithRouter();
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/legal entity/i)).toHaveTextContent(
+        "SecPal Operations GmbH"
+      );
+      expect(screen.getByLabelText(/establishment/i)).toHaveTextContent(
+        /select establishment/i
+      );
+    });
+
+    await waitForDomainAssignmentReady();
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(customersApi.updateSite).not.toHaveBeenCalled();
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        /select.*establishment/i
+      );
+    });
+  });
+
+  it("blocks submission when assignment authorization cannot be verified", async () => {
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockRejectedValue(
+      new Error("Legal entities unavailable")
+    );
+
+    renderWithRouter();
+    await screen.findByText("Legal entities unavailable");
+    await waitForDomainAssignmentReady();
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+
+    expect(customersApi.updateSite).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      /domain assignment options could not be loaded/i
+    );
   });
 });

@@ -79,7 +79,7 @@ describe("usePrefetch route strategy", () => {
       routeModules: ["employeeList"],
       apiPaths: [
         "/v1/employees?page=1&per_page=15",
-        "/v1/organizational-units",
+        "/v1/lookups/legal-entities",
       ],
     });
   });
@@ -92,27 +92,39 @@ describe("usePrefetch route strategy", () => {
 
     expect(getRoutePrefetchPlan("/sites/site-123/edit")).toEqual({
       routeModules: ["siteEdit"],
-      apiPaths: ["/v1/sites/site-123", "/v1/organizational-units?per_page=100"],
+      apiPaths: ["/v1/sites/site-123", "/v1/lookups/legal-entities"],
+    });
+
+    expect(getRoutePrefetchPlan("/sites/site-123")).toEqual({
+      routeModules: ["siteDetail"],
+      apiPaths: ["/v1/sites/site-123", "/v1/lookups/legal-entities"],
     });
 
     expect(getRoutePrefetchPlan("/employees/employee-123")).toEqual({
       routeModules: ["employeeDetail"],
-      apiPaths: ["/v1/employees/employee-123"],
+      apiPaths: ["/v1/employees/employee-123", "/v1/lookups/legal-entities"],
     });
   });
 
-  it("aligns site-create org-units prefetch with the page's listOrganizationalUnits({ per_page: 100 }) call", () => {
+  it("prefetches authorized legal entities without loading RBAC organizational units", () => {
     expect(getRoutePrefetchPlan("/sites/new")).toEqual({
       routeModules: ["siteCreate"],
-      apiPaths: ["/v1/organizational-units?per_page=100"],
+      apiPaths: ["/v1/lookups/legal-entities"],
     });
 
     expect(getRoutePrefetchPlan("/sites/new/customer/customer-123")).toEqual({
       routeModules: ["siteCreate"],
-      apiPaths: [
-        "/v1/customers/customer-123",
-        "/v1/organizational-units?per_page=100",
-      ],
+      apiPaths: ["/v1/customers/customer-123", "/v1/lookups/legal-entities"],
+    });
+
+    expect(getRoutePrefetchPlan("/employees/create")).toEqual({
+      routeModules: ["employeeCreate"],
+      apiPaths: ["/v1/lookups/legal-entities"],
+    });
+
+    expect(getRoutePrefetchPlan("/employees/employee-123/edit")).toEqual({
+      routeModules: ["employeeEdit"],
+      apiPaths: ["/v1/employees/employee-123", "/v1/lookups/legal-entities"],
     });
   });
 

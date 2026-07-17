@@ -9,7 +9,7 @@ import {
   fireEvent,
   waitFor,
 } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { Link, MemoryRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { messages as deMessages } from "../../locales/de/messages.mjs";
@@ -20,6 +20,8 @@ import { ApiError } from "../../services/ApiError";
 import * as employeeApi from "../../services/employeeApi";
 import * as qualificationApi from "../../services/qualificationApi";
 import * as documentApi from "../../services/employeeDocumentApi";
+import * as legalEntityApi from "../../services/customerLegalEntitiesApi";
+import * as domainApi from "../../services/customerDomainApi";
 
 const { mockUseUserCapabilities } = vi.hoisted(() => ({
   mockUseUserCapabilities: vi.fn(),
@@ -33,6 +35,8 @@ vi.mock("../../services/addressApi", () => ({
   fetchAddressLocalitySuggestions: vi.fn().mockResolvedValue([]),
 }));
 vi.mock("../../services/employeeDocumentApi");
+vi.mock("../../services/customerLegalEntitiesApi");
+vi.mock("../../services/customerDomainApi");
 vi.mock("../../hooks/useUserCapabilities", () => ({
   useUserCapabilities: mockUseUserCapabilities,
 }));
@@ -122,10 +126,8 @@ const mockEmployee: Employee = {
     mail_failed_at: null,
     failure_reason: null,
   },
-  organizational_unit: {
-    id: "unit-1",
-    name: "Engineering",
-  },
+  legal_entity_id: "legal-entity-1",
+  establishment_id: "establishment-1",
   addresses: [
     {
       id: "addr-default",
@@ -171,6 +173,12 @@ describe("EmployeeDetail", () => {
       []
     );
     vi.mocked(documentApi.fetchEmployeeDocuments).mockResolvedValue([]);
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
+      { id: "legal-entity-1", name: "SecPal GmbH" },
+    ]);
+    vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue([
+      { id: "establishment-1", name: "Engineering" },
+    ]);
   });
 
   it("should render employee details", async () => {
@@ -184,8 +192,63 @@ describe("EmployeeDetail", () => {
 
     expect(screen.getAllByText("E001").length).toBeGreaterThan(0);
     expect(screen.getByText("Developer")).toBeInTheDocument();
+    expect(await screen.findByText("SecPal GmbH")).toBeInTheDocument();
     expect(screen.getByText("Engineering")).toBeInTheDocument();
+    expect(screen.queryByText("legal-entity-1")).not.toBeInTheDocument();
+    expect(screen.queryByText("establishment-1")).not.toBeInTheDocument();
     expect(screen.getByText("Sent")).toBeInTheDocument();
+  });
+
+  it("keeps employee details visible with ID fallbacks when names fail", async () => {
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockRejectedValue(
+      new Error("Names unavailable")
+    );
+
+    renderWithProviders("emp-1");
+
+    expect(
+      await screen.findByRole("heading", { name: "John Doe" })
+    ).toBeInTheDocument();
+    expect(await screen.findByText("legal-entity-1")).toBeInTheDocument();
+    expect(screen.getByText("establishment-1")).toBeInTheDocument();
+  });
+
+  it("hides the previous employee while a new detail route is loading", async () => {
+    let rejectNextEmployee!: (reason: Error) => void;
+    vi.mocked(employeeApi.fetchEmployee).mockImplementation((id) =>
+      id === "emp-1"
+        ? Promise.resolve(mockEmployee)
+        : new Promise((_, reject) => {
+            rejectNextEmployee = reject;
+          })
+    );
+    render(
+      <I18nProvider i18n={i18n}>
+        <MemoryRouter initialEntries={["/employees/emp-1"]}>
+          <Link to="/employees/emp-2">Next employee</Link>
+          <Routes>
+            <Route path="/employees/:id" element={<EmployeeDetail />} />
+          </Routes>
+        </MemoryRouter>
+      </I18nProvider>
+    );
+    expect(
+      await screen.findByRole("heading", { name: "John Doe" })
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("link", { name: /next employee/i }));
+
+    expect(
+      await screen.findByText(/loading employee details/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "John Doe" })
+    ).not.toBeInTheDocument();
+
+    await act(async () => {
+      rejectNextEmployee(new Error("Employee 2 failed to load"));
+    });
+    expect(await screen.findByText("Employee 2 failed to load")).toBeVisible();
   });
 
   it("renders the migrated shadcn/Radix detail surface with dark-mode classes", async () => {
@@ -750,7 +813,8 @@ describe("EmployeeDetail", () => {
       ...mockEmployee,
       date_of_birth: null,
       contract_start_date: null,
-      organizational_unit: null,
+      legal_entity_id: "legal-entity-1",
+      establishment_id: "establishment-1",
     });
 
     renderWithProviders("emp-1");

@@ -6,7 +6,7 @@
  * Epic #210 - Customer & Site Management
  */
 
-import { useState, useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -16,14 +16,12 @@ import { Button } from "@/ui/button";
 import { LoadingRegion, SectionSkeleton } from "@/ui/loading";
 import { Skeleton } from "@/ui/skeleton";
 import { getSite, deleteSite, getCustomer } from "../../services/customersApi";
-import { getOrganizationalUnit } from "../../services/organizationalUnitApi";
 import type {
   Address,
   Customer,
   Site,
   SiteCustomer,
 } from "../../types/customers";
-import type { OrganizationalUnit } from "../../types/organizational";
 import {
   DescriptionList,
   DescriptionDetails,
@@ -47,6 +45,7 @@ import {
 import { formatDate } from "../../lib/dateUtils";
 import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
+import { useDomainAssignmentNames } from "../../hooks/useDomainAssignmentNames";
 
 function formatAddress(address: Address): string {
   return [
@@ -63,22 +62,27 @@ export default function SiteDetail() {
   const capabilities = useUserCapabilities();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const activeRouteId = useRef(id);
   const [site, setSite] = useState<Site | null>(null);
   const [customer, setCustomer] = useState<Customer | SiteCustomer | null>(
     null
   );
-  const [orgUnit, setOrgUnit] = useState<OrganizationalUnit | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const domainNames = useDomainAssignmentNames(site ? [site] : []);
+
+  useLayoutEffect(() => {
+    activeRouteId.current = id;
+  }, [id]);
 
   useEffect(() => {
     // Per-`id` cancellation flag: if a slow `getSite(prevId)` finishes
     // after the user has navigated to a new `/sites/:id`, ignore its
     // result instead of letting it overwrite `site`, `customer`, and
-    // `orgUnit` with the previous record's data under the new URL.
+    // association data with the previous record's data under the new URL.
     let cancelled = false;
 
     async function loadData() {
@@ -87,7 +91,9 @@ export default function SiteDetail() {
       setLoadError(null);
       setSite(null);
       setCustomer(null);
-      setOrgUnit(null);
+      setShowDeleteDialog(false);
+      setDeleteError(null);
+      setDeleting(false);
       try {
         const siteData = await getSite(id);
         if (cancelled) return;
@@ -96,20 +102,16 @@ export default function SiteDetail() {
           setCustomer(siteData.customer);
         }
 
-        // Load customer and org unit in parallel, but don't fail if they error
-        const [customerResult, orgUnitResult] = await Promise.allSettled([
+        // Load the customer relation, but don't fail the page if it errors.
+        const [customerResult] = await Promise.allSettled([
           siteData.customer
             ? Promise.resolve(siteData.customer)
             : getCustomer(siteData.customer_id),
-          getOrganizationalUnit(siteData.organizational_unit_id),
         ]);
         if (cancelled) return;
 
         if (customerResult.status === "fulfilled") {
           setCustomer(customerResult.value);
-        }
-        if (orgUnitResult.status === "fulfilled") {
-          setOrgUnit(orgUnitResult.value);
         }
       } catch (err) {
         if (cancelled) return;
@@ -128,14 +130,17 @@ export default function SiteDetail() {
 
   async function handleDelete() {
     if (!site) return;
+    const siteId = site.id;
 
     setDeleting(true);
     setDeleteError(null);
 
     try {
-      await deleteSite(site.id);
+      await deleteSite(siteId);
+      if (activeRouteId.current !== siteId) return;
       navigate("/sites");
     } catch (err) {
+      if (activeRouteId.current !== siteId) return;
       setDeleteError(
         err instanceof Error ? err.message : _(msg`Failed to delete site`)
       );
@@ -440,16 +445,19 @@ export default function SiteDetail() {
           >
             <DescriptionList>
               <DescriptionTerm>
-                <Trans>Organizational Unit</Trans>
+                <Trans>Legal Entity</Trans>
               </DescriptionTerm>
               <DescriptionDetails>
-                {orgUnit ? (
-                  orgUnit.name
-                ) : isAssociationLoading ? (
-                  <Skeleton className="h-4 w-40" />
-                ) : (
-                  site.organizational_unit_id
-                )}
+                {domainNames.legalEntities[site.legal_entity_id] ??
+                  site.legal_entity_id}
+              </DescriptionDetails>
+
+              <DescriptionTerm>
+                <Trans>Establishment</Trans>
+              </DescriptionTerm>
+              <DescriptionDetails>
+                {domainNames.establishments[site.establishment_id] ??
+                  site.establishment_id}
               </DescriptionDetails>
 
               <DescriptionTerm>

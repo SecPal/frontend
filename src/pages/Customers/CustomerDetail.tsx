@@ -6,7 +6,7 @@
  * Epic #210 - Customer & Site Management
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
@@ -16,7 +16,15 @@ import { Button } from "@/ui/button";
 import { Skeleton } from "@/ui/skeleton";
 import { SectionSkeleton } from "@/ui";
 import { deleteCustomer, getCustomer } from "../../services/customersApi";
-import type { Customer } from "@/types/api/customers";
+import {
+  listAllCustomerEstablishments,
+  listEstablishmentLookups,
+} from "../../services/customerDomainApi";
+import type {
+  Customer,
+  CustomerEstablishment,
+  EstablishmentLookup,
+} from "@/types/api/customers";
 import {
   Alert,
   AlertDescription,
@@ -39,6 +47,7 @@ import {
 } from "@/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
+import { useDomainAssignmentNames } from "../../hooks/useDomainAssignmentNames";
 
 function getCustomerSitesCount(customer: Customer): number | null {
   return typeof customer.sites_count === "number" ? customer.sites_count : null;
@@ -59,12 +68,30 @@ export default function CustomerDetail() {
   const capabilities = useUserCapabilities();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const activeRouteId = useRef(id);
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [customerEstablishments, setCustomerEstablishments] = useState<
+    CustomerEstablishment[] | null
+  >(null);
+  const [establishmentLookups, setEstablishmentLookups] = useState<
+    EstablishmentLookup[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [assignmentLoading, setAssignmentLoading] = useState(false);
+  const [assignmentLoadError, setAssignmentLoadError] = useState<string | null>(
+    null
+  );
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const domainNames = useDomainAssignmentNames(
+    customer ? [{ legal_entity_id: customer.legal_entity_id }] : []
+  );
+
+  useLayoutEffect(() => {
+    activeRouteId.current = id;
+  }, [id]);
 
   useEffect(() => {
     // Capture a per-`id` cancellation flag so that a slow fetch for the
@@ -84,8 +111,15 @@ export default function CustomerDetail() {
       // new fetch resolved, letting a user act on the wrong record
       // during that window.
       setCustomer(null);
+      setCustomerEstablishments(null);
+      setEstablishmentLookups([]);
       setLoading(true);
       setLoadError(null);
+      setAssignmentLoading(false);
+      setAssignmentLoadError(null);
+      setShowDeleteDialog(false);
+      setDeleteError(null);
+      setDeleting(false);
       if (!id) {
         setLoading(false);
         return;
@@ -94,13 +128,35 @@ export default function CustomerDetail() {
         const data = await getCustomer(id);
         if (cancelled) return;
         setCustomer(data);
+        setLoading(false);
+        setAssignmentLoading(true);
+
+        const [links, lookups] = await Promise.allSettled([
+          listAllCustomerEstablishments({ customer_id: id }),
+          listEstablishmentLookups(data.legal_entity_id),
+        ]);
+        if (cancelled) return;
+        if (links.status === "fulfilled") {
+          setCustomerEstablishments(links.value);
+        }
+        if (lookups.status === "fulfilled") {
+          setEstablishmentLookups(lookups.value);
+        }
+        if (links.status === "rejected" || lookups.status === "rejected") {
+          setAssignmentLoadError(
+            _(msg`Some establishment details could not be loaded.`)
+          );
+        }
       } catch (err) {
         if (cancelled) return;
         setLoadError(
           err instanceof Error ? err.message : _(msg`Failed to load customer`)
         );
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          setAssignmentLoading(false);
+        }
       }
     }
     loadCustomer();
@@ -111,14 +167,17 @@ export default function CustomerDetail() {
 
   async function handleDelete() {
     if (!customer) return;
+    const customerId = customer.id;
 
     setDeleting(true);
     setDeleteError(null);
 
     try {
-      await deleteCustomer(customer.id);
+      await deleteCustomer(customerId);
+      if (activeRouteId.current !== customerId) return;
       navigate("/customers");
     } catch (err) {
+      if (activeRouteId.current !== customerId) return;
       setDeleteError(
         err instanceof Error ? err.message : _(msg`Failed to delete customer`)
       );
@@ -185,12 +244,13 @@ export default function CustomerDetail() {
             </PageTitle>
             <DescriptionList>
               <DescriptionTerm>
-                <Trans>Legal Entity ID</Trans>
+                <Trans>Legal Entity</Trans>
               </DescriptionTerm>
               <DescriptionDetails>
                 {typeof customer.legal_entity_id === "string" &&
                 customer.legal_entity_id.trim().length > 0 ? (
-                  customer.legal_entity_id
+                  (domainNames.legalEntities[customer.legal_entity_id] ??
+                  customer.legal_entity_id)
                 ) : (
                   <span className="text-destructive">
                     <Trans>
@@ -247,72 +307,109 @@ export default function CustomerDetail() {
             </DescriptionList>
           </div>
 
-          {/* Contact Information */}
-          {customer.contact && (
-            <div>
-              <PageTitle level={2} className="mb-4">
-                <Trans>Contact Person</Trans>
-              </PageTitle>
-              <DescriptionList>
-                {customer.contact.name && (
-                  <>
-                    <DescriptionTerm>
-                      <Trans>Name</Trans>
-                    </DescriptionTerm>
-                    <DescriptionDetails>
-                      {customer.contact.name}
-                    </DescriptionDetails>
-                  </>
-                )}
-
-                {customer.contact.email && (
-                  <>
-                    <DescriptionTerm>
-                      <Trans>Email</Trans>
-                    </DescriptionTerm>
-                    <DescriptionDetails>
-                      {isSafeMailtoTarget(customer.contact.email) ? (
-                        <PageLink to={`mailto:${customer.contact.email}`}>
-                          {customer.contact.email}
-                        </PageLink>
-                      ) : (
-                        customer.contact.email
-                      )}
-                    </DescriptionDetails>
-                  </>
-                )}
-
-                {customer.contact.phone && (
-                  <>
-                    <DescriptionTerm>
-                      <Trans>Phone</Trans>
-                    </DescriptionTerm>
-                    <DescriptionDetails>
-                      {isSafeTelTarget(customer.contact.phone) ? (
-                        <PageLink to={`tel:${customer.contact.phone}`}>
-                          {customer.contact.phone}
-                        </PageLink>
-                      ) : (
-                        customer.contact.phone
-                      )}
-                    </DescriptionDetails>
-                  </>
-                )}
-              </DescriptionList>
-            </div>
-          )}
-
-          {/* Notes */}
-          {customer.notes && (
-            <div>
-              <PageTitle level={2} className="mb-4">
-                <Trans>Notes</Trans>
-              </PageTitle>
-              <PageText className="whitespace-pre-wrap">
-                {customer.notes}
+          <div>
+            <PageTitle level={2} className="mb-2">
+              <Trans>Establishments and local contacts</Trans>
+            </PageTitle>
+            <PageText className="mb-4 text-muted-foreground">
+              <Trans>
+                These contact details apply only to their establishment.
+              </Trans>
+            </PageText>
+            {assignmentLoadError ? (
+              <Alert role="alert" className="mb-4">
+                <AlertDescription>{assignmentLoadError}</AlertDescription>
+              </Alert>
+            ) : null}
+            {assignmentLoading ? (
+              <SectionSkeleton
+                loadingLabel={_(msg`Loading establishment details`)}
+                rows={2}
+              />
+            ) : customerEstablishments ===
+              null ? null : customerEstablishments.length === 0 ? (
+              <PageText>
+                <Trans>No establishments assigned.</Trans>
               </PageText>
-            </div>
-          )}
+            ) : (
+              <div className="space-y-4">
+                {customerEstablishments.map((assignment) => {
+                  const establishmentName =
+                    establishmentLookups.find(
+                      (lookup) => lookup.id === assignment.establishment_id
+                    )?.name ?? assignment.establishment_id;
+                  return (
+                    <section
+                      key={assignment.id}
+                      aria-labelledby={`establishment-${assignment.id}`}
+                      className="rounded-md border border-border p-4"
+                    >
+                      <h3
+                        id={`establishment-${assignment.id}`}
+                        className="mb-3 font-semibold"
+                      >
+                        {establishmentName}
+                      </h3>
+                      <DescriptionList>
+                        {assignment.contact_name ? (
+                          <>
+                            <DescriptionTerm>
+                              <Trans>Local contact</Trans>
+                            </DescriptionTerm>
+                            <DescriptionDetails>
+                              {assignment.contact_name}
+                            </DescriptionDetails>
+                          </>
+                        ) : null}
+                        {assignment.email ? (
+                          <>
+                            <DescriptionTerm>
+                              <Trans>Local email</Trans>
+                            </DescriptionTerm>
+                            <DescriptionDetails>
+                              {isSafeMailtoTarget(assignment.email) ? (
+                                <PageLink to={`mailto:${assignment.email}`}>
+                                  {assignment.email}
+                                </PageLink>
+                              ) : (
+                                assignment.email
+                              )}
+                            </DescriptionDetails>
+                          </>
+                        ) : null}
+                        {assignment.phone ? (
+                          <>
+                            <DescriptionTerm>
+                              <Trans>Local phone</Trans>
+                            </DescriptionTerm>
+                            <DescriptionDetails>
+                              {isSafeTelTarget(assignment.phone) ? (
+                                <PageLink to={`tel:${assignment.phone}`}>
+                                  {assignment.phone}
+                                </PageLink>
+                              ) : (
+                                assignment.phone
+                              )}
+                            </DescriptionDetails>
+                          </>
+                        ) : null}
+                        {assignment.comments ? (
+                          <>
+                            <DescriptionTerm>
+                              <Trans>Local comments</Trans>
+                            </DescriptionTerm>
+                            <DescriptionDetails className="whitespace-pre-wrap">
+                              {assignment.comments}
+                            </DescriptionDetails>
+                          </>
+                        ) : null}
+                      </DescriptionList>
+                    </section>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Sites */}
           <div>

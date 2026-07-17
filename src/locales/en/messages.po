@@ -26,6 +26,10 @@ msgstr "Full Name"
 msgid "Enabling..."
 msgstr "Enabling..."
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Legal Entity:"
+msgstr "Legal Entity:"
+
 #: src/pages/Login.tsx
 msgid "Second factor required"
 msgstr "Second factor required"
@@ -75,6 +79,17 @@ msgstr "Emergency Contact Email"
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Controls whether this unit is administratively active."
 msgstr "Controls whether this unit is administratively active."
+
+#: src/components/DomainAssignmentFields.tsx
+msgid "Clear domain filters"
+msgstr "Clear domain filters"
+
+#: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Establishment is required"
+msgstr "Establishment is required"
 
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -179,6 +194,10 @@ msgstr "Loading organizational structure"
 msgid "The bootstrap response is incomplete."
 msgstr "The bootstrap response is incomplete."
 
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Local phone {number}"
+msgstr "Local phone {number}"
+
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Invitation Failure Reason"
 msgstr "Invitation Failure Reason"
@@ -211,9 +230,6 @@ msgstr "The residence title must remain valid after your contract start date."
 msgid "Enable browser notifications"
 msgstr "Enable browser notifications"
 
-#: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -223,6 +239,12 @@ msgstr "Notes"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload front and back as separate files if available."
 msgstr "Upload front and back as separate files if available."
+
+#: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "The domain assignment options could not be loaded."
+msgstr "The domain assignment options could not be loaded."
 
 #: src/components/OrganizationalUnitTree.tsx
 msgid "Organizational structure"
@@ -249,10 +271,6 @@ msgstr "No"
 msgid "SecPal is licensed under AGPL-3.0-or-later with additional SecPal attribution terms. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the links below."
 msgstr "SecPal is licensed under AGPL-3.0-or-later with additional SecPal attribution terms. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the links below."
 
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "City is required."
-msgstr "City is required."
-
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Verification method"
 msgstr "Verification method"
@@ -264,6 +282,10 @@ msgstr "Global"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Confirm with your authenticator app or one recovery code to disable MFA for this account."
 msgstr "Confirm with your authenticator app or one recovery code to disable MFA for this account."
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Each establishment can only be assigned once."
+msgstr "Each establishment can only be assigned once."
 
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Previous Residences"
@@ -295,10 +317,6 @@ msgstr "No Organizational Units"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This onboarding step uses a schema we cannot render yet."
 msgstr "This onboarding step uses a schema we cannot render yet."
-
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "Legal entity is required."
-msgstr "Legal entity is required."
 
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "No address suggestions found."
@@ -527,10 +545,12 @@ msgstr "Enter your instance URL"
 msgid "Emergency contact name is required."
 msgstr "Emergency contact name is required."
 
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Local contact name {number}"
+msgstr "Local contact name {number}"
+
 #: src/components/OrganizationalUnitTree.tsx
 #: src/components/RouteGuardState.tsx
-#: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Login.tsx
 msgid "Retry"
 msgstr "Retry"
@@ -577,9 +597,6 @@ msgid "Edit Emergency Contacts"
 msgstr "Edit Emergency Contacts"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
-#: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -674,10 +691,9 @@ msgstr "Enter a label for this passkey."
 msgid "Maximum Assignable Rank"
 msgstr "Maximum Assignable Rank"
 
+#: src/components/DomainAssignmentFields.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 #: src/pages/Sites/SitesPage.tsx
 msgid "Customer"
 msgstr "Customer"
@@ -694,6 +710,10 @@ msgstr "Welcome to SecPal! Let's complete your profile."
 msgid "Update the organizational unit details."
 msgstr "Update the organizational unit details."
 
+#: src/pages/Employees/EmployeeEdit.tsx
+msgid "Error Updating Employee"
+msgstr "Error Updating Employee"
+
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "Current Residential Address"
@@ -708,12 +728,7 @@ msgid "No passkeys enrolled yet."
 msgstr "No passkeys enrolled yet."
 
 #: src/pages/Customers/CustomerCreate.tsx
-msgid "No legal entities are available for customer creation."
-msgstr "No legal entities are available for customer creation."
-
-#: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Billing Address"
@@ -750,6 +765,12 @@ msgstr "Android Capacitor wrapper that reuses the shared frontend build and adds
 #: src/components/RuntimeDiscoveryFlow.tsx
 msgid "The selected instance could not be checked."
 msgstr "The selected instance could not be checked."
+
+#: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Establishments and local contacts"
+msgstr "Establishments and local contacts"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Expires:"
@@ -888,9 +909,9 @@ msgstr "Passkey registration is not available on this device."
 msgid "Sending verification email..."
 msgstr "Sending verification email..."
 
-#: src/pages/Employees/EmployeeList.tsx
-msgid "Unit"
-msgstr "Unit"
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Select each establishment once."
+msgstr "Select each establishment once."
 
 #: src/components/OrganizationalUnitTree.tsx
 #: src/pages/Organization/OrganizationPage.tsx
@@ -943,6 +964,10 @@ msgstr "Your current answers will be saved as a draft before the first file uplo
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "This field"
 msgstr "This field"
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Select a legal entity and at least one establishment."
+msgstr "Select a legal entity and at least one establishment."
 
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -1011,10 +1036,6 @@ msgstr "Enter the instance URL you received from your supervisor."
 msgid "House Number"
 msgstr "House Number"
 
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "Country must use a 2-letter code."
-msgstr "Country must use a 2-letter code."
-
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Unnamed Android enrollment session"
 msgstr "Unnamed Android enrollment session"
@@ -1036,6 +1057,13 @@ msgstr "BWR export generated. Download the file below."
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "e.g., Berlin Branch"
 msgstr "e.g., Berlin Branch"
+
+#: src/pages/Employees/EmployeeCreate.tsx
+#: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Legal entity is required"
+msgstr "Legal entity is required"
 
 #: src/pages/Employees/EmployeeList.tsx
 msgid "Loading employees table"
@@ -1104,6 +1132,10 @@ msgstr "Use this QR code during Android setup before it expires."
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Lowest rank number the user can view (1 = CEO, higher numbers = lower positions). Range: 1-255"
 msgstr "Lowest rank number the user can view (1 = CEO, higher numbers = lower positions). Range: 1-255"
+
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Some establishment details could not be loaded."
+msgstr "Some establishment details could not be loaded."
 
 #: src/pages/SourcePage.tsx
 msgid "Copyright SecPal Contributors."
@@ -1179,10 +1211,6 @@ msgstr "Loading sites table"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Required documents for this step"
 msgstr "Required documents for this step"
-
-#: src/pages/Employees/EmployeeCreate.tsx
-msgid "Organizational units are still loading. Please wait a moment and try again."
-msgstr "Organizational units are still loading. Please wait a moment and try again."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -1261,6 +1289,11 @@ msgstr "Cancel"
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "This session was revoked and can no longer be used for device setup."
 msgstr "This session was revoked and can no longer be used for device setup."
+
+#: src/components/DomainAssignmentFields.tsx
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "Failed to load establishments"
+msgstr "Failed to load establishments"
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 #: src/pages/Customers/CustomersPage.tsx
@@ -1360,9 +1393,6 @@ msgstr "Address"
 msgid "Missing email address. Please use the link from your email."
 msgstr "Missing email address. Please use the link from your email."
 
-#: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
@@ -1542,12 +1572,10 @@ msgid "Activate"
 msgstr "Activate"
 
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 msgid "This customer requires a Legal Entity assignment."
 msgstr "This customer requires a Legal Entity assignment."
 
-#: src/pages/Sites/SiteCreate.tsx
-#: src/pages/Sites/SiteEdit.tsx
+#: src/components/DomainAssignmentFields.tsx
 msgid "Select customer..."
 msgstr "Select customer..."
 
@@ -1583,6 +1611,10 @@ msgstr "Required information"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "We couldn't prepare this step for file uploads. Please try saving your draft again."
 msgstr "We couldn't prepare this step for file uploads. Please try saving your draft again."
+
+#: src/pages/Customers/CustomerCreate.tsx
+msgid "The customer was created, but its establishment assignments could not be completed. Review and save the assignments again."
+msgstr "The customer was created, but its establishment assignments could not be completed. Review and save the assignments again."
 
 #: src/components/EncryptionProgress.tsx
 msgid "Encrypting files..."
@@ -1713,6 +1745,10 @@ msgstr "Back to List"
 msgid "Your onboarding state changed on the server while you were editing. The wizard was refreshed to the current server state."
 msgstr "Your onboarding state changed on the server while you were editing. The wizard was refreshed to the current server state."
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Local contact"
+msgstr "Local contact"
+
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "New parent"
 msgstr "New parent"
@@ -1785,8 +1821,6 @@ msgid "Home"
 msgstr "Home"
 
 #: src/components/OrganizationalUnitPicker.tsx
-#: src/pages/Employees/EmployeeCreate.tsx
-#: src/pages/Employees/EmployeeEdit.tsx
 msgid "Select organizational unit"
 msgstr "Select organizational unit"
 
@@ -1840,6 +1874,14 @@ msgstr "Choose your preferred language for the application."
 msgid "All units"
 msgstr "All units"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Legal-entity master data"
+msgstr "Legal-entity master data"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "The establishment assignments could not be fully restored. Reload the page before making further changes."
+msgstr "The establishment assignments could not be fully restored. Reload the page before making further changes."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload File"
 msgstr "Upload File"
@@ -1847,10 +1889,6 @@ msgstr "Upload File"
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Controls whether this unit can receive new operational assignments."
 msgstr "Controls whether this unit can receive new operational assignments."
-
-#: src/pages/Customers/CustomerEdit.tsx
-msgid "Current Legal Entity:"
-msgstr "Current Legal Entity:"
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "Cannot Delete \"{unitName}\""
@@ -1963,11 +2001,15 @@ msgstr "Switch instance"
 msgid "Emergency Contact Notes"
 msgstr "Emergency Contact Notes"
 
-#: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Contact"
 msgstr "Contact"
+
+#: src/components/CustomerEstablishmentFields.tsx
+#: src/components/DomainAssignmentFields.tsx
+msgid "Select establishment..."
+msgstr "Select establishment..."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
@@ -2020,6 +2062,10 @@ msgstr "Authenticator app QR code"
 msgid "Get started by creating your first organizational unit."
 msgstr "Get started by creating your first organizational unit."
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Loading establishment details"
+msgstr "Loading establishment details"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Provide a short reason before this Android enrollment session is revoked."
 msgstr "Provide a short reason before this Android enrollment session is revoked."
@@ -2061,6 +2107,11 @@ msgstr "Moving..."
 msgid "Category-specific notification preferences are not available yet. SecPal currently manages browser notifications at the browser and deployment level."
 msgstr "Category-specific notification preferences are not available yet. SecPal currently manages browser notifications at the browser and deployment level."
 
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Select an authorized legal entity, establishment, and customer."
+msgstr "Select an authorized legal entity, establishment, and customer."
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Try again"
 msgstr "Try again"
@@ -2086,10 +2137,6 @@ msgstr "Browser notifications are enabled for this signed-in browser on this dep
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to update contact field."
 msgstr "Failed to update contact field."
-
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "Postal code is required."
-msgstr "Postal code is required."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Generating BWR Export..."
@@ -2125,9 +2172,17 @@ msgstr "Expires"
 msgid "First Name"
 msgstr "First Name"
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "These contact details apply only to their establishment."
+msgstr "These contact details apply only to their establishment."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Contract"
 msgstr "Contract"
+
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Add establishment"
+msgstr "Add establishment"
 
 #: src/components/nav-user.tsx
 msgid "Lock app"
@@ -2395,7 +2450,6 @@ msgstr "Welcome to SecPal"
 msgid "Minijob"
 msgstr "Minijob"
 
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Loading site lookup data"
 msgstr "Loading site lookup data"
@@ -2403,6 +2457,14 @@ msgstr "Loading site lookup data"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Passwords do not match"
 msgstr "Passwords do not match"
+
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Remove establishment {number}"
+msgstr "Remove establishment {number}"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Customer data could not be fully restored. Reload the page before making further changes."
+msgstr "Customer data could not be fully restored. Reload the page before making further changes."
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "The end date must be on or after the start date."
@@ -2427,6 +2489,10 @@ msgstr "<0>Hash Chain:</0> Verifies the sequential integrity of activity logs. \
 #: src/pages/Login.tsx
 msgid "An unexpected passkey sign-in error occurred. Please try again."
 msgstr "An unexpected passkey sign-in error occurred. Please try again."
+
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Establishment {number}"
+msgstr "Establishment {number}"
 
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/OrganizationalUnitTree.tsx
@@ -2469,6 +2535,10 @@ msgstr "Identity card or passport"
 msgid "Add Contact"
 msgstr "Add Contact"
 
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Local comments {number}"
+msgstr "Local comments {number}"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Expired"
@@ -2477,6 +2547,10 @@ msgstr "Expired"
 #: src/pages/Employees/EmployeeList.tsx
 msgid "Error Loading Employees"
 msgstr "Error Loading Employees"
+
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Local email"
+msgstr "Local email"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Removing..."
@@ -2512,6 +2586,10 @@ msgstr "Administrative status"
 msgid "Moving organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Moving organizational units is not possible while offline. Please reconnect to make changes."
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Local comments"
+msgstr "Local comments"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Password must include at least one number"
 msgstr "Password must include at least one number"
@@ -2543,10 +2621,6 @@ msgstr "Download"
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR Registered At"
 msgstr "BWR Registered At"
-
-#: src/pages/Customers/CustomerEdit.tsx
-msgid "A legal entity must be selected before this customer can be updated."
-msgstr "A legal entity must be selected before this customer can be updated."
 
 #: src/pages/Employees/EmployeeList.tsx
 msgid "All"
@@ -2633,9 +2707,6 @@ msgstr "Open Source"
 msgid "Checking passkey availability..."
 msgstr "Checking passkey availability..."
 
-#: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -2672,7 +2743,11 @@ msgstr "Merkle Batch ID"
 msgid "I stored these recovery codes securely and understand they will not be shown again."
 msgstr "I stored these recovery codes securely and understand they will not be shown again."
 
+#: src/components/DomainAssignmentFields.tsx
 #: src/components/OrganizationalUnitFormDialog.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Employees/EmployeeList.tsx
+#: src/pages/Sites/SiteDetail.tsx
 msgid "Establishment"
 msgstr "Establishment"
 
@@ -2707,10 +2782,6 @@ msgstr "Obtainium"
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Organization Structure"
 msgstr "Organization Structure"
-
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "Customer name is required."
-msgstr "Customer name is required."
 
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -2776,19 +2847,13 @@ msgstr "Minimum rank cannot be greater than maximum rank."
 msgid "Authentication"
 msgstr "Authentication"
 
+#: src/components/DomainAssignmentFields.tsx
 #: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 msgid "Failed to load legal entities"
 msgstr "Failed to load legal entities"
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 #: src/pages/ActivityLog/ActivityLogList.tsx
-#: src/pages/Employees/EmployeeCreate.tsx
-#: src/pages/Employees/EmployeeDetail.tsx
-#: src/pages/Employees/EmployeeEdit.tsx
-#: src/pages/Employees/EmployeeList.tsx
-#: src/pages/Sites/SiteCreate.tsx
-#: src/pages/Sites/SiteDetail.tsx
 msgid "Organizational Unit"
 msgstr "Organizational Unit"
 
@@ -2916,10 +2981,6 @@ msgstr "Failed to delete passkey."
 msgid "This instance must be verified by an administrator before it can be used."
 msgstr "This instance must be verified by an administrator before it can be used."
 
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "Street is required."
-msgstr "Street is required."
-
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No qualifications assigned"
 msgstr "No qualifications assigned"
@@ -2929,9 +2990,18 @@ msgstr "No qualifications assigned"
 msgid "← Back to Employee"
 msgstr "← Back to Employee"
 
+#: src/components/CustomerEstablishmentFields.tsx
+msgid "Local email {number}"
+msgstr "Local email {number}"
+
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Saving BWR Status..."
 msgstr "Saving BWR Status..."
+
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "Customer is required"
+msgstr "Customer is required"
 
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SitesPage.tsx
@@ -3083,8 +3153,8 @@ msgstr "Submit for Review"
 msgid "Optional sections"
 msgstr "Optional sections"
 
+#: src/components/DomainAssignmentFields.tsx
 #: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 msgid "Select legal entity..."
 msgstr "Select legal entity..."
 
@@ -3216,9 +3286,14 @@ msgstr "\"{0}\" created successfully"
 msgid "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Please upload your identity card or passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
+#: src/components/DomainAssignmentFields.tsx
 #: src/pages/Customers/CustomersPage.tsx
 msgid "Failed to load customers"
 msgstr "Failed to load customers"
+
+#: src/pages/Employees/EmployeeEdit.tsx
+msgid "Select an authorized legal entity and establishment."
+msgstr "Select an authorized legal entity and establishment."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "We could not verify your identity with the details provided. For security reasons this onboarding link has been deactivated. Please contact HR for a new invitation."
@@ -3254,6 +3329,10 @@ msgstr "Save"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No postal address stored yet."
 msgstr "No postal address stored yet."
+
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "No establishments assigned."
+msgstr "No establishments assigned."
 
 #: src/components/RuntimeDiscoveryFlow.tsx
 msgid "API origin"
@@ -3347,10 +3426,6 @@ msgstr "Checking passkey availability…"
 msgid "This action could not be completed because the data changed in the meantime. Please reload and try again."
 msgstr "This action could not be completed because the data changed in the meantime. Please reload and try again."
 
-#: src/pages/Employees/EmployeeCreate.tsx
-msgid "Organizational unit is required"
-msgstr "Organizational unit is required"
-
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Site:"
 msgstr "Site:"
@@ -3438,10 +3513,6 @@ msgstr "This customer's site count is unavailable."
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Street"
 msgstr "Street"
-
-#: src/pages/Customers/CustomerEdit.tsx
-msgid "Reassign Legal Entity"
-msgstr "Reassign Legal Entity"
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingWizard.tsx
@@ -3549,10 +3620,6 @@ msgstr "Passkey sign-in was cancelled or not permitted by the browser."
 msgid "Legal"
 msgstr "Legal"
 
-#: src/pages/Customers/CustomerDetail.tsx
-msgid "Legal Entity ID"
-msgstr "Legal Entity ID"
-
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Assignment status"
 msgstr "Assignment status"
@@ -3582,11 +3649,14 @@ msgstr "Unlocking..."
 msgid "Administratively Active"
 msgstr "Administratively Active"
 
+#: src/components/DomainAssignmentFields.tsx
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Customers/CustomersPage.tsx
+#: src/pages/Employees/EmployeeDetail.tsx
+#: src/pages/Employees/EmployeeList.tsx
+#: src/pages/Sites/SiteDetail.tsx
 msgid "Legal Entity"
 msgstr "Legal Entity"
 
@@ -3649,6 +3719,11 @@ msgstr "Emergency Contact Relationship"
 msgid "0 or empty for non-leadership only"
 msgstr "0 or empty for non-leadership only"
 
+#: src/pages/Customers/CustomerCreate.tsx
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Contact details entered here apply only to the selected establishment."
+msgstr "Contact details entered here apply only to the selected establishment."
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "File removed successfully."
 msgstr "File removed successfully."
@@ -3657,6 +3732,10 @@ msgstr "File removed successfully."
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "Employee ID is missing."
 msgstr "Employee ID is missing."
+
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Local phone"
+msgstr "Local phone"
 
 #: src/components/MoveOrganizationalUnitDialog.tsx
 msgid "No unit selected"
@@ -3687,10 +3766,6 @@ msgstr "Signed in to {0}"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Please select a file to upload."
 msgstr "Please select a file to upload."
-
-#: src/pages/Customers/CustomerCreate.tsx
-msgid "Please enter a valid email address."
-msgstr "Please enter a valid email address."
 
 #: src/pages/SourcePage.tsx
 msgid "Source code and license"
@@ -3739,6 +3814,12 @@ msgstr "Check your device…"
 #: src/pages/SourcePage.tsx
 msgid "If this deployment does not publish source releases here, the project repositories below remain linked as the preferred form for making modifications."
 msgstr "If this deployment does not publish source releases here, the project repositories below remain linked as the preferred form for making modifications."
+
+#: src/pages/Employees/EmployeeEdit.tsx
+#: src/pages/Sites/SiteCreate.tsx
+#: src/pages/Sites/SiteEdit.tsx
+msgid "The domain assignment is still loading."
+msgstr "The domain assignment is still loading."
 
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 msgid "Merkle Root"
@@ -3949,10 +4030,6 @@ msgstr "Activity Log Details"
 msgid "View Profile"
 msgstr "View Profile"
 
-#: src/pages/Sites/SiteCreate.tsx
-msgid "Failed to load required data"
-msgstr "Failed to load required data"
-
 #. placeholder {0}: err.statusCode
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "File upload failed with HTTP status {0}."
@@ -3973,8 +4050,6 @@ msgid "Please choose whether you want to upload your identity document now."
 msgstr "Please choose whether you want to upload your identity document now."
 
 #: src/pages/Employees/EmployeeAddressFields.tsx
-#: src/pages/Employees/EmployeeCreate.tsx
-#: src/pages/Employees/EmployeeEdit.tsx
 msgid "Loading..."
 msgstr "Loading..."
 
@@ -4000,11 +4075,6 @@ msgstr "Draft saved. You can continue later."
 msgid "OK"
 msgstr "OK"
 
-#: src/pages/Employees/EmployeeCreate.tsx
-#: src/pages/Employees/EmployeeEdit.tsx
-msgid "Loading unit options"
-msgstr "Loading unit options"
-
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "Deleting organizational units is not possible while offline. Please reconnect to make changes."
 msgstr "Deleting organizational units is not possible while offline. Please reconnect to make changes."
@@ -4012,10 +4082,6 @@ msgstr "Deleting organizational units is not possible while offline. Please reco
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Password must include both uppercase and lowercase letters"
 msgstr "Password must include both uppercase and lowercase letters"
-
-#: src/pages/Sites/SiteCreate.tsx
-msgid "Select organizational unit..."
-msgstr "Select organizational unit..."
 
 #. placeholder {0}: unit.name
 #: src/pages/Organization/OrganizationPage.tsx
@@ -4026,9 +4092,6 @@ msgstr "\"{0}\" updated successfully"
 msgid "Create enrollment session"
 msgstr "Create enrollment session"
 
-#: src/pages/Customers/CustomerCreate.tsx
-#: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
