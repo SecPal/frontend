@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { I18nProvider } from "@lingui/react";
@@ -279,6 +279,43 @@ describe("SiteDetail", () => {
       "border-destructive/30",
       "bg-destructive/10"
     );
+  });
+
+  it("drops destructive state and late delete completion on a route change", async () => {
+    const user = userEvent.setup();
+    let resolveDelete: (() => void) | undefined;
+    vi.mocked(customersApi.deleteSite).mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveDelete = resolve;
+        })
+    );
+    vi.mocked(customersApi.getSite).mockImplementation(async (id) => ({
+      ...mockSite,
+      id,
+      name: id === "site-123" ? "Munich Office" : "Berlin Office",
+      customer: mockCustomer,
+    }));
+
+    renderWithRouter();
+    await screen.findByRole("heading", { name: "Munich Office" });
+    await user.click(screen.getByRole("button", { name: /^delete$/i }));
+    await user.click(
+      within(await screen.findByRole("dialog")).getByRole("button", {
+        name: /^delete$/i,
+      })
+    );
+
+    await act(async () => {
+      window.history.pushState({}, "", "/sites/site-456");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    await waitFor(() =>
+      expect(screen.getAllByText("Berlin Office")).not.toHaveLength(0)
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await act(async () => resolveDelete?.());
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it("displays contact information", async () => {

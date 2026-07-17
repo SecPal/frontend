@@ -6,7 +6,7 @@
  * Epic #210 - Customer & Site Management
  */
 
-import { useState, useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -61,6 +61,7 @@ export default function SiteDetail() {
   const capabilities = useUserCapabilities();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const activeRouteId = useRef(id);
   const [site, setSite] = useState<Site | null>(null);
   const [customer, setCustomer] = useState<Customer | SiteCustomer | null>(
     null
@@ -70,6 +71,10 @@ export default function SiteDetail() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  useLayoutEffect(() => {
+    activeRouteId.current = id;
+  }, [id]);
 
   useEffect(() => {
     // Per-`id` cancellation flag: if a slow `getSite(prevId)` finishes
@@ -84,6 +89,9 @@ export default function SiteDetail() {
       setLoadError(null);
       setSite(null);
       setCustomer(null);
+      setShowDeleteDialog(false);
+      setDeleteError(null);
+      setDeleting(false);
       try {
         const siteData = await getSite(id);
         if (cancelled) return;
@@ -120,14 +128,17 @@ export default function SiteDetail() {
 
   async function handleDelete() {
     if (!site) return;
+    const siteId = site.id;
 
     setDeleting(true);
     setDeleteError(null);
 
     try {
-      await deleteSite(site.id);
+      await deleteSite(siteId);
+      if (activeRouteId.current !== siteId) return;
       navigate("/sites");
     } catch (err) {
+      if (activeRouteId.current !== siteId) return;
       setDeleteError(
         err instanceof Error ? err.message : _(msg`Failed to delete site`)
       );

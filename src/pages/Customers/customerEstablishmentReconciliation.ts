@@ -5,6 +5,7 @@ import type { CustomerEstablishmentFormValue } from "@/components/CustomerEstabl
 import type {
   CreateCustomerEstablishmentRequest,
   CustomerEstablishment,
+  UpdateCustomerEstablishmentRequest,
 } from "@/types/api/customers";
 import {
   createCustomerEstablishment,
@@ -44,6 +45,17 @@ function createRequestForOriginal(
   return {
     customer_id: customerId,
     establishment_id: item.establishment_id,
+    contact_name: item.contact_name ?? null,
+    email: item.email ?? null,
+    phone: item.phone ?? null,
+    comments: item.comments ?? null,
+  };
+}
+
+function contactsForOriginal(
+  item: CustomerEstablishment
+): UpdateCustomerEstablishmentRequest {
+  return {
     contact_name: item.contact_name ?? null,
     email: item.email ?? null,
     phone: item.phone ?? null,
@@ -93,16 +105,15 @@ export async function reconcileCustomerEstablishments(
   originals: CustomerEstablishment[]
 ): Promise<void> {
   const plan = planCustomerEstablishmentChanges(assignments, originals);
-
-  await Promise.all(
-    plan.unchanged.map((item) =>
-      updateCustomerEstablishment(item.id!, contactsFor(item))
-    )
-  );
-
+  const originalsById = new Map(originals.map((item) => [item.id, item]));
+  const updated: CustomerEstablishment[] = [];
   const deleted: CustomerEstablishment[] = [];
   const created: CustomerEstablishment[] = [];
   try {
+    for (const item of plan.unchanged) {
+      await updateCustomerEstablishment(item.id!, contactsFor(item));
+      updated.push(originalsById.get(item.id!)!);
+    }
     for (const item of plan.deleteBeforeCreate) {
       await deleteCustomerEstablishment(item.id);
       deleted.push(item);
@@ -129,9 +140,15 @@ export async function reconcileCustomerEstablishments(
         createCustomerEstablishment(createRequestForOriginal(customerId, item))
       )
     );
+    const contactRestoration = await Promise.allSettled(
+      updated.map((item) =>
+        updateCustomerEstablishment(item.id, contactsForOriginal(item))
+      )
+    );
     if (
       cleanup.some((result) => result.status === "rejected") ||
-      restoration.some((result) => result.status === "rejected")
+      restoration.some((result) => result.status === "rejected") ||
+      contactRestoration.some((result) => result.status === "rejected")
     ) {
       throw new CustomerEstablishmentRecoveryError(error);
     }

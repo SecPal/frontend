@@ -1117,6 +1117,10 @@ msgstr "Verwenden Sie diesen QR-Code während der Android-Einrichtung, bevor er 
 msgid "Lowest rank number the user can view (1 = CEO, higher numbers = lower positions). Range: 1-255"
 msgstr "Niedrigste Rangnummer, die der Benutzer sehen kann (1 = CEO, höhere Zahlen = niedrigere Positionen). Bereich: 1-255"
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Some establishment details could not be loaded."
+msgstr "Einige Details zu Betriebsstätten konnten nicht geladen werden."
+
 #: src/pages/SourcePage.tsx
 msgid "Copyright SecPal Contributors."
 msgstr "Copyright SecPal Contributors."
@@ -2042,6 +2046,10 @@ msgstr "QR-Code der Authenticator-App"
 msgid "Get started by creating your first organizational unit."
 msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Loading establishment details"
+msgstr "Betriebsstättendetails werden geladen"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Provide a short reason before this Android enrollment session is revoked."
 msgstr "Geben Sie einen kurzen Grund an, bevor diese Android-Registrierungssitzung widerrufen wird."
@@ -2432,6 +2440,10 @@ msgstr "Passwörter stimmen nicht überein"
 #: src/components/CustomerEstablishmentFields.tsx
 msgid "Remove establishment {number}"
 msgstr "Betriebsstätte {number} entfernen"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Customer data could not be fully restored. Reload the page before making further changes."
+msgstr "Kundendaten konnten nicht vollständig wiederhergestellt werden. Laden Sie die Seite neu, bevor Sie weitere Änderungen vornehmen."
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "The end date must be on or after the start date."

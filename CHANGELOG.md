@@ -37,6 +37,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Revalidated every Site and Employee domain-assignment level after authorized
+  lookup refreshes, degraded customer detail pages only where auxiliary
+  establishment data fails, compensated partial customer and contact updates,
+  and prevented route changes from reusing stale customer or site deletion
+  state.
 - Preserved customer and site assignment integrity when dependent requests
   fail, kept customer-scoped Site creation fixed to its route customer, made
   optional Employee domain filters clearable, and localized the new

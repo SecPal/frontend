@@ -6,7 +6,7 @@
  * Epic #210 - Customer & Site Management
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { msg } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
@@ -67,18 +67,27 @@ export default function CustomerDetail() {
   const capabilities = useUserCapabilities();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const activeRouteId = useRef(id);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [customerEstablishments, setCustomerEstablishments] = useState<
-    CustomerEstablishment[]
-  >([]);
+    CustomerEstablishment[] | null
+  >(null);
   const [establishmentLookups, setEstablishmentLookups] = useState<
     EstablishmentLookup[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [assignmentLoading, setAssignmentLoading] = useState(false);
+  const [assignmentLoadError, setAssignmentLoadError] = useState<string | null>(
+    null
+  );
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  useLayoutEffect(() => {
+    activeRouteId.current = id;
+  }, [id]);
 
   useEffect(() => {
     // Capture a per-`id` cancellation flag so that a slow fetch for the
@@ -98,29 +107,52 @@ export default function CustomerDetail() {
       // new fetch resolved, letting a user act on the wrong record
       // during that window.
       setCustomer(null);
+      setCustomerEstablishments(null);
+      setEstablishmentLookups([]);
       setLoading(true);
       setLoadError(null);
+      setAssignmentLoading(false);
+      setAssignmentLoadError(null);
+      setShowDeleteDialog(false);
+      setDeleteError(null);
+      setDeleting(false);
       if (!id) {
         setLoading(false);
         return;
       }
       try {
         const data = await getCustomer(id);
-        const [links, lookups] = await Promise.all([
+        if (cancelled) return;
+        setCustomer(data);
+        setLoading(false);
+        setAssignmentLoading(true);
+
+        const [links, lookups] = await Promise.allSettled([
           listCustomerEstablishments({ customer_id: id, per_page: 100 }),
           listEstablishmentLookups(data.legal_entity_id),
         ]);
         if (cancelled) return;
-        setCustomer(data);
-        setCustomerEstablishments(links.data);
-        setEstablishmentLookups(lookups);
+        if (links.status === "fulfilled") {
+          setCustomerEstablishments(links.value.data);
+        }
+        if (lookups.status === "fulfilled") {
+          setEstablishmentLookups(lookups.value);
+        }
+        if (links.status === "rejected" || lookups.status === "rejected") {
+          setAssignmentLoadError(
+            _(msg`Some establishment details could not be loaded.`)
+          );
+        }
       } catch (err) {
         if (cancelled) return;
         setLoadError(
           err instanceof Error ? err.message : _(msg`Failed to load customer`)
         );
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          setAssignmentLoading(false);
+        }
       }
     }
     loadCustomer();
@@ -131,14 +163,17 @@ export default function CustomerDetail() {
 
   async function handleDelete() {
     if (!customer) return;
+    const customerId = customer.id;
 
     setDeleting(true);
     setDeleteError(null);
 
     try {
-      await deleteCustomer(customer.id);
+      await deleteCustomer(customerId);
+      if (activeRouteId.current !== customerId) return;
       navigate("/customers");
     } catch (err) {
+      if (activeRouteId.current !== customerId) return;
       setDeleteError(
         err instanceof Error ? err.message : _(msg`Failed to delete customer`)
       );
@@ -276,7 +311,18 @@ export default function CustomerDetail() {
                 These contact details apply only to their establishment.
               </Trans>
             </PageText>
-            {customerEstablishments.length === 0 ? (
+            {assignmentLoadError ? (
+              <Alert role="alert" className="mb-4">
+                <AlertDescription>{assignmentLoadError}</AlertDescription>
+              </Alert>
+            ) : null}
+            {assignmentLoading ? (
+              <SectionSkeleton
+                loadingLabel={_(msg`Loading establishment details`)}
+                rows={2}
+              />
+            ) : customerEstablishments ===
+              null ? null : customerEstablishments.length === 0 ? (
               <PageText>
                 <Trans>No establishments assigned.</Trans>
               </PageText>

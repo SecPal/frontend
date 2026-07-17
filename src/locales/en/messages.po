@@ -1117,6 +1117,10 @@ msgstr "Use this QR code during Android setup before it expires."
 msgid "Lowest rank number the user can view (1 = CEO, higher numbers = lower positions). Range: 1-255"
 msgstr "Lowest rank number the user can view (1 = CEO, higher numbers = lower positions). Range: 1-255"
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Some establishment details could not be loaded."
+msgstr "Some establishment details could not be loaded."
+
 #: src/pages/SourcePage.tsx
 msgid "Copyright SecPal Contributors."
 msgstr "Copyright SecPal Contributors."
@@ -2042,6 +2046,10 @@ msgstr "Authenticator app QR code"
 msgid "Get started by creating your first organizational unit."
 msgstr "Get started by creating your first organizational unit."
 
+#: src/pages/Customers/CustomerDetail.tsx
+msgid "Loading establishment details"
+msgstr "Loading establishment details"
+
 #: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 msgid "Provide a short reason before this Android enrollment session is revoked."
 msgstr "Provide a short reason before this Android enrollment session is revoked."
@@ -2432,6 +2440,10 @@ msgstr "Passwords do not match"
 #: src/components/CustomerEstablishmentFields.tsx
 msgid "Remove establishment {number}"
 msgstr "Remove establishment {number}"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Customer data could not be fully restored. Reload the page before making further changes."
+msgstr "Customer data could not be fully restored. Reload the page before making further changes."
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "The end date must be on or after the start date."

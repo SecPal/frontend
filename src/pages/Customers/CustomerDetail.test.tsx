@@ -105,6 +105,44 @@ describe("CustomerDetail", () => {
     expect(screen.queryByText(/organizational unit/i)).not.toBeInTheDocument();
   });
 
+  it("keeps customer master data visible when assignment loading fails", async () => {
+    vi.mocked(domainApi.listCustomerEstablishments).mockRejectedValue(
+      new Error("Assignments unavailable")
+    );
+
+    renderPage();
+
+    expect(
+      await screen.findByRole("heading", { name: "ACME GmbH" })
+    ).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /some establishment details could not be loaded/i
+    );
+    expect(screen.getByText("Street 1")).toBeInTheDocument();
+    expect(
+      screen.queryByText(/no establishments assigned/i)
+    ).not.toBeInTheDocument();
+  });
+
+  it("falls back to establishment IDs when name lookup fails", async () => {
+    vi.mocked(domainApi.listEstablishmentLookups).mockRejectedValue(
+      new Error("Names unavailable")
+    );
+
+    renderPage();
+
+    expect(
+      await screen.findByRole("heading", { name: "ACME GmbH" })
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "est-1" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/some establishment details could not be loaded/i)
+    ).toBeVisible();
+    expect(screen.getByText("Berlin Contact")).toBeInTheDocument();
+  });
+
   it("opens, cancels, and confirms the destructive flow", async () => {
     const user = userEvent.setup();
     vi.mocked(customersApi.deleteCustomer).mockResolvedValue();
@@ -159,6 +197,82 @@ describe("CustomerDetail", () => {
     expect(
       screen.queryByRole("button", { name: /^delete$/i })
     ).not.toBeInTheDocument();
+  });
+
+  it("closes destructive state when the customer route changes", async () => {
+    const user = userEvent.setup();
+    vi.mocked(customersApi.getCustomer).mockImplementation(async (id) => ({
+      id,
+      customer_number: id === "customer-1" ? "KD-1" : "KD-2",
+      legal_entity_id: "legal-1",
+      name: id === "customer-1" ? "ACME GmbH" : "Other GmbH",
+      billing_address: {
+        street: "Street 1",
+        postal_code: "10115",
+        city: "Berlin",
+        country: "DE",
+      },
+      is_active: true,
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+    }));
+    renderPage();
+    await screen.findByRole("heading", { name: "ACME GmbH" });
+    await user.click(screen.getByRole("button", { name: /^delete$/i }));
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+
+    await act(async () => {
+      window.history.pushState({}, "", "/customers/customer-2");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+
+    expect(
+      await screen.findByRole("heading", { name: "Other GmbH" })
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("ignores a completed delete action after the customer route changes", async () => {
+    const user = userEvent.setup();
+    let resolveDelete: (() => void) | undefined;
+    vi.mocked(customersApi.deleteCustomer).mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveDelete = resolve;
+        })
+    );
+    vi.mocked(customersApi.getCustomer).mockImplementation(async (id) => ({
+      id,
+      customer_number: id === "customer-1" ? "KD-1" : "KD-2",
+      legal_entity_id: "legal-1",
+      name: id === "customer-1" ? "ACME GmbH" : "Other GmbH",
+      billing_address: {
+        street: "Street 1",
+        postal_code: "10115",
+        city: "Berlin",
+        country: "DE",
+      },
+      is_active: true,
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+    }));
+    renderPage();
+    await screen.findByRole("heading", { name: "ACME GmbH" });
+    await user.click(screen.getByRole("button", { name: /^delete$/i }));
+    await user.click(
+      within(await screen.findByRole("dialog")).getByRole("button", {
+        name: /^delete$/i,
+      })
+    );
+
+    await act(async () => {
+      window.history.pushState({}, "", "/customers/customer-2");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    await screen.findByRole("heading", { name: "Other GmbH" });
+    await act(async () => resolveDelete?.());
+
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it("ignores a late response after navigating to another customer", async () => {

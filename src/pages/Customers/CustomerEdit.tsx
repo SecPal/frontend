@@ -49,6 +49,15 @@ function emptyAssignment(): CustomerEstablishmentFormValue {
 }
 const optional = (value: string) => value.trim() || null;
 
+function originalCustomerUpdate(customer: Customer): UpdateCustomerRequest {
+  return {
+    name: customer.name,
+    vat_id: customer.vat_id ?? null,
+    billing_address: customer.billing_address,
+    is_active: customer.is_active,
+  };
+}
+
 export default function CustomerEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -146,11 +155,13 @@ export default function CustomerEdit() {
     }
     setSaving(true);
     setSubmitError(null);
+    let masterDataUpdated = false;
     try {
       await updateCustomer(id, {
         ...form,
         vat_id: optional(form.vat_id ?? ""),
       });
+      masterDataUpdated = true;
       await reconcileCustomerEstablishments(
         id,
         assignments,
@@ -158,6 +169,18 @@ export default function CustomerEdit() {
       );
       navigate(`/customers/${id}`);
     } catch (reason) {
+      if (masterDataUpdated) {
+        try {
+          await updateCustomer(id, originalCustomerUpdate(customer));
+        } catch {
+          setSubmitError(
+            _(
+              msg`Customer data could not be fully restored. Reload the page before making further changes.`
+            )
+          );
+          return;
+        }
+      }
       setSubmitError(
         reason instanceof CustomerEstablishmentRecoveryError
           ? _(
