@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
@@ -13,7 +13,7 @@ import {
   RuntimeDiscoveryError,
   discoverAndroidRuntimeBootstrap,
 } from "../services/runtimeDiscovery";
-import { activateLocale, setLocalePreference } from "../i18n";
+import { LoginHeaderControls, LoginLegalFooter } from "./LoginLegalMenu";
 import type { BootstrapConfiguration } from "@/types/api";
 import {
   LoginButton,
@@ -31,30 +31,7 @@ import {
   LoginStatusMessage,
 } from "@/ui";
 
-const LOCALE_STORAGE_KEY = "secpal-locale";
 type RuntimeDiscoveryLocale = "en" | "de";
-
-function getStoredDiscoveryLocale(): RuntimeDiscoveryLocale {
-  try {
-    const storedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);
-
-    if (storedLocale === "de") {
-      return "de";
-    }
-  } catch {
-    // Locale persistence is best-effort; discovery must still be usable.
-  }
-
-  return "en";
-}
-
-function persistDiscoveryLocale(locale: RuntimeDiscoveryLocale): void {
-  try {
-    localStorage.setItem(LOCALE_STORAGE_KEY, locale);
-  } catch {
-    // Keep discovery usable when storage is blocked.
-  }
-}
 
 function getDiscoveryErrorMessage(
   error: unknown,
@@ -114,20 +91,15 @@ export function RuntimeDiscoveryFlow({
   runtimeInfo: SecPalRuntimeInfo;
   onConfigured: (bootstrap: BootstrapConfiguration) => void;
 }) {
-  const { _ } = useLingui();
+  const { _, i18n } = useLingui();
   const [instanceUrl, setInstanceUrl] = useState("");
-  const [locale, setLocale] = useState<RuntimeDiscoveryLocale>(() =>
-    getStoredDiscoveryLocale()
-  );
   const [resolvedBootstrap, setResolvedBootstrap] =
     useState<BootstrapConfiguration | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
 
-  useEffect(() => {
-    persistDiscoveryLocale(locale);
-  }, [locale]);
+  const locale: RuntimeDiscoveryLocale = i18n.locale === "de" ? "de" : "en";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -167,28 +139,13 @@ export function RuntimeDiscoveryFlow({
     }
   }
 
-  async function handleLocaleChange(nextLocale: RuntimeDiscoveryLocale) {
-    setError(null);
-
-    try {
-      await activateLocale(nextLocale);
-      setLocalePreference(nextLocale);
-      setLocale(nextLocale);
-    } catch (localeError) {
-      setError(
-        localeError instanceof Error
-          ? localeError.message
-          : _(msg`Failed to change language. Please try again.`)
-      );
-    }
-  }
-
   const apiOrigin = resolvedBootstrap
     ? getApiOrigin(resolvedBootstrap.api_base_url)
     : null;
 
   return (
     <LoginShell>
+      <LoginHeaderControls />
       <div className="flex w-full flex-1 items-center justify-center py-16">
         <LoginCard>
           <LoginCardHeader className="mb-8">
@@ -227,26 +184,6 @@ export function RuntimeDiscoveryFlow({
                   disabled={isChecking || isConfirming}
                   required
                 />
-              </LoginField>
-
-              <LoginField>
-                <LoginFieldLabel htmlFor="secpal-instance-discovery-locale">
-                  <Trans>Language</Trans>
-                </LoginFieldLabel>
-                <select
-                  id="secpal-instance-discovery-locale"
-                  className="border-input bg-background ring-offset-background placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground min-h-10 w-full rounded-md border px-3 py-2 text-base text-foreground shadow-xs transition-[color,box-shadow] outline-none disabled:cursor-not-allowed disabled:opacity-50 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 md:text-sm"
-                  value={locale}
-                  disabled={isChecking || isConfirming}
-                  onChange={(event) => {
-                    const nextLocale =
-                      event.target.value === "de" ? "de" : "en";
-                    void handleLocaleChange(nextLocale);
-                  }}
-                >
-                  <option value="en">English</option>
-                  <option value="de">Deutsch</option>
-                </select>
               </LoginField>
             </LoginFieldGroup>
 
@@ -368,6 +305,7 @@ export function RuntimeDiscoveryFlow({
           </LoginForm>
         </LoginCard>
       </div>
+      <LoginLegalFooter />
     </LoginShell>
   );
 }

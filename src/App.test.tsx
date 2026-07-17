@@ -234,6 +234,14 @@ function createAndroidRuntimeBootstrapBridge({
   return bridge;
 }
 
+async function selectDiscoveryLanguage(
+  user: ReturnType<typeof userEvent.setup>,
+  language: "English" | "Deutsch"
+) {
+  await user.click(screen.getByLabelText(/select language/i));
+  await user.click(await screen.findByRole("option", { name: language }));
+}
+
 function createBootstrapResponse(overrides: Record<string, unknown> = {}) {
   return {
     data: {
@@ -407,6 +415,15 @@ describe("App", () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText(/instance url/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/language/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /legal/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", {
+        name: "Powered by SecPal – A guard's best friend",
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("secpal-instance-discovery-locale")
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /continue to login/i })
     ).toBeDisabled();
@@ -498,7 +515,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await user.selectOptions(screen.getByLabelText(/language/i), "de");
+    await selectDiscoveryLanguage(user, "Deutsch");
 
     expect(
       await screen.findByRole("heading", { name: /instanz-url eingeben/i })
@@ -518,7 +535,7 @@ describe("App", () => {
 
     await renderWithI18n(<App />);
 
-    await user.selectOptions(screen.getByLabelText(/language/i), "de");
+    await selectDiscoveryLanguage(user, "Deutsch");
     await user.type(
       screen.getByLabelText(/instanz-url/i),
       "https://api.secpal.dev"
@@ -553,7 +570,7 @@ describe("App", () => {
       await screen.findByLabelText(/instance url/i),
       "https://api.secpal.dev"
     );
-    await user.selectOptions(screen.getByLabelText(/language/i), "de");
+    await selectDiscoveryLanguage(user, "Deutsch");
     await user.click(
       screen.getByRole("button", { name: /check instance|instanz prüfen/i })
     );

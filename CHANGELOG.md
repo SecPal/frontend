@@ -46,6 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   an inert switch action.
 - Restored confirmation-dialog focus to the instance switch button and kept the
   instance details in non-overlapping grid flow at narrow viewport heights.
+- Made Android instance discovery use the same top legal and language controls
+  and mandatory footer slogan as the login page, removing the duplicate
+  in-card language picker.
 - Isolated direct production-build tests to the web surface so local Android
   mock preview settings cannot leak into and invalidate full-suite builds.
 - Capped the Vitest worker pool for every full-suite run, preventing concurrent

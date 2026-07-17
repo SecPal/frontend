@@ -1051,7 +1051,6 @@ msgid "Complete each earlier residence until your history reaches five years bef
 msgstr "Vervollständigen Sie jeden früheren Wohnort, bis Ihre Angaben bis fünf Jahre vor heute reichen, oder setzen Sie das „Wohnhaft seit“-Datum der aktuellen Adresse weiter zurück."
 
 #: src/components/LoginLegalMenu.tsx
-#: src/components/RuntimeDiscoveryFlow.tsx
 msgid "Failed to change language. Please try again."
 msgstr "Sprache konnte nicht geändert werden. Bitte versuchen Sie es erneut."
 
@@ -3613,7 +3612,6 @@ msgid "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Bitte laden Sie Ihren Personalausweis hoch (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
 #: src/components/LoginLegalMenu.tsx
-#: src/components/RuntimeDiscoveryFlow.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Language"
 msgstr "Sprache"
@@ -3877,8 +3875,8 @@ msgid "← Back to Employees"
 msgstr "← Zurück zu Mitarbeitern"
 
 #: src/components/Footer.tsx
+#: src/components/LoginLegalMenu.tsx
 #: src/components/LoginRouteState.tsx
-#: src/pages/Login.tsx
 msgid "Powered by SecPal – A guard's best friend"
 msgstr "Powered by SecPal – A guard's best friend"
 

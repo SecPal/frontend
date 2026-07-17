@@ -9,7 +9,10 @@ import { useLingui } from "@lingui/react";
 import { KeyRound } from "lucide-react";
 
 import type { MfaChallenge, MfaVerificationMethod } from "@/types/api";
-import { LoginHeaderControls } from "@/components/LoginLegalMenu";
+import {
+  LoginHeaderControls,
+  LoginLegalFooter,
+} from "@/components/LoginLegalMenu";
 import { useAuth } from "../hooks/useAuth";
 import { useRecoverableLazyComponent } from "../hooks/useRecoverableLazyComponent";
 import { useLoginRateLimiter } from "../hooks/useLoginRateLimiter";
@@ -1207,26 +1210,5 @@ export function Login({
         />
       ) : null}
     </LoginShell>
-  );
-}
-
-function LoginLegalFooter() {
-  return (
-    // Natural-flow footer: sits at the bottom of the LoginShell flex column,
-    // pushed there by the centered-card wrapper above (`flex-1`). No absolute
-    // positioning so it cannot overlap the credential card on short landscape
-    // viewports (≈320px tall) where the card itself fills most of the height.
-    <footer className="mt-auto w-full max-w-sm pt-3 pb-[var(--app-footer-padding-bottom)] text-center text-xs [@media(max-height:42rem)]:pt-6">
-      <div className="text-muted-foreground">
-        <a
-          href="https://secpal.app"
-          target="_blank"
-          rel="noopener"
-          className="text-foreground hover:text-foreground/80 inline-block text-xs font-semibold"
-        >
-          <Trans>Powered by SecPal – A guard's best friend</Trans>
-        </a>
-      </div>
-    </footer>
   );
 }

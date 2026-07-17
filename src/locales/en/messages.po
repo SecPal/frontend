@@ -1051,7 +1051,6 @@ msgid "Complete each earlier residence until your history reaches five years bef
 msgstr "Complete each earlier residence until your history reaches five years before today, or move your current residence start date back."
 
 #: src/components/LoginLegalMenu.tsx
-#: src/components/RuntimeDiscoveryFlow.tsx
 msgid "Failed to change language. Please try again."
 msgstr "Failed to change language. Please try again."
 
@@ -3613,7 +3612,6 @@ msgid "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgstr "Please upload your identity card (PDF, JPG, JPEG, PNG; max. 10 MB)."
 
 #: src/components/LoginLegalMenu.tsx
-#: src/components/RuntimeDiscoveryFlow.tsx
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Language"
 msgstr "Language"
@@ -3877,8 +3875,8 @@ msgid "← Back to Employees"
 msgstr "← Back to Employees"
 
 #: src/components/Footer.tsx
+#: src/components/LoginLegalMenu.tsx
 #: src/components/LoginRouteState.tsx
-#: src/pages/Login.tsx
 msgid "Powered by SecPal – A guard's best friend"
 msgstr "Powered by SecPal – A guard's best friend"
 
