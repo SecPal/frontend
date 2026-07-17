@@ -380,7 +380,10 @@ describe("Login", () => {
       "absolute",
       "top-[89%]",
       "-translate-y-1/2",
-      "justify-center"
+      "justify-center",
+      "[@media(max-height:42rem)]:static",
+      "[@media(max-height:42rem)]:mt-6",
+      "[@media(max-height:42rem)]:translate-y-0"
     );
     expect(passkeyButton.closest("form")?.contains(instanceStatus)).toBe(false);
     expect(
@@ -3719,6 +3722,7 @@ describe("Login", () => {
       expect(footer).toHaveClass(
         "mt-auto",
         "pt-3",
+        "[@media(max-height:42rem)]:pt-6",
         "pb-[var(--app-footer-padding-bottom)]"
       );
       const footerContent = footer.querySelector("div");

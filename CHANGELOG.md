@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   centered, unboxed section with a compact label and smaller API origin between
   the login card and footer, while preserving the login card's page centering
   and offering the instance-discovery flow through a confirmed switch action.
+  On short displays, the instance section now follows the login in normal flow
+  with a visible gap to both the sign-in controls and footer.
 - Localized Android instance-discovery errors, including unavailable-instance
   messages, in the selected application language.
 - Capped the Vitest worker pool for every full-suite run, preventing concurrent

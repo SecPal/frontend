@@ -855,7 +855,7 @@ export function Login({
         Together with a non-absolute footer this guarantees the card and
         footer never overlap on short landscape viewports.
       */}
-      <div className="relative flex w-full flex-1 items-center justify-center">
+      <div className="relative flex w-full flex-1 items-center justify-center [@media(max-height:42rem)]:flex-col">
         <LoginCard
           aria-labelledby="login-title"
           aria-busy={isCompletingLogin || undefined}
@@ -1120,7 +1120,7 @@ export function Login({
         {displayedRuntimeBootstrap ? (
           <div
             data-testid="runtime-instance-section"
-            className="absolute inset-x-0 top-[89%] flex -translate-y-1/2 justify-center px-6"
+            className="absolute inset-x-0 top-[89%] flex -translate-y-1/2 justify-center px-6 [@media(max-height:42rem)]:static [@media(max-height:42rem)]:mt-6 [@media(max-height:42rem)]:translate-y-0"
           >
             <div
               data-testid="runtime-instance"
@@ -1228,7 +1228,7 @@ function LoginLegalFooter() {
     // pushed there by the centered-card wrapper above (`flex-1`). No absolute
     // positioning so it cannot overlap the credential card on short landscape
     // viewports (≈320px tall) where the card itself fills most of the height.
-    <footer className="mt-auto w-full max-w-sm pt-3 pb-[var(--app-footer-padding-bottom)] text-center text-xs">
+    <footer className="mt-auto w-full max-w-sm pt-3 pb-[var(--app-footer-padding-bottom)] text-center text-xs [@media(max-height:42rem)]:pt-6">
       <div className="text-muted-foreground">
         <a
           href="https://secpal.app"
