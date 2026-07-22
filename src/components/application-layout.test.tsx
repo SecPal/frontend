@@ -45,7 +45,16 @@ const mockClearSensitiveClientState = vi.hoisted(() =>
 const mockClearBrowserPushClientState = vi.hoisted(() =>
   vi.fn().mockResolvedValue(undefined)
 );
+const appSurfaceMock = vi.hoisted(() => ({
+  isAndroidSurface: true,
+}));
+
 vi.mock("../services/authApi");
+vi.mock("../platform/appSurface", () => ({
+  get isAndroidSurface() {
+    return appSurfaceMock.isAndroidSurface;
+  },
+}));
 vi.mock("@/components/UpdatePrompt", () => ({
   UpdatePrompt: () => <div data-testid="layout-update-prompt" />,
 }));
@@ -193,6 +202,7 @@ describe("ApplicationLayout", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    appSurfaceMock.isAndroidSurface = true;
     await Promise.all([
       db.analytics.clear(),
       db.organizationalUnitCache.clear(),
@@ -1455,6 +1465,30 @@ describe("ApplicationLayout", () => {
       expect(screen.getByText("Navigation")).toBeInTheDocument();
       expect(screen.getByText("Arbeitsbereich")).toBeInTheDocument();
       expect(screen.queryByText("Einstellungen")).not.toBeInTheDocument();
+    });
+
+    it("does not expose Android provisioning navigation on Android surfaces", async () => {
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "Operations User",
+        email: "operations@secpal.dev",
+        hasOrganizationalScopes: true,
+        roles: [],
+        permissions: ["android_enrollment.read"],
+      });
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(
+        await screen.findAllByRole("link", { name: "Home" })
+      ).not.toHaveLength(0);
+      expect(
+        screen.queryByRole("link", { name: "Android Provisioning" })
+      ).not.toBeInTheDocument();
     });
 
     it("updates the active workspace subtitle when the locale changes after render", async () => {
