@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal Contributors
+// SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { describe, it, expect } from "vitest";
@@ -55,6 +55,7 @@ describe("Web Vitals Development Warnings", () => {
         rating: "poor",
         delta: 5000,
         id: "lcp-poor",
+        navigationId: 1,
         navigationType: "navigate",
         entries: [],
       };
@@ -74,6 +75,7 @@ describe("Web Vitals Development Warnings", () => {
         rating: "poor",
         delta: 0.3,
         id: "cls-poor",
+        navigationId: 1,
         navigationType: "navigate",
         entries: [],
       };
@@ -90,6 +92,7 @@ describe("Web Vitals Development Warnings", () => {
         rating: "needs-improvement",
         delta: 3000,
         id: "lcp-needs-improvement",
+        navigationId: 1,
         navigationType: "navigate",
         entries: [],
       };
@@ -110,6 +113,7 @@ describe("Web Vitals Development Warnings", () => {
         rating: "good",
         delta: 2000,
         id: "lcp-good",
+        navigationId: 1,
         navigationType: "navigate",
         entries: [],
       };
