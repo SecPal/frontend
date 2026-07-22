@@ -21,7 +21,6 @@ const issue874Files = [
   "src/hooks/useServiceWorkerUpdate.ts",
   "src/pages/ActivityLog/ActivityDetailDialog.tsx",
   "src/pages/ActivityLog/ActivityLogList.tsx",
-  "src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx",
   "src/pages/Customers/CustomersPage.tsx",
   "src/pages/Employees/EmployeeDetail.tsx",
   "src/pages/Employees/EmployeeEdit.tsx",

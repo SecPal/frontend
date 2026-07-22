@@ -114,11 +114,6 @@ export function getRoutePrefetchPlan(
           "/v1/organizational-units",
         ]
       );
-    case "/android-provisioning":
-      return routePlan(
-        ["androidProvisioning"],
-        ["/v1/android-enrollment-sessions?per_page=15"]
-      );
     default:
       break;
   }

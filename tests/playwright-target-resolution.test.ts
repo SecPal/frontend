@@ -156,11 +156,10 @@ describe("playwright target resolution", () => {
     vi.stubEnv("PLAYWRIGHT_APP_SURFACE", "");
     vi.stubEnv("CI", "");
 
-    const { resolvePlaywrightAppSurface, supportsAndroidProvisioningE2E } =
+    const { resolvePlaywrightAppSurface } =
       await import("./e2e/target-urls.ts");
 
     expect(resolvePlaywrightAppSurface()).toBe("web");
-    expect(supportsAndroidProvisioningE2E()).toBe(false);
   });
 
   it("keeps local HTTPS localhost targets on the default Android surface", async () => {
@@ -171,11 +170,10 @@ describe("playwright target resolution", () => {
     vi.stubEnv("CI", "");
     mockNonPolyscopeCwd();
 
-    const { resolvePlaywrightAppSurface, supportsAndroidProvisioningE2E } =
+    const { resolvePlaywrightAppSurface } =
       await import("./e2e/target-urls.ts");
 
     expect(resolvePlaywrightAppSurface()).toBe("android-native");
-    expect(supportsAndroidProvisioningE2E()).toBe(true);
   });
 
   it("honors an explicit Android Playwright app surface override on workspace previews", async () => {
@@ -185,11 +183,10 @@ describe("playwright target resolution", () => {
     vi.stubEnv("PLAYWRIGHT_APP_SURFACE", "android-native");
     vi.stubEnv("CI", "");
 
-    const { resolvePlaywrightAppSurface, supportsAndroidProvisioningE2E } =
+    const { resolvePlaywrightAppSurface } =
       await import("./e2e/target-urls.ts");
 
     expect(resolvePlaywrightAppSurface()).toBe("android-native");
-    expect(supportsAndroidProvisioningE2E()).toBe(true);
   });
 
   it("honors an explicit Android mock Playwright app surface override on workspace previews", async () => {
@@ -199,11 +196,10 @@ describe("playwright target resolution", () => {
     vi.stubEnv("PLAYWRIGHT_APP_SURFACE", "android-mock");
     vi.stubEnv("CI", "");
 
-    const { resolvePlaywrightAppSurface, supportsAndroidProvisioningE2E } =
+    const { resolvePlaywrightAppSurface } =
       await import("./e2e/target-urls.ts");
 
     expect(resolvePlaywrightAppSurface()).toBe("android-mock");
-    expect(supportsAndroidProvisioningE2E()).toBe(true);
   });
 
   it("derives the API preview URL from the frontend preview when PLAYWRIGHT_API_BASE_URL is a non-preview value", async () => {

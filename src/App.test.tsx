@@ -184,7 +184,6 @@ function createAndroidRuntimeBootstrapBridge({
             features: {
               passwordLoginEnabled: true,
               passkeyLoginEnabled: true,
-              managedAndroidEnrollment: false,
             },
           },
         }
@@ -259,7 +258,6 @@ function createBootstrapResponse(overrides: Record<string, unknown> = {}) {
       features: {
         password_login: true,
         passkey_login: true,
-        managed_android_enrollment: false,
         notification_channels: {
           android_fcm: true,
           web_push: false,
@@ -365,7 +363,6 @@ describe("App", () => {
       import("./pages/Sites/SiteDetail"),
       import("./pages/Sites/SiteEdit"),
       import("./pages/ActivityLog/ActivityLogList"),
-      import("./pages/AndroidProvisioning/AndroidProvisioningPage"),
     ]);
   });
 
@@ -614,7 +611,6 @@ describe("App", () => {
         features: {
           passwordLoginEnabled: true,
           passkeyLoginEnabled: true,
-          managedAndroidEnrollment: false,
         },
       });
     });
@@ -634,7 +630,6 @@ describe("App", () => {
             features: {
               password_login: false,
               passkey_login: false,
-              managed_android_enrollment: false,
               notification_channels: {
                 android_fcm: false,
                 web_push: false,
@@ -748,7 +743,6 @@ describe("App", () => {
           features: {
             passwordLoginEnabled: false,
             passkeyLoginEnabled: false,
-            managedAndroidEnrollment: false,
           },
         },
       }),
@@ -2133,7 +2127,6 @@ describe("App", () => {
     "/employees",
     "/organization",
     "/activity-logs",
-    "/android-provisioning",
   ])(
     "redirects unverified pre-contract users from %s to onboarding before email verification",
     async (path) => {
@@ -2152,7 +2145,6 @@ describe("App", () => {
           "sites.view",
           "employees.view",
           "activity_logs.view",
-          "android_provisioning.view",
         ],
         employee: {
           id: "employee-1",

@@ -32,7 +32,6 @@ describe("bootstrap API types", () => {
         features: {
           password_login: true,
           passkey_login: true,
-          managed_android_enrollment: true,
           notification_channels: {
             android_fcm: true,
             web_push: true,
@@ -88,7 +87,6 @@ describe("bootstrap API types", () => {
       features: {
         password_login: true,
         passkey_login: true,
-        managed_android_enrollment: true,
         notification_channels: {
           android_fcm: true,
           web_push: false,

@@ -11,7 +11,6 @@ import {
   Home,
   MapPinned,
   Settings,
-  Smartphone,
   SquareChartGantt,
   Building2,
   ShieldCheck,
@@ -32,7 +31,6 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/ui/sidebar";
 import { useAuth } from "../hooks/useAuth";
 import { usePrefetch } from "../hooks/usePrefetch";
 import { useUserCapabilities } from "../hooks/useUserCapabilities";
-import { isAndroidSurface } from "../platform/appSurface";
 import { getAuthTransport } from "../services/authTransport";
 import { Footer } from "./Footer";
 import { PrefetchLink } from "./PrefetchLink";
@@ -90,14 +88,9 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
     if (capabilities.activityLogs) {
       primaryDestinations.push("/activity-logs");
     }
-    if (isAndroidSurface && capabilities.androidProvisioning) {
-      primaryDestinations.push("/android-provisioning");
-    }
-
     prefetchPathsOnIdle(primaryDestinations);
   }, [
     capabilities.activityLogs,
-    capabilities.androidProvisioning,
     capabilities.customers,
     capabilities.employees,
     capabilities.organization,
@@ -183,19 +176,10 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
             isActive: isCurrentPath("/activity-logs"),
           }
         : null,
-      isAndroidSurface && capabilities.androidProvisioning
-        ? {
-            title: t`Android Provisioning`,
-            url: "/android-provisioning",
-            icon: Smartphone,
-            isActive: isCurrentPath("/android-provisioning"),
-          }
-        : null,
     ].filter(isDefined);
   }, [
     activeLocale,
     capabilities.activityLogs,
-    capabilities.androidProvisioning,
     capabilities.customers,
     capabilities.employees,
     capabilities.organization,

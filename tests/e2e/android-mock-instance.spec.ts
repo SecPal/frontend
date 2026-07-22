@@ -46,7 +46,6 @@ const bootstrapResponse = {
     features: {
       password_login: true,
       passkey_login: true,
-      managed_android_enrollment: false,
       notification_channels: {
         android_fcm: false,
         web_push: false,

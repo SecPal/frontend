@@ -24,9 +24,7 @@ describe("FeatureRoute", () => {
     sites: true,
     employees: true,
     activityLogs: true,
-    androidProvisioning: true,
     actions: {
-      androidProvisioning: { create: true, revoke: true },
       customers: { create: true, update: true, delete: true },
       sites: { create: true, update: true, delete: true },
       employees: {
@@ -218,7 +216,7 @@ describe("FeatureRoute", () => {
     ).toBeInTheDocument();
     expect(screen.queryByText("Customers Content")).not.toBeInTheDocument();
   });
-  it("renders access denied when Android provisioning read access is missing", () => {
+  it("renders access denied when customer read access is missing", () => {
     vi.mocked(authHook.useAuth).mockReturnValue({
       isLoading: false,
       isAuthenticated: true,
@@ -237,22 +235,21 @@ describe("FeatureRoute", () => {
     });
     vi.mocked(capabilitiesHook.useUserCapabilities).mockReturnValue({
       ...capabilities,
-      androidProvisioning: false,
+      customers: false,
       actions: {
         ...capabilities.actions,
-        androidProvisioning: { create: false, revoke: false },
       },
     });
 
     render(
       <I18nProvider i18n={i18n}>
-        <MemoryRouter initialEntries={["/android-provisioning"]}>
+        <MemoryRouter initialEntries={["/customers"]}>
           <Routes>
             <Route
-              path="/android-provisioning"
+              path="/customers"
               element={
-                <FeatureRoute feature="androidProvisioning">
-                  <div>Android Provisioning Content</div>
+                <FeatureRoute feature="customers">
+                  <div>Customers Content</div>
                 </FeatureRoute>
               }
             />
@@ -267,9 +264,7 @@ describe("FeatureRoute", () => {
     expect(
       screen.getByText(/do not have permission to access this feature/i)
     ).toBeInTheDocument();
-    expect(
-      screen.queryByText("Android Provisioning Content")
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Customers Content")).not.toBeInTheDocument();
   });
 
   it("shows the shared bootstrap loading state until any session snapshot exists", () => {

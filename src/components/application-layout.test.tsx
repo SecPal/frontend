@@ -45,16 +45,7 @@ const mockClearSensitiveClientState = vi.hoisted(() =>
 const mockClearBrowserPushClientState = vi.hoisted(() =>
   vi.fn().mockResolvedValue(undefined)
 );
-const appSurfaceMock = vi.hoisted(() => ({
-  isAndroidSurface: true,
-}));
-
 vi.mock("../services/authApi");
-vi.mock("../platform/appSurface", () => ({
-  get isAndroidSurface() {
-    return appSurfaceMock.isAndroidSurface;
-  },
-}));
 vi.mock("@/components/UpdatePrompt", () => ({
   UpdatePrompt: () => <div data-testid="layout-update-prompt" />,
 }));
@@ -202,7 +193,6 @@ describe("ApplicationLayout", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    appSurfaceMock.isAndroidSurface = true;
     await Promise.all([
       db.analytics.clear(),
       db.organizationalUnitCache.clear(),
@@ -1434,38 +1424,11 @@ describe("ApplicationLayout", () => {
     });
   });
 
-  describe("Android Provisioning Navigation", () => {
+  describe("localized navigation", () => {
     afterEach(() => {
       act(() => {
         i18n.activate("en");
       });
-    });
-
-    it("renders the localized German label instead of the raw Lingui message id", async () => {
-      act(() => {
-        i18n.load("de", deMessages);
-        i18n.activate("de");
-      });
-
-      await seedAuthenticatedUser({
-        id: 1,
-        name: "Operations User",
-        email: "operations@secpal.dev",
-        hasOrganizationalScopes: true,
-        roles: [],
-        permissions: ["android_enrollment.read"],
-      });
-
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      await waitFor(() => {
-        expect(screen.getAllByText("Android-Provisionierung").length).toBe(1);
-      });
-      expect(screen.queryByText("62KQbc")).not.toBeInTheDocument();
     });
 
     it("renders localized sidebar section labels and quick actions in German", async () => {
@@ -1480,7 +1443,7 @@ describe("ApplicationLayout", () => {
         email: "operations@secpal.dev",
         hasOrganizationalScopes: true,
         roles: [],
-        permissions: ["customers.read", "android_enrollment.read"],
+        permissions: ["customers.read"],
       });
 
       renderWithProviders(
@@ -1520,50 +1483,6 @@ describe("ApplicationLayout", () => {
       await waitFor(() => {
         expect(screen.getByText("Arbeitsbereich")).toBeInTheDocument();
       });
-    });
-
-    it("hides the Android provisioning navigation entry without read access", async () => {
-      await seedAuthenticatedUser({
-        id: 1,
-        name: "Operations User",
-        email: "operations@secpal.dev",
-        hasOrganizationalScopes: true,
-        roles: [],
-        permissions: ["activity_log.read"],
-      });
-
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      expect(
-        screen.queryByRole("link", { name: "Android Provisioning" })
-      ).not.toBeInTheDocument();
-    });
-
-    it("hides the Android provisioning navigation entry outside Android surfaces", async () => {
-      appSurfaceMock.isAndroidSurface = false;
-
-      await seedAuthenticatedUser({
-        id: 1,
-        name: "Operations User",
-        email: "operations@secpal.dev",
-        hasOrganizationalScopes: true,
-        roles: [],
-        permissions: ["android_enrollment.read"],
-      });
-
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      expect(
-        screen.queryByRole("link", { name: "Android Provisioning" })
-      ).not.toBeInTheDocument();
     });
   });
 

@@ -30,8 +30,6 @@ export const routeModuleLoaders = {
   siteDetail: () => import("./pages/Sites/SiteDetail"),
   siteEdit: () => import("./pages/Sites/SiteEdit"),
   activityLogs: () => import("./pages/ActivityLog/ActivityLogList"),
-  androidProvisioning: () =>
-    import("./pages/AndroidProvisioning/AndroidProvisioningPage"),
 } satisfies Record<string, RouteModuleLoader>;
 
 export type RouteModuleKey = keyof typeof routeModuleLoaders;

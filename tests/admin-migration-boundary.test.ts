@@ -36,7 +36,6 @@ const scopedEntries = [
   "src/pages/Employees/EmployeeStatusOptions.tsx",
   "src/pages/ActivityLog/ActivityLogList.tsx",
   "src/pages/ActivityLog/ActivityDetailDialog.tsx",
-  "src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx",
   "src/components/OrganizationalUnitTree.tsx",
   "src/components/OrganizationalUnitFormDialog.tsx",
   "src/components/MoveOrganizationalUnitDialog.tsx",
@@ -180,7 +179,7 @@ function collectAdminMigrationViolations(sources: ScopedSource[]) {
 }
 
 describe("admin migration boundary", () => {
-  it("covers migrated admin, customer, site, employee, activity, provisioning, and organization sources", () => {
+  it("covers migrated admin, customer, site, employee, activity, and organization sources", () => {
     expect(readScopedSources().map((source) => source.path)).toEqual([
       ...scopedEntries,
     ]);

@@ -2,16 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { Suspense } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { MemoryRouter } from "react-router-dom";
 import AuthenticatedApp from "../AuthenticatedApp";
-
-const appSurfaceMock = vi.hoisted(() => ({
-  isAndroidSurface: false,
-}));
 
 vi.mock("./UpdatePrompt", () => ({
   UpdatePrompt: () => <div data-testid="route-update-prompt" />,
@@ -66,21 +62,12 @@ vi.mock("../hooks/useNotifications", () => ({
   useNotifications: () => undefined,
 }));
 
-vi.mock("../platform/appSurface", () => ({
-  get isAndroidSurface() {
-    return appSurfaceMock.isAndroidSurface;
-  },
-}));
-
 vi.mock("./OfflineIndicator", () => ({
   OfflineIndicator: () => null,
 }));
 
 vi.mock("../routeModules", () => {
   const resolvedModule = { default: () => <div>Resolved route</div> };
-  const androidProvisioningModule = {
-    default: () => <div>Android provisioning route</div>,
-  };
   const never = new Promise<typeof resolvedModule>(() => undefined);
 
   return {
@@ -105,16 +92,11 @@ vi.mock("../routeModules", () => {
       siteDetail: () => Promise.resolve(resolvedModule),
       siteEdit: () => Promise.resolve(resolvedModule),
       activityLogs: () => Promise.resolve(resolvedModule),
-      androidProvisioning: () => Promise.resolve(androidProvisioningModule),
     },
   };
 });
 
 describe("AuthenticatedApp", () => {
-  beforeEach(() => {
-    appSurfaceMock.isAndroidSurface = false;
-  });
-
   it("keeps the update prompt mounted while an authenticated route module is still loading", async () => {
     render(
       <MemoryRouter initialEntries={["/settings"]}>
@@ -132,9 +114,7 @@ describe("AuthenticatedApp", () => {
     expect(screen.getByTestId("route-update-prompt")).toBeInTheDocument();
   });
 
-  it("hides the Android provisioning route on non-Android surfaces", async () => {
-    appSurfaceMock.isAndroidSurface = false;
-
+  it("does not expose the removed Android provisioning route", async () => {
     render(
       <MemoryRouter initialEntries={["/android-provisioning"]}>
         <I18nProvider i18n={i18n}>
@@ -146,27 +126,5 @@ describe("AuthenticatedApp", () => {
     );
 
     expect(await screen.findByText("Not found")).toBeInTheDocument();
-    expect(
-      screen.queryByText("Android provisioning route")
-    ).not.toBeInTheDocument();
-  });
-
-  it("keeps the Android provisioning route reachable on Android surfaces", async () => {
-    appSurfaceMock.isAndroidSurface = true;
-
-    render(
-      <MemoryRouter initialEntries={["/android-provisioning"]}>
-        <I18nProvider i18n={i18n}>
-          <Suspense fallback={null}>
-            <AuthenticatedApp />
-          </Suspense>
-        </I18nProvider>
-      </MemoryRouter>
-    );
-
-    expect(
-      await screen.findByText("Android provisioning route")
-    ).toBeInTheDocument();
-    expect(screen.queryByText("Not found")).not.toBeInTheDocument();
   });
 });
