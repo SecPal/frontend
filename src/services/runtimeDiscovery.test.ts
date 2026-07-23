@@ -91,6 +91,33 @@ describe("runtime discovery", () => {
     ).resolves.toEqual(payload.data);
   });
 
+  it.each(["4", null, true, [], {}, 4.5])(
+    "rejects malformed bootstrap schema version %j",
+    async (schemaVersion) => {
+      const payload = createBootstrapPayload({
+        compatibility: {
+          bootstrap_version: "v1",
+          schema_version: schemaVersion,
+          minimum_supported_app_version: "1.4.0",
+          minimum_supported_app_build: 10400,
+        },
+      });
+
+      await expect(
+        discoverAndroidRuntimeBootstrap({
+          instanceUrl: "https://api.secpal.dev",
+          locale: "en",
+          runtimeInfo,
+          fetchBootstrap: vi
+            .fn()
+            .mockResolvedValue(
+              new Response(JSON.stringify(payload), { status: 200 })
+            ),
+        })
+      ).rejects.toMatchObject({ code: "BOOTSTRAP_INCOMPATIBLE" });
+    }
+  );
+
   it("fetches canonical Android bootstrap metadata for a secure instance origin", async () => {
     const fetchBootstrap = vi.fn().mockResolvedValue(
       new Response(JSON.stringify(createBootstrapPayload()), {

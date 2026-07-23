@@ -40,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Rejected Android runtime bootstrap responses whose schema version is not an
+  integer JSON number instead of coercing non-canonical values such as strings.
 - Android runtime discovery now accepts the canonical bootstrap schema `4`,
   retains schema `3` only for the documented Android rollout window, and sends
   the validated schema version in browser notification-installation payloads.
