@@ -43,11 +43,15 @@ describe("native facade surface", () => {
     expect(nativeFacades).not.toHaveProperty("executeNativeCommand");
   });
 
+  it("limits the enterprise facade to the OSS-license bridge", () => {
+    expect(Object.keys(nativeFacades.SecPalEnterprise).sort()).toEqual([
+      "isOssLicensesAvailable",
+      "openOssLicenses",
+    ]);
+  });
+
   it("keeps the prepared facades as inert stubs", async () => {
     await expect(nativeFacades.SecPalDeviceState.getSnapshot()).resolves.toBe(
-      null
-    );
-    await expect(nativeFacades.SecPalEnterprise.getEnrollment()).resolves.toBe(
       null
     );
     await expect(

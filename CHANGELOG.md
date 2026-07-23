@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Removed the final obsolete native enrollment compatibility surface from the
+  public enterprise facade, which now exposes only the preserved OSS-license
+  bridge.
 - Removed the obsolete Android provisioning frontend route, navigation,
   enrollment-session transport, capabilities, runtime-bootstrap bridge field,
   and associated localization and E2E support.

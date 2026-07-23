@@ -9,7 +9,6 @@ export {
 } from "./SecPalDeviceState";
 export {
   SecPalEnterprise,
-  type SecPalEnterpriseEnrollment,
   type SecPalEnterpriseFacade,
 } from "./SecPalEnterprise";
 export {
