@@ -40,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Updated the transitive `fast-uri` dependency to 3.1.4 to remediate the
+  literal-backslash authority delimiter host-confusion vulnerability.
 - Aligned generated customer response types with the required
   caller-visible `customer_establishments` array.
 - Loaded every customer-establishment assignment page, resolved authorized
