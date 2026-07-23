@@ -3,13 +3,7 @@
 
 import { Capacitor, registerPlugin } from "@capacitor/core";
 
-export interface SecPalEnterpriseEnrollment {
-  readonly tenantId: string;
-  readonly managedBy?: string;
-}
-
 export interface SecPalEnterpriseFacade {
-  getEnrollment(): Promise<SecPalEnterpriseEnrollment | null>;
   isOssLicensesAvailable(): boolean;
   openOssLicenses(): Promise<boolean>;
 }
@@ -44,9 +38,6 @@ function isOssLicensesAvailable(): boolean {
 }
 
 export const SecPalEnterprise: SecPalEnterpriseFacade = {
-  async getEnrollment(): Promise<SecPalEnterpriseEnrollment | null> {
-    return null;
-  },
   isOssLicensesAvailable(): boolean {
     return isOssLicensesAvailable();
   },
