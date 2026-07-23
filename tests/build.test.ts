@@ -242,11 +242,14 @@ describe("Build Configuration and Source Verification", () => {
       >;
     };
 
-    expect(packageJson.devDependencies?.chai).toBe("^6.2.2");
-    expect(packageLock.packages[""]?.devDependencies?.chai).toBe("^6.2.2");
-    expect(
-      packageLock.packages["node_modules/@vitest/expect"]?.dependencies?.chai
-    ).toBeDefined();
+    const expectedChaiRange =
+      packageLock.packages["node_modules/@vitest/expect"]?.dependencies?.chai;
+
+    expect(expectedChaiRange).toBeDefined();
+    expect(packageJson.devDependencies?.chai).toBe(expectedChaiRange);
+    expect(packageLock.packages[""]?.devDependencies?.chai).toBe(
+      expectedChaiRange
+    );
     expect(packageLock.packages["node_modules/chai"]).toBeDefined();
   });
 
