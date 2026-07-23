@@ -228,6 +228,31 @@ describe("Build Configuration and Source Verification", () => {
     expect(packageLock.packages?.[""]?.license).toBe(packageJson.license);
   });
 
+  it("declares Chai for Vitest's assertion package", () => {
+    const packageJson = JSON.parse(readRepoFile("package.json")) as {
+      devDependencies?: Record<string, string>;
+    };
+    const packageLock = JSON.parse(readRepoFile("package-lock.json")) as {
+      packages: Record<
+        string,
+        {
+          dependencies?: Record<string, string>;
+          devDependencies?: Record<string, string>;
+        }
+      >;
+    };
+
+    const expectedChaiRange =
+      packageLock.packages["node_modules/@vitest/expect"]?.dependencies?.chai;
+
+    expect(expectedChaiRange).toBeDefined();
+    expect(packageJson.devDependencies?.chai).toBe(expectedChaiRange);
+    expect(packageLock.packages[""]?.devDependencies?.chai).toBe(
+      expectedChaiRange
+    );
+    expect(packageLock.packages["node_modules/chai"]).toBeDefined();
+  });
+
   it("keeps explicit dev and build scripts for every app surface", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
       scripts?: Record<string, string>;
