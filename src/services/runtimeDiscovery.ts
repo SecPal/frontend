@@ -171,7 +171,6 @@ function validateFeatureFlags(value: unknown): BootstrapFeatureFlags {
   if (
     !isBoolean(value.password_login) ||
     !isBoolean(value.passkey_login) ||
-    !isBoolean(value.managed_android_enrollment) ||
     !isRecord(notificationChannels) ||
     !isBoolean(notificationChannels.android_fcm) ||
     !isBoolean(notificationChannels.web_push)
@@ -185,7 +184,6 @@ function validateFeatureFlags(value: unknown): BootstrapFeatureFlags {
   return {
     password_login: value.password_login,
     passkey_login: value.passkey_login,
-    managed_android_enrollment: value.managed_android_enrollment,
     notification_channels: {
       android_fcm: notificationChannels.android_fcm,
       web_push: notificationChannels.web_push,

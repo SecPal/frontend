@@ -232,12 +232,3 @@ export function resolvePlaywrightAppSurface(
 
   return "android-native";
 }
-
-export function supportsAndroidProvisioningE2E(
-  env: NodeJS.ProcessEnv = process.env,
-  cwd = process.cwd()
-): boolean {
-  const surface = resolvePlaywrightAppSurface(env, cwd);
-
-  return surface === "android-mock" || surface === "android-native";
-}

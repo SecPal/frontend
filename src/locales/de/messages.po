@@ -149,10 +149,6 @@ msgstr "MFA deaktivieren"
 msgid "Edit Contact Details"
 msgstr "Kontaktdaten bearbeiten"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Front desk tablet"
-msgstr "Empfangstablet"
-
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Edit Phone"
 msgstr "Telefonnummer bearbeiten"
@@ -441,10 +437,6 @@ msgstr "Telefonnummer des Notfallkontakts"
 msgid "Customer Name"
 msgstr "Name des Kunden"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Update channel"
-msgstr "Update-Kanal"
-
 #: src/pages/Login.tsx
 msgid "Your verification session expired. Please log in again."
 msgstr "Ihre Verifizierungssitzung ist abgelaufen. Bitte melden Sie sich erneut an."
@@ -469,10 +461,6 @@ msgstr "Test-Benachrichtigung"
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Site not found"
 msgstr "Objekt nicht gefunden"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "You can inspect Android enrollment status, but write permission is required to create or revoke sessions."
-msgstr "Sie können den Android-Enrollment-Status einsehen, aber zum Erstellen oder Widerrufen von Sitzungen ist Schreibberechtigung erforderlich."
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Additional validation messages from the server"
@@ -526,11 +514,6 @@ msgstr "SecPal – A guard’s best friend"
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Type is required"
 msgstr "Typ ist erforderlich"
-
-#: src/components/application-layout.tsx
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Android Provisioning"
-msgstr "Android-Provisionierung"
 
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Onboarding step navigation"
@@ -645,10 +628,6 @@ msgstr "Upload Ausweisdokument"
 #: src/lib/organizationalUnitUtils.ts
 msgid "Company"
 msgstr "Unternehmen"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "GitHub Releases"
-msgstr "GitHub-Versionen"
 
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeList.tsx
@@ -797,14 +776,6 @@ msgstr "Mitarbeiter #"
 msgid "Bewacherregister"
 msgstr "Bewacherregister"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Provisioning QR code"
-msgstr "Provisionierungs-QR-Code"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Ready for setup"
-msgstr "Bereit zur Einrichtung"
-
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "First Names (all)"
 msgstr "Vornamen (alle)"
@@ -896,10 +867,6 @@ msgstr "Akzeptierte Formate: PDF, JPG, JPEG, PNG."
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 msgid "I do not know my Bewacher ID."
 msgstr "Ich kenne meine Bewacher-ID nicht."
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Device label"
-msgstr "Gerätebezeichnung"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Passkey registration is not available on this device."
@@ -1036,10 +1003,6 @@ msgstr "Geben Sie die Instanz-URL ein, die Sie von Ihrem Vorgesetzten erhalten h
 msgid "House Number"
 msgstr "Hausnummer"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Unnamed Android enrollment session"
-msgstr "Unbenannte Android-Enrollment-Sitzung"
-
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Full Time"
 msgstr "Vollzeit"
@@ -1101,10 +1064,6 @@ msgstr "Schweiz"
 msgid "Loading page"
 msgstr "Seite wird geladen"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "This session expired before setup completed. Create a new session to continue."
-msgstr "Diese Sitzung ist abgelaufen, bevor die Einrichtung abgeschlossen wurde. Erstellen Sie eine neue Sitzung, um fortzufahren."
-
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Regenerate codes"
 msgstr "Codes neu generieren"
@@ -1124,10 +1083,6 @@ msgstr "Verwalten Sie den BWR-Export und den Registrierungsstatus dieses Mitarbe
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
 msgid "You do not need to take further action right now. If we need anything else, we will contact you directly."
 msgstr "Sie müssen vorerst nichts weiter tun. Falls wir noch etwas benötigen, melden wir uns bei Ihnen."
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Use this QR code during Android setup before it expires."
-msgstr "Verwenden Sie diesen QR-Code während der Android-Einrichtung, bevor er abläuft."
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Lowest rank number the user can view (1 = CEO, higher numbers = lower positions). Range: 1-255"
@@ -1270,7 +1225,6 @@ msgstr "Vielen Dank für die Einreichung Ihrer Onboarding-Angaben. Unser HR-Team
 #: src/components/MoveOrganizationalUnitDialog.tsx
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomerEdit.tsx
@@ -1285,10 +1239,6 @@ msgstr "Vielen Dank für die Einreichung Ihrer Onboarding-Angaben. Unser HR-Team
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Cancel"
 msgstr "Abbrechen"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "This session was revoked and can no longer be used for device setup."
-msgstr "Diese Sitzung wurde widerrufen und kann nicht mehr für die Geräteeinrichtung verwendet werden."
 
 #: src/components/DomainAssignmentFields.tsx
 #: src/pages/Customers/CustomerCreate.tsx
@@ -1428,10 +1378,6 @@ msgstr "Sind Sie sicher, dass Sie \"{0}\" löschen wollen? Diese Aktion kann nic
 msgid "Deleting..."
 msgstr "Löschen..."
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Direct APK sideload"
-msgstr "Direktes APK-Sideloading"
-
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "This unit has {childCount} child unit(s). Please delete or move the child units before deleting this unit."
 msgstr "Diese Einheit hat {childCount} untergeordnete Einheit(en). Bitte löschen oder verschieben Sie die untergeordneten Einheiten, bevor Sie diese Einheit löschen."
@@ -1479,10 +1425,6 @@ msgstr "Prüfen Sie die derzeit für dieses Konto eingerichteten Passkeys."
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Failed to submit"
 msgstr "Senden fehlgeschlagen"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Bootstrap completed"
-msgstr "Bootstrap abgeschlossen"
 
 #: src/components/LoginRouteState.tsx
 msgid "Loading login"
@@ -1699,10 +1641,6 @@ msgstr "Detailfenster schließen"
 msgid "Uploading..."
 msgstr "Wird hochgeladen..."
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Revoke"
-msgstr "Widerrufen"
-
 #: src/components/DeleteOrganizationalUnitDialog.tsx
 msgid "Child units must be deleted or reassigned to a different parent before this organizational unit can be removed."
 msgstr "Untergeordnete Einheiten müssen gelöscht oder einer anderen übergeordneten Einheit neu zugeordnet werden, bevor diese Organisationseinheit entfernt werden kann."
@@ -1760,10 +1698,6 @@ msgstr "Bitte verwenden Sie das erforderliche Format ({actualPattern})."
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "Address Supplement"
 msgstr "Adresszusatz"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Loading enrollment sessions..."
-msgstr "Enrollment-Sitzungen werden geladen..."
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -1823,10 +1757,6 @@ msgstr "Startseite"
 #: src/components/OrganizationalUnitPicker.tsx
 msgid "Select organizational unit"
 msgstr "Organisationseinheit auswählen"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Managed device rollout"
-msgstr "Rollout verwalteter Geräte"
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Back to Sites"
@@ -2066,10 +1996,6 @@ msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 msgid "Loading establishment details"
 msgstr "Betriebsstättendetails werden geladen"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Provide a short reason before this Android enrollment session is revoked."
-msgstr "Geben Sie einen kurzen Grund an, bevor diese Android-Registrierungssitzung widerrufen wird."
-
 #: src/components/LoginLegalMenu.tsx
 msgid "Select language"
 msgstr "Sprache auswählen"
@@ -2163,10 +2089,6 @@ msgstr "Objektnummer"
 msgid "You can upload now or continue and add documents later before final submission."
 msgstr "Sie können jetzt hochladen oder fortfahren und Dokumente später vor der finalen Einreichung hinzufügen."
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Expires"
-msgstr "Läuft ab"
-
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
 msgid "First Name"
@@ -2199,10 +2121,6 @@ msgstr "SecPal konnte die sichere Verifizierungsabfrage nicht laden. Versuchen S
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Please enter a valid date of birth"
 msgstr "Bitte geben Sie ein gültiges Geburtsdatum ein"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Unknown status"
-msgstr "Unbekannter Status"
 
 #: src/components/NotificationPreferences.tsx
 msgid "Changing deployment domains, service-worker scope, site data, or signing out can require you to enable notifications again."
@@ -2503,10 +2421,6 @@ msgstr "Organisatorische Einheit anlegen"
 msgid "An unexpected error occurred"
 msgstr "Ein unerwarteter Fehler ist aufgetreten"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Unknown channel"
-msgstr "Unbekannter Kanal"
-
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
@@ -2539,7 +2453,6 @@ msgstr "Kontakt hinzufügen"
 msgid "Local comments {number}"
 msgstr "Lokale Anmerkungen {number}"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Expired"
 msgstr "Abgelaufen"
@@ -2574,10 +2487,6 @@ msgstr "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut o
 msgid "Email address is required"
 msgstr "E-Mail-Adresse ist erforderlich"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Enrollment Sessions"
-msgstr "Enrollment-Sitzungen"
-
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Administrative status"
 msgstr "Administrativer Status"
@@ -2597,10 +2506,6 @@ msgstr "Das Passwort muss mindestens eine Zahl enthalten"
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "We compare this with the date of birth on file to verify your identity before activating your account."
 msgstr "Wir gleichen dieses Datum mit dem hinterlegten Geburtsdatum ab, um Ihre Identität vor der Aktivierung Ihres Kontos zu prüfen."
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "No action available"
-msgstr "Keine Aktion verfügbar"
 
 #: src/pages/SourcePage.tsx
 msgid "This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version."
@@ -2655,10 +2560,6 @@ msgstr "Dieser Browser unterstützt keine Passkeys."
 #: src/pages/Customers/CustomersPage.tsx
 msgid "Customers"
 msgstr "Kunden"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "No Android enrollment sessions have been created yet."
-msgstr "Es wurden noch keine Android-Enrollment-Sitzungen erstellt."
 
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Hide options"
@@ -2759,25 +2660,13 @@ msgstr "Sie kehren zur Instanzauswahl zurück."
 msgid "Store your recovery codes now"
 msgstr "Speichern Sie jetzt Ihre Wiederherstellungscodes"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Revoke enrollment session"
-msgstr "Registrierungssitzung widerrufen"
-
 #: src/pages/Customers/CustomerCreate.tsx
 msgid "Create Customer"
 msgstr "Kunde anlegen"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Revocation reason"
-msgstr "Widerrufsgrund"
-
 #: src/pages/Employees/EmployeeManagementLevelField.tsx
 msgid "Leadership Position"
 msgstr "Führungskraft"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Obtainium"
-msgstr "Obtainium"
 
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Organization Structure"
@@ -2943,10 +2832,6 @@ msgstr "Führungsebene ist erforderlich, wenn es eine Führungsposition ist"
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "Description must be at most 1000 characters"
 msgstr "Die Beschreibung darf höchstens 1000 Zeichen lang sein"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Revocation reason is required."
-msgstr "Ein Widerrufsgrund ist erforderlich."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Failed to validate onboarding link"
@@ -3624,14 +3509,6 @@ msgstr "Rechtliches"
 msgid "Assignment status"
 msgstr "Zuweisungsstatus"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Android provisioning QR code"
-msgstr "QR-Code zur Android-Provisionierung"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Reason"
-msgstr "Grund"
-
 #: src/components/NotificationPreferences.tsx
 msgid "SecPal could not sync this browser's notification registration with the server. Refresh the app and try again."
 msgstr "SecPal konnte die Benachrichtigungsregistrierung dieses Browsers nicht mit dem Server synchronisieren. Laden Sie die App neu und versuchen Sie es erneut."
@@ -3693,10 +3570,6 @@ msgstr "Seite wird geladen..."
 #: src/components/MfaQrCode.tsx
 msgid "Generating QR code..."
 msgstr "QR-Code wird generiert..."
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Creating enrollment session..."
-msgstr "Enrollment-Sitzung wird erstellt..."
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Failed to load passkeys."
@@ -3857,7 +3730,6 @@ msgstr "Passkey speichern …"
 msgid "Validating onboarding link"
 msgstr "Onboarding-Link wird geprüft"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Revoked"
@@ -4088,10 +3960,6 @@ msgstr "Das Passwort muss Groß- und Kleinbuchstaben enthalten"
 msgid "\"{0}\" updated successfully"
 msgstr "\"{0}\" erfolgreich aktualisiert"
 
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Create enrollment session"
-msgstr "Enrollment-Sitzung erstellen"
-
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
@@ -4101,10 +3969,6 @@ msgstr "Enrollment-Sitzung erstellen"
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Phone"
 msgstr "Telefon"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "This session has already been used to complete device bootstrap."
-msgstr "Diese Sitzung wurde bereits für den Geräte-Bootstrap verwendet."
 
 #: src/components/RuntimeDiscoveryFlow.tsx
 msgid "Saving instance"
@@ -4121,7 +3985,3 @@ msgstr "Für die Registrierung eines Passkeys ist Android 14 oder neuer erforder
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to activate employee"
 msgstr "Mitarbeiter konnte nicht aktiviert werden"
-
-#: src/pages/AndroidProvisioning/AndroidProvisioningPage.tsx
-msgid "Revoking..."
-msgstr "Wird widerrufen..."

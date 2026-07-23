@@ -61,7 +61,7 @@ describe("Lingui German catalog", () => {
     expect(missingEntries).toEqual([]);
   });
 
-  it("keeps passkey and Android provisioning strings translated", () => {
+  it("keeps passkey strings translated", () => {
     const catalogSource = readFileSync(
       join(process.cwd(), "src/locales/de/messages.po"),
       "utf8"
@@ -72,32 +72,14 @@ describe("Lingui German catalog", () => {
       "Added {0}",
       "Add passkey",
       "Adding passkey...",
-      "Create enrollment session",
-      "Creating enrollment session...",
-      "Device label",
-      "Enrollment Sessions",
-      "Expires",
-      "Front desk tablet",
-      "Loading enrollment sessions...",
       "Loading passkeys...",
-      "No action available",
-      "No Android enrollment sessions have been created yet.",
       "No passkeys enrolled yet.",
       "Passkey label",
       "Passkeys",
-      "Provisioning QR code",
-      "Reason",
       "Review the passkeys currently enrolled for this account.",
-      "Revocation reason",
-      "Revoke",
-      "Revoked",
       "Sign in with passkey",
       "Signing in with passkey...",
       "This browser does not support passkeys.",
-      "Unnamed Android enrollment session",
-      "Update channel",
-      "You can inspect Android enrollment status, but write permission is required to create or revoke sessions.",
-      "Removing...",
     ]) {
       expect(entries.get(msgid), msgid).toBeTruthy();
     }

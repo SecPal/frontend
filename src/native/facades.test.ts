@@ -78,7 +78,6 @@ describe("native facade surface", () => {
         features: {
           password_login: true,
           passkey_login: true,
-          managed_android_enrollment: true,
           notification_channels: {
             android_fcm: false,
             web_push: false,
@@ -208,7 +207,6 @@ describe("native facade surface", () => {
         features: {
           password_login: true,
           passkey_login: true,
-          managed_android_enrollment: true,
           notification_channels: {
             android_fcm: true,
             web_push: false,
@@ -251,7 +249,6 @@ describe("native facade surface", () => {
       features: {
         passwordLoginEnabled: true,
         passkeyLoginEnabled: true,
-        managedAndroidEnrollment: true,
       },
     });
     expect(clearRuntimeBootstrap).toHaveBeenCalledOnce();
@@ -287,7 +284,6 @@ describe("native facade surface", () => {
         features: {
           password_login: true,
           passkey_login: true,
-          managed_android_enrollment: false,
           notification_channels: {
             android_fcm: false,
             web_push: false,

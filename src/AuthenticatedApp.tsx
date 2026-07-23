@@ -20,7 +20,6 @@ import { RouteContentFallback } from "./components/RouteContentFallback";
 import { routeModuleLoaders } from "./routeModules";
 import { useNotifications } from "./hooks/useNotifications";
 import { OfflineIndicator } from "./components/OfflineIndicator";
-import { isAndroidSurface } from "./platform/appSurface";
 
 const SettingsPage = lazy(routeModuleLoaders.settings);
 const ProfilePage = lazy(routeModuleLoaders.profile);
@@ -41,7 +40,6 @@ const SiteCreate = lazy(routeModuleLoaders.siteCreate);
 const SiteDetail = lazy(routeModuleLoaders.siteDetail);
 const SiteEdit = lazy(routeModuleLoaders.siteEdit);
 const ActivityLogList = lazy(routeModuleLoaders.activityLogs);
-const AndroidProvisioningPage = lazy(routeModuleLoaders.androidProvisioning);
 
 function Home() {
   return (
@@ -258,18 +256,6 @@ export default function AuthenticatedApp() {
               </AppFeatureRoute>
             }
           />
-          {isAndroidSurface ? (
-            <Route
-              path="/android-provisioning"
-              element={
-                <AppFeatureRoute feature="androidProvisioning">
-                  <ApplicationLayout>
-                    <AndroidProvisioningPage />
-                  </ApplicationLayout>
-                </AppFeatureRoute>
-              }
-            />
-          ) : null}
           <Route
             path="/sites/:id"
             element={

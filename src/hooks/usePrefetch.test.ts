@@ -32,7 +32,6 @@ const { mockRouteModuleLoaders } = vi.hoisted(() => {
       siteDetail: createLoader(),
       siteEdit: createLoader(),
       activityLogs: createLoader(),
-      androidProvisioning: createLoader(),
     },
   };
 });
@@ -82,6 +81,10 @@ describe("usePrefetch route strategy", () => {
         "/v1/lookups/legal-entities",
       ],
     });
+  });
+
+  it("does not prefetch the removed Android provisioning route", () => {
+    expect(getRoutePrefetchPlan("/android-provisioning")).toBeNull();
   });
 
   it("plans high-frequency detail links with detail chunks and entity data", () => {

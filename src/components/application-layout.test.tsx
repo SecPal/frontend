@@ -1434,19 +1434,40 @@ describe("ApplicationLayout", () => {
     });
   });
 
-  describe("Android Provisioning Navigation", () => {
+  describe("localized navigation", () => {
     afterEach(() => {
       act(() => {
         i18n.activate("en");
       });
     });
 
-    it("renders the localized German label instead of the raw Lingui message id", async () => {
+    it("renders localized sidebar section labels and quick actions in German", async () => {
       act(() => {
         i18n.load("de", deMessages);
         i18n.activate("de");
       });
 
+      await seedAuthenticatedUser({
+        id: 1,
+        name: "Operations User",
+        email: "operations@secpal.dev",
+        hasOrganizationalScopes: true,
+        roles: [],
+        permissions: ["customers.read"],
+      });
+
+      renderWithProviders(
+        <ApplicationLayout>
+          <div>Content</div>
+        </ApplicationLayout>
+      );
+
+      expect(screen.getByText("Navigation")).toBeInTheDocument();
+      expect(screen.getByText("Arbeitsbereich")).toBeInTheDocument();
+      expect(screen.queryByText("Einstellungen")).not.toBeInTheDocument();
+    });
+
+    it("does not expose Android provisioning navigation on Android surfaces", async () => {
       await seedAuthenticatedUser({
         id: 1,
         name: "Operations User",
@@ -1462,36 +1483,12 @@ describe("ApplicationLayout", () => {
         </ApplicationLayout>
       );
 
-      await waitFor(() => {
-        expect(screen.getAllByText("Android-Provisionierung").length).toBe(1);
-      });
-      expect(screen.queryByText("62KQbc")).not.toBeInTheDocument();
-    });
-
-    it("renders localized sidebar section labels and quick actions in German", async () => {
-      act(() => {
-        i18n.load("de", deMessages);
-        i18n.activate("de");
-      });
-
-      await seedAuthenticatedUser({
-        id: 1,
-        name: "Operations User",
-        email: "operations@secpal.dev",
-        hasOrganizationalScopes: true,
-        roles: [],
-        permissions: ["customers.read", "android_enrollment.read"],
-      });
-
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      expect(screen.getByText("Navigation")).toBeInTheDocument();
-      expect(screen.getByText("Arbeitsbereich")).toBeInTheDocument();
-      expect(screen.queryByText("Einstellungen")).not.toBeInTheDocument();
+      expect(
+        await screen.findAllByRole("link", { name: "Home" })
+      ).not.toHaveLength(0);
+      expect(
+        screen.queryByRole("link", { name: "Android Provisioning" })
+      ).not.toBeInTheDocument();
     });
 
     it("updates the active workspace subtitle when the locale changes after render", async () => {
@@ -1520,50 +1517,6 @@ describe("ApplicationLayout", () => {
       await waitFor(() => {
         expect(screen.getByText("Arbeitsbereich")).toBeInTheDocument();
       });
-    });
-
-    it("hides the Android provisioning navigation entry without read access", async () => {
-      await seedAuthenticatedUser({
-        id: 1,
-        name: "Operations User",
-        email: "operations@secpal.dev",
-        hasOrganizationalScopes: true,
-        roles: [],
-        permissions: ["activity_log.read"],
-      });
-
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      expect(
-        screen.queryByRole("link", { name: "Android Provisioning" })
-      ).not.toBeInTheDocument();
-    });
-
-    it("hides the Android provisioning navigation entry outside Android surfaces", async () => {
-      appSurfaceMock.isAndroidSurface = false;
-
-      await seedAuthenticatedUser({
-        id: 1,
-        name: "Operations User",
-        email: "operations@secpal.dev",
-        hasOrganizationalScopes: true,
-        roles: [],
-        permissions: ["android_enrollment.read"],
-      });
-
-      renderWithProviders(
-        <ApplicationLayout>
-          <div>Content</div>
-        </ApplicationLayout>
-      );
-
-      expect(
-        screen.queryByRole("link", { name: "Android Provisioning" })
-      ).not.toBeInTheDocument();
     });
   });
 

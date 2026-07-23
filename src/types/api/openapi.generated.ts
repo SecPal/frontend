@@ -42,7 +42,6 @@ export interface components {
     BootstrapFeatureFlags: {
       password_login: boolean;
       passkey_login: boolean;
-      managed_android_enrollment: boolean;
       notification_channels: components["schemas"]["NotificationChannelFeatureFlags"];
     };
     BootstrapCompatibility: {

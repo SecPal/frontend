@@ -20,7 +20,7 @@ The current frontend ships the browser and PWA surfaces for SecPal's workforce o
 - authenticated browser sessions with httpOnly cookie auth, MFA, and passkeys
 - onboarding and activation flows for pre-contract users
 - customer, site, employee, and organizational-unit management
-- profile/settings, activity logs, and Android provisioning
+- profile/settings and activity logs
 - installable PWA behavior with service-worker updates and guarded offline support
 
 Legacy Secrets-era password-vault content has been removed from the current route surface and is no longer described in this README.

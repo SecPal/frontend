@@ -30,7 +30,6 @@ export interface SecPalAppliedRuntimeBootstrap {
   readonly features?: {
     readonly passwordLoginEnabled: boolean;
     readonly passkeyLoginEnabled: boolean;
-    readonly managedAndroidEnrollment: boolean;
   };
 }
 
@@ -103,7 +102,6 @@ function toAppliedRuntimeBootstrap(
     features: {
       passwordLoginEnabled: bootstrap.features.password_login,
       passkeyLoginEnabled: bootstrap.features.passkey_login,
-      managedAndroidEnrollment: bootstrap.features.managed_android_enrollment,
     },
   };
 }

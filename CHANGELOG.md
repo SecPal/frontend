@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Removed the obsolete Android provisioning frontend route, navigation,
+  enrollment-session transport, capabilities, runtime-bootstrap bridge field,
+  and associated localization and E2E support.
 - Replaced Site and Employee organizational-unit assignments with authorized
   Legal Entity and Establishment cascades; Site forms additionally restrict
   Customer choices to the selected Establishment, reset descendants

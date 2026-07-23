@@ -132,8 +132,8 @@ describe("AuthenticatedApp", () => {
     expect(screen.getByTestId("route-update-prompt")).toBeInTheDocument();
   });
 
-  it("hides the Android provisioning route on non-Android surfaces", async () => {
-    appSurfaceMock.isAndroidSurface = false;
+  it("does not expose the removed Android provisioning route", async () => {
+    appSurfaceMock.isAndroidSurface = true;
 
     render(
       <MemoryRouter initialEntries={["/android-provisioning"]}>
@@ -149,24 +149,5 @@ describe("AuthenticatedApp", () => {
     expect(
       screen.queryByText("Android provisioning route")
     ).not.toBeInTheDocument();
-  });
-
-  it("keeps the Android provisioning route reachable on Android surfaces", async () => {
-    appSurfaceMock.isAndroidSurface = true;
-
-    render(
-      <MemoryRouter initialEntries={["/android-provisioning"]}>
-        <I18nProvider i18n={i18n}>
-          <Suspense fallback={null}>
-            <AuthenticatedApp />
-          </Suspense>
-        </I18nProvider>
-      </MemoryRouter>
-    );
-
-    expect(
-      await screen.findByText("Android provisioning route")
-    ).toBeInTheDocument();
-    expect(screen.queryByText("Not found")).not.toBeInTheDocument();
   });
 });
