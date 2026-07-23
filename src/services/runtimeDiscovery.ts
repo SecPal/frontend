@@ -272,10 +272,12 @@ function validateBootstrapPayload(
   const minimumSupportedAppBuild = Number(
     compatibility.minimum_supported_app_build
   );
-  const schemaVersion = Number(compatibility.schema_version);
+  const schemaVersion = compatibility.schema_version;
 
   if (
     compatibility.bootstrap_version !== CURRENT_BOOTSTRAP_VERSION ||
+    typeof schemaVersion !== "number" ||
+    !Number.isInteger(schemaVersion) ||
     !ACCEPTED_BOOTSTRAP_SCHEMA_VERSIONS.has(schemaVersion)
   ) {
     throw new RuntimeDiscoveryError(
