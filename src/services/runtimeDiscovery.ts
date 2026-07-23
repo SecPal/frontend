@@ -10,7 +10,14 @@ import type {
 import type { SecPalRuntimeInfo } from "../native";
 
 const CURRENT_BOOTSTRAP_VERSION = "v1";
-const CURRENT_BOOTSTRAP_SCHEMA_VERSION = 3;
+const CURRENT_BOOTSTRAP_SCHEMA_VERSION = 4;
+
+// Keep schema 3 only while the API accepts schema-3 notification registrations
+// from supported Android releases. Remove it with that API compatibility path.
+const ACCEPTED_BOOTSTRAP_SCHEMA_VERSIONS = new Set([
+  3,
+  CURRENT_BOOTSTRAP_SCHEMA_VERSION,
+]);
 
 export type RuntimeDiscoveryErrorCode =
   | "INVALID_INSTANCE_URL"
@@ -269,7 +276,7 @@ function validateBootstrapPayload(
 
   if (
     compatibility.bootstrap_version !== CURRENT_BOOTSTRAP_VERSION ||
-    schemaVersion !== CURRENT_BOOTSTRAP_SCHEMA_VERSION
+    !ACCEPTED_BOOTSTRAP_SCHEMA_VERSIONS.has(schemaVersion)
   ) {
     throw new RuntimeDiscoveryError(
       "BOOTSTRAP_INCOMPATIBLE",

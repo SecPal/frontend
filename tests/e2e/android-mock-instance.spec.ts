@@ -39,7 +39,7 @@ const bootstrapResponse = {
     instance: { display_name: "Other Tenant" },
     compatibility: {
       bootstrap_version: "v1",
-      schema_version: 3,
+      schema_version: 4,
       minimum_supported_app_version: "1.0.0",
       minimum_supported_app_build: 1,
     },
