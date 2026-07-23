@@ -25,7 +25,7 @@ function createBootstrapPayload(overrides: Record<string, unknown> = {}) {
       },
       compatibility: {
         bootstrap_version: "v1",
-        schema_version: 3,
+        schema_version: 4,
         minimum_supported_app_version: "1.4.0",
         minimum_supported_app_build: 10400,
       },
@@ -43,6 +43,54 @@ function createBootstrapPayload(overrides: Record<string, unknown> = {}) {
 }
 
 describe("runtime discovery", () => {
+  it("accepts the canonical schema-4 Android bootstrap response", async () => {
+    const payload = createBootstrapPayload({
+      compatibility: {
+        bootstrap_version: "v1",
+        schema_version: 4,
+        minimum_supported_app_version: "1.4.0",
+        minimum_supported_app_build: 10400,
+      },
+    });
+
+    await expect(
+      discoverAndroidRuntimeBootstrap({
+        instanceUrl: "https://api.secpal.dev",
+        locale: "en",
+        runtimeInfo,
+        fetchBootstrap: vi
+          .fn()
+          .mockResolvedValue(
+            new Response(JSON.stringify(payload), { status: 200 })
+          ),
+      })
+    ).resolves.toEqual(payload.data);
+  });
+
+  it("temporarily accepts schema 3 for supported Android releases", async () => {
+    const payload = createBootstrapPayload({
+      compatibility: {
+        bootstrap_version: "v1",
+        schema_version: 3,
+        minimum_supported_app_version: "1.4.0",
+        minimum_supported_app_build: 10400,
+      },
+    });
+
+    await expect(
+      discoverAndroidRuntimeBootstrap({
+        instanceUrl: "https://api.secpal.dev",
+        locale: "en",
+        runtimeInfo,
+        fetchBootstrap: vi
+          .fn()
+          .mockResolvedValue(
+            new Response(JSON.stringify(payload), { status: 200 })
+          ),
+      })
+    ).resolves.toEqual(payload.data);
+  });
+
   it("fetches canonical Android bootstrap metadata for a secure instance origin", async () => {
     const fetchBootstrap = vi.fn().mockResolvedValue(
       new Response(JSON.stringify(createBootstrapPayload()), {
@@ -164,7 +212,7 @@ describe("runtime discovery", () => {
               createBootstrapPayload({
                 compatibility: {
                   bootstrap_version: "v2",
-                  schema_version: 3,
+                  schema_version: 4,
                   minimum_supported_app_version: "1.4.0",
                   minimum_supported_app_build: 10400,
                 },
@@ -175,6 +223,31 @@ describe("runtime discovery", () => {
         ),
       })
     ).rejects.toMatchObject({ code: "BOOTSTRAP_INCOMPATIBLE" });
+
+    for (const schemaVersion of [2, 5]) {
+      await expect(
+        discoverAndroidRuntimeBootstrap({
+          instanceUrl: "https://api.secpal.dev",
+          locale: "en",
+          runtimeInfo,
+          fetchBootstrap: vi.fn().mockResolvedValue(
+            new Response(
+              JSON.stringify(
+                createBootstrapPayload({
+                  compatibility: {
+                    bootstrap_version: "v1",
+                    schema_version: schemaVersion,
+                    minimum_supported_app_version: "1.4.0",
+                    minimum_supported_app_build: 10400,
+                  },
+                })
+              ),
+              { status: 200 }
+            )
+          ),
+        })
+      ).rejects.toMatchObject({ code: "BOOTSTRAP_INCOMPATIBLE" });
+    }
 
     await expect(
       discoverAndroidRuntimeBootstrap({
@@ -200,7 +273,7 @@ describe("runtime discovery", () => {
               createBootstrapPayload({
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                   minimum_supported_app_version: "2.0.0",
                   minimum_supported_app_build: 20000,
                 },

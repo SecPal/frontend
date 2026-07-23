@@ -16,7 +16,7 @@ describe("bootstrap API types", () => {
         },
         compatibility: {
           bootstrap_version: "v1",
-          schema_version: 3,
+          schema_version: 4,
           minimum_supported_app_version: "1.4.0",
           minimum_supported_app_build: 10400,
         },
@@ -80,7 +80,7 @@ describe("bootstrap API types", () => {
       },
       compatibility: {
         bootstrap_version: "v1",
-        schema_version: 3,
+        schema_version: 4,
         minimum_supported_app_version: "1.4.0",
         minimum_supported_app_build: 10400,
       },

@@ -40,6 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Android runtime discovery now accepts the canonical bootstrap schema `4`,
+  retains schema `3` only for the documented Android rollout window, and sends
+  the validated schema version in browser notification-installation payloads.
 - Declared Chai as an explicit Vitest development dependency so clean
   installations can resolve Vitest's assertion package before the test suite
   starts.
