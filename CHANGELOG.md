@@ -40,6 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Declared Chai as an explicit Vitest development dependency so clean
+  installations can resolve Vitest's assertion package before the test suite
+  starts.
 - Updated the transitive `fast-uri` dependency to 3.1.4 to remediate the
   literal-backslash authority delimiter host-confusion vulnerability.
 - Aligned generated customer response types with the required
