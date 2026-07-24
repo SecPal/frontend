@@ -200,6 +200,14 @@ test.describe("Android mock instance switching", () => {
     await expect(page.getByText(/signed in to other tenant/i)).toBeVisible();
     await expect.poll(() => selectedHealthRequests.length).toBeGreaterThan(0);
 
+    await context.addCookies([
+      {
+        name: "XSRF-TOKEN",
+        value: "test-xsrf-token",
+        url: page.url(),
+      },
+    ]);
+
     await page.getByLabel(/email/i).fill("person@secpal.dev");
     await page.getByLabel(/password/i).fill("not-a-real-password");
     await page.getByRole("button", { name: /log in/i }).click();
