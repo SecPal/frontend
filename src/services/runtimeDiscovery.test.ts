@@ -67,7 +67,7 @@ describe("runtime discovery", () => {
     ).resolves.toEqual(payload.data);
   });
 
-  it("temporarily accepts schema 3 for supported Android releases", async () => {
+  it("rejects the obsolete schema 3", async () => {
     const payload = createBootstrapPayload({
       compatibility: {
         bootstrap_version: "v1",
@@ -88,7 +88,7 @@ describe("runtime discovery", () => {
             new Response(JSON.stringify(payload), { status: 200 })
           ),
       })
-    ).resolves.toEqual(payload.data);
+    ).rejects.toMatchObject({ code: "BOOTSTRAP_INCOMPATIBLE" });
   });
 
   it.each(["4", null, true, [], {}, 4.5])(
