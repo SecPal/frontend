@@ -5,7 +5,7 @@ import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import CustomerCreate from "./CustomerCreate";
 import * as customersApi from "../../services/customersApi";
@@ -16,8 +16,8 @@ vi.mock("../../services/customersApi");
 vi.mock("../../services/customerLegalEntitiesApi");
 vi.mock("../../services/customerDomainApi");
 const navigate = vi.fn();
-vi.mock("react-router-dom", async () => ({
-  ...(await vi.importActual("react-router-dom")),
+vi.mock("react-router", async () => ({
+  ...(await vi.importActual("react-router")),
   useNavigate: () => navigate,
 }));
 

@@ -7,7 +7,7 @@ import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { lazy } from "react";
-import { Link, MemoryRouter, Route, Routes } from "react-router-dom";
+import { Link, MemoryRouter, Route, Routes } from "react-router";
 import App from "./App";
 import { ApplicationLayout } from "./components/application-layout";
 import { AuthProvider } from "./contexts/AuthContext";

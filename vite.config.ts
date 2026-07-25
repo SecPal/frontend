@@ -95,7 +95,7 @@ export function buildDevServerProxyConfig(configuredApiBaseUrl?: string): {
 }
 
 const vendorChunkPackages: Record<string, string[]> = {
-  "vendor-react": ["react", "react-dom", "react-router-dom"],
+  "vendor-react": ["react", "react-dom", "react-router"],
   "vendor-icons": ["lucide-react"],
   "vendor-ui": [
     "@radix-ui/react-checkbox",

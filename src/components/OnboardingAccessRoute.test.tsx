@@ -3,7 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { AppAccessRoute, OnboardingOnlyRoute } from "./OnboardingAccessRoute";
@@ -11,8 +11,8 @@ import type { User } from "../contexts/auth-context";
 import * as authHook from "../hooks/useAuth";
 
 vi.mock("../hooks/useAuth");
-vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual("react-router-dom");
+vi.mock("react-router", async () => {
+  const actual = await vi.importActual("react-router");
 
   return {
     ...actual,

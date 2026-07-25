@@ -10,7 +10,7 @@ import {
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router";
 import { RefreshCw, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Checkbox } from "@/ui/checkbox";

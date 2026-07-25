@@ -15,6 +15,24 @@ function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(repoRoot, relativePath), "utf8");
 }
 
+function expectVersionAtLeast(
+  actualVersion: string | undefined,
+  minimumVersion: string
+): void {
+  expect(actualVersion).toMatch(/^\d+\.\d+\.\d+$/u);
+  expect(minimumVersion).toMatch(/^\d+\.\d+\.\d+$/u);
+
+  const actualParts = actualVersion!.split(".").map(Number);
+  const minimumParts = minimumVersion.split(".").map(Number);
+  const comparison = actualParts.reduce(
+    (result, part, index) =>
+      result === 0 ? Math.sign(part - minimumParts[index]) : result,
+    0
+  );
+
+  expect(comparison).toBeGreaterThanOrEqual(0);
+}
+
 function getIndentedSection(text: string, sectionName: string): string {
   const lines = text.split("\n");
   const startIndex = lines.findIndex(
@@ -251,6 +269,31 @@ describe("Build Configuration and Source Verification", () => {
       expectedChaiRange
     );
     expect(packageLock.packages["node_modules/chai"]).toBeDefined();
+  });
+
+  it("keeps the July 2026 dependency remediations upgradeable", () => {
+    const packageJson = JSON.parse(readRepoFile("package.json")) as {
+      dependencies?: Record<string, string>;
+      overrides?: Record<string, string>;
+    };
+    const packageLock = JSON.parse(readRepoFile("package-lock.json")) as {
+      packages: Record<string, { version?: string }>;
+    };
+
+    expect(packageJson.dependencies?.["react-router"]).toMatch(/^\^/u);
+    expect(packageJson.dependencies?.["react-router-dom"]).toBeUndefined();
+    expect(packageJson.overrides?.["js-yaml"]).toMatch(/^>=/u);
+    expect(
+      packageLock.packages["node_modules/react-router-dom"]
+    ).toBeUndefined();
+    expectVersionAtLeast(
+      packageLock.packages["node_modules/react-router"]?.version,
+      "8.3.0"
+    );
+    expectVersionAtLeast(
+      packageLock.packages["node_modules/js-yaml"]?.version,
+      "5.2.2"
+    );
   });
 
   it("keeps explicit dev and build scripts for every app surface", () => {

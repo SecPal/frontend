@@ -23,7 +23,7 @@ import {
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
-import { MemoryRouter, useLocation } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router";
 import { ApplicationLayout } from "./application-layout";
 import { APP_SHELL_MAX_WIDTH_CLASS } from "./app-shell-width";
 import { AuthProvider } from "../contexts/AuthContext";
