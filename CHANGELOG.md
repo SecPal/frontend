@@ -43,6 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Resolved the deprecated `source-map@0.8.0-beta.0` transitive dependency from
+  `workbox-build` to its supported 0.8.0 release.
 - Android runtime discovery now accepts only strict JSON integer bootstrap
   schema `4`, rejects every other or malformed schema value without coercion,
   and sends the validated canonical schema in browser notification-installation
