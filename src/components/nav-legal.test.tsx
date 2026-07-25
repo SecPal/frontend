@@ -7,7 +7,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
-import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { messages as deMessages } from "@/locales/de/messages.mjs";
 import { messages as enMessages } from "@/locales/en/messages.mjs";
 import { NavLegal } from "./nav-legal";

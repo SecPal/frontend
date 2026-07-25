@@ -6,7 +6,7 @@ import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
 import { Code2, FileText, Languages, Scale, Shield } from "lucide-react";
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import { activateLocale, locales, setLocalePreference } from "@/i18n";
 import {

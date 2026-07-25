@@ -54,6 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   literal-backslash authority delimiter host-confusion vulnerability.
 - Updated the transitive `brace-expansion` dependency to 5.0.8 to remediate
   its unbounded-expansion memory denial-of-service vulnerability.
+- Updated the transitive `js-yaml` dependency to 5.2.2 and migrated to React
+  Router 8.3.0 to remediate high-severity denial-of-service and CSRF-bypass
+  vulnerabilities.
 - Aligned generated customer response types with the required
   caller-visible `customer_establishments` array.
 - Loaded every customer-establishment assignment page, resolved authorized

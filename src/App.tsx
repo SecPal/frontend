@@ -17,7 +17,7 @@ import {
   Route,
   Routes,
   useLocation,
-} from "react-router-dom";
+} from "react-router";
 import { NativeRuntimePwaGuard } from "./components/NativeRuntimePwaGuard";
 import { UpdatePrompt } from "./components/UpdatePrompt";
 import { AuthProvider } from "./contexts/AuthContext";

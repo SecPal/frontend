@@ -5,7 +5,7 @@ import { Suspense, useCallback, useEffect, useMemo } from "react";
 import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router";
 import {
   CircleUserRound,
   Home,

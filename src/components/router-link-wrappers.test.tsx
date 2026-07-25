@@ -9,11 +9,9 @@ const { capturedLinkProps } = vi.hoisted(() => ({
   capturedLinkProps: [] as Array<Record<string, unknown>>,
 }));
 
-vi.mock("react-router-dom", async () => {
+vi.mock("react-router", async () => {
   const actual =
-    await vi.importActual<typeof import("react-router-dom")>(
-      "react-router-dom"
-    );
+    await vi.importActual<typeof import("react-router")>("react-router");
   return {
     ...actual,
     Link: ({
@@ -57,7 +55,7 @@ function findCapture(targetTo: string) {
 
 describe("shadcn router-link composition keeps Link props clean", () => {
   it("SidebarMenuButton composes with Link via `asChild` without leaking `href`", async () => {
-    const { Link } = await import("react-router-dom");
+    const { Link } = await import("react-router");
     const { SidebarProvider, SidebarMenuButton } = await import("@/ui");
 
     render(
@@ -73,7 +71,7 @@ describe("shadcn router-link composition keeps Link props clean", () => {
   });
 
   it("SidebarMenuSubButton composes with Link via `asChild` without leaking `href`", async () => {
-    const { Link } = await import("react-router-dom");
+    const { Link } = await import("react-router");
     const { SidebarMenuSubButton } = await import("@/ui");
 
     render(
@@ -87,7 +85,7 @@ describe("shadcn router-link composition keeps Link props clean", () => {
   });
 
   it("DropdownMenuItem composes with Link via `asChild` without leaking `href`", async () => {
-    const { Link } = await import("react-router-dom");
+    const { Link } = await import("react-router");
     const { DropdownMenuItem } = await import("@/ui");
 
     render(

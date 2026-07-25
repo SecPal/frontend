@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { useState, type MouseEvent } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { ChevronRight, Code2, FileText, Scale, Shield } from "lucide-react";
 import { Trans } from "@lingui/react/macro";
 import { PrefetchLink } from "@/components/PrefetchLink";

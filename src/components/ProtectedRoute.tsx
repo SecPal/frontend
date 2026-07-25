@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-import { Navigate } from "react-router-dom";
+import { Navigate } from "react-router";
 import { useAuth } from "../hooks/useAuth";
 import { authStorage } from "../services/storage";
 import { EmailVerificationGate } from "./EmailVerificationGate";
