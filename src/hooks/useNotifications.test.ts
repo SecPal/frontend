@@ -251,7 +251,7 @@ describe("useNotifications", () => {
                 client_platform: "browser",
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                 },
                 features: {
                   notification_channels: {
@@ -327,6 +327,22 @@ describe("useNotifications", () => {
           method: "PUT",
         })
       );
+
+      const notificationRegistration = mockFetch.mock.calls.find(([input]) =>
+        /\/v1\/me\/notification-installations\//.test(String(input))
+      );
+      const notificationRegistrationOptions = notificationRegistration?.[1] as
+        RequestInit | undefined;
+
+      expect(notificationRegistrationOptions).toBeDefined();
+      expect(
+        JSON.parse(String(notificationRegistrationOptions?.body))
+      ).toMatchObject({
+        runtime: {
+          bootstrap_version: "v1",
+          schema_version: 4,
+        },
+      });
     });
   });
 
@@ -532,7 +548,7 @@ describe("useNotifications", () => {
                   client_platform: "browser",
                   compatibility: {
                     bootstrap_version: "v1",
-                    schema_version: 3,
+                    schema_version: 4,
                   },
                   features: {
                     notification_channels: {
@@ -634,7 +650,7 @@ describe("useNotifications", () => {
                 client_platform: "browser",
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                 },
                 features: {
                   notification_channels: {
@@ -749,7 +765,7 @@ describe("useNotifications", () => {
                 client_platform: "browser",
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                 },
                 features: {
                   notification_channels: {
@@ -855,7 +871,7 @@ describe("useNotifications", () => {
                 client_platform: "browser",
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                 },
                 features: {
                   notification_channels: {
@@ -891,7 +907,7 @@ describe("useNotifications", () => {
               code: "NOTIFICATION_RUNTIME_STATE_INVALID",
               details: {
                 bootstrap_version: "v1",
-                schema_version: 3,
+                schema_version: 4,
                 channel: "web_push",
                 provided_metadata_revision: 4,
                 expected_metadata_revision: 5,
@@ -912,7 +928,7 @@ describe("useNotifications", () => {
                 client_platform: "browser",
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                 },
                 features: {
                   notification_channels: {
@@ -1039,7 +1055,7 @@ describe("useNotifications", () => {
                 client_platform: "browser",
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                 },
                 features: {
                   notification_channels: {
@@ -1075,7 +1091,7 @@ describe("useNotifications", () => {
               code: "NOTIFICATION_RUNTIME_STATE_INVALID",
               details: {
                 bootstrap_version: "v1",
-                schema_version: 3,
+                schema_version: 4,
                 channel: "web_push",
                 provided_metadata_revision: 4,
                 expected_metadata_revision: 5,
@@ -1096,7 +1112,7 @@ describe("useNotifications", () => {
                 client_platform: "browser",
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                 },
                 features: {
                   notification_channels: {
@@ -1144,7 +1160,7 @@ describe("useNotifications", () => {
                 client_platform: "browser",
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                 },
                 features: {
                   notification_channels: {
@@ -1272,7 +1288,7 @@ describe("useNotifications", () => {
                 client_platform: "browser",
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                 },
                 features: {
                   notification_channels: {
@@ -1308,7 +1324,7 @@ describe("useNotifications", () => {
               code: "NOTIFICATION_RUNTIME_STATE_INVALID",
               details: {
                 bootstrap_version: "v1",
-                schema_version: 3,
+                schema_version: 4,
                 channel: "web_push",
                 provided_metadata_revision: 4,
                 expected_metadata_revision: 5,
@@ -1329,7 +1345,7 @@ describe("useNotifications", () => {
                 client_platform: "browser",
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                 },
                 features: {
                   notification_channels: {
@@ -1377,7 +1393,7 @@ describe("useNotifications", () => {
                 client_platform: "browser",
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                 },
                 features: {
                   notification_channels: {
@@ -1509,7 +1525,7 @@ describe("useNotifications", () => {
               client_platform: "browser",
               compatibility: {
                 bootstrap_version: "v1",
-                schema_version: 3,
+                schema_version: 4,
               },
               features: {
                 notification_channels: {
@@ -1543,7 +1559,7 @@ describe("useNotifications", () => {
             code: "NOTIFICATION_RUNTIME_STATE_INVALID",
             details: {
               bootstrap_version: "v1",
-              schema_version: 3,
+              schema_version: 4,
               channel: "web_push",
               provided_metadata_revision: 4,
               expected_metadata_revision: 5,
@@ -2048,7 +2064,7 @@ describe("useNotifications", () => {
                 client_platform: "browser",
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                 },
                 features: {
                   notification_channels: {
@@ -2149,7 +2165,7 @@ describe("useNotifications", () => {
                 client_platform: "browser",
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                 },
                 features: {
                   notification_channels: {
@@ -2233,7 +2249,7 @@ describe("useNotifications", () => {
                   client_platform: "browser",
                   compatibility: {
                     bootstrap_version: "v1",
-                    schema_version: 3,
+                    schema_version: 4,
                   },
                   features: {
                     notification_channels: {
@@ -2359,7 +2375,7 @@ describe("useNotifications", () => {
                 client_platform: "browser",
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                 },
                 features: {
                   notification_channels: {
@@ -2410,7 +2426,7 @@ describe("useNotifications", () => {
                 client_platform: "browser",
                 compatibility: {
                   bootstrap_version: "v1",
-                  schema_version: 3,
+                  schema_version: 4,
                 },
                 features: {
                   notification_channels: {

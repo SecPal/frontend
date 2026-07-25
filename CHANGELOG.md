@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Removed the final obsolete native enrollment compatibility surface from the
+  public enterprise facade, which now exposes only the preserved OSS-license
+  bridge.
 - Removed the obsolete Android provisioning frontend route, navigation,
   enrollment-session transport, capabilities, runtime-bootstrap bridge field,
   and associated localization and E2E support.
@@ -42,11 +45,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Resolved the deprecated `source-map@0.8.0-beta.0` transitive dependency from
   `workbox-build` to its supported 0.8.0 release.
+- Android runtime discovery now accepts only strict JSON integer bootstrap
+  schema `4`, rejects every other or malformed schema value without coercion,
+  and sends the validated canonical schema in browser notification-installation
+  payloads.
 - Declared Chai as an explicit Vitest development dependency so clean
   installations can resolve Vitest's assertion package before the test suite
   starts.
 - Updated the transitive `fast-uri` dependency to 3.1.4 to remediate the
   literal-backslash authority delimiter host-confusion vulnerability.
+- Updated the transitive `brace-expansion` dependency to 5.0.8 to remediate
+  its unbounded-expansion memory denial-of-service vulnerability.
+- Updated the transitive `js-yaml` dependency to 5.2.2 and migrated to React
+  Router 8.3.0 to remediate high-severity denial-of-service and CSRF-bypass
+  vulnerabilities.
 - Aligned generated customer response types with the required
   caller-visible `customer_establishments` array.
 - Loaded every customer-establishment assignment page, resolved authorized

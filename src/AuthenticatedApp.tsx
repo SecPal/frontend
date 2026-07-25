@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { lazy, Suspense } from "react";
-import { Link, Navigate, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Route, Routes } from "react-router";
 import { Trans } from "@lingui/react/macro";
 import { ApplicationLayout } from "./components/application-layout";
 import { UpdatePrompt } from "./components/UpdatePrompt";

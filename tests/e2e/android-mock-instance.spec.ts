@@ -39,7 +39,7 @@ const bootstrapResponse = {
     instance: { display_name: "Other Tenant" },
     compatibility: {
       bootstrap_version: "v1",
-      schema_version: 3,
+      schema_version: 4,
       minimum_supported_app_version: "1.0.0",
       minimum_supported_app_build: 1,
     },
@@ -199,6 +199,14 @@ test.describe("Android mock instance switching", () => {
 
     await expect(page.getByText(/signed in to other tenant/i)).toBeVisible();
     await expect.poll(() => selectedHealthRequests.length).toBeGreaterThan(0);
+
+    await context.addCookies([
+      {
+        name: "XSRF-TOKEN",
+        value: "test-xsrf-token",
+        url: page.url(),
+      },
+    ]);
 
     await page.getByLabel(/email/i).fill("person@secpal.dev");
     await page.getByLabel(/password/i).fill("not-a-real-password");

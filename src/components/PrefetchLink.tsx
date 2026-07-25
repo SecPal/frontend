@@ -5,7 +5,7 @@ import { forwardRef, useCallback, useMemo } from "react";
 import {
   Link as RouterLink,
   type LinkProps as RouterLinkProps,
-} from "react-router-dom";
+} from "react-router";
 import { usePrefetch } from "../hooks/usePrefetch";
 
 function pathFromTo(to: RouterLinkProps["to"]): string | null {

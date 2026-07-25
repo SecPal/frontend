@@ -10,7 +10,7 @@ import type {
 import type { SecPalRuntimeInfo } from "../native";
 
 const CURRENT_BOOTSTRAP_VERSION = "v1";
-const CURRENT_BOOTSTRAP_SCHEMA_VERSION = 3;
+const CURRENT_BOOTSTRAP_SCHEMA_VERSION = 4;
 
 export type RuntimeDiscoveryErrorCode =
   | "INVALID_INSTANCE_URL"
@@ -265,10 +265,12 @@ function validateBootstrapPayload(
   const minimumSupportedAppBuild = Number(
     compatibility.minimum_supported_app_build
   );
-  const schemaVersion = Number(compatibility.schema_version);
+  const schemaVersion = compatibility.schema_version;
 
   if (
     compatibility.bootstrap_version !== CURRENT_BOOTSTRAP_VERSION ||
+    typeof schemaVersion !== "number" ||
+    !Number.isInteger(schemaVersion) ||
     schemaVersion !== CURRENT_BOOTSTRAP_SCHEMA_VERSION
   ) {
     throw new RuntimeDiscoveryError(

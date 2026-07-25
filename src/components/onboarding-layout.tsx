@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { Trans } from "@lingui/react/macro";
 import { Suspense, type ReactNode } from "react";
 import { Logo } from "./Logo";

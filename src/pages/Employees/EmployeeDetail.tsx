@@ -8,7 +8,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router";
 import { SquarePen } from "lucide-react";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";

@@ -43,11 +43,15 @@ describe("native facade surface", () => {
     expect(nativeFacades).not.toHaveProperty("executeNativeCommand");
   });
 
+  it("limits the enterprise facade to the OSS-license bridge", () => {
+    expect(Object.keys(nativeFacades.SecPalEnterprise).sort()).toEqual([
+      "isOssLicensesAvailable",
+      "openOssLicenses",
+    ]);
+  });
+
   it("keeps the prepared facades as inert stubs", async () => {
     await expect(nativeFacades.SecPalDeviceState.getSnapshot()).resolves.toBe(
-      null
-    );
-    await expect(nativeFacades.SecPalEnterprise.getEnrollment()).resolves.toBe(
       null
     );
     await expect(
@@ -71,7 +75,7 @@ describe("native facade surface", () => {
         },
         compatibility: {
           bootstrap_version: "v1",
-          schema_version: 3,
+          schema_version: 4,
           minimum_supported_app_version: "1.4.0",
           minimum_supported_app_build: 10400,
         },
@@ -200,7 +204,7 @@ describe("native facade surface", () => {
         },
         compatibility: {
           bootstrap_version: "v1",
-          schema_version: 3,
+          schema_version: 4,
           minimum_supported_app_version: "1.4.0",
           minimum_supported_app_build: 10400,
         },
@@ -277,7 +281,7 @@ describe("native facade surface", () => {
         },
         compatibility: {
           bootstrap_version: "v1",
-          schema_version: 3,
+          schema_version: 4,
           minimum_supported_app_version: "1.4.0",
           minimum_supported_app_build: 10400,
         },
