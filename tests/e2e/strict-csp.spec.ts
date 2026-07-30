@@ -136,13 +136,60 @@ test("runs the production PWA without CSP violations", async ({ page }) => {
 
   const initialStyleElements = await page.locator("style").count();
   const initialScriptElements = await page.locator("script").count();
+  await page.evaluate(() => {
+    const auditWindow = window as typeof window & {
+      __secpalExecutableElementMutations?: string[];
+      __secpalExecutableElementObserver?: MutationObserver;
+    };
+    const mutations: string[] = [];
+    const recordElement = (element: Element) => {
+      if (element.matches("style, script")) {
+        mutations.push(element.tagName.toLowerCase());
+      }
+      for (const descendant of element.querySelectorAll("style, script")) {
+        mutations.push(descendant.tagName.toLowerCase());
+      }
+    };
 
-  await page.getByRole("combobox", { name: /select language/i }).click();
+    auditWindow.__secpalExecutableElementObserver?.disconnect();
+    auditWindow.__secpalExecutableElementMutations = mutations;
+    auditWindow.__secpalExecutableElementObserver = new MutationObserver(
+      (records) => {
+        for (const record of records) {
+          for (const node of record.addedNodes) {
+            if (node instanceof Element) {
+              recordElement(node);
+            }
+          }
+        }
+      }
+    );
+    auditWindow.__secpalExecutableElementObserver.observe(
+      document.documentElement,
+      {
+        childList: true,
+        subtree: true,
+      }
+    );
+  });
+
+  const languageSelect = page.getByRole("combobox", {
+    name: /select language|sprache auswählen/i,
+  });
+  await languageSelect.click();
   await expect(page.getByRole("listbox")).toBeVisible();
-  await page.keyboard.press("Escape");
+  await page.getByRole("option", { name: "Deutsch" }).click();
+  await expect(languageSelect).toContainText("Deutsch");
+  await languageSelect.click();
+  await page.getByRole("option", { name: "English" }).click();
+  await expect(languageSelect).toContainText("English");
 
-  await page.getByRole("button", { name: /legal/i }).click();
+  await page.getByRole("button", { name: /legal/i }).focus();
+  await page.keyboard.press("ArrowDown");
   await expect(page.getByRole("menu")).toBeVisible();
+  await expect(
+    page.getByRole("menuitem", { name: /source code/i })
+  ).toBeFocused();
   await page.keyboard.press("Escape");
 
   await expect(page.getByRole("form", { name: /login form/i })).toBeVisible();
@@ -242,6 +289,16 @@ test("runs the production PWA without CSP violations", async ({ page }) => {
   expect(await page.locator("style").count()).toBe(initialStyleElements);
   expect(await page.locator("script").count()).toBe(initialScriptElements);
   expect(await page.locator("[onclick],[onload],[onerror]").count()).toBe(0);
+  expect(
+    await page.evaluate(
+      () =>
+        (
+          window as typeof window & {
+            __secpalExecutableElementMutations?: string[];
+          }
+        ).__secpalExecutableElementMutations ?? []
+    )
+  ).toEqual([]);
 
   violations.push(
     ...(await page.evaluate(

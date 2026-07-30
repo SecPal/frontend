@@ -19,8 +19,11 @@ parallel primitive libraries, and compatibility facades are prohibited.
 
 Application code uses Tailwind classes, finite variants, semantic attributes,
 and stylesheet tokens. JSX `style` props and direct `CSSStyleDeclaration`
-changes are prohibited. Brand assets and domain-specific symbols that Lucide
-does not provide remain static reviewed assets.
+changes are prohibited. The official `tw-animate-css` integration supplies
+shadcn transition utilities, while the shared stylesheet reduces animation and
+transition durations for `prefers-reduced-motion: reduce`. Brand assets and
+domain-specific symbols that Lucide does not provide remain static reviewed
+assets.
 
 The migration retained SecPal product compositions including authentication,
 onboarding, organizational-unit management, employee management, customer and

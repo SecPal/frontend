@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -64,6 +70,32 @@ function expectWarningFreeShippedNginxConfigSyntax(nginxConfig: string): void {
   expect(nginxConfig).toMatch(/^\s*http2\s+on;$/mu);
   expect(nginxConfig).not.toMatch(/^\s*listen\b[^#;\n]*\bhttp2\b[^;\n]*;$/mu);
   expect(nginxConfig).not.toMatch(/^\s*ssi_types\s+text\/html;$/mu);
+}
+
+function expectStrictBuildAssets(distRoot: string): void {
+  const assetRoot = path.join(distRoot, "assets");
+  const assetNames = readdirSync(assetRoot);
+  const stylesheet = assetNames
+    .filter((name) => name.endsWith(".css"))
+    .map((name) => readFileSync(path.join(assetRoot, name), "utf8"))
+    .join("\n");
+  const scripts = [
+    readFileSync(path.join(distRoot, "sw.js"), "utf8"),
+    ...assetNames
+      .filter((name) => name.endsWith(".js"))
+      .map((name) => readFileSync(path.join(assetRoot, name), "utf8")),
+  ];
+
+  expect(stylesheet).toMatch(/data-open\\:animate-in\[data-open\]/u);
+  expect(stylesheet).toMatch(/data-closed\\:animate-out\[data-closed\]/u);
+  expect(stylesheet).toContain("@keyframes enter");
+  expect(stylesheet).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/u);
+  expect(scripts.length).toBeGreaterThan(1);
+
+  for (const script of scripts) {
+    expect(script).not.toMatch(/@radix-ui|radix-ui/iu);
+    expect(script).not.toMatch(/\beval\s*\(|\bnew\s+Function\s*\(/u);
+  }
 }
 
 /**
@@ -236,6 +268,7 @@ describe("Build Configuration and Source Verification", () => {
       );
       expect(document.querySelector('link[rel="stylesheet"]')).not.toBeNull();
       expect(document.querySelector("script[src]")).not.toBeNull();
+      expectStrictBuildAssets(distRoot);
 
       const referencedNotificationIcons = [
         "src/hooks/useNotifications.ts",
@@ -307,6 +340,7 @@ describe("Build Configuration and Source Verification", () => {
       );
       expect(document.querySelector('link[rel="stylesheet"]')).not.toBeNull();
       expect(document.querySelector("script[src]")).not.toBeNull();
+      expectStrictBuildAssets(distRoot);
       expect(existsSync(path.join(distRoot, "sw.js"))).toBe(true);
       expect(existsSync(path.join(distRoot, "dependencies.spdx.json"))).toBe(
         true

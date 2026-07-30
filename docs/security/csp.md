@@ -17,6 +17,13 @@ individual layout properties required for accessible positioning; this narrow
 library-internal behavior is accepted only while browser tests report no CSP
 violation and Base UI creates no style element.
 
+The production artifact contract verifies that external CSS contains the
+shadcn/Base UI open and closed animation rules and the reduced-motion media
+query. It also scans every shipped JavaScript chunk and the service worker for
+Radix package identifiers, `eval`, and `new Function`. The Chromium audit uses
+a `MutationObserver` during representative interactions so transient script or
+style element injection cannot disappear before the final DOM assertion.
+
 Web edge delivery may add a stricter header policy, `frame-ancestors`, reporting,
 and deployment-specific connection restrictions. It must not rewrite HTML or
 weaken this baseline. CSP reporting infrastructure and customer-specific edge

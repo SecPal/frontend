@@ -84,6 +84,27 @@ describe("shadcn/Base UI and strict CSP architecture", () => {
     expect(components.rsc).toBe(false);
   });
 
+  it("loads the official shadcn animation utilities and honors reduced motion", () => {
+    const packageJson = JSON.parse(readRepoFile("package.json")) as {
+      devDependencies: Record<string, string>;
+    };
+    const stylesheet = readRepoFile("src/index.css");
+
+    expect(packageJson.devDependencies).toHaveProperty("tw-animate-css");
+    expect(stylesheet).toContain('@import "tw-animate-css";');
+    expect(stylesheet).toMatch(
+      /@media\s*\(prefers-reduced-motion:\s*reduce\)/u
+    );
+  });
+
+  it("uses Base UI open and closed state selectors for Alert Dialog", () => {
+    const alertDialog = readRepoFile("src/ui/alert-dialog.tsx");
+
+    expect(alertDialog).not.toMatch(/data-\[state=(?:open|closed)\]/u);
+    expect(alertDialog).toContain("data-open:animate-in");
+    expect(alertDialog).toContain("data-closed:animate-out");
+  });
+
   it("installs the static strict CSP before every active resource", () => {
     const document = new DOMParser().parseFromString(
       readRepoFile("index.html"),
