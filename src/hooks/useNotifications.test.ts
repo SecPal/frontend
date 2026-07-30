@@ -421,7 +421,7 @@ describe("useNotifications", () => {
       });
     });
 
-    it("should fallback to browser notification if service worker unavailable", async () => {
+    it("uses the shipped canonical icon for the browser notification fallback", async () => {
       // Mock service worker without showNotification
       Object.defineProperty(navigator, "serviceWorker", {
         value: {
@@ -446,7 +446,7 @@ describe("useNotifications", () => {
 
       expect(mockNotification).toHaveBeenCalledWith("Fallback Notification", {
         body: "Using browser API",
-        icon: "/pwa-192x192.svg",
+        icon: "/pwa-192x192.png",
         tag: undefined,
         requireInteraction: undefined,
         data: undefined,
