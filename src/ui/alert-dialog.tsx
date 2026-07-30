@@ -10,7 +10,10 @@ export interface AlertDialogProps extends AlertDialogPrimitive.Root.Props {
   readonly open?: boolean;
 }
 
-export type AlertDialogTriggerProps = AlertDialogPrimitive.Trigger.Props;
+export interface AlertDialogTriggerProps
+  extends AlertDialogPrimitive.Trigger.Props {
+  readonly className?: string;
+}
 
 export interface AlertDialogPortalProps
   extends AlertDialogPrimitive.Portal.Props {
@@ -22,9 +25,8 @@ export interface AlertDialogCancelProps
   readonly className?: string;
 }
 
-export interface AlertDialogActionProps extends React.ComponentProps<
-  typeof Button
-> {
+export interface AlertDialogActionProps
+  extends AlertDialogPrimitive.Close.Props {
   readonly className?: string;
 }
 
@@ -90,7 +92,14 @@ export const AlertDialogAction = React.forwardRef<
   HTMLButtonElement,
   AlertDialogActionProps
 >(function AlertDialogAction(props, ref) {
-  return <Button ref={ref} data-slot="alert-dialog-action" {...props} />;
+  return (
+    <AlertDialogPrimitive.Close
+      ref={ref}
+      data-slot="alert-dialog-action"
+      render={<Button />}
+      {...props}
+    />
+  );
 });
 
 export const AlertDialogOverlay = React.forwardRef<

@@ -93,6 +93,35 @@ describe("RouteGuardState theme tokens", () => {
     expect(container).toHaveAttribute("aria-hidden", "true");
   });
 
+  it("requires the explicit action to dismiss the privacy shield", async () => {
+    const user = userEvent.setup();
+    const onDismiss = vi.fn();
+
+    renderWithProviders(
+      <RoutePrivacyShieldState onDismiss={onDismiss}>
+        <button type="button">Background action</button>
+      </RoutePrivacyShieldState>
+    );
+
+    const showAppButton = await screen.findByRole("button", {
+      name: /show app/i,
+    });
+    const overlay = document.querySelector<HTMLElement>(
+      '[data-slot="dialog-overlay"]'
+    );
+
+    expect(overlay).not.toBeNull();
+
+    await user.keyboard("{Escape}");
+    await user.click(overlay!);
+
+    expect(onDismiss).not.toHaveBeenCalled();
+
+    await user.click(showAppButton);
+
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
   it("hides existing body-level portal siblings behind the privacy shield", async () => {
     const existingPortal = document.createElement("div");
     existingPortal.setAttribute("data-portal", "existing");

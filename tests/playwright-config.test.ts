@@ -305,6 +305,19 @@ describe("playwright config", () => {
       }
     );
 
+    it.each([["NO_COLOR"], ["NODE_DISABLE_COLORS"]] as const)(
+      "removes %s before the strict CSP config starts child processes",
+      async (name) => {
+        vi.stubEnv(name, "1");
+        vi.resetModules();
+
+        expect(process.env[name]).toBe("1");
+        await import("../playwright.csp.config");
+
+        expect(process.env[name]).toBeUndefined();
+      }
+    );
+
     it("leaves process.env untouched when neither color-disabling var is set", async () => {
       vi.stubEnv("CI", "");
       vi.stubEnv("PLAYWRIGHT_BASE_URL", "");

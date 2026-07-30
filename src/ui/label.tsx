@@ -5,7 +5,11 @@
 
 import { cn } from "@/lib/utils";
 
-export function Label({ className, ...props }: React.ComponentProps<"label">) {
+export interface LabelProps extends React.ComponentProps<"label"> {
+  readonly className?: string;
+}
+
+export function Label({ className, ...props }: LabelProps) {
   return (
     <label
       data-slot="label"

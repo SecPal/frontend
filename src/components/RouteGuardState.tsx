@@ -167,11 +167,8 @@ export function RoutePrivacyShieldState({
   const privacyShield = (
     <Dialog
       open={isActive}
-      onOpenChange={(open) => {
-        if (!open) {
-          onDismiss();
-        }
-      }}
+      disablePointerDismissal
+      onOpenChange={(_open, eventDetails) => eventDetails.cancel()}
     >
       <DialogPortal>
         <DialogOverlay className="z-[70] bg-background/95 backdrop-blur-sm" />

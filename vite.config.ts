@@ -37,6 +37,25 @@ const linguiMacroBabelPreset = defineRolldownBabelPreset({
 });
 
 const defaultDevProxyTarget = "http://localhost:8000";
+const metaElementPattern = /[ \t]*<meta\b[^>]*\/?>[ \t]*(?:\r?\n)?/giu;
+const cspHttpEquivAttributePattern =
+  /\bhttp-equiv\s*=\s*(?:(["'])Content-Security-Policy\1|Content-Security-Policy(?=[\s/>]))/iu;
+
+export function stripStaticCspForViteDev(html: string): string {
+  const staticCspMetaElements = (html.match(metaElementPattern) ?? []).filter(
+    (metaElement) => cspHttpEquivAttributePattern.test(metaElement)
+  );
+
+  if (staticCspMetaElements.length !== 1) {
+    throw new Error(
+      `Expected exactly one static Content-Security-Policy meta element, found ${staticCspMetaElements.length}.`
+    );
+  }
+
+  return html.replace(metaElementPattern, (metaElement) =>
+    cspHttpEquivAttributePattern.test(metaElement) ? "" : metaElement
+  );
+}
 
 function normalizeAbsoluteProxyTarget(
   value: string | undefined
@@ -142,6 +161,14 @@ export default defineConfig(({ mode, command }) => {
         }
       : undefined,
     plugins: [
+      {
+        name: "vite-dev-csp-compatibility",
+        apply: "serve",
+        transformIndexHtml: {
+          order: "pre",
+          handler: stripStaticCspForViteDev,
+        },
+      },
       react({}),
       babel({
         presets: [linguiMacroBabelPreset],

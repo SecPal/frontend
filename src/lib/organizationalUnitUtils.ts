@@ -18,6 +18,8 @@ const SELECT_INDENT_CLASSES = [
   "pl-8",
   "pl-12",
   "pl-16",
+  "pl-20",
+  "pl-24",
 ] as const;
 
 const TREE_INDENT_CLASSES = [
@@ -26,10 +28,15 @@ const TREE_INDENT_CLASSES = [
   "pl-10",
   "pl-14",
   "pl-[4.5rem]",
+  "pl-[5.5rem]",
+  "pl-[6.5rem]",
 ] as const;
 
 function clampIndentDepth(depth: number) {
-  return Math.min(Math.max(Math.trunc(depth), 0), 4);
+  return Math.min(
+    Math.max(Math.trunc(depth), 0),
+    SELECT_INDENT_CLASSES.length - 1
+  );
 }
 
 export function getOrganizationalUnitSelectIndentClass(depth: number) {

@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: CC0-1.0
 
 import { defineConfig, devices } from "@playwright/test";
+import { scrubPlaywrightColorEnvironment } from "./tests/e2e/playwright-color-environment";
+
+scrubPlaywrightColorEnvironment();
 
 export default defineConfig({
   testDir: "./tests/e2e",

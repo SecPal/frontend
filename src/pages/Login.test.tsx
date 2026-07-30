@@ -438,6 +438,51 @@ describe("Login", () => {
     await waitFor(() => {
       expect(onSwitchRuntimeBootstrap).toHaveBeenCalledTimes(1);
     });
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("alertdialog", {
+          name: /switch instance\?/i,
+        })
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it("closes the confirmation and exposes runtime-switch failures", async () => {
+    const user = userEvent.setup();
+    const onSwitchRuntimeBootstrap = vi
+      .fn()
+      .mockRejectedValue(new Error("Runtime bootstrap reset failed"));
+
+    renderLogin({
+      runtimeBootstrap: {
+        instanceDisplayName: "Tiny Pony",
+        apiOrigin: "https://api-tiny-pony.preview.secpal.dev",
+        features: {
+          passwordLoginEnabled: true,
+          passkeyLoginEnabled: true,
+        },
+      },
+      onSwitchRuntimeBootstrap,
+    });
+
+    await user.click(
+      await screen.findByRole("button", { name: /switch instance/i })
+    );
+    await user.click(
+      await screen.findByRole("button", { name: /switch instance/i })
+    );
+
+    await waitFor(() => {
+      expect(onSwitchRuntimeBootstrap).toHaveBeenCalledTimes(1);
+      expect(
+        screen.queryByRole("alertdialog", {
+          name: /switch instance\?/i,
+        })
+      ).not.toBeInTheDocument();
+    });
+    expect(
+      await screen.findByText("Runtime bootstrap reset failed")
+    ).toBeVisible();
   });
 
   it("hides passkey login when the configured runtime disables passkey login", async () => {

@@ -10,6 +10,12 @@ and future Capacitor iOS builds. It permits only external same-origin scripts
 and styles, denies script and style attributes, and contains no unsafe source,
 nonce, hash, SSI placeholder, or inline executable content.
 
+Vite development is not a distributable surface and injects imported CSS
+through a development-only style element. The serve-only Vite HTML transform
+therefore removes the static CSP meta before the development client runs.
+Production builds and previews retain the strict meta unchanged, and the
+transform fails fast if the expected source policy is missing or duplicated.
+
 The root `CSPProvider` configures Base UI with `disableStyleElements`. SecPal
 code must not create style or script elements or use JSX `style`, `element.style`,
 `cssText`, inline event handlers, `eval`, or `javascript:` URLs. Base UI may set
