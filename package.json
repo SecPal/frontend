@@ -145,7 +145,7 @@
     "eslint-plugin-react-refresh": "^0.5.3",
     "fake-indexeddb": "^6.2.5",
     "globals": "^17.8.0",
-    "jsdom": "^30.0.0",
+    "jsdom": "^30.0.1",
     "jsdom-testing-mocks": "^1.16.0",
     "lighthouse": "^13.4.1",
     "markdownlint-cli": "0.49.1",
