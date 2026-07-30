@@ -59,7 +59,6 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Preflight overrides (local only)
-.preflight-allow-large-pr
 
 # Temporary files
 *.tmp

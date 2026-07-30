@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Changed local and hosted pull-request size reporting to treat 600 changed
+  lines as an advisory reviewability threshold, with no override file, approval
+  label, or size-triggered push failure.
 - Removed the final obsolete native enrollment compatibility surface from the
   public enterprise facade, which now exposes only the preserved OSS-license
   bridge.
@@ -307,6 +310,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Serialized the **Quality Checks → Vitest Tests** job with a repository-wide concurrency group (`queue: max`), raised the job timeout from 15 to 25 minutes, capped CI Vitest workers at two, and trimmed CI coverage reporters to `text`/`lcov`/`clover` only. Dependabot mass-rebases were launching many full-suite coverage runs at once; contested runs completed 150/152 test files and then stalled until GitHub cancelled the job at the 15-minute ceiling with no failing assertion (frontend#1233).
 - Aligned all runtime and toolchain `@lingui/*` packages to `6.4.0`, grouped future Dependabot `@lingui/*` minor/patch updates, and added an npm override so transitive `@lingui/core` resolves to the root dependency version. Dependabot PRs that bumped only `@lingui/react` or `@lingui/cli` while `@lingui/core` stayed on `6.3.0` were failing **Quality Checks → TypeScript Check** and **Lighthouse CI** with mixed-version `I18n` type errors across test files that wrap components in `I18nProvider`.
 - Closed four reviewer-reported gaps in the loading-skeleton audit:
+
   - `src/hooks/usePrefetch.ts` now tracks a `prefetchEpoch` counter so a stale in-flight prefetch that resolves after `resetPrefetchCache()` cannot leak its key back into `completedPrefetches`. Without the counter the AuthContext logout reset only emptied the dedupe sets while pending `runPrefetch` callbacks were still queued to add to them, breaking the cross-session isolation the previous fix-up advertised.
   - `src/hooks/usePrefetch.ts` now warms `/v1/organizational-units?per_page=100` for the `/sites/new`, `/sites/:id/edit`, and `/sites/new/customer/:id` prefetch plans so the dedupe key and HTTP request match the page's actual `listOrganizationalUnits({ per_page: 100 })` call. Previously these routes prefetched the no-query form, which was a wasted request on warm-up and a different dedupe key from the real lookup.
   - `src/components/ProtectedRoute.tsx` and `src/components/FeatureRoute.tsx` now accept a `revalidatingFallback` prop. When a stored session snapshot is being revalidated (`isLoading && user !== null`), each guard renders the fallback **inside** `EmailVerificationGate`, so the email gate keeps firing for unverified persisted users instead of briefly leaking the full authenticated shell.
@@ -325,6 +329,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Onboarding wizard: clicking _Submit for Review_ on the final step now correctly auto-submits earlier required draft steps that contain the residential address history template (template_key `residential_address_history`). `submitRequiredDraftSteps` previously validated every draft step with the generic JSON-Schema helpers in `src/pages/Onboarding/OnboardingWizard.tsx`, but `current_address` is declared as `type: "object"` and `isRequiredFieldFilled` has no branch for object-typed properties — it always returned `false`, so a fully filled address-history draft failed local validation, the user was bumped back to that step with the misleading "Please review the highlighted fields" banner (no field is actually highlighted because the residential UI uses nested keys like `current_address.street`), and the final submit only succeeded on the second attempt because the step that genuinely transitioned to `submitted` between attempts was then skipped. The fix routes residential-history draft validation through the same `validateResidentialAddressHistoryValue` / `getResidentialAddressHistoryValue` pair that `validateCurrentStepRequiredFields` already uses for the active step, by extending the previous `resolveStepValidationSchema` helper to a richer `resolveStepValidationContext` that also returns the resolved template so the special-case detector (`isResidentialAddressHistoryTemplate`) can fire on previously-saved drafts; the redundant `template && step.template_id === currentStepTemplateId` shortcut and the thin `resolveStepValidationSchema` wrapper were inlined / removed because the cache path covers them and they were untestable defensive paths. Regression coverage in `src/pages/Onboarding/OnboardingWizard.test.tsx` ("OnboardingWizard final-submit auto-submits earlier drafts") now exercises three scenarios: (a) finalizing the wizard from a non-residential last step with a valid residential history draft asserts `updateOnboardingSubmission` is called with `status: "submitted"` for the residential submission and that the user lands on `/onboarding/submitted`; (b) finalizing with a valid earlier non-residential draft (tax ID) covers the schema-validation branch that runs for non-residential drafts; (c) the API rejecting an earlier draft submission with a 422 surfaces the validation message and bumps the user back to that step. The first scenario fails on `main` and passes after the fix.
 
 - Pinned every "live-only" Playwright suite to the current Polyscope workspace preview instead of `app.secpal.dev` / `api.secpal.dev`, resolving the literal `Headquarters` brittleness on the live organization proof (issue #1199) and aligning the broader live-E2E surface with the Polyscope workflow where each workspace ships its own isolated preview backend. Concretely:
+
   - `tests/e2e/organization.spec.ts` — all four `Live organization proof` tests now gate on `isWorkspacePreviewTarget()` (from `tests/e2e/target-urls.ts`) instead of `isRemoteE2ETarget()`, so they only run against `frontend-<workspace>.preview.secpal.dev` / `api-<workspace>.preview.secpal.dev`, where the API workspace's `database/seeders/DatabaseSeeder.php` calls `OrganizationalUnit::firstOrCreate(['name' => 'Headquarters', 'tenant_id' => $tenantId], ['type' => 'holding'])` and therefore contractually guarantees a `Headquarters` `holding` root unit. The previously hard-coded literal is lifted into a documented `WORKSPACE_PREVIEW_ROOT_UNIT_NAME` constant (plus a precompiled `WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN` regex) that points back at the API workspace's seeder as the source of truth; the four test titles now spell out "on the Polyscope workspace preview".
   - `tests/e2e/auth.spec.ts` — both `live no-secret auth smoke` tests (`should surface the current login readiness state …` and `should resolve protected route auth bootstrap …`) moved from `!isRemoteE2ETarget()` to `!isWorkspacePreviewTarget()` and their titles/skip messages now say "on the Polyscope workspace preview"; the deterministic mock-only skips (`test.skip(isRemoteE2ETarget(), …)`) intentionally stay on the broader `isRemoteE2ETarget` predicate because they are still correct on workspace previews.
   - `tests/e2e/leadership-levels.spec.ts` — both `Live employee proof` tests (non-management + leadership) gate on `isWorkspacePreviewTarget()` + `PLAYWRIGHT_LIVE_EMPLOYEE_CRUD=1`; the `|| "https://api.secpal.dev"` API fallback is replaced with `?? ""` since the workspace-preview path always resolves a real API origin and the fallback can no longer be reached at runtime.
@@ -334,6 +339,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Net effect: a default `npm run test:e2e` inside any Polyscope workspace keeps running every live suite end-to-end, while invocations against any non-workspace remote target now skip the live-only blocks cleanly instead of failing on missing or differently-seeded data — so the full suite no longer needs `--grep-invert "Live organization proof"` against any target.
 
 - Retired the entire `app.secpal.dev` / `api.secpal.dev`-pinned E2E surface so the Polyscope workspace preview is the only "live" target across the test infrastructure (issue #1199, follow-up cleanup of the test-level migration above):
+
   - `tests/e2e/web-push-live-mode.ts` + `tests/e2e/web-push.live.spec.ts` — the live browser Web Push smoke is now gated by `isWorkspacePreviewTarget()` instead of the previous "any HTTPS deployment" gate; skip messages, the suite-wide test title ("on the Polyscope workspace preview"), and the `TEST_USER_*` error wording all describe the workspace-preview-only contract, and a "non-canonical HTTPS host" branch is no longer required because the workspace-preview gate fires first.
   - `tests/e2e/target-urls.ts` — removed `LIVE_FRONTEND_ORIGIN`, `LIVE_API_ORIGIN`, `isLiveRemoteTarget`, and the `app.secpal.dev → api.secpal.dev` API derivation; `resolvePlaywrightApiBaseUrl` now returns `undefined` for non-preview frontend overrides instead of synthesising `api.secpal.dev`, which is the correct behaviour for the Polyscope-only contract.
   - `tests/e2e/auth-helpers.ts` — `buildTestUser` now throws when `PLAYWRIGHT_BASE_URL` points at a non-workspace HTTPS remote (e.g. `app.secpal.dev`) without explicit `TEST_USER_*` credentials; silently injecting the seeded dev user against an arbitrary production host was a security regression. Workspace-preview and local-dev paths continue to use the standard seeded defaults (`test@example.com` / `password`, or `onboarding@example.com` / `password` for live-onboarding), while explicit `TEST_USER_*` overrides win for all targets.
@@ -566,22 +572,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hardened additional full-suite-sensitive submit flows in `Login`, `ApplicationLayout`, and `CustomerCreate` tests to reduce timing-dependent Vitest failures
 
 - **Frontend build now stays compatible with Vite 8**
+
   - replaced object-based manual chunk configuration with a function-based variant so production builds and Lighthouse CI continue to work with Vite 8
   - switched the React Babel macro configuration to Lingui's dedicated Babel plugin so Lingui macros continue to compile correctly with `@vitejs/plugin-react` 6
 
 - **Auth bootstrap now revalidates stored sessions before unlocking protected routes** (#503)
+
   - added frontend bootstrap revalidation against `GET /v1/me` when a stored session is present and the client is online
   - protected routes now remain in the loading state until startup revalidation succeeds or fails closed
   - stale local `auth_user` state is cleared, including sensitive client cleanup, when startup revalidation rejects
   - offline startup still preserves existing local session state to keep the offline-first flow available
 
 - **Employee API types now use a shared contract source** (#492)
+
   - added `src/types/api` as the central frontend import path for employee API types
   - removed employee request and response type declarations from `src/services/employeeApi.ts`
   - rewired employee pages, tests, and auth context away from service-local employee types
   - aligned the employee UI with the contract-backed `applicant` status
 
 - **Login page: Health check retry on offline→online transition**
+
   - Fixed false "System not ready" error when login page is opened offline and then comes online
   - Health check is now skipped when offline (shows offline warning instead)
   - Health check automatically retries when device comes back online
@@ -589,6 +599,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added test coverage for offline→online transitions
 
 - **PWA Update: Fixed double page reload issue**
+
   - **Problem:** When clicking "Update now" for a PWA update, the page reloaded twice, causing a jarring user experience
   - **Root Cause:** `swUpdate(true)` already triggers a reload via `vite-plugin-pwa`, but we were also explicitly calling `window.location.reload()` immediately after
   - **Solution:** Removed redundant `window.location.reload()` call from success path in `useServiceWorkerUpdate.ts`
@@ -601,6 +612,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Documentation:** `docs/PWA_UPDATE_DOUBLE_RELOAD_FIX.md`
 
 - **Console errors detected by Lighthouse CI** (#311)
+
   - Changed non-critical `console.error` to `console.warn` for graceful degradation:
     - Analytics singleton initialization (browsers without IndexedDB support)
     - Analytics event tracking and sync failures
@@ -608,6 +620,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed verbose Web Vitals initialization log
 
 - **Move dialog UX improvements** (Part of Epic #283)
+
   - Type labels (Company, Holding, etc.) are now translated in the Move dialog dropdown
   - Options are now sorted hierarchically (matching tree order) with indentation based on depth
   - Added type-specific icons in the dropdown options for better visual clarity
@@ -615,6 +628,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `getTypeLabel()` and `flattenTree()` utility functions for hierarchical sorting
 
 - **Inconsistent badge colors between tree and detail view** (#304, Part of Epic #283)
+
   - Detail panel now uses type-specific badge colors matching the tree view
   - Extracted `getTypeBadgeColor()` to `organizationalUnitUtils.ts` (DRY principle)
   - Added `BadgeColor` type for type-safe color values
@@ -622,6 +636,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added unit tests for `getTypeBadgeColor()`
 
 - **OfflineIndicator no longer blocks app interaction** (#283)
+
   - Replaced blocking modal dialog (`Alert`) with non-blocking toast banner
   - Banner auto-minimizes to icon after 5 seconds to reduce obstruction
   - Users can manually minimize/expand the notification
@@ -631,6 +646,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Used `ChevronDownIcon` from HeroIcons instead of inline SVG (DRY)
 
 - **Centralized API Wrapper with Session Expiry for All Requests** (#263)
+
   - Created `apiFetch()` as centralized API wrapper function in `csrf.ts`
   - Migrated all API services from direct `fetch()` calls to `apiFetch()`:
     - `customerApi.ts`: All customer CRUD + hierarchy operations
@@ -649,6 +665,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated all test files to mock `apiFetch` via `vi.mock("./csrf")`
 
 - **Session Expiry Handling for PWA** (#257)
+
   - Added `sessionEvents` module: Pub/sub event system for session lifecycle events
   - Modified `fetchWithCsrf` to emit `session:expired` event on 401 responses when online
   - `AuthContext` now subscribes to `session:expired` events and triggers automatic logout
@@ -657,6 +674,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Note:** Backend now uses `remember=true` for long-lived sessions (see api#270)
 
 - **PWA Service Worker API_URL mode detection** (#249)
+
   - Updated `vite.config.ts` to use mode-aware API_URL detection matching `src/config.ts`
   - Development mode now uses empty string (Vite proxy forwards `/v1/*` to DDEV backend)
   - Production mode uses `https://api.secpal.dev` as fallback
@@ -863,6 +881,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 - `.github/instructions/org-shared.instructions.md` — org-wide Copilot principles (TDD, quality gates, PR protocol); `applyTo: "**"` auto-loading was later removed during governance context cleanup
 
 - **Web Vitals monitoring with thresholds & development warnings** (#310)
+
   - Performance threshold configuration aligned with Lighthouse CI and Google's Core Web Vitals
   - Development-mode console warnings for poor metrics (zero runtime cost in production)
   - Metrics export API for dashboards: `getPerformanceMetrics()`, `clearPerformanceMetrics()`
@@ -871,6 +890,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Documentation: `docs/web-vitals-monitoring.md`
 
 - **Playwright E2E testing infrastructure** (#309)
+
   - Comprehensive E2E test suite with Playwright
   - Three testing modes:
     - Local development (localhost:5173 with DDEV backend proxy)
@@ -886,6 +906,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - npm scripts: `test:e2e`, `test:e2e:staging`, `test:e2e:ci`, `test:e2e:ui`, `test:e2e:headed`
 
 - **Lighthouse CI for automated performance testing** (#308)
+
   - GitHub Actions workflow runs Lighthouse audits on every PR and push to main
   - Performance budgets based on Core Web Vitals thresholds:
     - LCP (Largest Contentful Paint): < 2.5s (error threshold)
@@ -898,18 +919,21 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Tests for configuration validation
 
 - **Mobile-friendly action menu for organization tree** (Part of Epic #283)
+
   - Replaced individual action buttons (Add Child, Edit, Move, Delete) with a compact dropdown menu (three dots icon)
   - Actions are now accessible via a single button that expands to show all available options
   - Saves horizontal space on mobile devices where action buttons previously overflowed
   - Uses Catalyst Dropdown, DropdownButton, DropdownMenu, and DropdownItem components
 
 - **Detail panel close functionality** (#306, Part of Epic #283)
+
   - Close button (×) in detail panel header for explicit panel closing
   - ESC key support to close detail panel
   - Toggle selection: clicking the same unit again deselects it
   - Improved UX for organizational structure management
 
 - **Organizational Hierarchy UI Components** (#241, Part of Epic #228)
+
   - **API Services** - Four comprehensive API service modules with full CRUD support:
     - `organizationalUnitApi.ts`: Manage organizational units (holding, company, region, branch, division, department, custom)
     - `customerApi.ts`: Customer hierarchy management with parent-child relationships
@@ -935,6 +959,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - **Benefit:** Enables visual management of the organizational structure introduced in backend Epic #228
 
 - **CSRF Token Integration & API Service Updates** (#224, Part of Epic #205)
+
   - All API services now properly include CSRF tokens via X-XSRF-TOKEN header
   - Automatic 419 (CSRF token mismatch) retry with fresh token refresh
   - Verified comprehensive test coverage: 19 unit tests + 18 integration tests, all passing
@@ -942,6 +967,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Follows Gebot #1 (Qualität vor Geschwindigkeit) - All existing tests pass, no breaking changes
 
 - **PWA Update Notification** (#222)
+
   - Changed `vite.config.ts` PWA plugin from `registerType: 'autoUpdate'` to `registerType: 'prompt'`
   - `useServiceWorkerUpdate` hook for detecting and managing PWA updates
     - `needRefresh` state indicates when new version is available
@@ -962,6 +988,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Follows Gebot #1 (Qualität vor Geschwindigkeit) - Full TDD implementation with comprehensive tests
 
 - **Integration Tests & Developer Documentation for httpOnly Cookie Authentication** (#212, Part of Epic #208) - **CURRENT PR**
+
   - `tests/integration/auth/cookieAuth.test.ts`: Complete integration tests for cookie-based authentication flow
     - Login flow with CSRF token and httpOnly cookies
     - Authenticated requests with automatic cookie inclusion
@@ -994,6 +1021,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
     - `CHANGELOG.md`: Updated with complete Epic #208 implementation timeline
 
 - **CSRF Token Handling & Request Interceptor** (#211, Part of Epic #208) - **MERGED 23.11.2025**
+
   - `csrf.ts` service module with CSRF token management
   - `fetchCsrfToken()`: Fetches CSRF token from Laravel Sanctum (`/sanctum/csrf-cookie`)
   - `getCsrfTokenFromCookie()`: Extracts XSRF-TOKEN from browser cookies
@@ -1008,6 +1036,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Security: Protects against CSRF attacks for all state-changing requests
 
 - **Client-Side File Encryption - Phase 5: Security Audit & Documentation** (#174, Part of #143)
+
   - Comprehensive security documentation in `CRYPTO_ARCHITECTURE.md`
   - Security audit completed for all encryption code
   - Updated README with File Encryption section
@@ -1016,6 +1045,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Part of File Encryption Epic #143 (Phase 5/5)
 
 - **Client-Side File Encryption - Phase 4: Download & Decryption** (#176, Part of #143) - **MERGED 21.11.2025**
+
   - `AttachmentList` component with download/preview/delete actions
   - `downloadAndDecryptAttachment()` API function with integrity verification
   - Automatic decryption on download with SHA-256 checksum validation
@@ -1025,6 +1055,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Part of File Encryption Epic #143 (Phase 4/5)
 
 - **Client-Side File Encryption - Phase 3: Upload Integration** (#175, Part of #143) - **MERGED 21.11.2025**
+
   - Background sync for encrypted file uploads with exponential backoff
   - `UploadStatus` component with progress indicators and retry functionality
   - IndexedDB-based upload queue with persistent storage
@@ -1035,6 +1066,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Part of File Encryption Epic #143 (Phase 3/5)
 
 - **Client-Side File Encryption - Phase 1: Crypto Utilities** (#172, Part of #143) - **MERGED 19.11.2025**
+
   - AES-GCM-256 encryption/decryption with Web Crypto API
   - HKDF-SHA-256 key derivation for per-file keys
   - SHA-256 checksum calculation for integrity verification
@@ -1044,6 +1076,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Part of File Encryption Epic #143 (Phase 1/5)
 
 - **Push Notifications Infrastructure** (#166, Part of #144 PWA Phase 3)
+
   - Service Worker push event handlers for backend notifications
   - Notification click routing with deep-link support
   - `usePushSubscription` hook for VAPID-based subscription management
@@ -1066,6 +1099,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Part of PWA Phase 3 (Epic #64, Sub-Issue #166)
 
 - **Offline Analytics & Telemetry** (#167, Part of #144 PWA Phase 3)
+
   - Web Vitals integration for performance monitoring:
     - CLS (Cumulative Layout Shift) - Visual stability tracking
     - INP (Interaction to Next Paint) - Responsiveness measurement (Web Vitals v4)
@@ -1085,6 +1119,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Part of PWA Phase 3 (Epic #144, Sub-Issue #167)
 
 - **Code Coverage Integration** (#137)
+
   - Integrated Codecov for automated coverage tracking
   - Vitest now generates LCOV and Clover coverage reports
   - CI pipeline uploads coverage to Codecov dashboard
@@ -1093,6 +1128,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Supports organization-wide 80% coverage threshold
 
 - **Git Conflict Marker Detection**: Automated check for unresolved merge conflicts
+
   - `scripts/check-conflict-markers.sh` - Scans all tracked files for conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`, `|||||||`)
   - `.github/workflows/check-conflict-markers.yml` - CI integration (runs on all PRs and pushes to main)
   - `docs/scripts/CHECK_CONFLICT_MARKERS.md` - Complete usage guide with examples and troubleshooting
@@ -1101,12 +1137,14 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Colored output shows exact file locations and line numbers
 
 - **Documentation**: Created `docs/KNOWN_ISSUES.md` to track upstream dependency issues
+
   - Documents npm deprecation warnings from `workbox-build@7.3.0` transitive dependencies
   - Explains why warnings appear and why we cannot fix them directly
   - Provides impact assessment, upstream issue links, and expected resolution timeline
   - Follows Gebot #2 (Qualität vor Geschwindigkeit) by accepting the issue rather than hiding it
 
 - **PWA Phase 3 Features (Issue #67)**: Complete implementation of Push Notifications and Offline Analytics
+
   - **Push Notifications**: Permission management, Service Worker integration, notification display
     - `useNotifications` hook with permission state management
     - Service Worker notification display with fallback to browser API
@@ -1129,6 +1167,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Total: 67 new tests added (131 tests passing)
 
 - **Background Sync API**: Automatic retry of failed operations when connection restored
+
   - Workbox Background Sync integration for API requests
   - Exponential backoff retry strategy (1s, 2s, 4s, 8s, 16s)
   - Max 5 retry attempts before marking operation as failed
@@ -1138,6 +1177,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - 15 comprehensive tests for sync logic and error handling
 
 - **Sync Status Indicator UI Component**: Real-time sync status visualization
+
   - Live display of pending/error operations count using Dexie React Hooks
   - Auto-sync when device comes online after being offline
   - Manual sync trigger button for user-initiated synchronization
@@ -1149,6 +1189,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Dependencies: `dexie-react-hooks@^4.2.0`
 
 - **IndexedDB Integration with Dexie.js**: Structured client-side storage for offline-first architecture
+
   - Database schema with tables for guards, sync queue, and API cache
   - TypeScript-first implementation with full type safety
   - CRUD operations for all entities
@@ -1161,12 +1202,14 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - 27 passing tests with 100% coverage of core functionality
 
 - **PWA App Shortcuts**: Quick access to key features from app icon
+
   - 4 shortcuts: View Schedule, Quick Report, My Profile, Emergency Contact
   - Deep linking to specific app sections
   - Configured in Web App Manifest for all platforms
   - Mobile and desktop support (Android, iOS, Chrome, Edge)
 
 - **Storage Quota Indicator**: UI component for storage monitoring
+
   - Real-time display of IndexedDB usage (MB / Quota)
   - Percentage-based progress bar with visual feedback
   - Warning indicator when storage exceeds 80% capacity
@@ -1174,6 +1217,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - 4 comprehensive tests for all scenarios
 
 - **Legacy UI setup completion**: Production-ready configuration
+
   - React Router v7 for client-side navigation with SPA routing
   - Inter font family integration via @fontsource/inter (weights 400-700)
   - Legacy outline icon library for UI consistency
@@ -1183,6 +1227,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Updated tests for new router-based structure
 
 - **PWA Offline-First Foundation**: Progressive Web App infrastructure
+
   - Vite PWA plugin with Workbox for service worker management
   - Web App Manifest for installability (name, icons, theme)
   - `useOnlineStatus` hook for network detection
@@ -1193,6 +1238,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Comprehensive test coverage for online/offline detection
 
 - **Legacy UI kit integration**: All 27 components
+
   - Components: Alert, Avatar, Badge, Button, Checkbox, Combobox, Dialog, Dropdown, Input, Select, Table, etc.
   - Dependencies: legacy menu primitives, `motion`, `clsx`
   - Documentation reference in README
@@ -1480,6 +1526,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Documentation: `docs/diagnose-hooks.md`
   - Added "Troubleshooting" section to CONTRIBUTING.md with diagnostic guide, performance tips, and common fixes
 - **Employee Management & Onboarding Portal** (#332, Epic #211 Phase 7)
+
   - **API Service Layers:**
     - Employee API service layer (CRUD operations, activate, terminate)
     - Qualification API service (system/custom qualifications, employee assignments)
@@ -1515,6 +1562,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - All Catalyst components and patterns maintained
   - Footer integration preserved across both layouts
 - **Improved "Add Unit" button label in Organizational Unit Tree** (#300, Part of Epic #283)
+
   - Renamed "Add Unit" button to "Add Root Unit" for clarity
   - Makes it explicit that the button creates a root-level organizational unit
   - Reduces confusion about where new units will be created
@@ -1522,6 +1570,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - **Enhanced with hierarchy-based type filtering**: When creating a child unit, the type dropdown now only shows valid child types based on the parent's hierarchy rank. Child units must be **lower** in the hierarchy than their parent (e.g., Division under Branch is valid, but Branch under Branch is not allowed). This prevents users from selecting invalid types upfront, improving UX by avoiding validation errors after submission.
 
 - **Optimistic UI for organizational unit CRUD operations** (SecPal/api#303, Part of Epic #283)
+
   - After creating a unit, it's immediately added to the tree without reload
   - After updating a unit, changes appear instantly in the tree
   - After moving/reparenting a unit, the tree structure updates immediately
@@ -1533,6 +1582,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - 6 test cases for optimistic UI behavior (delete, create, update)
 
 - **Permission-Filtered Organizational Unit Tree View** (#291, Part of Epic SecPal/api#280)
+
   - Tree component now uses `root_unit_ids` from API response to determine tree roots
   - Users see only organizational units they have access to (Need-to-Know principle)
   - Changed header from "Organizational Structure" to "My Organization" (user-centric)
@@ -1542,6 +1592,7 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
   - Implements ADR-007 Need-to-Know pattern
 
 - **Authentication Migration to httpOnly Cookies** (#210, Part of Epic #208) - **XSS Protection Enhancement**
+
   - Migrated from localStorage-based token storage to httpOnly cookies for XSS protection
   - Removed client-side token handling from `AuthContext` and `useAuth` hook
   - Updated `authApi.ts` to use `credentials: "include"` for cookie-based authentication
