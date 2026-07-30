@@ -90,8 +90,7 @@ describe("RouteGuardState theme tokens", () => {
     });
     expect(showAppButton.closest("body")).not.toBeNull();
 
-    const shieldedBackground = container.querySelector('[aria-hidden="true"]');
-    expect(shieldedBackground).toHaveAttribute("inert");
+    expect(container).toHaveAttribute("aria-hidden", "true");
   });
 
   it("hides existing body-level portal siblings behind the privacy shield", async () => {
@@ -109,12 +108,10 @@ describe("RouteGuardState theme tokens", () => {
     await screen.findByRole("button", { name: /show app/i });
 
     expect(existingPortal).toHaveAttribute("aria-hidden", "true");
-    expect(existingPortal).toHaveAttribute("inert");
 
     unmount();
 
     expect(existingPortal).not.toHaveAttribute("aria-hidden");
-    expect(existingPortal).not.toHaveAttribute("inert");
     existingPortal.remove();
   });
 

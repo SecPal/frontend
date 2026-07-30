@@ -184,7 +184,7 @@ async function selectNationality(
     await user.clear(nationalityControl);
     await user.type(nationalityControl, query);
   } else {
-    const searchbox = await screen.findByRole("searchbox");
+    const searchbox = await screen.findByPlaceholderText(/search/i);
     await user.clear(searchbox);
     await user.type(searchbox, query);
   }
@@ -1734,7 +1734,7 @@ describe("OnboardingWizard", () => {
     expect(nationalityControl).toHaveAttribute("role", "combobox");
     await user.click(nationalityControl);
     expect(
-      await screen.findByRole("searchbox", {
+      await screen.findByRole("combobox", {
         name: /search and select one nationality/i,
       })
     ).toBeInTheDocument();

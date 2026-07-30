@@ -3,28 +3,19 @@
 
 import {
   createContext,
-  useCallback,
   useContext,
-  useEffect,
   useId,
-  useRef,
   useState,
   forwardRef,
-  type ButtonHTMLAttributes,
-  type ComponentProps,
   type ComponentPropsWithoutRef,
-  type ElementRef,
-  type ForwardedRef,
-  type KeyboardEvent,
   type ReactElement,
   type ReactNode,
 } from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import * as LabelPrimitive from "@radix-ui/react-label";
-import * as PopoverPrimitive from "@radix-ui/react-popover";
-import * as ProgressPrimitive from "@radix-ui/react-progress";
-import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
-import { Command as CommandPrimitive } from "cmdk";
+import { Combobox as ComboboxPrimitive } from "@base-ui/react/combobox";
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
+import { Radio as RadioPrimitive } from "@base-ui/react/radio";
+import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group";
 import { Check, ChevronDown, Circle, Search } from "lucide-react";
 import { PrefetchLink } from "@/components/PrefetchLink";
 import {
@@ -33,29 +24,9 @@ import {
   type OrganizationalUnitBadgeColor,
 } from "@/lib/organizationalUnitUtils";
 import { cn } from "@/lib/utils";
+import { Button } from "./button";
+import { Label } from "./label";
 import { buttonVariants, type ButtonVariant, uiFocusRing } from "./styles";
-
-const Button = forwardRef(function Button(
-  {
-    className,
-    variant,
-    type = "button",
-    ...props
-  }: ButtonHTMLAttributes<HTMLButtonElement> & {
-    variant?: ButtonVariant;
-  },
-  ref: ForwardedRef<HTMLButtonElement>
-) {
-  return (
-    <button
-      ref={ref}
-      type={type}
-      data-slot="button"
-      className={cn(buttonVariants({ variant }), className)}
-      {...props}
-    />
-  );
-});
 
 export function Field({
   className,
@@ -80,11 +51,11 @@ export function FieldGroup({
 }
 
 export const FieldLabel = forwardRef<
-  ElementRef<typeof LabelPrimitive.Root>,
-  ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
+  HTMLLabelElement,
+  React.ComponentProps<typeof Label>
 >(function FieldLabel({ className, ...props }, ref) {
   return (
-    <LabelPrimitive.Root
+    <Label
       ref={ref}
       data-slot="field-label"
       className={cn(
@@ -122,226 +93,6 @@ export function FieldError({
   );
 }
 
-function setForwardedRef<T>(ref: ForwardedRef<T>, value: T | null) {
-  if (typeof ref === "function") {
-    ref(value);
-    return;
-  }
-
-  if (ref) {
-    ref.current = value;
-  }
-}
-
-export const Command = forwardRef<
-  ElementRef<typeof CommandPrimitive>,
-  ComponentPropsWithoutRef<typeof CommandPrimitive>
->(function Command({ className, ...props }, ref) {
-  return (
-    <CommandPrimitive
-      ref={ref}
-      data-slot="command"
-      className={cn(
-        "bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md",
-        className
-      )}
-      {...props}
-    />
-  );
-});
-
-export const CommandInput = forwardRef<
-  ElementRef<typeof CommandPrimitive.Input>,
-  ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
->(function CommandInput({ className, ...props }, ref) {
-  const inputRef = useCallback(
-    (node: ElementRef<typeof CommandPrimitive.Input> | null) => {
-      if (node) {
-        node.setAttribute("role", "searchbox");
-      }
-      setForwardedRef(ref, node);
-    },
-    [ref]
-  );
-
-  return (
-    <div
-      data-slot="command-input-wrapper"
-      className="flex h-9 items-center gap-2 border-b border-border px-3"
-    >
-      <Search className="size-4 shrink-0 opacity-50" aria-hidden="true" />
-      <CommandPrimitive.Input
-        ref={inputRef}
-        data-slot="command-input"
-        className={cn(
-          "placeholder:text-muted-foreground flex h-9 w-full rounded-md bg-transparent py-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50",
-          className
-        )}
-        {...props}
-      />
-    </div>
-  );
-});
-
-export const CommandList = forwardRef<
-  ElementRef<typeof CommandPrimitive.List>,
-  ComponentPropsWithoutRef<typeof CommandPrimitive.List>
->(function CommandList({ className, ...props }, ref) {
-  const listRef = useCallback(
-    (node: ElementRef<typeof CommandPrimitive.List> | null) => {
-      if (node && props.id) {
-        node.id = props.id;
-      }
-      setForwardedRef(ref, node);
-    },
-    [props.id, ref]
-  );
-
-  return (
-    <CommandPrimitive.List
-      ref={listRef}
-      data-slot="command-list"
-      className={cn("max-h-72 overflow-x-hidden overflow-y-auto", className)}
-      {...props}
-    />
-  );
-});
-
-export const CommandEmpty = forwardRef<
-  ElementRef<typeof CommandPrimitive.Empty>,
-  ComponentPropsWithoutRef<typeof CommandPrimitive.Empty>
->(function CommandEmpty({ className, ...props }, ref) {
-  return (
-    <CommandPrimitive.Empty
-      ref={ref}
-      data-slot="command-empty"
-      className={cn("py-6 text-center text-sm", className)}
-      {...props}
-    />
-  );
-});
-
-export const CommandGroup = forwardRef<
-  ElementRef<typeof CommandPrimitive.Group>,
-  ComponentPropsWithoutRef<typeof CommandPrimitive.Group>
->(function CommandGroup({ className, ...props }, ref) {
-  return (
-    <CommandPrimitive.Group
-      ref={ref}
-      data-slot="command-group"
-      className={cn(
-        "text-foreground overflow-hidden p-1 [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium",
-        className
-      )}
-      {...props}
-    />
-  );
-});
-
-export const CommandSeparator = forwardRef<
-  ElementRef<typeof CommandPrimitive.Separator>,
-  ComponentPropsWithoutRef<typeof CommandPrimitive.Separator>
->(function CommandSeparator({ className, ...props }, ref) {
-  return (
-    <CommandPrimitive.Separator
-      ref={ref}
-      data-slot="command-separator"
-      className={cn("bg-border -mx-1 h-px", className)}
-      {...props}
-    />
-  );
-});
-
-export const CommandItem = forwardRef<
-  ElementRef<typeof CommandPrimitive.Item>,
-  ComponentPropsWithoutRef<typeof CommandPrimitive.Item>
->(function CommandItem({ className, id, ...props }, ref) {
-  const itemRef = useCallback(
-    (node: ElementRef<typeof CommandPrimitive.Item> | null) => {
-      if (node && id) {
-        node.id = id;
-      }
-      setForwardedRef(ref, node);
-    },
-    [id, ref]
-  );
-
-  return (
-    <CommandPrimitive.Item
-      ref={itemRef}
-      data-slot="command-item"
-      className={cn(
-        "data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
-        className
-      )}
-      id={id}
-      {...props}
-    />
-  );
-});
-
-export function CommandShortcut({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"span">) {
-  return (
-    <span
-      data-slot="command-shortcut"
-      className={cn(
-        "text-muted-foreground ml-auto text-xs tracking-widest",
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-const emptyCommandValue = "__secpal_empty_command_value__";
-
-function toCommandValue(value: string) {
-  return value === "" ? emptyCommandValue : value;
-}
-
-function fromCommandValue(value: string) {
-  return value === emptyCommandValue ? "" : value;
-}
-
-function commandOptionFilter(
-  value: string,
-  search: string,
-  keywords: string[] = []
-) {
-  const normalizedSearch = search.trim().toLowerCase();
-
-  if (!normalizedSearch) {
-    return 1;
-  }
-
-  const entries = [value, ...keywords].map((entry) =>
-    entry.trim().toLowerCase()
-  );
-
-  if (entries.some((entry) => entry === normalizedSearch)) {
-    return 1;
-  }
-
-  if (entries.some((entry) => entry.startsWith(normalizedSearch))) {
-    return 0.9;
-  }
-
-  if (
-    entries.some((entry) =>
-      entry
-        .split(/[\s,./()_-]+/)
-        .some((word) => word.startsWith(normalizedSearch))
-    )
-  ) {
-    return 0.8;
-  }
-
-  return 0;
-}
-
 export interface CommandOption {
   value: string;
   label: string;
@@ -352,6 +103,8 @@ export interface CommandOption {
 export interface SearchableAutocompleteListboxProps {
   anchor: ReactElement;
   open: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onValueChange?: (value: string | null) => void;
   listboxId: string;
   className?: string;
   slotPrefix: string;
@@ -361,75 +114,70 @@ export interface SearchableAutocompleteListboxProps {
 export function SearchableAutocompleteListbox({
   anchor,
   open,
+  onOpenChange,
+  onValueChange,
   listboxId,
   className,
   slotPrefix,
   children,
 }: SearchableAutocompleteListboxProps) {
   return (
-    <PopoverPrimitive.Root open={open}>
-      <PopoverPrimitive.Anchor asChild>{anchor}</PopoverPrimitive.Anchor>
-      <PopoverPrimitive.Portal>
-        <PopoverPrimitive.Content
+    <ComboboxPrimitive.Root<string>
+      open={open}
+      onOpenChange={(nextOpen) => onOpenChange?.(nextOpen)}
+      onValueChange={(value) => onValueChange?.(value)}
+    >
+      <ComboboxPrimitive.Input render={anchor} />
+      <ComboboxPrimitive.Portal>
+        <ComboboxPrimitive.Positioner
           align="start"
           sideOffset={4}
-          data-slot={`${slotPrefix}-autocomplete-popover-content`}
-          className={cn(
-            "z-50 w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-lg outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-            className
-          )}
-          onOpenAutoFocus={(event) => event.preventDefault()}
-          onCloseAutoFocus={(event) => event.preventDefault()}
+          className="isolate z-50"
         >
-          <Command
-            shouldFilter={false}
-            data-prefixed-slot={`${slotPrefix}-autocomplete-command`}
+          <ComboboxPrimitive.Popup
+            data-slot={`${slotPrefix}-autocomplete-popover-content`}
+            className={cn(
+              "bg-popover text-popover-foreground z-50 w-(--anchor-width) overflow-hidden rounded-md border border-border shadow-lg outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+              className
+            )}
           >
-            <CommandList
+            <ComboboxPrimitive.List
               id={listboxId}
               data-slot={`${slotPrefix}-autocomplete-listbox`}
+              className="max-h-72 overflow-x-hidden overflow-y-auto"
             >
               {children}
-            </CommandList>
-          </Command>
-        </PopoverPrimitive.Content>
-      </PopoverPrimitive.Portal>
-    </PopoverPrimitive.Root>
+            </ComboboxPrimitive.List>
+          </ComboboxPrimitive.Popup>
+        </ComboboxPrimitive.Positioner>
+      </ComboboxPrimitive.Portal>
+    </ComboboxPrimitive.Root>
   );
 }
 
-export interface SearchableAutocompleteOptionProps extends ComponentPropsWithoutRef<"button"> {
-  highlighted?: boolean;
+export interface SearchableAutocompleteOptionProps extends Omit<
+  ComponentPropsWithoutRef<"div">,
+  "style"
+> {
   slotPrefix: string;
+  value: string;
 }
 
 export function SearchableAutocompleteOption({
   className,
-  highlighted = false,
   slotPrefix,
-  type: _type,
   value,
   ...props
 }: SearchableAutocompleteOptionProps) {
-  void _type;
-
-  const commandValue = typeof value === "string" ? value : undefined;
-  const commandItemProps = props as ComponentPropsWithoutRef<
-    typeof CommandItem
-  >;
-
   return (
-    <CommandItem
-      forceMount
-      value={commandValue}
+    <ComboboxPrimitive.Item
+      value={value}
       data-slot={`${slotPrefix}-autocomplete-option`}
-      data-highlighted={highlighted ? "" : undefined}
       className={cn(
-        "block w-full border-b border-border px-3 py-2 text-left last:border-b-0 hover:bg-accent",
-        highlighted && "bg-accent text-accent-foreground",
+        "block w-full cursor-default border-b border-border px-3 py-2 text-left text-sm outline-none last:border-b-0 data-highlighted:bg-accent data-highlighted:text-accent-foreground",
         className
       )}
-      {...commandItemProps}
+      {...props}
     />
   );
 }
@@ -461,59 +209,38 @@ export function SearchableCommandPopover({
 }: SearchableCommandPopoverProps) {
   const labelId = useId();
   const errorId = useId();
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const closeFocusTargetRef = useRef<"trigger" | "next" | null>(null);
-  const [open, setOpen] = useState(false);
-
-  const selectedOption = options.find((option) => option.value === value);
-
-  function handleOpenChange(nextOpen: boolean) {
-    setOpen(nextOpen);
-  }
-
-  function selectOption(commandValue: string) {
-    const optionValue = fromCommandValue(commandValue);
-    const option = options.find((candidate) => candidate.value === optionValue);
-
-    if (!option || option.disabled) {
-      return;
-    }
-
-    onValueChange(option.value);
-    closeFocusTargetRef.current = "trigger";
-    setOpen(false);
-  }
-
-  function handleTriggerKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      setOpen(true);
-    }
-  }
-
-  function focusNextElementAfterTrigger() {
-    const trigger = triggerRef.current;
-
-    if (!trigger) {
-      return;
-    }
-
-    const focusableElements = Array.from(
-      document.querySelectorAll<HTMLElement>(
-        'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
-      )
-    ).filter((element) => !contentRef.current?.contains(element));
-    const triggerIndex = focusableElements.indexOf(trigger);
-    const nextElement =
-      triggerIndex >= 0 ? focusableElements[triggerIndex + 1] : undefined;
-
-    (nextElement ?? trigger).focus();
-  }
+  const [inputValue, setInputValue] = useState("");
+  const selectedOption =
+    options.find((option) => option.value === value) ?? null;
 
   return (
-    <PopoverPrimitive.Root open={open} onOpenChange={handleOpenChange}>
+    <ComboboxPrimitive.Root
+      items={options}
+      autoHighlight
+      value={selectedOption}
+      inputValue={inputValue}
+      disabled={disabled}
+      itemToStringLabel={(option) => option.label}
+      itemToStringValue={(option) => option.value}
+      isItemEqualToValue={(option, selected) => option.value === selected.value}
+      filter={(option, query) =>
+        commandOptionFilter(option.label, query, [
+          option.value,
+          ...(option.keywords ?? []),
+        ]) > 0
+      }
+      onValueChange={(option) => {
+        if (option && !option.disabled) {
+          onValueChange(option.value);
+        }
+      }}
+      onInputValueChange={(nextInputValue) => setInputValue(nextInputValue)}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          setInputValue("");
+        }
+      }}
+    >
       <div className="space-y-2">
         <span
           id={labelId}
@@ -521,142 +248,135 @@ export function SearchableCommandPopover({
         >
           {label}
         </span>
-        <PopoverPrimitive.Trigger asChild>
-          <Button
-            ref={triggerRef}
-            variant="outline"
-            className="w-full justify-between"
-            aria-labelledby={labelId}
-            aria-expanded={open}
-            aria-haspopup="listbox"
-            aria-invalid={errorMessage ? true : undefined}
-            aria-describedby={errorMessage ? errorId : undefined}
-            disabled={disabled}
-            role="combobox"
-            onKeyDown={handleTriggerKeyDown}
-          >
-            <span>{selectedOption?.label ?? placeholder}</span>
-            <ChevronDown className="size-4 opacity-50" aria-hidden="true" />
-          </Button>
-        </PopoverPrimitive.Trigger>
-        <PopoverPrimitive.Portal>
-          <PopoverPrimitive.Content
-            ref={contentRef}
+        <ComboboxPrimitive.Trigger
+          render={
+            <Button
+              variant="outline"
+              className="w-full justify-between"
+              aria-labelledby={labelId}
+              aria-invalid={errorMessage ? true : undefined}
+              aria-describedby={errorMessage ? errorId : undefined}
+              disabled={disabled}
+            />
+          }
+        >
+          <span>{selectedOption?.label ?? placeholder}</span>
+          <ChevronDown className="size-4 opacity-50" aria-hidden="true" />
+        </ComboboxPrimitive.Trigger>
+        <ComboboxPrimitive.Portal>
+          <ComboboxPrimitive.Positioner
             align="start"
             sideOffset={4}
-            data-slot={`${slotPrefix}-command-popover-content`}
-            className="z-50 w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-lg outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
-            onOpenAutoFocus={(event) => {
-              event.preventDefault();
-              inputRef.current?.focus();
-            }}
-            onCloseAutoFocus={(event) => {
-              const closeFocusTarget = closeFocusTargetRef.current;
-
-              if (!closeFocusTarget) {
-                return;
-              }
-
-              event.preventDefault();
-              closeFocusTargetRef.current = null;
-              window.requestAnimationFrame(() => {
-                if (closeFocusTarget === "next") {
-                  focusNextElementAfterTrigger();
-                  return;
-                }
-
-                triggerRef.current?.focus();
-              });
-            }}
+            className="isolate z-50"
           >
-            <Command
-              label={searchPlaceholder}
-              filter={commandOptionFilter}
-              loop
-              data-prefixed-slot={`${slotPrefix}-command`}
-              onKeyDown={(event) => {
-                if (event.key === "Escape") {
-                  event.preventDefault();
-                  closeFocusTargetRef.current = "trigger";
-                  setOpen(false);
-                }
-              }}
+            <ComboboxPrimitive.Popup
+              data-slot={`${slotPrefix}-command-popover-content`}
+              className="bg-popover text-popover-foreground z-50 w-(--anchor-width) overflow-hidden rounded-md border border-border shadow-lg outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
             >
-              <CommandInput
-                ref={inputRef}
-                aria-invalid={errorMessage ? true : undefined}
-                aria-describedby={errorMessage ? errorId : undefined}
-                placeholder={searchPlaceholder}
-                onKeyDown={(event) => {
-                  if (event.key === "Tab") {
-                    event.preventDefault();
-                    closeFocusTargetRef.current = event.shiftKey
-                      ? "trigger"
-                      : "next";
-                    setOpen(false);
-                  }
-                }}
-              />
-              <CommandList>
-                <CommandEmpty>{emptyMessage}</CommandEmpty>
-                <CommandGroup>
-                  {options.map((option) => {
-                    const commandValue = toCommandValue(option.value);
-
-                    return (
-                      <CommandItem
-                        key={commandValue}
-                        value={commandValue}
-                        keywords={[
-                          option.label,
-                          option.value,
-                          ...(option.keywords ?? []),
-                        ]}
-                        disabled={option.disabled}
-                        data-current={option.value === value ? "" : undefined}
-                        onSelect={selectOption}
-                      >
-                        <span className="min-w-0 flex-1 truncate">
-                          {option.label}
-                        </span>
-                        {option.value === value ? (
-                          <Check className="size-4" aria-hidden="true" />
-                        ) : null}
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverPrimitive.Content>
-        </PopoverPrimitive.Portal>
+              <div className="flex h-9 items-center gap-2 border-b border-border px-3">
+                <Search
+                  className="size-4 shrink-0 opacity-50"
+                  aria-hidden="true"
+                />
+                <ComboboxPrimitive.Input
+                  data-slot="command-input"
+                  aria-label={searchPlaceholder}
+                  aria-invalid={errorMessage ? true : undefined}
+                  aria-describedby={errorMessage ? errorId : undefined}
+                  placeholder={searchPlaceholder}
+                  className="placeholder:text-muted-foreground flex h-9 w-full rounded-md bg-transparent py-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
+              <ComboboxPrimitive.Empty className="py-6 text-center text-sm">
+                {emptyMessage}
+              </ComboboxPrimitive.Empty>
+              <ComboboxPrimitive.List
+                data-slot="command-list"
+                className="max-h-72 overflow-x-hidden overflow-y-auto p-1"
+              >
+                {(option: CommandOption) => (
+                  <ComboboxPrimitive.Item
+                    key={option.value}
+                    data-slot="command-item"
+                    value={option}
+                    disabled={option.disabled}
+                    className="data-highlighted:bg-accent data-highlighted:text-accent-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50"
+                  >
+                    <span className="min-w-0 flex-1 truncate">
+                      {option.label}
+                    </span>
+                    <ComboboxPrimitive.ItemIndicator>
+                      <Check className="size-4" aria-hidden="true" />
+                    </ComboboxPrimitive.ItemIndicator>
+                  </ComboboxPrimitive.Item>
+                )}
+              </ComboboxPrimitive.List>
+            </ComboboxPrimitive.Popup>
+          </ComboboxPrimitive.Positioner>
+        </ComboboxPrimitive.Portal>
         {errorMessage ? (
           <FieldError id={errorId}>{errorMessage}</FieldError>
         ) : null}
       </div>
-    </PopoverPrimitive.Root>
+    </ComboboxPrimitive.Root>
   );
+}
+
+function commandOptionFilter(
+  value: string,
+  search: string,
+  keywords: string[] = []
+) {
+  const normalizedSearch = search.trim().toLowerCase();
+
+  if (!normalizedSearch) {
+    return 1;
+  }
+
+  const entries = [value, ...keywords].map((entry) =>
+    entry.trim().toLowerCase()
+  );
+
+  if (entries.some((entry) => entry === normalizedSearch)) {
+    return 1;
+  }
+
+  if (entries.some((entry) => entry.startsWith(normalizedSearch))) {
+    return 0.9;
+  }
+
+  return entries.some((entry) =>
+    entry
+      .split(/[\s,./()_-]+/)
+      .some((word) => word.startsWith(normalizedSearch))
+  )
+    ? 0.8
+    : 0;
 }
 
 export function RadioGroup({
   className,
+  onValueChange,
   ...props
-}: ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>) {
+}: Omit<RadioGroupPrimitive.Props, "onValueChange"> & {
+  onValueChange?: (value: string) => void;
+}) {
   return (
-    <RadioGroupPrimitive.Root
+    <RadioGroupPrimitive
       data-slot="radio-group"
       className={cn("grid gap-3", className)}
+      onValueChange={(value) => onValueChange?.(value)}
       {...props}
     />
   );
 }
 
 export const RadioGroupItem = forwardRef<
-  ElementRef<typeof RadioGroupPrimitive.Item>,
-  ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
+  HTMLButtonElement,
+  RadioPrimitive.Root.Props
 >(function RadioGroupItem({ className, ...props }, ref) {
   return (
-    <RadioGroupPrimitive.Item
+    <RadioPrimitive.Root
       ref={ref}
       data-slot="radio-group-item"
       className={cn(
@@ -665,10 +385,10 @@ export const RadioGroupItem = forwardRef<
       )}
       {...props}
     >
-      <RadioGroupPrimitive.Indicator asChild>
-        <Circle className="size-2.5 fill-current" aria-hidden="true" />
-      </RadioGroupPrimitive.Indicator>
-    </RadioGroupPrimitive.Item>
+      <RadioPrimitive.Indicator
+        render={<Circle className="size-2.5 fill-current" aria-hidden="true" />}
+      />
+    </RadioPrimitive.Root>
   );
 });
 
@@ -684,80 +404,24 @@ const dialogSizes = {
   "5xl": "sm:max-w-5xl",
 } satisfies Record<string, string>;
 
-function clearStaleBodyModalStyles() {
-  if (typeof document === "undefined") {
-    return;
-  }
-
-  const hasOpenModalOverlay =
-    document.querySelector('[data-slot="dialog-overlay"]') !== null ||
-    document.querySelector('[data-slot="sheet-overlay"]') !== null;
-
-  if (hasOpenModalOverlay) {
-    return;
-  }
-
-  document.body.style.removeProperty("pointer-events");
-  document.body.style.removeProperty("overflow");
+export function Dialog(props: DialogPrimitive.Root.Props) {
+  return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
 
-export function Dialog({
-  open,
-  onClose,
-  children,
-}: {
-  open: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  useEffect(() => {
-    if (open || typeof window === "undefined") {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      clearStaleBodyModalStyles();
-    }, 0);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [open]);
-
-  useEffect(() => {
-    return () => {
-      clearStaleBodyModalStyles();
-    };
-  }, []);
-
-  return (
-    <DialogPrimitive.Root
-      open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
-          onClose();
-        }
-      }}
-    >
-      {children}
-    </DialogPrimitive.Root>
-  );
-}
-
-export function DialogPortal(
-  props: ComponentProps<typeof DialogPrimitive.Portal>
-) {
+export function DialogPortal(props: DialogPrimitive.Portal.Props) {
   return <DialogPrimitive.Portal {...props} />;
 }
 
 export const DialogOverlay = forwardRef<
-  ElementRef<typeof DialogPrimitive.Overlay>,
-  ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+  HTMLDivElement,
+  DialogPrimitive.Backdrop.Props
 >(function DialogOverlay({ className, ...props }, ref) {
   return (
-    <DialogPrimitive.Overlay
+    <DialogPrimitive.Backdrop
       ref={ref}
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 z-40 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+        "fixed inset-0 z-40 bg-black/50 transition-opacity data-ending-style:opacity-0 data-starting-style:opacity-0",
         className
       )}
       {...props}
@@ -766,30 +430,30 @@ export const DialogOverlay = forwardRef<
 });
 
 export const DialogContent = forwardRef<
-  ElementRef<typeof DialogPrimitive.Content>,
-  ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+  HTMLDivElement,
+  DialogPrimitive.Popup.Props & {
     size?: keyof typeof dialogSizes;
   }
 >(function DialogContent({ className, children, size = "md", ...props }, ref) {
   return (
-    <DialogPrimitive.Content
+    <DialogPrimitive.Popup
       ref={ref}
       data-slot="dialog-content"
       className={cn(
-        "bg-background text-foreground fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 overflow-x-hidden overflow-y-auto rounded-lg border border-border p-6 shadow-lg duration-200 overscroll-contain data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+        "bg-background text-foreground fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 overflow-x-hidden overflow-y-auto rounded-lg border border-border p-6 shadow-lg duration-200 overscroll-contain outline-none data-ending-style:opacity-0 data-ending-style:scale-95 data-starting-style:opacity-0 data-starting-style:scale-95",
         dialogSizes[size],
         className
       )}
       {...props}
     >
       {children}
-    </DialogPrimitive.Content>
+    </DialogPrimitive.Popup>
   );
 });
 
 export const DialogTitle = forwardRef<
-  ElementRef<typeof DialogPrimitive.Title>,
-  ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+  HTMLHeadingElement,
+  DialogPrimitive.Title.Props
 >(function DialogTitle({ className, ...props }, ref) {
   return (
     <DialogPrimitive.Title
@@ -805,8 +469,8 @@ export const DialogTitle = forwardRef<
 });
 
 export const DialogDescription = forwardRef<
-  ElementRef<typeof DialogPrimitive.Description>,
-  ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+  HTMLParagraphElement,
+  DialogPrimitive.Description.Props
 >(function DialogDescription({ className, ...props }, ref) {
   return (
     <DialogPrimitive.Description
@@ -866,33 +530,30 @@ export function Progress({
   className,
   value,
   max = 100,
-  style,
   ...props
-}: ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> & {
+}: Omit<ProgressPrimitive.Root.Props, "style" | "value"> & {
   value: number;
   max?: number;
 }) {
   const boundedMax = max > 0 ? max : 100;
   const boundedValue = Math.min(Math.max(value, 0), boundedMax);
-  const percentage = (boundedValue / boundedMax) * 100;
-
   return (
     <ProgressPrimitive.Root
       data-slot="progress"
       value={boundedValue}
       max={boundedMax}
-      className={cn(
-        "bg-primary/20 relative h-2 w-full overflow-hidden rounded-full",
-        className
-      )}
-      style={style}
+      className={cn("relative w-full", className)}
       {...props}
     >
-      <ProgressPrimitive.Indicator
-        data-slot="progress-indicator"
-        className="h-full w-full flex-1 bg-primary transition-all"
-        style={{ transform: `translateX(-${100 - percentage}%)` }}
-      />
+      <ProgressPrimitive.Track
+        data-slot="progress-track"
+        className="bg-primary/20 relative h-2 w-full overflow-hidden rounded-full"
+      >
+        <ProgressPrimitive.Indicator
+          data-slot="progress-indicator"
+          className="h-full bg-primary transition-all"
+        />
+      </ProgressPrimitive.Track>
     </ProgressPrimitive.Root>
   );
 }
@@ -1266,6 +927,8 @@ export function EmployeeLegend({ className, ...props }: EmployeeLegendProps) {
 export function EmployeeAutocompleteListbox({
   anchor,
   open,
+  onOpenChange,
+  onValueChange,
   listboxId,
   className,
   children,
@@ -1274,6 +937,8 @@ export function EmployeeAutocompleteListbox({
     <SearchableAutocompleteListbox
       anchor={anchor}
       open={open}
+      onOpenChange={onOpenChange}
+      onValueChange={onValueChange}
       listboxId={listboxId}
       className={className}
       slotPrefix="employee"
@@ -1286,29 +951,28 @@ export function EmployeeAutocompleteListbox({
 export interface EmployeeAutocompleteListboxProps {
   anchor: ReactElement;
   open: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onValueChange?: (value: string | null) => void;
   listboxId: string;
   className?: string;
   children: ReactNode;
 }
 
-export interface EmployeeAutocompleteOptionProps extends ComponentPropsWithoutRef<"button"> {
-  highlighted?: boolean;
+export interface EmployeeAutocompleteOptionProps extends Omit<
+  ComponentPropsWithoutRef<"div">,
+  "style"
+> {
+  value: string;
 }
 
 export function EmployeeAutocompleteOption({
   className,
-  highlighted = false,
-  type = "button",
-  tabIndex = -1,
   ...props
 }: EmployeeAutocompleteOptionProps) {
   return (
     <SearchableAutocompleteOption
       className={className}
-      highlighted={highlighted}
       slotPrefix="employee"
-      type={type}
-      tabIndex={tabIndex}
       {...props}
     />
   );

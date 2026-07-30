@@ -4,14 +4,7 @@
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   EmployeeAutocompleteListbox as AutocompleteListbox,
   EmployeeAutocompleteOption as AutocompleteOption,
@@ -48,6 +41,18 @@ const idleSuggestionRequestState: SuggestionRequestState = {
   hasResolved: false,
 };
 
+function localitySuggestionValue(suggestion: AddressLocalitySuggestion) {
+  return JSON.stringify([suggestion.postal_code, suggestion.locality]);
+}
+
+function streetSuggestionValue(suggestion: AddressStreetSuggestion) {
+  return JSON.stringify([
+    suggestion.name,
+    suggestion.postal_code,
+    suggestion.locality,
+  ]);
+}
+
 export function EmployeeAddressFields({
   draft,
   onChange,
@@ -83,10 +88,6 @@ export function EmployeeAddressFields({
 
   /** Delayed blur must not wipe focus when TAB moves between autocomplete fields. */
   const blurHideSuggestionsTimeoutRef = useRef<number | null>(null);
-
-  /** Keyboard highlight within open suggestion list (-1 = none). */
-  const [streetHighlightIndex, setStreetHighlightIndex] = useState(-1);
-  const [localityHighlightIndex, setLocalityHighlightIndex] = useState(-1);
 
   const normalizedCountry = draft.country.trim().toUpperCase();
   const autocompleteEnabled =
@@ -160,7 +161,6 @@ export function EmployeeAddressFields({
     ) {
       const timeoutId = window.setTimeout(() => {
         setStreetSuggestions([]);
-        setStreetHighlightIndex(-1);
         setStreetRequestState(idleSuggestionRequestState);
       }, 0);
 
@@ -188,7 +188,6 @@ export function EmployeeAddressFields({
           }
 
           setStreetSuggestions(result);
-          setStreetHighlightIndex(-1);
           setStreetRequestState({
             loading: false,
             error: null,
@@ -201,7 +200,6 @@ export function EmployeeAddressFields({
           }
 
           setStreetSuggestions([]);
-          setStreetHighlightIndex(-1);
           setStreetRequestState({
             loading: false,
             error: getAutocompleteErrorMessage(error),
@@ -234,7 +232,6 @@ export function EmployeeAddressFields({
     ) {
       const timeoutId = window.setTimeout(() => {
         setLocalitySuggestions([]);
-        setLocalityHighlightIndex(-1);
         setLocalityRequestState(idleSuggestionRequestState);
       }, 0);
 
@@ -261,7 +258,6 @@ export function EmployeeAddressFields({
           }
 
           setLocalitySuggestions(result);
-          setLocalityHighlightIndex(-1);
           setLocalityRequestState({
             loading: false,
             error: null,
@@ -274,7 +270,6 @@ export function EmployeeAddressFields({
           }
 
           setLocalitySuggestions([]);
-          setLocalityHighlightIndex(-1);
           setLocalityRequestState({
             loading: false,
             error: getAutocompleteErrorMessage(error),
@@ -303,11 +298,6 @@ export function EmployeeAddressFields({
     };
   }, []);
 
-  function resetSuggestionHighlights() {
-    setStreetHighlightIndex(-1);
-    setLocalityHighlightIndex(-1);
-  }
-
   function cancelScheduledBlurHideSuggestions() {
     if (blurHideSuggestionsTimeoutRef.current !== null) {
       window.clearTimeout(blurHideSuggestionsTimeoutRef.current);
@@ -328,7 +318,6 @@ export function EmployeeAddressFields({
     field: "postalCode" | "city" | "street"
   ): void {
     cancelScheduledBlurHideSuggestions();
-    resetSuggestionHighlights();
     setFocusedField(field);
   }
 
@@ -339,7 +328,6 @@ export function EmployeeAddressFields({
       if (focusIsOnAutocompleteInput()) {
         return;
       }
-      resetSuggestionHighlights();
       setFocusedField(null);
     }, 100);
   }
@@ -400,14 +388,12 @@ export function EmployeeAddressFields({
     onChange("street", suggestion.name);
     onChange("postalCode", suggestion.postal_code);
     onChange("city", suggestion.locality);
-    resetSuggestionHighlights();
     setFocusedField(null);
   }
 
   function selectLocalitySuggestion(suggestion: AddressLocalitySuggestion) {
     onChange("postalCode", suggestion.postal_code);
     onChange("city", suggestion.locality);
-    resetSuggestionHighlights();
     setFocusedField(null);
   }
 
@@ -451,119 +437,6 @@ export function EmployeeAddressFields({
     });
   }
 
-  function handleStreetSuggestionKeyDown(
-    event: KeyboardEvent<HTMLInputElement>
-  ) {
-    if (
-      !showStreetSuggestions ||
-      streetSuggestions.length === 0 ||
-      streetRequestState.loading
-    ) {
-      return;
-    }
-
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      setStreetHighlightIndex((prev) =>
-        prev < streetSuggestions.length - 1 ? prev + 1 : prev
-      );
-      return;
-    }
-
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      setStreetHighlightIndex((prev) => (prev <= 0 ? -1 : prev - 1));
-      return;
-    }
-
-    if (event.key === "Enter") {
-      const pick =
-        streetHighlightIndex >= 0
-          ? streetSuggestions[streetHighlightIndex]
-          : undefined;
-      if (pick) {
-        event.preventDefault();
-        selectStreetSuggestion(pick);
-        focusNextFieldAfterStreetSelect();
-        return;
-      }
-      event.preventDefault();
-      return;
-    }
-
-    if (event.key === "Tab" && !event.shiftKey && streetHighlightIndex >= 0) {
-      const pick = streetSuggestions[streetHighlightIndex];
-      if (pick) {
-        event.preventDefault();
-        selectStreetSuggestion(pick);
-        focusNextFieldAfterStreetSelect();
-      }
-    }
-
-    if (event.key === "Escape") {
-      event.preventDefault();
-      setStreetHighlightIndex(-1);
-      setFocusedField(null);
-    }
-  }
-
-  function handleLocalitySuggestionKeyDown(
-    event: KeyboardEvent<HTMLInputElement>,
-    listActive: boolean
-  ) {
-    if (
-      !listActive ||
-      localitySuggestions.length === 0 ||
-      localityRequestState.loading
-    ) {
-      return;
-    }
-
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      setLocalityHighlightIndex((prev) =>
-        prev < localitySuggestions.length - 1 ? prev + 1 : prev
-      );
-      return;
-    }
-
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      setLocalityHighlightIndex((prev) => (prev <= 0 ? -1 : prev - 1));
-      return;
-    }
-
-    if (event.key === "Enter") {
-      const pick =
-        localityHighlightIndex >= 0
-          ? localitySuggestions[localityHighlightIndex]
-          : undefined;
-      if (pick) {
-        event.preventDefault();
-        selectLocalitySuggestion(pick);
-        focusNextFieldAfterLocalitySelect();
-        return;
-      }
-      event.preventDefault();
-      return;
-    }
-
-    if (event.key === "Tab" && !event.shiftKey && localityHighlightIndex >= 0) {
-      const pick = localitySuggestions[localityHighlightIndex];
-      if (pick) {
-        event.preventDefault();
-        selectLocalitySuggestion(pick);
-        focusNextFieldAfterLocalitySelect();
-      }
-    }
-
-    if (event.key === "Escape") {
-      event.preventDefault();
-      setLocalityHighlightIndex(-1);
-      setFocusedField(null);
-    }
-  }
-
   return (
     <>
       <Field>
@@ -572,6 +445,20 @@ export function EmployeeAddressFields({
         </Label>
         <AutocompleteListbox
           open={showPostalSuggestions}
+          onOpenChange={(open) => {
+            if (!open) {
+              setFocusedField(null);
+            }
+          }}
+          onValueChange={(value) => {
+            const suggestion = localitySuggestions.find(
+              (candidate) => localitySuggestionValue(candidate) === value
+            );
+            if (suggestion) {
+              selectLocalitySuggestion(suggestion);
+              focusNextFieldAfterLocalitySelect();
+            }
+          }}
           listboxId={localityListboxId}
           anchor={
             <Input
@@ -584,17 +471,9 @@ export function EmployeeAddressFields({
               aria-autocomplete="list"
               aria-expanded={showPostalSuggestions}
               aria-controls={localityListboxId}
-              aria-activedescendant={
-                showPostalSuggestions && localityHighlightIndex >= 0
-                  ? `${fieldIdPrefix}-locality-option-${localityHighlightIndex}`
-                  : undefined
-              }
               value={draft.postalCode}
               onFocus={() => handleAutocompleteFocus("postalCode")}
               onBlur={handleAutocompleteInputBlur}
-              onKeyDown={(event) =>
-                handleLocalitySuggestionKeyDown(event, showPostalSuggestions)
-              }
               onChange={(event) => {
                 const nextValue = event.target.value;
                 onChange("postalCode", nextValue);
@@ -604,15 +483,10 @@ export function EmployeeAddressFields({
           }
         >
           {showPostalSuggestions
-            ? localitySuggestions.map((suggestion, index) => (
+            ? localitySuggestions.map((suggestion) => (
                 <AutocompleteOption
                   key={`${suggestion.postal_code}-${suggestion.locality}`}
-                  id={`${fieldIdPrefix}-locality-option-${index}`}
-                  highlighted={localityHighlightIndex === index}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    selectLocalitySuggestion(suggestion);
-                  }}
+                  value={localitySuggestionValue(suggestion)}
                 >
                   <span className="block font-medium">
                     {suggestion.postal_code}
@@ -651,6 +525,20 @@ export function EmployeeAddressFields({
         </Label>
         <AutocompleteListbox
           open={showCitySuggestions}
+          onOpenChange={(open) => {
+            if (!open) {
+              setFocusedField(null);
+            }
+          }}
+          onValueChange={(value) => {
+            const suggestion = localitySuggestions.find(
+              (candidate) => localitySuggestionValue(candidate) === value
+            );
+            if (suggestion) {
+              selectLocalitySuggestion(suggestion);
+              focusNextFieldAfterLocalitySelect();
+            }
+          }}
           listboxId={localityListboxId}
           anchor={
             <Input
@@ -663,17 +551,9 @@ export function EmployeeAddressFields({
               aria-autocomplete="list"
               aria-expanded={showCitySuggestions}
               aria-controls={localityListboxId}
-              aria-activedescendant={
-                showCitySuggestions && localityHighlightIndex >= 0
-                  ? `${fieldIdPrefix}-locality-option-${localityHighlightIndex}`
-                  : undefined
-              }
               value={draft.city}
               onFocus={() => handleAutocompleteFocus("city")}
               onBlur={handleAutocompleteInputBlur}
-              onKeyDown={(event) =>
-                handleLocalitySuggestionKeyDown(event, showCitySuggestions)
-              }
               onChange={(event) => {
                 const nextValue = event.target.value;
                 onChange("city", nextValue);
@@ -683,15 +563,10 @@ export function EmployeeAddressFields({
           }
         >
           {showCitySuggestions
-            ? localitySuggestions.map((suggestion, index) => (
+            ? localitySuggestions.map((suggestion) => (
                 <AutocompleteOption
                   key={`${suggestion.locality}-${suggestion.postal_code}`}
-                  id={`${fieldIdPrefix}-locality-option-${index}`}
-                  highlighted={localityHighlightIndex === index}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    selectLocalitySuggestion(suggestion);
-                  }}
+                  value={localitySuggestionValue(suggestion)}
                 >
                   <span className="block font-medium">
                     {suggestion.locality}
@@ -730,6 +605,20 @@ export function EmployeeAddressFields({
         </Label>
         <AutocompleteListbox
           open={showStreetSuggestions}
+          onOpenChange={(open) => {
+            if (!open) {
+              setFocusedField(null);
+            }
+          }}
+          onValueChange={(value) => {
+            const suggestion = streetSuggestions.find(
+              (candidate) => streetSuggestionValue(candidate) === value
+            );
+            if (suggestion) {
+              selectStreetSuggestion(suggestion);
+              focusNextFieldAfterStreetSelect();
+            }
+          }}
           listboxId={streetListboxId}
           anchor={
             <Input
@@ -742,15 +631,9 @@ export function EmployeeAddressFields({
               aria-autocomplete="list"
               aria-expanded={showStreetSuggestions}
               aria-controls={streetListboxId}
-              aria-activedescendant={
-                showStreetSuggestions && streetHighlightIndex >= 0
-                  ? `${fieldIdPrefix}-street-option-${streetHighlightIndex}`
-                  : undefined
-              }
               value={draft.street}
               onFocus={() => handleAutocompleteFocus("street")}
               onBlur={handleAutocompleteInputBlur}
-              onKeyDown={handleStreetSuggestionKeyDown}
               onChange={(event) => {
                 const nextValue = event.target.value;
                 onChange("street", nextValue);
@@ -760,15 +643,10 @@ export function EmployeeAddressFields({
           }
         >
           {showStreetSuggestions
-            ? streetSuggestions.map((suggestion, index) => (
+            ? streetSuggestions.map((suggestion) => (
                 <AutocompleteOption
                   key={`${suggestion.name}-${suggestion.postal_code}-${suggestion.locality}`}
-                  id={`${fieldIdPrefix}-street-option-${index}`}
-                  highlighted={streetHighlightIndex === index}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    selectStreetSuggestion(suggestion);
-                  }}
+                  value={streetSuggestionValue(suggestion)}
                 >
                   <span className="block font-medium">{suggestion.name}</span>
                   <span className="text-muted-foreground block">

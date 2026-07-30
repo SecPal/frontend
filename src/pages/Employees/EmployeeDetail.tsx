@@ -1227,12 +1227,14 @@ export function EmployeeDetail() {
 
       <Dialog
         open={editingContactField !== null}
-        onClose={() => {
-          if (!contactSaveLoading) {
-            setEditingContactField(null);
-            setContactSaveError(null);
-            setContactInvalidField(null);
-            setContactEmergencyInvalidField(null);
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            if (!contactSaveLoading) {
+              setEditingContactField(null);
+              setContactSaveError(null);
+              setContactInvalidField(null);
+              setContactEmergencyInvalidField(null);
+            }
           }
         }}
       >

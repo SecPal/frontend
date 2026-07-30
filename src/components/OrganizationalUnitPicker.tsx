@@ -11,11 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/select";
+import { cn } from "@/lib/utils";
 import type {
   OrganizationalUnit,
   OrganizationalUnitType,
 } from "../types/organizational";
-import { getTypeLabel } from "../lib/organizationalUnitUtils";
+import {
+  getOrganizationalUnitSelectIndentClass,
+  getTypeLabel,
+} from "../lib/organizationalUnitUtils";
 import {
   OrganizationalUnitRootIcon,
   OrganizationalUnitTypeIcon,
@@ -137,6 +141,16 @@ export function OrganizationalUnitPicker({
   return (
     <Select
       value={toSelectValue(value)}
+      items={[
+        {
+          value: ALL_UNITS_SELECT_VALUE,
+          label: allUnitsLabel || t`All Units`,
+        },
+        ...sortedUnits.map((unit) => ({
+          value: unit.id,
+          label: unit.name,
+        })),
+      ]}
       onValueChange={(nextValue) => onChange(fromSelectValue(nextValue))}
       disabled={disabled}
     >
@@ -162,8 +176,10 @@ export function OrganizationalUnitPicker({
         {sortedUnits.map((u) => (
           <SelectItem key={u.id} value={u.id}>
             <span
-              className="flex items-center gap-2"
-              style={{ paddingLeft: `${u.depth * 16}px` }}
+              className={cn(
+                "flex items-center gap-2",
+                getOrganizationalUnitSelectIndentClass(u.depth)
+              )}
             >
               <OrganizationalUnitTypeIcon
                 type={u.type}

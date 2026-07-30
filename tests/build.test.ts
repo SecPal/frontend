@@ -6,6 +6,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { JSDOM } from "jsdom";
 import { describe, it, expect } from "vitest";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -204,6 +205,37 @@ describe("Build Configuration and Source Verification", () => {
       expect(readFileSync(path.join(distRoot, "index.html"), "utf8")).toContain(
         'src="/custom/'
       );
+      const builtHtml = readFileSync(path.join(distRoot, "index.html"), "utf8");
+      const document = new JSDOM(builtHtml).window.document;
+      const csp = document.querySelector(
+        'meta[http-equiv="Content-Security-Policy"]'
+      );
+
+      expect(csp).not.toBeNull();
+      expect(
+        csp!.compareDocumentPosition(document.querySelector("script")!)
+      ).toBe(document.defaultView!.Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(csp!.getAttribute("content")).toBe(
+        "default-src 'self'; base-uri 'self'; connect-src 'self' https:; font-src 'self' data:; form-action 'self'; frame-src 'none'; img-src 'self' data: blob:; manifest-src 'self'; media-src 'self'; object-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-elem 'self'; style-src-attr 'none'; worker-src 'self'"
+      );
+      expect(document.querySelectorAll("style")).toHaveLength(0);
+      expect(
+        [...document.querySelectorAll("script")].every(
+          (script) => script.src && script.textContent?.trim() === ""
+        )
+      ).toBe(true);
+      expect(
+        [...document.querySelectorAll("*")].flatMap((element) =>
+          [...element.attributes].filter((attribute) =>
+            /^on/iu.test(attribute.name)
+          )
+        )
+      ).toHaveLength(0);
+      expect(builtHtml).not.toMatch(
+        /nonce=|csp-nonce|<!--#|unsafe-inline|unsafe-eval|unsafe-hashes/iu
+      );
+      expect(document.querySelector('link[rel="stylesheet"]')).not.toBeNull();
+      expect(document.querySelector("script[src]")).not.toBeNull();
 
       const referencedNotificationIcons = [
         "src/hooks/useNotifications.ts",
@@ -227,6 +259,67 @@ describe("Build Configuration and Source Verification", () => {
     // This covers the full release build path (typecheck, Vite/PWA build, and
     // SBOM generation). It can exceed 60 seconds under full-suite load, so
     // retain a load-tolerant timeout without changing lightweight test defaults.
+  }, 120_000);
+
+  it("emits the strict CSP artifact contract for the Android surface", () => {
+    const distRoot = mkdtempSync(path.join(tmpdir(), "secpal-android-output-"));
+    const safeEnv = {
+      ...process.env,
+      VITE_APP_SURFACE: "android-native",
+    };
+    delete safeEnv.NODE_V8_COVERAGE;
+
+    try {
+      execFileSync(
+        "npm",
+        ["run", "build:android", "--", "--outDir", distRoot],
+        {
+          cwd: repoRoot,
+          stdio: "pipe",
+          env: safeEnv,
+        }
+      );
+
+      const builtHtml = readFileSync(path.join(distRoot, "index.html"), "utf8");
+      const document = new JSDOM(builtHtml).window.document;
+      const csp = document.querySelector(
+        'meta[http-equiv="Content-Security-Policy"]'
+      );
+
+      expect(csp?.getAttribute("content")).toBe(
+        "default-src 'self'; base-uri 'self'; connect-src 'self' https:; font-src 'self' data:; form-action 'self'; frame-src 'none'; img-src 'self' data: blob:; manifest-src 'self'; media-src 'self'; object-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-elem 'self'; style-src-attr 'none'; worker-src 'self'"
+      );
+      expect(document.querySelectorAll("style")).toHaveLength(0);
+      expect(
+        [...document.querySelectorAll("script")].every(
+          (script) => script.src && script.textContent?.trim() === ""
+        )
+      ).toBe(true);
+      expect(
+        [...document.querySelectorAll("*")].flatMap((element) =>
+          [...element.attributes].filter((attribute) =>
+            /^on/iu.test(attribute.name)
+          )
+        )
+      ).toHaveLength(0);
+      expect(builtHtml).not.toMatch(
+        /nonce=|csp-nonce|<!--#|unsafe-inline|unsafe-eval|unsafe-hashes/iu
+      );
+      expect(document.querySelector('link[rel="stylesheet"]')).not.toBeNull();
+      expect(document.querySelector("script[src]")).not.toBeNull();
+      expect(existsSync(path.join(distRoot, "sw.js"))).toBe(true);
+      expect(existsSync(path.join(distRoot, "dependencies.spdx.json"))).toBe(
+        true
+      );
+      expect(
+        existsSync(path.join(distRoot, "THIRD-PARTY-DEPENDENCY-NOTICES.md"))
+      ).toBe(true);
+      expect(existsSync(path.join(distRoot, "THIRD-PARTY-NOTICES.md"))).toBe(
+        true
+      );
+    } finally {
+      rmSync(distRoot, { recursive: true, force: true });
+    }
   }, 120_000);
 
   it("keeps timeout-minutes only on runnable quality workflow jobs", () => {
@@ -385,8 +478,8 @@ describe("Build Configuration and Source Verification", () => {
     expect(readme).toContain("Service Worker");
     expect(readme).toContain("Workbox");
     expect(readme).toContain("src/ui");
-    expect(readme).toContain("shadcn-compatible");
-    expect(readme).toContain("Radix");
+    expect(readme).toContain("shadcn/Base UI");
+    expect(readme).toContain("base-vega");
     expect(readme).toContain("lucide-react");
     expect(readme).toContain("Do not introduce visual rebuilds");
     expect(readme).toContain("npm run dev:android:mock");
@@ -637,10 +730,9 @@ describe("Build Configuration and Source Verification", () => {
     expect(htaccess).toContain("manifest-src 'self'");
     expect(htaccess).toContain("connect-src 'self'");
     expect(htaccess).toContain("style-src 'self'");
-    expect(htaccess).toContain("style-src 'self' 'unsafe-inline'");
-    expect(htaccess).toContain("style-src-elem 'self' 'unsafe-inline'");
-    expect(htaccess).not.toContain("nonce-%{csp_nonce}e");
-    expect(htaccess).not.toContain("UNIQUE_ID");
+    expect(htaccess).toContain("style-src-elem 'self'");
+    expect(htaccess).toContain("style-src-attr 'none'");
+    expect(htaccess).not.toMatch(/unsafe-|nonce-|csp_nonce|UNIQUE_ID/u);
 
     expect(nginxConfig).toContain("default-src 'self'");
     expect(nginxConfig).toContain("script-src 'self'");
@@ -650,13 +742,10 @@ describe("Build Configuration and Source Verification", () => {
     expect(nginxConfig).toContain("manifest-src 'self'");
     expect(nginxConfig).toContain("connect-src 'self'");
     expect(nginxConfig).toContain("style-src 'self'");
-    expect(nginxConfig).toContain("style-src-elem 'self' 'nonce-$csp_nonce'");
-    expect(nginxConfig).not.toContain("style-src 'self' 'unsafe-inline'");
-    expect(viteConfig).toContain("html: {");
-    expect(viteConfig).toContain("cspNonce: cspNonceSsiPlaceholder");
-    expect(viteConfig).toContain(
-      "<!--#echo var='csp_nonce' encoding='none' -->"
-    );
+    expect(nginxConfig).toContain("style-src-elem 'self'");
+    expect(nginxConfig).toContain("style-src-attr 'none'");
+    expect(nginxConfig).not.toMatch(/unsafe-|nonce-|csp_nonce|\bssi\b/u);
+    expect(viteConfig).not.toMatch(/cspNonce|nonce-|#echo|\bssi\b/u);
     expect(viteConfig).toContain(
       'globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2,md}"]'
     );
@@ -664,12 +753,11 @@ describe("Build Configuration and Source Verification", () => {
       'globIgnores: ["**/*.html", "theme-color.js", "document-language.js"]'
     );
     expect(viteConfig).toContain("navigateFallback: null");
-    expect(viteConfig).toContain("nonceBearingHtmlShellPattern");
-    expect(viteConfig).toContain("manifestTransforms");
+    expect(viteConfig).toContain("injectRegister: false");
     expect(viteConfig).not.toContain("js,css,html,ico");
   });
 
-  it("does not precache nonce-bearing HTML shells", () => {
+  it("keeps HTML shells network-first and outside precache", () => {
     const serviceWorker = readRepoFile("src/sw.ts");
     const viteConfig = readRepoFile("vite.config.ts");
 
@@ -722,12 +810,13 @@ describe("Build Configuration and Source Verification", () => {
     expect(themeColorJs).not.toContain("(?:\\?.*)?$");
   });
 
-  it("reads CSP nonces from emitted script/link tags instead of a custom meta carrier", () => {
-    const nonceHelper = readRepoFile("src/lib/cspNonce.tsx");
+  it("configures Base UI centrally without a nonce carrier", () => {
+    const main = readRepoFile("src/main.tsx");
+    const indexHtml = readRepoFile("index.html");
 
-    expect(nonceHelper).toContain("script[nonce]");
-    expect(nonceHelper).toContain('link[rel="stylesheet"][nonce]');
-    expect(nonceHelper).not.toContain('property="csp-nonce"');
+    expect(main).toContain("<CSPProvider disableStyleElements>");
+    expect(indexHtml).toContain('http-equiv="Content-Security-Policy"');
+    expect(`${main}\n${indexHtml}`).not.toMatch(/nonce-|cspNonce|#echo/u);
   });
 
   it("adds dedicated delivery rules for service worker and manifest files", () => {

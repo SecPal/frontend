@@ -39,6 +39,7 @@ import {
   EmployeePageTitle as PageTitle,
 } from "@/ui";
 import { EmployeeStatusSelectItems } from "./EmployeeStatusOptions";
+import { useEmployeeStatusSelectItems } from "./useEmployeeStatusSelectItems";
 import { EmployeeAddressFields } from "./EmployeeAddressFields";
 import {
   buildCreateAddressPayload,
@@ -76,6 +77,7 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  */
 export function EmployeeCreate() {
   const { i18n } = useLingui();
+  const employeeStatusItems = useEmployeeStatusSelectItems();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   // Display values for date inputs
@@ -724,6 +726,7 @@ export function EmployeeCreate() {
                       <Trans>Status</Trans> *
                     </FieldLabel>
                     <Select
+                      items={employeeStatusItems}
                       value={formData.status}
                       onValueChange={(value) =>
                         handleStatusChange(value as EmployeeStatus)

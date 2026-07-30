@@ -212,7 +212,7 @@ describe("admin migration boundary", () => {
     // REUSE-IgnoreEnd
   });
 
-  it("keeps scoped admin and employee sources on the shadcn/radix UI layer", () => {
+  it("keeps scoped admin and employee sources on the shadcn/Base UI layer", () => {
     expect(collectAdminMigrationViolations(readScopedSources())).toEqual([]);
   });
 });

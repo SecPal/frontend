@@ -84,7 +84,7 @@ Every release build also emits that inventory as
 `dist/dependencies.spdx.json` in SPDX 2.3 format.
 
 This inventory includes build dependencies such as `tailwindcss` and
-`@tailwindcss/vite`, as well as runtime dependencies such as React, Radix UI,
+`@tailwindcss/vite`, as well as runtime dependencies such as React, Base UI,
 and Lucide. Their package licenses remain independent from the shadcn copied-
 source provenance recorded above.
 

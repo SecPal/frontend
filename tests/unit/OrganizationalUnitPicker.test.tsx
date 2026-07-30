@@ -24,7 +24,7 @@ function openOrganizationalUnitPicker() {
   fireEvent.click(trigger);
 }
 
-function selectRadixOption(option: HTMLElement) {
+function selectPickerOption(option: HTMLElement) {
   fireEvent.pointerDown(option);
   fireEvent.pointerUp(option);
   fireEvent.click(option);
@@ -137,7 +137,7 @@ describe("OrganizationalUnitPicker", () => {
     const germanyOption = screen.getByRole("option", {
       name: /Germany Branch/i,
     });
-    selectRadixOption(germanyOption);
+    selectPickerOption(germanyOption);
 
     expect(onChange).toHaveBeenCalledWith("unit-2");
   });

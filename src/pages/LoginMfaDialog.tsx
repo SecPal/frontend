@@ -3,7 +3,6 @@
 
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
-import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
 import type { FormEvent } from "react";
 import type { MfaChallenge, MfaVerificationMethod } from "@/types/api";
 import { useLingui } from "@lingui/react";
@@ -105,7 +104,7 @@ export default function LoginMfaDialog({
                   onChange={onChangeCode}
                   length={RECOVERY_CODE_LENGTH}
                   groups={[4, 4]}
-                  pattern={REGEXP_ONLY_DIGITS_AND_CHARS}
+                  validationType="alphanumeric"
                   inputMode="text"
                   textTransform="uppercase"
                   disabled={isVerifyingMfa}

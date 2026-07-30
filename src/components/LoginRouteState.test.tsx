@@ -91,7 +91,7 @@ describe("LoginRouteState", () => {
       screen.queryByRole("link", { name: /agpl v3\+/i })
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("menuitem", { name: /source code/i })
+      await screen.findByRole("menuitem", { name: /source code/i })
     ).toHaveAttribute("href", "/source");
   });
 

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -149,8 +149,8 @@ describe("auth login shadcn primitives", () => {
       "border-input",
       "bg-background",
       "text-foreground",
-      "data-[active]:border-ring",
-      "data-[active]:ring-ring/50"
+      "focus:border-ring",
+      "focus:ring-ring/50"
     );
     expect(otpSeparator).toHaveClass("text-muted-foreground");
     expect(empty).toHaveClass("border-border");
@@ -277,7 +277,7 @@ describe("auth login shadcn primitives", () => {
     );
   });
 
-  it("renders the MFA dialog with shadcn Radix dialog semantics", async () => {
+  it("renders the MFA dialog with shadcn/Base UI dialog semantics", async () => {
     const handleClose = vi.fn();
     const user = userEvent.setup();
 
@@ -307,9 +307,9 @@ describe("auth login shadcn primitives", () => {
     expect(dialog).toHaveAccessibleDescription(
       "Complete MFA to finish signing in."
     );
-    expect(dialog).toHaveAttribute("data-state", "open");
+    expect(dialog).toHaveAttribute("data-open", "");
     expect(backgroundButton.closest('[aria-hidden="true"]')).not.toBeNull();
-    expect(cancelButton).toHaveFocus();
+    await waitFor(() => expect(cancelButton).toHaveFocus());
     // Responsive: the dialog must cap its height to the visible viewport and
     // scroll its body when content overflows (e.g. landscape mobile), so the
     // OTP entry and action buttons remain reachable.
@@ -325,10 +325,10 @@ describe("auth login shadcn primitives", () => {
     expect(verifyButton).toHaveFocus();
 
     await user.tab();
-    expect(cancelButton).toHaveFocus();
+    await waitFor(() => expect(cancelButton).toHaveFocus());
 
     await user.tab({ shift: true });
-    expect(verifyButton).toHaveFocus();
+    await waitFor(() => expect(verifyButton).toHaveFocus());
 
     fireEvent.keyDown(document, { key: "Escape" });
 
@@ -390,25 +390,27 @@ describe("auth login shadcn primitives", () => {
       />
     );
 
-    const otpInput = screen.getByLabelText("Authenticator code");
+    const otpInput = container.querySelector<HTMLInputElement>(
+      '[data-slot="login-input-otp-slot"]'
+    )!;
     expect(otpInput).toHaveAttribute("id", "auth-otp");
     expect(otpInput).toHaveAttribute("inputmode", "numeric");
     expect(otpInput).toHaveAttribute("autocomplete", "one-time-code");
-    expect(otpInput).toHaveValue("12");
+    expect(otpInput).toHaveValue("1");
 
     const slots = container.querySelectorAll(
       '[data-slot="login-input-otp-slot"]'
     );
     expect(slots).toHaveLength(6);
-    expect(slots[0]).toHaveTextContent("1");
-    expect(slots[1]).toHaveTextContent("2");
+    expect(slots[0]).toHaveValue("1");
+    expect(slots[1]).toHaveValue("2");
 
     fireEvent.change(otpInput, { target: { value: "654321" } });
     expect(handleChange).toHaveBeenCalledWith("654321");
 
     handleChange.mockClear();
     fireEvent.change(otpInput, { target: { value: "12a 34-56" } });
-    expect(handleChange).not.toHaveBeenCalled();
+    expect(handleChange).toHaveBeenCalledWith("123456");
   });
 
   it("supports alphanumeric input with split groups, separator and uppercase normalization (recovery-code shape)", () => {
@@ -421,14 +423,16 @@ describe("auth login shadcn primitives", () => {
         onChange={handleChange}
         length={8}
         groups={[4, 4]}
-        pattern="^[a-zA-Z0-9]+$"
+        validationType="alphanumeric"
         inputMode="text"
         textTransform="uppercase"
         aria-label="Recovery code"
       />
     );
 
-    const recoveryInput = screen.getByLabelText("Recovery code");
+    const recoveryInput = container.querySelector<HTMLInputElement>(
+      '[data-slot="login-input-otp-slot"]'
+    )!;
     expect(recoveryInput).toHaveAttribute("inputmode", "text");
     expect(recoveryInput).toHaveAttribute("maxlength", "8");
     expect(recoveryInput).toHaveAttribute("autocomplete", "off");
@@ -459,11 +463,11 @@ describe("auth login shadcn primitives", () => {
     fireEvent.change(recoveryInput, { target: { value: "b6f42q8p" } });
     expect(handleChange).toHaveBeenCalledWith("B6F42Q8P");
 
-    // Characters outside the alphanumeric pattern are rejected by input-otp's
-    // built-in regex validation.
+    // Formatting separators are normalized before Base UI validates each
+    // alphanumeric position.
     handleChange.mockClear();
     fireEvent.change(recoveryInput, { target: { value: "b6f4-2q8" } });
-    expect(handleChange).not.toHaveBeenCalled();
+    expect(handleChange).toHaveBeenCalledWith("B6F42Q8");
   });
 
   it("strips whitespace/hyphen/underscore from pasted codes before validation", () => {
@@ -483,7 +487,9 @@ describe("auth login shadcn primitives", () => {
       />
     );
 
-    const input = screen.getByLabelText("Authenticator code");
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-slot="login-input-otp-slot"]'
+    )!;
 
     // input-otp dispatches via `onPaste`; simulate the user pasting a
     // formatted code and check the transformed value reaches `onChange`.
@@ -508,14 +514,16 @@ describe("auth login shadcn primitives", () => {
         onChange={handleChange}
         length={8}
         groups={[4, 4]}
-        pattern="^[a-zA-Z0-9]+$"
+        validationType="alphanumeric"
         inputMode="text"
         textTransform="uppercase"
         aria-label="Recovery code"
       />
     );
 
-    const input = screen.getByLabelText("Recovery code");
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-slot="login-input-otp-slot"]'
+    )!;
 
     fireEvent.paste(input, {
       clipboardData: {
@@ -548,7 +556,9 @@ describe("auth login shadcn primitives", () => {
       />
     );
 
-    const input = screen.getByLabelText("Authenticator code");
+    const input = container.querySelector<HTMLInputElement>(
+      '[data-slot="login-input-otp-slot"]'
+    )!;
     const wrapper = container.querySelector("[data-input-otp-container]");
     expect(wrapper).not.toBeNull();
 

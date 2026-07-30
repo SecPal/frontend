@@ -58,10 +58,9 @@ function createMatchMediaStub(initialMatches: boolean) {
 describe("system color scheme sync", () => {
   afterEach(() => {
     document.documentElement.classList.remove("dark");
-    document.documentElement.style.colorScheme = "";
   });
 
-  it("applies the dark class and color-scheme when the system prefers dark mode", () => {
+  it("applies the dark class when the system prefers dark mode", () => {
     const matchMediaStub = createMatchMediaStub(true);
     const cleanup = installSystemColorSchemeSync({
       document: window.document,
@@ -69,7 +68,6 @@ describe("system color scheme sync", () => {
     });
 
     expect(document.documentElement).toHaveClass("dark");
-    expect(document.documentElement.style.colorScheme).toBe("dark");
 
     cleanup();
   });
@@ -82,15 +80,12 @@ describe("system color scheme sync", () => {
     });
 
     expect(document.documentElement).not.toHaveClass("dark");
-    expect(document.documentElement.style.colorScheme).toBe("light");
 
     matchMediaStub.emit(true);
     expect(document.documentElement).toHaveClass("dark");
-    expect(document.documentElement.style.colorScheme).toBe("dark");
 
     matchMediaStub.emit(false);
     expect(document.documentElement).not.toHaveClass("dark");
-    expect(document.documentElement.style.colorScheme).toBe("light");
 
     cleanup();
   });
@@ -104,7 +99,6 @@ describe("system color scheme sync", () => {
     });
 
     expect(document.documentElement).toHaveClass("dark");
-    expect(document.documentElement.style.colorScheme).toBe("dark");
     expect(matchMediaStub.listenerCount()).toBe(0);
   });
 

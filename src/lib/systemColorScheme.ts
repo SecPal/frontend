@@ -8,7 +8,6 @@ export function applySystemColorSchemeClass(
   isDarkMode: boolean
 ): void {
   rootElement.classList.toggle("dark", isDarkMode);
-  rootElement.style.colorScheme = isDarkMode ? "dark" : "light";
 }
 
 export function syncSystemColorScheme(

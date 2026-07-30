@@ -406,7 +406,7 @@ msgstr "HR will still require these documents for the Bewacherregister registrat
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
-#: src/pages/Employees/EmployeeStatusOptions.tsx
+#: src/pages/Employees/useEmployeeStatusSelectItems.ts
 msgid "On Leave"
 msgstr "On Leave"
 
@@ -1442,7 +1442,7 @@ msgstr "Enter the expiry date if the residence title is limited."
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
-#: src/pages/Employees/EmployeeStatusOptions.tsx
+#: src/pages/Employees/useEmployeeStatusSelectItems.ts
 #: src/pages/Organization/OrganizationPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SitesPage.tsx
@@ -1943,7 +1943,7 @@ msgstr "Select establishment..."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
-#: src/pages/Employees/EmployeeStatusOptions.tsx
+#: src/pages/Employees/useEmployeeStatusSelectItems.ts
 msgid "Applicant"
 msgstr "Applicant"
 
@@ -2048,7 +2048,7 @@ msgstr "Welcome to SecPal"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
-#: src/pages/Employees/EmployeeStatusOptions.tsx
+#: src/pages/Employees/useEmployeeStatusSelectItems.ts
 msgid "Pre-Contract"
 msgstr "Pre-Contract"
 
@@ -2790,7 +2790,7 @@ msgstr "Dismiss notification prompt"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
-#: src/pages/Employees/EmployeeStatusOptions.tsx
+#: src/pages/Employees/useEmployeeStatusSelectItems.ts
 msgid "Terminated"
 msgstr "Terminated"
 

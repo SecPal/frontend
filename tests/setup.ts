@@ -131,9 +131,8 @@ class MockResizeObserver implements ResizeObserver {
 }
 global.ResizeObserver = MockResizeObserver;
 
-// Stubs for Radix UI primitives (Select, etc.) in JSDOM. Radix relies on
-// pointer-capture and scrollIntoView APIs that JSDOM does not implement; without
-// these stubs, opening a Radix Select trigger in tests throws.
+// Floating Base UI interactions rely on pointer-capture and scrollIntoView
+// APIs that JSDOM does not implement.
 if (typeof Element !== "undefined") {
   if (!("hasPointerCapture" in Element.prototype)) {
     Element.prototype.hasPointerCapture = () => false;
@@ -149,21 +148,6 @@ if (typeof Element !== "undefined") {
   }
 }
 
-// Stubs for input-otp in JSDOM. The library schedules timer-driven pointer-
-// reset callbacks that call `document.elementFromPoint(x, y)` (for password-
-// manager-overlay detection) and `window.scrollTo(...)` (when the input
-// nudges itself into view); JSDOM implements neither. Without the stubs
-// `elementFromPoint` surfaces as an "Uncaught TypeError" several seconds
-// after the test that mounted the OTP input, and `scrollTo` floods the
-// console with "Not implemented" warnings.
-if (
-  typeof document !== "undefined" &&
-  typeof document.elementFromPoint !== "function"
-) {
-  (
-    document as Document & { elementFromPoint: () => Element | null }
-  ).elementFromPoint = () => null;
-}
 if (typeof window !== "undefined") {
   // JSDOM's `scrollTo` throws a "Not implemented" diagnostic instead of
   // being a real function; replace it with a no-op so the warning does not

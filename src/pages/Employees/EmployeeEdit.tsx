@@ -34,6 +34,7 @@ import {
   EmployeePageTitle as PageTitle,
 } from "@/ui";
 import { EmployeeStatusSelectItems } from "./EmployeeStatusOptions";
+import { useEmployeeStatusSelectItems } from "./useEmployeeStatusSelectItems";
 import { EmployeeAddressFields } from "./EmployeeAddressFields";
 import {
   employeeAddressToDraft,
@@ -59,6 +60,7 @@ import { EmployeeManagementLevelField } from "./EmployeeManagementLevelField";
  */
 export function EmployeeEdit() {
   const { i18n } = useLingui();
+  const employeeStatusItems = useEmployeeStatusSelectItems();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
@@ -653,7 +655,11 @@ export function EmployeeEdit() {
                       <FieldLabel htmlFor="status">
                         <Trans>Status</Trans>
                       </FieldLabel>
-                      <Select value={formData.status} disabled>
+                      <Select
+                        items={employeeStatusItems}
+                        value={formData.status}
+                        disabled
+                      >
                         <SelectTrigger id="status">
                           <SelectValue />
                         </SelectTrigger>

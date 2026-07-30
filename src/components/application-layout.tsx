@@ -234,14 +234,7 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
   }, [activeLocale, location.pathname, navMain, shortcuts]);
 
   return (
-    <SidebarProvider
-      className="min-h-[var(--app-shell-min-height)]"
-      style={
-        {
-          "--sidebar-width": "18rem",
-        } as React.CSSProperties
-      }
-    >
+    <SidebarProvider className="min-h-[var(--app-shell-min-height)] [--sidebar-width:18rem]">
       <AppSidebar
         navMain={navMain}
         user={{
@@ -259,10 +252,8 @@ export function ApplicationLayout({ children }: { children: React.ReactNode }) {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink asChild>
-                    <PrefetchLink to="/">
-                      <Trans>SecPal</Trans>
-                    </PrefetchLink>
+                  <BreadcrumbLink render={<PrefetchLink to="/" />}>
+                    <Trans>SecPal</Trans>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />

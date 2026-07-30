@@ -86,28 +86,30 @@ export function NavUser({
             open={isMenuOpen}
             onOpenChange={setIsMenuOpen}
           >
-            <DropdownMenuTrigger asChild>
-              <SidebarMenuButton
-                aria-label={t`User menu`}
-                size="lg"
-                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-              >
-                <Avatar className="h-8 w-8 rounded-lg">
-                  {user.avatar ? (
-                    <AvatarImage src={user.avatar} alt={user.name} />
-                  ) : null}
-                  <AvatarFallback className="rounded-lg">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
-                </div>
-              </SidebarMenuButton>
+            <DropdownMenuTrigger
+              render={
+                <SidebarMenuButton
+                  aria-label={t`User menu`}
+                  size="lg"
+                  className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
+                />
+              }
+            >
+              <Avatar className="h-8 w-8 rounded-lg">
+                {user.avatar ? (
+                  <AvatarImage src={user.avatar} alt={user.name} />
+                ) : null}
+                <AvatarFallback className="rounded-lg">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">{user.name}</span>
+                <span className="truncate text-xs">{user.email}</span>
+              </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-              className="w-fit min-w-56 max-w-[min(20rem,var(--radix-dropdown-menu-content-available-width))] rounded-lg"
+              className="w-fit min-w-56 max-w-[min(20rem,var(--available-width))] rounded-lg"
               side={isMobile ? "bottom" : "right"}
               align="end"
               sideOffset={4}
@@ -131,17 +133,24 @@ export function NavUser({
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem asChild>
-                  <PrefetchLink to="/profile" onClick={handleMenuLinkClick}>
-                    <CircleUserRound />
-                    <Trans>My profile</Trans>
-                  </PrefetchLink>
+                <DropdownMenuItem
+                  render={
+                    <PrefetchLink to="/profile" onClick={handleMenuLinkClick} />
+                  }
+                >
+                  <CircleUserRound />
+                  <Trans>My profile</Trans>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <PrefetchLink to="/settings" onClick={handleMenuLinkClick}>
-                    <Settings />
-                    <Trans>Settings</Trans>
-                  </PrefetchLink>
+                <DropdownMenuItem
+                  render={
+                    <PrefetchLink
+                      to="/settings"
+                      onClick={handleMenuLinkClick}
+                    />
+                  }
+                >
+                  <Settings />
+                  <Trans>Settings</Trans>
                 </DropdownMenuItem>
                 {onLock ? (
                   <DropdownMenuItem onClick={() => handleMenuAction(onLock)}>

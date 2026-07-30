@@ -78,7 +78,7 @@ describe("EmployeeAddressFields", () => {
       screen.getByRole("option", { name: /grabstraße/i })
     ).toBeInTheDocument();
 
-    fireEvent.mouseDown(screen.getByRole("option", { name: /grabstraße/i }));
+    fireEvent.click(screen.getByRole("option", { name: /grabstraße/i }));
 
     expect(onChange).toHaveBeenCalledWith("street", "Grabstraße");
     expect(onChange).toHaveBeenCalledWith("postalCode", "13156");
@@ -124,7 +124,7 @@ describe("EmployeeAddressFields", () => {
     });
     expect(screen.getByRole("option", { name: /10115/i })).toBeInTheDocument();
 
-    fireEvent.mouseDown(screen.getByRole("option", { name: /10115/i }));
+    fireEvent.click(screen.getByRole("option", { name: /10115/i }));
 
     expect(onChange).toHaveBeenCalledWith("postalCode", "10115");
     expect(onChange).toHaveBeenCalledWith("city", "Berlin");
@@ -351,7 +351,7 @@ describe("EmployeeAddressFields", () => {
     });
 
     expect(screen.getByRole("option", { name: /köln/i })).toBeInTheDocument();
-    fireEvent.mouseDown(screen.getByRole("option", { name: /köln/i }));
+    fireEvent.click(screen.getByRole("option", { name: /köln/i }));
 
     expect(onChange).toHaveBeenCalledWith("city", "Köln");
     expect(onChange).toHaveBeenCalledWith("postalCode", "50667");
@@ -394,7 +394,7 @@ describe("EmployeeAddressFields", () => {
     expect(onChange).toHaveBeenCalledWith("postalCode", "50667");
   });
 
-  it("selects locality suggestion with Tab when highlighted", async () => {
+  it("requires explicit activation instead of selecting a locality on Tab", async () => {
     const onChange = vi.fn();
     vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
     vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([
@@ -427,7 +427,7 @@ describe("EmployeeAddressFields", () => {
     fireEvent.keyDown(cityInput, { key: "ArrowDown" });
     fireEvent.keyDown(cityInput, { key: "Tab" });
 
-    expect(onChange).toHaveBeenCalledWith("city", "Köln");
+    expect(onChange).not.toHaveBeenCalledWith("city", "Köln");
   });
 
   it("dismisses street suggestions with Escape and closes the popup", async () => {
@@ -543,7 +543,7 @@ describe("EmployeeAddressFields", () => {
     expect(onChange).toHaveBeenCalledWith("street", "Astraße");
   });
 
-  it("selects street suggestion with Tab when highlighted", async () => {
+  it("requires explicit activation instead of selecting a street on Tab", async () => {
     const onChange = vi.fn();
     vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
       { name: "Grabstraße", postal_code: "13156", locality: "Berlin" },
@@ -576,7 +576,7 @@ describe("EmployeeAddressFields", () => {
     fireEvent.keyDown(streetInput, { key: "ArrowDown" });
     fireEvent.keyDown(streetInput, { key: "Tab" });
 
-    expect(onChange).toHaveBeenCalledWith("street", "Grabstraße");
+    expect(onChange).not.toHaveBeenCalledWith("street", "Grabstraße");
   });
 
   it("shows a loading indicator while fetching street suggestions", async () => {
@@ -1159,7 +1159,7 @@ describe("EmployeeAddressFields", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: /country/i }));
-    await user.type(screen.getByRole("searchbox"), "FR");
+    await user.type(await screen.findByPlaceholderText(/search/i), "FR");
     await user.keyboard("{ArrowDown}{Enter}");
 
     expect(onChange).toHaveBeenCalledWith("country", "FR");
@@ -1190,7 +1190,7 @@ describe("EmployeeAddressFields", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: /land/i }));
-    await user.type(screen.getByRole("searchbox"), "zzzzzz");
+    await user.type(await screen.findByPlaceholderText(/suchen/i), "zzzzzz");
 
     expect(screen.getByText(i18n._(msg`No results found`))).toBeInTheDocument();
   });

@@ -352,7 +352,7 @@ describe("legacy UI guardrails", () => {
   it("keeps shadcn project metadata aligned with the canonical UI layer", () => {
     expect(readJsonFile<ShadcnComponentsConfig>("components.json")).toEqual({
       $schema: "https://ui.shadcn.com/schema.json",
-      style: "new-york",
+      style: "base-vega",
       rsc: false,
       tsx: true,
       tailwind: {

@@ -23,13 +23,14 @@ describe("EncryptionProgress", () => {
     const shell = screen.getByRole("status");
     const title = screen.getByText(/encrypting files/i);
     const filename = screen.getByText("evidence.pdf");
-    const track = screen.getByRole("progressbar").parentElement;
-    const bar = screen.getByRole("progressbar");
+    const progressbar = screen.getByRole("progressbar");
+    const track = progressbar.querySelector('[data-slot="progress-track"]');
+    const bar = progressbar.querySelector('[data-slot="progress-indicator"]');
 
     expect(shell).toHaveClass("border-border", "bg-muted");
     expect(title).toHaveClass("text-foreground");
     expect(filename).toHaveClass("text-muted-foreground");
-    expect(track).toHaveClass("bg-accent");
+    expect(track).toHaveClass("bg-primary/20");
     expect(bar).toHaveClass("bg-primary");
     expect(shell.className).not.toContain("bg-blue-100");
 

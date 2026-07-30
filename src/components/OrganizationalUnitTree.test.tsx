@@ -57,29 +57,28 @@ vi.mock("@/ui/dropdown-menu", async () => {
     DropdownMenuTrigger: ({
       children,
       onClick,
-      asChild: asChildProp,
+      render,
       ...props
     }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
       children: React.ReactNode;
-      asChild?: boolean;
+      render?: React.ReactElement<
+        React.ButtonHTMLAttributes<HTMLButtonElement>
+      >;
     }) => {
-      void asChildProp;
       const context = React.useContext(DropdownContext);
       const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         onClick?.(event);
         context?.setOpen((current) => !current);
       };
 
-      if (React.isValidElement(children)) {
-        const child = children as React.ReactElement<
-          React.ButtonHTMLAttributes<HTMLButtonElement>
-        >;
-
-        return React.cloneElement(child, {
+      if (React.isValidElement(render)) {
+        return React.cloneElement(render, {
+          ...props,
           onClick: (event: React.MouseEvent<HTMLButtonElement>) => {
-            child.props.onClick?.(event);
+            render.props.onClick?.(event);
             handleClick(event);
           },
+          children,
         });
       }
 

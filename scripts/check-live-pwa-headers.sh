@@ -108,7 +108,8 @@ assert_common_hardening() {
 
     assert_header_contains "$headers" "Content-Security-Policy" "default-src 'self'"
     assert_header_contains "$headers" "Content-Security-Policy" "style-src 'self'"
-    assert_header_contains "$headers" "Content-Security-Policy" "style-src-elem 'self' 'nonce-"
+    assert_header_contains "$headers" "Content-Security-Policy" "style-src-elem 'self'"
+    assert_header_contains "$headers" "Content-Security-Policy" "style-src-attr 'none'"
     assert_header_contains "$headers" "Permissions-Policy" "camera=()"
     assert_header_contains "$headers" "Strict-Transport-Security" "max-age=63072000"
     assert_header_contains "$headers" "Referrer-Policy" "strict-origin-when-cross-origin"

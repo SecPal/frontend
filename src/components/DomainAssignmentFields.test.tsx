@@ -22,6 +22,23 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
+async function selectBaseUiOption(
+  user: ReturnType<typeof userEvent.setup>,
+  triggerName: RegExp,
+  optionName: string
+) {
+  const trigger = await screen.findByRole("combobox", { name: triggerName });
+  await waitFor(() =>
+    expect(trigger).toHaveAttribute("aria-expanded", "false")
+  );
+  await user.click(trigger);
+  await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "true"));
+  await user.click(await screen.findByRole("option", { name: optionName }));
+  await waitFor(() =>
+    expect(trigger).toHaveAttribute("aria-expanded", "false")
+  );
+}
+
 function Harness({
   customer = true,
   withErrors = false,
@@ -330,12 +347,8 @@ describe("DomainAssignmentFields", () => {
     const user = userEvent.setup();
     render(<Harness customer={false} />);
 
-    await user.click(
-      await screen.findByRole("combobox", { name: /legal entity/i })
-    );
-    await user.click(screen.getByRole("option", { name: "SecPal GmbH" }));
-    await user.click(screen.getByRole("combobox", { name: /legal entity/i }));
-    await user.click(screen.getByRole("option", { name: "Operations GmbH" }));
+    await selectBaseUiOption(user, /legal entity/i, "SecPal GmbH");
+    await selectBaseUiOption(user, /legal entity/i, "Operations GmbH");
     await waitFor(() =>
       expect(domainApi.listEstablishmentLookups).toHaveBeenCalledWith("legal-2")
     );
@@ -362,23 +375,18 @@ describe("DomainAssignmentFields", () => {
     const user = userEvent.setup();
     render(<Harness customer={false} />);
 
-    await user.click(
-      await screen.findByRole("combobox", { name: /legal entity/i })
-    );
-    await user.click(screen.getByRole("option", { name: "SecPal GmbH" }));
+    await selectBaseUiOption(user, /legal entity/i, "SecPal GmbH");
     await user.click(screen.getByRole("combobox", { name: /establishment/i }));
     expect(
       await screen.findByRole("option", { name: "Old Berlin" })
     ).toBeInTheDocument();
     await user.keyboard("{Escape}");
 
-    await user.click(screen.getByRole("combobox", { name: /legal entity/i }));
-    await user.click(screen.getByRole("option", { name: "Operations GmbH" }));
+    await selectBaseUiOption(user, /legal entity/i, "Operations GmbH");
     await waitFor(() =>
       expect(domainApi.listEstablishmentLookups).toHaveBeenCalledWith("legal-2")
     );
-    await user.click(screen.getByRole("combobox", { name: /legal entity/i }));
-    await user.click(screen.getByRole("option", { name: "SecPal GmbH" }));
+    await selectBaseUiOption(user, /legal entity/i, "SecPal GmbH");
 
     expect(
       screen.getByRole("combobox", { name: /establishment/i })
@@ -402,10 +410,7 @@ describe("DomainAssignmentFields", () => {
     const user = userEvent.setup();
     render(<Harness withErrors />);
 
-    await user.click(
-      await screen.findByRole("combobox", { name: /legal entity/i })
-    );
-    await user.click(screen.getByRole("option", { name: "SecPal GmbH" }));
+    await selectBaseUiOption(user, /legal entity/i, "SecPal GmbH");
 
     expect(screen.queryByText("Invalid establishment")).not.toBeInTheDocument();
     expect(screen.queryByText("Invalid customer")).not.toBeInTheDocument();
@@ -413,8 +418,7 @@ describe("DomainAssignmentFields", () => {
       '"establishment_id":"","customer_id":""'
     );
 
-    await user.click(screen.getByRole("combobox", { name: /establishment/i }));
-    await user.click(await screen.findByRole("option", { name: "Berlin" }));
+    await selectBaseUiOption(user, /establishment/i, "Berlin");
     await waitFor(() =>
       expect(domainApi.listCustomerLookups).toHaveBeenCalledWith("est-1")
     );
@@ -432,14 +436,9 @@ describe("DomainAssignmentFields", () => {
     const user = userEvent.setup();
     render(<Harness />);
 
-    await user.click(
-      await screen.findByRole("combobox", { name: /legal entity/i })
-    );
-    await user.click(screen.getByRole("option", { name: "SecPal GmbH" }));
-    await user.click(screen.getByRole("combobox", { name: /establishment/i }));
-    await user.click(await screen.findByRole("option", { name: "Berlin" }));
-    await user.click(screen.getByRole("combobox", { name: /establishment/i }));
-    await user.click(await screen.findByRole("option", { name: "Hamburg" }));
+    await selectBaseUiOption(user, /legal entity/i, "SecPal GmbH");
+    await selectBaseUiOption(user, /establishment/i, "Berlin");
+    await selectBaseUiOption(user, /establishment/i, "Hamburg");
 
     await user.click(screen.getByRole("combobox", { name: /customer/i }));
     expect(
@@ -461,12 +460,8 @@ describe("DomainAssignmentFields", () => {
     const user = userEvent.setup();
     render(<Harness customer={false} required={false} />);
 
-    await user.click(
-      await screen.findByRole("combobox", { name: /legal entity/i })
-    );
-    await user.click(screen.getByRole("option", { name: "SecPal GmbH" }));
-    await user.click(screen.getByRole("combobox", { name: /establishment/i }));
-    await user.click(await screen.findByRole("option", { name: "Berlin" }));
+    await selectBaseUiOption(user, /legal entity/i, "SecPal GmbH");
+    await selectBaseUiOption(user, /establishment/i, "Berlin");
     await user.click(
       screen.getByRole("button", { name: /clear domain filters/i })
     );
@@ -486,12 +481,8 @@ describe("DomainAssignmentFields", () => {
     const user = userEvent.setup();
     render(<Harness fixedCustomerId="customer-1" />);
 
-    await user.click(
-      await screen.findByRole("combobox", { name: /legal entity/i })
-    );
-    await user.click(screen.getByRole("option", { name: "SecPal GmbH" }));
-    await user.click(screen.getByRole("combobox", { name: /establishment/i }));
-    await user.click(await screen.findByRole("option", { name: "Berlin" }));
+    await selectBaseUiOption(user, /legal entity/i, "SecPal GmbH");
+    await selectBaseUiOption(user, /establishment/i, "Berlin");
 
     expect(screen.getByTestId("assignment-value")).toHaveTextContent(
       '"customer_id":"customer-1"'

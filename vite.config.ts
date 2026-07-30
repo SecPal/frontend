@@ -22,8 +22,6 @@ import { thirdPartyDependencyNotices } from "./thirdPartyDependencyNotices";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const { lingui } = resolveLinguiVitePluginExports(linguiVitePlugin);
 const linguiMacroImportPattern = /@lingui\/(?:core|react)\/macro/;
-const cspNonceSsiPlaceholder = "<!--#echo var='csp_nonce' encoding='none' -->";
-const nonceBearingHtmlShellPattern = /\.html$/;
 const linguiMacroBabelPreset = defineRolldownBabelPreset({
   preset: [
     () => ({
@@ -97,23 +95,9 @@ export function buildDevServerProxyConfig(configuredApiBaseUrl?: string): {
 const vendorChunkPackages: Record<string, string[]> = {
   "vendor-react": ["react", "react-dom", "react-router"],
   "vendor-icons": ["lucide-react"],
-  "vendor-ui": [
-    "@radix-ui/react-checkbox",
-    "@radix-ui/react-dialog",
-    "@radix-ui/react-dropdown-menu",
-    "@radix-ui/react-label",
-    "@radix-ui/react-popover",
-    "@radix-ui/react-progress",
-    "@radix-ui/react-radio-group",
-    "@radix-ui/react-select",
-    "@radix-ui/react-switch",
-    "class-variance-authority",
-    "input-otp",
-    "tailwind-merge",
-  ],
+  "vendor-ui": ["@base-ui/react", "class-variance-authority", "tailwind-merge"],
   "vendor-lingui": ["@lingui/core", "@lingui/react"],
   "vendor-db": ["dexie", "dexie-react-hooks", "idb"],
-  "vendor-animation": ["motion"],
   "vendor-monitoring": ["web-vitals"],
   "vendor-utils": ["clsx"],
 };
@@ -158,18 +142,6 @@ export default defineConfig(({ mode, command }) => {
         }
       : undefined,
     plugins: [
-      {
-        name: "strip-vite-csp-meta-carrier",
-        transformIndexHtml: {
-          order: "post",
-          handler(html) {
-            return html.replace(
-              /\s*<meta property="csp-nonce" nonce="[^"]*">\s*/g,
-              "\n"
-            );
-          },
-        },
-      },
       react({}),
       babel({
         presets: [linguiMacroBabelPreset],
@@ -226,18 +198,10 @@ export default defineConfig(({ mode, command }) => {
         injectManifest: {
           globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2,md}"],
           globIgnores: ["**/*.html", "theme-color.js", "document-language.js"],
-          manifestTransforms: [
-            async (entries) => ({
-              manifest: entries.filter(
-                (entry) => !nonceBearingHtmlShellPattern.test(entry.url)
-              ),
-              warnings: [],
-            }),
-          ],
         },
         srcDir: "src",
         filename: "sw.ts",
-        injectRegister: "auto",
+        injectRegister: false,
         includeAssets: [
           "favicon.ico",
           "apple-touch-icon-v7.png",
@@ -304,9 +268,6 @@ export default defineConfig(({ mode, command }) => {
       alias: {
         "@": path.resolve(__dirname, "src"),
       },
-    },
-    html: {
-      cspNonce: cspNonceSsiPlaceholder,
     },
     build: {
       rollupOptions: {

@@ -3,14 +3,14 @@ SPDX-FileCopyrightText: 2026 SecPal Contributors
 SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 -->
 
-# Canonical shadcn/Radix/Lucide Layer
+# Canonical shadcn/Base UI/Lucide Layer
 
 `src/ui` is the canonical app UI layer for production surfaces. It owns the
 common zinc/blue SecPal tokens, rounded `md` controls, focus rings, dark-mode
-classes, Radix-backed interactive primitives, shell composition, Lucide icon
+classes, Base UI-backed interactive primitives, shell composition, Lucide icon
 composition, and the canonical `cn` export from `@/lib/utils`.
 
-The shadcn project metadata lives in `components.json`. It pins the `new-york`
+The shadcn project metadata lives in `components.json`. It pins the `base-vega`
 style, TypeScript React output, Tailwind v4 CSS entry at `src/index.css`, the
 `zinc` base color, Lucide icons, and aliases that route generated or manually
 ported primitives to `@/ui`, `@/components`, `@/lib`, `@/hooks`, and
@@ -42,7 +42,7 @@ compatibility exports that imitate old shell/dropdown names are blocked from
 returning.
 
 Canonical shell primitives such as `Sidebar*`, `Sheet*`, `DropdownMenu*`, and
-`Navbar*` remain in `src/ui` under their shadcn/Radix names. Feature-specific
+`Navbar*` remain in `src/ui` under their shadcn names. Feature-specific
 helpers remain explicit and prefixed so they cannot be confused with canonical
 shared primitives.
 

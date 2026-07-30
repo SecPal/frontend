@@ -77,7 +77,7 @@ import {
   Textarea,
 } from ".";
 
-describe("shared shadcn/radix UI basis", () => {
+describe("shared shadcn/Base UI basis", () => {
   it("restores a saved open sidebar preference below the desktop default breakpoint", () => {
     const matchMedia = vi.fn().mockReturnValue({
       matches: false,
@@ -299,6 +299,9 @@ describe("shared shadcn/radix UI basis", () => {
     expect(screen.getByRole("alert")).toHaveAttribute("data-slot", "alert");
     const card = container.querySelector('[data-slot="card"]');
     const progress = container.querySelector('[data-slot="progress"]');
+    const progressTrack = container.querySelector(
+      '[data-slot="progress-track"]'
+    );
     const avatar = container.querySelector('[data-slot="avatar"]');
     const avatarFallback = container.querySelector(
       '[data-slot="avatar-fallback"]'
@@ -316,7 +319,7 @@ describe("shared shadcn/radix UI basis", () => {
     );
     expect(screen.getByText("Active")).toHaveAttribute("data-slot", "badge");
     expect(progress).toBeInTheDocument();
-    expect(progress).toHaveClass("bg-primary/20");
+    expect(progressTrack).toHaveClass("bg-primary/20");
     expect(avatar).toBeInTheDocument();
     expect(avatar).toHaveClass("rounded-full");
     expect(avatar).toHaveAttribute("data-size", "sm");
@@ -402,6 +405,24 @@ describe("shared shadcn/radix UI basis", () => {
     );
   });
 
+  it("does not submit a containing form when a switch is toggled", async () => {
+    const user = userEvent.setup();
+    const handleSubmit = vi.fn((event: React.FormEvent) =>
+      event.preventDefault()
+    );
+
+    render(
+      <form onSubmit={handleSubmit}>
+        <Switch aria-label="Send invitation" />
+      </form>
+    );
+
+    const toggle = screen.getByRole("switch", { name: "Send invitation" });
+    expect(toggle).toHaveAttribute("type", "button");
+    await user.click(toggle);
+    expect(handleSubmit).not.toHaveBeenCalled();
+  });
+
   it("keeps shared shell primitives on the canonical sidebar theme tokens", () => {
     const { container } = render(
       <SidebarProvider>
@@ -436,8 +457,8 @@ describe("shared shadcn/radix UI basis", () => {
     expect(sidebarMenu).toHaveClass("flex", "w-full", "min-w-0", "flex-col");
     expect(sidebarButton).toHaveClass(
       "hover:bg-sidebar-accent",
-      "data-[active=true]:bg-sidebar-accent",
-      "data-[active=true]:text-sidebar-accent-foreground"
+      "data-active:bg-sidebar-accent",
+      "data-active:text-sidebar-accent-foreground"
     );
 
     expect(sidebar?.className).not.toContain("bg-background");
@@ -604,7 +625,7 @@ describe("shared shadcn/radix UI basis", () => {
     expect(branch.className).not.toContain("text-purple-700");
   });
 
-  it("renders Radix select, checkbox, and radio group primitives", async () => {
+  it("renders Base UI select, checkbox, and radio group primitives", async () => {
     const user = userEvent.setup();
     const handleRadioChange = vi.fn();
     const handleCheckboxChange = vi.fn();
@@ -658,7 +679,7 @@ describe("shared shadcn/radix UI basis", () => {
     expect(handleRadioChange).toHaveBeenCalledWith("recovery");
   });
 
-  it("blurs select triggers after outside pointer dismissal", async () => {
+  it("restores focus to select triggers after outside pointer dismissal", async () => {
     const user = userEvent.setup();
 
     render(
@@ -681,7 +702,8 @@ describe("shared shadcn/radix UI basis", () => {
     fireEvent.click(document.body);
 
     await waitFor(() => {
-      expect(document.activeElement).not.toBe(trigger);
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
+      expect(document.activeElement).toBe(trigger);
     });
   });
 
@@ -717,12 +739,19 @@ describe("shared shadcn/radix UI basis", () => {
     });
   });
 
-  it("renders a Radix dialog with the shared responsive content boundary", async () => {
+  it("renders a Base UI dialog with the shared responsive content boundary", async () => {
     const user = userEvent.setup();
     const handleClose = vi.fn();
 
     render(
-      <Dialog open onClose={handleClose}>
+      <Dialog
+        open
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            handleClose();
+          }
+        }}
+      >
         <DialogPortal>
           <DialogOverlay />
           <DialogContent>

@@ -3,9 +3,9 @@
 
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { CSPProvider } from "@base-ui/react/csp-provider";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { RuntimeStyleCspSupport } from "@/lib/RuntimeStyleCspSupport";
 import {
   Alert,
   AlertDescription,
@@ -136,7 +136,7 @@ describe("onboarding shadcn primitives", () => {
     expect(screen.getByRole("button", { name: "Save draft" })).toBeDisabled();
   });
 
-  it("uses Radix radio semantics and keyboard behavior for single-choice fields", async () => {
+  it("uses Base UI radio semantics and keyboard behavior for single-choice fields", async () => {
     const user = userEvent.setup();
     const handleValueChange = vi.fn();
 
@@ -167,7 +167,7 @@ describe("onboarding shadcn primitives", () => {
         name: "Upload identity document now?",
       })
     ).toBeInTheDocument();
-    expect(yes).toHaveAttribute("data-state", "checked");
+    expect(yes).toHaveAttribute("data-checked", "");
     expect(yes).toBeChecked();
 
     yes.focus();
@@ -180,7 +180,7 @@ describe("onboarding shadcn primitives", () => {
     expect(handleValueChange).toHaveBeenCalledWith("no");
   });
 
-  it("uses Radix select semantics while preserving option-shaped API", async () => {
+  it("uses Base UI select semantics while preserving option-shaped API", async () => {
     const user = userEvent.setup();
     const handleChange = vi.fn();
 
@@ -215,15 +215,12 @@ describe("onboarding shadcn primitives", () => {
     );
   });
 
-  it("passes the CSP nonce through to the onboarding Radix select viewport style", async () => {
+  it("opens the onboarding Base UI select without injecting a style element", async () => {
     const user = userEvent.setup();
-    const nonceCarrier = document.createElement("script");
-    nonceCarrier.setAttribute("nonce", "nonce-onboarding");
-    document.head.appendChild(nonceCarrier);
+    const styleElementCount = document.querySelectorAll("style").length;
 
     render(
-      <>
-        <RuntimeStyleCspSupport />
+      <CSPProvider disableStyleElements>
         <Field>
           <FieldLabel htmlFor="contract-type-csp">Contract type</FieldLabel>
           <Select id="contract-type-csp" defaultValue="">
@@ -231,17 +228,12 @@ describe("onboarding shadcn primitives", () => {
             <option value="contractor">Contractor</option>
           </Select>
         </Field>
-      </>
+      </CSPProvider>
     );
 
     await user.click(screen.getByRole("combobox", { name: "Contract type" }));
 
-    const style = Array.from(document.querySelectorAll("style")).find((node) =>
-      node.textContent?.includes("data-radix-select-viewport")
-    );
-
-    expect(style).toHaveAttribute("nonce", "nonce-onboarding");
-    nonceCarrier.remove();
+    expect(document.querySelectorAll("style")).toHaveLength(styleElementCount);
   });
 
   it("hands the Select onChange callback a React-style synthetic event whose preventDefault and stopPropagation flags stay consistent after they are called", async () => {
@@ -407,9 +399,8 @@ describe("onboarding shadcn primitives", () => {
       "text-popover-foreground"
     );
     expect(selectItem).toHaveClass(
-      "text-foreground",
-      "data-[highlighted]:bg-accent",
-      "data-[highlighted]:text-accent-foreground"
+      "data-highlighted:bg-accent",
+      "data-highlighted:text-accent-foreground"
     );
 
     expect(shell?.className).not.toContain("bg-white");
@@ -419,9 +410,7 @@ describe("onboarding shadcn primitives", () => {
     expect(selectContent?.className).not.toContain("border-zinc-200");
     expect(selectContent?.className).not.toContain("bg-white");
     expect(selectItem?.className).not.toContain("text-zinc-950");
-    expect(selectItem?.className).not.toContain(
-      "data-[highlighted]:bg-zinc-100"
-    );
+    expect(selectItem?.className).not.toContain("data-highlighted:bg-zinc-100");
   });
 
   it("renders badge and progress primitives with accessible state", () => {
@@ -438,7 +427,8 @@ describe("onboarding shadcn primitives", () => {
     ).toHaveAttribute("aria-valuenow", "40");
   });
 
-  it("renders editable autocomplete suggestions in a Radix-backed listbox", () => {
+  it("renders editable autocomplete suggestions in a Base UI-backed listbox", async () => {
+    const user = userEvent.setup();
     render(
       <AutocompleteListbox
         open
@@ -452,10 +442,10 @@ describe("onboarding shadcn primitives", () => {
           />
         }
       >
-        <AutocompleteOption id="street-option-0" highlighted>
+        <AutocompleteOption id="street-option-0" value="main-street">
           Main Street
         </AutocompleteOption>
-        <AutocompleteOption id="street-option-1">
+        <AutocompleteOption id="street-option-1" value="market-street">
           Market Street
         </AutocompleteOption>
       </AutocompleteListbox>
@@ -471,9 +461,10 @@ describe("onboarding shadcn primitives", () => {
       "data-slot",
       "onboarding-autocomplete-listbox"
     );
+    await user.click(screen.getByRole("combobox", { name: "Street" }));
+    await user.keyboard("{ArrowDown}");
     expect(screen.getByRole("option", { name: "Main Street" })).toHaveAttribute(
-      "data-highlighted",
-      ""
+      "data-highlighted"
     );
     expect(screen.getByRole("option", { name: "Main Street" })).toHaveAttribute(
       "id",
@@ -499,13 +490,13 @@ describe("onboarding shadcn primitives", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: "Nationality" }));
-    await user.type(screen.getByRole("searchbox"), "fra");
+    await user.type(await screen.findByPlaceholderText(/search/i), "fra");
     await user.keyboard("{Enter}");
 
     expect(handleValueChange).toHaveBeenCalledWith("fr");
   });
 
-  it("renders searchable select content with canonical shadcn command slots", async () => {
+  it("renders searchable select content with canonical shadcn/Base UI slots", async () => {
     const user = userEvent.setup();
 
     render(
@@ -522,9 +513,14 @@ describe("onboarding shadcn primitives", () => {
 
     await user.click(screen.getByRole("combobox", { name: "Nationality" }));
 
-    expect(document.querySelector('[data-slot="command"]')).toBeInTheDocument();
     expect(
-      screen.getByRole("searchbox", { name: "Search options" })
+      await screen.findByPlaceholderText("Search options")
+    ).toBeInTheDocument();
+    expect(
+      document.querySelector('[data-slot="onboarding-command-popover-content"]')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: "Search options" })
     ).toHaveAttribute("data-slot", "command-input");
     expect(screen.getByRole("listbox")).toHaveAttribute(
       "data-slot",
@@ -536,7 +532,7 @@ describe("onboarding shadcn primitives", () => {
     );
   });
 
-  it("opens the popover and highlights the first option when ArrowDown is pressed on the closed trigger", async () => {
+  it("opens the popover and focuses its search field when ArrowDown is pressed on the closed trigger", async () => {
     const user = userEvent.setup();
 
     render(
@@ -558,10 +554,8 @@ describe("onboarding shadcn primitives", () => {
     await user.keyboard("{ArrowDown}");
 
     expect(trigger).toHaveAttribute("aria-expanded", "true");
-    const options = screen.getAllByRole("option");
-    // First ArrowDown opens the popover and highlights the first option,
-    // matching the visual list order. It must not skip past the first item.
-    expect(options[0]).toHaveAttribute("aria-selected", "true");
+    expect(await screen.findAllByRole("option")).toHaveLength(3);
+    expect(await screen.findByPlaceholderText(/search/i)).toHaveFocus();
   });
 
   it("navigates options with ArrowDown/ArrowUp inside the search box and selects with Enter", async () => {
@@ -582,14 +576,23 @@ describe("onboarding shadcn primitives", () => {
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
 
+    const searchbox = await screen.findByPlaceholderText(/search/i);
     await user.keyboard("{ArrowDown}");
     await user.keyboard("{ArrowDown}");
-    await user.keyboard("{ArrowUp}");
-    expect(screen.getAllByRole("option")[1]).toHaveAttribute(
-      "aria-selected",
-      "true"
+    await waitFor(() =>
+      expect(screen.getAllByRole("option")[1]).toHaveAttribute(
+        "data-highlighted",
+        ""
+      )
     );
 
+    expect(searchbox).toHaveFocus();
+    await user.keyboard("{ArrowUp}");
+    expect(screen.getAllByRole("option")[0]).toHaveAttribute(
+      "data-highlighted",
+      ""
+    );
+    await user.keyboard("{ArrowDown}");
     await user.keyboard("{Enter}");
     expect(handleValueChange).toHaveBeenCalledWith("fr");
   });
@@ -612,20 +615,18 @@ describe("onboarding shadcn primitives", () => {
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
 
-    const searchbox = screen.getByRole("searchbox");
+    const searchbox = await screen.findByPlaceholderText(/search/i);
     const germany = screen.getByRole("option", { name: "Germany" });
     const france = screen.getByRole("option", { name: "France" });
 
-    expect(germany).toHaveAttribute("data-current", "");
     expect(germany).toHaveAttribute("aria-selected", "true");
-    expect(france).toHaveAttribute("aria-selected", "false");
+    expect(france).not.toHaveAttribute("aria-selected", "true");
 
     await user.keyboard("{ArrowDown}");
 
     expect(searchbox).toHaveFocus();
-    expect(germany).toHaveAttribute("data-current", "");
-    expect(germany).toHaveAttribute("aria-selected", "false");
-    expect(france).toHaveAttribute("aria-selected", "true");
+    expect(germany).toHaveAttribute("aria-selected", "true");
+    await waitFor(() => expect(france).toHaveAttribute("data-highlighted", ""));
   });
 
   it("closes the popover when Escape is pressed and clears stale query/active index for the next open", async () => {
@@ -644,28 +645,31 @@ describe("onboarding shadcn primitives", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
-    expect(screen.getByRole("searchbox")).toBeInTheDocument();
+    expect(await screen.findByPlaceholderText(/search/i)).toBeInTheDocument();
 
     // Move the active index away from the first option and apply a query so
     // there is observable stale state to be cleared on Escape.
-    await user.type(screen.getByRole("searchbox"), "fra");
-    expect(screen.getByRole("searchbox")).toHaveValue("fra");
+    await user.type(await screen.findByPlaceholderText(/search/i), "fra");
+    expect(await screen.findByPlaceholderText(/search/i)).toHaveValue("fra");
 
     await user.keyboard("{Escape}");
 
-    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Country" })).toHaveAttribute(
+      "aria-expanded",
+      "false"
+    );
 
-    // Re-open: query must be reset and the first option must be the active
-    // descendant again, so the popover does not show stale filtering or an
-    // out-of-context active option.
+    // Re-open: query and keyboard highlight must be reset.
     await user.click(screen.getByRole("combobox", { name: "Country" }));
-    expect(screen.getByRole("searchbox")).toHaveValue("");
+    expect(await screen.findByPlaceholderText(/search/i)).toHaveValue("");
     const options = screen.getAllByRole("option");
     expect(options).toHaveLength(3);
-    expect(options[0]).toHaveAttribute("aria-selected", "true");
+    expect(
+      options.every((option) => !option.hasAttribute("data-highlighted"))
+    ).toBe(true);
   });
 
-  it("clears stale query/active index when the trigger closes the popover", async () => {
+  it("clears stale query and highlight when Escape closes the popover", async () => {
     const user = userEvent.setup();
 
     render(
@@ -683,17 +687,19 @@ describe("onboarding shadcn primitives", () => {
     const trigger = screen.getByRole("combobox", { name: "Country" });
 
     await user.click(trigger);
-    await user.type(screen.getByRole("searchbox"), "fra");
-    expect(screen.getByRole("searchbox")).toHaveValue("fra");
+    await user.type(await screen.findByPlaceholderText(/search/i), "fra");
+    expect(await screen.findByPlaceholderText(/search/i)).toHaveValue("fra");
+
+    await user.keyboard("{Escape}");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
 
     await user.click(trigger);
-    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
-
-    await user.click(trigger);
-    expect(screen.getByRole("searchbox")).toHaveValue("");
+    expect(await screen.findByPlaceholderText(/search/i)).toHaveValue("");
     const options = screen.getAllByRole("option");
     expect(options).toHaveLength(3);
-    expect(options[0]).toHaveAttribute("aria-selected", "true");
+    expect(
+      options.every((option) => !option.hasAttribute("data-highlighted"))
+    ).toBe(true);
   });
 
   it("renders the empty message when no options match the query", async () => {
@@ -712,7 +718,7 @@ describe("onboarding shadcn primitives", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
-    await user.type(screen.getByRole("searchbox"), "zzzzzz");
+    await user.type(await screen.findByPlaceholderText(/search/i), "zzzzzz");
 
     expect(screen.getByText("No matches")).toBeInTheDocument();
     expect(screen.queryAllByRole("option")).toHaveLength(0);
@@ -734,10 +740,12 @@ describe("onboarding shadcn primitives", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
-    const options = screen.getAllByRole("option");
+    const options = await screen.findAllByRole("option");
 
     await user.hover(options[1]!);
-    expect(options[1]).toHaveAttribute("aria-selected", "true");
+    await waitFor(() =>
+      expect(options[1]).toHaveAttribute("data-highlighted", "")
+    );
 
     await user.click(options[1]!);
     expect(handleValueChange).toHaveBeenCalledWith("fr");
@@ -759,13 +767,13 @@ describe("onboarding shadcn primitives", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
-    const options = screen.getAllByRole("option");
+    const options = await screen.findAllByRole("option");
 
     await user.click(options[1]!);
     expect(handleValueChange).not.toHaveBeenCalled();
   });
 
-  it("closes the Radix popover content on outside interaction", async () => {
+  it("closes the Base UI popover content on outside interaction", async () => {
     const user = userEvent.setup();
 
     render(
@@ -785,16 +793,13 @@ describe("onboarding shadcn primitives", () => {
     const trigger = screen.getByRole("combobox", { name: "Country" });
     await user.click(trigger);
 
-    expect(
-      screen.getByRole("searchbox", { name: "Search options" })
-    ).toHaveFocus();
+    expect(await screen.findByPlaceholderText("Search options")).toHaveFocus();
     expect(
       document.querySelector('[data-slot="onboarding-command-popover-content"]')
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "After country" }));
 
-    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
     expect(trigger).toHaveAttribute("aria-expanded", "false");
   });
 
@@ -817,9 +822,7 @@ describe("onboarding shadcn primitives", () => {
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
 
-    const searchbox = screen.getByRole("searchbox", {
-      name: "Search options",
-    });
+    const searchbox = await screen.findByPlaceholderText("Search options");
 
     expect(searchbox).toHaveFocus();
 
@@ -829,10 +832,13 @@ describe("onboarding shadcn primitives", () => {
         screen.getByRole("button", { name: "After country" })
       ).toHaveFocus();
     });
-    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Country" })).toHaveAttribute(
+      "aria-expanded",
+      "false"
+    );
   });
 
-  it("skips disabled options when navigating with the keyboard", async () => {
+  it("does not select disabled options during keyboard navigation", async () => {
     const user = userEvent.setup();
     const handleValueChange = vi.fn();
 
@@ -849,11 +855,19 @@ describe("onboarding shadcn primitives", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
-    const options = screen.getAllByRole("option");
+    const options = await screen.findAllByRole("option");
 
     await user.keyboard("{ArrowDown}");
-    expect(options[2]).toHaveAttribute("aria-selected", "true");
+    await user.keyboard("{ArrowDown}");
+    await waitFor(() =>
+      expect(options[1]).toHaveAttribute("data-highlighted", "")
+    );
 
+    await user.keyboard("{Enter}");
+    expect(handleValueChange).not.toHaveBeenCalled();
+
+    await user.keyboard("{ArrowDown}");
+    expect(options[2]).toHaveAttribute("data-highlighted", "");
     await user.keyboard("{Enter}");
     expect(handleValueChange).toHaveBeenCalledWith("es");
   });
@@ -887,7 +901,7 @@ describe("onboarding shadcn primitives", () => {
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
 
-    const searchbox = screen.getByRole("searchbox");
+    const searchbox = await screen.findByPlaceholderText(/search/i);
     expect(searchbox).toBeInvalid();
     expect(searchbox).toHaveAccessibleDescription("Country is required");
   });
@@ -908,7 +922,7 @@ describe("onboarding shadcn primitives", () => {
     await user.keyboard("{Enter}");
 
     expect(handleValueChange).not.toHaveBeenCalled();
-    expect(screen.getByRole("searchbox")).toBeInTheDocument();
+    expect(await screen.findByPlaceholderText(/search/i)).toBeInTheDocument();
   });
 
   it("does not move the active index when ArrowDown is pressed on an empty result list", async () => {
@@ -926,7 +940,7 @@ describe("onboarding shadcn primitives", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
-    const searchbox = screen.getByRole("searchbox");
+    const searchbox = await screen.findByPlaceholderText(/search/i);
     await user.type(searchbox, "zzzzz");
 
     await user.keyboard("{ArrowDown}");
@@ -969,7 +983,7 @@ describe("onboarding shadcn primitives", () => {
     await user.click(screen.getByRole("combobox", { name: "Country" }));
 
     expect(
-      screen.getByRole("searchbox", { name: "Search or select country" })
+      await screen.findByPlaceholderText("Search or select country")
     ).toBeInTheDocument();
   });
 
@@ -1004,7 +1018,7 @@ describe("onboarding shadcn primitives", () => {
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
     await user.click(
-      screen.getByRole("option", { name: "No country selected" })
+      await screen.findByRole("option", { name: "No country selected" })
     );
 
     expect(handleValueChange).toHaveBeenCalledWith("");

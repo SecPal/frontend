@@ -98,19 +98,17 @@ describe("NavUser", () => {
 
     await user.click(screen.getByRole("button", { name: /user menu/i }));
 
-    const dropdown = screen
-      .getByRole("menuitem", { name: /my profile/i })
-      .closest('[data-slot="dropdown-menu-content"]');
+    const dropdown = (
+      await screen.findByRole("menuitem", { name: /my profile/i })
+    ).closest('[data-slot="dropdown-menu-content"]');
 
     expect(dropdown).not.toBeNull();
     expect(dropdown).toHaveClass(
       "w-fit",
       "min-w-56",
-      "max-w-[min(20rem,var(--radix-dropdown-menu-content-available-width))]"
+      "max-w-[min(20rem,var(--available-width))]"
     );
-    expect(dropdown!.className).not.toContain(
-      "w-(--radix-dropdown-menu-trigger-width)"
-    );
+    expect(dropdown!.className).not.toContain("w-(--anchor-width)");
   });
 
   it("keeps long user profile data truncatable inside the bounded dropdown width", async () => {
@@ -126,9 +124,9 @@ describe("NavUser", () => {
 
     await user.click(screen.getByRole("button", { name: /user menu/i }));
 
-    const dropdown = screen
-      .getByRole("menuitem", { name: /my profile/i })
-      .closest('[data-slot="dropdown-menu-content"]');
+    const dropdown = (
+      await screen.findByRole("menuitem", { name: /my profile/i })
+    ).closest('[data-slot="dropdown-menu-content"]');
     const profileSummaries = screen
       .getAllByText(
         /maximilian-alexander\.von\.beispielhausen-suedwest@operations-secpal-example\.invalid/i
@@ -136,9 +134,7 @@ describe("NavUser", () => {
       .map((node) => node.parentElement);
 
     expect(dropdown).not.toBeNull();
-    expect(dropdown).toHaveClass(
-      "max-w-[min(20rem,var(--radix-dropdown-menu-content-available-width))]"
-    );
+    expect(dropdown).toHaveClass("max-w-[min(20rem,var(--available-width))]");
     expect(profileSummaries).toContainEqual(
       expect.objectContaining({
         className: expect.stringContaining("min-w-0"),
