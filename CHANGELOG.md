@@ -51,6 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Made OnboardingWizard Base UI select tests wait for interactive popup state
+  and isolated nationality mocks so full-suite timing cannot cascade failures
+  across server-validation scenarios.
 - Kept the privacy shield active across Escape and backdrop interactions, made
   Base UI confirmation actions close consistently so runtime-switch failures
   remain visible, and preserved distinct organizational-unit indentation across
