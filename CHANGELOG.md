@@ -51,6 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Stabilized Base UI onboarding popover focus tests under full-suite load so
+  asynchronous focus management cannot leave later interaction tests locked.
 - Used the shipped canonical PNG icon for regular browser notification
   fallbacks and verified every referenced notification icon is emitted by
   production builds.

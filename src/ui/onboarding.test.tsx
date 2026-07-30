@@ -555,7 +555,8 @@ describe("onboarding shadcn primitives", () => {
 
     expect(trigger).toHaveAttribute("aria-expanded", "true");
     expect(await screen.findAllByRole("option")).toHaveLength(3);
-    expect(await screen.findByPlaceholderText(/search/i)).toHaveFocus();
+    const searchbox = await screen.findByPlaceholderText(/search/i);
+    await waitFor(() => expect(searchbox).toHaveFocus());
   });
 
   it("navigates options with ArrowDown/ArrowUp inside the search box and selects with Enter", async () => {
@@ -793,14 +794,28 @@ describe("onboarding shadcn primitives", () => {
     const trigger = screen.getByRole("combobox", { name: "Country" });
     await user.click(trigger);
 
-    expect(await screen.findByPlaceholderText("Search options")).toHaveFocus();
-    expect(
-      document.querySelector('[data-slot="onboarding-command-popover-content"]')
-    ).toBeInTheDocument();
+    try {
+      const searchbox = await screen.findByPlaceholderText("Search options");
+      await waitFor(() => expect(searchbox).toHaveFocus());
+      expect(
+        document.querySelector(
+          '[data-slot="onboarding-command-popover-content"]'
+        )
+      ).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "After country" }));
+      await user.click(screen.getByRole("button", { name: "After country" }));
 
-    expect(trigger).toHaveAttribute("aria-expanded", "false");
+      await waitFor(() =>
+        expect(trigger).toHaveAttribute("aria-expanded", "false")
+      );
+    } finally {
+      if (trigger.getAttribute("aria-expanded") === "true") {
+        await user.keyboard("{Escape}");
+        await waitFor(() =>
+          expect(trigger).toHaveAttribute("aria-expanded", "false")
+        );
+      }
+    }
   });
 
   it("closes the command popover when tab leaves the search field", async () => {
@@ -824,7 +839,7 @@ describe("onboarding shadcn primitives", () => {
 
     const searchbox = await screen.findByPlaceholderText("Search options");
 
-    expect(searchbox).toHaveFocus();
+    await waitFor(() => expect(searchbox).toHaveFocus());
 
     await user.tab();
     await waitFor(() => {
