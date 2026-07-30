@@ -582,7 +582,7 @@ export function useNotifications(
           // Fallback to regular notification
           new Notification(options.title, {
             body: options.body,
-            icon: options.icon || "/pwa-192x192.svg",
+            icon: options.icon || "/pwa-192x192.png",
             tag: options.tag,
             requireInteraction: options.requireInteraction,
             data: options.data,

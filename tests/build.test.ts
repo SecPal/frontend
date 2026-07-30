@@ -204,6 +204,23 @@ describe("Build Configuration and Source Verification", () => {
       expect(readFileSync(path.join(distRoot, "index.html"), "utf8")).toContain(
         'src="/custom/'
       );
+
+      const referencedNotificationIcons = [
+        "src/hooks/useNotifications.ts",
+        "src/sw.ts",
+      ].flatMap((sourcePath) =>
+        Array.from(
+          readRepoFile(sourcePath).matchAll(
+            /["'](\/pwa-[^"']+\.(?:png|svg))["']/gu
+          ),
+          (match) => match[1]
+        )
+      );
+
+      expect(referencedNotificationIcons.length).toBeGreaterThan(0);
+      for (const iconPath of new Set(referencedNotificationIcons)) {
+        expect(existsSync(path.join(distRoot, iconPath.slice(1)))).toBe(true);
+      }
     } finally {
       rmSync(distRoot, { recursive: true, force: true });
     }

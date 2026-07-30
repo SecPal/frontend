@@ -43,6 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Used the shipped canonical PNG icon for regular browser notification
+  fallbacks and verified every referenced notification icon is emitted by
+  production builds.
 - Resolved the deprecated `source-map@0.8.0-beta.0` transitive dependency from
   `workbox-build` to its supported 0.8.0 release.
 - Android runtime discovery now accepts only strict JSON integer bootstrap
