@@ -184,7 +184,7 @@ async function selectNationality(
     await user.clear(nationalityControl);
     await user.type(nationalityControl, query);
   } else {
-    const searchbox = await screen.findByRole("searchbox");
+    const searchbox = await screen.findByPlaceholderText(/search/i);
     await user.clear(searchbox);
     await user.type(searchbox, query);
   }
@@ -205,21 +205,35 @@ async function selectOnboardingOption(
   }
 
   await user.click(control);
-  const option = await waitFor(() => {
-    const matchingOption = Array.from(
-      document.querySelectorAll<HTMLElement>(
-        '[data-slot="onboarding-select-item"]'
-      )
-    ).find((element) => element.dataset.value === value);
+  try {
+    const option = await waitFor(() => {
+      const matchingOption = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          '[data-slot="onboarding-select-item"]'
+        )
+      ).find((element) => element.dataset.value === value);
 
-    if (!matchingOption) {
-      throw new Error(`Option with value "${value}" not found`);
+      if (!matchingOption) {
+        throw new Error(`Option with value "${value}" not found`);
+      }
+
+      expect(getComputedStyle(matchingOption).pointerEvents).not.toBe("none");
+      return matchingOption;
+    });
+
+    await user.click(option);
+    await waitFor(() =>
+      expect(control).toHaveAttribute("aria-expanded", "false")
+    );
+  } finally {
+    if (control.getAttribute("aria-expanded") === "true") {
+      control.focus();
+      await user.keyboard("{Escape}");
+      await waitFor(() =>
+        expect(control).toHaveAttribute("aria-expanded", "false")
+      );
     }
-
-    return matchingOption;
-  });
-
-  await user.click(option);
+  }
 }
 
 async function enableIdentityUpload(
@@ -1734,7 +1748,7 @@ describe("OnboardingWizard", () => {
     expect(nationalityControl).toHaveAttribute("role", "combobox");
     await user.click(nationalityControl);
     expect(
-      await screen.findByRole("searchbox", {
+      await screen.findByRole("combobox", {
         name: /search and select one nationality/i,
       })
     ).toBeInTheDocument();
@@ -3196,6 +3210,10 @@ describe("OnboardingWizard server-side validation feedback", () => {
       can_be_deleted: false,
       can_be_edited: false,
     });
+    onboardingApiMocks.fetchOnboardingNationalityOptions.mockResolvedValue([
+      { code: "DE", name: "Germany" },
+      { code: "FR", name: "France" },
+    ]);
   });
 
   it("shows API field validation messages inline after Submit for Review", async () => {

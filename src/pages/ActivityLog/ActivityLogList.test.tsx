@@ -79,18 +79,8 @@ const renderWithProviders = () => {
   );
 };
 
-async function selectRadixOption(triggerName: RegExp, optionName: RegExp) {
+async function selectOption(triggerName: RegExp, optionName: RegExp) {
   const trigger = screen.getByRole("combobox", { name: triggerName });
-  fireEvent.pointerDown(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
   fireEvent.click(trigger, { button: 0 });
 
   const option = await screen.findByRole("option", { name: optionName });
@@ -568,7 +558,7 @@ describe("ActivityLogList", () => {
       ).toBeInTheDocument();
     });
 
-    await selectRadixOption(/log name/i, /^authentication$/i);
+    await selectOption(/log name/i, /^authentication$/i);
 
     await waitFor(() => {
       expect(activityLogApi.fetchActivityLogs).toHaveBeenCalledWith(

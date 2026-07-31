@@ -3,7 +3,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render } from "@testing-library/react";
-import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
+import { Menu as DropdownMenuPrimitive } from "@base-ui/react/menu";
 
 const { capturedLinkProps } = vi.hoisted(() => ({
   capturedLinkProps: [] as Array<Record<string, unknown>>,
@@ -54,14 +54,14 @@ function findCapture(targetTo: string) {
 }
 
 describe("shadcn router-link composition keeps Link props clean", () => {
-  it("SidebarMenuButton composes with Link via `asChild` without leaking `href`", async () => {
+  it("SidebarMenuButton composes with Link via `render` without leaking `href`", async () => {
     const { Link } = await import("react-router");
     const { SidebarProvider, SidebarMenuButton } = await import("@/ui");
 
     render(
       <SidebarProvider>
-        <SidebarMenuButton asChild>
-          <Link to="/customers">Customers</Link>
+        <SidebarMenuButton render={<Link to="/customers" />}>
+          Customers
         </SidebarMenuButton>
       </SidebarProvider>
     );
@@ -70,13 +70,13 @@ describe("shadcn router-link composition keeps Link props clean", () => {
     expect(capture).not.toHaveProperty("href");
   });
 
-  it("SidebarMenuSubButton composes with Link via `asChild` without leaking `href`", async () => {
+  it("SidebarMenuSubButton composes with Link via `render` without leaking `href`", async () => {
     const { Link } = await import("react-router");
     const { SidebarMenuSubButton } = await import("@/ui");
 
     render(
-      <SidebarMenuSubButton asChild>
-        <Link to="/profile">Profile</Link>
+      <SidebarMenuSubButton render={<Link to="/profile" />}>
+        Profile
       </SidebarMenuSubButton>
     );
 
@@ -84,7 +84,7 @@ describe("shadcn router-link composition keeps Link props clean", () => {
     expect(capture).not.toHaveProperty("href");
   });
 
-  it("DropdownMenuItem composes with Link via `asChild` without leaking `href`", async () => {
+  it("DropdownMenuItem composes with Link via `render` without leaking `href`", async () => {
     const { Link } = await import("react-router");
     const { DropdownMenuItem } = await import("@/ui");
 
@@ -92,11 +92,13 @@ describe("shadcn router-link composition keeps Link props clean", () => {
       <DropdownMenuPrimitive.Root open>
         <DropdownMenuPrimitive.Trigger>Open</DropdownMenuPrimitive.Trigger>
         <DropdownMenuPrimitive.Portal>
-          <DropdownMenuPrimitive.Content>
-            <DropdownMenuItem asChild>
-              <Link to="/settings">Settings</Link>
-            </DropdownMenuItem>
-          </DropdownMenuPrimitive.Content>
+          <DropdownMenuPrimitive.Positioner>
+            <DropdownMenuPrimitive.Popup>
+              <DropdownMenuItem render={<Link to="/settings" />}>
+                Settings
+              </DropdownMenuItem>
+            </DropdownMenuPrimitive.Popup>
+          </DropdownMenuPrimitive.Positioner>
         </DropdownMenuPrimitive.Portal>
       </DropdownMenuPrimitive.Root>
     );

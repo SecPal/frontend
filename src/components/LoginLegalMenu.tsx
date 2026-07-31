@@ -44,16 +44,18 @@ export function LoginLegalMenu({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          className="border-input bg-background text-foreground w-auto justify-start gap-2 px-3 text-base font-normal whitespace-nowrap shadow-xs hover:bg-accent hover:text-accent-foreground md:text-sm dark:bg-background dark:hover:bg-accent"
-        >
-          <Scale className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-          <Trans>Legal</Trans>
-        </Button>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="border-input bg-background text-foreground w-auto justify-start gap-2 px-3 text-base font-normal whitespace-nowrap shadow-xs hover:bg-accent hover:text-accent-foreground md:text-sm dark:bg-background dark:hover:bg-accent"
+          />
+        }
+      >
+        <Scale className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        <Trans>Legal</Trans>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-fit min-w-fit">
         <DropdownMenuGroup>
@@ -74,11 +76,11 @@ export function LoginLegalMenu({
           <DropdownMenuLabel>
             <Trans>Open Source</Trans>
           </DropdownMenuLabel>
-          <DropdownMenuItem asChild>
-            <PrefetchLink to="/source" state={{ sourceReturnTo }}>
-              <Code2 />
-              <Trans>Source Code</Trans>
-            </PrefetchLink>
+          <DropdownMenuItem
+            render={<PrefetchLink to="/source" state={{ sourceReturnTo }} />}
+          >
+            <Code2 />
+            <Trans>Source Code</Trans>
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>

@@ -1,0 +1,66 @@
+# SPDX-FileCopyrightText: 2026 SecPal Contributors
+# SPDX-License-Identifier: CC0-1.0
+
+---
+name: UI and CSP Architecture
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - "components.json"
+      - "index.html"
+      - "src/**"
+      - "public/**"
+      - "config/**"
+      - "scripts/**"
+      - "vite.config.*"
+      - "tsconfig*"
+      - "eslint*"
+      - "tests/**"
+      - "playwright*.config.*"
+      - "thirdPartyDependencyNotices.*"
+      - "LICENSE"
+      - "LICENSES/**"
+      - "THIRD-PARTY-NOTICES.md"
+      - ".github/workflows/**"
+
+permissions:
+  contents: read
+
+jobs:
+  strict-csp:
+    name: Strict CSP
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --foreground-scripts
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify source architecture
+        run: npm run test:ui-csp
+
+      - name: Build Web surface
+        run: npm run build:web
+
+      - name: Build Android surface
+        run: npm run build:android
+
+      - name: Exercise strict CSP in Chromium
+        run: npm run test:e2e:csp

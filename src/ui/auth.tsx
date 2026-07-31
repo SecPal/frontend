@@ -4,21 +4,18 @@
 import {
   Fragment,
   forwardRef,
-  useContext,
   type ButtonHTMLAttributes,
   type ComponentProps,
   type ComponentPropsWithoutRef,
-  type ElementRef,
   type ForwardedRef,
   type FormHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
 } from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
-import * as LabelPrimitive from "@radix-ui/react-label";
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { OTPField as OTPFieldPrimitive } from "@base-ui/react/otp-field";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Minus } from "lucide-react";
-import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from "input-otp";
 import {
   Dialog as AppDialog,
   DialogContent as AppDialogContent,
@@ -28,6 +25,7 @@ import {
   DialogTitle as AppDialogTitle,
   FieldLabel as AppFieldLabel,
 } from "./primitives";
+import { Label } from "./label";
 import { Alert as AppAlert, AlertTitle as AppAlertTitle } from "./alert";
 import { Button as AppButton } from "./button";
 import { Input as AppInput } from "./input";
@@ -89,7 +87,7 @@ export function LoginShell({
         // sub-pixel-rounded transforms, etc.) sneaks past its container, the
         // shell never offers a horizontal page scrollbar. `clip` is preferred
         // over `hidden` because it does not form a scroll-containing block,
-        // so `position: sticky` descendants and Radix Portal overlays keep
+        // so `position: sticky` descendants and Base UI Portal overlays keep
         // working unchanged.
         //
         // The shell intentionally does NOT vertically center its children;
@@ -244,8 +242,8 @@ export function LoginFormActions({
 }
 
 export const LoginFieldLabel = forwardRef<
-  ElementRef<typeof LabelPrimitive.Root>,
-  ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
+  HTMLLabelElement,
+  ComponentProps<typeof Label>
 >(function LoginFieldLabel({ className, ...props }, ref) {
   return <AppFieldLabel ref={ref} className={className} {...props} />;
 });
@@ -356,7 +354,14 @@ export function LoginDialog({
   onClose: () => void;
 }) {
   return (
-    <AppDialog open={open} onClose={onClose}>
+    <AppDialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose();
+        }
+      }}
+    >
       <AppDialogPortal>
         <AppDialogOverlay data-slot="login-dialog-overlay" />
         <AppDialogContent
@@ -372,8 +377,8 @@ export function LoginDialog({
 }
 
 export const LoginDialogTitle = forwardRef<
-  ElementRef<typeof DialogPrimitive.Title>,
-  ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+  HTMLHeadingElement,
+  DialogPrimitive.Title.Props
 >(function LoginDialogTitle({ className, ...props }, ref) {
   return (
     <AppDialogTitle
@@ -389,8 +394,8 @@ export const LoginDialogTitle = forwardRef<
 });
 
 export const LoginDialogDescription = forwardRef<
-  ElementRef<typeof DialogPrimitive.Description>,
-  ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+  HTMLParagraphElement,
+  DialogPrimitive.Description.Props
 >(function LoginDialogDescription({ className, ...props }, ref) {
   return (
     <AppDialogDescription
@@ -427,116 +432,14 @@ export function LoginDialogActions({
   );
 }
 
-export function LoginInputOtp({
-  containerClassName,
-  className,
-  onFocus,
-  ...props
-}: ComponentProps<typeof OTPInput> & { containerClassName?: string }) {
-  return (
-    <OTPInput
-      data-slot="login-input-otp"
-      containerClassName={cn(
-        "flex items-center gap-2 has-[:disabled]:opacity-50",
-        containerClassName
-      )}
-      className={cn("disabled:cursor-not-allowed", className)}
-      noScriptCSSFallback={null}
-      onFocus={(event) => {
-        onFocus?.(event);
-        // Keep the OTP cells visible above mobile soft keyboards. The
-        // dialog is `position: fixed; top: 50%`, so the browser's native
-        // auto-scroll-on-focus cannot move it; we instead scroll the
-        // visible slot row into the center of its scroll container (the
-        // dialog body). Delayed via setTimeout so the browser has time
-        // to (a) finish opening the keyboard, (b) shrink the visual
-        // viewport per `interactive-widget=resizes-content`, and (c)
-        // re-center the dialog before we measure where the cells are.
-        // `data-input-otp-container` is input-otp's wrapper around the
-        // visible slot cluster, which is the meaningful scroll target
-        // (the hidden `<input>` itself is `position: absolute; inset: 0`
-        // and has no observable bounding rect of its own).
-        const input = event.currentTarget;
-        const target = (input.closest("[data-input-otp-container]") ??
-          input) as HTMLElement;
-        window.setTimeout(() => {
-          target.scrollIntoView({ block: "center", behavior: "smooth" });
-        }, 200);
-      }}
-      {...props}
-    />
-  );
-}
-
-export function LoginInputOtpGroup({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"div">) {
-  return (
-    <div
-      data-slot="login-input-otp-group"
-      className={cn("flex items-center", className)}
-      {...props}
-    />
-  );
-}
-
-export function LoginInputOtpSlot({
-  index,
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"div"> & { index: number }) {
-  const context = useContext(OTPInputContext);
-  const slot = context?.slots[index];
-  const char = slot?.char ?? "";
-  const hasFakeCaret = slot?.hasFakeCaret ?? false;
-  const isActive = slot?.isActive ?? false;
-
-  return (
-    <div
-      data-slot="login-input-otp-slot"
-      data-active={isActive || undefined}
-      className={cn(
-        "relative flex h-12 w-10 items-center justify-center border border-input bg-background text-base font-semibold text-foreground shadow-sm transition-all outline-none first:rounded-l-md last:rounded-r-md [&:not(:first-child)]:border-l-0 aria-invalid:border-destructive data-[active]:z-10 data-[active]:border-ring data-[active]:ring-2 data-[active]:ring-ring/50 data-[active]:ring-offset-2 data-[active]:ring-offset-background",
-        className
-      )}
-      {...props}
-    >
-      {char}
-      {hasFakeCaret ? (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-4 w-px animate-pulse bg-foreground" />
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-export function LoginInputOtpSeparator({
-  className,
-  ...props
-}: ComponentPropsWithoutRef<"div">) {
-  return (
-    <div
-      data-slot="login-input-otp-separator"
-      role="separator"
-      aria-hidden="true"
-      className={cn("flex items-center text-muted-foreground", className)}
-      {...props}
-    >
-      <Minus className="h-4 w-4" />
-    </div>
-  );
-}
-
 export function LoginOtpInput({
   value,
   onChange,
   length = 6,
   idPrefix = "login-otp",
   disabled = false,
-  pattern = REGEXP_ONLY_DIGITS,
-  inputMode = "numeric",
+  validationType = "numeric",
+  inputMode,
   groups,
   textTransform = "none",
   "aria-label": ariaLabel,
@@ -549,117 +452,112 @@ export function LoginOtpInput({
   length?: number;
   idPrefix?: string;
   disabled?: boolean;
-  /**
-   * Regex source string (input-otp's per-character pattern). Defaults to
-   * digits-only (`REGEXP_ONLY_DIGITS`); pass `REGEXP_ONLY_DIGITS_AND_CHARS`
-   * for alphanumeric inputs such as recovery codes.
-   */
-  pattern?: string;
-  /**
-   * HTML `inputMode` for the hidden input. Defaults to `"numeric"`; switch to
-   * `"text"` for alphanumeric inputs so mobile keyboards do not lock to the
-   * number pad.
-   */
-  inputMode?: ComponentProps<typeof OTPInput>["inputMode"];
-  /**
-   * Slot grouping. Defaults to `[length]` (single group). Pass e.g. `[4, 4]`
-   * to render two groups of four slots separated by `LoginInputOtpSeparator`
-   * (mirrors the shadcn `input-otp` "Pattern" example).
-   */
+  validationType?: OTPFieldPrimitive.Root.ValidationType;
+  inputMode?: InputHTMLAttributes<HTMLInputElement>["inputMode"];
   groups?: readonly number[];
-  /**
-   * Visual + value text-transform applied to the OTP value. Defaults to
-   * `"none"`. Use `"uppercase"` for case-insensitive codes such as recovery
-   * codes so the user sees uppercase letters regardless of caps-lock state
-   * and the value that reaches the consumer is already normalized.
-   */
   textTransform?: "none" | "uppercase";
   "aria-label": string;
   "aria-describedby"?: string;
   "aria-invalid"?: boolean;
   className?: string;
 }) {
-  const slotGroups: readonly number[] =
-    groups && groups.length > 0 ? groups : [length];
-  const totalSlots = slotGroups.reduce((sum, n) => sum + n, 0);
-  // Slot grouping must add up to `length` so OTPInput's maxLength and the
-  // rendered slots stay in sync; fall back to a single group when callers
-  // accidentally pass a mismatching `groups` array.
-  const useFallbackGroup = totalSlots !== length;
-  const effectiveGroups: readonly number[] = useFallbackGroup
-    ? [length]
-    : slotGroups;
-
-  const handleChange = (next: string) => {
-    onChange(textTransform === "uppercase" ? next.toUpperCase() : next);
-  };
-
-  // Strip common autofill/SMS formatting before `input-otp` validates the
-  // paste against `pattern`. Without this, pasting "123 456" or "123-456"
-  // (typical TOTP SMS or password-manager copy) fails the digits-only
-  // regex on the whole string and the field stays empty. Whitespace and
-  // hyphens are never meaningful in either TOTP or recovery codes; the
-  // uppercase normalization keeps recovery codes case-insensitive on paste
-  // (mirrors the on-type behavior of `handleChange`).
-  const pasteTransformer = (pasted: string) => {
-    const stripped = pasted.replace(/[\s\-_]+/g, "");
-    return textTransform === "uppercase" ? stripped.toUpperCase() : stripped;
-  };
-
-  // Pre-compute absolute slot offset for each group up front. A render-phase
-  // accumulator (`let cursor += groupLength`) would also work but trips the
-  // React 19 immutability lint, and a `reduce` accumulator keeps the inner
-  // `.map` callback pure.
+  const requestedGroups =
+    groups && groups.length > 0 ? groups : ([length] as const);
+  const totalSlots = requestedGroups.reduce(
+    (sum, groupLength) => sum + groupLength,
+    0
+  );
+  const effectiveGroups =
+    totalSlots === length ? requestedGroups : ([length] as const);
   const groupOffsets = effectiveGroups.reduce<number[]>(
     (offsets, groupLength) => {
-      const last = offsets.length > 0 ? offsets[offsets.length - 1]! : 0;
-      offsets.push(last + groupLength);
+      const previousOffset =
+        offsets.length > 0 ? offsets[offsets.length - 1]! : 0;
+      offsets.push(previousOffset + groupLength);
       return offsets;
     },
     [0]
   );
-  const autoComplete = inputMode === "numeric" ? "one-time-code" : "off";
 
   return (
-    <LoginInputOtp
-      id={idPrefix}
-      value={value}
-      onChange={handleChange}
-      pasteTransformer={pasteTransformer}
-      maxLength={length}
-      pattern={pattern}
-      inputMode={inputMode}
-      autoComplete={autoComplete}
-      disabled={disabled}
-      aria-label={ariaLabel}
-      aria-describedby={ariaDescribedBy}
-      aria-invalid={ariaInvalid}
-      containerClassName={cn("justify-center", className)}
-    >
-      {effectiveGroups.map((groupLength, groupIndex) => {
-        const offset = groupOffsets[groupIndex]!;
-        const slots = Array.from({ length: groupLength }, (_, slotIndex) => {
-          const absoluteIndex = offset + slotIndex;
-          return (
-            <LoginInputOtpSlot
-              key={`${idPrefix}-${absoluteIndex}`}
-              index={absoluteIndex}
-              aria-invalid={ariaInvalid}
-              className={
-                textTransform === "uppercase" ? "uppercase" : undefined
-              }
-            />
-          );
-        });
+    <>
+      <label htmlFor={idPrefix} className="sr-only">
+        {ariaLabel}
+      </label>
+      <OTPFieldPrimitive.Root
+        key={`${idPrefix}-${length}`}
+        id={idPrefix}
+        length={length}
+        value={value}
+        disabled={disabled}
+        validationType={validationType}
+        inputMode={inputMode}
+        autoComplete={validationType === "numeric" ? "one-time-code" : "off"}
+        data-input-otp-container=""
+        normalizeValue={(nextValue) => {
+          const normalized = nextValue.replace(/[\s\-_]+/g, "");
+          return textTransform === "uppercase"
+            ? normalized.toUpperCase()
+            : normalized;
+        }}
+        onValueChange={(nextValue) => onChange(nextValue)}
+        onFocus={(event) => {
+          const container = event.currentTarget;
+          window.setTimeout(() => {
+            container.scrollIntoView({
+              block: "center",
+              behavior: "smooth",
+            });
+          }, 200);
+        }}
+        aria-describedby={ariaDescribedBy}
+        className={cn("flex items-center gap-2", className)}
+      >
+        {effectiveGroups.map((groupLength, groupIndex) => {
+          const groupStart = groupOffsets[groupIndex] ?? 0;
 
-        return (
-          <Fragment key={`${idPrefix}-group-${groupIndex}`}>
-            {groupIndex > 0 ? <LoginInputOtpSeparator /> : null}
-            <LoginInputOtpGroup>{slots}</LoginInputOtpGroup>
-          </Fragment>
-        );
-      })}
-    </LoginInputOtp>
+          return (
+            <Fragment key={`${idPrefix}-group-${groupStart}`}>
+              {groupIndex > 0 ? (
+                <span
+                  data-slot="login-input-otp-separator"
+                  className="flex items-center text-muted-foreground"
+                  role="separator"
+                  aria-hidden="true"
+                >
+                  <Minus className="size-4" />
+                </span>
+              ) : null}
+              <div
+                className="flex items-center"
+                data-slot="login-input-otp-group"
+              >
+                {Array.from({ length: groupLength }, (_, slotIndex) => {
+                  const absoluteIndex = groupStart + slotIndex;
+
+                  return (
+                    <OTPFieldPrimitive.Input
+                      key={`${idPrefix}-slot-${absoluteIndex}`}
+                      data-slot="login-input-otp-slot"
+                      aria-label={
+                        absoluteIndex === 0
+                          ? undefined
+                          : `${ariaLabel} ${absoluteIndex + 1}/${length}`
+                      }
+                      aria-invalid={ariaInvalid}
+                      className={cn(
+                        "h-12 w-10 border border-input bg-background text-center text-base font-semibold text-foreground shadow-sm transition-all outline-none first:rounded-l-md last:rounded-r-md [&:not(:first-child)]:border-l-0 focus:z-10 focus:border-ring focus:ring-2 focus:ring-ring/50 focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive",
+                        textTransform === "uppercase" && "uppercase"
+                      )}
+                    />
+                  );
+                })}
+              </div>
+            </Fragment>
+          );
+        })}
+      </OTPFieldPrimitive.Root>
+    </>
   );
 }
 

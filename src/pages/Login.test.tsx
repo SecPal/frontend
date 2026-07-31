@@ -207,13 +207,8 @@ function enterTotpCode(code: string) {
 }
 
 function getRecoveryCodeInput(): HTMLInputElement {
-  // The recovery-code input is the `input-otp` hidden input (always
-  // `data-input-otp`), regardless of its `autocomplete` value — the
-  // alphanumeric path opts out of `one-time-code` so browsers do not
-  // mis-suggest SMS codes for the alphanumeric backup field, so the
-  // `[autocomplete="one-time-code"]` selector no longer matches here.
-  return screen.getByLabelText(/recovery code/i, {
-    selector: "[data-input-otp]",
+  return screen.getByLabelText(/^recovery code$/i, {
+    selector: '[data-slot="login-input-otp-slot"]',
   }) as HTMLInputElement;
 }
 
@@ -228,16 +223,6 @@ function switchToRecoveryCodeMode() {
 async function selectLanguage(visibleName: string) {
   const trigger = screen.getByRole("combobox", {
     name: /select language/i,
-  });
-  fireEvent.pointerDown(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
   });
   fireEvent.click(trigger, { button: 0 });
 
@@ -420,9 +405,11 @@ describe("Login", () => {
 
     await user.click(screen.getByRole("button", { name: /cancel/i }));
     expect(onSwitchRuntimeBootstrap).not.toHaveBeenCalled();
-    expect(
-      screen.getByRole("button", { name: /switch instance/i })
-    ).toHaveFocus();
+    await waitFor(() =>
+      expect(
+        document.querySelector("#secpal-runtime-switch-instance")
+      ).toHaveFocus()
+    );
   });
 
   it("switches the configured instance after confirmation", async () => {
@@ -451,6 +438,51 @@ describe("Login", () => {
     await waitFor(() => {
       expect(onSwitchRuntimeBootstrap).toHaveBeenCalledTimes(1);
     });
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("alertdialog", {
+          name: /switch instance\?/i,
+        })
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it("closes the confirmation and exposes runtime-switch failures", async () => {
+    const user = userEvent.setup();
+    const onSwitchRuntimeBootstrap = vi
+      .fn()
+      .mockRejectedValue(new Error("Runtime bootstrap reset failed"));
+
+    renderLogin({
+      runtimeBootstrap: {
+        instanceDisplayName: "Tiny Pony",
+        apiOrigin: "https://api-tiny-pony.preview.secpal.dev",
+        features: {
+          passwordLoginEnabled: true,
+          passkeyLoginEnabled: true,
+        },
+      },
+      onSwitchRuntimeBootstrap,
+    });
+
+    await user.click(
+      await screen.findByRole("button", { name: /switch instance/i })
+    );
+    await user.click(
+      await screen.findByRole("button", { name: /switch instance/i })
+    );
+
+    await waitFor(() => {
+      expect(onSwitchRuntimeBootstrap).toHaveBeenCalledTimes(1);
+      expect(
+        screen.queryByRole("alertdialog", {
+          name: /switch instance\?/i,
+        })
+      ).not.toBeInTheDocument();
+    });
+    expect(
+      await screen.findByText("Runtime bootstrap reset failed")
+    ).toBeVisible();
   });
 
   it("hides passkey login when the configured runtime disables passkey login", async () => {
@@ -1931,12 +1963,19 @@ describe("Login", () => {
 
     enterTotpCode("12a 34-56");
 
-    expect(getTotpInput()).toHaveValue("");
+    expect(
+      Array.from(
+        document.querySelectorAll<HTMLInputElement>(
+          '[data-slot="login-input-otp-slot"]'
+        )
+      )
+        .map((input) => input.value)
+        .join("")
+    ).toBe("123456");
     expect(
       screen.getByRole("button", { name: /verify and continue/i })
-    ).toBeDisabled();
+    ).toBeEnabled();
 
-    enterTotpCode("123456");
     fireEvent.click(
       screen.getByRole("button", { name: /verify and continue/i })
     );
@@ -3520,10 +3559,11 @@ describe("Login", () => {
           name: /zweiter faktor erforderlich/i,
         })
       ).toBeInTheDocument();
-      expect(screen.getByLabelText(/authenticator-code/i)).toHaveAttribute(
-        "inputmode",
-        "numeric"
-      );
+      expect(
+        screen.getByLabelText(/^authenticator-code$/i, {
+          selector: '[data-slot="login-input-otp-slot"]',
+        })
+      ).toHaveAttribute("inputmode", "numeric");
       expect(
         screen.getByRole("button", { name: /überprüfen und fortfahren/i })
       ).toBeDisabled();
@@ -3658,8 +3698,8 @@ describe("Login", () => {
         screen.getByRole("combobox", { name: /select language/i })
       );
 
-      const dropdown = screen.getByRole("listbox");
-      expect(dropdown).toHaveClass("data-[side=bottom]:translate-y-1");
+      const dropdown = document.querySelector('[data-slot="select-content"]')!;
+      expect(dropdown).toHaveAttribute("data-side", "bottom");
       expect(dropdown).toHaveClass("w-fit", "min-w-fit");
       expect(dropdown.className).not.toContain("min-w-[8rem]");
     });

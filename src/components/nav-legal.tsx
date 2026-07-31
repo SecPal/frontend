@@ -63,13 +63,11 @@ export function NavLegal() {
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu modal>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
-                  <Scale />
-                  <span>
-                    <Trans>Legal</Trans>
-                  </span>
-                </SidebarMenuButton>
+              <DropdownMenuTrigger render={<SidebarMenuButton />}>
+                <Scale />
+                <span>
+                  <Trans>Legal</Trans>
+                </span>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 className="w-fit min-w-fit rounded-lg"
@@ -95,17 +93,19 @@ export function NavLegal() {
                   <DropdownMenuLabel>
                     <Trans>Open Source</Trans>
                   </DropdownMenuLabel>
-                  <DropdownMenuItem asChild>
-                    <PrefetchLink
-                      to="/source"
-                      state={{ sourceReturnTo }}
-                      onClick={handleItemClick}
-                    >
-                      <Code2 />
-                      <span>
-                        <Trans>Source Code</Trans>
-                      </span>
-                    </PrefetchLink>
+                  <DropdownMenuItem
+                    render={
+                      <PrefetchLink
+                        to="/source"
+                        state={{ sourceReturnTo }}
+                        onClick={handleItemClick}
+                      />
+                    }
+                  >
+                    <Code2 />
+                    <span>
+                      <Trans>Source Code</Trans>
+                    </span>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
               </DropdownMenuContent>
@@ -120,74 +120,71 @@ export function NavLegal() {
     <SidebarGroup>
       <SidebarMenu>
         <Collapsible
-          asChild
+          render={<SidebarMenuItem />}
           open={effectiveIsLegalOpen}
           onOpenChange={setIsLegalOpen}
           className="group/collapsible"
         >
-          <SidebarMenuItem>
-            <CollapsibleTrigger asChild>
-              <SidebarMenuButton>
-                <Scale />
-                <span>
-                  <Trans>Legal</Trans>
-                </span>
-                <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-              </SidebarMenuButton>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarMenuSub>
-                <SidebarMenuSubItem>
-                  <SidebarGroupLabel asChild>
-                    <span>
-                      <Trans>Legal pages</Trans>
-                    </span>
-                  </SidebarGroupLabel>
-                </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
-                  <SidebarMenuSubButton asChild className="pointer-events-none">
-                    <span aria-disabled="true">
-                      <FileText />
-                      <span>
-                        <Trans>Imprint</Trans>
-                      </span>
-                    </span>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
-                  <SidebarMenuSubButton asChild className="pointer-events-none">
-                    <span aria-disabled="true">
-                      <Shield />
-                      <span>
-                        <Trans>Privacy</Trans>
-                      </span>
-                    </span>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-                <SidebarMenuSubItem className="mt-1 border-t border-sidebar-border pt-2">
-                  <SidebarGroupLabel asChild>
-                    <span>
-                      <Trans>Open Source</Trans>
-                    </span>
-                  </SidebarGroupLabel>
-                </SidebarMenuSubItem>
-                <SidebarMenuSubItem>
-                  <SidebarMenuSubButton asChild isActive={isSourceRoute}>
+          <CollapsibleTrigger render={<SidebarMenuButton />}>
+            <Scale />
+            <span>
+              <Trans>Legal</Trans>
+            </span>
+            <ChevronRight className="ml-auto transition-transform group-data-open/collapsible:rotate-90" />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <SidebarMenuSub>
+              <SidebarMenuSubItem>
+                <SidebarGroupLabel render={<span />}>
+                  <Trans>Legal pages</Trans>
+                </SidebarGroupLabel>
+              </SidebarMenuSubItem>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton
+                  render={<span aria-disabled="true" />}
+                  className="pointer-events-none"
+                >
+                  <FileText />
+                  <span>
+                    <Trans>Imprint</Trans>
+                  </span>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton
+                  render={<span aria-disabled="true" />}
+                  className="pointer-events-none"
+                >
+                  <Shield />
+                  <span>
+                    <Trans>Privacy</Trans>
+                  </span>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+              <SidebarMenuSubItem className="mt-1 border-t border-sidebar-border pt-2">
+                <SidebarGroupLabel render={<span />}>
+                  <Trans>Open Source</Trans>
+                </SidebarGroupLabel>
+              </SidebarMenuSubItem>
+              <SidebarMenuSubItem>
+                <SidebarMenuSubButton
+                  render={
                     <PrefetchLink
                       to="/source"
                       state={{ sourceReturnTo }}
                       onClick={handleItemClick}
-                    >
-                      <Code2 />
-                      <span>
-                        <Trans>Source Code</Trans>
-                      </span>
-                    </PrefetchLink>
-                  </SidebarMenuSubButton>
-                </SidebarMenuSubItem>
-              </SidebarMenuSub>
-            </CollapsibleContent>
-          </SidebarMenuItem>
+                    />
+                  }
+                  isActive={isSourceRoute}
+                >
+                  <Code2 />
+                  <span>
+                    <Trans>Source Code</Trans>
+                  </span>
+                </SidebarMenuSubButton>
+              </SidebarMenuSubItem>
+            </SidebarMenuSub>
+          </CollapsibleContent>
         </Collapsible>
       </SidebarMenu>
     </SidebarGroup>

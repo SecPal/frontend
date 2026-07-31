@@ -155,15 +155,28 @@ describe("CustomerDetail", () => {
     renderPage();
     await screen.findByRole("heading", { name: "ACME GmbH" });
 
-    await user.click(screen.getByRole("button", { name: /^delete$/i }));
+    const pageDeleteButton = screen
+      .getAllByRole("button", { name: /^delete$/i })
+      .find((button) => button.getAttribute("data-variant") === "outline");
+    expect(pageDeleteButton).toBeInTheDocument();
+    await user.click(pageDeleteButton!);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /cancel/i }));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      document.querySelector('[role="dialog"][data-open]')
+    ).not.toBeInTheDocument();
     expect(customersApi.deleteCustomer).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole("button", { name: /^delete$/i }));
+    await user.click(pageDeleteButton!);
+    const openDialog = await waitFor(() => {
+      const dialog = document.querySelector<HTMLElement>(
+        '[role="dialog"][data-open]'
+      );
+      expect(dialog).toBeInTheDocument();
+      return dialog!;
+    });
     await user.click(
-      within(await screen.findByRole("dialog")).getByRole("button", {
+      within(openDialog).getByRole("button", {
         name: /^delete$/i,
       })
     );

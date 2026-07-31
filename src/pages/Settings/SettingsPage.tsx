@@ -130,7 +130,14 @@ function SettingsDialog({
   children: ReactNode;
 }) {
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose();
+        }
+      }}
+    >
       <DialogPortal>
         <DialogOverlay />
         <DialogContent size={size}>{children}</DialogContent>
@@ -1127,11 +1134,6 @@ export function SettingsPage() {
                         <RadioGroupItem
                           id={`sensitive-mfa-method-${method}`}
                           value={method}
-                          aria-label={
-                            method === "totp"
-                              ? _(msg`Authenticator code`)
-                              : _(msg`Recovery code`)
-                          }
                           className="mt-1"
                         />
                         <span>{label}</span>

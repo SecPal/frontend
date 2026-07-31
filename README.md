@@ -201,10 +201,10 @@ import { Trans } from "@lingui/react/macro";
 
 ## 🎨 UI Components & Design System
 
-This project uses `src/ui` as the canonical shadcn/Radix/Lucide layer for
+This project uses `src/ui` as the canonical shadcn/Base UI/Lucide layer for
 application UI components.
 
-**shadcn metadata:** `components.json` pins the `new-york` style, TypeScript
+**shadcn metadata:** `components.json` pins the Base UI `base-vega` style, TypeScript
 React output, Tailwind v4 CSS entry at `src/index.css`, the `zinc` base color,
 Lucide icons, and the canonical aliases (`@/ui`, `@/components`, `@/lib`,
 `@/hooks`, `@/lib/utils`).
@@ -219,7 +219,7 @@ inventory at zero.
 **License:** AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 **Architecture Notes:** [`src/ui/MIGRATION.md`](src/ui/MIGRATION.md)
 
-UI and UX work must build on the existing `src/ui`, shadcn-compatible, Radix,
+UI and UX work must build on the existing `src/ui`, shadcn/Base UI, Tailwind,
 and `lucide-react` building blocks. Do not introduce visual rebuilds of the same
 screens or controls in route-local components or native repositories when an
 existing frontend primitive can express the interaction.

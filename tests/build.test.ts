@@ -2,10 +2,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { JSDOM } from "jsdom";
 import { describe, it, expect } from "vitest";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -63,6 +70,32 @@ function expectWarningFreeShippedNginxConfigSyntax(nginxConfig: string): void {
   expect(nginxConfig).toMatch(/^\s*http2\s+on;$/mu);
   expect(nginxConfig).not.toMatch(/^\s*listen\b[^#;\n]*\bhttp2\b[^;\n]*;$/mu);
   expect(nginxConfig).not.toMatch(/^\s*ssi_types\s+text\/html;$/mu);
+}
+
+function expectStrictBuildAssets(distRoot: string): void {
+  const assetRoot = path.join(distRoot, "assets");
+  const assetNames = readdirSync(assetRoot);
+  const stylesheet = assetNames
+    .filter((name) => name.endsWith(".css"))
+    .map((name) => readFileSync(path.join(assetRoot, name), "utf8"))
+    .join("\n");
+  const scripts = [
+    readFileSync(path.join(distRoot, "sw.js"), "utf8"),
+    ...assetNames
+      .filter((name) => name.endsWith(".js"))
+      .map((name) => readFileSync(path.join(assetRoot, name), "utf8")),
+  ];
+
+  expect(stylesheet).toMatch(/data-open\\:animate-in\[data-open\]/u);
+  expect(stylesheet).toMatch(/data-closed\\:animate-out\[data-closed\]/u);
+  expect(stylesheet).toContain("@keyframes enter");
+  expect(stylesheet).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)/u);
+  expect(scripts.length).toBeGreaterThan(1);
+
+  for (const script of scripts) {
+    expect(script).not.toMatch(/@radix-ui|radix-ui/iu);
+    expect(script).not.toMatch(/\beval\s*\(|\bnew\s+Function\s*\(/u);
+  }
 }
 
 /**
@@ -204,6 +237,38 @@ describe("Build Configuration and Source Verification", () => {
       expect(readFileSync(path.join(distRoot, "index.html"), "utf8")).toContain(
         'src="/custom/'
       );
+      const builtHtml = readFileSync(path.join(distRoot, "index.html"), "utf8");
+      const document = new JSDOM(builtHtml).window.document;
+      const csp = document.querySelector(
+        'meta[http-equiv="Content-Security-Policy"]'
+      );
+
+      expect(csp).not.toBeNull();
+      expect(
+        csp!.compareDocumentPosition(document.querySelector("script")!)
+      ).toBe(document.defaultView!.Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(csp!.getAttribute("content")).toBe(
+        "default-src 'self'; base-uri 'self'; connect-src 'self' https:; font-src 'self' data:; form-action 'self'; frame-src 'none'; img-src 'self' data: blob:; manifest-src 'self'; media-src 'self'; object-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-elem 'self'; style-src-attr 'none'; worker-src 'self'"
+      );
+      expect(document.querySelectorAll("style")).toHaveLength(0);
+      expect(
+        [...document.querySelectorAll("script")].every(
+          (script) => script.src && script.textContent?.trim() === ""
+        )
+      ).toBe(true);
+      expect(
+        [...document.querySelectorAll("*")].flatMap((element) =>
+          [...element.attributes].filter((attribute) =>
+            /^on/iu.test(attribute.name)
+          )
+        )
+      ).toHaveLength(0);
+      expect(builtHtml).not.toMatch(
+        /nonce=|csp-nonce|<!--#|unsafe-inline|unsafe-eval|unsafe-hashes/iu
+      );
+      expect(document.querySelector('link[rel="stylesheet"]')).not.toBeNull();
+      expect(document.querySelector("script[src]")).not.toBeNull();
+      expectStrictBuildAssets(distRoot);
 
       const referencedNotificationIcons = [
         "src/hooks/useNotifications.ts",
@@ -229,6 +294,68 @@ describe("Build Configuration and Source Verification", () => {
     // retain a load-tolerant timeout without changing lightweight test defaults.
   }, 120_000);
 
+  it("emits the strict CSP artifact contract for the Android surface", () => {
+    const distRoot = mkdtempSync(path.join(tmpdir(), "secpal-android-output-"));
+    const safeEnv = {
+      ...process.env,
+      VITE_APP_SURFACE: "android-native",
+    };
+    delete safeEnv.NODE_V8_COVERAGE;
+
+    try {
+      execFileSync(
+        "npm",
+        ["run", "build:android", "--", "--outDir", distRoot],
+        {
+          cwd: repoRoot,
+          stdio: "pipe",
+          env: safeEnv,
+        }
+      );
+
+      const builtHtml = readFileSync(path.join(distRoot, "index.html"), "utf8");
+      const document = new JSDOM(builtHtml).window.document;
+      const csp = document.querySelector(
+        'meta[http-equiv="Content-Security-Policy"]'
+      );
+
+      expect(csp?.getAttribute("content")).toBe(
+        "default-src 'self'; base-uri 'self'; connect-src 'self' https:; font-src 'self' data:; form-action 'self'; frame-src 'none'; img-src 'self' data: blob:; manifest-src 'self'; media-src 'self'; object-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-elem 'self'; style-src-attr 'none'; worker-src 'self'"
+      );
+      expect(document.querySelectorAll("style")).toHaveLength(0);
+      expect(
+        [...document.querySelectorAll("script")].every(
+          (script) => script.src && script.textContent?.trim() === ""
+        )
+      ).toBe(true);
+      expect(
+        [...document.querySelectorAll("*")].flatMap((element) =>
+          [...element.attributes].filter((attribute) =>
+            /^on/iu.test(attribute.name)
+          )
+        )
+      ).toHaveLength(0);
+      expect(builtHtml).not.toMatch(
+        /nonce=|csp-nonce|<!--#|unsafe-inline|unsafe-eval|unsafe-hashes/iu
+      );
+      expect(document.querySelector('link[rel="stylesheet"]')).not.toBeNull();
+      expect(document.querySelector("script[src]")).not.toBeNull();
+      expectStrictBuildAssets(distRoot);
+      expect(existsSync(path.join(distRoot, "sw.js"))).toBe(true);
+      expect(existsSync(path.join(distRoot, "dependencies.spdx.json"))).toBe(
+        true
+      );
+      expect(
+        existsSync(path.join(distRoot, "THIRD-PARTY-DEPENDENCY-NOTICES.md"))
+      ).toBe(true);
+      expect(existsSync(path.join(distRoot, "THIRD-PARTY-NOTICES.md"))).toBe(
+        true
+      );
+    } finally {
+      rmSync(distRoot, { recursive: true, force: true });
+    }
+  }, 120_000);
+
   it("keeps timeout-minutes only on runnable quality workflow jobs", () => {
     const qualityWorkflow = readRepoFile(".github/workflows/quality.yml");
     const jobsSection = getIndentedSection(qualityWorkflow, "jobs");
@@ -250,6 +377,14 @@ describe("Build Configuration and Source Verification", () => {
       expect(jobSection).toContain("runs-on:");
       expect(jobSection).toContain("timeout-minutes:");
     }
+  });
+
+  it("runs the required UI and CSP check for every pull request", () => {
+    const workflow = readRepoFile(".github/workflows/ui-csp.yml");
+    const pullRequestTrigger = getIndentedSection(workflow, "pull_request");
+
+    expect(pullRequestTrigger).not.toContain("paths:");
+    expect(getIndentedSection(workflow, "jobs")).toContain("strict-csp:");
   });
 
   it("keeps the package-lock root license aligned with package.json", () => {
@@ -385,8 +520,8 @@ describe("Build Configuration and Source Verification", () => {
     expect(readme).toContain("Service Worker");
     expect(readme).toContain("Workbox");
     expect(readme).toContain("src/ui");
-    expect(readme).toContain("shadcn-compatible");
-    expect(readme).toContain("Radix");
+    expect(readme).toContain("shadcn/Base UI");
+    expect(readme).toContain("base-vega");
     expect(readme).toContain("lucide-react");
     expect(readme).toContain("Do not introduce visual rebuilds");
     expect(readme).toContain("npm run dev:android:mock");
@@ -637,10 +772,9 @@ describe("Build Configuration and Source Verification", () => {
     expect(htaccess).toContain("manifest-src 'self'");
     expect(htaccess).toContain("connect-src 'self'");
     expect(htaccess).toContain("style-src 'self'");
-    expect(htaccess).toContain("style-src 'self' 'unsafe-inline'");
-    expect(htaccess).toContain("style-src-elem 'self' 'unsafe-inline'");
-    expect(htaccess).not.toContain("nonce-%{csp_nonce}e");
-    expect(htaccess).not.toContain("UNIQUE_ID");
+    expect(htaccess).toContain("style-src-elem 'self'");
+    expect(htaccess).toContain("style-src-attr 'none'");
+    expect(htaccess).not.toMatch(/unsafe-|nonce-|csp_nonce|UNIQUE_ID/u);
 
     expect(nginxConfig).toContain("default-src 'self'");
     expect(nginxConfig).toContain("script-src 'self'");
@@ -650,13 +784,10 @@ describe("Build Configuration and Source Verification", () => {
     expect(nginxConfig).toContain("manifest-src 'self'");
     expect(nginxConfig).toContain("connect-src 'self'");
     expect(nginxConfig).toContain("style-src 'self'");
-    expect(nginxConfig).toContain("style-src-elem 'self' 'nonce-$csp_nonce'");
-    expect(nginxConfig).not.toContain("style-src 'self' 'unsafe-inline'");
-    expect(viteConfig).toContain("html: {");
-    expect(viteConfig).toContain("cspNonce: cspNonceSsiPlaceholder");
-    expect(viteConfig).toContain(
-      "<!--#echo var='csp_nonce' encoding='none' -->"
-    );
+    expect(nginxConfig).toContain("style-src-elem 'self'");
+    expect(nginxConfig).toContain("style-src-attr 'none'");
+    expect(nginxConfig).not.toMatch(/unsafe-|nonce-|csp_nonce|\bssi\b/u);
+    expect(viteConfig).not.toMatch(/cspNonce|nonce-|#echo|\bssi\b/u);
     expect(viteConfig).toContain(
       'globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2,md}"]'
     );
@@ -664,12 +795,11 @@ describe("Build Configuration and Source Verification", () => {
       'globIgnores: ["**/*.html", "theme-color.js", "document-language.js"]'
     );
     expect(viteConfig).toContain("navigateFallback: null");
-    expect(viteConfig).toContain("nonceBearingHtmlShellPattern");
-    expect(viteConfig).toContain("manifestTransforms");
+    expect(viteConfig).toContain("injectRegister: false");
     expect(viteConfig).not.toContain("js,css,html,ico");
   });
 
-  it("does not precache nonce-bearing HTML shells", () => {
+  it("keeps HTML shells network-first and outside precache", () => {
     const serviceWorker = readRepoFile("src/sw.ts");
     const viteConfig = readRepoFile("vite.config.ts");
 
@@ -722,12 +852,13 @@ describe("Build Configuration and Source Verification", () => {
     expect(themeColorJs).not.toContain("(?:\\?.*)?$");
   });
 
-  it("reads CSP nonces from emitted script/link tags instead of a custom meta carrier", () => {
-    const nonceHelper = readRepoFile("src/lib/cspNonce.tsx");
+  it("configures Base UI centrally without a nonce carrier", () => {
+    const main = readRepoFile("src/main.tsx");
+    const indexHtml = readRepoFile("index.html");
 
-    expect(nonceHelper).toContain("script[nonce]");
-    expect(nonceHelper).toContain('link[rel="stylesheet"][nonce]');
-    expect(nonceHelper).not.toContain('property="csp-nonce"');
+    expect(main).toContain("<CSPProvider disableStyleElements>");
+    expect(indexHtml).toContain('http-equiv="Content-Security-Policy"');
+    expect(`${main}\n${indexHtml}`).not.toMatch(/nonce-|cspNonce|#echo/u);
   });
 
   it("adds dedicated delivery rules for service worker and manifest files", () => {

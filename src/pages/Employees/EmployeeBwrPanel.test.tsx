@@ -76,21 +76,8 @@ function renderPanel({
   );
 }
 
-async function selectRadixOption(
-  triggerName: RegExp,
-  optionName: RegExp | string
-) {
+async function selectOption(triggerName: RegExp, optionName: RegExp | string) {
   const trigger = screen.getByRole("combobox", { name: triggerName });
-  fireEvent.pointerDown(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
   fireEvent.click(trigger, { button: 0 });
 
   const option = await screen.findByRole("option", { name: optionName });
@@ -174,7 +161,7 @@ describe("EmployeeBwrPanel", () => {
     expect(document.querySelector('a[href^="data:"]')).toBeNull();
   });
 
-  it("saves managed BWR status with Radix fields and refreshes the panel", async () => {
+  it("saves managed BWR status with Base UI fields and refreshes the panel", async () => {
     const activeEmployee: Employee = {
       ...mockEmployee,
       bwr_status: "pending",
@@ -193,7 +180,7 @@ describe("EmployeeBwrPanel", () => {
 
     renderPanel({ employee: activeEmployee, onRefresh });
 
-    await selectRadixOption(/^BWR Status$/i, /^Active$/i);
+    await selectOption(/^BWR Status$/i, /^Active$/i);
     fireEvent.change(screen.getByLabelText(/^BWR ID$/i), {
       target: { value: " 7654321 " },
     });

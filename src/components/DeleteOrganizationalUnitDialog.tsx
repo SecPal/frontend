@@ -40,7 +40,7 @@ export interface DeleteOrganizationalUnitDialogProps {
 /**
  * Delete confirmation dialog for organizational units
  *
- * Uses the shared shadcn/Radix dialog primitives for confirmation semantics.
+ * Uses the shared shadcn/Base UI dialog primitives for confirmation semantics.
  * Shows different content based on whether the unit has children:
  * - Without children: Standard delete confirmation with Delete/Cancel buttons
  * - With children: Warning that unit cannot be deleted, with OK button only
@@ -93,7 +93,14 @@ export function DeleteOrganizationalUnitDialog({
 
   // Single Alert with conditional content - prevents flickering
   return (
-    <Dialog open={open} onClose={handleClose}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          handleClose();
+        }
+      }}
+    >
       <DialogPortal>
         <DialogOverlay />
         <DialogContent size="md">

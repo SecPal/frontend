@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal Contributors
+// SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -38,16 +38,6 @@ describe("LanguageSwitcher", () => {
   async function selectLanguage(visibleName: string) {
     const trigger = screen.getByRole("combobox", {
       name: /select language/i,
-    });
-    fireEvent.pointerDown(trigger, {
-      button: 0,
-      pointerId: 1,
-      pointerType: "mouse",
-    });
-    fireEvent.pointerUp(trigger, {
-      button: 0,
-      pointerId: 1,
-      pointerType: "mouse",
     });
     fireEvent.click(trigger, { button: 0 });
 

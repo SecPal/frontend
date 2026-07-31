@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { Trans } from "@lingui/react/macro";
+import { Progress } from "@/ui/primitives";
 
 export interface EncryptionProgressProps {
   /**
@@ -58,16 +59,10 @@ export function EncryptionProgress({
                   {percentage}%
                 </p>
               </div>
-              <div className="bg-accent h-2 w-full rounded-full">
-                <div
-                  className="bg-primary h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${percentage}%` }}
-                  role="progressbar"
-                  aria-valuenow={percentage}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                />
-              </div>
+              <Progress
+                value={percentage}
+                aria-label={`${filename}: ${percentage}%`}
+              />
             </div>
           ))}
         </div>

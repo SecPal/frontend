@@ -139,10 +139,10 @@ describe("DropdownMenuItem", () => {
     expect(content!.className).not.toContain("border bg-popover");
   });
 
-  it("supports `asChild` link composition", () => {
+  it("supports Base UI render-prop link composition", () => {
     renderOpenDropdown(
-      <DropdownMenuItem asChild>
-        <PrefetchLink to="/settings">Settings</PrefetchLink>
+      <DropdownMenuItem render={<PrefetchLink to="/settings" />}>
+        Settings
       </DropdownMenuItem>
     );
 
@@ -181,10 +181,8 @@ describe("DropdownMenuItem", () => {
 
   it("renders item labels as inline content instead of nested menu section labels", () => {
     renderOpenDropdown(
-      <DropdownMenuItem asChild>
-        <PrefetchLink to="/settings">
-          <DropdownMenuLabel>Settings</DropdownMenuLabel>
-        </PrefetchLink>
+      <DropdownMenuItem render={<PrefetchLink to="/settings" />}>
+        <DropdownMenuLabel>Settings</DropdownMenuLabel>
       </DropdownMenuItem>
     );
 

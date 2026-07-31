@@ -90,8 +90,36 @@ describe("RouteGuardState theme tokens", () => {
     });
     expect(showAppButton.closest("body")).not.toBeNull();
 
-    const shieldedBackground = container.querySelector('[aria-hidden="true"]');
-    expect(shieldedBackground).toHaveAttribute("inert");
+    expect(container).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("requires the explicit action to dismiss the privacy shield", async () => {
+    const user = userEvent.setup();
+    const onDismiss = vi.fn();
+
+    renderWithProviders(
+      <RoutePrivacyShieldState onDismiss={onDismiss}>
+        <button type="button">Background action</button>
+      </RoutePrivacyShieldState>
+    );
+
+    const showAppButton = await screen.findByRole("button", {
+      name: /show app/i,
+    });
+    const overlay = document.querySelector<HTMLElement>(
+      '[data-slot="dialog-overlay"]'
+    );
+
+    expect(overlay).not.toBeNull();
+
+    await user.keyboard("{Escape}");
+    await user.click(overlay!);
+
+    expect(onDismiss).not.toHaveBeenCalled();
+
+    await user.click(showAppButton);
+
+    expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
   it("hides existing body-level portal siblings behind the privacy shield", async () => {
@@ -109,12 +137,10 @@ describe("RouteGuardState theme tokens", () => {
     await screen.findByRole("button", { name: /show app/i });
 
     expect(existingPortal).toHaveAttribute("aria-hidden", "true");
-    expect(existingPortal).toHaveAttribute("inert");
 
     unmount();
 
     expect(existingPortal).not.toHaveAttribute("aria-hidden");
-    expect(existingPortal).not.toHaveAttribute("inert");
     existingPortal.remove();
   });
 

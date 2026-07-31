@@ -139,7 +139,7 @@ const mockResponse: PaginatedResponse<Site> = {
   },
 };
 
-async function selectRadixOption(label: RegExp, optionName: RegExp) {
+async function selectOption(label: RegExp, optionName: RegExp) {
   const user = userEvent.setup();
   await user.click(screen.getByRole("combobox", { name: label }));
   await user.click(await screen.findByRole("option", { name: optionName }));
@@ -297,7 +297,7 @@ describe("SitesPage", () => {
     // Clear call history to isolate this test's API calls
     vi.mocked(customersApi.listSites).mockClear();
 
-    await selectRadixOption(/type/i, /permanent/i);
+    await selectOption(/type/i, /permanent/i);
 
     await waitFor(() => {
       expect(customersApi.listSites).toHaveBeenCalledWith(
@@ -313,7 +313,7 @@ describe("SitesPage", () => {
       expect(screen.getByText("Main Office")).toBeInTheDocument();
     });
 
-    await selectRadixOption(/status/i, /inactive/i);
+    await selectOption(/status/i, /inactive/i);
 
     await waitFor(() => {
       expect(customersApi.listSites).toHaveBeenCalledWith(
@@ -643,7 +643,7 @@ describe("SitesPage", () => {
     // Clear call history to isolate this test's API calls
     vi.mocked(customersApi.listSites).mockClear();
 
-    await selectRadixOption(/type/i, /temporary/i);
+    await selectOption(/type/i, /temporary/i);
 
     await waitFor(() => {
       expect(customersApi.listSites).toHaveBeenCalledWith(
@@ -659,7 +659,7 @@ describe("SitesPage", () => {
       expect(screen.getByText("Main Office")).toBeInTheDocument();
     });
 
-    await selectRadixOption(/status/i, /inactive/i);
+    await selectOption(/status/i, /inactive/i);
 
     await waitFor(() => {
       expect(customersApi.listSites).toHaveBeenCalledWith(

@@ -48,22 +48,12 @@ function submitEmployeeCreateForm() {
   );
 }
 
-async function selectRadixOption(
+async function selectBaseUiOption(
   triggerName: RegExp,
   optionName: RegExp | string
 ) {
   const trigger = screen.getByRole("combobox", { name: triggerName });
   await waitFor(() => expect(trigger).not.toBeDisabled());
-  fireEvent.pointerDown(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
   fireEvent.click(trigger, { button: 0 });
 
   const option = await screen.findByRole("option", { name: optionName });
@@ -130,7 +120,7 @@ describe("EmployeeCreate", () => {
       )
     );
     expect(legalEntityApi.listCustomerLegalEntities).toHaveBeenCalledTimes(1);
-    await selectRadixOption(/establishment/i, "Main Office");
+    await selectBaseUiOption(/establishment/i, "Main Office");
   });
 
   it("should load establishments after the legal entity", async () => {
@@ -148,14 +138,9 @@ describe("EmployeeCreate", () => {
       expect(select).not.toBeDisabled();
     });
 
-    fireEvent.pointerDown(
-      screen.getByRole("combobox", { name: /establishment/i }),
-      {
-        button: 0,
-        pointerId: 1,
-        pointerType: "mouse",
-      }
-    );
+    fireEvent.click(screen.getByRole("combobox", { name: /establishment/i }), {
+      button: 0,
+    });
     expect(
       await screen.findByRole("option", { name: "Main Office" })
     ).toHaveAttribute("data-value", "establishment-1");
@@ -198,7 +183,7 @@ describe("EmployeeCreate", () => {
       target: { value: "01/01/2025" },
     });
     fireEvent.blur(screen.getByLabelText(/contract start date/i));
-    await selectRadixOption(/establishment/i, "Main Office");
+    await selectBaseUiOption(/establishment/i, "Main Office");
 
     submitEmployeeCreateForm();
 
@@ -294,7 +279,7 @@ describe("EmployeeCreate", () => {
         target: { value: "01/01/2025" },
       });
       fireEvent.blur(screen.getByLabelText(/contract start date/i));
-      await selectRadixOption(/establishment/i, "Main Office");
+      await selectBaseUiOption(/establishment/i, "Main Office");
 
       // Submit
       submitEmployeeCreateForm();
@@ -380,7 +365,7 @@ describe("EmployeeCreate", () => {
         target: { value: "01/01/2025" },
       });
       fireEvent.blur(screen.getByLabelText(/contract start date/i));
-      await selectRadixOption(/establishment/i, "Main Office");
+      await selectBaseUiOption(/establishment/i, "Main Office");
 
       // Submit
       submitEmployeeCreateForm();
@@ -544,7 +529,7 @@ describe("EmployeeCreate", () => {
       target: { value: "01/01/2025" },
     });
     fireEvent.blur(screen.getByLabelText(/contract start date/i));
-    await selectRadixOption(/establishment/i, "Main Office");
+    await selectBaseUiOption(/establishment/i, "Main Office");
 
     fireEvent.click(screen.getByRole("switch", { name: /leadership/i }));
     submitEmployeeCreateForm();
@@ -601,7 +586,7 @@ describe("EmployeeCreate", () => {
       target: { value: "01/01/2025" },
     });
     fireEvent.blur(screen.getByLabelText(/contract start date/i));
-    await selectRadixOption(/establishment/i, "Main Office");
+    await selectBaseUiOption(/establishment/i, "Main Office");
 
     submitEmployeeCreateForm();
 
@@ -666,7 +651,7 @@ describe("EmployeeCreate", () => {
     fireEvent.change(screen.getByLabelText(/contract start date/i), {
       target: { value: "2025-01-01" },
     });
-    await selectRadixOption(/establishment/i, "Main Office");
+    await selectBaseUiOption(/establishment/i, "Main Office");
 
     fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
 
@@ -686,12 +671,12 @@ describe("EmployeeCreate", () => {
       ).not.toBeDisabled();
     });
 
-    await selectRadixOption(/status/i, "Active");
+    await selectBaseUiOption(/status/i, "Active");
     expect(screen.getByRole("combobox", { name: /status/i })).toHaveTextContent(
       "Active"
     );
 
-    await selectRadixOption(/contract type/i, "Part Time");
+    await selectBaseUiOption(/contract type/i, "Part Time");
     expect(
       screen.getByRole("combobox", { name: /contract type/i })
     ).toHaveTextContent("Part Time");
@@ -713,7 +698,7 @@ describe("EmployeeCreate", () => {
     );
     expect(invitationSwitch).toBeChecked();
 
-    await selectRadixOption(/status/i, "Active");
+    await selectBaseUiOption(/status/i, "Active");
 
     expect(invitationSwitch).toBeDisabled();
     expect(invitationSwitch).not.toBeChecked();
@@ -793,7 +778,7 @@ describe("EmployeeCreate", () => {
       target: { value: "01/01/2025" },
     });
     fireEvent.blur(screen.getByLabelText(/contract start date/i));
-    await selectRadixOption(/establishment/i, "Main Office");
+    await selectBaseUiOption(/establishment/i, "Main Office");
 
     submitEmployeeCreateForm();
 
@@ -823,7 +808,7 @@ describe("EmployeeCreate", () => {
       ).not.toBeDisabled();
     });
 
-    await selectRadixOption(/status/i, "Applicant");
+    await selectBaseUiOption(/status/i, "Applicant");
 
     expect(screen.getByRole("combobox", { name: /status/i })).toHaveTextContent(
       "Applicant"
@@ -867,7 +852,7 @@ describe("EmployeeCreate", () => {
     fireEvent.change(screen.getByLabelText(/contract start date/i), {
       target: { value: "2025-01-01" },
     });
-    await selectRadixOption(/establishment/i, "Main Office");
+    await selectBaseUiOption(/establishment/i, "Main Office");
 
     // Submit form to trigger error
     fireEvent.click(screen.getByRole("button", { name: /create employee/i }));
@@ -1068,7 +1053,7 @@ describe("EmployeeCreate", () => {
           target: { value: "01/01/2025" },
         });
         fireEvent.blur(screen.getByLabelText(/contract start date/i));
-        await selectRadixOption(/establishment/i, "Main Office");
+        await selectBaseUiOption(/establishment/i, "Main Office");
 
         // Enable leadership and set management level
         const leadershipSwitch = screen.getByRole("switch", {
@@ -1249,7 +1234,7 @@ describe("EmployeeCreate", () => {
       fireEvent.change(screen.getByLabelText(/datum des vertragsbeginns/i), {
         target: { value: "1.6." },
       });
-      await selectRadixOption(/betriebsstätte/i, "Main Office");
+      await selectBaseUiOption(/betriebsstätte/i, "Main Office");
 
       submitEmployeeCreateForm();
 

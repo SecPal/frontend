@@ -39,7 +39,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-  Button,
   LoginButton,
   LoginCard,
   LoginCardHeader,
@@ -1135,27 +1134,29 @@ export function Login({
                   </p>
                 </div>
                 {onSwitchRuntimeBootstrap ? (
-                  <AlertDialogTrigger asChild>
-                    <LoginButton
-                      id="secpal-runtime-switch-instance"
-                      type="button"
-                      variant="outline"
-                      className="mx-auto w-full"
-                      disabled={
-                        isSubmitting ||
-                        isSubmittingPasskey ||
-                        isMfaChallengeActive ||
-                        isCompletingLogin ||
-                        isSwitchingRuntimeBootstrap
-                      }
-                      aria-busy={isSwitchingRuntimeBootstrap}
-                    >
-                      {isSwitchingRuntimeBootstrap ? (
-                        <Trans>Switching instance...</Trans>
-                      ) : (
-                        <Trans>Switch instance</Trans>
-                      )}
-                    </LoginButton>
+                  <AlertDialogTrigger
+                    render={
+                      <LoginButton
+                        id="secpal-runtime-switch-instance"
+                        type="button"
+                        variant="outline"
+                        className="mx-auto w-full"
+                        disabled={
+                          isSubmitting ||
+                          isSubmittingPasskey ||
+                          isMfaChallengeActive ||
+                          isCompletingLogin ||
+                          isSwitchingRuntimeBootstrap
+                        }
+                        aria-busy={isSwitchingRuntimeBootstrap}
+                      />
+                    }
+                  >
+                    {isSwitchingRuntimeBootstrap ? (
+                      <Trans>Switching instance...</Trans>
+                    ) : (
+                      <Trans>Switch instance</Trans>
+                    )}
                   </AlertDialogTrigger>
                 ) : null}
               </div>
@@ -1172,18 +1173,14 @@ export function Login({
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <Button asChild variant="outline">
-                  <AlertDialogCancel>
-                    <Trans>Cancel</Trans>
-                  </AlertDialogCancel>
-                </Button>
-                <Button asChild>
-                  <AlertDialogAction
-                    onClick={() => void handleSwitchRuntimeBootstrap()}
-                  >
-                    <Trans>Switch instance</Trans>
-                  </AlertDialogAction>
-                </Button>
+                <AlertDialogCancel>
+                  <Trans>Cancel</Trans>
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => void handleSwitchRuntimeBootstrap()}
+                >
+                  <Trans>Switch instance</Trans>
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

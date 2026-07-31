@@ -14,6 +14,8 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
+import { getOrganizationalUnitTreeIndentClass } from "@/lib/organizationalUnitUtils";
+import { cn } from "@/lib/utils";
 import { Button } from "@/ui/button";
 import {
   DropdownMenu,
@@ -138,10 +140,11 @@ const TreeNode = memo(
     return (
       <div className="select-none">
         <div
-          className={`group flex items-center gap-1.5 py-2 px-2 rounded-lg cursor-pointer transition-colors ${
+          className={cn(
+            "group flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-2 transition-colors",
+            getOrganizationalUnitTreeIndentClass(level),
             isSelected ? "border-primary/30 bg-primary/10" : "hover:bg-muted"
-          }`}
-          style={{ paddingLeft: `${Math.min(level * 16, 64) + 8}px` }}
+          )}
           onClick={handleSelect}
           role="treeitem"
           aria-expanded={hasChildren ? isExpanded : undefined}
@@ -203,15 +206,17 @@ const TreeNode = memo(
           {/* Actions Menu */}
           {hasActions && (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-label={t`Actions for ${unit.name}`}
-                  className="shrink-0 rounded-md p-1 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                >
-                  <EllipsisVertical className="text-muted-foreground h-5 w-5" />
-                </button>
+              <DropdownMenuTrigger
+                render={
+                  <button
+                    type="button"
+                    aria-label={t`Actions for ${unit.name}`}
+                    className="shrink-0 rounded-md p-1 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  />
+                }
+              >
+                <EllipsisVertical className="text-muted-foreground h-5 w-5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent side="bottom" align="end">
                 {canCreateChild && (

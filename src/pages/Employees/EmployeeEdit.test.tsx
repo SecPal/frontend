@@ -58,22 +58,9 @@ async function waitForDomainAssignmentReady() {
   );
 }
 
-async function selectRadixOption(
-  triggerName: RegExp,
-  optionName: RegExp | string
-) {
+async function selectOption(triggerName: RegExp, optionName: RegExp | string) {
   const trigger = screen.getByRole("combobox", { name: triggerName });
   await waitFor(() => expect(trigger).not.toBeDisabled());
-  fireEvent.pointerDown(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
   fireEvent.click(trigger, { button: 0 });
 
   const option = await screen.findByRole("option", { name: optionName });
@@ -467,16 +454,6 @@ describe("EmployeeEdit", () => {
     const trigger = screen.getByRole("combobox", {
       name: /establishment/i,
     });
-    fireEvent.pointerDown(trigger, {
-      button: 0,
-      pointerId: 1,
-      pointerType: "mouse",
-    });
-    fireEvent.pointerUp(trigger, {
-      button: 0,
-      pointerId: 1,
-      pointerType: "mouse",
-    });
     fireEvent.click(trigger, { button: 0 });
 
     expect(
@@ -638,7 +615,7 @@ describe("EmployeeEdit", () => {
       expect(screen.getByLabelText(/first name/i)).toHaveValue("John");
     });
 
-    await selectRadixOption(/establishment/i, "Marketing");
+    await selectOption(/establishment/i, "Marketing");
 
     // Submit
     await waitForDomainAssignmentReady();
