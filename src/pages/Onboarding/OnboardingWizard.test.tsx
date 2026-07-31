@@ -3,6 +3,7 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
+  act,
   fireEvent,
   render,
   screen,
@@ -89,6 +90,15 @@ function setCsrfTokenCookie(value: string) {
   document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
 }
 
+function findReactActWarnings(calls: unknown[][]) {
+  return calls.filter((call) =>
+    call.some(
+      (value) =>
+        typeof value === "string" && value.includes("not wrapped in act")
+    )
+  );
+}
+
 async function renderWithAuthenticatedProviders(options?: {
   contractStartDate?: string | null;
   employeeId?: string;
@@ -122,7 +132,7 @@ async function renderWithAuthenticatedProviders(options?: {
     },
   } as Awaited<ReturnType<typeof authApi.getCurrentUser>>);
 
-  return render(
+  const providers = (
     <MemoryRouter initialEntries={["/onboarding"]}>
       <I18nProvider i18n={i18n}>
         <AuthContext.Provider
@@ -165,6 +175,10 @@ async function renderWithAuthenticatedProviders(options?: {
       </I18nProvider>
     </MemoryRouter>
   );
+
+  await act(async () => {
+    render(providers);
+  });
 }
 
 async function selectNationality(
@@ -780,9 +794,16 @@ describe("OnboardingWizard", () => {
       can_be_edited: false,
     });
 
+    const consoleError = vi.spyOn(console, "error");
     await renderWithAuthenticatedProviders({
       contractStartDate: "2026-05-01",
     });
+    const initialRenderActWarnings = findReactActWarnings(
+      consoleError.mock.calls
+    );
+    consoleError.mockRestore();
+
+    expect(initialRenderActWarnings).toHaveLength(0);
 
     expect(
       await screen.findByRole("heading", { name: /personal information form/i })
@@ -801,8 +822,9 @@ describe("OnboardingWizard", () => {
     const expiryInput = screen.getByLabelText(/residence title valid until/i);
     // 2026-06-01 is after auth date (2026-05-01) so validation must pass,
     // meaning employment-permitted question appears.
-    fireEvent.change(expiryInput, { target: { value: "2026-06-01" } });
-    fireEvent.blur(expiryInput);
+    await user.type(expiryInput, "2026-06-01");
+    await user.tab();
+    expect(expiryInput).not.toHaveFocus();
 
     expect(
       await screen.findByLabelText(/employment permitted/i)
@@ -4598,7 +4620,8 @@ describe("OnboardingWizard initial loading and error states", () => {
     i18n.activate("en");
   });
 
-  it("renders the initial onboarding skeleton inside the wizard frame", () => {
+  it("renders the initial onboarding skeleton inside the wizard frame", async () => {
+    const consoleError = vi.spyOn(console, "error");
     let resolveSteps: (value: unknown[]) => void = () => {};
     onboardingApiMocks.fetchOnboardingSteps.mockImplementation(
       () =>
@@ -4623,6 +4646,17 @@ describe("OnboardingWizard initial loading and error states", () => {
     expect(loadingRegion.tagName.toLowerCase()).toBe("div");
 
     resolveSteps([]);
+
+    expect(
+      await screen.findByText(/no onboarding steps are available right now/i)
+    ).toBeInTheDocument();
+
+    const loadingTransitionActWarnings = findReactActWarnings(
+      consoleError.mock.calls
+    );
+    consoleError.mockRestore();
+
+    expect(loadingTransitionActWarnings).toHaveLength(0);
   });
 
   it("keeps the wizard frame mounted while a step transition loads the next template", async () => {
