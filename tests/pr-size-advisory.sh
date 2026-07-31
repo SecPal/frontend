@@ -69,6 +69,7 @@ for policy_file in "${policy_files[@]}"; do
   for obsolete_policy in \
     ".preflight-allow-large-pr" \
     "large-pr-approved" \
+    "Excluded from PR size calculation" \
     "PR size validation (≤600 lines)" \
     "PRs must be ≤600 lines" \
     "600-line PR size check" \

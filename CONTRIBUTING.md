@@ -112,7 +112,7 @@ pnpm test:run        # Unit tests
 pnpm test:e2e        # E2E tests
 ```
 
-**Excluded from PR size calculation:**
+**Excluded from advisory PR-size reporting:**
 
 The following files are automatically excluded from advisory PR-size reporting because they are auto-generated or boilerplate:
 
