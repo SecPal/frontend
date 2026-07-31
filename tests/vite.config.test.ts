@@ -71,6 +71,47 @@ describe("vite config dev proxy", () => {
       buildDevServerProxyConfig("")
     );
   });
+
+  it("removes the production CSP meta from Vite development HTML", async () => {
+    const { stripStaticCspForViteDev } = await import("../vite.config");
+    const html = `<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self'; style-src-elem 'self'"
+    />
+    <link rel="stylesheet" href="/src/index.css" />
+  </head>
+</html>`;
+
+    const transformedHtml = stripStaticCspForViteDev(html);
+
+    expect(transformedHtml).not.toContain("Content-Security-Policy");
+    expect(transformedHtml).toContain(
+      '<link rel="stylesheet" href="/src/index.css" />'
+    );
+  });
+
+  it("fails fast when the development HTML CSP contract drifts", async () => {
+    const { stripStaticCspForViteDev } = await import("../vite.config");
+    const cspMeta =
+      '<meta http-equiv="Content-Security-Policy" content="default-src \'self\'" />';
+    const reorderedCspMeta =
+      '<meta content="default-src \'self\'" http-equiv="Content-Security-Policy" />';
+
+    expect(() => stripStaticCspForViteDev("<html></html>")).toThrow(
+      "Expected exactly one static Content-Security-Policy meta element, found 0."
+    );
+    expect(() =>
+      stripStaticCspForViteDev(
+        `<html><head>${cspMeta}${reorderedCspMeta}</head></html>`
+      )
+    ).toThrow(
+      "Expected exactly one static Content-Security-Policy meta element, found 2."
+    );
+  });
 });
 
 describe("vite config surface validation", () => {

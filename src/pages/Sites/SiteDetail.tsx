@@ -509,7 +509,11 @@ export default function SiteDetail() {
       {capabilities.actions.sites.delete && (
         <Dialog
           open={showDeleteDialog}
-          onClose={() => setShowDeleteDialog(false)}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) {
+              setShowDeleteDialog(false);
+            }
+          }}
         >
           <DialogPortal>
             <DialogOverlay />

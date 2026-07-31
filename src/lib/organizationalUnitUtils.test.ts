@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal Contributors
+// SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { describe, it, expect, beforeEach } from "vitest";
@@ -9,6 +9,8 @@ import {
   getTypeBadgeColor,
   getValidChildTypeOptions,
   getDefaultChildType,
+  getOrganizationalUnitSelectIndentClass,
+  getOrganizationalUnitTreeIndentClass,
   TYPE_HIERARCHY,
 } from "./organizationalUnitUtils";
 
@@ -131,6 +133,41 @@ describe("organizationalUnitUtils", () => {
       expect(TYPE_HIERARCHY.division).toBe(5);
       expect(TYPE_HIERARCHY.department).toBe(6);
       expect(TYPE_HIERARCHY.custom).toBe(7);
+    });
+  });
+
+  describe("organizational unit indentation", () => {
+    it("preserves every supported select hierarchy depth", () => {
+      expect(
+        Array.from({ length: 7 }, (_, depth) =>
+          getOrganizationalUnitSelectIndentClass(depth)
+        )
+      ).toEqual(["pl-0", "pl-4", "pl-8", "pl-12", "pl-16", "pl-20", "pl-24"]);
+    });
+
+    it("preserves every supported tree hierarchy depth", () => {
+      expect(
+        Array.from({ length: 7 }, (_, depth) =>
+          getOrganizationalUnitTreeIndentClass(depth)
+        )
+      ).toEqual([
+        "pl-2",
+        "pl-6",
+        "pl-10",
+        "pl-14",
+        "pl-[4.5rem]",
+        "pl-[5.5rem]",
+        "pl-[6.5rem]",
+      ]);
+    });
+
+    it("bounds malformed depths to the supported hierarchy", () => {
+      expect(getOrganizationalUnitSelectIndentClass(-1)).toBe("pl-0");
+      expect(getOrganizationalUnitSelectIndentClass(99)).toBe("pl-24");
+      expect(getOrganizationalUnitTreeIndentClass(-1)).toBe("pl-2");
+      expect(getOrganizationalUnitTreeIndentClass(99)).toBe("pl-[6.5rem]");
+      expect(getOrganizationalUnitSelectIndentClass(Number.NaN)).toBe("pl-0");
+      expect(getOrganizationalUnitTreeIndentClass(Number.NaN)).toBe("pl-2");
     });
   });
 

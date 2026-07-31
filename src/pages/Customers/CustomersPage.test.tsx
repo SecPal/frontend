@@ -95,7 +95,7 @@ const mockResponse: PaginatedResponse<Customer> = {
 
 const QUERY_TIMEOUT = 15000;
 
-async function selectRadixOption(label: RegExp, optionName: RegExp) {
+async function selectOption(label: RegExp, optionName: RegExp) {
   const user = userEvent.setup();
   await user.click(screen.getByRole("combobox", { name: label }));
   await user.click(await screen.findByRole("option", { name: optionName }));
@@ -261,7 +261,7 @@ describe("CustomersPage", () => {
       expect(screen.getByText("Acme Corp")).toBeInTheDocument();
     });
 
-    await selectRadixOption(/status/i, /inactive/i);
+    await selectOption(/status/i, /inactive/i);
 
     await waitFor(() => {
       expect(customersApi.listCustomers).toHaveBeenCalledWith(
@@ -488,7 +488,7 @@ describe("CustomersPage", () => {
       expect(screen.getByText("Acme Corp")).toBeInTheDocument();
     });
 
-    await selectRadixOption(/status/i, /inactive/i);
+    await selectOption(/status/i, /inactive/i);
 
     await waitFor(() => {
       expect(customersApi.listCustomers).toHaveBeenCalledWith(

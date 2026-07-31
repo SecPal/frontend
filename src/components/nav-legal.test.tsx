@@ -1,7 +1,12 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-import type { ReactNode } from "react";
+import {
+  cloneElement,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -29,16 +34,16 @@ vi.mock("@/ui/sidebar", async (importOriginal) => {
     SidebarMenu: ({ children }: { children: ReactNode }) => <ul>{children}</ul>,
     SidebarMenuButton: ({
       children,
-      asChild,
+      render,
       ...props
     }: {
       children: ReactNode;
-      asChild?: boolean;
+      render?: ReactElement;
     } & Record<string, unknown>) =>
       (() => {
         capturedSidebarMenuButtonProps.push(props);
-        return asChild ? (
-          <>{children}</>
+        return isValidElement(render) ? (
+          cloneElement(render, props, children)
         ) : (
           <button {...props}>{children}</button>
         );
@@ -51,13 +56,22 @@ vi.mock("@/ui/sidebar", async (importOriginal) => {
     ),
     SidebarMenuSubButton: ({
       children,
-      asChild,
+      render,
+      isActive,
       ...props
     }: {
       children: ReactNode;
-      asChild?: boolean;
-    } & Record<string, unknown>) =>
-      asChild ? <>{children}</> : <a {...props}>{children}</a>,
+      render?: ReactElement;
+      isActive?: boolean;
+    } & Record<string, unknown>) => {
+      void isActive;
+
+      return isValidElement(render) ? (
+        cloneElement(render, props, children)
+      ) : (
+        <a {...props}>{children}</a>
+      );
+    },
     SidebarMenuSubItem: ({ children }: { children: ReactNode }) => (
       <li>{children}</li>
     ),

@@ -6,18 +6,13 @@ import {
   forwardRef,
   isValidElement,
   type ChangeEvent,
+  type ComponentProps,
   type ComponentPropsWithoutRef,
-  type ElementRef,
   type ForwardedRef,
   type InputHTMLAttributes,
   type ReactElement,
   type ReactNode,
 } from "react";
-import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
-import * as LabelPrimitive from "@radix-ui/react-label";
-import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
-import * as SelectPrimitive from "@radix-ui/react-select";
-import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import {
   Badge as AppBadge,
   Field as AppField,
@@ -49,8 +44,15 @@ import {
 } from "./card";
 import { Checkbox as AppCheckbox } from "./checkbox";
 import { Input as AppInput } from "./input";
+import { Label } from "./label";
+import {
+  Select as AppSelect,
+  SelectContent as AppSelectContent,
+  SelectItem as AppSelectItem,
+  SelectTrigger as AppSelectTrigger,
+  SelectValue as AppSelectValue,
+} from "./select";
 import { Textarea as AppTextarea } from "./textarea";
-import { getCspNonce } from "@/lib/cspNonce";
 import { cn } from "@/lib/utils";
 import { uiControlBase } from "./styles";
 
@@ -62,12 +64,12 @@ export const Textarea = AppTextarea;
 
 const emptySelectValue = "__onboarding_select_empty__";
 
-function toRadixSelectValue(value: unknown) {
+function toSelectValue(value: unknown) {
   const stringValue = value === undefined ? undefined : String(value);
   return stringValue === "" ? emptySelectValue : stringValue;
 }
 
-function fromRadixSelectValue(value: string) {
+function fromSelectValue(value: string) {
   return value === emptySelectValue ? "" : value;
 }
 
@@ -170,7 +172,7 @@ export const Select = forwardRef(function Select(
     "aria-invalid": ariaInvalid,
     ...props
   }: Omit<
-    ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>,
+    ComponentProps<typeof AppSelectTrigger>,
     "children" | "defaultValue" | "onChange" | "value"
   > & {
     children?: ReactNode;
@@ -180,18 +182,21 @@ export const Select = forwardRef(function Select(
     required?: boolean;
     onChange?: (event: ChangeEvent<HTMLSelectElement>) => void;
   },
-  ref: ForwardedRef<ElementRef<typeof SelectPrimitive.Trigger>>
+  ref: ForwardedRef<HTMLButtonElement>
 ) {
   const options = getSelectOptions(children);
   const isControlled = value !== undefined;
-  const selectedValue = isControlled ? toRadixSelectValue(value) : undefined;
+  const selectedValue = isControlled ? toSelectValue(value) : undefined;
   const initialValue =
-    defaultValue === undefined ? undefined : toRadixSelectValue(defaultValue);
+    defaultValue === undefined ? undefined : toSelectValue(defaultValue);
   const emptyOption = options.find((option) => option.value === "");
-  const cspNonce = getCspNonce();
 
   return (
-    <SelectPrimitive.Root
+    <AppSelect
+      items={options.map((option) => ({
+        value: toSelectValue(option.value) ?? option.value,
+        label: option.label,
+      }))}
       {...(isControlled
         ? { value: selectedValue }
         : { defaultValue: initialValue })}
@@ -203,12 +208,12 @@ export const Select = forwardRef(function Select(
           createSelectChangeEvent({
             id,
             name,
-            value: fromRadixSelectValue(nextValue),
+            value: fromSelectValue(nextValue),
           })
         );
       }}
     >
-      <SelectPrimitive.Trigger
+      <AppSelectTrigger
         ref={ref}
         id={id}
         data-slot="onboarding-select-trigger"
@@ -218,66 +223,27 @@ export const Select = forwardRef(function Select(
         aria-required={required || undefined}
         className={cn(
           uiControlBase,
-          "flex h-10 items-center justify-between gap-2 [&>span]:line-clamp-1",
+          "flex h-10 items-center justify-between gap-2",
           className
         )}
         {...props}
       >
-        <SelectPrimitive.Value placeholder={emptyOption?.label} />
-        <SelectPrimitive.Icon asChild>
-          <ChevronDown
-            className="size-4 opacity-50"
-            aria-hidden="true"
-            data-slot="onboarding-select-trigger-icon"
-          />
-        </SelectPrimitive.Icon>
-      </SelectPrimitive.Trigger>
-      <SelectPrimitive.Portal>
-        <SelectPrimitive.Content
-          data-slot="onboarding-select-content"
-          position="popper"
-          className="relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1"
-        >
-          <SelectPrimitive.ScrollUpButton
-            data-slot="onboarding-select-scroll-up"
-            className="flex cursor-default items-center justify-center py-1"
+        <AppSelectValue placeholder={emptyOption?.label} />
+      </AppSelectTrigger>
+      <AppSelectContent data-slot="onboarding-select-content">
+        {options.map((option) => (
+          <AppSelectItem
+            key={option.value}
+            value={toSelectValue(option.value) ?? option.value}
+            disabled={option.disabled}
+            data-slot="onboarding-select-item"
+            data-value={option.value}
           >
-            <ChevronUp className="size-4" aria-hidden="true" />
-          </SelectPrimitive.ScrollUpButton>
-          <SelectPrimitive.Viewport
-            nonce={cspNonce}
-            data-slot="onboarding-select-viewport"
-            className="h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] p-1"
-          >
-            {options.map((option) => (
-              <SelectPrimitive.Item
-                key={option.value}
-                value={toRadixSelectValue(option.value) ?? option.value}
-                disabled={option.disabled}
-                data-slot="onboarding-select-item"
-                data-value={option.value}
-                className="relative flex w-full cursor-default items-center rounded-sm py-1.5 pr-8 pl-2 text-sm text-foreground outline-none data-[disabled]:pointer-events-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:opacity-50"
-              >
-                <span className="absolute right-2 flex size-3.5 items-center justify-center">
-                  <SelectPrimitive.ItemIndicator>
-                    <Check className="size-4" aria-hidden="true" />
-                  </SelectPrimitive.ItemIndicator>
-                </span>
-                <SelectPrimitive.ItemText>
-                  {option.label}
-                </SelectPrimitive.ItemText>
-              </SelectPrimitive.Item>
-            ))}
-          </SelectPrimitive.Viewport>
-          <SelectPrimitive.ScrollDownButton
-            data-slot="onboarding-select-scroll-down"
-            className="flex cursor-default items-center justify-center py-1"
-          >
-            <ChevronDown className="size-4" aria-hidden="true" />
-          </SelectPrimitive.ScrollDownButton>
-        </SelectPrimitive.Content>
-      </SelectPrimitive.Portal>
-    </SelectPrimitive.Root>
+            {option.label}
+          </AppSelectItem>
+        ))}
+      </AppSelectContent>
+    </AppSelect>
   );
 });
 
@@ -287,12 +253,12 @@ export const Checkbox = forwardRef(function Checkbox(
     onChange,
     ...props
   }: Omit<
-    ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>,
+    ComponentProps<typeof AppCheckbox>,
     "onChange" | "onCheckedChange"
   > & {
     onChange?: InputHTMLAttributes<HTMLInputElement>["onChange"];
   },
-  ref: ForwardedRef<ElementRef<typeof CheckboxPrimitive.Root>>
+  ref: ForwardedRef<HTMLButtonElement>
 ) {
   return (
     <AppCheckbox
@@ -300,10 +266,6 @@ export const Checkbox = forwardRef(function Checkbox(
       data-slot="onboarding-checkbox"
       className={className}
       onCheckedChange={(checked) => {
-        if (checked === "indeterminate") {
-          return;
-        }
-
         const target = {
           checked,
           value: props.value,
@@ -324,7 +286,7 @@ export const Checkbox = forwardRef(function Checkbox(
 export function RadioGroup({
   className,
   ...props
-}: ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>) {
+}: ComponentProps<typeof AppRadioGroup>) {
   return (
     <AppRadioGroup
       data-slot="onboarding-radio-group"
@@ -335,11 +297,8 @@ export function RadioGroup({
 }
 
 export const RadioGroupItem = forwardRef(function RadioGroupItem(
-  {
-    className,
-    ...props
-  }: ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>,
-  ref: ForwardedRef<ElementRef<typeof RadioGroupPrimitive.Item>>
+  { className, ...props }: ComponentProps<typeof AppRadioGroupItem>,
+  ref: ForwardedRef<HTMLButtonElement>
 ) {
   return (
     <AppRadioGroupItem
@@ -501,8 +460,8 @@ export function FieldGroup({
 }
 
 export const FieldLabel = forwardRef(function FieldLabel(
-  { className, ...props }: ComponentPropsWithoutRef<typeof LabelPrimitive.Root>,
-  ref: ForwardedRef<ElementRef<typeof LabelPrimitive.Root>>
+  { className, ...props }: ComponentProps<typeof Label>,
+  ref: ForwardedRef<HTMLLabelElement>
 ) {
   return (
     <AppFieldLabel
@@ -538,12 +497,16 @@ export function FormSection({
 export function AutocompleteListbox({
   anchor,
   open,
+  onOpenChange,
+  onValueChange,
   listboxId,
   className,
   children,
 }: {
   anchor: ReactElement;
   open: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onValueChange?: (value: string | null) => void;
   listboxId: string;
   className?: string;
   children: ReactNode;
@@ -552,6 +515,8 @@ export function AutocompleteListbox({
     <SearchableAutocompleteListbox
       anchor={anchor}
       open={open}
+      onOpenChange={onOpenChange}
+      onValueChange={onValueChange}
       listboxId={listboxId}
       className={className}
       slotPrefix="onboarding"
@@ -563,20 +528,12 @@ export function AutocompleteListbox({
 
 export function AutocompleteOption({
   className,
-  highlighted = false,
-  type = "button",
-  tabIndex = -1,
   ...props
-}: ComponentPropsWithoutRef<"button"> & {
-  highlighted?: boolean;
-}) {
+}: Omit<ComponentPropsWithoutRef<"div">, "style"> & { value: string }) {
   return (
     <SearchableAutocompleteOption
       className={className}
-      highlighted={highlighted}
       slotPrefix="onboarding"
-      type={type}
-      tabIndex={tabIndex}
       {...props}
     />
   );

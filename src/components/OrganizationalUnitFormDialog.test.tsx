@@ -71,16 +71,6 @@ function submitDialogForm(buttonName: RegExp) {
 
 async function openTypeSelect() {
   const trigger = screen.getByRole("combobox", { name: /type/i });
-  fireEvent.pointerDown(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
   fireEvent.click(trigger, { button: 0 });
 
   return screen.findAllByRole("option");

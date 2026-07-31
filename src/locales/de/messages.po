@@ -406,7 +406,7 @@ msgstr "Die Personalabteilung benötigt diese Unterlagen dennoch zwingend für d
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
-#: src/pages/Employees/EmployeeStatusOptions.tsx
+#: src/pages/Employees/useEmployeeStatusSelectItems.ts
 msgid "On Leave"
 msgstr "in Freistellung"
 
@@ -1442,7 +1442,7 @@ msgstr "Geben Sie das Ablaufdatum an, wenn der Aufenthaltstitel befristet ist."
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
-#: src/pages/Employees/EmployeeStatusOptions.tsx
+#: src/pages/Employees/useEmployeeStatusSelectItems.ts
 #: src/pages/Organization/OrganizationPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SitesPage.tsx
@@ -1943,7 +1943,7 @@ msgstr "Betriebsstätte auswählen..."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
-#: src/pages/Employees/EmployeeStatusOptions.tsx
+#: src/pages/Employees/useEmployeeStatusSelectItems.ts
 msgid "Applicant"
 msgstr "Bewerber"
 
@@ -2048,7 +2048,7 @@ msgstr "Willkommen zu SecPal"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
-#: src/pages/Employees/EmployeeStatusOptions.tsx
+#: src/pages/Employees/useEmployeeStatusSelectItems.ts
 msgid "Pre-Contract"
 msgstr "Vorvertrag"
 
@@ -2790,7 +2790,7 @@ msgstr "Benachrichtigungshinweis schließen"
 
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
-#: src/pages/Employees/EmployeeStatusOptions.tsx
+#: src/pages/Employees/useEmployeeStatusSelectItems.ts
 msgid "Terminated"
 msgstr "Beendet"
 

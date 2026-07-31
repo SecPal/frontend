@@ -49,15 +49,13 @@ export function NavMain({ items }: { items: NavMainItem[] }) {
         {items.map((item) => (
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton
-              asChild
+              render={<PrefetchLink to={item.url} onClick={handleItemClick} />}
               isActive={item.isActive}
               tooltip={item.title}
               aria-current={item.isActive ? "page" : undefined}
             >
-              <PrefetchLink to={item.url} onClick={handleItemClick}>
-                <item.icon />
-                <span>{item.title}</span>
-              </PrefetchLink>
+              <item.icon />
+              <span>{item.title}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}

@@ -12,6 +12,43 @@ export type OrganizationalUnitBadgeColor =
   "blue" | "green" | "purple" | "orange" | "zinc";
 export type BadgeColor = OrganizationalUnitBadgeColor;
 
+const SELECT_INDENT_CLASSES = [
+  "pl-0",
+  "pl-4",
+  "pl-8",
+  "pl-12",
+  "pl-16",
+  "pl-20",
+  "pl-24",
+] as const;
+
+const TREE_INDENT_CLASSES = [
+  "pl-2",
+  "pl-6",
+  "pl-10",
+  "pl-14",
+  "pl-[4.5rem]",
+  "pl-[5.5rem]",
+  "pl-[6.5rem]",
+] as const;
+
+function clampIndentDepth(depth: number, maximumDepth: number) {
+  const normalizedDepth = Number.isNaN(depth) ? 0 : Math.trunc(depth);
+  return Math.min(Math.max(normalizedDepth, 0), maximumDepth);
+}
+
+export function getOrganizationalUnitSelectIndentClass(depth: number) {
+  return SELECT_INDENT_CLASSES[
+    clampIndentDepth(depth, SELECT_INDENT_CLASSES.length - 1)
+  ];
+}
+
+export function getOrganizationalUnitTreeIndentClass(depth: number) {
+  return TREE_INDENT_CLASSES[
+    clampIndentDepth(depth, TREE_INDENT_CLASSES.length - 1)
+  ];
+}
+
 /**
  * Hierarchy ranking for organizational unit types
  * Lower numbers = higher in hierarchy (more senior)

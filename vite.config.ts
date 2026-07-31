@@ -22,8 +22,6 @@ import { thirdPartyDependencyNotices } from "./thirdPartyDependencyNotices";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const { lingui } = resolveLinguiVitePluginExports(linguiVitePlugin);
 const linguiMacroImportPattern = /@lingui\/(?:core|react)\/macro/;
-const cspNonceSsiPlaceholder = "<!--#echo var='csp_nonce' encoding='none' -->";
-const nonceBearingHtmlShellPattern = /\.html$/;
 const linguiMacroBabelPreset = defineRolldownBabelPreset({
   preset: [
     () => ({
@@ -39,6 +37,25 @@ const linguiMacroBabelPreset = defineRolldownBabelPreset({
 });
 
 const defaultDevProxyTarget = "http://localhost:8000";
+const metaElementPattern = /[ \t]*<meta\b[^>]*\/?>[ \t]*(?:\r?\n)?/giu;
+const cspHttpEquivAttributePattern =
+  /\bhttp-equiv\s*=\s*(?:(["'])Content-Security-Policy\1|Content-Security-Policy(?=[\s/>]))/iu;
+
+export function stripStaticCspForViteDev(html: string): string {
+  const staticCspMetaElements = (html.match(metaElementPattern) ?? []).filter(
+    (metaElement) => cspHttpEquivAttributePattern.test(metaElement)
+  );
+
+  if (staticCspMetaElements.length !== 1) {
+    throw new Error(
+      `Expected exactly one static Content-Security-Policy meta element, found ${staticCspMetaElements.length}.`
+    );
+  }
+
+  return html.replace(metaElementPattern, (metaElement) =>
+    cspHttpEquivAttributePattern.test(metaElement) ? "" : metaElement
+  );
+}
 
 function normalizeAbsoluteProxyTarget(
   value: string | undefined
@@ -97,23 +114,9 @@ export function buildDevServerProxyConfig(configuredApiBaseUrl?: string): {
 const vendorChunkPackages: Record<string, string[]> = {
   "vendor-react": ["react", "react-dom", "react-router"],
   "vendor-icons": ["lucide-react"],
-  "vendor-ui": [
-    "@radix-ui/react-checkbox",
-    "@radix-ui/react-dialog",
-    "@radix-ui/react-dropdown-menu",
-    "@radix-ui/react-label",
-    "@radix-ui/react-popover",
-    "@radix-ui/react-progress",
-    "@radix-ui/react-radio-group",
-    "@radix-ui/react-select",
-    "@radix-ui/react-switch",
-    "class-variance-authority",
-    "input-otp",
-    "tailwind-merge",
-  ],
+  "vendor-ui": ["@base-ui/react", "class-variance-authority", "tailwind-merge"],
   "vendor-lingui": ["@lingui/core", "@lingui/react"],
   "vendor-db": ["dexie", "dexie-react-hooks", "idb"],
-  "vendor-animation": ["motion"],
   "vendor-monitoring": ["web-vitals"],
   "vendor-utils": ["clsx"],
 };
@@ -159,15 +162,11 @@ export default defineConfig(({ mode, command }) => {
       : undefined,
     plugins: [
       {
-        name: "strip-vite-csp-meta-carrier",
+        name: "vite-dev-csp-compatibility",
+        apply: "serve",
         transformIndexHtml: {
-          order: "post",
-          handler(html) {
-            return html.replace(
-              /\s*<meta property="csp-nonce" nonce="[^"]*">\s*/g,
-              "\n"
-            );
-          },
+          order: "pre",
+          handler: stripStaticCspForViteDev,
         },
       },
       react({}),
@@ -226,18 +225,10 @@ export default defineConfig(({ mode, command }) => {
         injectManifest: {
           globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2,md}"],
           globIgnores: ["**/*.html", "theme-color.js", "document-language.js"],
-          manifestTransforms: [
-            async (entries) => ({
-              manifest: entries.filter(
-                (entry) => !nonceBearingHtmlShellPattern.test(entry.url)
-              ),
-              warnings: [],
-            }),
-          ],
         },
         srcDir: "src",
         filename: "sw.ts",
-        injectRegister: "auto",
+        injectRegister: false,
         includeAssets: [
           "favicon.ico",
           "apple-touch-icon-v7.png",
@@ -304,9 +295,6 @@ export default defineConfig(({ mode, command }) => {
       alias: {
         "@": path.resolve(__dirname, "src"),
       },
-    },
-    html: {
-      cspNonce: cspNonceSsiPlaceholder,
     },
     build: {
       rollupOptions: {

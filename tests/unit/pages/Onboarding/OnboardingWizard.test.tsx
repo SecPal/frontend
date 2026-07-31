@@ -180,7 +180,7 @@ async function selectNationality(
     await user.clear(nationalityControl);
     await user.type(nationalityControl, query);
   } else {
-    const searchbox = await screen.findByRole("searchbox");
+    const searchbox = await screen.findByPlaceholderText(/search/i);
     await user.clear(searchbox);
     await user.type(searchbox, query);
   }
@@ -265,6 +265,8 @@ function enableUploadNowSelection(
       if (!option) {
         throw new Error(`Document kind option "${documentKind}" not found`);
       }
+      fireEvent.pointerDown(option, { button: 0 });
+      fireEvent.pointerUp(option, { button: 0 });
       fireEvent.click(option);
     }
   }

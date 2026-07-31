@@ -54,22 +54,9 @@ function setViewportMatchesDesktop(matches: boolean) {
   });
 }
 
-async function selectRadixOption(
-  triggerName: RegExp,
-  optionName: RegExp | string
-) {
+async function selectOption(triggerName: RegExp, optionName: RegExp | string) {
   const trigger = screen.getByRole("combobox", { name: triggerName });
   await waitFor(() => expect(trigger).not.toBeDisabled());
-  fireEvent.pointerDown(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
   fireEvent.click(trigger, { button: 0 });
 
   const option = await screen.findByRole("option", { name: optionName });
@@ -86,18 +73,8 @@ async function selectRadixOption(
   fireEvent.click(option, { button: 0 });
 }
 
-async function openRadixSelect(triggerName: RegExp) {
+async function openSelect(triggerName: RegExp) {
   const trigger = screen.getByRole("combobox", { name: triggerName });
-  fireEvent.pointerDown(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
   fireEvent.click(trigger, { button: 0 });
 }
 
@@ -244,7 +221,7 @@ describe("EmployeeList", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("renders the migrated shadcn/Radix list surface with light and dark classes", async () => {
+  it("renders the migrated shadcn/Base UI list surface with light and dark classes", async () => {
     renderWithProviders();
 
     await waitFor(() => {
@@ -289,7 +266,7 @@ describe("EmployeeList", () => {
       expect(screen.getAllByText("Applicant").length).toBeGreaterThan(0);
     });
 
-    await openRadixSelect(/^status$/i);
+    await openSelect(/^status$/i);
 
     expect(
       await screen.findByRole("option", { name: /applicant/i })
@@ -425,7 +402,7 @@ describe("EmployeeList", () => {
       expect(screen.getByText("John Doe")).toBeInTheDocument();
     });
 
-    await selectRadixOption(/^status$/i, /^active$/i);
+    await selectOption(/^status$/i, /^active$/i);
 
     await waitFor(() => {
       expect(employeeApi.fetchEmployees).toHaveBeenCalledWith(
@@ -441,8 +418,8 @@ describe("EmployeeList", () => {
       expect(screen.getByText("John Doe")).toBeInTheDocument();
     });
 
-    await selectRadixOption(/^legal entity$/i, /SecPal GmbH/i);
-    await selectRadixOption(/^establishment$/i, /design/i);
+    await selectOption(/^legal entity$/i, /SecPal GmbH/i);
+    await selectOption(/^establishment$/i, /design/i);
 
     await waitFor(() => {
       expect(employeeApi.fetchEmployees).toHaveBeenCalledWith(
@@ -461,8 +438,8 @@ describe("EmployeeList", () => {
     await waitFor(() =>
       expect(screen.getByText("John Doe")).toBeInTheDocument()
     );
-    await selectRadixOption(/^legal entity$/i, /SecPal GmbH/i);
-    await selectRadixOption(/^establishment$/i, /Design/i);
+    await selectOption(/^legal entity$/i, /SecPal GmbH/i);
+    await selectOption(/^establishment$/i, /Design/i);
     fireEvent.click(
       screen.getByRole("button", { name: /clear domain filters/i })
     );

@@ -112,7 +112,7 @@ function getStoredAuthState(): string | null {
   return localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
 }
 
-// Mock ResizeObserver for Radix menu components.
+// Mock ResizeObserver for floating Base UI components.
 beforeAll(() => {
   global.ResizeObserver = class ResizeObserver {
     observe() {}
@@ -305,7 +305,7 @@ describe("ApplicationLayout", () => {
       expect(brandTrigger).not.toBeNull();
       expect(brandTrigger?.className).toContain("hover:!bg-transparent");
       expect(brandTrigger?.className).toContain(
-        "data-[state=open]:!bg-transparent"
+        "data-popup-open:!bg-transparent"
       );
       expect(
         document.querySelector('[data-slot="breadcrumb"]')
@@ -495,7 +495,7 @@ describe("ApplicationLayout", () => {
       expect(avatar?.className).not.toContain("bg-zinc-900");
     });
 
-    it("opens and closes the mobile sidebar with Radix dialog semantics", async () => {
+    it("opens and closes the mobile sidebar with Base UI dialog semantics", async () => {
       const user = userEvent.setup();
       const originalInnerWidth = window.innerWidth;
 
@@ -755,7 +755,7 @@ describe("ApplicationLayout", () => {
       const homeLink = document.querySelector(
         '[data-slot="sidebar-menu-button"][href="/"]'
       );
-      expect(homeLink).toHaveAttribute("data-active", "true");
+      expect(homeLink).toHaveAttribute("data-active");
     });
 
     it("shows the current standalone page in the breadcrumb", () => {
@@ -1409,7 +1409,7 @@ describe("ApplicationLayout", () => {
         const activityLogsLink = document.querySelector(
           '[data-slot="sidebar-menu-button"][href="/activity-logs"]'
         );
-        expect(activityLogsLink).toHaveAttribute("data-active", "true");
+        expect(activityLogsLink).toHaveAttribute("data-active");
       });
     });
 

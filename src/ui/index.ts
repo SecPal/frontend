@@ -13,6 +13,7 @@ export * from "./checkbox";
 export * from "./collapsible";
 export * from "./dropdown-menu";
 export * from "./input";
+export * from "./label";
 export * from "./loading";
 export {
   AutocompleteListbox as OnboardingAutocompleteListbox,

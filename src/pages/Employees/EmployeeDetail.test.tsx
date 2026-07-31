@@ -64,21 +64,8 @@ const renderWithProviders = (employeeId: string) => {
   );
 };
 
-async function selectRadixOption(
-  triggerName: RegExp,
-  optionName: RegExp | string
-) {
+async function selectOption(triggerName: RegExp, optionName: RegExp | string) {
   const trigger = screen.getByRole("combobox", { name: triggerName });
-  fireEvent.pointerDown(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
   fireEvent.click(trigger, { button: 0 });
 
   const option = await screen.findByRole("option", { name: optionName });
@@ -251,7 +238,7 @@ describe("EmployeeDetail", () => {
     expect(await screen.findByText("Employee 2 failed to load")).toBeVisible();
   });
 
-  it("renders the migrated shadcn/Radix detail surface with dark-mode classes", async () => {
+  it("renders the migrated shadcn/Base UI detail surface with dark-mode classes", async () => {
     renderWithProviders("emp-1");
 
     await waitFor(() => {
@@ -896,7 +883,7 @@ describe("EmployeeDetail", () => {
       ).toBeInTheDocument();
     });
 
-    await selectRadixOption(/export format/i, /^XML$/i);
+    await selectOption(/export format/i, /^XML$/i);
     fireEvent.click(
       screen.getByRole("button", { name: /generate bwr export/i })
     );
@@ -993,7 +980,7 @@ describe("EmployeeDetail", () => {
       expect(screen.getByLabelText(/^BWR Status$/i)).toBeInTheDocument();
     });
 
-    await selectRadixOption(/^BWR Status$/i, /^Active$/i);
+    await selectOption(/^BWR Status$/i, /^Active$/i);
     fireEvent.change(screen.getByLabelText(/^BWR ID$/i), {
       target: { value: "1234567" },
     });

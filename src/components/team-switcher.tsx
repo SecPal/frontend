@@ -52,27 +52,27 @@ export function TeamSwitcher({ workspaces }: { workspaces: Workspace[] }) {
       <SidebarMenuItem>
         <div ref={setMenuPortalContainer}>
           <DropdownMenu modal={!isMobile}>
-            <DropdownMenuTrigger asChild>
-              <SidebarMenuButton
-                size="lg"
-                className="hover:!bg-transparent hover:!text-inherit data-[state=open]:!bg-transparent data-[state=open]:!text-inherit active:!bg-transparent active:!text-inherit"
-              >
-                <div className="flex aspect-square size-8 items-center justify-center">
-                  <activeWorkspace.logo size="32" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">
-                    {activeWorkspace.name}
-                  </span>
-                  <span className="truncate text-xs">
-                    {activeWorkspace.plan}
-                  </span>
-                </div>
-                <ChevronsUpDown className="ml-auto" />
-              </SidebarMenuButton>
+            <DropdownMenuTrigger
+              render={
+                <SidebarMenuButton
+                  size="lg"
+                  className="hover:!bg-transparent hover:!text-inherit data-popup-open:!bg-transparent data-popup-open:!text-inherit active:!bg-transparent active:!text-inherit"
+                />
+              }
+            >
+              <div className="flex aspect-square size-8 items-center justify-center">
+                <activeWorkspace.logo size="32" />
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">
+                  {activeWorkspace.name}
+                </span>
+                <span className="truncate text-xs">{activeWorkspace.plan}</span>
+              </div>
+              <ChevronsUpDown className="ml-auto" />
             </DropdownMenuTrigger>
             <DropdownMenuContent
-              className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+              className="w-(--anchor-width) min-w-56 rounded-lg"
               align="start"
               side={isMobile ? "bottom" : "right"}
               sideOffset={4}

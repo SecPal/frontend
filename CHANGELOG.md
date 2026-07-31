@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   lines as an advisory reviewability threshold, with no override file, approval
   label, or size-triggered push failure; the focused policy regression now runs
   automatically before local and CI unit-test and coverage commands.
+- Migrated shared shadcn components from Radix to Base UI, removed duplicate
+  primitive behavior and application-owned inline styles, and standardized the
+  UI stack on shadcn, Base UI, Tailwind CSS, and Lucide. Official shadcn
+  animation utilities now ship as external CSS with reduced-motion handling.
+- Replaced nonce and SSI-based CSP handling with one static strict policy for
+  Web, PWA, and Capacitor surfaces, backed by source, build-artifact, component,
+  and Chromium CSP checks, including transient script/style insertion detection
+  from document creation onward and production JavaScript bundle scans.
 - Removed the final obsolete native enrollment compatibility surface from the
   public enterprise facade, which now exposes only the preserved OSS-license
   bridge.
@@ -47,6 +55,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Kept strict-CSP browser audit evidence across full-page navigations and made
+  the required UI/CSP workflow report a check for every pull request.
+- Made OnboardingWizard Base UI select tests wait for interactive popup state
+  and isolated nationality mocks so full-suite timing cannot cascade failures
+  across server-validation scenarios.
+- Kept the privacy shield active across Escape and backdrop interactions, made
+  Base UI confirmation actions close consistently so runtime-switch failures
+  remain visible, and preserved distinct organizational-unit indentation across
+  every supported hierarchy depth with independent bounds and safe malformed
+  depth handling.
+- Restored styled Vite development by removing the production CSP meta only
+  from transformed development HTML while retaining the same strict static
+  policy in every distributable Web and Capacitor artifact, and reused the
+  warning-free Playwright environment setup for the dedicated CSP runner.
+- Stabilized Base UI onboarding popover focus tests under full-suite load so
+  asynchronous focus management cannot leave later interaction tests locked.
 - Used the shipped canonical PNG icon for regular browser notification
   fallbacks and verified every referenced notification icon is emitted by
   production builds.

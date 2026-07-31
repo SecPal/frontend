@@ -1,5 +1,7 @@
-// SPDX-FileCopyrightText: 2025 SecPal Contributors
+// SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+
+import { cn } from "@/lib/utils";
 
 /**
  * SecPal Logo Component
@@ -16,11 +18,11 @@ interface LogoProps {
   size?: "16" | "32" | "48" | "64";
 }
 
-const LOGO_DISPLAY_SIZE_PX = {
-  "16": 16,
-  "32": 32,
-  "48": 48,
-  "64": 64,
+const LOGO_SIZE_CLASS = {
+  "16": "w-4",
+  "32": "w-8",
+  "48": "w-12",
+  "64": "w-16",
 } as const;
 
 const LIGHT_LOGO_RASTER = {
@@ -36,7 +38,7 @@ const DARK_LOGO_RASTER = {
 } as const;
 
 export function Logo({ className = "", size = "64" }: LogoProps) {
-  const displayWidth = LOGO_DISPLAY_SIZE_PX[size];
+  const sizeClassName = LOGO_SIZE_CLASS[size];
 
   return (
     <div role="img" aria-label="SecPal" className={className}>
@@ -44,21 +46,19 @@ export function Logo({ className = "", size = "64" }: LogoProps) {
         src={LIGHT_LOGO_RASTER.src}
         alt=""
         aria-hidden="true"
-        className="dark:hidden"
+        className={cn("h-auto dark:hidden", sizeClassName)}
         width={LIGHT_LOGO_RASTER.width}
         height={LIGHT_LOGO_RASTER.height}
         decoding="async"
-        style={{ width: `${displayWidth}px`, height: "auto" }}
       />
       <img
         src={DARK_LOGO_RASTER.src}
         alt=""
         aria-hidden="true"
-        className="hidden dark:block"
+        className={cn("hidden h-auto dark:block", sizeClassName)}
         width={DARK_LOGO_RASTER.width}
         height={DARK_LOGO_RASTER.height}
         decoding="async"
-        style={{ width: `${displayWidth}px`, height: "auto" }}
       />
     </div>
   );

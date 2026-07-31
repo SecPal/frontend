@@ -50,7 +50,7 @@ function renderWithRouter(initialRoute = "/sites/new") {
   );
 }
 
-async function selectRadixOption(label: RegExp, optionName: RegExp) {
+async function selectOption(label: RegExp, optionName: RegExp) {
   const user = userEvent.setup();
   const trigger = screen.getByRole("combobox", { name: label });
   await waitFor(() => expect(trigger).not.toBeDisabled());
@@ -64,8 +64,8 @@ async function selectSiteAssignment() {
       "legal-entity-1"
     )
   );
-  await selectRadixOption(/establishment/i, /IT Department/i);
-  await selectRadixOption(/customer/i, /Customer One/i);
+  await selectOption(/establishment/i, /IT Department/i);
+  await selectOption(/customer/i, /Customer One/i);
 }
 
 describe("SiteCreate", () => {
@@ -195,7 +195,7 @@ describe("SiteCreate", () => {
     );
     expect(screen.getByRole("combobox", { name: /customer/i })).toBeDisabled();
 
-    await selectRadixOption(/establishment/i, /IT Department/i);
+    await selectOption(/establishment/i, /IT Department/i);
     await waitFor(() =>
       expect(
         screen.getByRole("combobox", { name: /customer/i })

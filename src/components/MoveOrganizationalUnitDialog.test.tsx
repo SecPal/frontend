@@ -374,7 +374,7 @@ describe("MoveOrganizationalUnitDialog", () => {
         expect(getParentSelectTrigger()).toBeInTheDocument();
       });
 
-      // Open the Radix Select dropdown.
+      // Open the Select dropdown.
       openParentSelect();
 
       // Check that "Berlin Mitte" is not in the dropdown options
@@ -405,7 +405,7 @@ describe("MoveOrganizationalUnitDialog", () => {
         { timeout: 5000 }
       );
 
-      // Open the Radix Select dropdown.
+      // Open the Select dropdown.
       openParentSelect();
 
       // Should have a "Make root unit" option
@@ -480,7 +480,7 @@ describe("MoveOrganizationalUnitDialog", () => {
         expect(getParentSelectTrigger()).toBeInTheDocument();
       });
 
-      // Open the Radix Select dropdown.
+      // Open the Select dropdown.
       const listboxButton = openParentSelect();
 
       // Select Region Hamburg
@@ -561,7 +561,7 @@ describe("MoveOrganizationalUnitDialog", () => {
         expect(getParentSelectTrigger()).toBeInTheDocument();
       });
 
-      // Open the Radix Select dropdown and select a new parent.
+      // Open the Select dropdown and select a new parent.
       openParentSelect();
 
       await waitFor(() => {
@@ -603,7 +603,7 @@ describe("MoveOrganizationalUnitDialog", () => {
         expect(getParentSelectTrigger()).toBeInTheDocument();
       });
 
-      // Open the Radix Select dropdown and select "Make root unit".
+      // Open the Select dropdown and select "Make root unit".
       openParentSelect();
 
       await waitFor(() => {
@@ -668,7 +668,7 @@ describe("MoveOrganizationalUnitDialog", () => {
         expect(getParentSelectTrigger()).toBeInTheDocument();
       });
 
-      // Open the Radix Select dropdown and select a new parent.
+      // Open the Select dropdown and select a new parent.
       openParentSelect();
 
       await waitFor(() => {
@@ -709,7 +709,7 @@ describe("MoveOrganizationalUnitDialog", () => {
         expect(getParentSelectTrigger()).toBeInTheDocument();
       });
 
-      // Open the Radix Select dropdown and select a new parent.
+      // Open the Select dropdown and select a new parent.
       openParentSelect();
 
       await waitFor(() => {
@@ -790,7 +790,7 @@ describe("MoveOrganizationalUnitDialog", () => {
         expect(getParentSelectTrigger()).toBeInTheDocument();
       });
 
-      // Open the Radix Select dropdown and select a new parent.
+      // Open the Select dropdown and select a new parent.
       openParentSelect();
 
       await waitFor(() => {

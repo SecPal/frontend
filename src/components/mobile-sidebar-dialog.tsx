@@ -52,18 +52,20 @@ export function MobileSidebarDialog({
         </SheetDescription>
         <div className="bg-background ring-border/50 flex h-full flex-col rounded-md shadow-lg ring-1">
           <div className="-mb-3 px-4 pt-3">
-            <SheetClose asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                className="size-11 p-2"
-                aria-label={t({
-                  id: "layout.mobileNavigation.close",
-                  message: "Close navigation",
-                })}
-              >
-                <X data-slot="icon" aria-hidden="true" />
-              </Button>
+            <SheetClose
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="size-11 p-2"
+                  aria-label={t({
+                    id: "layout.mobileNavigation.close",
+                    message: "Close navigation",
+                  })}
+                />
+              }
+            >
+              <X data-slot="icon" aria-hidden="true" />
             </SheetClose>
           </div>
           {children}

@@ -3,11 +3,11 @@
 
 import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
+import { CSPProvider } from "@base-ui/react/csp-provider";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import App from "./App";
 import { initializeLocale } from "./i18n";
-import { RuntimeStyleCspSupport } from "./lib/RuntimeStyleCspSupport";
 import {
   installSystemColorSchemeSync,
   syncSystemColorScheme,
@@ -23,10 +23,11 @@ export function AppWithI18n() {
   }, []);
 
   return (
-    <I18nProvider i18n={i18n}>
-      <RuntimeStyleCspSupport />
-      <App />
-    </I18nProvider>
+    <CSPProvider disableStyleElements>
+      <I18nProvider i18n={i18n}>
+        <App />
+      </I18nProvider>
+    </CSPProvider>
   );
 }
 

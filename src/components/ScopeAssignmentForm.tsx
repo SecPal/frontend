@@ -627,7 +627,14 @@ export function ScopeAssignmentForm({
   onSuccess,
 }: ScopeAssignmentFormProps) {
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose();
+        }
+      }}
+    >
       <DialogPortal>
         <DialogOverlay />
         <DialogContent size="2xl">

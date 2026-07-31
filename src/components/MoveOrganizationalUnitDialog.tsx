@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/select";
+import { cn } from "@/lib/utils";
 import {
   Alert,
   AlertDescription,
@@ -37,7 +38,11 @@ import {
   attachOrganizationalUnitParent,
   detachOrganizationalUnitParent,
 } from "../services/organizationalUnitApi";
-import { getTypeLabel, TYPE_HIERARCHY } from "../lib/organizationalUnitUtils";
+import {
+  getOrganizationalUnitSelectIndentClass,
+  getTypeLabel,
+  TYPE_HIERARCHY,
+} from "../lib/organizationalUnitUtils";
 import { useOrganizationalUnitsWithOffline } from "../hooks/useOrganizationalUnitsWithOffline";
 import {
   OrganizationalUnitRootIcon,
@@ -322,8 +327,10 @@ function MoveOrganizationalUnitDialogContent({
                 {sortedUnits.map((u) => (
                   <SelectItem key={u.id} value={u.id}>
                     <span
-                      className="flex items-center gap-2"
-                      style={{ paddingLeft: `${u.depth * 16}px` }}
+                      className={cn(
+                        "flex items-center gap-2",
+                        getOrganizationalUnitSelectIndentClass(u.depth)
+                      )}
                     >
                       <OrganizationalUnitTypeIcon
                         type={u.type}
@@ -370,7 +377,14 @@ export function MoveOrganizationalUnitDialog({
   onSuccess,
 }: MoveOrganizationalUnitDialogProps) {
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose();
+        }
+      }}
+    >
       <DialogPortal>
         <DialogOverlay />
         <DialogContent size="lg">

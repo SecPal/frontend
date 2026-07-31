@@ -483,7 +483,11 @@ export default function CustomerDetail() {
       {customer && capabilities.actions.customers.delete && (
         <Dialog
           open={showDeleteDialog}
-          onClose={() => setShowDeleteDialog(false)}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) {
+              setShowDeleteDialog(false);
+            }
+          }}
         >
           <DialogPortal>
             <DialogOverlay />

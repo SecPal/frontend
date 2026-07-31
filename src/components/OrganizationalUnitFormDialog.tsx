@@ -530,7 +530,14 @@ export function OrganizationalUnitFormDialog({
   onSuccess,
 }: OrganizationalUnitFormDialogProps) {
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose();
+        }
+      }}
+    >
       <DialogPortal>
         <DialogOverlay />
         <DialogContent>

@@ -76,16 +76,6 @@ async function renderSettingsPage() {
 
 async function selectLanguage(visibleName: string) {
   const trigger = screen.getByRole("combobox", { name: /select language/i });
-  fireEvent.pointerDown(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
-  fireEvent.pointerUp(trigger, {
-    button: 0,
-    pointerId: 1,
-    pointerType: "mouse",
-  });
   fireEvent.click(trigger, { button: 0 });
 
   const option = await screen.findByRole("option", { name: visibleName });

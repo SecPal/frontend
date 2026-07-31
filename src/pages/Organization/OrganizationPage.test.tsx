@@ -530,7 +530,9 @@ describe("OrganizationPage", () => {
         ).not.toBeInTheDocument();
       });
 
-      expect(document.querySelector('[data-slot="dialog-overlay"]')).toBeNull();
+      expect(
+        document.querySelector('[data-slot="dialog-overlay"][data-open]')
+      ).toBeNull();
       expect(document.body.style.pointerEvents).toBe("");
       expect(document.body.style.overflow).toBe("");
 
@@ -815,7 +817,9 @@ describe("OrganizationPage", () => {
         ).not.toBeInTheDocument();
       });
 
-      expect(document.querySelector('[data-slot="dialog-overlay"]')).toBeNull();
+      expect(
+        document.querySelector('[data-slot="dialog-overlay"][data-open]')
+      ).toBeNull();
       expect(document.body.style.pointerEvents).toBe("");
       expect(document.body.style.overflow).toBe("");
 
@@ -893,7 +897,9 @@ describe("OrganizationPage", () => {
       expect(
         document.querySelector('[data-slot="dropdown-menu-content"]')
       ).toBeNull();
-      expect(document.querySelector('[data-slot="dialog-overlay"]')).toBeNull();
+      expect(
+        document.querySelector('[data-slot="dialog-overlay"][data-open]')
+      ).toBeNull();
       expect(document.body.style.pointerEvents).toBe("");
       expect(document.body.style.overflow).toBe("");
     },
