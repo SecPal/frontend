@@ -16,7 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changed local and hosted pull-request size reporting to treat 600 changed
   lines as an advisory reviewability threshold, with no override file, approval
-  label, or size-triggered push failure.
+  label, or size-triggered push failure; the focused policy regression now runs
+  automatically before local and CI unit-test and coverage commands.
 - Removed the final obsolete native enrollment compatibility surface from the
   public enterprise facade, which now exposes only the preserved OSS-license
   bridge.

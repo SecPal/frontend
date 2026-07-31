@@ -317,7 +317,7 @@ This runs:
 - ✅ ESLint
 - ✅ TypeScript type checking
 - ⏭️ Tests (skipped by default, run in CI)
-- ✅ PR size validation (≤600 lines)
+- ✅ Advisory PR-size reporting (600-line reviewability threshold)
 
 ## 📁 Project Structure
 
@@ -369,7 +369,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 **Key Requirements:**
 
 - Test-Driven Development (TDD) is **mandatory** - tests must be written before implementation
-- PRs must be ≤600 lines (excluding generated files)
+- PR size is reported against an advisory 600-line reviewability threshold
 - One PR = one topic (no mixing features/fixes/docs)
 - All commits must be GPG-signed
 
