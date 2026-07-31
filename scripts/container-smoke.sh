@@ -227,6 +227,8 @@ valid_origins=(
   "https://192.0.2.10"
   "https://[2001:db8::10]"
   "https://[2001:db8::10]:8443"
+  "https://[::ffff:c000:20a]"
+  "https://[64:ff9b::7f00:1]"
   "https://xn--bcher-kva.example"
 )
 for origin in "${valid_origins[@]}"; do
@@ -247,6 +249,10 @@ invalid_origins=(
   "https://0x7f.1"
   "https://127.1"
   "https://[::1]"
+  "https://[::7f00:1]"
+  "https://[::ffff:0:0]"
+  "https://[::ffff:7f00:1]"
+  "https://[::ffff:7fff:ffff]"
   "http://api.example.com"
   "https://api.example.com/"
   "https://api.example.com/v1"

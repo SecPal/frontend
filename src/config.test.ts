@@ -31,6 +31,8 @@ describe("config", () => {
     ["explicit port", "https://api.example.com:8443"],
     ["IPv4 host", "https://192.0.2.10"],
     ["IPv6 host", "https://[2001:db8::10]:8443"],
+    ["IPv4-mapped public IPv6 host", "https://[::ffff:c000:20a]"],
+    ["NAT64 IPv6 host", "https://[64:ff9b::7f00:1]"],
     ["Punycode host", "https://xn--bcher-kva.example"],
   ])(
     "uses a valid %s Web runtime origin before the build fallback",
@@ -110,6 +112,10 @@ describe("config", () => {
     "https://0x7f.1",
     "https://127.1",
     "https://[::1]",
+    "https://[::7f00:1]",
+    "https://[::ffff:0:0]",
+    "https://[::ffff:7f00:1]",
+    "https://[::ffff:7fff:ffff]",
   ])("rejects a loopback Web runtime origin: %s", async (origin) => {
     vi.stubEnv("MODE", "web");
     vi.stubEnv("PROD", true);

@@ -83,6 +83,48 @@ validate_origin() {
       return 1
     }
 
+    function hex_value(value, normalized_, index_, result_, digit_) {
+      normalized_ = tolower(value)
+      result_ = 0
+      for (index_ = 1; index_ <= length(normalized_); index_++) {
+        digit_ = index("0123456789abcdef", substr(normalized_, index_, 1)) - 1
+        result_ = result_ * 16 + digit_
+      }
+      return result_
+    }
+
+    function expand_hex_ipv6(value, separator_, left_, right_, left_parts_, right_parts_, left_count_, right_count_, zero_count_, position_, index_) {
+      for (index_ = 1; index_ <= 8; index_++) ipv6_words_[index_] = 0
+
+      separator_ = index(value, "::")
+      if (separator_ == 0) {
+        left_count_ = split(value, left_parts_, ":")
+        if (left_count_ != 8) return 0
+        for (index_ = 1; index_ <= 8; index_++) {
+          ipv6_words_[index_] = hex_value(left_parts_[index_])
+        }
+        return 1
+      }
+
+      left_ = substr(value, 1, separator_ - 1)
+      right_ = substr(value, separator_ + 2)
+      left_count_ = left_ == "" ? 0 : split(left_, left_parts_, ":")
+      right_count_ = right_ == "" ? 0 : split(right_, right_parts_, ":")
+      zero_count_ = 8 - left_count_ - right_count_
+      if (zero_count_ < 1) return 0
+
+      position_ = 1
+      for (index_ = 1; index_ <= left_count_; index_++) {
+        ipv6_words_[position_++] = hex_value(left_parts_[index_])
+      }
+      position_ += zero_count_
+      for (index_ = 1; index_ <= right_count_; index_++) {
+        ipv6_words_[position_++] = hex_value(right_parts_[index_])
+      }
+
+      return position_ == 9
+    }
+
     function valid_ipv6(value, compressed_, remainder_, parts_, count_, index_, group_, weight_) {
       if (index(value, ":") == 0 || value ~ /:::/) return 0
       if (substr(value, 1, 1) == ":" && substr(value, 1, 2) != "::") return 0
@@ -111,7 +153,7 @@ validate_origin() {
       return compressed_ ? weight_ < 8 : weight_ == 8
     }
 
-    function is_local_ipv6(value, parts_, count_, index_, group_, last_, nonzero_) {
+    function is_local_ipv6(value, parts_, count_, index_, group_, last_, direct_local_, compatible_, mapped_, embedded_) {
       count_ = split(value, parts_, ":")
       last_ = 0
       for (index_ = 1; index_ <= count_; index_++) {
@@ -128,15 +170,26 @@ validate_origin() {
         return is_loopback_ipv4(parts_[last_])
       }
 
-      nonzero_ = 0
-      for (index_ = 1; index_ <= last_; index_++) {
-        group_ = parts_[index_]
-        if (group_ == "" || group_ ~ /^0+$/) continue
-        nonzero_++
-        if (index_ != last_ || group_ !~ /^0*1$/) return 0
-      }
+      if (!expand_hex_ipv6(value)) return 0
 
-      return nonzero_ <= 1
+      direct_local_ = ipv6_words_[8] == 0 || ipv6_words_[8] == 1
+      for (index_ = 1; index_ <= 7; index_++) {
+        if (ipv6_words_[index_] != 0) direct_local_ = 0
+      }
+      if (direct_local_) return 1
+
+      compatible_ = 1
+      for (index_ = 1; index_ <= 6; index_++) {
+        if (ipv6_words_[index_] != 0) compatible_ = 0
+      }
+      mapped_ = ipv6_words_[6] == 65535
+      for (index_ = 1; index_ <= 5; index_++) {
+        if (ipv6_words_[index_] != 0) mapped_ = 0
+      }
+      if (!compatible_ && !mapped_) return 0
+
+      embedded_ = ipv6_words_[7] * 65536 + ipv6_words_[8]
+      return embedded_ == 0 || int(embedded_ / 16777216) == 127
     }
 
     NR == 1 { origin = $0 }

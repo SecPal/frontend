@@ -70,9 +70,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   observe and block unexpected API origins, allocate a dynamic host port, use
   fresh workspace-isolated images, and clean up only its uniquely named Docker
   container so independent workspaces can run the test concurrently.
-- Rejected loopback API origins supplied through Web or container runtime
-  configuration so production clients cannot send API traffic to local
-  services.
+- Rejected loopback API origins, including embedded hexadecimal IPv4 forms,
+  supplied through Web or container runtime configuration so production
+  clients cannot send API traffic to local services.
 - Kept strict-CSP browser audit evidence across full-page navigations and made
   the required UI/CSP workflow report a check for every pull request.
 - Made OnboardingWizard Base UI select tests wait for interactive popup state

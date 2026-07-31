@@ -39,13 +39,27 @@ function isAbsoluteHttpUrl(value: string): boolean {
 }
 
 function isLoopbackApiHost(hostname: string): boolean {
+  const embeddedIpv4Match =
+    /^\[::(?:ffff:)?([0-9a-f]{1,4}):([0-9a-f]{1,4})\]$/u.exec(
+      hostname.toLowerCase()
+    );
+  const embeddedIpv4High = embeddedIpv4Match?.[1];
+  const embeddedIpv4Low = embeddedIpv4Match?.[2];
+  const embeddedIpv4 =
+    embeddedIpv4High !== undefined && embeddedIpv4Low !== undefined
+      ? Number.parseInt(embeddedIpv4High, 16) * 0x1_0000 +
+        Number.parseInt(embeddedIpv4Low, 16)
+      : null;
+
   return (
     hostname === "localhost" ||
     hostname.endsWith(".localhost") ||
     hostname === "0.0.0.0" ||
     hostname === "::1" ||
     hostname === "[::1]" ||
-    /^127(?:\.\d{1,3}){3}$/.test(hostname)
+    /^127(?:\.\d{1,3}){3}$/.test(hostname) ||
+    embeddedIpv4 === 0 ||
+    (embeddedIpv4 !== null && Math.floor(embeddedIpv4 / 0x100_0000) === 127)
   );
 }
 
