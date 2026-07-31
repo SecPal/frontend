@@ -25,6 +25,9 @@ describe("frontend container source contract", () => {
     expect(dockerfile).toContain(
       "nginxinc/nginx-unprivileged:1.30.4-trixie@sha256:679387908ea95d6d8de12952cd15d6b351258054a992d2106d3b6aa12659d87d"
     );
+    expect(dockerfile).toContain(
+      "COPY package.json package-lock.json .npmrc ./"
+    );
     expect(dockerfile).toContain("RUN npm run build:web");
     expect(dockerfile).toContain("USER 101:101");
     expect(dockerfile).toContain("EXPOSE 8080");
@@ -46,6 +49,9 @@ describe("frontend container source contract", () => {
     expect(nginxConfig).toContain("/tmp/secpal-runtime/runtime-config.js");
     expect(nginxConfig).toContain("location = /health/live");
     expect(nginxConfig).toContain("try_files $uri $uri/ /index.html;");
+    expect(nginxConfig).toMatch(
+      /location ~\* \\\.md\$[^}]*default_type text\/markdown;/u
+    );
     expect(nginxConfig).not.toMatch(
       /proxy_pass|fastcgi_pass|ssi\s+on|sub_filter|Content-Security-Policy|Strict-Transport-Security|ssl_certificate|listen\s+(?:80|443)\b/iu
     );
@@ -89,7 +95,9 @@ describe("frontend container source contract", () => {
     expect(smokeTest).toContain("--read-only");
     expect(smokeTest).toContain("--cap-drop=ALL");
     expect(smokeTest).toContain("no-new-privileges:true");
-    expect(smokeTest).toContain('docker restart "$CONTAINER_A"');
+    expect(smokeTest).toMatch(
+      /docker restart "\$CONTAINER_A"[^]*PORT_A=\$\(container_port "\$CONTAINER_A"\)[^]*wait_for_live "\$PORT_A"/u
+    );
     expect(smokeTest).toContain("source maps");
     expect(smokeTest).toContain("SECPAL_API_URL");
     expect(workflow).toContain("name: Frontend Container");

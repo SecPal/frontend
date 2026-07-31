@@ -165,6 +165,7 @@ cmp "$TEMP_DIR/style-${PORT_A}.css" "$TEMP_DIR/style-${PORT_B}.css" >/dev/null |
   fail "same image emitted different CSS assets"
 
 docker restart "$CONTAINER_A" >/dev/null
+PORT_A=$(container_port "$CONTAINER_A")
 wait_for_live "$PORT_A"
 curl --fail --silent "http://127.0.0.1:${PORT_A}/runtime-config.js" \
   >"$TEMP_DIR/runtime-a-restarted.js"
