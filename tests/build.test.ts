@@ -107,11 +107,46 @@ function expectStrictBuildAssets(distRoot: string): void {
  * real build to verify emitted output paths.
  */
 describe("Build Configuration and Source Verification", () => {
+  it("loads the neutral external runtime configuration before the application module", () => {
+    const indexHtml = readRepoFile("index.html");
+    const document = new JSDOM(indexHtml).window.document;
+    const runtimeScript = document.querySelector(
+      'script[src="/runtime-config.js"]'
+    );
+    const applicationScript = document.querySelector(
+      'script[type="module"][src="/src/main.tsx"]'
+    );
+    const runtimeConfig = readRepoFile("public/runtime-config.js");
+
+    expect(runtimeScript).not.toBeNull();
+    expect(applicationScript).not.toBeNull();
+    expect(runtimeScript!.compareDocumentPosition(applicationScript!)).toBe(
+      document.defaultView!.Node.DOCUMENT_POSITION_FOLLOWING
+    );
+    expect(runtimeConfig).toContain("apiBaseUrl: null");
+    expect(runtimeConfig).not.toMatch(/https?:\/\//u);
+  });
+
+  it("excludes runtime-config.js from precache and runtime script caches", () => {
+    const viteConfig = readRepoFile("vite.config.ts");
+    const serviceWorker = readRepoFile("src/sw.ts");
+
+    expect(viteConfig).toContain('"runtime-config.js"');
+    expect(serviceWorker).toContain('pathname !== "/runtime-config.js"');
+  });
   it("keeps the hooks diagnostic SPDX copyright year current", () => {
     const diagnosticScript = readRepoFile("scripts/diagnose-hooks.sh");
 
     expect(diagnosticScript).toContain(
       "# SPDX-FileCopyrightText: 2025-2026 SecPal Contributors"
+    );
+  });
+
+  it("keeps the Vite environment declarations SPDX copyright year current", () => {
+    const viteEnvironmentDeclarations = readRepoFile("src/vite-env.d.ts");
+
+    expect(viteEnvironmentDeclarations).toContain(
+      "// SPDX-FileCopyrightText: 2025-2026 SecPal Contributors"
     );
   });
 
@@ -268,6 +303,15 @@ describe("Build Configuration and Source Verification", () => {
       );
       expect(document.querySelector('link[rel="stylesheet"]')).not.toBeNull();
       expect(document.querySelector("script[src]")).not.toBeNull();
+      const runtimeConfigScript = document.querySelector(
+        'script[src$="/runtime-config.js"]'
+      );
+      const applicationModule = document.querySelector('script[type="module"]');
+      expect(runtimeConfigScript).not.toBeNull();
+      expect(applicationModule).not.toBeNull();
+      expect(
+        runtimeConfigScript!.compareDocumentPosition(applicationModule!)
+      ).toBe(document.defaultView!.Node.DOCUMENT_POSITION_FOLLOWING);
       expectStrictBuildAssets(distRoot);
 
       const referencedNotificationIcons = [
@@ -340,6 +384,15 @@ describe("Build Configuration and Source Verification", () => {
       );
       expect(document.querySelector('link[rel="stylesheet"]')).not.toBeNull();
       expect(document.querySelector("script[src]")).not.toBeNull();
+      const runtimeConfigScript = document.querySelector(
+        'script[src$="/runtime-config.js"]'
+      );
+      const applicationModule = document.querySelector('script[type="module"]');
+      expect(runtimeConfigScript).not.toBeNull();
+      expect(applicationModule).not.toBeNull();
+      expect(
+        runtimeConfigScript!.compareDocumentPosition(applicationModule!)
+      ).toBe(document.defaultView!.Node.DOCUMENT_POSITION_FOLLOWING);
       expectStrictBuildAssets(distRoot);
       expect(existsSync(path.join(distRoot, "sw.js"))).toBe(true);
       expect(existsSync(path.join(distRoot, "dependencies.spdx.json"))).toBe(
@@ -791,9 +844,14 @@ describe("Build Configuration and Source Verification", () => {
     expect(viteConfig).toContain(
       'globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2,md}"]'
     );
-    expect(viteConfig).toContain(
-      'globIgnores: ["**/*.html", "theme-color.js", "document-language.js"]'
-    );
+    for (const ignoredAsset of [
+      '"**/*.html"',
+      '"runtime-config.js"',
+      '"theme-color.js"',
+      '"document-language.js"',
+    ]) {
+      expect(viteConfig).toContain(ignoredAsset);
+    }
     expect(viteConfig).toContain("navigateFallback: null");
     expect(viteConfig).toContain("injectRegister: false");
     expect(viteConfig).not.toContain("js,css,html,ico");

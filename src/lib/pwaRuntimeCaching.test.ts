@@ -32,4 +32,12 @@ describe("buildPwaRuntimeCaching", () => {
       ])
     );
   });
+
+  it("never matches runtime-config.js with a script caching rule", () => {
+    const matchingRules = buildPwaRuntimeCaching().filter((rule) =>
+      rule.urlPattern.test("https://app.example.com/runtime-config.js")
+    );
+
+    expect(matchingRules).toEqual([]);
+  });
 });

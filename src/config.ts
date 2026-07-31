@@ -39,13 +39,27 @@ function isAbsoluteHttpUrl(value: string): boolean {
 }
 
 function isLoopbackApiHost(hostname: string): boolean {
+  const embeddedIpv4Match =
+    /^\[::(?:ffff:)?([0-9a-f]{1,4}):([0-9a-f]{1,4})\]$/u.exec(
+      hostname.toLowerCase()
+    );
+  const embeddedIpv4High = embeddedIpv4Match?.[1];
+  const embeddedIpv4Low = embeddedIpv4Match?.[2];
+  const embeddedIpv4 =
+    embeddedIpv4High !== undefined && embeddedIpv4Low !== undefined
+      ? Number.parseInt(embeddedIpv4High, 16) * 0x1_0000 +
+        Number.parseInt(embeddedIpv4Low, 16)
+      : null;
+
   return (
     hostname === "localhost" ||
     hostname.endsWith(".localhost") ||
     hostname === "0.0.0.0" ||
     hostname === "::1" ||
     hostname === "[::1]" ||
-    /^127(?:\.\d{1,3}){3}$/.test(hostname)
+    /^127(?:\.\d{1,3}){3}$/.test(hostname) ||
+    embeddedIpv4 === 0 ||
+    (embeddedIpv4 !== null && Math.floor(embeddedIpv4 / 0x100_0000) === 127)
   );
 }
 
@@ -72,6 +86,89 @@ function getRuntimeHostname(): string | null {
   }
 
   return window.location.hostname || null;
+}
+
+function isValidRuntimeHostname(hostname: string): boolean {
+  if (hostname.startsWith("[") && hostname.endsWith("]")) {
+    return true;
+  }
+
+  if (hostname.length === 0 || hostname.length > 253) {
+    return false;
+  }
+
+  return hostname
+    .split(".")
+    .every(
+      (label) =>
+        label.length > 0 &&
+        label.length <= 63 &&
+        /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/u.test(label)
+    );
+}
+
+function resolveWebRuntimeApiBaseUrl(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const runtimeConfig: unknown = window.__SECPAL_RUNTIME_CONFIG__;
+
+  if (runtimeConfig === undefined) {
+    return null;
+  }
+
+  if (
+    runtimeConfig === null ||
+    typeof runtimeConfig !== "object" ||
+    !("apiBaseUrl" in runtimeConfig)
+  ) {
+    throw new ApiBaseUrlConfigurationError(
+      "Web runtime API base URL must be an exact HTTPS origin or null."
+    );
+  }
+
+  const value = (runtimeConfig as { apiBaseUrl: unknown }).apiBaseUrl;
+
+  if (value === null) {
+    return null;
+  }
+
+  if (
+    typeof value !== "string" ||
+    !/^https:\/\/(?:[A-Za-z0-9.-]+|\[[0-9A-Fa-f:.]+\])(?::[0-9]+)?$/u.test(
+      value
+    )
+  ) {
+    throw new ApiBaseUrlConfigurationError(
+      "Web runtime API base URL must be an exact HTTPS origin or null."
+    );
+  }
+
+  try {
+    const url = new URL(value);
+
+    if (
+      url.protocol !== "https:" ||
+      !isValidRuntimeHostname(url.hostname) ||
+      isLoopbackApiHost(url.hostname) ||
+      (url.port !== "" && Number(url.port) < 1)
+    ) {
+      throw new ApiBaseUrlConfigurationError(
+        "Web runtime API base URL must be an exact HTTPS origin or null."
+      );
+    }
+
+    return url.origin;
+  } catch (error) {
+    if (error instanceof ApiBaseUrlConfigurationError) {
+      throw error;
+    }
+
+    throw new ApiBaseUrlConfigurationError(
+      "Web runtime API base URL must be an exact HTTPS origin or null."
+    );
+  }
 }
 
 /**
@@ -174,6 +271,12 @@ export function resolveApiBaseUrl(options?: {
   mode?: string;
   runtimeHostname?: string | null;
 }): string {
+  const runtimeApiBaseUrl = resolveWebRuntimeApiBaseUrl();
+
+  if (runtimeApiBaseUrl !== null) {
+    return runtimeApiBaseUrl;
+  }
+
   const configuredBaseUrl =
     options?.configuredBaseUrl ?? import.meta.env.VITE_API_URL ?? "";
   const mode = options?.mode ?? import.meta.env.MODE;

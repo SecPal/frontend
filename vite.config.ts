@@ -224,7 +224,12 @@ export default defineConfig(({ mode, command }) => {
         },
         injectManifest: {
           globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2,md}"],
-          globIgnores: ["**/*.html", "theme-color.js", "document-language.js"],
+          globIgnores: [
+            "**/*.html",
+            "runtime-config.js",
+            "theme-color.js",
+            "document-language.js",
+          ],
         },
         srcDir: "src",
         filename: "sw.ts",
@@ -276,7 +281,12 @@ export default defineConfig(({ mode, command }) => {
         },
         workbox: {
           globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2,md}"],
-          globIgnores: ["**/*.html", "theme-color.js", "document-language.js"],
+          globIgnores: [
+            "**/*.html",
+            "runtime-config.js",
+            "theme-color.js",
+            "document-language.js",
+          ],
           navigateFallback: null,
           cleanupOutdatedCaches: true,
           runtimeCaching: buildPwaRuntimeCaching(),

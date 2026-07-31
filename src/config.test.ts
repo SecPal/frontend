@@ -5,8 +5,128 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("config", () => {
   afterEach(() => {
+    delete window.__SECPAL_RUNTIME_CONFIG__;
     vi.unstubAllEnvs();
     vi.resetModules();
+  });
+
+  it("prefers the native override over the Web runtime configuration", async () => {
+    vi.stubEnv("MODE", "web");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "https://build.example.com");
+    window.__SECPAL_RUNTIME_CONFIG__ = Object.freeze({
+      apiBaseUrl: "https://runtime.example.com",
+    });
+
+    const { getApiBaseUrl, setRuntimeApiBaseUrlOverride } =
+      await import("./config");
+
+    setRuntimeApiBaseUrlOverride("https://native.example.com/bootstrap");
+
+    expect(getApiBaseUrl()).toBe("https://native.example.com");
+  });
+
+  it.each([
+    ["standard host", "https://api.example.com"],
+    ["explicit port", "https://api.example.com:8443"],
+    ["IPv4 host", "https://192.0.2.10"],
+    ["IPv6 host", "https://[2001:db8::10]:8443"],
+    ["IPv4-mapped public IPv6 host", "https://[::ffff:c000:20a]"],
+    ["NAT64 IPv6 host", "https://[64:ff9b::7f00:1]"],
+    ["Punycode host", "https://xn--bcher-kva.example"],
+  ])(
+    "uses a valid %s Web runtime origin before the build fallback",
+    async (_name, origin) => {
+      vi.stubEnv("MODE", "web");
+      vi.stubEnv("PROD", true);
+      vi.stubEnv("VITE_API_URL", "https://build.example.com/path");
+      window.__SECPAL_RUNTIME_CONFIG__ = Object.freeze({ apiBaseUrl: origin });
+
+      const { getApiBaseUrl } = await import("./config");
+
+      expect(getApiBaseUrl()).toBe(origin);
+    }
+  );
+
+  it("treats the neutral Web runtime value as no deployment override", async () => {
+    vi.stubEnv("MODE", "web");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "https://build.example.com/path");
+    window.__SECPAL_RUNTIME_CONFIG__ = Object.freeze({ apiBaseUrl: null });
+
+    const { getApiBaseUrl } = await import("./config");
+
+    expect(getApiBaseUrl()).toBe("https://build.example.com");
+  });
+
+  it("returns the normalized origin for a valid Web runtime value", async () => {
+    vi.stubEnv("MODE", "web");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "https://build.example.com");
+    window.__SECPAL_RUNTIME_CONFIG__ = Object.freeze({
+      apiBaseUrl: "https://API.EXAMPLE.COM:443",
+    });
+
+    const { getApiBaseUrl } = await import("./config");
+
+    expect(getApiBaseUrl()).toBe("https://api.example.com");
+  });
+
+  it.each([
+    "",
+    "http://api.example.com",
+    "https://api.example.com/",
+    "https://api.example.com/v1",
+    "https://user@example.com",
+    "https://api.example.com?x=1",
+    "https://api.example.com#fragment",
+    " https://api.example.com",
+    "https://api.example.com\n",
+    'https://api.example.com"',
+    "https://api.example.com\\",
+    "javascript:alert(1)",
+    "https://api.example.com:0",
+    "https://api.example.com:65536",
+  ])("rejects an invalid non-neutral Web runtime value: %s", async (value) => {
+    vi.stubEnv("MODE", "web");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "https://build.example.com");
+    window.__SECPAL_RUNTIME_CONFIG__ = Object.freeze({ apiBaseUrl: value });
+
+    const { getApiBaseUrl } = await import("./config");
+
+    expect(() => getApiBaseUrl()).toThrow(
+      "Web runtime API base URL must be an exact HTTPS origin"
+    );
+  });
+
+  it.each([
+    "https://localhost",
+    "https://api.localhost",
+    "https://127.0.0.1",
+    "https://127.255.255.255:8443",
+    "https://0.0.0.0",
+    "https://2130706433",
+    "https://0x7f000001",
+    "https://017700000001",
+    "https://0x7f.1",
+    "https://127.1",
+    "https://[::1]",
+    "https://[::7f00:1]",
+    "https://[::ffff:0:0]",
+    "https://[::ffff:7f00:1]",
+    "https://[::ffff:7fff:ffff]",
+  ])("rejects a loopback Web runtime origin: %s", async (origin) => {
+    vi.stubEnv("MODE", "web");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "https://build.example.com");
+    window.__SECPAL_RUNTIME_CONFIG__ = Object.freeze({ apiBaseUrl: origin });
+
+    const { getApiBaseUrl } = await import("./config");
+
+    expect(() => getApiBaseUrl()).toThrow(
+      "Web runtime API base URL must be an exact HTTPS origin"
+    );
   });
 
   it("requires an explicit absolute API URL in production", async () => {

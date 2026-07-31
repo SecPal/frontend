@@ -72,6 +72,7 @@ function isCacheableStaticAssetRequest(request: Request): boolean {
   const pathname = new URL(request.url).pathname;
 
   return (
+    pathname !== "/runtime-config.js" &&
     pathname !== "/theme-color.js" &&
     pathname !== "/document-language.js" &&
     (request.destination === "image" ||

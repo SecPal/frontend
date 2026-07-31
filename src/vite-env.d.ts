@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal Contributors
+// SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 /// <reference types="vite/client" />
@@ -12,4 +12,12 @@ interface ImportMetaEnv {
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
+}
+
+interface SecPalRuntimeConfig {
+  readonly apiBaseUrl: string | null;
+}
+
+interface Window {
+  __SECPAL_RUNTIME_CONFIG__?: Readonly<SecPalRuntimeConfig>;
 }

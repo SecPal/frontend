@@ -55,6 +55,7 @@ export async function installStrictCspAudit(
       const source = element.getAttribute("src") ?? "";
       const sourceIsApproved =
         source === "/document-language.js" ||
+        source === "/runtime-config.js" ||
         source === "/theme-color.js" ||
         /^\/assets\/index-[A-Za-z0-9_-]+\.js$/u.test(source);
       if (!sourceIsApproved || claimedApprovedParserScriptSources.has(source)) {

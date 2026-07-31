@@ -12,6 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added a production-ready unprivileged frontend container image that serves
+  the existing Web/PWA artifact through static Nginx on port 8080, configures
+  the API origin at startup through strict `SECPAL_API_URL` validation, and
+  supports read-only root filesystems with all runtime writes confined to
+  `/tmp`. The runtime configuration remains outside the immutable bundles and
+  service-worker caches, with real-container smoke, Nginx, same-image/multiple-
+  configuration, negative-input, and Chromium CSP contracts in local tooling
+  and CI.
+
 ### Changed
 
 - Changed local and hosted pull-request size reporting to treat 600 changed
@@ -55,6 +66,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Hardened the real-container browser validation to compare exact API origins,
+  observe and block unexpected API origins, allocate a dynamic host port, use
+  fresh workspace-isolated images, and clean up only its uniquely named Docker
+  container so independent workspaces can run the test concurrently.
+- Rejected loopback API origins, including embedded hexadecimal IPv4 forms,
+  supplied through Web or container runtime configuration so production
+  clients cannot send API traffic to local services.
 - Kept strict-CSP browser audit evidence across full-page navigations and made
   the required UI/CSP workflow report a check for every pull request.
 - Made OnboardingWizard Base UI select tests wait for interactive popup state

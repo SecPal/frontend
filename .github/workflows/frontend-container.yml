@@ -1,0 +1,52 @@
+# SPDX-FileCopyrightText: 2026 SecPal Contributors
+# SPDX-License-Identifier: CC0-1.0
+
+---
+name: Frontend Container
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  container-contract:
+    name: Container Contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22.22.2"
+          cache: npm
+
+      - name: Set up Docker Buildx
+        # v4.0.0
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd
+
+      - name: Install dependencies
+        run: npm ci --foreground-scripts
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify source container contracts
+        run: >-
+          npm exec -- vitest run tests/container-contract.test.ts
+          src/config.test.ts src/lib/pwaRuntimeCaching.test.ts
+
+      - name: Build and exercise hardened frontend image
+        run: npm run test:container
+
+      - name: Exercise the real container in Chromium
+        env:
+          SECPAL_CONTAINER_SKIP_BUILD: "1"
+        run: npm run test:e2e:container
