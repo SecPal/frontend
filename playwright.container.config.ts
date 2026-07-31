@@ -6,6 +6,14 @@ import { scrubPlaywrightColorEnvironment } from "./tests/e2e/playwright-color-en
 
 scrubPlaywrightColorEnvironment();
 
+const containerBaseUrl = process.env.SECPAL_CONTAINER_BASE_URL;
+
+if (!containerBaseUrl) {
+  throw new Error(
+    "SECPAL_CONTAINER_BASE_URL must be set by scripts/container-browser.sh."
+  );
+}
+
 export default defineConfig({
   testDir: "./tests/e2e",
   testMatch: "container.spec.ts",
@@ -14,7 +22,7 @@ export default defineConfig({
   retries: 0,
   reporter: [["list"]],
   use: {
-    baseURL: "http://127.0.0.1:4176",
+    baseURL: containerBaseUrl,
     serviceWorkers: "allow",
     trace: "retain-on-failure",
   },
@@ -24,10 +32,4 @@ export default defineConfig({
       use: devices["Desktop Chrome"],
     },
   ],
-  webServer: {
-    command: "bash ./scripts/run-frontend-container-test-server.sh",
-    url: "http://127.0.0.1:4176/health/live",
-    reuseExistingServer: false,
-    timeout: 180_000,
-  },
 });

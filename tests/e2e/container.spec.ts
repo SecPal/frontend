@@ -6,6 +6,13 @@ import { hasExactOrigin } from "./container-origin";
 import { installStrictCspAudit } from "./strict-csp-audit";
 
 const API_ORIGIN = "https://api.container.example";
+const FRONTEND_ORIGIN = process.env.SECPAL_CONTAINER_BASE_URL;
+
+if (!FRONTEND_ORIGIN) {
+  throw new Error(
+    "SECPAL_CONTAINER_BASE_URL must be set by scripts/container-browser.sh."
+  );
+}
 
 test("runs the immutable frontend artifact with startup runtime configuration", async ({
   page,
@@ -57,7 +64,7 @@ test("runs the immutable frontend artifact with startup runtime configuration", 
       "access-control-allow-credentials": "true",
       "access-control-allow-headers": "Content-Type, X-XSRF-TOKEN",
       "access-control-allow-methods": "GET, POST, OPTIONS",
-      "access-control-allow-origin": "http://127.0.0.1:4176",
+      "access-control-allow-origin": FRONTEND_ORIGIN,
     };
 
     if (request.method() === "OPTIONS") {

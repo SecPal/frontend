@@ -89,9 +89,7 @@ describe("frontend container source contract", () => {
     const packageJson = readRepoFile("package.json");
     const browserTest = readRepoFile("tests/e2e/container.spec.ts");
     const browserRunner = readRepoFile("scripts/container-browser.sh");
-    const browserServer = readRepoFile(
-      "scripts/run-frontend-container-test-server.sh"
-    );
+    const browserConfig = readRepoFile("playwright.container.config.ts");
     const smokeTest = readRepoFile("scripts/container-smoke.sh");
     const workflow = readRepoFile(".github/workflows/frontend-container.yml");
 
@@ -103,9 +101,14 @@ describe("frontend container source contract", () => {
       "secpal.dev/test-role=frontend-container-browser"
     );
     expect(browserRunner).toContain("docker rm --force");
-    expect(browserServer).toContain(
-      "--label secpal.dev/test-role=frontend-container-browser"
-    );
+    expect(browserRunner).toContain("--publish 127.0.0.1::8080");
+    expect(browserRunner).toContain("SECPAL_CONTAINER_BASE_URL");
+    expect(browserRunner).not.toContain("docker ps --all");
+    expect(browserRunner).not.toContain("127.0.0.1:4176");
+    expect(browserConfig).toContain("process.env.SECPAL_CONTAINER_BASE_URL");
+    expect(browserConfig).not.toContain("webServer:");
+    expect(browserTest).toContain("process.env.SECPAL_CONTAINER_BASE_URL");
+    expect(browserTest).not.toContain("127.0.0.1:4176");
     expect(browserTest).not.toContain("startsWith(apiOrigin)");
     expect(browserTest).toContain("new URL(requestUrl).origin");
     expect(smokeTest).toContain("--read-only");

@@ -142,6 +142,14 @@ describe("Build Configuration and Source Verification", () => {
     );
   });
 
+  it("keeps the Vite environment declarations SPDX copyright year current", () => {
+    const viteEnvironmentDeclarations = readRepoFile("src/vite-env.d.ts");
+
+    expect(viteEnvironmentDeclarations).toContain(
+      "// SPDX-FileCopyrightText: 2025-2026 SecPal Contributors"
+    );
+  });
+
   it("keeps the hooks diagnostic command literal without suppressing ShellCheck", () => {
     const diagnosticScript = readRepoFile("scripts/diagnose-hooks.sh");
 
