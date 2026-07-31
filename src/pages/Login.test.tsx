@@ -3577,6 +3577,7 @@ describe("Login", () => {
       vi.mocked(i18nModule.activateLocale).mockRejectedValueOnce(
         new Error("Failed to fetch chunk /assets/de-abc123.js")
       );
+      const user = userEvent.setup();
 
       renderLogin();
 
@@ -3586,11 +3587,16 @@ describe("Login", () => {
         ).toBeInTheDocument();
       });
 
-      await selectLanguage("Deutsch");
-
-      expect(await screen.findByRole("alert")).toHaveTextContent(
-        /failed to change language/i
+      await user.click(
+        screen.getByRole("combobox", { name: /select language/i })
       );
+      await user.click(await screen.findByRole("option", { name: "Deutsch" }));
+
+      await waitFor(() => {
+        expect(screen.getByRole("alert")).toHaveTextContent(
+          /failed to change language/i
+        );
+      });
 
       expect(
         screen.queryByText(/failed to fetch chunk/i)
