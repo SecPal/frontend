@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { expect, test } from "@playwright/test";
+import { hasExactOrigin } from "./container-origin";
 import { installStrictCspAudit } from "./strict-csp-audit";
 
 const API_ORIGIN = "https://api.container.example";
@@ -101,9 +102,9 @@ test("runs the immutable frontend artifact with startup runtime configuration", 
   await expect(languageSelect).toContainText("Deutsch");
 
   await expect
-    .poll(() => apiRequests.some((url) => url.startsWith(API_ORIGIN)))
+    .poll(() => apiRequests.some((url) => hasExactOrigin(url, API_ORIGIN)))
     .toBe(true);
-  expect(apiRequests.every((url) => url.startsWith(`${API_ORIGIN}/`))).toBe(
+  expect(apiRequests.every((url) => hasExactOrigin(url, API_ORIGIN))).toBe(
     true
   );
   expect(

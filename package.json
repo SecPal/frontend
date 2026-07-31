@@ -63,7 +63,7 @@
     "test:e2e:csp": "playwright test --config=playwright.csp.config.ts",
     "pretest:ui": "npm run test:pr-size-advisory",
     "test:container": "bash ./scripts/container-smoke.sh",
-    "test:e2e:container": "playwright test --config=playwright.container.config.ts",
+    "test:e2e:container": "bash ./scripts/container-browser.sh",
     "test:ui": "vitest --ui",
     "pretest:coverage": "npm run test:pr-size-advisory",
     "test:coverage": "vitest run --coverage",

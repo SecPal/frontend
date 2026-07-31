@@ -87,11 +87,24 @@ describe("frontend container source contract", () => {
 
   it("runs the real hardened image contract and container browser in CI", () => {
     const packageJson = readRepoFile("package.json");
+    const browserRunner = readRepoFile("scripts/container-browser.sh");
+    const browserServer = readRepoFile(
+      "scripts/run-frontend-container-test-server.sh"
+    );
     const smokeTest = readRepoFile("scripts/container-smoke.sh");
     const workflow = readRepoFile(".github/workflows/frontend-container.yml");
 
     expect(packageJson).toContain('"test:container"');
-    expect(packageJson).toContain('"test:e2e:container"');
+    expect(packageJson).toContain(
+      '"test:e2e:container": "bash ./scripts/container-browser.sh"'
+    );
+    expect(browserRunner).toContain(
+      "secpal.dev/test-role=frontend-container-browser"
+    );
+    expect(browserRunner).toContain("docker rm --force");
+    expect(browserServer).toContain(
+      "--label secpal.dev/test-role=frontend-container-browser"
+    );
     expect(smokeTest).toContain("--read-only");
     expect(smokeTest).toContain("--cap-drop=ALL");
     expect(smokeTest).toContain("no-new-privileges:true");

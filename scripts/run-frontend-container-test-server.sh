@@ -17,6 +17,7 @@ fi
 docker run \
   --detach \
   --name "$CONTAINER_NAME" \
+  --label secpal.dev/test-role=frontend-container-browser \
   --read-only \
   --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m \
   --cap-drop=ALL \

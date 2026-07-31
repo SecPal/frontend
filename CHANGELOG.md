@@ -66,6 +66,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Hardened the real-container browser validation to compare exact API origins
+  and clean up its labeled Docker container after every test outcome, preventing
+  stale port `4176` allocations between runs.
 - Kept strict-CSP browser audit evidence across full-page navigations and made
   the required UI/CSP workflow report a check for every pull request.
 - Made OnboardingWizard Base UI select tests wait for interactive popup state
