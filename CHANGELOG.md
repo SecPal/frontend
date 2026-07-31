@@ -57,7 +57,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Kept the privacy shield active across Escape and backdrop interactions, made
   Base UI confirmation actions close consistently so runtime-switch failures
   remain visible, and preserved distinct organizational-unit indentation across
-  every supported hierarchy depth.
+  every supported hierarchy depth with independent bounds and safe malformed
+  depth handling.
 - Restored styled Vite development by removing the production CSP meta only
   from transformed development HTML while retaining the same strict static
   policy in every distributable Web and Capacitor artifact, and reused the

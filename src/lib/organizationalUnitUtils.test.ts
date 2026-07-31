@@ -166,6 +166,8 @@ describe("organizationalUnitUtils", () => {
       expect(getOrganizationalUnitSelectIndentClass(99)).toBe("pl-24");
       expect(getOrganizationalUnitTreeIndentClass(-1)).toBe("pl-2");
       expect(getOrganizationalUnitTreeIndentClass(99)).toBe("pl-[6.5rem]");
+      expect(getOrganizationalUnitSelectIndentClass(Number.NaN)).toBe("pl-0");
+      expect(getOrganizationalUnitTreeIndentClass(Number.NaN)).toBe("pl-2");
     });
   });
 

@@ -32,19 +32,21 @@ const TREE_INDENT_CLASSES = [
   "pl-[6.5rem]",
 ] as const;
 
-function clampIndentDepth(depth: number) {
-  return Math.min(
-    Math.max(Math.trunc(depth), 0),
-    SELECT_INDENT_CLASSES.length - 1
-  );
+function clampIndentDepth(depth: number, maximumDepth: number) {
+  const normalizedDepth = Number.isNaN(depth) ? 0 : Math.trunc(depth);
+  return Math.min(Math.max(normalizedDepth, 0), maximumDepth);
 }
 
 export function getOrganizationalUnitSelectIndentClass(depth: number) {
-  return SELECT_INDENT_CLASSES[clampIndentDepth(depth)];
+  return SELECT_INDENT_CLASSES[
+    clampIndentDepth(depth, SELECT_INDENT_CLASSES.length - 1)
+  ];
 }
 
 export function getOrganizationalUnitTreeIndentClass(depth: number) {
-  return TREE_INDENT_CLASSES[clampIndentDepth(depth)];
+  return TREE_INDENT_CLASSES[
+    clampIndentDepth(depth, TREE_INDENT_CLASSES.length - 1)
+  ];
 }
 
 /**
