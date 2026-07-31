@@ -207,9 +207,9 @@ function enterTotpCode(code: string) {
 }
 
 function getRecoveryCodeInput(): HTMLInputElement {
-  return document.querySelector<HTMLInputElement>(
-    '[data-slot="login-input-otp-slot"]'
-  )!;
+  return screen.getByLabelText(/^recovery code$/i, {
+    selector: '[data-slot="login-input-otp-slot"]',
+  }) as HTMLInputElement;
 }
 
 function enterRecoveryCode(code: string) {
@@ -3560,7 +3560,9 @@ describe("Login", () => {
         })
       ).toBeInTheDocument();
       expect(
-        document.querySelector('[data-slot="login-input-otp-slot"]')
+        screen.getByLabelText(/^authenticator-code$/i, {
+          selector: '[data-slot="login-input-otp-slot"]',
+        })
       ).toHaveAttribute("inputmode", "numeric");
       expect(
         screen.getByRole("button", { name: /überprüfen und fortfahren/i })

@@ -390,9 +390,9 @@ describe("auth login shadcn primitives", () => {
       />
     );
 
-    const otpInput = container.querySelector<HTMLInputElement>(
-      '[data-slot="login-input-otp-slot"]'
-    )!;
+    const otpInput = screen.getByLabelText("Authenticator code", {
+      selector: '[data-slot="login-input-otp-slot"]',
+    });
     expect(otpInput).toHaveAttribute("id", "auth-otp");
     expect(otpInput).toHaveAttribute("inputmode", "numeric");
     expect(otpInput).toHaveAttribute("autocomplete", "one-time-code");
@@ -430,9 +430,9 @@ describe("auth login shadcn primitives", () => {
       />
     );
 
-    const recoveryInput = container.querySelector<HTMLInputElement>(
-      '[data-slot="login-input-otp-slot"]'
-    )!;
+    const recoveryInput = screen.getByLabelText("Recovery code", {
+      selector: '[data-slot="login-input-otp-slot"]',
+    });
     expect(recoveryInput).toHaveAttribute("inputmode", "text");
     expect(recoveryInput).toHaveAttribute("maxlength", "8");
     expect(recoveryInput).toHaveAttribute("autocomplete", "off");
@@ -487,9 +487,9 @@ describe("auth login shadcn primitives", () => {
       />
     );
 
-    const input = document.querySelector<HTMLInputElement>(
-      '[data-slot="login-input-otp-slot"]'
-    )!;
+    const input = screen.getByLabelText("Authenticator code", {
+      selector: '[data-slot="login-input-otp-slot"]',
+    });
 
     // input-otp dispatches via `onPaste`; simulate the user pasting a
     // formatted code and check the transformed value reaches `onChange`.
@@ -521,9 +521,9 @@ describe("auth login shadcn primitives", () => {
       />
     );
 
-    const input = document.querySelector<HTMLInputElement>(
-      '[data-slot="login-input-otp-slot"]'
-    )!;
+    const input = screen.getByLabelText("Recovery code", {
+      selector: '[data-slot="login-input-otp-slot"]',
+    });
 
     fireEvent.paste(input, {
       clipboardData: {
@@ -556,9 +556,9 @@ describe("auth login shadcn primitives", () => {
       />
     );
 
-    const input = container.querySelector<HTMLInputElement>(
-      '[data-slot="login-input-otp-slot"]'
-    )!;
+    const input = screen.getByLabelText("Authenticator code", {
+      selector: '[data-slot="login-input-otp-slot"]',
+    });
     const wrapper = container.querySelector("[data-input-otp-container]");
     expect(wrapper).not.toBeNull();
 
