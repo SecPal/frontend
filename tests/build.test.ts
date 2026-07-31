@@ -379,6 +379,14 @@ describe("Build Configuration and Source Verification", () => {
     }
   });
 
+  it("runs the required UI and CSP check for every pull request", () => {
+    const workflow = readRepoFile(".github/workflows/ui-csp.yml");
+    const pullRequestTrigger = getIndentedSection(workflow, "pull_request");
+
+    expect(pullRequestTrigger).not.toContain("paths:");
+    expect(getIndentedSection(workflow, "jobs")).toContain("strict-csp:");
+  });
+
   it("keeps the package-lock root license aligned with package.json", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
       license: string;

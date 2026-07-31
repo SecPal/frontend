@@ -9,10 +9,10 @@ import {
   installStoredMockBrowserSession,
   loginWithMockedBrowserSession,
 } from "./offline-live-helpers";
+import { installStrictCspAudit } from "./strict-csp-audit";
 
 test("runs the production PWA without CSP violations", async ({ page }) => {
   test.setTimeout(60_000);
-  const violations: string[] = [];
   const pageErrors: string[] = [];
   const resourceFailures: string[] = [];
   const authenticatedUser = buildOfflineLiveMockUser({
@@ -97,16 +97,7 @@ test("runs the production PWA without CSP violations", async ({ page }) => {
         }),
       })
     );
-  await page.addInitScript(() => {
-    window.addEventListener("securitypolicyviolation", (event) => {
-      const current = ((
-        window as typeof window & { __secpalCspViolations?: string[] }
-      ).__secpalCspViolations ??= []);
-      current.push(
-        `${event.violatedDirective}: ${event.blockedURI || "inline"}`
-      );
-    });
-  });
+  const strictCspAudit = await installStrictCspAudit(page);
   page.on("pageerror", (error) => pageErrors.push(error.message));
   page.on("requestfailed", (request) => {
     if (
@@ -133,45 +124,6 @@ test("runs the production PWA without CSP violations", async ({ page }) => {
     page.getByRole("heading", { name: /welcome to secpal/i })
   ).toBeVisible();
   await expect(page.locator("link[rel=stylesheet]")).toHaveCount(1);
-
-  const initialStyleElements = await page.locator("style").count();
-  const initialScriptElements = await page.locator("script").count();
-  await page.evaluate(() => {
-    const auditWindow = window as typeof window & {
-      __secpalExecutableElementMutations?: string[];
-      __secpalExecutableElementObserver?: MutationObserver;
-    };
-    const mutations: string[] = [];
-    const recordElement = (element: Element) => {
-      if (element.matches("style, script")) {
-        mutations.push(element.tagName.toLowerCase());
-      }
-      for (const descendant of element.querySelectorAll("style, script")) {
-        mutations.push(descendant.tagName.toLowerCase());
-      }
-    };
-
-    auditWindow.__secpalExecutableElementObserver?.disconnect();
-    auditWindow.__secpalExecutableElementMutations = mutations;
-    auditWindow.__secpalExecutableElementObserver = new MutationObserver(
-      (records) => {
-        for (const record of records) {
-          for (const node of record.addedNodes) {
-            if (node instanceof Element) {
-              recordElement(node);
-            }
-          }
-        }
-      }
-    );
-    auditWindow.__secpalExecutableElementObserver.observe(
-      document.documentElement,
-      {
-        childList: true,
-        subtree: true,
-      }
-    );
-  });
 
   const languageSelect = page.getByRole("combobox", {
     name: /select language|sprache auswählen/i,
@@ -286,29 +238,11 @@ test("runs the production PWA without CSP violations", async ({ page }) => {
     )
     .toBe(true);
 
-  expect(await page.locator("style").count()).toBe(initialStyleElements);
-  expect(await page.locator("script").count()).toBe(initialScriptElements);
+  await expect(page.locator("style")).toHaveCount(0);
+  await expect(page.locator("script:not([src])")).toHaveCount(0);
   expect(await page.locator("[onclick],[onload],[onerror]").count()).toBe(0);
-  expect(
-    await page.evaluate(
-      () =>
-        (
-          window as typeof window & {
-            __secpalExecutableElementMutations?: string[];
-          }
-        ).__secpalExecutableElementMutations ?? []
-    )
-  ).toEqual([]);
-
-  violations.push(
-    ...(await page.evaluate(
-      () =>
-        (window as typeof window & { __secpalCspViolations?: string[] })
-          .__secpalCspViolations ?? []
-    ))
-  );
-
-  expect(violations).toEqual([]);
+  expect(strictCspAudit.executableElementMutations).toEqual([]);
+  expect(strictCspAudit.violations).toEqual([]);
   expect(pageErrors).toEqual([]);
   expect(resourceFailures).toEqual([]);
 });

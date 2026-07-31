@@ -7,25 +7,6 @@ name: UI and CSP Architecture
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "package.json"
-      - "package-lock.json"
-      - "components.json"
-      - "index.html"
-      - "src/**"
-      - "public/**"
-      - "config/**"
-      - "scripts/**"
-      - "vite.config.*"
-      - "tsconfig*"
-      - "eslint*"
-      - "tests/**"
-      - "playwright*.config.*"
-      - "thirdPartyDependencyNotices.*"
-      - "LICENSE"
-      - "LICENSES/**"
-      - "THIRD-PARTY-NOTICES.md"
-      - ".github/workflows/**"
   push:
     branches: [main]
     paths:

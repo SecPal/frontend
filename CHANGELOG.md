@@ -51,6 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Kept strict-CSP browser audit evidence across full-page navigations and made
+  the required UI/CSP workflow report a check for every pull request.
 - Made OnboardingWizard Base UI select tests wait for interactive popup state
   and isolated nationality mocks so full-suite timing cannot cascade failures
   across server-validation scenarios.
