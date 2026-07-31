@@ -137,6 +137,7 @@ function resolveWebRuntimeApiBaseUrl(): string | null {
     if (
       url.protocol !== "https:" ||
       !isValidRuntimeHostname(url.hostname) ||
+      isLoopbackApiHost(url.hostname) ||
       (url.port !== "" && Number(url.port) < 1)
     ) {
       throw new ApiBaseUrlConfigurationError(

@@ -56,9 +56,26 @@ test("runs the immutable frontend artifact with startup runtime configuration", 
     };
   }, API_ORIGIN);
 
+  page.on("request", (request) => {
+    if (["fetch", "xhr"].includes(request.resourceType())) {
+      apiRequests.push(request.url());
+    }
+  });
+
+  await page.context().route(
+    (url) => url.origin !== FRONTEND_ORIGIN && url.origin !== API_ORIGIN,
+    async (route) => {
+      if (["fetch", "xhr"].includes(route.request().resourceType())) {
+        await route.abort("blockedbyclient");
+        return;
+      }
+
+      await route.fallback();
+    }
+  );
+
   await page.context().route(`${API_ORIGIN}/**`, async (route) => {
     const request = route.request();
-    apiRequests.push(request.url());
 
     const headers = {
       "access-control-allow-credentials": "true",

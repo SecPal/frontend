@@ -5,7 +5,8 @@
 set -euo pipefail
 
 ROOT_DIR=$(git rev-parse --show-toplevel)
-IMAGE_TAG=${SECPAL_CONTAINER_IMAGE:-secpal-frontend:contract-test}
+DEFAULT_IMAGE_TAG=$(node "$ROOT_DIR/scripts/container-test-image-tag.mjs" "$ROOT_DIR")
+IMAGE_TAG=${SECPAL_CONTAINER_IMAGE:-$DEFAULT_IMAGE_TAG}
 CONTAINER_LABEL="secpal.dev/test-role=frontend-container-browser"
 RUN_ID=$(node -e 'process.stdout.write(require("node:crypto").randomUUID())')
 CONTAINER_NAME="secpal-frontend-browser-${RUN_ID}"
@@ -25,13 +26,11 @@ trap 'handle_signal 129' HUP
 trap 'handle_signal 130' INT
 trap 'handle_signal 143' TERM
 
-if ! docker image inspect "$IMAGE_TAG" >/dev/null 2>&1; then
-  if [ "${SECPAL_CONTAINER_SKIP_BUILD:-0}" = "1" ]; then
-    echo "ERROR: frontend container image is missing while builds are disabled" >&2
-    exit 1
-  fi
-
+if [ "${SECPAL_CONTAINER_SKIP_BUILD:-0}" != "1" ]; then
   docker build --tag "$IMAGE_TAG" "$ROOT_DIR"
+elif ! docker image inspect "$IMAGE_TAG" >/dev/null 2>&1; then
+  echo "ERROR: frontend container image is missing while builds are disabled" >&2
+  exit 1
 fi
 
 docker run \

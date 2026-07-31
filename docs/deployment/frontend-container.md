@@ -47,8 +47,8 @@ docker run --rm \
 
 The image runs as fixed user and group `101:101`, listens over HTTP on port
 `8080`, and writes only beneath `/tmp`. The `/tmp` mount does not need execute
-permission. A missing or invalid API origin fails startup before Nginx runs,
-without reflecting the supplied value in logs.
+permission. A missing, loopback, or otherwise invalid API origin fails startup
+before Nginx runs, without reflecting the supplied value in logs.
 
 The entrypoint validates the origin, creates private runtime and Nginx
 directories, atomically writes `/tmp/secpal-runtime/runtime-config.js`, checks

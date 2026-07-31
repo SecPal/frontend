@@ -5,7 +5,8 @@
 set -euo pipefail
 
 ROOT_DIR=$(git rev-parse --show-toplevel)
-IMAGE_TAG=${SECPAL_CONTAINER_IMAGE:-secpal-frontend:contract-test}
+DEFAULT_IMAGE_TAG=$(node "$ROOT_DIR/scripts/container-test-image-tag.mjs" "$ROOT_DIR")
+IMAGE_TAG=${SECPAL_CONTAINER_IMAGE:-$DEFAULT_IMAGE_TAG}
 CONTAINER_PREFIX="secpal-frontend-contract-$$"
 CONTAINER_A="${CONTAINER_PREFIX}-a"
 CONTAINER_B="${CONTAINER_PREFIX}-b"
@@ -235,6 +236,17 @@ done
 
 invalid_origins=(
   ""
+  "https://localhost"
+  "https://api.localhost"
+  "https://127.0.0.1"
+  "https://127.255.255.255:8443"
+  "https://0.0.0.0"
+  "https://2130706433"
+  "https://0x7f000001"
+  "https://017700000001"
+  "https://0x7f.1"
+  "https://127.1"
+  "https://[::1]"
   "http://api.example.com"
   "https://api.example.com/"
   "https://api.example.com/v1"

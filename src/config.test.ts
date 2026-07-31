@@ -98,6 +98,31 @@ describe("config", () => {
     );
   });
 
+  it.each([
+    "https://localhost",
+    "https://api.localhost",
+    "https://127.0.0.1",
+    "https://127.255.255.255:8443",
+    "https://0.0.0.0",
+    "https://2130706433",
+    "https://0x7f000001",
+    "https://017700000001",
+    "https://0x7f.1",
+    "https://127.1",
+    "https://[::1]",
+  ])("rejects a loopback Web runtime origin: %s", async (origin) => {
+    vi.stubEnv("MODE", "web");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "https://build.example.com");
+    window.__SECPAL_RUNTIME_CONFIG__ = Object.freeze({ apiBaseUrl: origin });
+
+    const { getApiBaseUrl } = await import("./config");
+
+    expect(() => getApiBaseUrl()).toThrow(
+      "Web runtime API base URL must be an exact HTTPS origin"
+    );
+  });
+
   it("requires an explicit absolute API URL in production", async () => {
     vi.stubEnv("MODE", "production");
     vi.stubEnv("VITE_API_URL", "");

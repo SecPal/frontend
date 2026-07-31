@@ -105,10 +105,20 @@ describe("frontend container source contract", () => {
     expect(browserRunner).toContain("SECPAL_CONTAINER_BASE_URL");
     expect(browserRunner).not.toContain("docker ps --all");
     expect(browserRunner).not.toContain("127.0.0.1:4176");
+    expect(browserRunner).toContain("container-test-image-tag.mjs");
+    expect(browserRunner).toMatch(
+      /SECPAL_CONTAINER_SKIP_BUILD[^]*docker build[^]*elif ! docker image inspect/u
+    );
+    expect(smokeTest).toContain("container-test-image-tag.mjs");
+    expect(smokeTest).toContain('"https://localhost"');
+    expect(smokeTest).toContain('"https://127.0.0.1"');
+    expect(smokeTest).toContain('"https://[::1]"');
     expect(browserConfig).toContain("process.env.SECPAL_CONTAINER_BASE_URL");
     expect(browserConfig).not.toContain("webServer:");
     expect(browserTest).toContain("process.env.SECPAL_CONTAINER_BASE_URL");
     expect(browserTest).not.toContain("127.0.0.1:4176");
+    expect(browserTest).toContain('page.on("request"');
+    expect(browserTest).toContain('["fetch", "xhr"]');
     expect(browserTest).not.toContain("startsWith(apiOrigin)");
     expect(browserTest).toContain("new URL(requestUrl).origin");
     expect(smokeTest).toContain("--read-only");

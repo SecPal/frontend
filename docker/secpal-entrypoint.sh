@@ -34,9 +34,33 @@ validate_origin() {
       return 1
     }
 
+    function is_loopback_ipv4(value, parts_, count_) {
+      count_ = split(value, parts_, ".")
+      if (count_ != 4) return 0
+      return (parts_[1] + 0) == 127 || value == "0.0.0.0"
+    }
+
+    function is_loopback_hostname(value, normalized_) {
+      normalized_ = tolower(value)
+      if (normalized_ == "localhost" || normalized_ ~ /\.localhost$/) return 1
+      return valid_ipv4(normalized_) && is_loopback_ipv4(normalized_)
+    }
+
+    function is_ipv4_number_syntax(value, parts_, count_, index_, part_) {
+      count_ = split(value, parts_, ".")
+      if (count_ < 1 || count_ > 4) return 0
+      for (index_ = 1; index_ <= count_; index_++) {
+        part_ = parts_[index_]
+        if (all_digits(part_)) continue
+        if (part_ ~ /^0[xX][0-9A-Fa-f]+$/) continue
+        return 0
+      }
+      return 1
+    }
+
     function valid_hostname(value, labels_, count_, index_, label_, char_index_, character_) {
       if (length(value) == 0 || length(value) > 253) return 0
-      if (value ~ /^[0-9.]+$/) return valid_ipv4(value)
+      if (is_ipv4_number_syntax(value)) return valid_ipv4(value)
       count_ = split(value, labels_, ".")
       for (index_ = 1; index_ <= count_; index_++) {
         label_ = labels_[index_]
@@ -87,6 +111,34 @@ validate_origin() {
       return compressed_ ? weight_ < 8 : weight_ == 8
     }
 
+    function is_local_ipv6(value, parts_, count_, index_, group_, last_, nonzero_) {
+      count_ = split(value, parts_, ":")
+      last_ = 0
+      for (index_ = 1; index_ <= count_; index_++) {
+        if (parts_[index_] != "") last_ = index_
+      }
+
+      if (last_ == 0) return 1
+      if (index(parts_[last_], ".") > 0) {
+        for (index_ = 1; index_ < last_; index_++) {
+          group_ = tolower(parts_[index_])
+          if (group_ == "" || group_ ~ /^0+$/ || group_ == "ffff") continue
+          return 0
+        }
+        return is_loopback_ipv4(parts_[last_])
+      }
+
+      nonzero_ = 0
+      for (index_ = 1; index_ <= last_; index_++) {
+        group_ = parts_[index_]
+        if (group_ == "" || group_ ~ /^0+$/) continue
+        nonzero_++
+        if (index_ != last_ || group_ !~ /^0*1$/) return 0
+      }
+
+      return nonzero_ <= 1
+    }
+
     NR == 1 { origin = $0 }
     NR > 1 { extra_line = 1 }
 
@@ -113,6 +165,7 @@ validate_origin() {
           port = substr(suffix, 2)
         }
         if (!valid_ipv6(host)) exit 1
+        if (is_local_ipv6(host)) exit 1
       } else {
         colon = index(authority, ":")
         if (colon > 0) {
@@ -124,6 +177,7 @@ validate_origin() {
           host = authority
         }
         if (!valid_hostname(host)) exit 1
+        if (is_loopback_hostname(host)) exit 1
       }
 
       if (has_port && (!all_digits(port) || (port + 0) < 1 || (port + 0) > 65535)) exit 1

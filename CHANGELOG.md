@@ -67,8 +67,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Hardened the real-container browser validation to compare exact API origins,
-  allocate a dynamic host port, and clean up only its uniquely named Docker
-  container, allowing independent workspaces to run the test concurrently.
+  observe and block unexpected API origins, allocate a dynamic host port, use
+  fresh workspace-isolated images, and clean up only its uniquely named Docker
+  container so independent workspaces can run the test concurrently.
+- Rejected loopback API origins supplied through Web or container runtime
+  configuration so production clients cannot send API traffic to local
+  services.
 - Kept strict-CSP browser audit evidence across full-page navigations and made
   the required UI/CSP workflow report a check for every pull request.
 - Made OnboardingWizard Base UI select tests wait for interactive popup state
