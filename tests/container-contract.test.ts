@@ -87,6 +87,7 @@ describe("frontend container source contract", () => {
 
   it("runs the real hardened image contract and container browser in CI", () => {
     const packageJson = readRepoFile("package.json");
+    const browserTest = readRepoFile("tests/e2e/container.spec.ts");
     const browserRunner = readRepoFile("scripts/container-browser.sh");
     const browserServer = readRepoFile(
       "scripts/run-frontend-container-test-server.sh"
@@ -105,6 +106,8 @@ describe("frontend container source contract", () => {
     expect(browserServer).toContain(
       "--label secpal.dev/test-role=frontend-container-browser"
     );
+    expect(browserTest).not.toContain("startsWith(apiOrigin)");
+    expect(browserTest).toContain("new URL(requestUrl).origin");
     expect(smokeTest).toContain("--read-only");
     expect(smokeTest).toContain("--cap-drop=ALL");
     expect(smokeTest).toContain("no-new-privileges:true");

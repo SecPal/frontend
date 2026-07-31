@@ -29,9 +29,16 @@ test("runs the immutable frontend artifact with startup runtime configuration", 
           : input instanceof URL
             ? input.href
             : input.url;
+      const requestOrigin = (() => {
+        try {
+          return new URL(requestUrl).origin;
+        } catch {
+          return null;
+        }
+      })();
 
       if (
-        requestUrl.startsWith(apiOrigin) &&
+        requestOrigin === apiOrigin &&
         auditedWindow.__SECPAL_RUNTIME_CONFIG_AT_FIRST_API__ === undefined
       ) {
         auditedWindow.__SECPAL_RUNTIME_CONFIG_AT_FIRST_API__ =
