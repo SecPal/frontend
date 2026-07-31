@@ -1,0 +1,103 @@
+// SPDX-FileCopyrightText: 2026 SecPal Contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { describe, expect, it } from "vitest";
+
+const repoRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  ".."
+);
+
+function readRepoFile(relativePath: string): string {
+  return readFileSync(path.join(repoRoot, relativePath), "utf8");
+}
+
+describe("frontend container source contract", () => {
+  it("pins exact multi-architecture Debian base image manifests", () => {
+    const dockerfile = readRepoFile("Dockerfile");
+
+    expect(dockerfile).toContain(
+      "node:22.22.2-bookworm-slim@sha256:9f6d5975c7dca860947d3915877f85607946403fc55349f39b4bc3688448bb6e"
+    );
+    expect(dockerfile).toContain(
+      "nginxinc/nginx-unprivileged:1.30.4-trixie@sha256:679387908ea95d6d8de12952cd15d6b351258054a992d2106d3b6aa12659d87d"
+    );
+    expect(dockerfile).toContain("RUN npm run build:web");
+    expect(dockerfile).toContain("USER 101:101");
+    expect(dockerfile).toContain("EXPOSE 8080");
+    expect(dockerfile).not.toContain(
+      "--chown=101:101 /app/dist/ /usr/share/nginx/html/"
+    );
+    expect(dockerfile).not.toMatch(/alpine|:latest/iu);
+  });
+
+  it("keeps Nginx a read-only static server without CSP or edge behavior", () => {
+    const securityHeaders = readRepoFile("docker/security-headers.conf");
+    const nginxConfig = `${readRepoFile("docker/nginx.conf")}\n${readRepoFile(
+      "docker/default.conf"
+    )}\n${securityHeaders}`;
+
+    expect(nginxConfig).toContain("listen 8080;");
+    expect(nginxConfig).toContain("listen [::]:8080;");
+    expect(nginxConfig).toContain("server_name _;");
+    expect(nginxConfig).toContain("/tmp/secpal-runtime/runtime-config.js");
+    expect(nginxConfig).toContain("location = /health/live");
+    expect(nginxConfig).toContain("try_files $uri $uri/ /index.html;");
+    expect(nginxConfig).not.toMatch(
+      /proxy_pass|fastcgi_pass|ssi\s+on|sub_filter|Content-Security-Policy|Strict-Transport-Security|ssl_certificate|listen\s+(?:80|443)\b/iu
+    );
+    expect(securityHeaders).toContain("X-Content-Type-Options");
+    expect(securityHeaders).toContain("Referrer-Policy");
+    expect(securityHeaders).toContain("X-Frame-Options");
+    expect(securityHeaders).toContain("Permissions-Policy");
+
+    for (const directive of [
+      "pid",
+      "client_body_temp_path",
+      "proxy_temp_path",
+      "fastcgi_temp_path",
+      "uwsgi_temp_path",
+      "scgi_temp_path",
+    ]) {
+      expect(nginxConfig).toMatch(new RegExp(`${directive}\\s+/tmp/`, "u"));
+    }
+  });
+
+  it("validates and atomically writes only the runtime API origin", () => {
+    const entrypoint = readRepoFile("docker/secpal-entrypoint.sh");
+
+    expect(entrypoint).toContain("set -eu");
+    expect(entrypoint).toContain("umask 077");
+    expect(entrypoint).toContain("SECPAL_API_URL");
+    expect(entrypoint).toContain("/tmp/secpal-runtime");
+    expect(entrypoint).toContain("ensure_private_directory");
+    expect(entrypoint).toContain("mv");
+    expect(entrypoint).toContain('exec "$@"');
+    expect(entrypoint).not.toMatch(/\beval\b|\bsource\b|envsubst|sed\b/u);
+  });
+
+  it("runs the real hardened image contract and container browser in CI", () => {
+    const packageJson = readRepoFile("package.json");
+    const smokeTest = readRepoFile("scripts/container-smoke.sh");
+    const workflow = readRepoFile(".github/workflows/frontend-container.yml");
+
+    expect(packageJson).toContain('"test:container"');
+    expect(packageJson).toContain('"test:e2e:container"');
+    expect(smokeTest).toContain("--read-only");
+    expect(smokeTest).toContain("--cap-drop=ALL");
+    expect(smokeTest).toContain("no-new-privileges:true");
+    expect(smokeTest).toContain('docker restart "$CONTAINER_A"');
+    expect(smokeTest).toContain("source maps");
+    expect(smokeTest).toContain("SECPAL_API_URL");
+    expect(workflow).toContain("name: Frontend Container");
+    expect(workflow).toContain("name: Container Contract");
+    expect(workflow).toContain('node-version: "22.22.2"');
+    expect(workflow).toContain("contents: read");
+    expect(workflow).not.toMatch(
+      /packages:\s*write|id-token:\s*write|docker\s+push|buildx\s+--push/iu
+    );
+  });
+});

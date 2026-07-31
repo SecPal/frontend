@@ -175,42 +175,21 @@ These platforms auto-detect SPAs and configure routing automatically.
 
 ## Docker / Kubernetes
 
-**Dockerfile with Nginx:**
+Use the repository's official unprivileged image contract instead of creating
+a deployment-specific Dockerfile. The image uses the complete Web/SBOM build,
+runs as non-root on port 8080, supports a read-only root filesystem, and reads
+the exact API origin from `SECPAL_API_URL` only when the container starts.
 
-```dockerfile
-FROM node:22 AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-**nginx.conf:**
-
-```nginx
-server {
-  listen 80;
-  root /usr/share/nginx/html;
-  index index.html;
-
-  location / {
-    try_files $uri $uri/ /index.html;
-  }
-}
-```
+See [Frontend Container](deployment/frontend-container.md) for the build,
+hardened run command, health endpoint, cache behavior, and orchestrator
+assumptions.
 
 ---
 
 ## Environment Variables
 
-**Build-time variables** (set before `npm run build`):
+**Build-time variables for non-containerized static deployments** (set before
+`npm run build`):
 
 - `VITE_API_URL` - Backend API URL as an absolute origin (for example `https://api.secpal.dev` or `https://customer-api.secpal.dev`)
 
@@ -221,6 +200,11 @@ VITE_API_URL=https://api.secpal.dev
 ```
 
 `VITE_API_URL` is mandatory for production builds. Do not use `/`, `/api`, or any other relative value in production, because that allows `/v1/*` and `/sanctum/*` requests to fall back to the SPA host when the web server is misrouted.
+
+The official frontend container deliberately keeps the artifact neutral and
+does not use a tenant-specific `VITE_API_URL`. It requires the separate startup
+variable `SECPAL_API_URL`; see the frontend container guide for that strict
+origin contract.
 
 **Load environment:**
 

@@ -239,7 +239,7 @@ test("runs the production PWA without CSP violations", async ({ page }) => {
     .toBe(true);
 
   await expect(page.locator("style")).toHaveCount(0);
-  await expect(page.locator("script[src]")).toHaveCount(3);
+  await expect(page.locator("script[src]")).toHaveCount(4);
   await expect(page.locator("script:not([src])")).toHaveCount(0);
   expect(await page.locator("[onclick],[onload],[onerror]").count()).toBe(0);
   expect(strictCspAudit.executableElementMutations).toEqual([]);

@@ -12,6 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added a production-ready unprivileged frontend container image that serves
+  the existing Web/PWA artifact through static Nginx on port 8080, configures
+  the API origin at startup through strict `SECPAL_API_URL` validation, and
+  supports read-only root filesystems with all runtime writes confined to
+  `/tmp`. The runtime configuration remains outside the immutable bundles and
+  service-worker caches, with real-container smoke, Nginx, same-image/multiple-
+  configuration, negative-input, and Chromium CSP contracts in local tooling
+  and CI.
+
 ### Changed
 
 - Changed local and hosted pull-request size reporting to treat 600 changed

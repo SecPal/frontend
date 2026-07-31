@@ -13,3 +13,11 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+interface SecPalRuntimeConfig {
+  readonly apiBaseUrl: string | null;
+}
+
+interface Window {
+  __SECPAL_RUNTIME_CONFIG__?: Readonly<SecPalRuntimeConfig>;
+}

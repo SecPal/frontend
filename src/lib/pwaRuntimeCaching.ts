@@ -27,7 +27,8 @@ export function buildPwaRuntimeCaching(): PwaRuntimeCachingRule[] {
       },
     },
     {
-      urlPattern: /\.(?:js|css)(?:\?.*)?$/i,
+      urlPattern:
+        /^(?!.*\/runtime-config\.js(?:\?.*)?$).*\.(?:js|css)(?:\?.*)?$/i,
       handler: "CacheFirst",
       options: {
         cacheName: "static-assets",

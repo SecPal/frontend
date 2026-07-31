@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 SecPal Contributors
+# SPDX-License-Identifier: CC0-1.0
+
+.git
+.github
+.context
+.polyscope*
+.env
+.env.*
+!.env.example
+.idea
+.vscode
+*.log
+*.tar
+*.tgz
+coverage
+dist
+node_modules
+playwright-report
+test-results
+tmp
+.cache
+.eslintcache
+.lighthouseci
+reuse.spdx
+test-results.json
+tests
+playwright*.config.*

@@ -103,10 +103,21 @@ Important operational entry points for the current app:
 
 Current operational references:
 
+- [docs/deployment/frontend-container.md](docs/deployment/frontend-container.md) - production frontend image, startup configuration, and hardened runtime contract
 - [docs/deployment-spa-routing.md](docs/deployment-spa-routing.md) - Apache/Nginx SPA routing, security headers, and `VITE_API_URL` requirements
 - [PWA_OFFLINE_PERSISTENCE_AUDIT.md](PWA_OFFLINE_PERSISTENCE_AUDIT.md) - active offline-storage audit and follow-up issue mapping
 - [CONTRIBUTING.md](CONTRIBUTING.md) - local workflow, preflight usage, and PR rules
 - [SECURITY.md](SECURITY.md) - vulnerability reporting and security process
+
+### Frontend Container
+
+Build the official local image with `docker build -t secpal-frontend:local .`
+and configure its API origin only when the container starts. The complete
+non-root, read-only example and cache/health contracts are documented in the
+[frontend container guide](docs/deployment/frontend-container.md).
+
+The frontend container is a static reference server, not the public deployment
+edge.
 
 ### Customer-Owned Browser Web Push Rollout
 
