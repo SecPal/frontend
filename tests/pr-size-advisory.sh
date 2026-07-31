@@ -90,6 +90,7 @@ fi
 
 grep -Fiq "advisory PR-size reporting" "$repo_root/README.md"
 grep -Fiq "advisory PR-size reporting" "$repo_root/.preflight-exclude"
+grep -Eq '^# SPDX-FileCopyrightText: .*2026' "$repo_root/.preflight-exclude"
 grep -Eq \
   'uses: SecPal/\.github/\.github/workflows/reusable-pr-size\.yml@[0-9a-f]{40}$' \
   "$repo_root/.github/workflows/pr-size.yml"
@@ -108,14 +109,16 @@ if (scripts["test:pr-size-advisory"] !== "bash tests/pr-size-advisory.sh") {
   throw new Error("package.json must expose the focused PR-size regression");
 }
 
-for (const testScript of [
-  "test",
-  "test:ci",
-  "test:run",
-  "test:run:all",
-  "test:coverage",
-  "test:coverage:ci",
-]) {
+const directVitestScripts = Object.entries(scripts)
+  .filter(([testScript, command]) =>
+    testScript.startsWith("test") && /^vitest(?:\s|$)/.test(command),
+  )
+  .map(([testScript]) => testScript);
+if (directVitestScripts.length === 0) {
+  throw new Error("package.json must expose at least one direct Vitest script");
+}
+
+for (const testScript of directVitestScripts) {
   const lifecycleScript = testScript === "test" ? "pretest" : `pre${testScript}`;
   if (scripts[lifecycleScript] !== "npm run test:pr-size-advisory") {
     throw new Error(`${lifecycleScript} must run the focused PR-size regression`);
