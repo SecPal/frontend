@@ -129,9 +129,18 @@ const personalInformationSubmission = {
   updated_at: "2026-05-01T00:00:00Z",
 };
 
+type WizardTemplate =
+  | typeof countryTemplate
+  | typeof finalTemplate
+  | typeof personalInformationTemplate;
+type WizardSubmission =
+  | typeof countrySubmission
+  | typeof finalSubmission
+  | typeof personalInformationSubmission;
+
 interface WizardRouteScenario {
-  templates: ReadonlyArray<{ id: string }>;
-  submissions: ReadonlyArray<{ form_template_id: string }>;
+  templates: ReadonlyArray<WizardTemplate>;
+  submissions: ReadonlyArray<WizardSubmission>;
 }
 
 const patternValidationScenario: WizardRouteScenario = {
@@ -216,11 +225,23 @@ async function installWizardValidationRoutes(
     }
 
     const requestBody = route.request().postDataJSON() as
-      { status?: string } | undefined;
+      { status?: string; form_data?: Record<string, unknown> } | undefined;
     const submissionId = route.request().url().split("/").at(-1);
+    const submission = scenario.submissions.find(
+      (entry) => entry.id === submissionId
+    );
+
+    if (!submission) {
+      await route.fulfill({
+        status: 404,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "Submission not found" }),
+      });
+      return;
+    }
 
     if (
-      submissionId === countrySubmission.id &&
+      submission.id === countrySubmission.id &&
       requestBody?.status === "draft"
     ) {
       await route.fulfill({
@@ -232,7 +253,7 @@ async function installWizardValidationRoutes(
     }
 
     if (
-      submissionId === countrySubmission.id &&
+      submission.id === countrySubmission.id &&
       requestBody?.status === "submitted"
     ) {
       await route.fulfill({
@@ -248,7 +269,13 @@ async function installWizardValidationRoutes(
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ data: finalSubmission }),
+      body: JSON.stringify({
+        data: {
+          ...submission,
+          status: requestBody?.status ?? submission.status,
+          form_data: requestBody?.form_data ?? submission.form_data,
+        },
+      }),
     });
   });
 }
@@ -306,6 +333,7 @@ test.describe("Onboarding wizard validation", () => {
       templates: [personalInformationTemplate],
       submissions: [personalInformationSubmission],
     });
+    await page.clock.install({ time: new Date("2026-05-15T12:00:00Z") });
 
     await page.goto("/onboarding");
     await page.waitForLoadState("networkidle");
