@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced nonce and SSI-based CSP handling with one static strict policy for
   Web, PWA, and Capacitor surfaces, backed by source, build-artifact, component,
   and Chromium CSP checks, including transient script/style insertion detection
-  and production JavaScript bundle scans.
+  from document creation onward and production JavaScript bundle scans.
 - Removed the final obsolete native enrollment compatibility surface from the
   public enterprise facade, which now exposes only the preserved OSS-license
   bridge.

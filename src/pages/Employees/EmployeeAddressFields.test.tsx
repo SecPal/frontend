@@ -6,7 +6,7 @@ import { i18n } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { messages as deMessages } from "../../locales/de/messages.mjs";
 import { messages as enMessages } from "../../locales/en/messages.mjs";
-import { act } from "react";
+import { act, useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { EmployeeAddressFields } from "./EmployeeAddressFields";
@@ -33,6 +33,58 @@ describe("EmployeeAddressFields", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it("keeps autocomplete inputs synchronized with prefilled and suggestion-populated draft values", async () => {
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
+      {
+        name: "Grabstraße",
+        postal_code: "13156",
+        locality: "Berlin",
+      },
+    ]);
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+
+    function AddressHarness() {
+      const [draft, setDraft] = useState({
+        street: "Gr",
+        houseNumber: "4",
+        postalCode: "10115",
+        city: "Old City",
+        supplement: "",
+        country: "DE",
+      });
+
+      return (
+        <EmployeeAddressFields
+          draft={draft}
+          onChange={(field, value) => {
+            setDraft((current) => ({ ...current, [field]: value }));
+          }}
+        />
+      );
+    }
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <AddressHarness />
+      </I18nProvider>
+    );
+
+    expect(screen.getByLabelText(/postal code/i)).toHaveValue("10115");
+    expect(screen.getByLabelText(/^city$/i)).toHaveValue("Old City");
+    const streetInput = screen.getByLabelText(/street/i);
+    expect(streetInput).toHaveValue("Gr");
+
+    fireEvent.focus(streetInput);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
+    fireEvent.click(screen.getByRole("option", { name: /grabstraße/i }));
+
+    expect(streetInput).toHaveValue("Grabstraße");
+    expect(screen.getByLabelText(/postal code/i)).toHaveValue("13156");
+    expect(screen.getByLabelText(/^city$/i)).toHaveValue("Berlin");
   });
 
   it("fills postal code and city from a selected street suggestion", async () => {
