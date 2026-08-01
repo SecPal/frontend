@@ -612,7 +612,7 @@ msgstr "Failed to confirm onboarding"
 msgid "Update the Android app before using this instance."
 msgstr "Update the Android app before using this instance."
 
-#: src/pages/Login.tsx
+#: src/components/LoginRuntimeInstanceSection.tsx
 msgid "SecPal could not switch instances. Please try again."
 msgstr "SecPal could not switch instances. Please try again."
 
@@ -1222,6 +1222,7 @@ msgid "Thank you for submitting your onboarding information. Our HR team will re
 msgstr "Thank you for submitting your onboarding information. Our HR team will review your details."
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
+#: src/components/LoginRuntimeInstanceSection.tsx
 #: src/components/MoveOrganizationalUnitDialog.tsx
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
@@ -1232,7 +1233,6 @@ msgstr "Thank you for submitting your onboarding information. Our HR team will r
 #: src/pages/Employees/EmployeeCreate.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeEdit.tsx
-#: src/pages/Login.tsx
 #: src/pages/Settings/SettingsPage.tsx
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
@@ -1863,7 +1863,7 @@ msgstr "Step 2: Configure assignment permissions"
 msgid "Identity card"
 msgstr "Identity card"
 
-#: src/pages/Login.tsx
+#: src/components/LoginRuntimeInstanceSection.tsx
 msgid "Switch instance?"
 msgstr "Switch instance?"
 
@@ -1922,7 +1922,7 @@ msgstr "Assignable for new assignments"
 msgid "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
 msgstr "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
 
-#: src/pages/Login.tsx
+#: src/components/LoginRuntimeInstanceSection.tsx
 msgid "Switch instance"
 msgstr "Switch instance"
 
@@ -2652,7 +2652,7 @@ msgstr "I stored these recovery codes securely and understand they will not be s
 msgid "Establishment"
 msgstr "Establishment"
 
-#: src/pages/Login.tsx
+#: src/components/LoginRuntimeInstanceSection.tsx
 msgid "You will be returned to the instance selection screen."
 msgstr "You will be returned to the instance selection screen."
 
@@ -3250,7 +3250,7 @@ msgstr "We couldn't submit the form yet. Please review the highlighted fields."
 msgid "VAT ID"
 msgstr "VAT ID"
 
-#: src/pages/Login.tsx
+#: src/components/LoginRuntimeInstanceSection.tsx
 msgid "Switching instance..."
 msgstr "Switching instance..."
 
@@ -3631,8 +3631,8 @@ msgstr "Edit Postal Address"
 msgid "Read the AGPL v3 license"
 msgstr "Read the AGPL v3 license"
 
-#. placeholder {0}: displayedRuntimeBootstrap.instanceDisplayName
-#: src/pages/Login.tsx
+#. placeholder {0}: runtimeBootstrap.instanceDisplayName
+#: src/components/LoginRuntimeInstanceSection.tsx
 msgid "Signed in to {0}"
 msgstr "Signed in to {0}"
 

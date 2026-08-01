@@ -1578,11 +1578,14 @@ describe("App", () => {
       });
 
       expect(
-        screen.getByRole("form", { name: /login form/i })
+        screen.getByRole("status", { name: /loading login/i })
       ).toBeInTheDocument();
       expect(screen.getByLabelText(/email/i)).toBeDisabled();
       expect(screen.getByLabelText(/password/i)).toBeDisabled();
       expect(screen.getByRole("button", { name: /^log in$/i })).toBeDisabled();
+      expect(
+        screen.queryByRole("form", { name: /login form/i })
+      ).not.toBeInTheDocument();
       expect(
         screen.getByRole("button", { name: /switch instance/i })
       ).toBeEnabled();

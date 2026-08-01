@@ -31,10 +31,11 @@ import {
 import { PublicRouteLoader } from "./components/PublicRouteLoader";
 import { RouteBootstrapRecoveryState } from "./components/RouteGuardState";
 import { RuntimeDiscoveryFlow } from "./components/RuntimeDiscoveryFlow";
+import type { LoginRuntimeBootstrapSummary } from "./components/LoginRuntimeInstanceSection";
 import { loadAuthenticatedAppModule } from "./lib/lazyAppModules";
 import { isRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
 import { SecPalRuntimeBootstrap, type SecPalRuntimeInfo } from "./native";
-import { Login, type LoginRuntimeBootstrapSummary } from "./pages/Login";
+import { Login } from "./pages/Login";
 import { SourcePage } from "./pages/SourcePage";
 import { getAuthTransport } from "./services/authTransport";
 import {
@@ -184,6 +185,10 @@ function LoginRouteBootstrapGate() {
   }, [logout, returnToRuntimeDiscovery]);
 
   useEffect(() => {
+    if (isNativeAuthBootstrap) {
+      return;
+    }
+
     const timeoutId = globalThis.setTimeout(() => {
       setShowInteractiveLogin(true);
     }, LOGIN_ROUTE_BOOTSTRAP_INTERACTIVE_DELAY_MS);
@@ -191,7 +196,18 @@ function LoginRouteBootstrapGate() {
     return () => {
       globalThis.clearTimeout(timeoutId);
     };
-  }, []);
+  }, [isNativeAuthBootstrap]);
+
+  if (isNativeAuthBootstrap) {
+    return (
+      <LoginRouteLoadingState
+        runtimeBootstrap={loginRuntimeBootstrap}
+        onSwitchRuntimeBootstrap={
+          returnToRuntimeDiscovery ? handleSwitchRuntimeBootstrap : undefined
+        }
+      />
+    );
+  }
 
   return showInteractiveLogin ? (
     <Login
@@ -199,7 +215,6 @@ function LoginRouteBootstrapGate() {
       onSwitchRuntimeBootstrap={
         returnToRuntimeDiscovery ? handleSwitchRuntimeBootstrap : undefined
       }
-      isAuthBootstrapPending={isNativeAuthBootstrap}
     />
   ) : (
     <LoginRouteLoadingState />

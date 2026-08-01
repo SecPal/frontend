@@ -70,8 +70,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Rehydrated native Android sessions after WebView or process restarts even
   without a local frontend user snapshot, while preserving explicit logout
-  barriers, ending invalid native tokens cleanly as logged out, and retaining
-  native sessions across temporary bootstrap failures.
+  barriers, keeping login controls hidden until bootstrap completes, ending
+  invalid native tokens cleanly as logged out, and retaining native sessions
+  across temporary bootstrap failures.
 - Hardened the real-container browser validation to compare exact API origins,
   observe and block unexpected API origins, allocate a dynamic host port, use
   fresh workspace-isolated images, and clean up only its uniquely named Docker
