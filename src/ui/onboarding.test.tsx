@@ -929,15 +929,32 @@ describe("onboarding shadcn primitives", () => {
       <TestCommandPopover
         label="Country"
         onValueChange={handleValueChange}
-        options={[{ value: "de", label: "Germany", disabled: true }]}
+        options={[
+          { value: "fr", label: "France" },
+          { value: "de", label: "Germany", disabled: true },
+        ]}
       />
     );
 
-    await user.click(screen.getByRole("combobox", { name: "Country" }));
+    const trigger = screen.getByRole("combobox", { name: "Country" });
+    await user.click(trigger);
+    const searchbox = await screen.findByPlaceholderText(/search/i);
+    const disabledOption = await screen.findByRole("option", {
+      name: "Germany",
+    });
+
+    await waitFor(() => expect(searchbox).toHaveFocus());
+    await user.keyboard("{ArrowDown}{ArrowDown}");
+    await waitFor(() =>
+      expect(disabledOption).toHaveAttribute("data-highlighted", "")
+    );
+
     await user.keyboard("{Enter}");
 
     expect(handleValueChange).not.toHaveBeenCalled();
-    expect(await screen.findByPlaceholderText(/search/i)).toBeInTheDocument();
+    expect(searchbox).toBeInTheDocument();
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(trigger).toHaveTextContent("Select option");
   });
 
   it("does not move the active index when ArrowDown is pressed on an empty result list", async () => {
