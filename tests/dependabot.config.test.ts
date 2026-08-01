@@ -31,8 +31,38 @@ function getIndentedSection(text: string, sectionName: string): string {
   return sectionLines.join("\n");
 }
 
+function getPackageEcosystemSection(text: string, ecosystem: string): string {
+  const lines = text.split("\n");
+  const marker = `- package-ecosystem: "${ecosystem}"`;
+  const startIndex = lines.findIndex((line) => line.trim() === marker);
+
+  if (startIndex === -1) {
+    return "";
+  }
+
+  const sectionIndent = lines[startIndex].match(/^ */)?.[0].length ?? 0;
+  const sectionLines = [lines[startIndex]];
+
+  for (const line of lines.slice(startIndex + 1)) {
+    const lineIndent = line.match(/^ */)?.[0].length ?? 0;
+
+    if (
+      line.trim().startsWith("- package-ecosystem:") &&
+      lineIndent === sectionIndent
+    ) {
+      break;
+    }
+
+    sectionLines.push(line);
+  }
+
+  return sectionLines.join("\n");
+}
+
 describe("Dependabot configuration", () => {
+  const changelogPath = join(process.cwd(), "CHANGELOG.md");
   const configPath = join(process.cwd(), ".github", "dependabot.yml");
+  const packageLockPath = join(process.cwd(), "package-lock.json");
   const packageJsonPath = join(process.cwd(), "package.json");
 
   function readConfigText(): string {
@@ -41,15 +71,18 @@ describe("Dependabot configuration", () => {
     return readFileSync(configPath, "utf8");
   }
 
-  function readDependencies(): Record<string, string> {
+  function readDependencies(
+    dependencyType: "dependencies" | "devDependencies" = "dependencies"
+  ): Record<string, string> {
     expect(existsSync(packageJsonPath)).toBe(true);
 
     return (
       (
         JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
           dependencies?: Record<string, string>;
+          devDependencies?: Record<string, string>;
         }
-      ).dependencies ?? {}
+      )[dependencyType] ?? {}
     );
   }
 
@@ -85,5 +118,42 @@ describe("Dependabot configuration", () => {
     expect(dependencies.react).toBeDefined();
     expect(dependencies["react-dom"]).toBeDefined();
     expect(dependencies.react).toBe(dependencies["react-dom"]);
+  });
+
+  it("tracks the Browserslist browser database as a direct development dependency", () => {
+    const devDependencies = readDependencies("devDependencies");
+    const caniuseLiteRange = devDependencies["caniuse-lite"];
+    const npmUpdates = getPackageEcosystemSection(readConfigText(), "npm");
+
+    expect(caniuseLiteRange).toMatch(/^\^1\.0\.\d+$/);
+    expect(npmUpdates).toContain('versioning-strategy: "increase"');
+
+    expect(existsSync(packageLockPath)).toBe(true);
+    const packageLock = JSON.parse(readFileSync(packageLockPath, "utf8")) as {
+      packages?: Record<
+        string,
+        {
+          devDependencies?: Record<string, string>;
+          version?: string;
+        }
+      >;
+    };
+
+    expect(packageLock.packages?.[""]?.devDependencies?.["caniuse-lite"]).toBe(
+      caniuseLiteRange
+    );
+    expect(packageLock.packages?.["node_modules/caniuse-lite"]?.version).toBe(
+      caniuseLiteRange?.slice(1)
+    );
+  });
+
+  it("documents Browserslist database update automation", () => {
+    expect(existsSync(changelogPath)).toBe(true);
+
+    const changelog = readFileSync(changelogPath, "utf8");
+
+    expect(changelog).toMatch(
+      /Declared `caniuse-lite` as an explicit development dependency so daily\s+Dependabot updates/
+    );
   });
 });

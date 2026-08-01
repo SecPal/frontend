@@ -103,6 +103,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Declared Chai as an explicit Vitest development dependency so clean
   installations can resolve Vitest's assertion package before the test suite
   starts.
+- Declared `caniuse-lite` as an explicit development dependency so daily
+  Dependabot updates keep the Browserslist browser database current and
+  production builds no longer emit stale-data warnings.
 - Updated the transitive `fast-uri` dependency to 3.1.4 to remediate the
   literal-backslash authority delimiter host-confusion vulnerability.
 - Updated the transitive `brace-expansion` dependency to 5.0.8 to remediate
