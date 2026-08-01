@@ -929,15 +929,32 @@ describe("onboarding shadcn primitives", () => {
       <TestCommandPopover
         label="Country"
         onValueChange={handleValueChange}
-        options={[{ value: "de", label: "Germany", disabled: true }]}
+        options={[
+          { value: "fr", label: "France" },
+          { value: "de", label: "Germany", disabled: true },
+        ]}
       />
     );
 
-    await user.click(screen.getByRole("combobox", { name: "Country" }));
+    const trigger = screen.getByRole("combobox", { name: "Country" });
+    await user.click(trigger);
+    const searchbox = await screen.findByPlaceholderText(/search/i);
+    const disabledOption = await screen.findByRole("option", {
+      name: "Germany",
+    });
+
+    await waitFor(() => expect(searchbox).toHaveFocus());
+    await user.keyboard("{ArrowDown}{ArrowDown}");
+    await waitFor(() =>
+      expect(disabledOption).toHaveAttribute("data-highlighted", "")
+    );
+
     await user.keyboard("{Enter}");
 
     expect(handleValueChange).not.toHaveBeenCalled();
-    expect(await screen.findByPlaceholderText(/search/i)).toBeInTheDocument();
+    expect(searchbox).toBeInTheDocument();
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(trigger).toHaveTextContent("Select option");
   });
 
   it("does not move the active index when ArrowDown is pressed on an empty result list", async () => {
@@ -981,6 +998,39 @@ describe("onboarding shadcn primitives", () => {
     await user.keyboard("{ArrowDown}");
 
     expect(handleValueChange).not.toHaveBeenCalled();
+  });
+
+  it("does not select when Enter is pressed with only disabled options", async () => {
+    const user = userEvent.setup();
+    const handleValueChange = vi.fn();
+
+    render(
+      <TestCommandPopover
+        label="Country"
+        onValueChange={handleValueChange}
+        options={[
+          { value: "de", label: "Germany", disabled: true },
+          { value: "fr", label: "France", disabled: true },
+        ]}
+      />
+    );
+
+    const trigger = screen.getByRole("combobox", { name: "Country" });
+    await user.click(trigger);
+    const searchbox = await screen.findByPlaceholderText(/search/i);
+    const options = await screen.findAllByRole("option");
+
+    await waitFor(() => expect(searchbox).toHaveFocus());
+    expect(options).toHaveLength(2);
+    options.forEach((option) => {
+      expect(option).toHaveAttribute("aria-disabled", "true");
+      expect(option).not.toHaveAttribute("data-highlighted");
+    });
+
+    await user.keyboard("{Enter}");
+
+    expect(handleValueChange).not.toHaveBeenCalled();
+    expect(trigger).toHaveTextContent("Select option");
   });
 
   it("exposes an accessible name for the searchbox derived from the localized search placeholder", async () => {
