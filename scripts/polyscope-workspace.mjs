@@ -12,7 +12,7 @@ const POLYSCOPE_CLONE_PATH_PATTERN =
 // `tests/e2e/target-urls.ts`. Accept canonical preview hosts as well as
 // `frontend-<workspace>` ones, but reject other repo previews such as `api-*`.
 const WORKSPACE_PREVIEW_HOSTNAME_PATTERN =
-  /^(?:(api|frontend|secpal-app|changelog)-)?([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.preview\.secpal\.dev$/i;
+  /^(?:(api|frontend|secpal-app)-)?([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.preview\.secpal\.dev$/i;
 
 export function detectPolyscopeWorkspaceName(
   env = process.env,

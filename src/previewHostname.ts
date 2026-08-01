@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 export const WORKSPACE_PREVIEW_HOSTNAME_PATTERN =
-  /^(?:(api|frontend|secpal-app|changelog)-)?([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.preview\.secpal\.dev$/i;
+  /^(?:(api|frontend|secpal-app)-)?([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.preview\.secpal\.dev$/i;
 
 export type PreviewHostname = {
   repo: string | null;

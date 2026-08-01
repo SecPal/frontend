@@ -48,6 +48,23 @@ function runDomainCheck(
 }
 
 describe("check-domains", () => {
+  it("rejects the retired standalone changelog host", () => {
+    const retiredHostname = ["changelog", "secpal", "app"].join(".");
+    const result = runDomainCheck([
+      {
+        path: "README.md",
+        contents: `The retired host is https://${retiredHostname}.\n`,
+      },
+    ]);
+
+    expect(result.error).toBeUndefined();
+    expect(result.status).toBe(1);
+    expect(result.stdout + result.stderr).toContain(retiredHostname);
+    expect(result.stdout + result.stderr).toContain(
+      "Domain Policy Check FAILED"
+    );
+  });
+
   it("keeps tracked storage-key documentation and fixtures in browser-storage contexts", () => {
     const changelog = readFileSync(path.join(repoRoot, "CHANGELOG.md"), "utf8");
     const themeColorBootstrapTests = readFileSync(
