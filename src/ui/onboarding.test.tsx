@@ -1022,9 +1022,10 @@ describe("onboarding shadcn primitives", () => {
 
     await waitFor(() => expect(searchbox).toHaveFocus());
     expect(options).toHaveLength(2);
-    options.forEach((option) =>
-      expect(option).toHaveAttribute("aria-disabled", "true")
-    );
+    options.forEach((option) => {
+      expect(option).toHaveAttribute("aria-disabled", "true");
+      expect(option).not.toHaveAttribute("data-highlighted");
+    });
 
     await user.keyboard("{Enter}");
 
