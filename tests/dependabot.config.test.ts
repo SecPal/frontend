@@ -41,15 +41,18 @@ describe("Dependabot configuration", () => {
     return readFileSync(configPath, "utf8");
   }
 
-  function readDependencies(): Record<string, string> {
+  function readDependencies(
+    dependencyType: "dependencies" | "devDependencies" = "dependencies"
+  ): Record<string, string> {
     expect(existsSync(packageJsonPath)).toBe(true);
 
     return (
       (
         JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
           dependencies?: Record<string, string>;
+          devDependencies?: Record<string, string>;
         }
-      ).dependencies ?? {}
+      )[dependencyType] ?? {}
     );
   }
 
@@ -85,5 +88,11 @@ describe("Dependabot configuration", () => {
     expect(dependencies.react).toBeDefined();
     expect(dependencies["react-dom"]).toBeDefined();
     expect(dependencies.react).toBe(dependencies["react-dom"]);
+  });
+
+  it("tracks the Browserslist browser database as a direct development dependency", () => {
+    const devDependencies = readDependencies("devDependencies");
+
+    expect(devDependencies["caniuse-lite"]).toBeDefined();
   });
 });
