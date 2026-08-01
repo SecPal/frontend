@@ -109,11 +109,21 @@ function shouldBootstrapBrowserSessionWithoutStoredUser(
   return true;
 }
 
+function shouldBootstrapNativeSessionWithoutStoredUser(
+  authTransportKind: string,
+  hasLogoutBarrier: boolean
+): boolean {
+  return authTransportKind === "native-bridge" && !hasLogoutBarrier;
+}
+
 function shouldTreatBootstrapFailureWithoutStoredUserAsLoggedOut(
+  authTransportKind: string,
   clearSensitiveStateOnInvalidSession: boolean
 ): boolean {
   return (
-    !clearSensitiveStateOnInvalidSession && getCsrfTokenFromCookie() === null
+    authTransportKind === "browser-session" &&
+    !clearSensitiveStateOnInvalidSession &&
+    getCsrfTokenFromCookie() === null
   );
 }
 
@@ -280,9 +290,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (!authStorage.hasStoredUser()) {
-      return shouldBootstrapBrowserSessionWithoutStoredUser(
-        authTransport.kind,
-        hasLogoutBarrier
+      return (
+        shouldBootstrapBrowserSessionWithoutStoredUser(
+          authTransport.kind,
+          hasLogoutBarrier
+        ) ||
+        shouldBootstrapNativeSessionWithoutStoredUser(
+          authTransport.kind,
+          hasLogoutBarrier
+        )
       );
     }
 
@@ -827,7 +843,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (!user) {
+    if (authStorage.hasLogoutBarrier()) {
       setBootstrapRecoveryReason(null);
       setIsLoading(false);
       return;
@@ -837,7 +853,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setBootstrapRecoveryReason(null);
     setIsLoading(true);
     setBootstrapRetryKey((currentValue) => currentValue + 1);
-  }, [authTransport.kind, user]);
+  }, [authTransport.kind]);
 
   const revalidateBrowserSessionAfterStorageMismatch = useCallback(() => {
     const hasLogoutBarrier =
@@ -955,6 +971,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setBootstrapRetryKey((currentValue) => currentValue + 1);
       };
 
+      const showBootstrapRecovery = (
+        reason: Exclude<AuthBootstrapRecoveryReason, null>
+      ) => {
+        setIsLoading(false);
+        if (!clearSensitiveStateOnInvalidSession) {
+          setUser(null);
+          setIsVaultLocked(false);
+          syncOfflineAuthState(false);
+        }
+        setBootstrapRecoveryReason(reason);
+      };
+
       timeoutId = globalThis.setTimeout(() => {
         if (
           !isActive ||
@@ -967,6 +995,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         didTimeout = true;
         if (
           shouldTreatBootstrapFailureWithoutStoredUserAsLoggedOut(
+            authTransport.kind,
             clearSensitiveStateOnInvalidSession
           )
         ) {
@@ -980,8 +1009,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        setIsLoading(false);
-        setBootstrapRecoveryReason("timeout");
+        showBootstrapRecovery("timeout");
         console.warn(
           `Auth bootstrap revalidation exceeded ${BOOTSTRAP_REVALIDATION_TIMEOUT_MS}ms.`
         );
@@ -1054,14 +1082,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           if (isOfflineBootstrapError(error)) {
-            setIsLoading(false);
-            setBootstrapRecoveryReason(null);
+            if (clearSensitiveStateOnInvalidSession) {
+              setIsLoading(false);
+              setBootstrapRecoveryReason(null);
+              return;
+            }
+
+            showBootstrapRecovery("network");
             return;
           }
 
           if (
             !isConfirmedBootstrapSessionError(error) &&
             shouldTreatBootstrapFailureWithoutStoredUserAsLoggedOut(
+              authTransport.kind,
               clearSensitiveStateOnInvalidSession
             )
           ) {
@@ -1074,8 +1108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               "Auth bootstrap revalidation failed with a non-retriable response; holding protected routes behind recovery UI.",
               error
             );
-            setIsLoading(false);
-            setBootstrapRecoveryReason("network");
+            showBootstrapRecovery("network");
             return;
           }
 
@@ -1088,8 +1121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             "Auth bootstrap revalidation failed; holding protected routes behind recovery UI.",
             error
           );
-          setIsLoading(false);
-          setBootstrapRecoveryReason(didTimeout ? "timeout" : "network");
+          showBootstrapRecovery(didTimeout ? "timeout" : "network");
         });
     };
 
@@ -1116,8 +1148,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (!storedUser) {
-        const shouldBootstrapWithoutStoredUser =
+        const shouldBootstrapBrowserSessionWithoutUser =
           shouldBootstrapBrowserSessionWithoutStoredUser(
+            authTransport.kind,
+            hasLogoutBarrierRef.current
+          );
+        const shouldBootstrapNativeSessionWithoutUser =
+          shouldBootstrapNativeSessionWithoutStoredUser(
             authTransport.kind,
             hasLogoutBarrierRef.current
           );
@@ -1135,7 +1172,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        if (shouldBootstrapWithoutStoredUser) {
+        if (shouldBootstrapNativeSessionWithoutUser) {
+          startBootstrapRevalidation(false);
+          return;
+        }
+
+        if (shouldBootstrapBrowserSessionWithoutUser) {
           startBootstrapRevalidation(false);
           return;
         }

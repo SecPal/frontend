@@ -195,12 +195,11 @@ function createAndroidRuntimeBootstrapBridge({
     appBuild: 10400,
   }),
   login = vi.fn(),
-  getCurrentUser = vi.fn().mockResolvedValue({
-    id: "42",
-    name: "Configured User",
-    email: "configured.user@secpal.dev",
-    emailVerified: true,
-  }),
+  getCurrentUser = vi.fn().mockRejectedValue(
+    Object.assign(new Error("Android auth token is not available"), {
+      code: "NO_STORED_TOKEN",
+    })
+  ),
   setRuntimeBootstrap = vi.fn().mockResolvedValue(undefined),
   clearRuntimeBootstrap = vi.fn().mockResolvedValue(undefined),
   logout = vi.fn().mockResolvedValue(undefined),
@@ -1533,6 +1532,137 @@ describe("App", () => {
       )
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/");
+  });
+
+  it("rehydrates a native session on the login route without exposing interactive login", async () => {
+    vi.useFakeTimers();
+    let resolveCurrentUser!: (user: {
+      id: string;
+      name: string;
+      email: string;
+      emailVerified: boolean;
+    }) => void;
+    const getCurrentUser = vi.fn(
+      () =>
+        new Promise<{
+          id: string;
+          name: string;
+          email: string;
+          emailVerified: boolean;
+        }>((resolve) => {
+          resolveCurrentUser = resolve;
+        })
+    );
+    const bridge = createAndroidRuntimeBootstrapBridge({
+      configured: true,
+      getCurrentUser,
+    });
+
+    try {
+      await renderWithI18n(<App />);
+
+      await act(async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(
+        screen.getByRole("status", { name: /loading login/i })
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText(/email/i)).toBeDisabled();
+
+      await act(async () => {
+        vi.advanceTimersByTime(1_000);
+        await Promise.resolve();
+      });
+
+      expect(
+        screen.getByRole("form", { name: /login form/i })
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText(/email/i)).toBeDisabled();
+      expect(screen.getByLabelText(/password/i)).toBeDisabled();
+      expect(screen.getByRole("button", { name: /^log in$/i })).toBeDisabled();
+      expect(
+        screen.getByRole("button", { name: /switch instance/i })
+      ).toBeEnabled();
+
+      await act(async () => {
+        resolveCurrentUser({
+          id: "42",
+          name: "Configured User",
+          email: "configured.user@secpal.dev",
+          emailVerified: true,
+        });
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      vi.useRealTimers();
+
+      expect(
+        await screen.findByRole(
+          "heading",
+          { name: /welcome to secpal/i },
+          { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+        )
+      ).toBeInTheDocument();
+      expect(window.location.pathname).toBe("/");
+      expect(bridge.getCurrentUser).toHaveBeenCalledTimes(1);
+      expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("shows retryable recovery when native no-snapshot rehydration detects offline state", async () => {
+    const user = userEvent.setup();
+    const nativeLogout = vi.fn().mockResolvedValue(undefined);
+    const getCurrentUser = vi
+      .fn()
+      .mockRejectedValueOnce(
+        Object.assign(
+          new Error("Android auth requires an active internet connection"),
+          { code: "NETWORK_OFFLINE" }
+        )
+      )
+      .mockResolvedValue({
+        id: "42",
+        name: "Configured User",
+        email: "configured.user@secpal.dev",
+        emailVerified: true,
+      });
+
+    createAndroidRuntimeBootstrapBridge({
+      configured: true,
+      getCurrentUser,
+      logout: nativeLogout,
+    });
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /still loading your secure session/i,
+      })
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/login");
+    expect(nativeLogout).not.toHaveBeenCalled();
+    expect(mockAuthStorage.clear).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: /^retry$/i }));
+
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /welcome to secpal/i },
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/");
+    expect(getCurrentUser).toHaveBeenCalledTimes(2);
+    expect(nativeLogout).not.toHaveBeenCalled();
   });
 
   it("keeps protected routes on a neutral loader while browser-session recovery is pending", async () => {

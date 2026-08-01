@@ -167,6 +167,10 @@ function LoginRoute() {
 
 function LoginRouteBootstrapGate() {
   const [showInteractiveLogin, setShowInteractiveLogin] = useState(false);
+  const isNativeAuthBootstrap = useMemo(
+    () => getAuthTransport().kind === "native-bridge",
+    []
+  );
   const { logout } = useAuth();
   const { loginRuntimeBootstrap, returnToRuntimeDiscovery } =
     useNativeRuntimeBootstrapContext();
@@ -195,6 +199,7 @@ function LoginRouteBootstrapGate() {
       onSwitchRuntimeBootstrap={
         returnToRuntimeDiscovery ? handleSwitchRuntimeBootstrap : undefined
       }
+      isAuthBootstrapPending={isNativeAuthBootstrap}
     />
   ) : (
     <LoginRouteLoadingState />

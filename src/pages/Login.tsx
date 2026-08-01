@@ -85,6 +85,7 @@ export interface LoginRuntimeBootstrapSummary {
 export interface LoginProps {
   readonly runtimeBootstrap?: LoginRuntimeBootstrapSummary | null;
   readonly onSwitchRuntimeBootstrap?: () => Promise<void>;
+  readonly isAuthBootstrapPending?: boolean;
 }
 
 async function loadAuthApiModule() {
@@ -321,6 +322,7 @@ function getLocalizedMfaErrorMessage(
 export function Login({
   runtimeBootstrap = null,
   onSwitchRuntimeBootstrap,
+  isAuthBootstrapPending = false,
 }: LoginProps = {}) {
   const displayedRuntimeBootstrap = runtimeBootstrap;
   const navigate = useNavigate();
@@ -491,6 +493,7 @@ export function Login({
   const isSystemNotReady = isOnline && healthStatus?.status === "not_ready";
   const isMfaChallengeActive = pendingMfaChallenge !== null;
   const areCredentialsDisabled =
+    isAuthBootstrapPending ||
     !isOnline ||
     isSystemNotReady ||
     isLocked ||
@@ -498,6 +501,7 @@ export function Login({
     isCompletingLogin ||
     isSwitchingRuntimeBootstrap;
   const isLoginSubmitDisabled =
+    isAuthBootstrapPending ||
     !isOnline ||
     !isPasswordLoginEnabled ||
     isSubmitting ||
@@ -508,6 +512,7 @@ export function Login({
     isCompletingLogin ||
     isSwitchingRuntimeBootstrap;
   const isPasskeySubmitDisabled =
+    isAuthBootstrapPending ||
     !isOnline ||
     !isPasskeyLoginEnabled ||
     isSubmitting ||
@@ -530,6 +535,11 @@ export function Login({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    if (isAuthBootstrapPending) {
+      return;
+    }
+
     setError(null);
     setHasCredentialError(false);
 
@@ -641,6 +651,10 @@ export function Login({
   };
 
   const handlePasskeySignIn = async () => {
+    if (isAuthBootstrapPending) {
+      return;
+    }
+
     if (nativePasskeyCapabilities?.passkeysAvailable === false) {
       setError(
         getNativePasskeyCompatibilityMessage(
@@ -846,7 +860,7 @@ export function Login({
       <div className="grid w-full flex-1 grid-rows-[1fr_auto_1fr] justify-items-center">
         <LoginCard
           aria-labelledby="login-title"
-          aria-busy={isCompletingLogin || undefined}
+          aria-busy={isAuthBootstrapPending || isCompletingLogin || undefined}
           className="relative row-start-2"
         >
           <LoginForm
@@ -997,6 +1011,7 @@ export function Login({
                       className="w-full"
                       aria-busy={isSubmitting}
                       aria-disabled={
+                        isAuthBootstrapPending ||
                         !isOnline ||
                         isSubmittingPasskey ||
                         isSystemNotReady ||
