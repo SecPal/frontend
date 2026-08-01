@@ -14,4 +14,13 @@ describe("parsePreviewHostname", () => {
       workspace: "grumpy-lynx",
     });
   });
+
+  it("treats the retired changelog prefix as part of a generic workspace name", () => {
+    expect(
+      parsePreviewHostname("changelog-grumpy-lynx.preview.secpal.dev")
+    ).toEqual({
+      repo: null,
+      workspace: "changelog-grumpy-lynx",
+    });
+  });
 });
