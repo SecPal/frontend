@@ -1000,6 +1000,38 @@ describe("onboarding shadcn primitives", () => {
     expect(handleValueChange).not.toHaveBeenCalled();
   });
 
+  it("does not select when Enter is pressed with only disabled options", async () => {
+    const user = userEvent.setup();
+    const handleValueChange = vi.fn();
+
+    render(
+      <TestCommandPopover
+        label="Country"
+        onValueChange={handleValueChange}
+        options={[
+          { value: "de", label: "Germany", disabled: true },
+          { value: "fr", label: "France", disabled: true },
+        ]}
+      />
+    );
+
+    const trigger = screen.getByRole("combobox", { name: "Country" });
+    await user.click(trigger);
+    const searchbox = await screen.findByPlaceholderText(/search/i);
+    const options = await screen.findAllByRole("option");
+
+    await waitFor(() => expect(searchbox).toHaveFocus());
+    expect(options).toHaveLength(2);
+    options.forEach((option) =>
+      expect(option).toHaveAttribute("aria-disabled", "true")
+    );
+
+    await user.keyboard("{Enter}");
+
+    expect(handleValueChange).not.toHaveBeenCalled();
+    expect(trigger).toHaveTextContent("Select option");
+  });
+
   it("exposes an accessible name for the searchbox derived from the localized search placeholder", async () => {
     const user = userEvent.setup();
 
