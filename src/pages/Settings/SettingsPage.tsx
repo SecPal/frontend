@@ -457,6 +457,7 @@ export function SettingsPage() {
       ]);
 
       setPasskeyLabel("");
+      setPasskeyCurrentPassword("");
 
       setIsLoadingPasskeys(true);
 

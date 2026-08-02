@@ -639,6 +639,7 @@ describe("SettingsPage", () => {
     expect(
       screen.getByRole("status", { name: /loading passkeys/i })
     ).toBeInTheDocument();
+    expect(screen.getByLabelText(/current password/i)).toHaveValue("");
   });
 
   it("shows a browser-check prompt while waiting for the credential provider", async () => {
