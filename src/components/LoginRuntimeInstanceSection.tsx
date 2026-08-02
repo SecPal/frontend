@@ -4,7 +4,7 @@
 import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react";
 import { Trans } from "@lingui/react/macro";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,15 +42,17 @@ export function LoginRuntimeInstanceSection({
   onSwitchingChange,
 }: LoginRuntimeInstanceSectionProps) {
   const { _ } = useLingui();
+  const isSwitchingRef = useRef(false);
   const [isSwitching, setIsSwitching] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSwitch = async () => {
-    if (!onSwitchRuntimeBootstrap) {
+    if (!onSwitchRuntimeBootstrap || isSwitchingRef.current) {
       return;
     }
 
+    isSwitchingRef.current = true;
     setErrorMessage(null);
     setIsSwitching(true);
     onSwitchingChange?.(true);
@@ -65,6 +67,7 @@ export function LoginRuntimeInstanceSection({
           : _(msg`SecPal could not switch instances. Please try again.`)
       );
     } finally {
+      isSwitchingRef.current = false;
       setIsSwitching(false);
       onSwitchingChange?.(false);
     }
@@ -137,7 +140,10 @@ export function LoginRuntimeInstanceSection({
           <AlertDialogCancel>
             <Trans>Cancel</Trans>
           </AlertDialogCancel>
-          <AlertDialogAction onClick={() => void handleSwitch()}>
+          <AlertDialogAction
+            disabled={isSwitching}
+            onClick={() => void handleSwitch()}
+          >
             <Trans>Switch instance</Trans>
           </AlertDialogAction>
         </AlertDialogFooter>

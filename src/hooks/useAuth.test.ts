@@ -485,6 +485,67 @@ describe("useAuth", () => {
     }
   });
 
+  it("clears a prior logout barrier after native login when no local snapshot can be persisted", async () => {
+    clearCsrfTokenCookie();
+    localStorage.setItem("auth_logout_barrier", "1");
+    const nativeUser = {
+      id: "42",
+      name: "Native Session User",
+      email: "native-session@secpal.dev",
+      emailVerified: true,
+    };
+    const nativeBridge = {
+      login: vi.fn(),
+      logout: vi.fn(),
+      getCurrentUser: vi.fn().mockResolvedValue(nativeUser),
+      isNetworkAvailable: vi.fn().mockResolvedValue(true),
+    };
+    const authGlobal = globalThis as typeof globalThis & {
+      SecPalNativeAuthBridge?: typeof nativeBridge;
+    };
+    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+
+    authGlobal.SecPalNativeAuthBridge = nativeBridge;
+
+    try {
+      const initialSession = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(initialSession.result.current.isLoading).toBe(false);
+      });
+      expect(nativeBridge.getCurrentUser).not.toHaveBeenCalled();
+
+      await act(async () => {
+        await initialSession.result.current.login(nativeUser);
+      });
+
+      expect(initialSession.result.current.isAuthenticated).toBe(true);
+      expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+      expectNoStoredAuthState();
+
+      initialSession.unmount();
+
+      const restoredSession = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(restoredSession.result.current.isAuthenticated).toBe(true);
+      });
+
+      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(1);
+      expect(restoredSession.result.current.user).toEqual(nativeUser);
+    } finally {
+      if (originalNativeBridge === undefined) {
+        delete authGlobal.SecPalNativeAuthBridge;
+      } else {
+        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
+      }
+    }
+  });
+
   it.each([
     {
       error: Object.assign(new Error("Network request failed"), {

@@ -264,6 +264,7 @@ export interface AuthStorage {
   removeUser(options?: AuthStorageClearOptions): Promise<void>;
   clear(options?: AuthStorageClearOptions): Promise<void>;
   hasLogoutBarrier(): boolean;
+  clearLogoutBarrier(): void;
   shouldSkipBarrierVaultTableCleanup(): boolean;
   setSkipBarrierVaultTableCleanup(shouldSkip: boolean): void;
   beginSensitiveLogoutBarrierCleanup(): string;
@@ -305,7 +306,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     this.cleanupLegacyToken();
   }
 
-  private clearLogoutBarrier(): void {
+  clearLogoutBarrier(): void {
     localStorage.removeItem(this.LOGOUT_BARRIER_KEY);
   }
 

@@ -75,16 +75,18 @@ const {
         storedUser = null;
         vaultPresent = false;
         vaultLocked = false;
-        logoutBarrier = false;
       }),
       clear: vi.fn(async () => {
         storedUser = null;
         vaultPresent = false;
         vaultLocked = false;
-        logoutBarrier = false;
+        logoutBarrier = true;
         skipVaultTableCleanup = false;
       }),
       hasLogoutBarrier: vi.fn(() => logoutBarrier),
+      clearLogoutBarrier: vi.fn(() => {
+        logoutBarrier = false;
+      }),
       shouldSkipBarrierVaultTableCleanup: vi.fn(() => skipVaultTableCleanup),
       setSkipBarrierVaultTableCleanup: vi.fn((shouldSkip: boolean) => {
         skipVaultTableCleanup = shouldSkip;
@@ -368,7 +370,9 @@ describe("App", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     await authStorage.clear();
+    mockAuthStorage.clearLogoutBarrier();
     mockAuthStorage.clear.mockClear();
+    mockAuthStorage.clearLogoutBarrier.mockClear();
     localStorage.clear();
     sessionStorage.clear();
     delete (globalThis as { SecPalNativeAuthBridge?: unknown })
@@ -721,7 +725,10 @@ describe("App", () => {
       screen.getByRole("button", { name: /switch instance/i })
     );
     expect(
-      screen.getByRole("button", { name: /switch instance/i })
+      screen.getByRole("button", {
+        name: /switch instance/i,
+        expanded: false,
+      })
     ).toBeEnabled();
     expect(
       screen.queryByRole("heading", { name: /enter your instance url/i })
@@ -1617,6 +1624,89 @@ describe("App", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it("keeps native login non-interactive while switching instances during rehydration", async () => {
+    const user = userEvent.setup();
+    let resolveStorageClear!: () => void;
+    const storageClear = new Promise<void>((resolve) => {
+      resolveStorageClear = resolve;
+    });
+    const getCurrentUser = vi.fn(() => new Promise(() => undefined));
+    const bridge = createAndroidRuntimeBootstrapBridge({
+      configured: true,
+      getCurrentUser,
+    });
+
+    mockAuthStorage.clear.mockImplementationOnce(() => storageClear);
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("status", { name: /loading login/i })
+    ).toBeInTheDocument();
+
+    await confirmRuntimeInstanceSwitch(user);
+
+    expect(
+      screen.getByRole("status", { name: /loading login/i })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeDisabled();
+    expect(screen.getByLabelText(/password/i)).toBeDisabled();
+    expect(screen.getByRole("button", { name: /^log in$/i })).toBeDisabled();
+    expect(
+      screen.queryByRole("form", { name: /login form/i })
+    ).not.toBeInTheDocument();
+    expect(bridge.clearRuntimeBootstrap).not.toHaveBeenCalled();
+
+    resolveStorageClear();
+
+    expect(
+      await screen.findByRole("heading", { name: /enter your instance url/i })
+    ).toBeInTheDocument();
+    expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps native bootstrap switch failures visible without exposing login", async () => {
+    const user = userEvent.setup();
+    const getCurrentUser = vi.fn(() => new Promise(() => undefined));
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const resetError = new Error("Runtime bootstrap reset failed");
+
+    createAndroidRuntimeBootstrapBridge({
+      configured: true,
+      getCurrentUser,
+      clearRuntimeBootstrap: vi.fn().mockRejectedValue(resetError),
+    });
+
+    await renderWithI18n(<App />);
+
+    expect(
+      await screen.findByRole("status", { name: /loading login/i })
+    ).toBeInTheDocument();
+
+    await confirmRuntimeInstanceSwitch(user);
+
+    expect(
+      await screen.findByText("Runtime bootstrap reset failed")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("status", { name: /loading login/i })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/email/i)).toBeDisabled();
+    expect(
+      screen.queryByRole("form", { name: /login form/i })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /switch instance/i })
+    ).toBeEnabled();
+    expect(consoleError).toHaveBeenCalledWith(
+      "Runtime bootstrap reset error:",
+      resetError
+    );
+    consoleError.mockRestore();
   });
 
   it("shows retryable recovery when native no-snapshot rehydration detects offline state", async () => {

@@ -447,11 +447,53 @@ describe("Login", () => {
     });
   });
 
+  it("starts only one instance switch when confirmation is activated twice", async () => {
+    const user = userEvent.setup();
+    let resolveSwitch!: () => void;
+    const switchPromise = new Promise<void>((resolve) => {
+      resolveSwitch = resolve;
+    });
+    const onSwitchRuntimeBootstrap = vi.fn(() => switchPromise);
+
+    renderLogin({
+      runtimeBootstrap: {
+        instanceDisplayName: "Tiny Pony",
+        apiOrigin: "https://api-tiny-pony.preview.secpal.dev",
+        features: {
+          passwordLoginEnabled: true,
+          passkeyLoginEnabled: true,
+        },
+      },
+      onSwitchRuntimeBootstrap,
+    });
+
+    await user.click(
+      await screen.findByRole("button", { name: /switch instance/i })
+    );
+    const confirmSwitch = await screen.findByRole("button", {
+      name: /switch instance/i,
+    });
+
+    act(() => {
+      confirmSwitch.click();
+      confirmSwitch.click();
+    });
+
+    expect(onSwitchRuntimeBootstrap).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveSwitch();
+      await switchPromise;
+    });
+  });
+
   it("closes the confirmation and exposes runtime-switch failures", async () => {
     const user = userEvent.setup();
-    const onSwitchRuntimeBootstrap = vi
-      .fn()
-      .mockRejectedValue(new Error("Runtime bootstrap reset failed"));
+    const resetError = new Error("Runtime bootstrap reset failed");
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const onSwitchRuntimeBootstrap = vi.fn().mockRejectedValue(resetError);
 
     renderLogin({
       runtimeBootstrap: {
@@ -483,6 +525,11 @@ describe("Login", () => {
     expect(
       await screen.findByText("Runtime bootstrap reset failed")
     ).toBeVisible();
+    expect(consoleError).toHaveBeenCalledWith(
+      "Runtime bootstrap reset error:",
+      resetError
+    );
+    consoleError.mockRestore();
   });
 
   it("hides passkey login when the configured runtime disables passkey login", async () => {

@@ -724,6 +724,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       invalidateBootstrapRevalidation();
+      authStorage.clearLogoutBarrier();
       await persistAuthenticatedUser(sanitizedUser);
       hasLogoutBarrierRef.current = false;
       shouldSkipBarrierVaultTableCleanupRef.current = false;
