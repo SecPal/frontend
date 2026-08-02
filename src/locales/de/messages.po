@@ -612,7 +612,7 @@ msgstr "Onboarding konnte nicht bestätigt werden"
 msgid "Update the Android app before using this instance."
 msgstr "Aktualisieren Sie die Android-App, bevor Sie diese Instanz verwenden."
 
-#: src/components/LoginRuntimeInstanceSection.tsx
+#: src/ui/login-runtime-instance-section.tsx
 msgid "SecPal could not switch instances. Please try again."
 msgstr "SecPal konnte die Instanz nicht wechseln. Bitte versuchen Sie es erneut."
 
@@ -1222,7 +1222,6 @@ msgid "Thank you for submitting your onboarding information. Our HR team will re
 msgstr "Vielen Dank für die Einreichung Ihrer Onboarding-Angaben. Unser HR-Team wird Ihre Daten prüfen."
 
 #: src/components/DeleteOrganizationalUnitDialog.tsx
-#: src/components/LoginRuntimeInstanceSection.tsx
 #: src/components/MoveOrganizationalUnitDialog.tsx
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
@@ -1237,6 +1236,7 @@ msgstr "Vielen Dank für die Einreichung Ihrer Onboarding-Angaben. Unser HR-Team
 #: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
 #: src/pages/Sites/SiteEdit.tsx
+#: src/ui/login-runtime-instance-section.tsx
 msgid "Cancel"
 msgstr "Abbrechen"
 
@@ -1863,7 +1863,7 @@ msgstr "Schritt 2: Konfigurieren der Zuweisungsberechtigungen"
 msgid "Identity card"
 msgstr "Personalausweis"
 
-#: src/components/LoginRuntimeInstanceSection.tsx
+#: src/ui/login-runtime-instance-section.tsx
 msgid "Switch instance?"
 msgstr "Instanz wechseln?"
 
@@ -1922,7 +1922,7 @@ msgstr "Für neue Zuweisungen verfügbar"
 msgid "SecPal signed you in as {email}, but this account cannot access the protected app until the email address is verified."
 msgstr "SecPal hat Sie als {email} angemeldet, aber dieses Konto kann nicht auf die geschützte App zugreifen, bis die E-Mail-Adresse verifiziert ist."
 
-#: src/components/LoginRuntimeInstanceSection.tsx
+#: src/ui/login-runtime-instance-section.tsx
 msgid "Switch instance"
 msgstr "Instanz wechseln"
 
@@ -2652,7 +2652,7 @@ msgstr "Ich habe diese Wiederherstellungscodes sicher gespeichert und weiß, das
 msgid "Establishment"
 msgstr "Betriebsstätte"
 
-#: src/components/LoginRuntimeInstanceSection.tsx
+#: src/ui/login-runtime-instance-section.tsx
 msgid "You will be returned to the instance selection screen."
 msgstr "Sie kehren zur Instanzauswahl zurück."
 
@@ -3250,7 +3250,7 @@ msgstr "Wir konnten das Formular noch nicht abschicken. Bitte überprüfen Sie d
 msgid "VAT ID"
 msgstr "Umsatzsteuer-ID"
 
-#: src/components/LoginRuntimeInstanceSection.tsx
+#: src/ui/login-runtime-instance-section.tsx
 msgid "Switching instance..."
 msgstr "Instanz wird gewechselt..."
 
@@ -3632,7 +3632,7 @@ msgid "Read the AGPL v3 license"
 msgstr "AGPL-v3-Lizenz lesen"
 
 #. placeholder {0}: runtimeBootstrap.instanceDisplayName
-#: src/components/LoginRuntimeInstanceSection.tsx
+#: src/ui/login-runtime-instance-section.tsx
 msgid "Signed in to {0}"
 msgstr "Angemeldet bei {0}"
 

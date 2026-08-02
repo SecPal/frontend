@@ -17,7 +17,7 @@ import {
   AlertDialogTrigger,
   LoginButton,
   LoginStatusMessage,
-} from "@/ui";
+} from "./index";
 
 export interface LoginRuntimeBootstrapSummary {
   readonly instanceDisplayName: string;

@@ -548,6 +548,100 @@ describe("useAuth", () => {
 
   it.each([
     {
+      label: "a persisted BFCache pageshow",
+      dispatchRestore: () => {
+        window.dispatchEvent(
+          new PageTransitionEvent("pageshow", { persisted: true })
+        );
+      },
+    },
+    {
+      label: "a cross-tab vault removal",
+      dispatchRestore: () => {
+        const storageEvent = new Event("storage");
+        Object.defineProperties(storageEvent, {
+          key: { value: AUTH_VAULT_STORAGE_KEY },
+          oldValue: { value: "previous-vault-state" },
+          newValue: { value: null },
+          storageArea: { value: localStorage },
+        } satisfies Partial<
+          Record<keyof StorageEventInit, PropertyDescriptor>
+        >);
+        window.dispatchEvent(storageEvent);
+      },
+    },
+  ])(
+    "revalidates a snapshotless native session after $label without creating a logout barrier",
+    async ({ dispatchRestore }) => {
+      clearCsrfTokenCookie();
+      localStorage.setItem("auth_logout_barrier", "1");
+      const nativeUser = {
+        id: "42",
+        name: "Native Session User",
+        email: "native-session@secpal.dev",
+        emailVerified: true,
+      };
+      const nativeBridge = {
+        login: vi.fn(),
+        logout: vi.fn(),
+        getCurrentUser: vi.fn().mockResolvedValue(nativeUser),
+        isNetworkAvailable: vi.fn().mockResolvedValue(true),
+      };
+      const authGlobal = globalThis as typeof globalThis & {
+        SecPalNativeAuthBridge?: typeof nativeBridge;
+      };
+      const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+
+      authGlobal.SecPalNativeAuthBridge = nativeBridge;
+
+      try {
+        const { result } = renderHook(() => useAuth(), {
+          wrapper: AuthProvider,
+        });
+
+        await waitFor(() => {
+          expect(result.current.isLoading).toBe(false);
+        });
+
+        await act(async () => {
+          await result.current.login(nativeUser);
+        });
+
+        expect(result.current.isAuthenticated).toBe(true);
+        expectNoStoredAuthState();
+        nativeBridge.getCurrentUser.mockClear();
+
+        act(() => {
+          dispatchRestore();
+        });
+
+        await waitForTestingLibrary(
+          () => {
+            expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(1);
+          },
+          { timeout: 1_000 }
+        );
+        await waitFor(() => {
+          expect(result.current.isAuthenticated).toBe(true);
+          expect(result.current.isLoading).toBe(false);
+        });
+
+        expect(result.current.user).toEqual(nativeUser);
+        expect(result.current.bootstrapRecoveryReason).toBeNull();
+        expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+        expect(clearSensitiveClientState).not.toHaveBeenCalled();
+      } finally {
+        if (originalNativeBridge === undefined) {
+          delete authGlobal.SecPalNativeAuthBridge;
+        } else {
+          authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
+        }
+      }
+    }
+  );
+
+  it.each([
+    {
       error: Object.assign(new Error("Network request failed"), {
         code: "NETWORK_ERROR",
       }),
@@ -676,6 +770,92 @@ describe("useAuth", () => {
       expect(clearSpy).not.toHaveBeenCalled();
       expect(clearSensitiveClientState).not.toHaveBeenCalled();
       expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false);
+      expect(consoleWarn).toHaveBeenCalledWith(
+        `Auth bootstrap revalidation exceeded ${BOOTSTRAP_REVALIDATION_TIMEOUT_MS}ms.`
+      );
+
+      unmount();
+    } finally {
+      setUserSpy.mockRestore();
+      clearSpy.mockRestore();
+      consoleWarn.mockRestore();
+      vi.useRealTimers();
+      if (originalNativeBridge === undefined) {
+        delete authGlobal.SecPalNativeAuthBridge;
+      } else {
+        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
+      }
+    }
+  });
+
+  it("keeps the native no-snapshot bootstrap timeout active while secure user persistence stalls", async () => {
+    vi.useFakeTimers();
+    const nativeLogout = vi.fn();
+    const nativeUser = {
+      id: "42",
+      name: "Native Session User",
+      email: "native-session@secpal.dev",
+      emailVerified: true,
+    };
+    const nativeBridge = {
+      login: vi.fn(),
+      logout: nativeLogout,
+      getCurrentUser: vi.fn().mockResolvedValue(nativeUser),
+      isNetworkAvailable: vi.fn().mockResolvedValue(true),
+    };
+    const authGlobal = globalThis as typeof globalThis & {
+      SecPalNativeAuthBridge?: typeof nativeBridge;
+    };
+    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+    const setUserSpy = vi
+      .spyOn(authStorage, "setUser")
+      .mockImplementation(() => new Promise(() => undefined));
+    const clearSpy = vi.spyOn(authStorage, "clear");
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    authGlobal.SecPalNativeAuthBridge = nativeBridge;
+
+    try {
+      const { result, unmount } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await act(async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(result.current.isLoading).toBe(true);
+      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(1);
+      expect(setUserSpy).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(result.current.isLoading).toBe(true);
+      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(2);
+      expect(setUserSpy).toHaveBeenCalledTimes(2);
+
+      await act(async () => {
+        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
+
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(result.current.bootstrapRecoveryReason).toBe("timeout");
+      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(2);
+      expect(nativeLogout).not.toHaveBeenCalled();
+      expect(clearSpy).not.toHaveBeenCalled();
+      expect(clearSensitiveClientState).not.toHaveBeenCalled();
       expect(consoleWarn).toHaveBeenCalledWith(
         `Auth bootstrap revalidation exceeded ${BOOTSTRAP_REVALIDATION_TIMEOUT_MS}ms.`
       );

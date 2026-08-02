@@ -31,7 +31,7 @@ import {
 import { PublicRouteLoader } from "./components/PublicRouteLoader";
 import { RouteBootstrapRecoveryState } from "./components/RouteGuardState";
 import { RuntimeDiscoveryFlow } from "./components/RuntimeDiscoveryFlow";
-import type { LoginRuntimeBootstrapSummary } from "./components/LoginRuntimeInstanceSection";
+import type { LoginRuntimeBootstrapSummary } from "./ui/login-runtime-instance-section";
 import { loadAuthenticatedAppModule } from "./lib/lazyAppModules";
 import { isRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
 import { SecPalRuntimeBootstrap, type SecPalRuntimeInfo } from "./native";

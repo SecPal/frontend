@@ -72,9 +72,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   without a local frontend user snapshot, while preserving logout barriers
   until a successful login, keeping login controls hidden until bootstrap or
   instance-switch cleanup completes, making failed switches retryable without
-  exposing login, preventing duplicate switches, ending invalid native tokens
-  cleanly as logged out, and retaining native sessions across temporary
-  bootstrap failures.
+  exposing login, preventing duplicate switches, revalidating snapshotless
+  native sessions after BFCache restores or cross-tab vault removal, keeping
+  the bootstrap deadline active through secure user persistence, ending
+  invalid native tokens cleanly as logged out, and retaining native sessions
+  across temporary bootstrap failures.
 - Hardened the real-container browser validation to compare exact API origins,
   observe and block unexpected API origins, allocate a dynamic host port, use
   fresh workspace-isolated images, and clean up only its uniquely named Docker

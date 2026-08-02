@@ -14,7 +14,7 @@ import { Logo } from "./Logo";
 import {
   LoginRuntimeInstanceSection,
   type LoginRuntimeBootstrapSummary,
-} from "./LoginRuntimeInstanceSection";
+} from "@/ui/login-runtime-instance-section";
 import {
   Alert,
   AlertDescription,

@@ -27,7 +27,7 @@ import { Logo } from "../components/Logo";
 import {
   LoginRuntimeInstanceSection,
   type LoginRuntimeBootstrapSummary,
-} from "../components/LoginRuntimeInstanceSection";
+} from "@/ui/login-runtime-instance-section";
 import { loadLoginMfaDialogModule } from "../lib/lazyAppModules";
 import {
   isRecoverableLazyModuleError,

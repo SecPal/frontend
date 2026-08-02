@@ -856,7 +856,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setBootstrapRetryKey((currentValue) => currentValue + 1);
   }, [authTransport.kind]);
 
-  const revalidateBrowserSessionAfterStorageMismatch = useCallback(() => {
+  const revalidateSessionAfterStorageMismatch = useCallback(() => {
     const hasLogoutBarrier =
       hasLogoutBarrierRef.current || syncBarrierStateFromStorage();
 
@@ -865,14 +865,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (
+    const shouldRevalidateBrowserSession =
       authTransport.kind === "browser-session" &&
-      isOnline() &&
       shouldBootstrapBrowserSessionWithoutStoredUser(
         authTransport.kind,
         hasLogoutBarrier
-      )
-    ) {
+      );
+    const shouldRevalidateNativeSession =
+      shouldBootstrapNativeSessionWithoutStoredUser(
+        authTransport.kind,
+        hasLogoutBarrier
+      );
+
+    if (shouldRevalidateBrowserSession || shouldRevalidateNativeSession) {
       shouldResetPrefetchCacheAfterStorageMismatchRef.current = true;
       hasLogoutBarrierRef.current = false;
       shouldSkipBarrierVaultTableCleanupRef.current = false;
@@ -947,6 +952,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const requestVersion = bootstrapRequestVersionRef.current + 1;
     bootstrapRequestVersionRef.current = requestVersion;
 
+    const clearBootstrapTimeout = () => {
+      if (timeoutId === null) {
+        return;
+      }
+
+      globalThis.clearTimeout(timeoutId);
+      timeoutId = null;
+    };
+
     const startBootstrapRevalidation = (
       clearSensitiveStateOnInvalidSession: boolean
     ) => {
@@ -985,6 +999,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
 
       timeoutId = globalThis.setTimeout(() => {
+        timeoutId = null;
         if (
           !isActive ||
           bootstrapRequestVersionRef.current !== requestVersion ||
@@ -1019,15 +1034,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       void authTransport
         .getCurrentUser()
         .then(async (currentUser) => {
-          if (timeoutId !== null) {
-            globalThis.clearTimeout(timeoutId);
-          }
-
           if (
             !isActive ||
             bootstrapRequestVersionRef.current !== requestVersion ||
             hasLogoutBarrierRef.current
           ) {
+            clearBootstrapTimeout();
             return;
           }
 
@@ -1036,6 +1048,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } catch (error: unknown) {
             throw createConfirmedBootstrapSessionError(error);
           }
+
+          clearBootstrapTimeout();
 
           if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
             reconcileActiveBarrierState();
@@ -1059,9 +1073,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           syncOfflineAuthState(true);
         })
         .catch((error: unknown) => {
-          if (timeoutId !== null) {
-            globalThis.clearTimeout(timeoutId);
-          }
+          clearBootstrapTimeout();
 
           if (
             !isActive ||
@@ -1248,9 +1260,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       isActive = false;
-      if (timeoutId !== null) {
-        globalThis.clearTimeout(timeoutId);
-      }
+      clearBootstrapTimeout();
     };
   }, [
     authTransport,
@@ -1320,7 +1330,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.getItem("auth_user") === null &&
         localStorage.getItem(AUTH_VAULT_STORAGE_KEY) === null
       ) {
-        revalidateBrowserSessionAfterStorageMismatch();
+        revalidateSessionAfterStorageMismatch();
         return;
       }
 
@@ -1361,7 +1371,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           if (!nextUser) {
-            revalidateBrowserSessionAfterStorageMismatch();
+            revalidateSessionAfterStorageMismatch();
             return;
           }
 
@@ -1374,7 +1384,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           syncOfflineAuthState(true);
         } catch (error) {
           console.error("Failed to parse cross-tab auth state:", error);
-          revalidateBrowserSessionAfterStorageMismatch();
+          revalidateSessionAfterStorageMismatch();
         }
       })();
     };
@@ -1387,7 +1397,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [
     clearAuthenticatedState,
     invalidateBootstrapRevalidation,
-    revalidateBrowserSessionAfterStorageMismatch,
+    revalidateSessionAfterStorageMismatch,
     reconcileActiveBarrierState,
     syncBarrierStateFromStorage,
     syncOfflineAuthState,
@@ -1419,7 +1429,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (!storedUser) {
-          if (user) {
+          if (user && authTransport.kind === "native-bridge") {
+            revalidateSessionAfterStorageMismatch();
+          } else if (user) {
             clearAuthenticatedState(false);
           }
 
@@ -1443,8 +1455,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener("pageshow", reconcileRestoredPageState);
     };
   }, [
+    authTransport.kind,
     clearAuthenticatedState,
     invalidateBootstrapRevalidation,
+    revalidateSessionAfterStorageMismatch,
     reconcileActiveBarrierState,
     syncBarrierStateFromStorage,
     syncOfflineAuthState,
