@@ -239,6 +239,7 @@ export interface PasskeyRegistrationCredential {
 }
 
 export interface PasskeyRegistrationVerificationRequest {
+  current_password: string;
   credential: PasskeyRegistrationCredential;
   label?: string;
 }

@@ -198,6 +198,7 @@ test.describe("Passkeys", () => {
       page.getByRole("heading", { name: /passkeys/i })
     ).toBeVisible();
     await page.getByLabel(/passkey label/i).fill("Security Key");
+    await page.getByLabel(/current password/i).fill("test-password");
     await page.getByRole("button", { name: /add passkey/i }).click();
 
     await expect(page.getByText(/security key/i)).toBeVisible();
@@ -389,6 +390,7 @@ test.describe("Passkeys", () => {
     await page.goto("/settings");
 
     await page.getByLabel(/passkey label/i).fill("Security Key");
+    await page.getByLabel(/current password/i).fill("test-password");
     await page.getByRole("button", { name: /add passkey/i }).click();
     await expect(page.getByText(/security key/i)).toBeVisible();
 

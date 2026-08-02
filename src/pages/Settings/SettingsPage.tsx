@@ -229,6 +229,7 @@ export function SettingsPage() {
     null
   );
   const [passkeyLabel, setPasskeyLabel] = useState("");
+  const [passkeyCurrentPassword, setPasskeyCurrentPassword] = useState("");
   const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
   const [registrationStep, setRegistrationStep] = useState<
     "challenge" | "device" | "saving" | null
@@ -409,12 +410,19 @@ export function SettingsPage() {
       return;
     }
 
+    if (!passkeyCurrentPassword) {
+      setPasskeyError(_(msg`Enter your current password to add a passkey.`));
+      return;
+    }
+
     setPasskeyError(null);
     setIsRegisteringPasskey(true);
     setRegistrationStep("challenge");
 
     try {
-      const challengeResponse = await startPasskeyRegistrationChallenge();
+      const challengeResponse = await startPasskeyRegistrationChallenge(
+        passkeyCurrentPassword
+      );
       console.info(
         "[SecPal] Passkey registration: challenge created id=%s",
         challengeResponse.data.challenge_id
@@ -430,6 +438,7 @@ export function SettingsPage() {
       const response = await verifyPasskeyRegistrationChallenge(
         challengeResponse.data.challenge_id,
         {
+          current_password: passkeyCurrentPassword,
           label: trimmedLabel,
           credential,
         }
@@ -499,6 +508,7 @@ export function SettingsPage() {
         setPasskeyError(_(msg`Failed to register passkey.`));
       }
     } finally {
+      setPasskeyCurrentPassword("");
       setIsRegisteringPasskey(false);
       setRegistrationStep(null);
     }
@@ -754,7 +764,7 @@ export function SettingsPage() {
                 </p>
               ) : supportsPasskeys ? (
                 <form
-                  className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+                  className="grid gap-3 sm:grid-cols-2 sm:items-end lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
                   onSubmit={handlePasskeyRegistration}
                 >
                   <Field>
@@ -768,6 +778,21 @@ export function SettingsPage() {
                       onChange={(event) => setPasskeyLabel(event.target.value)}
                       disabled={isRegisteringPasskey}
                       maxLength={100}
+                    />
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="passkey-current-password">
+                      <Trans>Current password</Trans>
+                    </FieldLabel>
+                    <Input
+                      id="passkey-current-password"
+                      type="password"
+                      value={passkeyCurrentPassword}
+                      onChange={(event) =>
+                        setPasskeyCurrentPassword(event.target.value)
+                      }
+                      disabled={isRegisteringPasskey}
+                      autoComplete="current-password"
                     />
                   </Field>
                   <Button type="submit" disabled={isRegisteringPasskey}>

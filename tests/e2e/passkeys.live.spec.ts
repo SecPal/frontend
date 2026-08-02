@@ -186,11 +186,12 @@ async function openSettings(page: Page) {
   await expect(page.getByRole("heading", { name: /passkeys/i })).toBeVisible();
 }
 
-async function addPasskey(page: Page, label: string) {
+async function addPasskey(page: Page, label: string, currentPassword: string) {
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const addButton = page.getByRole("button", { name: /add passkey/i });
 
     await page.getByLabel(/passkey label/i).fill(label);
+    await page.getByLabel(/current password/i).fill(currentPassword);
     await addButton.click();
 
     try {
@@ -281,7 +282,7 @@ test.describe("Live passkey proof", () => {
           page,
           activeAuthenticatorId
         );
-        await addPasskey(page, firstLabel);
+        await addPasskey(page, firstLabel, TEST_USER.password);
 
         expect(traffic.registrationVerify).toHaveLength(1);
         expect(traffic.registrationVerify[0]?.status).toBe(201);
@@ -312,7 +313,7 @@ test.describe("Live passkey proof", () => {
           page,
           activeAuthenticatorId
         );
-        await addPasskey(page, secondLabel);
+        await addPasskey(page, secondLabel, TEST_USER.password);
 
         expect(traffic.registrationVerify).toHaveLength(2);
         expect(traffic.registrationVerify[1]?.status).toBe(201);

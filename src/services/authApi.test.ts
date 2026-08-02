@@ -882,9 +882,9 @@ describe("authApi", () => {
         json: async () => mockResponse,
       } as Response);
 
-      await expect(startPasskeyRegistrationChallenge()).resolves.toEqual(
-        mockResponse
-      );
+      await expect(
+        startPasskeyRegistrationChallenge("correct-password")
+      ).resolves.toEqual(mockResponse);
 
       expect(mockFetch.mock.calls[1]?.[0]).toEqual(
         expect.stringContaining("/v1/me/passkeys/challenges/registration")
@@ -893,11 +893,13 @@ describe("authApi", () => {
         method: "POST",
         credentials: "include",
         cache: "no-store",
+        body: JSON.stringify({ current_password: "correct-password" }),
       });
     });
 
     it("verifies a passkey registration challenge", async () => {
       const payload = {
+        current_password: "correct-password",
         label: "Work MacBook Touch ID",
         credential: {
           id: "credential-id",
