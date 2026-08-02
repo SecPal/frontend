@@ -109,6 +109,30 @@ interface VaultRootKeyDecryptionResult {
   keyMaterialUsed: string | null;
 }
 
+export interface OfflineVaultInitializationOptions {
+  shouldCommit?: () => boolean;
+}
+
+class OfflineVaultInitializationSupersededError extends Error {}
+
+const alwaysCommitOfflineVaultInitialization = (): boolean => true;
+
+function assertOfflineVaultInitializationCurrent(
+  shouldCommit: () => boolean
+): void {
+  let isCurrent: boolean;
+
+  try {
+    isCurrent = shouldCommit();
+  } catch {
+    throw new OfflineVaultInitializationSupersededError();
+  }
+
+  if (!isCurrent) {
+    throw new OfflineVaultInitializationSupersededError();
+  }
+}
+
 type VaultAnalyticsPayload = Omit<
   AnalyticsEvent,
   "id" | "synced" | "timestamp"
@@ -1094,7 +1118,10 @@ async function ensureVaultOrganizationalUnitIndexes(
   markVaultOrgUnitIndexEnsured();
 }
 
-async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
+async function ensureOfflineVaultSession(
+  shouldCommit = alwaysCommitOfflineVaultInitialization
+): Promise<VaultSession | null> {
+  assertOfflineVaultInitializationCurrent(shouldCommit);
   let activeVaultSession = getActiveOfflineVaultSession<VaultSession>();
   const currentKeyMaterial = getAuthVaultKeyMaterial();
   const storedState = getStoredVaultState();
@@ -1116,13 +1143,16 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
 
       activeVaultSession = await maybeRewriteStoredVaultState(
         activeVaultSession,
-        storedState
+        storedState,
+        shouldCommit
       );
+      assertOfflineVaultInitializationCurrent(shouldCommit);
       setActiveOfflineVaultSession(activeVaultSession);
 
       return activeVaultSession;
     }
 
+    assertOfflineVaultInitializationCurrent(shouldCommit);
     clearOfflineVaultSession();
   }
 
@@ -1132,6 +1162,7 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
 
   const { rootKeyBytes, keyMaterialUsed } =
     await decryptVaultRootKeyBytes(storedState);
+  assertOfflineVaultInitializationCurrent(shouldCommit);
 
   if (!rootKeyBytes) {
     if (
@@ -1143,7 +1174,9 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
       return null;
     }
 
+    assertOfflineVaultInitializationCurrent(shouldCommit);
     await clearInvalidOfflineVaultArtifacts();
+    assertOfflineVaultInitializationCurrent(shouldCommit);
     return null;
   }
 
@@ -1165,10 +1198,12 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
   ) {
     activeVaultSession = await maybeRewriteStoredVaultState(
       activeVaultSession,
-      storedState
+      storedState,
+      shouldCommit
     );
   }
 
+  assertOfflineVaultInitializationCurrent(shouldCommit);
   setActiveOfflineVaultSession(activeVaultSession);
 
   return activeVaultSession;
@@ -1176,7 +1211,8 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
 
 async function maybeRewriteStoredVaultState(
   session: VaultSession,
-  storedState: AuthVaultStateEnvelope
+  storedState: AuthVaultStateEnvelope,
+  shouldCommit = alwaysCommitOfflineVaultInitialization
 ): Promise<VaultSession> {
   const currentKeyMaterial = getAuthVaultKeyMaterial();
   const currentStoredWrapperCacheKey = getStoredVaultWrapperCacheKey(
@@ -1186,6 +1222,7 @@ async function maybeRewriteStoredVaultState(
   const preferredWrapperKind = (await getNativeDeviceBoundVaultBridge())
     ? "native-device-bound"
     : "browser-session";
+  assertOfflineVaultInitializationCurrent(shouldCommit);
   const currentWrapperKind =
     storedState.version === AUTH_VAULT_LEGACY_VERSION
       ? "browser-session"
@@ -1204,6 +1241,7 @@ async function maybeRewriteStoredVaultState(
     session.rootKeyBytes,
     session.subjectHash
   );
+  assertOfflineVaultInitializationCurrent(shouldCommit);
 
   if (!rewrittenState) {
     return session;
@@ -1224,12 +1262,17 @@ async function maybeRewriteStoredVaultState(
   };
 }
 
-async function ensureVaultSessionForUser(user: PersistedAuthUser): Promise<{
+async function ensureVaultSessionForUser(
+  user: PersistedAuthUser,
+  shouldCommit = alwaysCommitOfflineVaultInitialization
+): Promise<{
   session: VaultSession;
   pendingStoredState: AuthVaultStateEnvelope | null;
 }> {
   const subjectHash = await computeSubjectHash(user.id);
-  const currentSession = await ensureOfflineVaultSession();
+  assertOfflineVaultInitializationCurrent(shouldCommit);
+  const currentSession = await ensureOfflineVaultSession(shouldCommit);
+  assertOfflineVaultInitializationCurrent(shouldCommit);
   const existingStoredState = getStoredVaultState();
 
   if (currentSession && currentSession.subjectHash === subjectHash) {
@@ -1237,7 +1280,8 @@ async function ensureVaultSessionForUser(user: PersistedAuthUser): Promise<{
       return {
         session: await maybeRewriteStoredVaultState(
           currentSession,
-          existingStoredState
+          existingStoredState,
+          shouldCommit
         ),
         pendingStoredState: null,
       };
@@ -1250,12 +1294,15 @@ async function ensureVaultSessionForUser(user: PersistedAuthUser): Promise<{
   }
 
   if (currentSession && currentSession.subjectHash !== subjectHash) {
+    assertOfflineVaultInitializationCurrent(shouldCommit);
     await clearOfflineVaultTables();
+    assertOfflineVaultInitializationCurrent(shouldCommit);
     clearStoredOfflineVaultState();
   }
 
   const rootKeyBytes = createRandomBytes(32);
   const storedState = await encryptVaultRootKeyBytes(rootKeyBytes, subjectHash);
+  assertOfflineVaultInitializationCurrent(shouldCommit);
 
   if (!storedState) {
     throw new Error(
@@ -1278,9 +1325,11 @@ async function ensureVaultSessionForUser(user: PersistedAuthUser): Promise<{
 
 async function persistProfileRecord(
   user: PersistedAuthUser,
-  session: VaultSession
+  session: VaultSession,
+  shouldCommit = alwaysCommitOfflineVaultInitialization
 ): Promise<void> {
   await ensureVaultDatabaseOpen();
+  assertOfflineVaultInitializationCurrent(shouldCommit);
 
   const encryptedRecord = await encryptVaultRecord(
     user,
@@ -1288,6 +1337,7 @@ async function persistProfileRecord(
     PROFILE_RECORD_ID,
     session
   );
+  assertOfflineVaultInitializationCurrent(shouldCommit);
 
   await db.vaultProfile.put({
     id: PROFILE_RECORD_ID,
@@ -1296,11 +1346,14 @@ async function persistProfileRecord(
 }
 
 async function migrateLegacyAnalyticsRecords(
-  session: VaultSession
+  session: VaultSession,
+  shouldCommit = alwaysCommitOfflineVaultInitialization
 ): Promise<void> {
   await ensureVaultDatabaseOpen();
+  assertOfflineVaultInitializationCurrent(shouldCommit);
 
   const legacyRecords = await db.analytics.toArray();
+  assertOfflineVaultInitializationCurrent(shouldCommit);
 
   if (legacyRecords.length === 0) {
     return;
@@ -1331,17 +1384,22 @@ async function migrateLegacyAnalyticsRecords(
       } satisfies Omit<VaultAnalyticsRecord, "id">;
     })
   );
+  assertOfflineVaultInitializationCurrent(shouldCommit);
 
   await db.vaultAnalytics.bulkPut(encryptedRecords);
+  assertOfflineVaultInitializationCurrent(shouldCommit);
   await db.analytics.clear();
 }
 
 async function migrateLegacyOrganizationalUnitRecords(
-  session: VaultSession
+  session: VaultSession,
+  shouldCommit = alwaysCommitOfflineVaultInitialization
 ): Promise<void> {
   await ensureVaultDatabaseOpen();
+  assertOfflineVaultInitializationCurrent(shouldCommit);
 
   const legacyRecords = await db.organizationalUnitCache.toArray();
+  assertOfflineVaultInitializationCurrent(shouldCommit);
 
   if (legacyRecords.length === 0) {
     return;
@@ -1365,27 +1423,45 @@ async function migrateLegacyOrganizationalUnitRecords(
       } satisfies VaultOrganizationalUnitCacheRecord;
     })
   );
+  assertOfflineVaultInitializationCurrent(shouldCommit);
 
   await db.vaultOrganizationalUnitCache.bulkPut(encryptedRecords);
+  assertOfflineVaultInitializationCurrent(shouldCommit);
   await db.organizationalUnitCache.clear();
 }
 
 export async function initializeOfflineVault(
-  user: PersistedAuthUser
+  user: PersistedAuthUser,
+  options: OfflineVaultInitializationOptions = {}
 ): Promise<void> {
-  const { session, pendingStoredState } = await ensureVaultSessionForUser(user);
+  const shouldCommit =
+    options.shouldCommit ?? alwaysCommitOfflineVaultInitialization;
 
-  await persistProfileRecord(user, session);
-  await Promise.all([
-    migrateLegacyAnalyticsRecords(session),
-    migrateLegacyOrganizationalUnitRecords(session),
-  ]);
+  try {
+    const { session, pendingStoredState } = await ensureVaultSessionForUser(
+      user,
+      shouldCommit
+    );
 
-  if (pendingStoredState) {
-    setStoredVaultState(pendingStoredState);
+    await persistProfileRecord(user, session, shouldCommit);
+    await Promise.all([
+      migrateLegacyAnalyticsRecords(session, shouldCommit),
+      migrateLegacyOrganizationalUnitRecords(session, shouldCommit),
+    ]);
+    assertOfflineVaultInitializationCurrent(shouldCommit);
+
+    if (pendingStoredState) {
+      setStoredVaultState(pendingStoredState);
+    }
+
+    localStorage.removeItem("auth_user");
+  } catch (error) {
+    if (error instanceof OfflineVaultInitializationSupersededError) {
+      return;
+    }
+
+    throw error;
   }
-
-  localStorage.removeItem("auth_user");
 }
 
 export async function readPersistedAuthUserFromVault(): Promise<PersistedAuthUser | null> {

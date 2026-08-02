@@ -75,10 +75,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   exposing login, preventing duplicate switches, revalidating snapshotless
   native sessions after BFCache restores or cross-tab vault removal, keeping
   the bootstrap deadline active through secure user persistence, and guarding
-  serialized snapshot writes and explicit or cross-tab vault unlocks so late
-  async auth work cannot override a newer logout barrier, ending invalid native
-  tokens cleanly as logged out, and retaining native sessions across temporary
-  bootstrap failures.
+  snapshot writes with last-write-wins invalidation so stalled or failed auth
+  work cannot block recovery, overwrite a newer user, unlock a locked vault, or
+  override a newer logout barrier. Retry-only invalidation preserves the
+  authenticated profile and offline caches, invalid native tokens end cleanly
+  as logged out, and temporary bootstrap failures retain the native session.
 - Hardened the real-container browser validation to compare exact API origins,
   observe and block unexpected API origins, allocate a dynamic host port, use
   fresh workspace-isolated images, and clean up only its uniquely named Docker

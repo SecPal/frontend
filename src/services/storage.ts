@@ -296,7 +296,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     "auth_logout_skip_vault_table_cleanup_owner:";
   private readonly VAULT_TABLE_CLEANUP_WAIT_TIMEOUT_MS = 5_000;
   private vaultTableCleanupQueuePromise: Promise<void> = Promise.resolve();
-  private setUserQueuePromise: Promise<void> = Promise.resolve();
+  private setUserOperationVersion = 0;
 
   /**
    * Clean up any legacy auth_token that might exist from before migration.
@@ -640,14 +640,14 @@ class LocalStorageAuthStorage implements AuthStorage {
     user: User,
     options: AuthStorageSetUserOptions = {}
   ): Promise<void> {
-    const queuedSetUserPromise = this.setUserQueuePromise
-      .catch(() => {
-        // A failed persistence must not block a later authenticated session.
-      })
-      .then(() => this.setUserImmediately(user, options));
+    const operationVersion = ++this.setUserOperationVersion;
+    const guardedOptions: AuthStorageSetUserOptions = {
+      shouldCommit: () =>
+        operationVersion === this.setUserOperationVersion &&
+        this.shouldCommitSetUser(options),
+    };
 
-    this.setUserQueuePromise = queuedSetUserPromise;
-    await queuedSetUserPromise;
+    await this.setUserImmediately(user, guardedOptions);
   }
 
   private shouldCommitSetUser(options: AuthStorageSetUserOptions): boolean {
@@ -656,6 +656,10 @@ class LocalStorageAuthStorage implements AuthStorage {
     } catch {
       return false;
     }
+  }
+
+  private invalidateSetUserOperations(): void {
+    this.setUserOperationVersion += 1;
   }
 
   private async setUserImmediately(
@@ -675,15 +679,24 @@ class LocalStorageAuthStorage implements AuthStorage {
 
     try {
       const { initializeOfflineVault } = await loadOfflineVaultModule();
-      await initializeOfflineVault(sanitizedUser);
+      await initializeOfflineVault(sanitizedUser, {
+        shouldCommit: () => this.shouldCommitSetUser(options),
+      });
     } catch (error) {
+      if (!this.shouldCommitSetUser(options)) {
+        return;
+      }
+
       console.error("Failed to persist stored user data:", error);
       await this.removeUser({ allowBarrierSkipUpgrade: true });
       return;
     }
 
     if (!this.shouldCommitSetUser(options)) {
-      await this.removeUser({ clearOfflineVaultTables: true });
+      if (this.hasLogoutBarrier()) {
+        await this.removeUser({ clearOfflineVaultTables: true });
+      }
+
       return;
     }
 
@@ -693,6 +706,7 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   lockVault(): void {
+    this.invalidateSetUserOperations();
     this.clearLogoutBarrier();
     if (localStorage.getItem(this.VAULT_KEY) !== null) {
       localStorage.setItem(this.VAULT_LOCK_KEY, "1");
@@ -760,6 +774,7 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   async clear(options?: AuthStorageClearOptions): Promise<void> {
+    this.invalidateSetUserOperations();
     const shouldPreserveExistingSkipMarker =
       this.hasLogoutBarrier() && this.shouldSkipBarrierVaultTableCleanup();
 

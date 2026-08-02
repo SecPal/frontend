@@ -159,6 +159,65 @@ describe("offlineVault", () => {
     );
   });
 
+  it("does not let a superseded native wrapper write overwrite a newer user", async () => {
+    const staleUser: PersistedAuthUser = {
+      id: "stale-user",
+      name: "Stale User",
+      email: "stale-user@secpal.dev",
+      emailVerified: false,
+    };
+    const currentUser: PersistedAuthUser = {
+      id: "current-user",
+      name: "Current User",
+      email: "current-user@secpal.dev",
+      emailVerified: true,
+    };
+    const staleWrapperDeferred = createDeferredPromise<{
+      wrappedRootKey: string;
+    }>();
+    const wrapVaultRootKey = vi
+      .fn()
+      .mockImplementationOnce(() => staleWrapperDeferred.promise)
+      .mockImplementation(
+        async ({ rootKeyBase64 }: { rootKeyBase64: string }) => ({
+          wrappedRootKey: `wrapped:${rootKeyBase64}`,
+        })
+      );
+
+    installNativeVaultBridge({
+      isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
+      wrapVaultRootKey,
+      unwrapVaultRootKey: vi.fn(
+        async ({ wrappedRootKey }: { wrappedRootKey: string }) => ({
+          rootKeyBase64: wrappedRootKey.replace("wrapped:", ""),
+        })
+      ),
+    });
+
+    let shouldCommitStaleUser = true;
+    const staleInitializationPromise = initializeOfflineVault(staleUser, {
+      shouldCommit: () => shouldCommitStaleUser,
+    });
+
+    await vi.waitFor(() => {
+      expect(wrapVaultRootKey).toHaveBeenCalledTimes(1);
+    });
+
+    shouldCommitStaleUser = false;
+    await initializeOfflineVault(currentUser);
+
+    const staleRootKey = wrapVaultRootKey.mock.calls[0]?.[0]?.rootKeyBase64;
+
+    expect(staleRootKey).toEqual(expect.any(String));
+    staleWrapperDeferred.resolve({ wrappedRootKey: `wrapped:${staleRootKey}` });
+    await staleInitializationPromise;
+
+    clearOfflineVaultSession();
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      currentUser
+    );
+  });
+
   it("keeps the vault readable when the browser-session CSRF token rotates", async () => {
     await initializeOfflineVault(persistedUser);
 
