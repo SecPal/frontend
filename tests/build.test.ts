@@ -226,9 +226,15 @@ describe("Build Configuration and Source Verification", () => {
       scripts: Record<string, string>;
     };
 
-    expect(packageJson.scripts["test:ci"]).toBe(
-      "vitest run --silent=passed-only --exclude tests/build.test.ts && vitest run tests/build.test.ts --silent=passed-only --maxWorkers=1 --no-file-parallelism"
-    );
+    expect(packageJson.scripts).toMatchObject({
+      "test:ci":
+        "vitest run --silent=passed-only --exclude tests/build.test.ts --exclude tests/shadcn-provenance.test.ts && npm run test:ci:release-builds",
+      "pretest:ci:release-builds": "npm run test:pr-size-advisory",
+      "test:ci:release-builds":
+        "vitest run tests/build.test.ts --silent=passed-only --maxWorkers=1 --no-file-parallelism && vitest run tests/shadcn-provenance.test.ts --silent=passed-only --maxWorkers=1 --no-file-parallelism",
+      "test:coverage:ci":
+        "vitest run --coverage --silent=passed-only --exclude tests/build.test.ts --exclude tests/shadcn-provenance.test.ts && npm run test:ci:release-builds",
+    });
   });
 
   it("forwards custom Vite output directories to the build artifact and SBOM", () => {

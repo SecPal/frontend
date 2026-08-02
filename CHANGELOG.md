@@ -68,9 +68,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Isolated full production-build artifact checks from the parallel CI suite so
-  constrained runners do not contend with their typecheck, Vite/PWA, and SBOM
-  subprocesses or retain Vitest workers after a failure.
+- Isolated full production-build artifact and provenance checks from parallel
+  pull-request and coverage CI suites so constrained runners do not contend
+  with their typecheck, Vite/PWA, and SBOM subprocesses or retain Vitest
+  workers after a failure.
 - Switched Vitest's bounded worker pool from forks to threads so jsdom
   environment startup no longer intermittently fails to resolve installed
   modules during full-suite validation.
