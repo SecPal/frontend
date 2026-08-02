@@ -1700,7 +1700,10 @@ describe("App", () => {
       screen.queryByRole("form", { name: /login form/i })
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /switch instance/i })
+      screen.getByRole("button", {
+        name: /switch instance/i,
+        expanded: false,
+      })
     ).toBeEnabled();
     expect(consoleError).toHaveBeenCalledWith(
       "Runtime bootstrap reset error:",
