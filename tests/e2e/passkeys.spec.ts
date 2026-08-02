@@ -132,6 +132,12 @@ async function installPasskeyBrowserMocks(page: Page) {
   });
 }
 
+async function installCsrfToken(page: Page) {
+  await page.addInitScript((csrfToken) => {
+    document.cookie = `XSRF-TOKEN=${encodeURIComponent(csrfToken)}; path=/; SameSite=Lax`;
+  }, AUTH_STORAGE_CSRF_TOKEN);
+}
+
 test.describe("Passkeys", () => {
   test("registers a passkey and refreshes the enrolled list", async ({
     page,
@@ -208,6 +214,7 @@ test.describe("Passkeys", () => {
 
   test("signs in with a passkey through the browser flow", async ({ page }) => {
     await installPasskeyBrowserMocks(page);
+    await installCsrfToken(page);
 
     await page.route("**/health/ready", async (route) => {
       await fulfillJson(route, {
@@ -254,6 +261,7 @@ test.describe("Passkeys", () => {
     page,
   }) => {
     await installPasskeyBrowserMocks(page);
+    await installCsrfToken(page);
 
     const publicChallengeBodies: Array<string | null> = [];
 
@@ -301,13 +309,15 @@ test.describe("Passkeys", () => {
   test("keeps registration persistence and discoverable login lookup in sync", async ({
     page,
   }) => {
+    const context = page.context();
+
     await installPasskeyBrowserMocks(page);
     await installStoredAuthUser(page, authUser, AUTH_STORAGE_CSRF_TOKEN);
 
     let storedPasskeys: Array<typeof registrationVerification.data.credential> =
       [];
 
-    await page.route("**/health/ready", async (route) => {
+    await context.route("**/health/ready", async (route) => {
       await fulfillJson(route, {
         status: "ready",
         checks: {
@@ -318,13 +328,13 @@ test.describe("Passkeys", () => {
         timestamp: "2026-04-09T17:00:00Z",
       });
     });
-    await page.route("**/sanctum/csrf-cookie", async (route) => {
+    await context.route("**/sanctum/csrf-cookie", async (route) => {
       await route.fulfill({ status: 204, body: "" });
     });
-    await page.route("**/v1/me", async (route) => {
+    await context.route("**/v1/me", async (route) => {
       await fulfillJson(route, authUser);
     });
-    await page.route("**/v1/me/mfa", async (route) => {
+    await context.route("**/v1/me/mfa", async (route) => {
       await fulfillJson(route, {
         data: {
           enabled: false,
@@ -335,23 +345,23 @@ test.describe("Passkeys", () => {
         },
       });
     });
-    await page.route("**/v1/me/passkeys", async (route) => {
+    await context.route("**/v1/me/passkeys", async (route) => {
       await fulfillJson(route, { data: storedPasskeys });
     });
-    await page.route(
+    await context.route(
       "**/v1/me/passkeys/challenges/registration",
       async (route) => {
         await fulfillJson(route, registrationChallenge, 201);
       }
     );
-    await page.route(
+    await context.route(
       "**/v1/me/passkeys/challenges/registration/550e8400-e29b-41d4-a716-446655440099/verify",
       async (route) => {
         storedPasskeys = [registrationVerification.data.credential];
         await fulfillJson(route, registrationVerification, 201);
       }
     );
-    await page.route("**/v1/auth/passkeys/challenges", async (route) => {
+    await context.route("**/v1/auth/passkeys/challenges", async (route) => {
       const rawBody = route.request().postData();
 
       if (rawBody !== null) {
@@ -373,7 +383,7 @@ test.describe("Passkeys", () => {
 
       await fulfillJson(route, authenticationChallenge, 201);
     });
-    await page.route(
+    await context.route(
       "**/v1/auth/passkeys/challenges/550e8400-e29b-41d4-a716-446655440001/verify",
       async (route) => {
         await fulfillJson(route, {
@@ -397,11 +407,23 @@ test.describe("Passkeys", () => {
     await page.evaluate(() => {
       window.localStorage.removeItem("auth_user");
     });
+    await context.unroute("**/v1/me");
+    await context.route("**/v1/me", async (route) => {
+      await fulfillJson(route, { message: "Unauthenticated." }, 401);
+    });
+    await page.close();
 
-    await page.goto("/login");
-    await page.getByLabel(/email/i).fill("test@example.com");
-    await page.getByRole("button", { name: /sign in with passkey/i }).click();
+    const loggedOutPage = await context.newPage();
+    await installPasskeyBrowserMocks(loggedOutPage);
+    await installCsrfToken(loggedOutPage);
 
-    await expect(page).not.toHaveURL(/\/login$/);
+    await loggedOutPage.goto("/login");
+    await loggedOutPage.getByLabel(/email/i).fill("test@example.com");
+    await loggedOutPage
+      .getByRole("button", { name: /sign in with passkey/i })
+      .click();
+
+    await expect(loggedOutPage).not.toHaveURL(/\/login$/);
+    await loggedOutPage.close();
   });
 });
