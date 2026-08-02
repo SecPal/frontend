@@ -132,6 +132,18 @@ function setCsrfTokenCookie(value: string): void {
   document.cookie = `XSRF-TOKEN=${encodeURIComponent(value)};path=/`;
 }
 
+function createDeferredPromise<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return { promise, resolve, reject };
+}
+
 describe("authStorage", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -459,6 +471,87 @@ describe("authStorage", () => {
     expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
       "1"
     );
+  });
+
+  it("does not let late guarded persistence clear a newly raised logout barrier", async () => {
+    const user = {
+      id: "1",
+      name: "Stale User",
+      email: "stale-user@secpal.dev",
+      emailVerified: false,
+    };
+    const persistenceDeferred = createDeferredPromise<void>();
+    const actualInitializeOfflineVault = offlineVault.initializeOfflineVault;
+    const initializeOfflineVaultSpy = vi
+      .spyOn(offlineVault, "initializeOfflineVault")
+      .mockImplementationOnce(async (nextUser) => {
+        await persistenceDeferred.promise;
+        await actualInitializeOfflineVault(nextUser);
+      });
+    let shouldCommit = true;
+
+    const persistencePromise = authStorage.setUser(user, {
+      shouldCommit: () => shouldCommit,
+    });
+
+    await vi.waitFor(() => {
+      expect(initializeOfflineVaultSpy).toHaveBeenCalledTimes(1);
+    });
+
+    localStorage.setItem("auth_logout_barrier", "1");
+    shouldCommit = false;
+    persistenceDeferred.resolve();
+    await persistencePromise;
+
+    expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    await expect(authStorage.getUser()).resolves.toBeNull();
+  });
+
+  it("serializes guarded persistence so stale cleanup cannot erase a newer user", async () => {
+    const staleUser = {
+      id: "1",
+      name: "Stale User",
+      email: "stale-user@secpal.dev",
+      emailVerified: false,
+    };
+    const currentUser = {
+      id: "2",
+      name: "Current User",
+      email: "current-user@secpal.dev",
+      emailVerified: true,
+    };
+    const stalePersistenceDeferred = createDeferredPromise<void>();
+    const actualInitializeOfflineVault = offlineVault.initializeOfflineVault;
+    const initializeOfflineVaultSpy = vi
+      .spyOn(offlineVault, "initializeOfflineVault")
+      .mockImplementationOnce(async (nextUser) => {
+        await stalePersistenceDeferred.promise;
+        await actualInitializeOfflineVault(nextUser);
+      });
+    let shouldCommitStaleUser = true;
+
+    const stalePersistencePromise = authStorage.setUser(staleUser, {
+      shouldCommit: () => shouldCommitStaleUser,
+    });
+
+    await vi.waitFor(() => {
+      expect(initializeOfflineVaultSpy).toHaveBeenCalledTimes(1);
+    });
+
+    shouldCommitStaleUser = false;
+
+    const currentPersistencePromise = authStorage.setUser(currentUser, {
+      shouldCommit: () => true,
+    });
+
+    await Promise.resolve();
+    expect(initializeOfflineVaultSpy).toHaveBeenCalledTimes(1);
+
+    stalePersistenceDeferred.resolve();
+    await Promise.all([stalePersistencePromise, currentPersistencePromise]);
+
+    await expect(authStorage.getUser()).resolves.toEqual(currentUser);
   });
 
   it("honors a skip-marker upgrade after getUserSnapshot sees a logout barrier", async () => {

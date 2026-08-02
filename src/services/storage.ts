@@ -258,7 +258,7 @@ export interface AuthStorage {
   hasVaultLock(): boolean;
   getUserSnapshot(): User | null;
   getUser(): Promise<User | null>;
-  setUser(user: User): Promise<void>;
+  setUser(user: User, options?: AuthStorageSetUserOptions): Promise<void>;
   lockVault(): void;
   unlockVault(): Promise<User | null>;
   removeUser(options?: AuthStorageClearOptions): Promise<void>;
@@ -271,6 +271,10 @@ export interface AuthStorage {
   endSensitiveLogoutBarrierCleanup(ownerToken: string): void;
   completeStaleSensitiveLogoutBarrierCleanup(ownerToken: string): void;
   waitForInFlightVaultTableCleanup(): Promise<void>;
+}
+
+export interface AuthStorageSetUserOptions {
+  shouldCommit?: () => boolean;
 }
 
 interface AuthStorageClearOptions {
@@ -292,6 +296,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     "auth_logout_skip_vault_table_cleanup_owner:";
   private readonly VAULT_TABLE_CLEANUP_WAIT_TIMEOUT_MS = 5_000;
   private vaultTableCleanupQueuePromise: Promise<void> = Promise.resolve();
+  private setUserQueuePromise: Promise<void> = Promise.resolve();
 
   /**
    * Clean up any legacy auth_token that might exist from before migration.
@@ -631,7 +636,36 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
   }
 
-  async setUser(user: User): Promise<void> {
+  async setUser(
+    user: User,
+    options: AuthStorageSetUserOptions = {}
+  ): Promise<void> {
+    const queuedSetUserPromise = this.setUserQueuePromise
+      .catch(() => {
+        // A failed persistence must not block a later authenticated session.
+      })
+      .then(() => this.setUserImmediately(user, options));
+
+    this.setUserQueuePromise = queuedSetUserPromise;
+    await queuedSetUserPromise;
+  }
+
+  private shouldCommitSetUser(options: AuthStorageSetUserOptions): boolean {
+    try {
+      return options.shouldCommit?.() ?? true;
+    } catch {
+      return false;
+    }
+  }
+
+  private async setUserImmediately(
+    user: User,
+    options: AuthStorageSetUserOptions
+  ): Promise<void> {
+    if (!this.shouldCommitSetUser(options)) {
+      return;
+    }
+
     const sanitizedUser = sanitizePersistedAuthUser(user);
 
     if (!sanitizedUser) {
@@ -645,6 +679,11 @@ class LocalStorageAuthStorage implements AuthStorage {
     } catch (error) {
       console.error("Failed to persist stored user data:", error);
       await this.removeUser({ allowBarrierSkipUpgrade: true });
+      return;
+    }
+
+    if (!this.shouldCommitSetUser(options)) {
+      await this.removeUser({ clearOfflineVaultTables: true });
       return;
     }
 

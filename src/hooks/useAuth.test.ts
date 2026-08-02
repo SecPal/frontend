@@ -328,9 +328,9 @@ describe("useAuth", () => {
         roles: ["Guard"],
       };
 
-      setUserSpy.mockImplementation(async (nextUser) => {
+      setUserSpy.mockImplementation(async (nextUser, options) => {
         await persistDeferred.promise;
-        await originalSetUser(nextUser);
+        await originalSetUser(nextUser, options);
       });
 
       authGlobal.SecPalNativeAuthBridge = nativeBridge;
@@ -356,7 +356,9 @@ describe("useAuth", () => {
         expect(result.current.isLoading).toBe(true);
 
         await waitFor(() => {
-          expect(setUserSpy).toHaveBeenCalledWith(expectedUser);
+          expect(setUserSpy).toHaveBeenCalledWith(expectedUser, {
+            shouldCommit: expect.any(Function),
+          });
         });
 
         expect(result.current.user).toBeNull();
@@ -375,7 +377,9 @@ describe("useAuth", () => {
 
         expect(nativeBridge.isNetworkAvailable).not.toHaveBeenCalled();
         expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(1);
-        expect(setUserSpy).toHaveBeenCalledWith(expectedUser);
+        expect(setUserSpy).toHaveBeenCalledWith(expectedUser, {
+          shouldCommit: expect.any(Function),
+        });
         expect(result.current.user).toEqual(expectedUser);
         expect(result.current.bootstrapRecoveryReason).toBeNull();
         expect(syncOfflineSessionAccess).toHaveBeenCalledWith(true);
@@ -807,9 +811,13 @@ describe("useAuth", () => {
       SecPalNativeAuthBridge?: typeof nativeBridge;
     };
     const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+    const persistenceCommitGuards: Array<(() => boolean) | undefined> = [];
     const setUserSpy = vi
       .spyOn(authStorage, "setUser")
-      .mockImplementation(() => new Promise(() => undefined));
+      .mockImplementation((_user, options) => {
+        persistenceCommitGuards.push(options?.shouldCommit);
+        return new Promise(() => undefined);
+      });
     const clearSpy = vi.spyOn(authStorage, "clear");
     const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
 
@@ -829,6 +837,7 @@ describe("useAuth", () => {
       expect(result.current.isLoading).toBe(true);
       expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(1);
       expect(setUserSpy).toHaveBeenCalledTimes(1);
+      expect(persistenceCommitGuards[0]?.()).toBe(true);
 
       await act(async () => {
         vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
@@ -840,6 +849,8 @@ describe("useAuth", () => {
       expect(result.current.isLoading).toBe(true);
       expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(2);
       expect(setUserSpy).toHaveBeenCalledTimes(2);
+      expect(persistenceCommitGuards[0]?.()).toBe(false);
+      expect(persistenceCommitGuards[1]?.()).toBe(true);
 
       await act(async () => {
         vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
@@ -853,6 +864,7 @@ describe("useAuth", () => {
       expect(result.current.isAuthenticated).toBe(false);
       expect(result.current.bootstrapRecoveryReason).toBe("timeout");
       expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(2);
+      expect(persistenceCommitGuards[1]?.()).toBe(false);
       expect(nativeLogout).not.toHaveBeenCalled();
       expect(clearSpy).not.toHaveBeenCalled();
       expect(clearSensitiveClientState).not.toHaveBeenCalled();
@@ -2264,6 +2276,65 @@ describe("useAuth", () => {
     await expectEncryptedStoredUser(mockUser);
   });
 
+  it("does not let late login persistence undo a newer logout", async () => {
+    window.history.replaceState({}, "", "/onboarding/complete");
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    const persistenceDeferred = createDeferredPromise<void>();
+    let persistenceCommitGuard: (() => boolean) | undefined;
+    const setUserSpy = vi
+      .spyOn(authStorage, "setUser")
+      .mockImplementation((_user, options) => {
+        persistenceCommitGuard = options?.shouldCommit;
+        return persistenceDeferred.promise;
+      });
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+      let loginPromise!: Promise<void>;
+
+      act(() => {
+        loginPromise = Promise.resolve(result.current.login(mockUser));
+      });
+
+      await waitFor(() => {
+        expect(setUserSpy).toHaveBeenCalledTimes(1);
+      });
+      expect(persistenceCommitGuard?.()).toBe(true);
+
+      let logoutPromise!: Promise<void>;
+
+      act(() => {
+        logoutPromise = Promise.resolve(result.current.logout());
+      });
+
+      await waitFor(() => {
+        expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      });
+      expect(persistenceCommitGuard?.()).toBe(false);
+
+      persistenceDeferred.resolve();
+
+      await act(async () => {
+        await Promise.all([loginPromise, logoutPromise]);
+      });
+
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expectNoStoredAuthState();
+    } finally {
+      persistenceDeferred.resolve();
+      setUserSpy.mockRestore();
+    }
+  });
+
   it("logout clears user", async () => {
     const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
 
@@ -2639,7 +2710,8 @@ describe("useAuth", () => {
           id: "2",
           name: "Next User",
           email: "next@secpal.dev",
-        })
+        }),
+        { shouldCommit: expect.any(Function) }
       );
       expect(result.current.user).toEqual(
         expect.objectContaining({
@@ -3129,6 +3201,127 @@ describe("useAuth", () => {
     expect(result.current.user).toEqual(revalidatedUser);
   });
 
+  it("does not let a late vault unlock undo a newer logout", async () => {
+    window.history.replaceState({}, "", "/onboarding/complete");
+    const unlockedUser = {
+      id: "1",
+      name: "Unlocked User",
+      email: "unlocked-user@secpal.dev",
+      emailVerified: true,
+    };
+    const unlockDeferred = createDeferredPromise<typeof unlockedUser>();
+    const unlockSpy = vi
+      .spyOn(authStorage, "unlockVault")
+      .mockImplementation(() => unlockDeferred.promise);
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+      let unlockPromise!: Promise<boolean>;
+      const unlock = result.current.unlock;
+
+      if (!unlock) {
+        throw new Error("Expected vault unlock to be available.");
+      }
+
+      act(() => {
+        unlockPromise = unlock();
+      });
+
+      await waitFor(() => {
+        expect(unlockSpy).toHaveBeenCalledTimes(1);
+      });
+
+      let logoutPromise!: Promise<void>;
+
+      act(() => {
+        logoutPromise = Promise.resolve(result.current.logout());
+      });
+
+      await waitFor(() => {
+        expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      });
+
+      unlockDeferred.resolve(unlockedUser);
+
+      let didUnlock = true;
+
+      await act(async () => {
+        [didUnlock] = await Promise.all([unlockPromise, logoutPromise]);
+      });
+
+      expect(didUnlock).toBe(false);
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+    } finally {
+      unlockDeferred.resolve(unlockedUser);
+      unlockSpy.mockRestore();
+    }
+  });
+
+  it("does not let a late vault unlock failure clear a newer login", async () => {
+    window.history.replaceState({}, "", "/onboarding/complete");
+    const currentUser = {
+      id: "2",
+      name: "Current User",
+      email: "current-user@secpal.dev",
+      emailVerified: true,
+    };
+    const unlockDeferred = createDeferredPromise<typeof currentUser | null>();
+    const unlockSpy = vi
+      .spyOn(authStorage, "unlockVault")
+      .mockImplementation(() => unlockDeferred.promise);
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+      const unlock = result.current.unlock;
+
+      if (!unlock) {
+        throw new Error("Expected vault unlock to be available.");
+      }
+
+      let unlockPromise!: Promise<boolean>;
+
+      act(() => {
+        unlockPromise = unlock();
+      });
+
+      await waitFor(() => {
+        expect(unlockSpy).toHaveBeenCalledTimes(1);
+      });
+
+      await act(async () => {
+        await result.current.login(currentUser);
+      });
+
+      expect(result.current.user).toEqual(currentUser);
+      unlockDeferred.reject(new Error("Late vault unlock failure"));
+
+      let didUnlock = true;
+
+      await act(async () => {
+        didUnlock = await unlockPromise;
+      });
+
+      expect(didUnlock).toBe(false);
+      expect(result.current.user).toEqual(currentUser);
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+      expect(consoleError).not.toHaveBeenCalled();
+    } finally {
+      unlockDeferred.resolve(null);
+      unlockSpy.mockRestore();
+      consoleError.mockRestore();
+    }
+  });
+
   it("shows a visual privacy shield without locking or clearing the offline vault session", async () => {
     const mockUser = {
       id: "1",
@@ -3401,6 +3594,124 @@ describe("useAuth", () => {
 
     expect(result.current.isVaultLocked).toBe(false);
     expect(result.current.user).toEqual(revalidatedUser);
+  });
+
+  it("does not let a late cross-tab vault unlock undo a newer logout", async () => {
+    window.history.replaceState({}, "", "/onboarding/complete");
+    const unlockedUser = {
+      id: "1",
+      name: "Cross-tab User",
+      email: "cross-tab-user@secpal.dev",
+      emailVerified: true,
+    };
+    const unlockDeferred = createDeferredPromise<typeof unlockedUser>();
+    const unlockSpy = vi
+      .spyOn(authStorage, "unlockVault")
+      .mockImplementation(() => unlockDeferred.promise);
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      act(() => {
+        const crossTabUnlockEvent = new Event("storage");
+        Object.defineProperties(crossTabUnlockEvent, {
+          key: { value: AUTH_VAULT_LOCK_KEY },
+          newValue: { value: null },
+          storageArea: { value: localStorage },
+        } satisfies Partial<
+          Record<keyof StorageEventInit, PropertyDescriptor>
+        >);
+        window.dispatchEvent(crossTabUnlockEvent);
+      });
+
+      await waitFor(() => {
+        expect(unlockSpy).toHaveBeenCalledTimes(1);
+      });
+
+      let logoutPromise!: Promise<void>;
+
+      act(() => {
+        logoutPromise = Promise.resolve(result.current.logout());
+      });
+
+      await waitFor(() => {
+        expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      });
+
+      unlockDeferred.resolve(unlockedUser);
+
+      await act(async () => {
+        await Promise.all([unlockDeferred.promise, logoutPromise]);
+      });
+
+      expect(result.current.user).toBeNull();
+      expect(result.current.isAuthenticated).toBe(false);
+      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+    } finally {
+      unlockDeferred.resolve(unlockedUser);
+      unlockSpy.mockRestore();
+    }
+  });
+
+  it("does not let a late cross-tab vault unlock failure clear a newer login", async () => {
+    window.history.replaceState({}, "", "/onboarding/complete");
+    const currentUser = {
+      id: "2",
+      name: "Current User",
+      email: "current-user@secpal.dev",
+      emailVerified: true,
+    };
+    const unlockDeferred = createDeferredPromise<typeof currentUser | null>();
+    const unlockSpy = vi
+      .spyOn(authStorage, "unlockVault")
+      .mockImplementation(() => unlockDeferred.promise);
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      act(() => {
+        const crossTabUnlockEvent = new Event("storage");
+        Object.defineProperties(crossTabUnlockEvent, {
+          key: { value: AUTH_VAULT_LOCK_KEY },
+          newValue: { value: null },
+          storageArea: { value: localStorage },
+        } satisfies Partial<
+          Record<keyof StorageEventInit, PropertyDescriptor>
+        >);
+        window.dispatchEvent(crossTabUnlockEvent);
+      });
+
+      await waitFor(() => {
+        expect(unlockSpy).toHaveBeenCalledTimes(1);
+      });
+
+      await act(async () => {
+        await result.current.login(currentUser);
+      });
+
+      expect(result.current.user).toEqual(currentUser);
+
+      await act(async () => {
+        unlockDeferred.reject(new Error("Late cross-tab unlock failure"));
+        await unlockDeferred.promise.catch(() => undefined);
+      });
+
+      expect(result.current.user).toEqual(currentUser);
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+      expect(consoleError).not.toHaveBeenCalled();
+    } finally {
+      unlockDeferred.resolve(null);
+      unlockSpy.mockRestore();
+      consoleError.mockRestore();
+    }
   });
 
   it("does not logout when auth vault storage changes while the vault is locked", async () => {
