@@ -68,6 +68,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Isolated full production-build artifact checks from the parallel CI suite so
+  constrained runners do not contend with their typecheck, Vite/PWA, and SBOM
+  subprocesses or retain Vitest workers after a failure.
 - Hardened the real-container browser validation to compare exact API origins,
   observe and block unexpected API origins, allocate a dynamic host port, use
   fresh workspace-isolated images, and clean up only its uniquely named Docker

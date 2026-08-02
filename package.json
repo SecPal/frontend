@@ -47,7 +47,7 @@
     "pretest": "npm run test:pr-size-advisory",
     "test": "vitest run",
     "pretest:ci": "npm run test:pr-size-advisory",
-    "test:ci": "vitest run --silent=passed-only",
+    "test:ci": "vitest run --silent=passed-only --exclude tests/build.test.ts && vitest run tests/build.test.ts --silent=passed-only --maxWorkers=1 --no-file-parallelism",
     "pretest:watch": "npm run test:pr-size-advisory",
     "test:watch": "vitest",
     "pretest:run": "npm run test:pr-size-advisory",
