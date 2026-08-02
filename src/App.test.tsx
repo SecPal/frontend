@@ -62,6 +62,7 @@ const {
         vaultPresent = true;
         vaultLocked = false;
         logoutBarrier = false;
+        return { status: "persisted" as const };
       }),
       lockVault: vi.fn(() => {
         vaultLocked = true;

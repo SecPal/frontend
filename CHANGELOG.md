@@ -80,6 +80,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   override a newer logout barrier. Retry-only invalidation preserves the
   authenticated profile and offline caches, invalid native tokens end cleanly
   as logged out, and temporary bootstrap failures retain the native session.
+- Completed native session recovery by protecting rehydrated user snapshots
+  with a non-extractable WebCrypto wrapping key in IndexedDB without restoring
+  the removed Android root-key bridge, distinguishing committed and superseded
+  writes, surfacing secure persistence failures as recoverable state, bounding
+  stale logout-barrier cleanup before a new login commits, and keeping stored
+  native revalidation inside the existing bootstrap deadline.
 - Hardened the real-container browser validation to compare exact API origins,
   observe and block unexpected API origins, allocate a dynamic host port, use
   fresh workspace-isolated images, and clean up only its uniquely named Docker

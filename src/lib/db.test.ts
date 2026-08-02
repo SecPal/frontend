@@ -11,6 +11,7 @@ describe("IndexedDB Database", () => {
     await db.analytics.clear();
     await db.organizationalUnitCache.clear();
     await db.vaultProfile.clear();
+    await db.vaultWrappingKeys.clear();
     await db.vaultAnalytics.clear();
     await db.vaultOrganizationalUnitCache.clear();
   });
@@ -30,6 +31,7 @@ describe("IndexedDB Database", () => {
       expect(tableNames).toContain("analytics");
       expect(tableNames).toContain("organizationalUnitCache");
       expect(tableNames).toContain("vaultProfile");
+      expect(tableNames).toContain("vaultWrappingKeys");
       expect(tableNames).toContain("vaultAnalytics");
       expect(tableNames).toContain("vaultOrganizationalUnitCache");
       expect(tableNames).not.toContain("guards");

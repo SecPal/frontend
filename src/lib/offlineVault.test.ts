@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
+import Dexie from "dexie";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PersistedAuthUser } from "../services/authState";
 import { db, type OrganizationalUnitCacheEntry } from "./db";
@@ -24,7 +25,7 @@ function clearCsrfTokenCookie(): void {
 }
 
 function setCapacitorNativeRuntime(
-  value = { isNativePlatform: () => true }
+  value: Record<string, unknown> = { isNativePlatform: () => true }
 ): void {
   Object.defineProperty(globalThis, "Capacitor", {
     configurable: true,
@@ -105,7 +106,7 @@ describe("offlineVault", () => {
     vi.restoreAllMocks();
   });
 
-  it("stores the persisted profile in the encrypted vault and keeps auth_user out of localStorage", async () => {
+  it("uses the WebCrypto device wrapper when the optional native wrapper probe fails", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
     installNativeVaultBridge({
       isVaultDeviceBoundWrapperAvailable: vi
@@ -113,11 +114,13 @@ describe("offlineVault", () => {
         .mockRejectedValue(new Error("bridge unavailable")),
     });
 
-    await initializeOfflineVault(persistedUser);
+    await expect(initializeOfflineVault(persistedUser)).resolves.toEqual({
+      status: "persisted",
+    });
 
     expect(localStorage.getItem("auth_user")).toBeNull();
     expect(readStoredVaultState().wrapper).toMatchObject({
-      kind: "browser-session",
+      kind: "webcrypto-device-bound",
     });
     await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
       persistedUser
@@ -210,7 +213,9 @@ describe("offlineVault", () => {
 
     expect(staleRootKey).toEqual(expect.any(String));
     staleWrapperDeferred.resolve({ wrappedRootKey: `wrapped:${staleRootKey}` });
-    await staleInitializationPromise;
+    await expect(staleInitializationPromise).resolves.toEqual({
+      status: "superseded",
+    });
 
     clearOfflineVaultSession();
     await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
@@ -376,6 +381,290 @@ describe("offlineVault", () => {
         subjectHash,
       })
     );
+  });
+
+  it("stores native vault state with a non-extractable WebCrypto key when the Android wrapper bridge is disabled", async () => {
+    clearCsrfTokenCookie();
+    const nativePlugin = {
+      isVaultDeviceBoundWrapperAvailable: vi
+        .fn()
+        .mockResolvedValue({ available: false }),
+      wrapVaultRootKey: vi.fn().mockRejectedValue(new Error("unsupported")),
+      unwrapVaultRootKey: vi.fn().mockRejectedValue(new Error("unsupported")),
+    };
+
+    setCapacitorNativeRuntime({
+      isNativePlatform: () => true,
+      Plugins: { SecPalNativeAuth: nativePlugin },
+    });
+    setNativeVaultBridge({
+      login: vi.fn(),
+      logout: vi.fn(),
+      getCurrentUser: vi.fn(),
+    });
+
+    await expect(initializeOfflineVault(persistedUser)).resolves.toEqual({
+      status: "persisted",
+    });
+
+    expect(readStoredVaultState().wrapper).toEqual(
+      expect.objectContaining({ kind: "webcrypto-device-bound" })
+    );
+    const storedWrappingKey =
+      await db.vaultWrappingKeys.get("native-auth-vault");
+    expect(storedWrappingKey?.key).toBeInstanceOf(CryptoKey);
+    expect(storedWrappingKey?.key.extractable).toBe(false);
+    expect(nativePlugin.wrapVaultRootKey).not.toHaveBeenCalled();
+    expect(
+      (globalThis as { SecPalNativeAuthBridge?: Record<string, unknown> })
+        .SecPalNativeAuthBridge
+    ).not.toHaveProperty("wrapVaultRootKey");
+
+    clearOfflineVaultSession();
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
+    );
+    expect(nativePlugin.unwrapVaultRootKey).not.toHaveBeenCalled();
+  });
+
+  it("preserves native vault data when the WebCrypto wrapping key read fails temporarily", async () => {
+    clearCsrfTokenCookie();
+    setCapacitorNativeRuntime();
+    await initializeOfflineVault(persistedUser);
+    clearOfflineVaultSession();
+
+    const wrappingKeyReadError = new Error("IndexedDB temporarily unavailable");
+    const originalGet = db.vaultWrappingKeys.get.bind(db.vaultWrappingKeys);
+    const wrappingKeyGetSpy = vi
+      .spyOn(db.vaultWrappingKeys, "get")
+      .mockRejectedValueOnce(wrappingKeyReadError)
+      .mockImplementation(originalGet);
+
+    await expect(readPersistedAuthUserFromVault()).rejects.toBe(
+      wrappingKeyReadError
+    );
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(await db.vaultProfile.count()).toBe(1);
+    expect(await db.vaultWrappingKeys.count()).toBe(1);
+
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
+    );
+    expect(wrappingKeyGetSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not recreate a native wrapping key after persistence is superseded by cleanup", async () => {
+    clearCsrfTokenCookie();
+    setCapacitorNativeRuntime();
+    const generatedKey = (await crypto.subtle.generateKey(
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt", "decrypt"]
+    )) as CryptoKey;
+    const generateKeyDeferred = createDeferredPromise<CryptoKey>();
+    const generateKeySpy = vi
+      .spyOn(crypto.subtle, "generateKey")
+      .mockReturnValueOnce(generateKeyDeferred.promise as never);
+    let shouldCommit = true;
+    const initializationPromise = initializeOfflineVault(persistedUser, {
+      shouldCommit: () => shouldCommit,
+    });
+
+    await vi.waitFor(() => {
+      expect(generateKeySpy).toHaveBeenCalledTimes(1);
+    });
+
+    shouldCommit = false;
+    await clearOfflineVaultTables();
+    generateKeyDeferred.resolve(generatedKey);
+
+    await expect(initializationPromise).resolves.toEqual({
+      status: "superseded",
+    });
+    expect(await db.vaultWrappingKeys.count()).toBe(0);
+    expect(await db.vaultProfile.count()).toBe(0);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+  });
+
+  it("does not clear the current vault when a stale subject switch resumes after database open", async () => {
+    const nextUser: PersistedAuthUser = {
+      ...persistedUser,
+      id: "user-2",
+      email: "next-user@secpal.dev",
+    };
+    await initializeOfflineVault(persistedUser);
+    const storedVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+    const databaseOpenDeferred = createDeferredPromise<typeof db>();
+    const originalOpen = db.open.bind(db);
+    db.close();
+    const openSpy = vi
+      .spyOn(db, "open")
+      .mockReturnValueOnce(databaseOpenDeferred.promise as never)
+      .mockImplementation(originalOpen);
+    let shouldCommit = true;
+
+    try {
+      const staleInitializationPromise = initializeOfflineVault(nextUser, {
+        shouldCommit: () => shouldCommit,
+      });
+
+      await vi.waitFor(() => {
+        expect(openSpy).toHaveBeenCalledTimes(1);
+      });
+
+      shouldCommit = false;
+      databaseOpenDeferred.resolve(db);
+
+      await expect(staleInitializationPromise).resolves.toEqual({
+        status: "superseded",
+      });
+      openSpy.mockRestore();
+      await db.open();
+
+      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(
+        storedVaultState
+      );
+      expect(await db.vaultProfile.count()).toBe(1);
+      clearOfflineVaultSession();
+      await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+        persistedUser
+      );
+    } finally {
+      databaseOpenDeferred.resolve(db);
+      openSpy.mockRestore();
+      if (!db.isOpen()) {
+        await db.open();
+      }
+    }
+  });
+
+  it("rolls back an in-flight subject clear before a newer persistence commits", async () => {
+    clearCsrfTokenCookie();
+    setCapacitorNativeRuntime();
+    const nextUser: PersistedAuthUser = {
+      ...persistedUser,
+      id: "user-2",
+      email: "next-user@secpal.dev",
+    };
+    await initializeOfflineVault(persistedUser);
+    const clearDeferred = createDeferredPromise<void>();
+    const originalWrappingKeyClear = db.vaultWrappingKeys.clear.bind(
+      db.vaultWrappingKeys
+    );
+    const wrappingKeyClearSpy = vi
+      .spyOn(db.vaultWrappingKeys, "clear")
+      .mockImplementationOnce(
+        () =>
+          Dexie.waitFor(clearDeferred.promise).then(() =>
+            originalWrappingKeyClear()
+          ) as ReturnType<typeof originalWrappingKeyClear>
+      );
+    let staleShouldCommit = true;
+    let currentPersistenceSettled = false;
+
+    try {
+      const stalePersistence = initializeOfflineVault(nextUser, {
+        shouldCommit: () => staleShouldCommit,
+      });
+
+      await vi.waitFor(() => {
+        expect(wrappingKeyClearSpy).toHaveBeenCalledTimes(1);
+      });
+
+      staleShouldCommit = false;
+      const currentPersistence = initializeOfflineVault(persistedUser).then(
+        (result) => {
+          currentPersistenceSettled = true;
+          return result;
+        }
+      );
+
+      await Promise.resolve();
+      expect(currentPersistenceSettled).toBe(false);
+
+      clearDeferred.resolve();
+
+      await expect(stalePersistence).resolves.toEqual({
+        status: "superseded",
+      });
+      await expect(currentPersistence).resolves.toEqual({
+        status: "persisted",
+      });
+
+      clearOfflineVaultSession();
+      await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+        persistedUser
+      );
+      expect(await db.vaultWrappingKeys.count()).toBe(1);
+      expect(await db.vaultProfile.count()).toBe(1);
+    } finally {
+      clearDeferred.resolve();
+      wrappingKeyClearSpy.mockRestore();
+    }
+  });
+
+  it("aborts a superseded hanging subject clear so newer persistence can continue", async () => {
+    clearCsrfTokenCookie();
+    setCapacitorNativeRuntime();
+    const nextUser: PersistedAuthUser = {
+      ...persistedUser,
+      id: "user-2",
+      email: "next-user@secpal.dev",
+    };
+    await initializeOfflineVault(persistedUser);
+    const wrappingKeyClearSpy = vi
+      .spyOn(db.vaultWrappingKeys, "clear")
+      .mockImplementationOnce(() => {
+        const transaction = Dexie.currentTransaction;
+
+        return new Dexie.Promise<void>((_resolve, reject) => {
+          transaction?.on("abort", () => {
+            reject(new Error("Subject transition aborted"));
+          });
+        });
+      });
+    let staleShouldCommit = true;
+    let currentPersistenceSettled = false;
+
+    try {
+      const stalePersistence = initializeOfflineVault(nextUser, {
+        shouldCommit: () => staleShouldCommit,
+      });
+
+      await vi.waitFor(() => {
+        expect(wrappingKeyClearSpy).toHaveBeenCalledTimes(1);
+      });
+
+      staleShouldCommit = false;
+      const currentPersistence = initializeOfflineVault(persistedUser).then(
+        (result) => {
+          currentPersistenceSettled = true;
+          return result;
+        }
+      );
+
+      await vi.waitFor(
+        () => {
+          expect(currentPersistenceSettled).toBe(true);
+        },
+        { timeout: 250 }
+      );
+
+      await expect(stalePersistence).resolves.toEqual({
+        status: "superseded",
+      });
+      await expect(currentPersistence).resolves.toEqual({
+        status: "persisted",
+      });
+      clearOfflineVaultSession();
+      await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+        persistedUser
+      );
+      expect(await db.vaultWrappingKeys.count()).toBe(1);
+      expect(await db.vaultProfile.count()).toBe(1);
+    } finally {
+      wrappingKeyClearSpy.mockRestore();
+    }
   });
 
   it("decrypts a persisted auth user from a legacy v1 envelope after upgrade", async () => {
