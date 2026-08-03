@@ -20,6 +20,11 @@ const PASSKEY_LABEL_PREFIX = "Live E2E Passkey";
 const PASSKEY_RATE_LIMIT_MESSAGE = /too many passkey attempts/i;
 const PASSKEY_RATE_LIMIT_WAIT_MS = 610_000;
 
+// Registration requests contain the live test user's current password.
+// Playwright traces retain raw network bodies independently of our redacted
+// in-memory diagnostics, so this suite must never record them.
+test.use({ trace: "off" });
+
 interface RecordedExchange {
   url: string;
   method: string;
