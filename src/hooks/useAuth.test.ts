@@ -51,6 +51,12 @@ const {
 }));
 
 const AUTH_BOOTSTRAP_TIMEOUT_MS = 20_000;
+const RETRIABLE_BOOTSTRAP_WARNING =
+  "Auth bootstrap revalidation failed; holding protected routes behind recovery UI.";
+const NON_RETRIABLE_BOOTSTRAP_WARNING =
+  "Auth bootstrap revalidation failed with a non-retriable response; holding protected routes behind recovery UI.";
+const TEMPORARY_AUTH_RESTORE_WARNING =
+  "Failed to restore persisted auth state temporarily; keeping the route behind recovery UI.";
 
 vi.mock("../services/authApi", async () => {
   const actual = await vi.importActual("../services/authApi");
@@ -171,6 +177,10 @@ async function waitForAuthState(
 
 const waitFor = waitForAuthState;
 
+function captureConsoleWarnings() {
+  return vi.spyOn(console, "warn").mockImplementation(() => undefined);
+}
+
 async function waitForSensitiveClientCleanup(callCount: number = 1) {
   await waitFor(() => {
     expect(clearSensitiveClientState).toHaveBeenCalledTimes(callCount);
@@ -227,6 +237,7 @@ describe("useAuth", () => {
   afterEach(() => {
     vi.useRealTimers();
     clearOfflineVaultSession();
+    vi.restoreAllMocks();
   });
 
   it("throws error when used outside AuthProvider", () => {
@@ -514,6 +525,7 @@ describe("useAuth", () => {
       .mockRejectedValueOnce(persistenceFailure)
       .mockImplementationOnce(originalSetUser);
     const clearSpy = vi.spyOn(authStorage, "clear");
+    const consoleWarnSpy = captureConsoleWarnings();
 
     authGlobal.SecPalNativeAuthBridge = nativeBridge;
 
@@ -548,6 +560,11 @@ describe("useAuth", () => {
       expect(authStorage.hasStoredUser()).toBe(true);
       await expect(authStorage.getUser()).resolves.toEqual(nativeUser);
       expect(nativeLogout).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        RETRIABLE_BOOTSTRAP_WARNING,
+        persistenceFailure
+      );
     } finally {
       clearSpy.mockRestore();
       setUserSpy.mockRestore();
@@ -1352,14 +1369,14 @@ describe("useAuth", () => {
       name: "Bootstrap User",
       email: "bootstrap@secpal.dev",
     });
-    mockFetchCsrfToken.mockRejectedValue(
-      new AuthApiError(
-        "CSRF refresh failed: Network down",
-        undefined,
-        undefined,
-        "NETWORK_ERROR"
-      )
+    const csrfRefreshFailure = new AuthApiError(
+      "CSRF refresh failed: Network down",
+      undefined,
+      undefined,
+      "NETWORK_ERROR"
     );
+    mockFetchCsrfToken.mockRejectedValue(csrfRefreshFailure);
+    const consoleWarnSpy = captureConsoleWarnings();
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -1372,6 +1389,11 @@ describe("useAuth", () => {
 
     expect(result.current.isAuthenticated).toBe(false);
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      RETRIABLE_BOOTSTRAP_WARNING,
+      csrfRefreshFailure
+    );
   });
 
   it("does not run sensitive logout cleanup when bootstrap revalidation finds no browser-session user", async () => {
@@ -1864,14 +1886,14 @@ describe("useAuth", () => {
     };
 
     await authStorage.setUser(mockUser);
-    mockGetCurrentUser.mockRejectedValue(
-      new AuthApiError(
-        "Current user fetch failed: Network down",
-        undefined,
-        undefined,
-        "NETWORK_ERROR"
-      )
+    const bootstrapFailure = new AuthApiError(
+      "Current user fetch failed: Network down",
+      undefined,
+      undefined,
+      "NETWORK_ERROR"
     );
+    mockGetCurrentUser.mockRejectedValue(bootstrapFailure);
+    const consoleWarnSpy = captureConsoleWarnings();
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -1889,6 +1911,11 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
     await expect(authStorage.getUser()).resolves.toEqual(mockUser);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      RETRIABLE_BOOTSTRAP_WARNING,
+      bootstrapFailure
+    );
   });
 
   it("holds routes behind recovery UI when the offline vault chunk is temporarily unavailable", async () => {
@@ -1909,6 +1936,7 @@ describe("useAuth", () => {
           new TypeError("Failed to fetch dynamically imported module")
         )
       );
+    const consoleWarnSpy = captureConsoleWarnings();
 
     try {
       const { result } = renderHook(() => useAuth(), {
@@ -1925,6 +1953,10 @@ describe("useAuth", () => {
       expect(authStorage.hasStoredUser()).toBe(true);
       expect(syncOfflineSessionAccess).not.toHaveBeenCalledWith(false);
       expect(clearSensitiveClientState).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        TEMPORARY_AUTH_RESTORE_WARNING
+      );
     } finally {
       getUserSpy.mockRestore();
     }
@@ -1952,6 +1984,7 @@ describe("useAuth", () => {
       .mockRejectedValueOnce(wrappingKeyReadError)
       .mockImplementation(originalWrappingKeyGet);
     const clearSpy = vi.spyOn(authStorage, "clear");
+    const consoleWarnSpy = captureConsoleWarnings();
     const nativeLogout = vi.fn();
     const nativeBridge = {
       login: vi.fn(),
@@ -1983,6 +2016,10 @@ describe("useAuth", () => {
       expect(await db.vaultProfile.count()).toBe(1);
       expect(await db.vaultWrappingKeys.count()).toBe(1);
       expect(nativeLogout).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        TEMPORARY_AUTH_RESTORE_WARNING
+      );
 
       act(() => {
         result.current.retryBootstrap();
@@ -2160,6 +2197,9 @@ describe("useAuth", () => {
     const getUserSpy = vi
       .spyOn(authStorage, "getUser")
       .mockResolvedValue(storedUser);
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
     authGlobal.SecPalNativeAuthBridge = nativeBridge;
     vi.useFakeTimers();
 
@@ -2205,9 +2245,14 @@ describe("useAuth", () => {
       expect(nativeBridge.isNetworkAvailable).not.toHaveBeenCalled();
       expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(2);
       expect(nativeLogout).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        `Auth bootstrap revalidation exceeded ${BOOTSTRAP_REVALIDATION_TIMEOUT_MS}ms.`
+      );
 
       unmount();
     } finally {
+      consoleWarnSpy.mockRestore();
       getUserSpy.mockRestore();
       vi.useRealTimers();
       if (originalNativeBridge === undefined) {
@@ -2229,6 +2274,7 @@ describe("useAuth", () => {
 
     await persistAuthUser(mockUser);
     mockGetCurrentUser.mockImplementation(() => deferred.promise);
+    const consoleWarnSpy = captureConsoleWarnings();
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -2249,6 +2295,10 @@ describe("useAuth", () => {
         expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
       },
       BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000
+    );
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      `Auth bootstrap revalidation exceeded ${BOOTSTRAP_REVALIDATION_TIMEOUT_MS}ms.`
     );
   });
 
@@ -2328,6 +2378,7 @@ describe("useAuth", () => {
       .mockResolvedValue(mockUser);
     // All attempts stall so each cycle hits the timeout twice (auto-retry + final timeout).
     mockGetCurrentUser.mockImplementation(() => deferred.promise);
+    const consoleWarnSpy = captureConsoleWarnings();
     vi.useFakeTimers();
 
     const { result, unmount } = renderHook(() => useAuth(), {
@@ -2399,6 +2450,15 @@ describe("useAuth", () => {
       });
 
       expect(result.current.bootstrapRecoveryReason).toBe("timeout");
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(2);
+      expect(consoleWarnSpy).toHaveBeenNthCalledWith(
+        1,
+        `Auth bootstrap revalidation exceeded ${BOOTSTRAP_REVALIDATION_TIMEOUT_MS}ms.`
+      );
+      expect(consoleWarnSpy).toHaveBeenNthCalledWith(
+        2,
+        `Auth bootstrap revalidation exceeded ${BOOTSTRAP_REVALIDATION_TIMEOUT_MS}ms.`
+      );
     } finally {
       unmount();
       getUserSpy.mockRestore();
@@ -2415,13 +2475,13 @@ describe("useAuth", () => {
     };
 
     await persistAuthUser(mockUser);
-    mockGetCurrentUser.mockRejectedValueOnce(
-      new AuthApiError(
-        "Current user fetch failed: expected application/json response from API",
-        undefined,
-        404
-      )
+    const bootstrapFailure = new AuthApiError(
+      "Current user fetch failed: expected application/json response from API",
+      undefined,
+      404
     );
+    mockGetCurrentUser.mockRejectedValueOnce(bootstrapFailure);
+    const consoleWarnSpy = captureConsoleWarnings();
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -2434,6 +2494,11 @@ describe("useAuth", () => {
 
     expect(result.current.user).toEqual(mockUser);
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      NON_RETRIABLE_BOOTSTRAP_WARNING,
+      bootstrapFailure
+    );
   });
 
   it("retries browser-session bootstrap from recovery on /login without a restored user snapshot", async () => {
@@ -2452,6 +2517,7 @@ describe("useAuth", () => {
     mockGetCurrentUser
       .mockRejectedValueOnce(firstFailure)
       .mockResolvedValueOnce(recoveredUser);
+    const consoleWarnSpy = captureConsoleWarnings();
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -2472,6 +2538,11 @@ describe("useAuth", () => {
     });
 
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      NON_RETRIABLE_BOOTSTRAP_WARNING,
+      firstFailure
+    );
   });
 
   it("does not silently retry an AuthApiError without a numeric status field", async () => {
@@ -2485,9 +2556,11 @@ describe("useAuth", () => {
     await persistAuthUser(mockUser);
     // AuthApiError with no status and no HTTP_ code — deterministic API-layer
     // error that should not trigger the silent retry path.
-    mockGetCurrentUser.mockRejectedValueOnce(
-      new AuthApiError("Current user fetch failed: non-retriable client error")
+    const bootstrapFailure = new AuthApiError(
+      "Current user fetch failed: non-retriable client error"
     );
+    mockGetCurrentUser.mockRejectedValueOnce(bootstrapFailure);
+    const consoleWarnSpy = captureConsoleWarnings();
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -2500,6 +2573,11 @@ describe("useAuth", () => {
 
     expect(result.current.user).toEqual(mockUser);
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      NON_RETRIABLE_BOOTSTRAP_WARNING,
+      bootstrapFailure
+    );
   });
 
   it("does not silently retry API base URL configuration failures", async () => {
@@ -2511,9 +2589,11 @@ describe("useAuth", () => {
     };
 
     await persistAuthUser(mockUser);
-    mockGetCurrentUser.mockRejectedValueOnce(
-      new ApiBaseUrlConfigurationError("Invalid API base URL")
+    const bootstrapFailure = new ApiBaseUrlConfigurationError(
+      "Invalid API base URL"
     );
+    mockGetCurrentUser.mockRejectedValueOnce(bootstrapFailure);
+    const consoleWarnSpy = captureConsoleWarnings();
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -2526,6 +2606,11 @@ describe("useAuth", () => {
 
     expect(result.current.user).toEqual(mockUser);
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      NON_RETRIABLE_BOOTSTRAP_WARNING,
+      bootstrapFailure
+    );
   });
 
   it("stops the loading spinner when the browser goes offline during the automatic bootstrap retry", async () => {
