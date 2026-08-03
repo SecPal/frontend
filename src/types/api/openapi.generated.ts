@@ -61,6 +61,28 @@ export interface components {
     BootstrapResponse: {
       data: components["schemas"]["BootstrapConfiguration"];
     };
+    PasskeyTransport: "ble" | "hybrid" | "internal" | "nfc" | "usb";
+    PasskeyAttestationResponse: {
+      client_data_json: string;
+      attestation_object: string;
+      transports?: components["schemas"]["PasskeyTransport"][];
+    };
+    PasskeyCredentialWrapperBase: {
+      id: string;
+      raw_id: string;
+      type: "public-key";
+      client_extension_results?: Record<string, unknown>;
+    };
+    PasskeyRegistrationCredential: components["schemas"]["PasskeyCredentialWrapperBase"] & {
+      response: components["schemas"]["PasskeyAttestationResponse"];
+    };
+    PasskeyCurrentPasswordStepUpRequest: {
+      current_password: string;
+    };
+    PasskeyRegistrationVerificationRequest: components["schemas"]["PasskeyCurrentPasswordStepUpRequest"] & {
+      credential: components["schemas"]["PasskeyRegistrationCredential"];
+      label?: string | null;
+    };
     OrganizationalUnitType:
       | "holding"
       | "company"
