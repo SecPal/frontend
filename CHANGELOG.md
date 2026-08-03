@@ -68,6 +68,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Kept passkey enrollment request payloads contract-derived end to end: both
+  client calls now accept the generated OpenAPI request types directly, and
+  type-level regression coverage prevents the client boundary from drifting
+  from those schemas.
 - Restored passkey enrollment after the API began requiring a current-password
   step-up: the settings form now collects the password and includes it in both
   registration requests, while live browser-test traffic redacts the password

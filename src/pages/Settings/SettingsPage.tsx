@@ -420,9 +420,9 @@ export function SettingsPage() {
     setRegistrationStep("challenge");
 
     try {
-      const challengeResponse = await startPasskeyRegistrationChallenge(
-        passkeyCurrentPassword
-      );
+      const challengeResponse = await startPasskeyRegistrationChallenge({
+        current_password: passkeyCurrentPassword,
+      });
       console.info(
         "[SecPal] Passkey registration: challenge created id=%s",
         challengeResponse.data.challenge_id

@@ -574,7 +574,7 @@ describe("SettingsPage", () => {
     await waitFor(() => {
       expect(
         authAccountApi.startPasskeyRegistrationChallenge
-      ).toHaveBeenCalledWith("correct-password");
+      ).toHaveBeenCalledWith({ current_password: "correct-password" });
       expect(passkeyBrowser.getPasskeyAttestation).toHaveBeenCalledTimes(1);
       expect(
         authAccountApi.verifyPasskeyRegistrationChallenge

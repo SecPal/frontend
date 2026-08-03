@@ -883,7 +883,9 @@ describe("authApi", () => {
       } as Response);
 
       await expect(
-        startPasskeyRegistrationChallenge("correct-password")
+        startPasskeyRegistrationChallenge({
+          current_password: "correct-password",
+        })
       ).resolves.toEqual(mockResponse);
 
       expect(mockFetch.mock.calls[1]?.[0]).toEqual(
