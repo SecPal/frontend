@@ -785,7 +785,7 @@ describe("Build Configuration and Source Verification", () => {
       'import * as linguiVitePlugin from "@lingui/vite-plugin";'
     );
     expect(viteConfig).toContain(
-      'import { resolveLinguiVitePluginExports } from "./linguiVitePluginInterop";'
+      'import { resolveLinguiVitePluginExports } from "./linguiVitePluginInterop.ts";'
     );
     expect(viteConfig).toContain(
       "resolveLinguiVitePluginExports(linguiVitePlugin)"

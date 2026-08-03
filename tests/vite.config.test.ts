@@ -2,6 +2,32 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const viteConfigSource = readFileSync(
+  path.resolve(__dirname, "../vite.config.ts"),
+  "utf8"
+);
+
+describe("vite config native loading", () => {
+  it("uses explicit TypeScript extensions for local config dependencies", () => {
+    const localImportSpecifiers = Array.from(
+      viteConfigSource.matchAll(/^import .* from "(\.[^"]+)";$/gmu),
+      ([, specifier]) => specifier
+    );
+
+    expect(localImportSpecifiers).toEqual([
+      "./linguiVitePluginInterop.ts",
+      "./src/lib/pwaInjectManifestBuildConfig.ts",
+      "./src/lib/pwaRuntimeCaching.ts",
+      "./src/platform/appSurfaceContract.ts",
+      "./thirdPartyDependencyNotices.ts",
+    ]);
+  });
+});
 
 describe("vite config dev proxy", () => {
   afterEach(() => {

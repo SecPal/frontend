@@ -13,11 +13,11 @@ import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
 import { fileURLToPath } from "url";
 import type { ProxyOptions } from "vite";
-import { resolveLinguiVitePluginExports } from "./linguiVitePluginInterop";
-import { applyInjectManifestCodeSplittingFix } from "./src/lib/pwaInjectManifestBuildConfig";
-import { buildPwaRuntimeCaching } from "./src/lib/pwaRuntimeCaching";
-import { resolveAppSurface } from "./src/platform/appSurfaceContract";
-import { thirdPartyDependencyNotices } from "./thirdPartyDependencyNotices";
+import { resolveLinguiVitePluginExports } from "./linguiVitePluginInterop.ts";
+import { applyInjectManifestCodeSplittingFix } from "./src/lib/pwaInjectManifestBuildConfig.ts";
+import { buildPwaRuntimeCaching } from "./src/lib/pwaRuntimeCaching.ts";
+import { resolveAppSurface } from "./src/platform/appSurfaceContract.ts";
+import { thirdPartyDependencyNotices } from "./thirdPartyDependencyNotices.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const { lingui } = resolveLinguiVitePluginExports(linguiVitePlugin);
