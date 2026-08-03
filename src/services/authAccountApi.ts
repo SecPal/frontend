@@ -89,6 +89,10 @@ export async function getPasskeys(): Promise<PasskeyListResponse> {
 export async function startPasskeyRegistrationChallenge(
   payload: PasskeyCurrentPasswordStepUpRequest
 ): Promise<PasskeyRegistrationChallengeResponse> {
+  const request: PasskeyCurrentPasswordStepUpRequest = {
+    current_password: payload.current_password,
+  };
+
   await fetchCsrfToken();
 
   const response = await apiFetch(
@@ -100,7 +104,7 @@ export async function startPasskeyRegistrationChallenge(
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(request),
     }
   );
 

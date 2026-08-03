@@ -856,6 +856,10 @@ describe("authApi", () => {
 
   describe("passkey registration", () => {
     it("starts a passkey registration challenge", async () => {
+      const payload = {
+        current_password: "correct-password",
+        unexpected_sensitive_field: "must-not-be-sent",
+      };
       const mockResponse = {
         data: {
           challenge_id: "550e8400-e29b-41d4-a716-446655440099",
@@ -882,11 +886,9 @@ describe("authApi", () => {
         json: async () => mockResponse,
       } as Response);
 
-      await expect(
-        startPasskeyRegistrationChallenge({
-          current_password: "correct-password",
-        })
-      ).resolves.toEqual(mockResponse);
+      await expect(startPasskeyRegistrationChallenge(payload)).resolves.toEqual(
+        mockResponse
+      );
 
       expect(mockFetch.mock.calls[1]?.[0]).toEqual(
         expect.stringContaining("/v1/me/passkeys/challenges/registration")
