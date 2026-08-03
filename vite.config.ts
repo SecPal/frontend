@@ -4,7 +4,6 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import babel, { defineRolldownBabelPreset } from "@rolldown/plugin-babel";
-import linguiMacroBabelPlugin from "@lingui/babel-plugin-lingui-macro";
 import * as linguiVitePlugin from "@lingui/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
@@ -23,11 +22,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const { lingui } = resolveLinguiVitePluginExports(linguiVitePlugin);
 const linguiMacroImportPattern = /@lingui\/(?:core|react)\/macro/;
 const linguiMacroBabelPreset = defineRolldownBabelPreset({
-  preset: [
-    () => ({
-      plugins: [linguiMacroBabelPlugin],
-    }),
-  ],
+  preset: () => ({
+    plugins: ["@lingui/babel-plugin-lingui-macro"],
+  }),
   rolldown: {
     filter: {
       id: /\.[jt]sx?$/,

@@ -5,12 +5,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadConfigFromFile } from "vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const viteConfigSource = readFileSync(
-  path.resolve(__dirname, "../vite.config.ts"),
-  "utf8"
-);
+const repoRoot = path.resolve(__dirname, "..");
+const viteConfigPath = path.join(repoRoot, "vite.config.ts");
+const viteConfigSource = readFileSync(viteConfigPath, "utf8");
 
 describe("vite config native loading", () => {
   it("uses explicit TypeScript extensions for local config dependencies", () => {
@@ -26,6 +26,25 @@ describe("vite config native loading", () => {
       "./src/platform/appSurfaceContract.ts",
       "./thirdPartyDependencyNotices.ts",
     ]);
+  });
+
+  it("loads the config through Vite's native config loader", async () => {
+    const loadedConfig = await loadConfigFromFile(
+      {
+        command: "build",
+        mode: "preview",
+        isSsrBuild: false,
+        isPreview: false,
+      },
+      viteConfigPath,
+      repoRoot,
+      "error",
+      undefined,
+      "native"
+    );
+
+    expect(loadedConfig?.path).toBe(viteConfigPath);
+    expect(loadedConfig?.config).toBeDefined();
   });
 });
 

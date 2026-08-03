@@ -42,7 +42,7 @@
     "generate:dependency-sbom": "node ./scripts/generate-dependency-sbom.mjs",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --cache",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.node.json --noEmit",
     "test:pr-size-advisory": "bash tests/pr-size-advisory.sh",
     "pretest": "npm run test:pr-size-advisory",
     "test": "vitest run",

@@ -68,8 +68,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Made local Vite config imports compatible with Vite's native config loader,
-  removing its future-default compatibility warning from test runs.
+- Made local Vite config imports compatible with Vite's native config loader
+  and covered the config and its dependencies with strict TypeScript checks,
+  removing the future-default compatibility warning from test runs.
 - Updated the transitive `brace-expansion` dependency to 5.0.9 or newer to
   remediate its denial-of-service vulnerability.
 - Kept passkey enrollment request payloads contract-derived end to end: both

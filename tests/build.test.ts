@@ -797,6 +797,28 @@ describe("Build Configuration and Source Verification", () => {
     expect(interopHelper).not.toContain('"linguiTransformerBabelPreset"');
   });
 
+  it("typechecks the Vite config with TypeScript-extension imports enabled", () => {
+    const packageJson = JSON.parse(readRepoFile("package.json")) as {
+      scripts?: Record<string, string>;
+    };
+    const nodeTypeScriptConfig = JSON.parse(
+      readRepoFile("tsconfig.node.json")
+    ) as {
+      compilerOptions?: {
+        allowImportingTsExtensions?: boolean;
+        noEmit?: boolean;
+      };
+    };
+
+    expect(nodeTypeScriptConfig.compilerOptions).toMatchObject({
+      allowImportingTsExtensions: true,
+      noEmit: true,
+    });
+    expect(packageJson.scripts?.typecheck).toContain(
+      "tsc -p tsconfig.node.json --noEmit"
+    );
+  });
+
   it("keeps nginx serving Digital Asset Links even when hidden directories are skipped during deploy", () => {
     const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");
 
