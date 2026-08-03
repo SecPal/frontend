@@ -70,7 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Restored passkey enrollment after the API began requiring a current-password
   step-up: the settings form now collects the password and includes it in both
-  registration requests.
+  registration requests, while live browser-test traffic redacts the password
+  before retaining diagnostic request payloads.
 - Isolated full production-build artifact and provenance checks from parallel
   pull-request and coverage CI suites so constrained runners do not contend
   with their typecheck, Vite/PWA, and SBOM subprocesses or retain Vitest

@@ -206,7 +206,7 @@ describe("onboarding shadcn primitives", () => {
     expect(trigger).toHaveAttribute("aria-required", "true");
 
     await user.click(trigger);
-    await user.click(await screen.findByRole("option", { name: "Contractor" }));
+    await user.click(screen.getByRole("option", { name: "Contractor" }));
 
     expect(handleChange).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -255,7 +255,7 @@ describe("onboarding shadcn primitives", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: "Contract type" }));
-    await user.click(await screen.findByRole("option", { name: "Contractor" }));
+    await user.click(screen.getByRole("option", { name: "Contractor" }));
 
     expect(handleChange).toHaveBeenCalledTimes(1);
     const syntheticEvent = handleChange.mock.calls[0]?.[0];

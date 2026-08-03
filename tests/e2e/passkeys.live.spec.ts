@@ -7,6 +7,7 @@ import {
   isWorkspacePreviewTarget,
   resolvePlaywrightApiBaseUrl,
 } from "./target-urls";
+import { redactCurrentPassword } from "./passkey-payload-redaction";
 
 // In the Polyscope workspace preview path (the only path that runs the live
 // passkey proof below), `resolvePlaywrightApiBaseUrl()` always returns the
@@ -59,7 +60,9 @@ function observePasskeyTraffic(page: Page, traffic: PasskeyTraffic) {
   page.on("response", async (response) => {
     const url = response.url();
     const method = response.request().method();
-    const payload = parseJson(response.request().postData() ?? null);
+    const payload = redactCurrentPassword(
+      parseJson(response.request().postData() ?? null)
+    );
     const responseBody = parseJson(await response.text().catch(() => null));
 
     const exchange: RecordedExchange = {

@@ -754,6 +754,7 @@ describe("SettingsPage", () => {
       "bg-destructive/10"
     );
     expect(passkeyAlert).toHaveAttribute("data-slot", "alert");
+    expect(screen.getByLabelText(/current password/i)).toHaveValue("");
   });
 
   it("shows cancellation message when user dismisses the browser passkey dialog", async () => {
