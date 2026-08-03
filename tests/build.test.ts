@@ -221,6 +221,22 @@ describe("Build Configuration and Source Verification", () => {
     expect(viteConfig).toContain('dest: "."');
   });
 
+  it("runs release-build artifact checks separately from the parallel CI suite", () => {
+    const packageJson = JSON.parse(readRepoFile("package.json")) as {
+      scripts: Record<string, string>;
+    };
+
+    expect(packageJson.scripts).toMatchObject({
+      "test:ci":
+        "vitest run --silent=passed-only --exclude tests/build.test.ts --exclude tests/shadcn-provenance.test.ts && npm run --ignore-scripts test:ci:release-builds",
+      "pretest:ci:release-builds": "npm run test:pr-size-advisory",
+      "test:ci:release-builds":
+        "vitest run tests/build.test.ts --silent=passed-only --maxWorkers=1 --no-file-parallelism && vitest run tests/shadcn-provenance.test.ts --silent=passed-only --maxWorkers=1 --no-file-parallelism",
+      "test:coverage:ci":
+        "vitest run --coverage --silent=passed-only --exclude tests/build.test.ts --exclude tests/shadcn-provenance.test.ts && npm run --ignore-scripts test:ci:release-builds",
+    });
+  });
+
   it("forwards custom Vite output directories to the build artifact and SBOM", () => {
     const distRoot = mkdtempSync(path.join(tmpdir(), "secpal-build-output-"));
     const safeEnv = { ...process.env, VITE_APP_SURFACE: "web" };

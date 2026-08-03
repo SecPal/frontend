@@ -7,6 +7,7 @@ import {
   isWorkspacePreviewTarget,
   resolvePlaywrightApiBaseUrl,
 } from "./target-urls";
+import { redactCurrentPassword } from "./passkey-payload-redaction";
 
 // In the Polyscope workspace preview path (the only path that runs the live
 // passkey proof below), `resolvePlaywrightApiBaseUrl()` always returns the
@@ -18,6 +19,11 @@ const LIVE_PASSKEY_ENABLED = process.env.PLAYWRIGHT_LIVE_PASSKEY === "1";
 const PASSKEY_LABEL_PREFIX = "Live E2E Passkey";
 const PASSKEY_RATE_LIMIT_MESSAGE = /too many passkey attempts/i;
 const PASSKEY_RATE_LIMIT_WAIT_MS = 610_000;
+
+// Registration requests contain the live test user's current password.
+// Playwright traces retain raw network bodies independently of our redacted
+// in-memory diagnostics, so this suite must never record them.
+test.use({ trace: "off" });
 
 interface RecordedExchange {
   url: string;
@@ -59,7 +65,9 @@ function observePasskeyTraffic(page: Page, traffic: PasskeyTraffic) {
   page.on("response", async (response) => {
     const url = response.url();
     const method = response.request().method();
-    const payload = parseJson(response.request().postData() ?? null);
+    const payload = redactCurrentPassword(
+      parseJson(response.request().postData() ?? null)
+    );
     const responseBody = parseJson(await response.text().catch(() => null));
 
     const exchange: RecordedExchange = {
@@ -186,11 +194,12 @@ async function openSettings(page: Page) {
   await expect(page.getByRole("heading", { name: /passkeys/i })).toBeVisible();
 }
 
-async function addPasskey(page: Page, label: string) {
+async function addPasskey(page: Page, label: string, currentPassword: string) {
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const addButton = page.getByRole("button", { name: /add passkey/i });
 
     await page.getByLabel(/passkey label/i).fill(label);
+    await page.getByLabel(/current password/i).fill(currentPassword);
     await addButton.click();
 
     try {
@@ -281,7 +290,7 @@ test.describe("Live passkey proof", () => {
           page,
           activeAuthenticatorId
         );
-        await addPasskey(page, firstLabel);
+        await addPasskey(page, firstLabel, TEST_USER.password);
 
         expect(traffic.registrationVerify).toHaveLength(1);
         expect(traffic.registrationVerify[0]?.status).toBe(201);
@@ -312,7 +321,7 @@ test.describe("Live passkey proof", () => {
           page,
           activeAuthenticatorId
         );
-        await addPasskey(page, secondLabel);
+        await addPasskey(page, secondLabel, TEST_USER.password);
 
         expect(traffic.registrationVerify).toHaveLength(2);
         expect(traffic.registrationVerify[1]?.status).toBe(201);

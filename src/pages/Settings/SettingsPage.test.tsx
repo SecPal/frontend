@@ -74,6 +74,18 @@ async function renderSettingsPage() {
   await screen.findByText(/not enabled/i);
 }
 
+function fillPasskeyRegistrationForm(
+  label = "Security Key",
+  currentPassword = "correct-password"
+) {
+  fireEvent.change(screen.getByLabelText(/passkey label/i), {
+    target: { value: label },
+  });
+  fireEvent.change(screen.getByLabelText(/current password/i), {
+    target: { value: currentPassword },
+  });
+}
+
 async function selectLanguage(visibleName: string) {
   const trigger = screen.getByRole("combobox", { name: /select language/i });
   fireEvent.click(trigger, { button: 0 });
@@ -556,15 +568,13 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    fireEvent.change(screen.getByLabelText(/passkey label/i), {
-      target: { value: "Security Key" },
-    });
+    fillPasskeyRegistrationForm();
     fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
 
     await waitFor(() => {
       expect(
         authAccountApi.startPasskeyRegistrationChallenge
-      ).toHaveBeenCalledTimes(1);
+      ).toHaveBeenCalledWith("correct-password");
       expect(passkeyBrowser.getPasskeyAttestation).toHaveBeenCalledTimes(1);
       expect(
         authAccountApi.verifyPasskeyRegistrationChallenge
@@ -572,6 +582,7 @@ describe("SettingsPage", () => {
         "550e8400-e29b-41d4-a716-446655440099",
         expect.objectContaining({
           label: "Security Key",
+          current_password: "correct-password",
           credential: expect.objectContaining({ id: "new-credential-id" }),
         })
       );
@@ -579,6 +590,27 @@ describe("SettingsPage", () => {
     });
 
     expect(await screen.findByText(/security key/i)).toBeInTheDocument();
+  });
+
+  it("requires the current password before starting passkey registration", async () => {
+    await renderSettingsPage();
+
+    expect(screen.getByLabelText(/current password/i)).toHaveAttribute(
+      "aria-required",
+      "true"
+    );
+
+    fireEvent.change(screen.getByLabelText(/passkey label/i), {
+      target: { value: "Security Key" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
+
+    expect(
+      await screen.findByText(/enter your current password to add a passkey/i)
+    ).toBeInTheDocument();
+    expect(
+      authAccountApi.startPasskeyRegistrationChallenge
+    ).not.toHaveBeenCalled();
   });
 
   it("keeps passkey rows visible while refreshing after registration", async () => {
@@ -604,9 +636,7 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    fireEvent.change(screen.getByLabelText(/passkey label/i), {
-      target: { value: "Security Key" },
-    });
+    fillPasskeyRegistrationForm();
     fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
 
     expect(await screen.findByText(/security key/i)).toBeInTheDocument();
@@ -614,6 +644,7 @@ describe("SettingsPage", () => {
     expect(
       screen.getByRole("status", { name: /loading passkeys/i })
     ).toBeInTheDocument();
+    expect(screen.getByLabelText(/current password/i)).toHaveValue("");
   });
 
   it("shows a browser-check prompt while waiting for the credential provider", async () => {
@@ -630,9 +661,7 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    fireEvent.change(screen.getByLabelText(/passkey label/i), {
-      target: { value: "Security Key" },
-    });
+    fillPasskeyRegistrationForm();
     fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
 
     await waitFor(() => {
@@ -685,9 +714,7 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    fireEvent.change(screen.getByLabelText(/passkey label/i), {
-      target: { value: "Security Key" },
-    });
+    fillPasskeyRegistrationForm();
     fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
 
     await waitFor(() => {
@@ -714,9 +741,7 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    fireEvent.change(screen.getByLabelText(/passkey label/i), {
-      target: { value: "Security Key" },
-    });
+    fillPasskeyRegistrationForm();
     fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
 
     const passkeyError = await screen.findByText(
@@ -729,6 +754,7 @@ describe("SettingsPage", () => {
       "bg-destructive/10"
     );
     expect(passkeyAlert).toHaveAttribute("data-slot", "alert");
+    expect(screen.getByLabelText(/current password/i)).toHaveValue("");
   });
 
   it("shows cancellation message when user dismisses the browser passkey dialog", async () => {
@@ -744,9 +770,7 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    fireEvent.change(screen.getByLabelText(/passkey label/i), {
-      target: { value: "Security Key" },
-    });
+    fillPasskeyRegistrationForm();
     fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
 
     expect(
@@ -767,9 +791,7 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    fireEvent.change(screen.getByLabelText(/passkey label/i), {
-      target: { value: "Security Key" },
-    });
+    fillPasskeyRegistrationForm();
     fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
 
     expect(
@@ -790,9 +812,7 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    fireEvent.change(screen.getByLabelText(/passkey label/i), {
-      target: { value: "Security Key" },
-    });
+    fillPasskeyRegistrationForm();
     fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
 
     expect(
@@ -815,9 +835,7 @@ describe("SettingsPage", () => {
 
     await renderSettingsPage();
 
-    fireEvent.change(screen.getByLabelText(/passkey label/i), {
-      target: { value: "Security Key" },
-    });
+    fillPasskeyRegistrationForm();
     fireEvent.click(screen.getByRole("button", { name: /add passkey/i }));
 
     expect(

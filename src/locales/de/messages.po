@@ -2807,6 +2807,10 @@ msgstr "Das Passwort muss mindestens ein Sonderzeichen enthalten"
 msgid "Workspace"
 msgstr "Arbeitsbereich"
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Current password"
+msgstr "Aktuelles Passwort"
+
 #: src/components/application-layout.tsx
 #: src/components/LoginLegalMenu.tsx
 #: src/components/nav-legal.tsx
@@ -3591,6 +3595,10 @@ msgstr "Beziehung des Notfallkontakts"
 #: src/components/ScopeAssignmentForm.tsx
 msgid "0 or empty for non-leadership only"
 msgstr "0 oder leer nur für Nicht-Führungskräfte"
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Enter your current password to add a passkey."
+msgstr "Geben Sie Ihr aktuelles Passwort ein, um einen Passkey hinzuzufügen."
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerEdit.tsx

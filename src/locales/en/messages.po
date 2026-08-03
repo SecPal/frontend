@@ -2807,6 +2807,10 @@ msgstr "Password must include at least one symbol"
 msgid "Workspace"
 msgstr "Workspace"
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Current password"
+msgstr "Current password"
+
 #: src/components/application-layout.tsx
 #: src/components/LoginLegalMenu.tsx
 #: src/components/nav-legal.tsx
@@ -3591,6 +3595,10 @@ msgstr "Emergency Contact Relationship"
 #: src/components/ScopeAssignmentForm.tsx
 msgid "0 or empty for non-leadership only"
 msgstr "0 or empty for non-leadership only"
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Enter your current password to add a passkey."
+msgstr "Enter your current password to add a passkey."
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerEdit.tsx

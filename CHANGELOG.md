@@ -68,6 +68,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restored passkey enrollment after the API began requiring a current-password
+  step-up: the settings form now collects the password and includes it in both
+  registration requests, while live browser-test traffic redacts the password
+  before retaining diagnostic request payloads and disables Playwright traces
+  that could otherwise capture raw credential-bearing network requests.
+- Isolated full production-build artifact and provenance checks from parallel
+  pull-request and coverage CI suites so constrained runners do not contend
+  with their typecheck, Vite/PWA, and SBOM subprocesses or retain Vitest
+  workers after a failure.
+- Switched Vitest's bounded worker pool from forks to threads so jsdom
+  environment startup no longer intermittently fails to resolve installed
+  modules during full-suite validation.
 - Rehydrated native Android sessions after WebView or process restarts even
   without a local frontend user snapshot, while preserving logout barriers
   until a successful login, keeping login controls hidden until bootstrap or
