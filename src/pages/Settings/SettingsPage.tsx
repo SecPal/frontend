@@ -794,6 +794,7 @@ export function SettingsPage() {
                       }
                       disabled={isRegisteringPasskey}
                       autoComplete="current-password"
+                      aria-required="true"
                     />
                   </Field>
                   <Button type="submit" disabled={isRegisteringPasskey}>

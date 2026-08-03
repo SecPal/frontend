@@ -337,6 +337,10 @@ export default defineConfig(({ mode, command }) => {
       unstubEnvs: true,
       testTimeout: 20000, // 20 seconds per test to keep full-suite UI tests stable under CI load
       hookTimeout: 20000, // 20 seconds for beforeEach/afterEach hooks
+      // Fork workers can intermittently fail to resolve jsdom during startup
+      // even when the dependency is present. Threads share this process's
+      // resolver while retaining isolated test workers.
+      pool: "threads",
       // Native validation and hosted runners can both expose constrained CPUs;
       // the default worker pool can thrash and stall heavyweight build checks.
       maxWorkers: 2,

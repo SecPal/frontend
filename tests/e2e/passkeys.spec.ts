@@ -9,7 +9,7 @@ const AUTH_STORAGE_CSRF_TOKEN = "playwright-test-csrf-token";
 const authUser = {
   id: "1",
   name: "Test User",
-  email: "test@example.com",
+  email: "test@secpal.dev",
   emailVerified: true,
   roles: [],
   permissions: [],
@@ -29,7 +29,7 @@ const registrationChallenge = {
       },
       user: {
         id: "dXNlci1pZA",
-        name: "test@example.com",
+        name: "test@secpal.dev",
         display_name: "Test User",
       },
       pub_key_cred_params: [{ type: "public-key", alg: -7 }],
@@ -299,7 +299,7 @@ test.describe("Passkeys", () => {
 
     await page.goto("/login");
 
-    await page.getByLabel(/email/i).fill("test@example.com");
+    await page.getByLabel(/email/i).fill("test@secpal.dev");
     await page.getByRole("button", { name: /sign in with passkey/i }).click();
 
     await expect(page).not.toHaveURL(/\/login$/);
@@ -418,7 +418,7 @@ test.describe("Passkeys", () => {
     await installCsrfToken(loggedOutPage);
 
     await loggedOutPage.goto("/login");
-    await loggedOutPage.getByLabel(/email/i).fill("test@example.com");
+    await loggedOutPage.getByLabel(/email/i).fill("test@secpal.dev");
     await loggedOutPage
       .getByRole("button", { name: /sign in with passkey/i })
       .click();

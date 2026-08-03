@@ -8,6 +8,10 @@
  * aligned with the current backend/runtime behavior for frontend session flows.
  */
 
+import type { components } from "./openapi.generated";
+
+type Schemas = components["schemas"];
+
 export type AuthenticatedUserId = number | string;
 
 export interface AuthenticatedUserEmployee {
@@ -129,8 +133,7 @@ export interface MfaRecoveryCodeRevealResponse {
   data: MfaRecoveryCodeRevealPayload;
 }
 
-export type PasskeyTransport =
-  "ble" | "hybrid" | "internal" | "nfc" | "usb" | (string & {});
+export type PasskeyTransport = Schemas["PasskeyTransport"];
 
 export interface PasskeyCredentialSummary {
   id: string;
@@ -238,11 +241,10 @@ export interface PasskeyRegistrationCredential {
   client_extension_results?: Record<string, unknown>;
 }
 
-export interface PasskeyRegistrationVerificationRequest {
-  current_password: string;
-  credential: PasskeyRegistrationCredential;
-  label?: string;
-}
+export type PasskeyCurrentPasswordStepUpRequest =
+  Schemas["PasskeyCurrentPasswordStepUpRequest"];
+export type PasskeyRegistrationVerificationRequest =
+  Schemas["PasskeyRegistrationVerificationRequest"];
 
 export interface PasskeyRegistrationResponse {
   data: {

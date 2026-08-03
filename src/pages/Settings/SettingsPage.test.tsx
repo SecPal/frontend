@@ -595,6 +595,11 @@ describe("SettingsPage", () => {
   it("requires the current password before starting passkey registration", async () => {
     await renderSettingsPage();
 
+    expect(screen.getByLabelText(/current password/i)).toHaveAttribute(
+      "aria-required",
+      "true"
+    );
+
     fireEvent.change(screen.getByLabelText(/passkey label/i), {
       target: { value: "Security Key" },
     });

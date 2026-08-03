@@ -167,19 +167,23 @@ describe("vite test workflow", () => {
   it.each([
     { ci: "", environment: "outside CI" },
     { ci: "true", environment: "in CI" },
-  ])("caps workers when the full suite runs $environment", async ({ ci }) => {
-    vi.stubEnv("CI", ci);
-    const { default: viteConfig } = await import("../vite.config");
-    const config =
-      typeof viteConfig === "function"
-        ? viteConfig({
-            command: "serve",
-            mode: "test",
-            isPreview: false,
-            isSsrBuild: false,
-          })
-        : viteConfig;
+  ])(
+    "uses a bounded thread pool when the full suite runs $environment",
+    async ({ ci }) => {
+      vi.stubEnv("CI", ci);
+      const { default: viteConfig } = await import("../vite.config");
+      const config =
+        typeof viteConfig === "function"
+          ? viteConfig({
+              command: "serve",
+              mode: "test",
+              isPreview: false,
+              isSsrBuild: false,
+            })
+          : viteConfig;
 
-    expect(config.test?.maxWorkers).toBe(2);
-  });
+      expect(config.test?.pool).toBe("threads");
+      expect(config.test?.maxWorkers).toBe(2);
+    }
+  );
 });

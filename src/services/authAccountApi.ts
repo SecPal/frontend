@@ -8,6 +8,7 @@ import type {
   MfaVerificationCodeRequest,
   PasskeyDeletionResponse,
   PasskeyListResponse,
+  PasskeyCurrentPasswordStepUpRequest,
   PasskeyRegistrationChallengeResponse,
   PasskeyRegistrationResponse,
   PasskeyRegistrationVerificationRequest,
@@ -86,7 +87,7 @@ export async function getPasskeys(): Promise<PasskeyListResponse> {
 }
 
 export async function startPasskeyRegistrationChallenge(
-  currentPassword: string
+  currentPassword: PasskeyCurrentPasswordStepUpRequest["current_password"]
 ): Promise<PasskeyRegistrationChallengeResponse> {
   await fetchCsrfToken();
 
@@ -99,7 +100,9 @@ export async function startPasskeyRegistrationChallenge(
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({ current_password: currentPassword }),
+      body: JSON.stringify({
+        current_password: currentPassword,
+      } satisfies PasskeyCurrentPasswordStepUpRequest),
     }
   );
 
