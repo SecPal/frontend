@@ -85,6 +85,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   revision, rejected additional tag and registry-write paths in publisher
   policy coverage, and recorded both runtime-platform manifest digests as
   non-canonical post-merge evidence.
+- Made the provenance policy regression helper fail immediately with an
+  actionable error when its required `jq` executable is unavailable.
 - Normalized static artifact, license, Nginx configuration, and entrypoint
   modes inside the image so inherited workspace ACLs cannot make unprivileged
   runtime files unreadable or non-executable despite Dockerfile `COPY --chmod`

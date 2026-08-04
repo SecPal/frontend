@@ -60,7 +60,8 @@ function provenanceVerificationPolicy(workflow: string): string {
 
 function evaluateProvenancePolicy(
   policy: string,
-  resolvedDependencies: unknown[]
+  resolvedDependencies: unknown[],
+  jqExecutable = "jq"
 ): ReturnType<typeof spawnSync> {
   const revision = "0123456789012345678901234567890123456789";
   const source = `https://github.com/SecPal/frontend.git#${revision}`;
@@ -80,14 +81,26 @@ function evaluateProvenancePolicy(
     },
   };
 
-  return spawnSync(
-    "jq",
+  const result = spawnSync(
+    jqExecutable,
     ["-e", "--arg", "source", source, "--arg", "revision", revision, policy],
     {
       encoding: "utf8",
       input: JSON.stringify(provenance),
     }
   );
+
+  if (result.error) {
+    if ((result.error as NodeJS.ErrnoException).code === "ENOENT") {
+      throw new Error("jq is required to evaluate the provenance policy", {
+        cause: result.error,
+      });
+    }
+
+    throw result.error;
+  }
+
+  return result;
 }
 
 function assertSecurityCriticalPolicy(workflow: string): void {
@@ -349,6 +362,24 @@ describe("frontend container publishing workflow", () => {
     expect(valid.status).toBe(0);
     expect(additionalRevision.status).not.toBe(0);
     expect(wrongRevisionOnly.status).not.toBe(0);
+  });
+
+  it("reports a clear error when jq is unavailable", () => {
+    const temporaryDirectory = mkdtempSync(
+      path.join(tmpdir(), "secpal-missing-jq-")
+    );
+
+    try {
+      expect(() =>
+        evaluateProvenancePolicy(
+          "true",
+          [],
+          path.join(temporaryDirectory, "jq")
+        )
+      ).toThrowError("jq is required to evaluate the provenance policy");
+    } finally {
+      rmSync(temporaryDirectory, { recursive: true, force: true });
+    }
   });
 
   it("runs both runtime and Chromium contracts against the digest on exactly two platforms", () => {
