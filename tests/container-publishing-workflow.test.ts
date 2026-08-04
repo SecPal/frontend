@@ -34,6 +34,31 @@ function jobBlock(workflow: string, jobName: string): string {
   return lines.slice(start, nextJob === -1 ? undefined : nextJob).join("\n");
 }
 
+function stepBlock(job: string, stepName: string): string {
+  const lines = job.split("\n");
+  const start = lines.findIndex((line) => line === `      - name: ${stepName}`);
+
+  expect(start, `missing ${stepName} step`).toBeGreaterThanOrEqual(0);
+
+  const nextStep = lines.findIndex(
+    (line, index) => index > start && /^ {6}- name: /u.test(line)
+  );
+
+  return lines.slice(start, nextStep === -1 ? undefined : nextStep).join("\n");
+}
+
+function shellScript(step: string): string {
+  const lines = step.split("\n");
+  const run = lines.findIndex((line) => line === "        run: |");
+
+  expect(run, "missing shell run block").toBeGreaterThanOrEqual(0);
+
+  return lines
+    .slice(run + 1)
+    .map((line) => (line.startsWith("          ") ? line.slice(10) : line))
+    .join("\n");
+}
+
 function actionReferences(workflow: string): string[] {
   return [...workflow.matchAll(/^\s*uses:\s*([^\s#]+)(?:\s*#.*)?$/gmu)].map(
     ([, reference]) => reference
@@ -47,6 +72,36 @@ function replaceRequired(
 ): string {
   expect(value).toContain(searchValue);
   return value.replace(searchValue, replacement);
+}
+
+function removeRequiredStep(
+  workflow: string,
+  jobName: string,
+  stepName: string
+): string {
+  return replaceRequired(
+    workflow,
+    stepBlock(jobBlock(workflow, jobName), stepName),
+    ""
+  );
+}
+
+function moveRequiredStepBefore(
+  workflow: string,
+  jobName: string,
+  movedStepName: string,
+  beforeStepName: string
+): string {
+  const job = jobBlock(workflow, jobName);
+  const movedStep = stepBlock(job, movedStepName);
+  const beforeStep = stepBlock(job, beforeStepName);
+  const withoutMovedStep = replaceRequired(workflow, movedStep, "");
+
+  return replaceRequired(
+    withoutMovedStep,
+    beforeStep,
+    `${movedStep}${beforeStep}`
+  );
 }
 
 function provenanceVerificationPolicy(workflow: string): string {
@@ -103,7 +158,123 @@ function evaluateProvenancePolicy(
   return result;
 }
 
+function assertPinnedGitHubCliPolicy(workflow: string): void {
+  const attest = jobBlock(workflow, "attest");
+  const install = stepBlock(attest, "Install pinned GitHub CLI");
+  const selectedVerification = stepBlock(
+    attest,
+    "Verify selected GitHub artifact attestation"
+  );
+  const finalVerification = stepBlock(
+    attest,
+    "Verify final discovery snapshot and artifact attestation"
+  );
+  const installCommands = shellScript(install);
+  const verificationCommands = [
+    shellScript(selectedVerification),
+    shellScript(finalVerification),
+  ].join("\n");
+  const officialArchiveUrl =
+    "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz";
+
+  expect(install).toMatch(/^ {10}GH_VERSION: "2\.97\.0"$/mu);
+  expect(install).toMatch(
+    /^ {10}GH_LINUX_AMD64_SHA256: "a2c9b8497e1f85b1ad0dfcb78b5a622e098801b8e461e459e88e1ee12f018112"$/mu
+  );
+  expect(countMatches(attest, /^ {10}GH_VERSION:/gmu)).toBe(1);
+  expect(countMatches(attest, /^ {10}GH_LINUX_AMD64_SHA256:/gmu)).toBe(1);
+  expect(installCommands).toMatch(
+    /^archive="\$RUNNER_TEMP\/gh_\$\{GH_VERSION\}_linux_amd64\.tar\.gz"$/mu
+  );
+  expect(installCommands).toMatch(
+    /^extracted="\$RUNNER_TEMP\/gh_\$\{GH_VERSION\}_linux_amd64"$/mu
+  );
+  expect(installCommands).toMatch(/^install_dir="\$RUNNER_TEMP\/gh-bin"$/mu);
+  expect(installCommands).toContain(
+    [
+      "curl --proto '=https' \\",
+      "  --tlsv1.2 \\",
+      "  --fail \\",
+      "  --location \\",
+      "  --silent \\",
+      "  --show-error \\",
+      `  "${officialArchiveUrl}" \\`,
+      '  --output "$archive"',
+    ].join("\n")
+  );
+  expect(
+    countMatches(
+      installCommands,
+      /https:\/\/github\.com\/cli\/cli\/releases\/download\//gu
+    )
+  ).toBe(1);
+  expect(installCommands).not.toMatch(/http:\/\//u);
+  expect(installCommands).toMatch(
+    /^printf '%s {2}%s\\n' "\$GH_LINUX_AMD64_SHA256" "\$archive" \|$/mu
+  );
+  expect(installCommands).toMatch(/^ {2}sha256sum --check --strict$/mu);
+  expect(countMatches(installCommands, /sha256sum --check --strict/gu)).toBe(1);
+  expect(installCommands).toMatch(/^ {2}--file "\$archive" \\$/mu);
+  expect(installCommands).toMatch(/^ {2}--directory "\$RUNNER_TEMP" \\$/mu);
+  expect(installCommands).toMatch(/^ {2}--no-same-owner$/mu);
+  expect(installCommands).toMatch(/^install -d -m 0700 "\$install_dir"$/mu);
+  expect(installCommands).toMatch(
+    /^install -m 0755 "\$extracted\/bin\/gh" "\$install_dir\/gh"$/mu
+  );
+  expect(installCommands).toMatch(/^PINNED_GH="\$install_dir\/gh"$/mu);
+  expect(installCommands).toMatch(
+    /^printf '%s\\n' "\$install_dir" >> "\$GITHUB_PATH"$/mu
+  );
+  expect(installCommands).toMatch(
+    /^printf 'PINNED_GH=%s\\n' "\$PINNED_GH" >> "\$GITHUB_ENV"$/mu
+  );
+  expect(installCommands).toMatch(
+    /^actual_version=\$\("\$PINNED_GH" version \| head -n 1\)$/mu
+  );
+  expect(installCommands).toMatch(
+    /^expected_version="gh version \$\{GH_VERSION\}"$/mu
+  );
+  expect(installCommands).toMatch(
+    /^printf 'GitHub CLI version: %s\\n' "\$actual_version"$/mu
+  );
+  expect(installCommands).toMatch(/^case "\$actual_version" in$/mu);
+  expect(installCommands).toMatch(
+    /^ {2}"\$expected_version" \| "\$expected_version "\*\) ;;$/mu
+  );
+  expect(installCommands).toMatch(/^ {4}exit 1$/mu);
+  expect(installCommands).toMatch(
+    /^"\$PINNED_GH" attestation verify --help >\/dev\/null$/mu
+  );
+
+  for (const verification of [selectedVerification, finalVerification]) {
+    expect(shellScript(verification)).toMatch(
+      /^"\$PINNED_GH" attestation verify "oci:\/\/\$\{DIGEST_REF\}" \\$/mu
+    );
+  }
+
+  expect(
+    countMatches(
+      verificationCommands,
+      /"\$PINNED_GH" attestation verify "oci:\/\/\$\{DIGEST_REF\}"/gu
+    )
+  ).toBe(2);
+  expect(verificationCommands).not.toMatch(
+    /(?:^|\n)\s*gh attestation verify/gu
+  );
+  expect(`${installCommands}\n${verificationCommands}`).not.toMatch(
+    /command -v gh|\/usr\/bin\/gh|gh\s+\|\||\|\|\s*"\$PINNED_GH"|releases\/latest|apt.*install.*gh|brew.*install.*gh|snap.*install.*gh/iu
+  );
+
+  const installIndex = attest.indexOf(install);
+  expect(installIndex).toBeGreaterThan(
+    attest.indexOf("Checkout publishing commit")
+  );
+  expect(attest.indexOf(selectedVerification)).toBeGreaterThan(installIndex);
+  expect(attest.indexOf(finalVerification)).toBeGreaterThan(installIndex);
+}
+
 function assertSecurityCriticalPolicy(workflow: string): void {
+  assertPinnedGitHubCliPolicy(workflow);
   expect(workflow).toMatch(/on:\n {2}push:\n {4}branches: \[main\](?:\n|$)/u);
   expect(workflow).not.toMatch(/pull_request:|workflow_dispatch:|schedule:/u);
   expect(workflow).toContain("permissions: {}");
@@ -312,6 +483,10 @@ describe("frontend container publishing workflow", () => {
     expect(workflow).toMatch(
       /docker\/buildkit-syft-scanner:[^@\s]+@sha256:[0-9a-f]{64}/u
     );
+  });
+
+  it("installs and exclusively uses the reviewed GitHub CLI release", () => {
+    assertPinnedGitHubCliPolicy(workflow);
   });
 
   it("verifies exact index bytes, platform metadata, SBOM, and provenance", () => {
@@ -563,7 +738,12 @@ describe("frontend container publishing workflow", () => {
     expect(initialVerificationIndex).toBeGreaterThan(generateIndex);
     expect(finalSnapshotIndex).toBeGreaterThan(initialVerificationIndex);
     expect(summaryIndex).toBeGreaterThan(finalSnapshotIndex);
-    expect(countMatches(attest, /gh attestation verify/gu)).toBe(2);
+    expect(
+      countMatches(
+        attest,
+        /"\$PINNED_GH" attestation verify "oci:\/\/\$\{DIGEST_REF\}"/gu
+      )
+    ).toBe(2);
     expect(attest).toContain('test "$byte_digest" = "$IMAGE_DIGEST"');
     expect(attest).toContain('test "$registry_digest" = "$IMAGE_DIGEST"');
   });
@@ -725,4 +905,112 @@ describe("frontend container publishing workflow", () => {
     const mutatedWorkflow = replaceRequired(workflow, searchValue, replacement);
     expect(() => assertSecurityCriticalPolicy(mutatedWorkflow)).toThrow();
   });
+
+  const githubCliMutations: Array<[string, (value: string) => string]> = [
+    [
+      "missing GitHub CLI installation",
+      (value) =>
+        removeRequiredStep(value, "attest", "Install pinned GitHub CLI"),
+    ],
+    [
+      "wrong GitHub CLI version",
+      (value) =>
+        replaceRequired(value, 'GH_VERSION: "2.97.0"', 'GH_VERSION: "2.96.0"'),
+    ],
+    [
+      "wrong GitHub CLI checksum",
+      (value) =>
+        replaceRequired(
+          value,
+          "a2c9b8497e1f85b1ad0dfcb78b5a622e098801b8e461e459e88e1ee12f018112",
+          "b".repeat(64)
+        ),
+    ],
+    [
+      "missing checksum verification",
+      (value) =>
+        replaceRequired(value, "sha256sum --check --strict", "cat >/dev/null"),
+    ],
+    [
+      "non-strict checksum verification",
+      (value) =>
+        replaceRequired(
+          value,
+          "sha256sum --check --strict",
+          "sha256sum --check"
+        ),
+    ],
+    [
+      "non-official GitHub CLI host",
+      (value) =>
+        replaceRequired(
+          value,
+          "https://github.com/cli/cli/releases/download/",
+          "https://downloads.example.com/cli/cli/releases/download/"
+        ),
+    ],
+    [
+      "insecure GitHub CLI download",
+      (value) =>
+        replaceRequired(
+          value,
+          "https://github.com/cli/cli/releases/download/",
+          "http://github.com/cli/cli/releases/download/"
+        ),
+    ],
+    [
+      "divergent archive version",
+      (value) =>
+        replaceRequired(
+          value,
+          'gh_${GH_VERSION}_linux_amd64.tar.gz" \\',
+          'gh_2.96.0_linux_amd64.tar.gz" \\'
+        ),
+    ],
+    [
+      "missing GITHUB_PATH update",
+      (value) =>
+        replaceRequired(
+          value,
+          'printf \'%s\\n\' "$install_dir" >> "$GITHUB_PATH"',
+          "true # GITHUB_PATH update removed"
+        ),
+    ],
+    [
+      "missing version enforcement",
+      (value) =>
+        replaceRequired(
+          value,
+          'case "$actual_version" in',
+          'case "$expected_version" in'
+        ),
+    ],
+    [
+      "runner GitHub CLI fallback",
+      (value) =>
+        replaceRequired(
+          value,
+          '"$PINNED_GH" attestation verify "oci://${DIGEST_REF}"',
+          'gh attestation verify "oci://${DIGEST_REF}"'
+        ),
+    ],
+    [
+      "attestation verification before CLI installation",
+      (value) =>
+        moveRequiredStepBefore(
+          value,
+          "attest",
+          "Verify selected GitHub artifact attestation",
+          "Install pinned GitHub CLI"
+        ),
+    ],
+  ];
+
+  it.each(githubCliMutations)(
+    "rejects the %s mutation",
+    (_name, mutateWorkflow) => {
+      const mutatedWorkflow = mutateWorkflow(workflow);
+      expect(() => assertPinnedGitHubCliPolicy(mutatedWorkflow)).toThrow();
+    }
+  );
 });

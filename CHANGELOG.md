@@ -87,6 +87,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   non-canonical post-merge evidence.
 - Made the provenance policy regression helper fail immediately with an
   actionable error when its required `jq` executable is unavailable.
+- Pinned the GitHub CLI used for frontend artifact-attestation verification to
+  version 2.97.0 and verified the official release archive checksum before use.
 - Normalized static artifact, license, Nginx configuration, and entrypoint
   modes inside the image so inherited workspace ACLs cannot make unprivileged
   runtime files unreadable or non-executable despite Dockerfile `COPY --chmod`
