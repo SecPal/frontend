@@ -10,6 +10,18 @@ IMAGE_TAG=${SECPAL_CONTAINER_IMAGE:-$DEFAULT_IMAGE_TAG}
 CONTAINER_LABEL="secpal.dev/test-role=frontend-container-browser"
 RUN_ID=$(node -e 'process.stdout.write(require("node:crypto").randomUUID())')
 CONTAINER_NAME="secpal-frontend-browser-${RUN_ID}"
+PLATFORM_ARGS=()
+
+case ${SECPAL_CONTAINER_PLATFORM:-} in
+  "") ;;
+  linux/amd64 | linux/arm64)
+    PLATFORM_ARGS+=(--platform "$SECPAL_CONTAINER_PLATFORM")
+    ;;
+  *)
+    echo "ERROR: unsupported container platform" >&2
+    exit 1
+    ;;
+esac
 
 cleanup_container() {
   docker rm --force "$CONTAINER_NAME" >/dev/null 2>&1 || true
@@ -27,13 +39,13 @@ trap 'handle_signal 130' INT
 trap 'handle_signal 143' TERM
 
 if [ "${SECPAL_CONTAINER_SKIP_BUILD:-0}" != "1" ]; then
-  docker build --tag "$IMAGE_TAG" "$ROOT_DIR"
+  docker build "${PLATFORM_ARGS[@]}" --tag "$IMAGE_TAG" "$ROOT_DIR"
 elif ! docker image inspect "$IMAGE_TAG" >/dev/null 2>&1; then
   echo "ERROR: frontend container image is missing while builds are disabled" >&2
   exit 1
 fi
 
-docker run \
+docker run "${PLATFORM_ARGS[@]}" \
   --detach \
   --name "$CONTAINER_NAME" \
   --label "$CONTAINER_LABEL" \

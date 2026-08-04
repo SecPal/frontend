@@ -14,6 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added push-to-`main` publication for the official
+  `ghcr.io/secpal/frontend` Web/PWA image with run-specific discovery tags,
+  canonical OCI index digests, exact index-byte verification, deterministic
+  OCI metadata, `linux/amd64` and `linux/arm64` runtime and Chromium checks,
+  per-platform BuildKit SPDX SBOM and `mode=max` provenance verification, and
+  digest-bound GitHub Artifact Attestations. Pull-request CI remains registry
+  read-only, deployment consumption remains pending, and Phase C remains in
+  progress. Frontend image publication is implemented but not yet
+  operationally verified.
 - Added a production-ready unprivileged frontend container image that serves
   the existing Web/PWA artifact through static Nginx on port 8080, configures
   the API origin at startup through strict `SECPAL_API_URL` validation, and
@@ -68,6 +77,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Bound the embedded dependency SPDX document timestamp and namespace to the
+  publishing commit through `SOURCE_DATE_EPOCH`, making repeated builds of the
+  same source produce identical application SBOM bytes.
+- Normalized static artifact, license, Nginx configuration, and entrypoint
+  modes inside the image so inherited workspace ACLs cannot make unprivileged
+  runtime files unreadable or non-executable despite Dockerfile `COPY --chmod`
+  declarations.
 - Updated the transitive `brace-expansion` dependency to 5.0.9 or newer to
   remediate its denial-of-service vulnerability.
 - Kept passkey enrollment request payloads contract-derived end to end: both
