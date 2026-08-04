@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: MIT
 
+import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
@@ -100,7 +101,7 @@ const sbom = {
     creators: ["Tool: SecPal lockfile SPDX generator"],
   },
   dataLicense: "CC0-1.0",
-  documentNamespace: `https://spdx.org/spdxdocs/${toSpdxIdPart(packageLock.name ?? "application")}-${creationDate.getTime()}`,
+  documentNamespace: "",
   name: `${packageLock.name ?? "application"} dependency inventory`,
   packages,
   relationships: packages.map(({ SPDXID }) => ({
@@ -110,6 +111,11 @@ const sbom = {
   })),
   spdxVersion: "SPDX-2.3",
 };
+
+const documentDigest = createHash("sha256")
+  .update(JSON.stringify(sbom))
+  .digest("hex");
+sbom.documentNamespace = `https://spdx.org/spdxdocs/${toSpdxIdPart(packageLock.name ?? "application")}-${documentDigest}`;
 
 mkdirSync(outputDirectory, { recursive: true });
 writeFileSync(

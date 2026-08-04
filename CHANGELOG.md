@@ -77,9 +77,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Bound the embedded dependency SPDX document timestamp and namespace to the
-  publishing commit through `SOURCE_DATE_EPOCH`, making repeated builds of the
-  same source produce identical application SBOM bytes.
+- Bound the embedded dependency SPDX document timestamp to the publishing
+  commit through `SOURCE_DATE_EPOCH` and its namespace to the document content,
+  making repeated builds of the same source produce identical application SBOM
+  bytes without namespace collisions between different documents.
 - Required the verified BuildKit provenance to contain exactly one Git source
   revision, rejected additional tag and registry-write paths in publisher
   policy coverage, and recorded both runtime-platform manifest digests as

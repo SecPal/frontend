@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -427,10 +427,69 @@ describe("frontend container publishing workflow", () => {
 
       expect(firstSbom).toBe(secondSbom);
       expect(parsedSbom.creationInfo.created).toBe("2023-11-14T22:13:20.000Z");
-      expect(parsedSbom.documentNamespace).toMatch(/-1700000000000$/u);
+      expect(parsedSbom.documentNamespace).toMatch(/-[0-9a-f]{64}$/u);
     } finally {
       rmSync(firstOutput, { recursive: true, force: true });
       rmSync(secondOutput, { recursive: true, force: true });
+    }
+  });
+
+  it("uses different SPDX namespaces for different documents with the same creation time", () => {
+    const firstProject = mkdtempSync(
+      path.join(tmpdir(), "secpal-sbom-namespace-first-")
+    );
+    const secondProject = mkdtempSync(
+      path.join(tmpdir(), "secpal-sbom-namespace-second-")
+    );
+    const sourceDateEpoch = "1700000000";
+    const env = { ...process.env, SOURCE_DATE_EPOCH: sourceDateEpoch };
+    const generator = path.join(
+      repoRoot,
+      "scripts",
+      "generate-dependency-sbom.mjs"
+    );
+    const firstPackageLock = JSON.parse(readRepoFile("package-lock.json")) as {
+      packages: Record<string, { version?: string }>;
+    };
+    const secondPackageLock = structuredClone(firstPackageLock);
+
+    secondPackageLock.packages[""].version = "0.0.0-namespace-collision-test";
+
+    try {
+      for (const [project, packageLock] of [
+        [firstProject, firstPackageLock],
+        [secondProject, secondPackageLock],
+      ] as const) {
+        writeFileSync(
+          path.join(project, "package-lock.json"),
+          `${JSON.stringify(packageLock)}\n`
+        );
+        execFileSync(process.execPath, [generator], {
+          cwd: project,
+          env,
+          stdio: "pipe",
+        });
+      }
+
+      const firstSbom = JSON.parse(
+        readFileSync(
+          path.join(firstProject, "dist", "dependencies.spdx.json"),
+          "utf8"
+        )
+      ) as { documentNamespace: string };
+      const secondSbom = JSON.parse(
+        readFileSync(
+          path.join(secondProject, "dist", "dependencies.spdx.json"),
+          "utf8"
+        )
+      ) as { documentNamespace: string };
+
+      expect(firstSbom.documentNamespace).not.toBe(
+        secondSbom.documentNamespace
+      );
+    } finally {
+      rmSync(firstProject, { recursive: true, force: true });
+      rmSync(secondProject, { recursive: true, force: true });
     }
   });
 
