@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -49,6 +49,47 @@ function replaceRequired(
   return value.replace(searchValue, replacement);
 }
 
+function provenanceVerificationPolicy(workflow: string): string {
+  const match = workflow.match(
+    /--arg revision "\$GITHUB_SHA" '\n(?<policy>[^]*?)\n {14}'\n {10}done/u
+  );
+
+  expect(match?.groups?.policy).toBeDefined();
+  return match!.groups!.policy!;
+}
+
+function evaluateProvenancePolicy(
+  policy: string,
+  resolvedDependencies: unknown[]
+): ReturnType<typeof spawnSync> {
+  const revision = "0123456789012345678901234567890123456789";
+  const source = `https://github.com/SecPal/frontend.git#${revision}`;
+  const provenance = {
+    buildDefinition: {
+      buildType:
+        "https://github.com/moby/buildkit/blob/master/docs/attestations/slsa-definitions.md",
+      resolvedDependencies,
+    },
+    runDetails: {
+      metadata: {
+        buildkit_completeness: {
+          request: true,
+          resolvedDependencies: true,
+        },
+      },
+    },
+  };
+
+  return spawnSync(
+    "jq",
+    ["-e", "--arg", "source", source, "--arg", "revision", revision, policy],
+    {
+      encoding: "utf8",
+      input: JSON.stringify(provenance),
+    }
+  );
+}
+
 function assertSecurityCriticalPolicy(workflow: string): void {
   expect(workflow).toMatch(/on:\n {2}push:\n {4}branches: \[main\](?:\n|$)/u);
   expect(workflow).not.toMatch(/pull_request:|workflow_dispatch:|schedule:/u);
@@ -77,6 +118,10 @@ function assertSecurityCriticalPolicy(workflow: string): void {
     1
   );
   expect(countMatches(workflow, /^\s*push:\s*true\s*$/gmu)).toBe(1);
+  expect(countMatches(workflow, /^\s*tags:/gmu)).toBe(1);
+  expect(workflow).toMatch(
+    /^\s*tags: \$\{\{ env\.CANONICAL_IMAGE \}\}:\$\{\{ steps\.published_tag\.outputs\.tag \}\}\s*$/mu
+  );
   expect(workflow).toContain("platforms: linux/amd64,linux/arm64");
   expect(workflow).toContain(
     "context: https://github.com/SecPal/frontend.git#${{ github.sha }}"
@@ -133,6 +178,9 @@ function assertSecurityCriticalPolicy(workflow: string): void {
   expect(countMatches(workflow, /--deny-self-hosted-runners/gu)).toBe(2);
   expect(workflow).not.toMatch(
     /curl[^\n]*(?:--request|-X)\s+(?:PUT|DELETE)|docker\s+manifest\s+push|docker\s+buildx\s+imagetools\s+create|promotion|promote|package\s+delete|manifest\s+delete/iu
+  );
+  expect(workflow).not.toMatch(
+    /docker\s+(?:push|buildx\s+build)|podman\s+push|oras\s+push|crane\s+push|skopeo\s+copy|regctl\s+(?:image\s+copy|manifest\s+put)/iu
   );
 }
 
@@ -268,6 +316,41 @@ describe("frontend container publishing workflow", () => {
     expect(verify).not.toMatch(/\|\|\s*true|continue-on-error:\s*true/u);
   });
 
+  it("rejects provenance containing any additional source revision", () => {
+    const revision = "0123456789012345678901234567890123456789";
+    const policy = provenanceVerificationPolicy(workflow);
+    const expectedSource = {
+      digest: { sha1: revision },
+      uri: `https://github.com/SecPal/frontend.git#${revision}`,
+    };
+    const unrelatedBaseImage = {
+      digest: { sha256: "a".repeat(64) },
+      uri: "pkg:docker/nginxinc/nginx-unprivileged@1.30.4",
+    };
+    const unexpectedSource = {
+      digest: { sha1: "f".repeat(40) },
+      uri: `https://github.com/SecPal/frontend.git#${"f".repeat(40)}`,
+    };
+
+    const valid = evaluateProvenancePolicy(policy, [
+      expectedSource,
+      unrelatedBaseImage,
+    ]);
+    const additionalRevision = evaluateProvenancePolicy(policy, [
+      expectedSource,
+      unexpectedSource,
+    ]);
+    const wrongRevisionOnly = evaluateProvenancePolicy(policy, [
+      unexpectedSource,
+      unrelatedBaseImage,
+    ]);
+
+    expect(valid.error).toBeUndefined();
+    expect(valid.status).toBe(0);
+    expect(additionalRevision.status).not.toBe(0);
+    expect(wrongRevisionOnly.status).not.toBe(0);
+  });
+
   it("runs both runtime and Chromium contracts against the digest on exactly two platforms", () => {
     const verify = jobBlock(workflow, "verify");
 
@@ -395,6 +478,30 @@ describe("frontend container publishing workflow", () => {
     expect(attest).toContain('test "$registry_digest" = "$IMAGE_DIGEST"');
   });
 
+  it("records both runtime manifest digests as non-canonical evidence", () => {
+    const verify = jobBlock(workflow, "verify");
+    const attest = jobBlock(workflow, "attest");
+
+    expect(verify).toContain(
+      "runtime_amd64_digest: ${{ steps.verify_image.outputs.amd64_digest }}"
+    );
+    expect(verify).toContain(
+      "runtime_arm64_digest: ${{ steps.verify_image.outputs.arm64_digest }}"
+    );
+    expect(attest).toContain(
+      "RUNTIME_AMD64_DIGEST: ${{ needs.verify.outputs.runtime_amd64_digest }}"
+    );
+    expect(attest).toContain(
+      "RUNTIME_ARM64_DIGEST: ${{ needs.verify.outputs.runtime_arm64_digest }}"
+    );
+    expect(attest).toContain(
+      "linux/amd64 runtime manifest digest (evidence only)"
+    );
+    expect(attest).toContain(
+      "linux/arm64 runtime manifest digest (evidence only)"
+    );
+  });
+
   it("keeps registry writes structurally limited", () => {
     expect(countMatches(workflow, /^\s*push:\s*true\s*$/gmu)).toBe(1);
     expect(countMatches(workflow, /^\s*push-to-registry:\s*true\s*$/gmu)).toBe(
@@ -488,6 +595,41 @@ describe("frontend container publishing workflow", () => {
       "raw manifest write",
       "set -euo pipefail",
       "curl -X PUT manifest\n          set -euo pipefail",
+    ],
+    [
+      "additional branch tag",
+      "tags: ${{ env.CANONICAL_IMAGE }}:${{ steps.published_tag.outputs.tag }}",
+      "tags: ${{ env.CANONICAL_IMAGE }}:${{ steps.published_tag.outputs.tag }},${{ env.CANONICAL_IMAGE }}:main",
+    ],
+    [
+      "additional release tag",
+      "tags: ${{ env.CANONICAL_IMAGE }}:${{ steps.published_tag.outputs.tag }}",
+      "tags: ${{ env.CANONICAL_IMAGE }}:${{ steps.published_tag.outputs.tag }},${{ env.CANONICAL_IMAGE }}:v0.0.1",
+    ],
+    [
+      "additional stable source SHA tag",
+      "tags: ${{ env.CANONICAL_IMAGE }}:${{ steps.published_tag.outputs.tag }}",
+      "tags: ${{ env.CANONICAL_IMAGE }}:${{ steps.published_tag.outputs.tag }},${{ env.CANONICAL_IMAGE }}:${{ github.sha }}",
+    ],
+    [
+      "shell docker push",
+      "set -euo pipefail",
+      'docker push "${CANONICAL_IMAGE}:${PUBLISHED_TAG}"\n          set -euo pipefail',
+    ],
+    [
+      "ORAS registry push",
+      "set -euo pipefail",
+      'oras push "${CANONICAL_IMAGE}:${PUBLISHED_TAG}" artifact\n          set -euo pipefail',
+    ],
+    [
+      "Skopeo registry copy",
+      "set -euo pipefail",
+      'skopeo copy source "docker://${CANONICAL_IMAGE}:${PUBLISHED_TAG}"\n          set -euo pipefail',
+    ],
+    [
+      "custom Buildx push",
+      "set -euo pipefail",
+      "docker buildx build --push .\n          set -euo pipefail",
     ],
   ])("rejects the %s mutation", (_name, searchValue, replacement) => {
     const mutatedWorkflow = replaceRequired(workflow, searchValue, replacement);

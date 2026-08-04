@@ -168,6 +168,9 @@ jobs:
     permissions:
       contents: read
       packages: read
+    outputs:
+      runtime_amd64_digest: ${{ steps.verify_image.outputs.amd64_digest }}
+      runtime_arm64_digest: ${{ steps.verify_image.outputs.arm64_digest }}
     env:
       IMAGE_DIGEST: ${{ needs.publish.outputs.image_digest }}
       IMAGE_CREATED: ${{ needs.publish.outputs.image_created }}
@@ -221,6 +224,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify workflow-built digest and BuildKit attestations
+        id: verify_image
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -279,6 +283,26 @@ jobs:
                 | select((.annotations["vnd.docker.reference.type"] // "") == "attestation-manifest")
                 | .annotations["vnd.docker.reference.digest"]] | sort)
           ' "$manifest_file"
+          runtime_digest() {
+            local architecture=$1
+            jq -er --arg architecture "$architecture" '
+              [.manifests[]
+                | select((.annotations["vnd.docker.reference.type"] // "")
+                    != "attestation-manifest")
+                | select(.platform.os == "linux"
+                    and .platform.architecture == $architecture)
+                | .digest]
+                | if length == 1 then .[0] else empty end
+            ' "$manifest_file"
+          }
+          amd64_digest=$(runtime_digest amd64)
+          arm64_digest=$(runtime_digest arm64)
+          printf '%s\n' "$amd64_digest" | grep -Eq '^sha256:[0-9a-f]{64}$'
+          printf '%s\n' "$arm64_digest" | grep -Eq '^sha256:[0-9a-f]{64}$'
+          {
+            printf 'amd64_digest=%s\n' "$amd64_digest"
+            printf 'arm64_digest=%s\n' "$arm64_digest"
+          } >> "$GITHUB_OUTPUT"
           for platform in linux/amd64 linux/arm64; do
             image_config=$(docker buildx imagetools inspect "$DIGEST_REF" \
               --format "{{json (index .Image \"${platform}\")}}")
@@ -310,8 +334,11 @@ jobs:
                   == "https://github.com/moby/buildkit/blob/master/docs/attestations/slsa-definitions.md"
                 and .runDetails.metadata.buildkit_completeness.request == true
                 and .runDetails.metadata.buildkit_completeness.resolvedDependencies == true
-                and any(.buildDefinition.resolvedDependencies[];
-                  .uri == $source and .digest.sha1 == $revision)
+                and ([.buildDefinition.resolvedDependencies[]
+                  | select(.digest.sha1? != null)]
+                  | length == 1
+                    and .[0].uri == $source
+                    and .[0].digest.sha1 == $revision)
               '
           done
 
@@ -344,6 +371,8 @@ jobs:
     env:
       IMAGE_DIGEST: ${{ needs.publish.outputs.image_digest }}
       PUBLISHED_TAG: ${{ needs.publish.outputs.published_tag }}
+      RUNTIME_AMD64_DIGEST: ${{ needs.verify.outputs.runtime_amd64_digest }}
+      RUNTIME_ARM64_DIGEST: ${{ needs.verify.outputs.runtime_arm64_digest }}
     steps:
       - name: Checkout publishing commit
         id: checkout
@@ -441,12 +470,19 @@ jobs:
 
       - name: Record published image identity
         run: |
+          set -euo pipefail
+          printf '%s\n' "$RUNTIME_AMD64_DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'
+          printf '%s\n' "$RUNTIME_ARM64_DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'
           {
             printf '## Published SecPal frontend image\n\n'
             printf -- "- Source commit: \`%s\`\n" "$GITHUB_SHA"
             printf -- "- Discovery tag: \`%s:%s\`\n" "$CANONICAL_IMAGE" "$PUBLISHED_TAG"
             printf -- "- Canonical digest: \`%s@%s\`\n" "$CANONICAL_IMAGE" "$IMAGE_DIGEST"
             printf -- "- Platforms: \`linux/amd64\`, \`linux/arm64\`\n"
+            printf -- "- linux/amd64 runtime manifest digest (evidence only): \`%s\`\n" \
+              "$RUNTIME_AMD64_DIGEST"
+            printf -- "- linux/arm64 runtime manifest digest (evidence only): \`%s\`\n" \
+              "$RUNTIME_ARM64_DIGEST"
             printf -- '- BuildKit SBOM: verified for both platforms\n'
             printf -- '- BuildKit provenance: verified for both platforms\n'
             printf -- '- Runtime smoke: verified for both platforms\n'

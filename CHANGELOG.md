@@ -80,6 +80,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bound the embedded dependency SPDX document timestamp and namespace to the
   publishing commit through `SOURCE_DATE_EPOCH`, making repeated builds of the
   same source produce identical application SBOM bytes.
+- Required the verified BuildKit provenance to contain exactly one Git source
+  revision, rejected additional tag and registry-write paths in publisher
+  policy coverage, and recorded both runtime-platform manifest digests as
+  non-canonical post-merge evidence.
 - Normalized static artifact, license, Nginx configuration, and entrypoint
   modes inside the image so inherited workspace ACLs cannot make unprivileged
   runtime files unreadable or non-executable despite Dockerfile `COPY --chmod`
