@@ -170,10 +170,6 @@ function assertPinnedGitHubCliPolicy(workflow: string): void {
     "Verify final discovery snapshot and artifact attestation"
   );
   const installCommands = shellScript(install);
-  const verificationCommands = [
-    shellScript(selectedVerification),
-    shellScript(finalVerification),
-  ].join("\n");
   const officialArchiveUrl =
     "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz";
 
@@ -254,14 +250,13 @@ function assertPinnedGitHubCliPolicy(workflow: string): void {
 
   expect(
     countMatches(
-      verificationCommands,
+      attest,
       /"\$PINNED_GH" attestation verify "oci:\/\/\$\{DIGEST_REF\}"/gu
     )
   ).toBe(2);
-  expect(verificationCommands).not.toMatch(
-    /(?:^|\n)\s*gh attestation verify/gu
-  );
-  expect(`${installCommands}\n${verificationCommands}`).not.toMatch(
+  expect(countMatches(attest, /"\$PINNED_GH" attestation verify/gu)).toBe(3);
+  expect(countMatches(attest, /attestation verify/gu)).toBe(3);
+  expect(attest).not.toMatch(
     /command -v gh|\/usr\/bin\/gh|gh\s+\|\||\|\|\s*"\$PINNED_GH"|releases\/latest|apt.*install.*gh|brew.*install.*gh|snap.*install.*gh/iu
   );
 
@@ -992,6 +987,20 @@ describe("frontend container publishing workflow", () => {
           value,
           '"$PINNED_GH" attestation verify "oci://${DIGEST_REF}"',
           'gh attestation verify "oci://${DIGEST_REF}"'
+        ),
+    ],
+    [
+      "additional runner GitHub CLI verification",
+      (value) =>
+        replaceRequired(
+          value,
+          "      - name: Verify selected GitHub artifact attestation",
+          [
+            "      - name: Verify with runner GitHub CLI",
+            '        run: gh attestation verify "oci://${CANONICAL_IMAGE}@${IMAGE_DIGEST}"',
+            "",
+            "      - name: Verify selected GitHub artifact attestation",
+          ].join("\n")
         ),
     ],
     [

@@ -89,6 +89,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   actionable error when its required `jq` executable is unavailable.
 - Pinned the GitHub CLI used for frontend artifact-attestation verification to
   version 2.97.0 and verified the official release archive checksum before use.
+- Extended the frontend publisher policy tests to reject any additional
+  attestation verification that bypasses the pinned GitHub CLI.
 - Normalized static artifact, license, Nginx configuration, and entrypoint
   modes inside the image so inherited workspace ACLs cannot make unprivileged
   runtime files unreadable or non-executable despite Dockerfile `COPY --chmod`
