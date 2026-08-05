@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: MIT
 
+import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
@@ -47,6 +48,32 @@ function normalizedLicense(license) {
     : "NOASSERTION";
 }
 
+function resolveCreationDate() {
+  const sourceDateEpoch = process.env.SOURCE_DATE_EPOCH;
+
+  if (sourceDateEpoch === undefined || sourceDateEpoch === "") {
+    return new Date();
+  }
+
+  if (!/^(0|[1-9][0-9]*)$/u.test(sourceDateEpoch)) {
+    throw new Error("SOURCE_DATE_EPOCH must be a non-negative integer");
+  }
+
+  const epochSeconds = Number(sourceDateEpoch);
+  const epochMilliseconds = epochSeconds * 1000;
+  const creationDate = new Date(epochMilliseconds);
+
+  if (
+    !Number.isSafeInteger(epochSeconds) ||
+    !Number.isSafeInteger(epochMilliseconds) ||
+    Number.isNaN(creationDate.getTime())
+  ) {
+    throw new Error("SOURCE_DATE_EPOCH is outside the supported date range");
+  }
+
+  return creationDate;
+}
+
 const packages = Object.entries(packageLock.packages ?? {})
   .filter(([, packageData]) => packageData.version)
   .map(([packagePath, packageData], index) => {
@@ -65,14 +92,16 @@ const packages = Object.entries(packageLock.packages ?? {})
     };
   });
 
+const creationDate = resolveCreationDate();
+
 const sbom = {
   SPDXID: "SPDXRef-DOCUMENT",
   creationInfo: {
-    created: new Date().toISOString(),
+    created: creationDate.toISOString(),
     creators: ["Tool: SecPal lockfile SPDX generator"],
   },
   dataLicense: "CC0-1.0",
-  documentNamespace: `https://spdx.org/spdxdocs/${toSpdxIdPart(packageLock.name ?? "application")}-${Date.now()}`,
+  documentNamespace: "",
   name: `${packageLock.name ?? "application"} dependency inventory`,
   packages,
   relationships: packages.map(({ SPDXID }) => ({
@@ -82,6 +111,11 @@ const sbom = {
   })),
   spdxVersion: "SPDX-2.3",
 };
+
+const documentDigest = createHash("sha256")
+  .update(JSON.stringify(sbom))
+  .digest("hex");
+sbom.documentNamespace = `https://spdx.org/spdxdocs/${toSpdxIdPart(packageLock.name ?? "application")}-${documentDigest}`;
 
 mkdirSync(outputDirectory, { recursive: true });
 writeFileSync(

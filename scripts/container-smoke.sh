@@ -10,8 +10,22 @@ IMAGE_TAG=${SECPAL_CONTAINER_IMAGE:-$DEFAULT_IMAGE_TAG}
 CONTAINER_PREFIX="secpal-frontend-contract-$$"
 CONTAINER_A="${CONTAINER_PREFIX}-a"
 CONTAINER_B="${CONTAINER_PREFIX}-b"
-TEMP_DIR=$(mktemp -d)
 CONTAINERS=()
+PLATFORM_ARGS=()
+
+case ${SECPAL_CONTAINER_PLATFORM:-} in
+  "") ;;
+  linux/amd64 | linux/arm64)
+    PLATFORM_ARGS+=(--platform "$SECPAL_CONTAINER_PLATFORM")
+    ;;
+  *)
+    printf 'ERROR: unsupported container platform: %s\n' \
+      "$SECPAL_CONTAINER_PLATFORM" >&2
+    exit 1
+    ;;
+esac
+
+TEMP_DIR=$(mktemp -d)
 
 cleanup() {
   for container in "${CONTAINERS[@]}"; do
@@ -27,7 +41,7 @@ fail() {
 }
 
 if [ "${SECPAL_CONTAINER_SKIP_BUILD:-0}" != "1" ]; then
-  docker build \
+  docker build "${PLATFORM_ARGS[@]}" \
     --pull \
     --build-arg SECPAL_IMAGE_REVISION="${GITHUB_SHA:-local-test}" \
     --build-arg SECPAL_IMAGE_VERSION="${SECPAL_IMAGE_VERSION:-0.0.1-local}" \
@@ -42,7 +56,7 @@ start_container() {
   local name=$1
   local api_origin=$2
 
-  docker run \
+  docker run "${PLATFORM_ARGS[@]}" \
     --detach \
     --name "$name" \
     --read-only \
@@ -209,7 +223,7 @@ assert_header "$PORT_A" "/THIRD-PARTY-NOTICES.md" '^Content-Type: text/markdown'
 assert_header "$PORT_A" "/" '^X-Content-Type-Options: nosniff$'
 assert_header "$PORT_A" "/runtime-config.js" '^X-Frame-Options: DENY$'
 
-docker run --rm --entrypoint /bin/sh "$IMAGE_TAG" -c '
+docker run "${PLATFORM_ARGS[@]}" --rm --entrypoint /bin/sh "$IMAGE_TAG" -c '
   ! command -v node >/dev/null 2>&1
   ! command -v npm >/dev/null 2>&1
   for path in /src /tests /node_modules /.git /package-lock.json /vite.config.ts /coverage /playwright-report; do
@@ -232,7 +246,8 @@ valid_origins=(
   "https://xn--bcher-kva.example"
 )
 for origin in "${valid_origins[@]}"; do
-  docker run --rm --env "SECPAL_API_URL=$origin" "$IMAGE_TAG" true >/dev/null 2>&1 ||
+  docker run "${PLATFORM_ARGS[@]}" --rm \
+    --env "SECPAL_API_URL=$origin" "$IMAGE_TAG" true >/dev/null 2>&1 ||
     fail "valid origin was rejected"
 done
 
@@ -272,14 +287,16 @@ invalid_origins=(
   "https://api.example.com:"
 )
 
-if docker run --rm "$IMAGE_TAG" true >"$TEMP_DIR/invalid.log" 2>&1; then
+if docker run "${PLATFORM_ARGS[@]}" --rm \
+  "$IMAGE_TAG" true >"$TEMP_DIR/invalid.log" 2>&1; then
   fail "container started without SECPAL_API_URL"
 fi
 grep -Fq 'SECPAL_API_URL must be an exact ASCII HTTPS origin' "$TEMP_DIR/invalid.log" ||
   fail "missing-value error did not describe the origin contract"
 
 for origin in "${invalid_origins[@]}"; do
-  if docker run --rm --env "SECPAL_API_URL=$origin" "$IMAGE_TAG" true \
+  if docker run "${PLATFORM_ARGS[@]}" --rm \
+    --env "SECPAL_API_URL=$origin" "$IMAGE_TAG" true \
     >"$TEMP_DIR/invalid.log" 2>&1; then
     fail "container accepted an invalid origin"
   fi

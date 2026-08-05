@@ -1,7 +1,9 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -29,6 +31,9 @@ describe("frontend container source contract", () => {
       "COPY package.json package-lock.json .npmrc ./"
     );
     expect(dockerfile).toContain("RUN npm run build:web");
+    expect(dockerfile).toMatch(
+      /RUN find \/usr\/share\/nginx\/html \/usr\/share\/licenses\/secpal-frontend[^]*-type f -exec chmod 0444[^]*&& chmod 0444[^]*&& chmod 0555 \/usr\/local\/bin\/secpal-entrypoint/u
+    );
     expect(dockerfile).toContain("USER 101:101");
     expect(dockerfile).toContain("EXPOSE 8080");
     expect(dockerfile).not.toContain(
@@ -136,5 +141,49 @@ describe("frontend container source contract", () => {
     expect(workflow).not.toMatch(
       /packages:\s*write|id-token:\s*write|docker\s+push|buildx\s+--push/iu
     );
+  });
+
+  it.each(["scripts/container-smoke.sh", "scripts/container-browser.sh"])(
+    "%s reports the rejected container platform",
+    (script) => {
+      const unsupportedPlatform = "linux/riscv64";
+      const result = spawnSync("bash", [script], {
+        cwd: repoRoot,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          SECPAL_CONTAINER_PLATFORM: unsupportedPlatform,
+        },
+      });
+
+      expect(result.error).toBeUndefined();
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(
+        `ERROR: unsupported container platform: ${unsupportedPlatform}`
+      );
+    }
+  );
+
+  it("validates the smoke platform before allocating temporary resources", () => {
+    const temporaryRoot = mkdtempSync(
+      path.join(tmpdir(), "secpal-invalid-platform-")
+    );
+
+    try {
+      const result = spawnSync("bash", ["scripts/container-smoke.sh"], {
+        cwd: repoRoot,
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          SECPAL_CONTAINER_PLATFORM: "linux/riscv64",
+          TMPDIR: temporaryRoot,
+        },
+      });
+
+      expect(result.status).toBe(1);
+      expect(readdirSync(temporaryRoot)).toEqual([]);
+    } finally {
+      rmSync(temporaryRoot, { recursive: true, force: true });
+    }
   });
 });

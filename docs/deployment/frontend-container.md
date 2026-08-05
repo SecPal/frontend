@@ -26,6 +26,60 @@ including TypeScript, Vite's PWA `injectManifest` build, dependency SBOM, third-
 party notices, and license artifacts. It does not introduce a second
 container-specific application build.
 
+## Published Image Identity
+
+The only official image is:
+
+```text
+ghcr.io/secpal/frontend
+```
+
+The only canonical trust, deployment, update, and rollback identity is the OCI
+index digest:
+
+```text
+ghcr.io/secpal/frontend@sha256:<oci-index-digest>
+```
+
+Each successful publisher run creates exactly one discovery tag:
+
+```text
+build-<40-character-source-sha>-<run-id>-<run-attempt>
+```
+
+The discovery tag locates the output of one workflow attempt. It is not a
+deployment contract, rollback contract, or trust anchor. It is also not
+technically immutable against another registry writer with sufficient
+permissions. Consumers must record and use the verified OCI index digest.
+
+The publisher runs only after a push to `main`, always rebuilds the selected
+source commit, and publishes exactly `linux/amd64` and `linux/arm64`. The build
+uses the commit timestamp for `org.opencontainers.image.created` and combines
+the package version with the full source commit as
+`<package-version>+git.<full-source-sha>`.
+
+For both platforms the workflow verifies all OCI labels, a non-empty BuildKit
+SPDX SBOM, and SLSA v1 provenance in `mode=max` bound to the exact source commit
+and repository build context. It hashes the exact OCI index response bytes,
+compares the result and the registry `Docker-Content-Digest` header with the
+Buildx digest, runs the complete container and Chromium contracts against the
+digest reference, and creates a GitHub Artifact Attestation for that digest.
+The attestation verification binds the repository, publisher workflow,
+`refs/heads/main`, source commit, signer commit, and GitHub-hosted runner.
+
+This image contains only the browser Web/PWA artifact. It does not publish
+Android or iOS artifacts. Its Nginx runtime remains an unprivileged `101:101`
+static reference server without Node.js; deployments supply `SECPAL_API_URL`
+only when the container starts. TLS termination and public-edge controls remain
+deployment responsibilities.
+
+Frontend image publication is implemented but not yet operationally verified.
+After merge, operators must record the successful publisher run and complete
+the package linkage, public-visibility, anonymous digest-pull, final discovery
+snapshot, and final attestation checks. Digest consumption in
+`SecPal/deployment` remains a separate follow-up, so Phase C remains in
+progress.
+
 ## Run
 
 `SECPAL_API_URL` is required and must be one exact ASCII HTTPS origin. Paths,
@@ -135,5 +189,6 @@ manifest digest. To update a pin:
 4. update the tag and digest together;
 5. run `npm run test:container` and `npm run test:e2e:container`.
 
-The image is built and validated locally and in CI. This repository does not
-publish it to a registry yet.
+Pull-request CI continues to build and validate the image locally without
+registry credentials or write effects. Registry publication occurs only in the
+push-triggered publisher after merge to `main`.
