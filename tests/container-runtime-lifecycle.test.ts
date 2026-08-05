@@ -21,6 +21,8 @@ const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   ".."
 );
+const canonicalFakeImageReference =
+  "ghcr.io/secpal/frontend@sha256:" + "0".repeat(64);
 const temporaryRoots: string[] = [];
 
 interface FakeRuntime {
@@ -305,7 +307,7 @@ describe("container runtime lifecycle", () => {
       "bash",
       ["scripts/container-smoke.sh"],
       {
-        SECPAL_CONTAINER_IMAGE: "example.invalid/frontend@sha256:fake",
+        SECPAL_CONTAINER_IMAGE: canonicalFakeImageReference,
         SECPAL_CONTAINER_SKIP_BUILD: "1",
       }
     );
@@ -336,7 +338,7 @@ describe("container runtime lifecycle", () => {
     "does not inspect or remove a container it did not create in %s",
     (script) => {
       const execution = runCommand("name-conflict", "bash", [script], {
-        SECPAL_CONTAINER_IMAGE: "example.invalid/frontend@sha256:fake",
+        SECPAL_CONTAINER_IMAGE: canonicalFakeImageReference,
         SECPAL_CONTAINER_SKIP_BUILD: "1",
       });
 
@@ -362,7 +364,7 @@ describe("container runtime lifecycle", () => {
     "diagnoses and removes only its created container when startup fails in %s",
     (script) => {
       const execution = runCommand("start-fails", "bash", [script], {
-        SECPAL_CONTAINER_IMAGE: "example.invalid/frontend@sha256:fake",
+        SECPAL_CONTAINER_IMAGE: canonicalFakeImageReference,
         SECPAL_CONTAINER_SKIP_BUILD: "1",
       });
 
@@ -452,13 +454,19 @@ describe("container runtime lifecycle", () => {
       "bash",
       ["scripts/container-browser.sh"],
       {
-        SECPAL_CONTAINER_IMAGE: "example.invalid/frontend@sha256:fake",
+        SECPAL_CONTAINER_IMAGE: canonicalFakeImageReference,
         SECPAL_CONTAINER_SKIP_BUILD: "1",
       }
     );
 
     expect(execution.result.error).toBeUndefined();
     expect(execution.result.status).toBe(0);
+    expect(execution.calls).toContainEqual(
+      expect.stringContaining(canonicalFakeImageReference)
+    );
+    expect(execution.calls).toContainEqual(
+      expect.stringContaining("--env SECPAL_API_URL=https://api.secpal.dev")
+    );
     expect(
       execution.calls.filter((call) => call.startsWith("port "))
     ).toHaveLength(3);

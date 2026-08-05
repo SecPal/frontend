@@ -60,7 +60,7 @@ if ! CONTAINER_ID=$(docker create "${PLATFORM_ARGS[@]}" \
   --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m \
   --cap-drop=ALL \
   --security-opt=no-new-privileges:true \
-  --env SECPAL_API_URL=https://api.container.example \
+  --env SECPAL_API_URL=https://api.secpal.dev \
   --publish 127.0.0.1::8080 \
   "$IMAGE_TAG"); then
   printf 'ERROR: could not create frontend browser container %s\n' \
