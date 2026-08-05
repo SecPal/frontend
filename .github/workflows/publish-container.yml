@@ -45,6 +45,7 @@ jobs:
       - name: Run container publishing and source policy tests
         run: >-
           npm exec -- vitest run
+          tests/container-runtime-lifecycle.test.ts
           tests/container-publishing-workflow.test.ts
           tests/container-contract.test.ts
 
@@ -58,6 +59,7 @@ jobs:
         run: >-
           docker run --rm -v "$PWD:/mnt:ro" -w /mnt
           koalaman/shellcheck:v0.10.0@sha256:2097951f02e735b613f4a34de20c40f937a6c8f18ecb170612c88c34517221fb
+          scripts/container-runtime.sh
           scripts/container-smoke.sh
           scripts/container-browser.sh
           docker/secpal-entrypoint.sh
