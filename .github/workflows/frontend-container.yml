@@ -42,7 +42,8 @@ jobs:
 
       - name: Verify source container contracts
         run: >-
-          npm exec -- vitest run tests/container-contract.test.ts
+          npm exec -- vitest run tests/container-runtime-lifecycle.test.ts
+          tests/container-contract.test.ts
           src/config.test.ts src/lib/pwaRuntimeCaching.test.ts
 
       - name: Build and exercise hardened frontend image

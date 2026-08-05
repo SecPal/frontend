@@ -1,0 +1,354 @@
+// SPDX-FileCopyrightText: 2026 SecPal Contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+
+import { spawnSync } from "node:child_process";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { afterEach, describe, expect, it } from "vitest";
+
+const repoRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  ".."
+);
+const temporaryRoots: string[] = [];
+
+interface FakeRuntime {
+  binDirectory: string;
+  stateDirectory: string;
+  temporaryDirectory: string;
+}
+
+interface RuntimeResult {
+  calls: string[];
+  removedContainers: string[];
+  result: ReturnType<typeof spawnSync>;
+  runtime: FakeRuntime;
+}
+
+function executable(filePath: string, contents: string): void {
+  writeFileSync(filePath, contents, "utf8");
+  chmodSync(filePath, 0o755);
+}
+
+function createFakeRuntime(): FakeRuntime {
+  const root = mkdtempSync(path.join(tmpdir(), "secpal-container-lifecycle-"));
+  const binDirectory = path.join(root, "bin");
+  const stateDirectory = path.join(root, "state");
+  const temporaryDirectory = path.join(root, "tmp");
+
+  temporaryRoots.push(root);
+  mkdirSync(binDirectory);
+  mkdirSync(stateDirectory);
+  mkdirSync(temporaryDirectory);
+
+  executable(
+    path.join(binDirectory, "docker"),
+    `#!/usr/bin/env bash
+set -u
+
+printf '%s\n' "$*" >>"$FAKE_DOCKER_STATE_DIR/calls"
+
+command_name=\${1:-}
+shift || true
+
+case "$command_name" in
+  image)
+    if [ "\${1:-}" = "inspect" ]; then
+      printf 'sha256:fake-image\n'
+      exit 0
+    fi
+    ;;
+  run | restart | exec | stop)
+    exit 0
+    ;;
+  port)
+    count_file="$FAKE_DOCKER_STATE_DIR/port-count"
+    count=0
+    if [ -f "$count_file" ]; then
+      count=$(<"$count_file")
+    fi
+    count=$((count + 1))
+    printf '%s\n' "$count" >"$count_file"
+
+    if [ "$FAKE_DOCKER_SCENARIO" = "delayed" ] && [ "$count" -ge 3 ]; then
+      printf '127.0.0.1:49152\n'
+      exit 0
+    fi
+    exit 1
+    ;;
+  inspect)
+    format=\${2:-}
+    if [ "$FAKE_DOCKER_SCENARIO" = "inspect-fails" ]; then
+      exit 125
+    fi
+
+    case "$format" in
+      '{{.State.Status}}')
+        if [ "$FAKE_DOCKER_SCENARIO" = "exited" ]; then
+          printf 'exited\n'
+        else
+          printf 'running\n'
+        fi
+        ;;
+      status=*)
+        if [ "$FAKE_DOCKER_SCENARIO" = "exited" ]; then
+          printf 'status=exited running=false exit=1 error="failed to create task" ports=null\n'
+        else
+          printf 'status=running running=true exit=0 error="" ports=null\n'
+        fi
+        ;;
+      '{{.Config.User}}')
+        printf '101:101\n'
+        ;;
+      '{{.State.Running}}')
+        printf 'false\n'
+        ;;
+      *)
+        exit 125
+        ;;
+    esac
+    ;;
+  logs)
+    if [ "$FAKE_DOCKER_SCENARIO" = "logs-fail" ]; then
+      exit 125
+    fi
+    printf 'nginx: [emerg] controlled startup error\n'
+    ;;
+  rm)
+    printf '%s\n' "\${*: -1}" >>"$FAKE_DOCKER_STATE_DIR/removed"
+    ;;
+esac
+`
+  );
+
+  executable(path.join(binDirectory, "curl"), "#!/bin/sh\nexit 0\n");
+  executable(path.join(binDirectory, "npm"), "#!/bin/sh\nexit 0\n");
+
+  return { binDirectory, stateDirectory, temporaryDirectory };
+}
+
+function readLines(filePath: string): string[] {
+  if (!existsSync(filePath)) {
+    return [];
+  }
+
+  return readFileSync(filePath, "utf8").trim().split("\n").filter(Boolean);
+}
+
+function runCommand(
+  scenario: string,
+  command: string,
+  args: string[],
+  extraEnvironment: NodeJS.ProcessEnv = {}
+): RuntimeResult {
+  const runtime = createFakeRuntime();
+  const result = spawnSync(command, args, {
+    cwd: repoRoot,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      ...extraEnvironment,
+      FAKE_DOCKER_SCENARIO: scenario,
+      FAKE_DOCKER_STATE_DIR: runtime.stateDirectory,
+      PATH: `${runtime.binDirectory}:${process.env.PATH ?? ""}`,
+      TMPDIR: runtime.temporaryDirectory,
+    },
+    timeout: 5_000,
+  });
+
+  return {
+    calls: readLines(path.join(runtime.stateDirectory, "calls")),
+    removedContainers: readLines(path.join(runtime.stateDirectory, "removed")),
+    result,
+    runtime,
+  };
+}
+
+function runHelper(scenario: string, attempts = 3): RuntimeResult {
+  const harness = `
+set -euo pipefail
+RUNTIME_TEMP_DIR=$(mktemp -d)
+cleanup() {
+  docker rm --force owned-container >/dev/null 2>&1 || true
+  rm -rf "$RUNTIME_TEMP_DIR"
+}
+trap cleanup EXIT HUP INT TERM
+source "$REPO_ROOT/scripts/container-runtime.sh"
+wait_for_container_port owned-container 8080 "$ATTEMPTS" 0
+`;
+
+  return runCommand(scenario, "bash", ["-c", harness], {
+    ATTEMPTS: String(attempts),
+    REPO_ROOT: repoRoot,
+  });
+}
+
+function expectOwnedContainerCleanup(execution: RuntimeResult): void {
+  expect(execution.removedContainers).toEqual(["owned-container"]);
+  expect(readdirSync(execution.runtime.temporaryDirectory)).toEqual([]);
+}
+
+afterEach(() => {
+  for (const root of temporaryRoots.splice(0)) {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+describe("container runtime lifecycle", () => {
+  it("waits for delayed loopback port assignment and returns the port", () => {
+    const execution = runHelper("delayed");
+
+    expect(execution.result.error).toBeUndefined();
+    expect(execution.result.status).toBe(0);
+    expect(execution.result.stdout).toBe("49152\n");
+    expect(
+      execution.calls.filter((call) => call.startsWith("port owned-container"))
+    ).toHaveLength(3);
+    expect(
+      execution.calls.filter((call) =>
+        call.includes("inspect --format {{.State.Status}} owned-container")
+      )
+    ).toHaveLength(2);
+    expectOwnedContainerCleanup(execution);
+  });
+
+  it("reports an exited smoke container and its startup logs before cleanup", () => {
+    const execution = runCommand(
+      "exited",
+      "bash",
+      ["scripts/container-smoke.sh"],
+      {
+        SECPAL_CONTAINER_IMAGE: "example.invalid/frontend@sha256:fake",
+        SECPAL_CONTAINER_SKIP_BUILD: "1",
+      }
+    );
+
+    expect(execution.result.error).toBeUndefined();
+    expect(execution.result.status).toBe(1);
+    expect(execution.result.stderr).toContain(
+      "container exited before publishing 8080/tcp"
+    );
+    expect(execution.result.stderr).toContain(
+      'status=exited running=false exit=1 error="failed to create task" ports=null'
+    );
+    expect(execution.result.stderr).toContain(
+      "nginx: [emerg] controlled startup error"
+    );
+    expect(execution.result.stderr).not.toContain("template parsing error");
+    expect(execution.removedContainers).toHaveLength(2);
+    expect(
+      execution.removedContainers.every((name) =>
+        name.startsWith("secpal-frontend-contract-")
+      )
+    ).toBe(true);
+    expect(execution.removedContainers).not.toContain("foreign-container");
+    expect(readdirSync(execution.runtime.temporaryDirectory)).toEqual([]);
+  });
+
+  it("fails closed when Docker cannot inspect container state", () => {
+    const execution = runHelper("inspect-fails");
+
+    expect(execution.result.status).toBe(1);
+    expect(execution.result.stderr).toContain(
+      "ERROR: could not inspect container state"
+    );
+    expect(execution.result.stderr).toContain(
+      "docker inspect failed for owned-container"
+    );
+    expectOwnedContainerCleanup(execution);
+  });
+
+  it("times out after bounded attempts and prints state and logs", () => {
+    const execution = runHelper("timeout", 4);
+
+    expect(execution.result.status).toBe(1);
+    expect(
+      execution.calls.filter((call) => call.startsWith("port "))
+    ).toHaveLength(4);
+    expect(execution.result.stderr).toContain(
+      "ERROR: container did not publish 8080/tcp before timeout"
+    );
+    expect(execution.result.stderr).toContain(
+      'status=running running=true exit=0 error="" ports=null'
+    );
+    expect(execution.result.stderr).toContain(
+      "nginx: [emerg] controlled startup error"
+    );
+    expectOwnedContainerCleanup(execution);
+  });
+
+  it("preserves the timeout error when container logs also fail", () => {
+    const execution = runHelper("logs-fail", 2);
+    const originalError =
+      "ERROR: container did not publish 8080/tcp before timeout";
+
+    expect(execution.result.status).toBe(1);
+    expect(execution.result.stderr).toContain(originalError);
+    expect(execution.result.stderr).toContain(
+      "docker logs failed for owned-container"
+    );
+    expect(execution.result.stderr.indexOf(originalError)).toBeLessThan(
+      execution.result.stderr.indexOf("docker logs failed for owned-container")
+    );
+    expectOwnedContainerCleanup(execution);
+  });
+
+  it("uses the same bounded lifecycle contract in the browser script", () => {
+    const execution = runCommand(
+      "delayed",
+      "bash",
+      ["scripts/container-browser.sh"],
+      {
+        SECPAL_CONTAINER_IMAGE: "example.invalid/frontend@sha256:fake",
+        SECPAL_CONTAINER_SKIP_BUILD: "1",
+      }
+    );
+
+    expect(execution.result.error).toBeUndefined();
+    expect(execution.result.status).toBe(0);
+    expect(
+      execution.calls.filter((call) => call.startsWith("port "))
+    ).toHaveLength(3);
+    expect(execution.result.stderr).not.toContain("template parsing error");
+    expect(execution.removedContainers).toHaveLength(1);
+    expect(execution.removedContainers[0]).toMatch(
+      /^secpal-frontend-browser-/u
+    );
+  });
+
+  it("removes the fragile nested port template from both active scripts", () => {
+    for (const script of [
+      "scripts/container-smoke.sh",
+      "scripts/container-browser.sh",
+    ]) {
+      const contents = readFileSync(path.join(repoRoot, script), "utf8");
+
+      expect(contents).toContain("container-runtime.sh");
+      expect(contents).not.toContain(
+        '{{(index (index .NetworkSettings.Ports "8080/tcp") 0).HostPort}}'
+      );
+    }
+  });
+
+  it("runs lifecycle regressions in pull-request and publisher validation", () => {
+    for (const workflow of [
+      ".github/workflows/frontend-container.yml",
+      ".github/workflows/publish-container.yml",
+    ]) {
+      expect(readFileSync(path.join(repoRoot, workflow), "utf8")).toContain(
+        "tests/container-runtime-lifecycle.test.ts"
+      );
+    }
+  });
+});

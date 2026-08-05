@@ -5,6 +5,8 @@
 set -euo pipefail
 
 ROOT_DIR=$(git rev-parse --show-toplevel)
+# shellcheck source=scripts/container-runtime.sh
+source "$ROOT_DIR/scripts/container-runtime.sh"
 DEFAULT_IMAGE_TAG=$(node "$ROOT_DIR/scripts/container-test-image-tag.mjs" "$ROOT_DIR")
 IMAGE_TAG=${SECPAL_CONTAINER_IMAGE:-$DEFAULT_IMAGE_TAG}
 CONTAINER_PREFIX="secpal-frontend-contract-$$"
@@ -33,10 +35,18 @@ cleanup() {
   done
   rm -rf "$TEMP_DIR"
 }
-trap cleanup EXIT HUP INT TERM
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 fail() {
-  echo "ERROR: $*" >&2
+  local container
+
+  printf 'ERROR: %s\n' "$*" >&2
+  for container in "${CONTAINERS[@]}"; do
+    print_container_diagnostics "$container"
+  done
   exit 1
 }
 
@@ -56,7 +66,8 @@ start_container() {
   local name=$1
   local api_origin=$2
 
-  docker run "${PLATFORM_ARGS[@]}" \
+  CONTAINERS+=("$name")
+  if ! docker run "${PLATFORM_ARGS[@]}" \
     --detach \
     --name "$name" \
     --read-only \
@@ -66,28 +77,18 @@ start_container() {
     --env "SECPAL_API_URL=$api_origin" \
     --env "SECPAL_SMOKE_SENTINEL=must-not-be-serialized" \
     --publish 127.0.0.1::8080 \
-    "$IMAGE_TAG" >/dev/null
-  CONTAINERS+=("$name")
+    "$IMAGE_TAG" >/dev/null; then
+    fail_with_container_diagnostics "$name" "could not start container"
+    return 1
+  fi
 }
 
 container_port() {
-  docker inspect \
-    --format '{{(index (index .NetworkSettings.Ports "8080/tcp") 0).HostPort}}' \
-    "$1"
+  wait_for_container_port "$1" 8080
 }
 
 wait_for_live() {
-  local port=$1
-
-  for _attempt in $(seq 1 100); do
-    if curl --fail --silent --show-error \
-      "http://127.0.0.1:${port}/health/live" >/dev/null 2>&1; then
-      return
-    fi
-    sleep 0.1
-  done
-
-  fail "container did not expose /health/live"
+  wait_for_container_live "$1" "$2"
 }
 
 assert_status() {
@@ -126,8 +127,8 @@ start_container "$CONTAINER_B" "https://api.customer-b.example"
 
 PORT_A=$(container_port "$CONTAINER_A")
 PORT_B=$(container_port "$CONTAINER_B")
-wait_for_live "$PORT_A"
-wait_for_live "$PORT_B"
+wait_for_live "$CONTAINER_A" "$PORT_A"
+wait_for_live "$CONTAINER_B" "$PORT_B"
 
 [ "$(docker inspect --format '{{.Config.User}}' "$CONTAINER_A")" = "101:101" ] ||
   fail "image user is not 101:101"
@@ -135,6 +136,11 @@ wait_for_live "$PORT_B"
   fail "running process is root"
 docker exec "$CONTAINER_A" test ! -w /usr/share/nginx/html/index.html ||
   fail "static Web artifact is writable by the runtime user"
+[ "$(docker exec "$CONTAINER_A" stat -c '%a' /etc/nginx/snippets)" = "555" ] ||
+  fail "Nginx snippets directory mode is not 0555"
+docker exec "$CONTAINER_A" \
+  test -r /etc/nginx/snippets/secpal-security-headers.conf ||
+  fail "Nginx security headers are not readable by the runtime user"
 
 assert_status "$PORT_A" "/health/live" "200"
 [ "$(curl --fail --silent "http://127.0.0.1:${PORT_A}/health/live")" = '{"status":"ok"}' ] ||
@@ -181,7 +187,7 @@ cmp "$TEMP_DIR/style-${PORT_A}.css" "$TEMP_DIR/style-${PORT_B}.css" >/dev/null |
 
 docker restart "$CONTAINER_A" >/dev/null
 PORT_A=$(container_port "$CONTAINER_A")
-wait_for_live "$PORT_A"
+wait_for_live "$CONTAINER_A" "$PORT_A"
 curl --fail --silent "http://127.0.0.1:${PORT_A}/runtime-config.js" \
   >"$TEMP_DIR/runtime-a-restarted.js"
 cmp "$RUNTIME_A" "$TEMP_DIR/runtime-a-restarted.js" >/dev/null ||

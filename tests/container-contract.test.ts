@@ -32,7 +32,10 @@ describe("frontend container source contract", () => {
     );
     expect(dockerfile).toContain("RUN npm run build:web");
     expect(dockerfile).toMatch(
-      /RUN find \/usr\/share\/nginx\/html \/usr\/share\/licenses\/secpal-frontend[^]*-type f -exec chmod 0444[^]*&& chmod 0444[^]*&& chmod 0555 \/usr\/local\/bin\/secpal-entrypoint/u
+      /RUN find \/usr\/share\/nginx\/html \/usr\/share\/licenses\/secpal-frontend[^]*-type f -exec chmod 0444[^]*&& chmod 0444[^]*&& chmod 0555 \/etc\/nginx\/snippets \/usr\/local\/bin\/secpal-entrypoint/u
+    );
+    expect(dockerfile).toContain(
+      "chmod 0555 /etc/nginx/snippets /usr/local/bin/secpal-entrypoint"
     );
     expect(dockerfile).toContain("USER 101:101");
     expect(dockerfile).toContain("EXPOSE 8080");
@@ -129,8 +132,12 @@ describe("frontend container source contract", () => {
     expect(smokeTest).toContain("--read-only");
     expect(smokeTest).toContain("--cap-drop=ALL");
     expect(smokeTest).toContain("no-new-privileges:true");
+    expect(smokeTest).toContain("Nginx snippets directory mode is not 0555");
+    expect(smokeTest).toContain(
+      "Nginx security headers are not readable by the runtime user"
+    );
     expect(smokeTest).toMatch(
-      /docker restart "\$CONTAINER_A"[^]*PORT_A=\$\(container_port "\$CONTAINER_A"\)[^]*wait_for_live "\$PORT_A"/u
+      /docker restart "\$CONTAINER_A"[^]*PORT_A=\$\(container_port "\$CONTAINER_A"\)[^]*wait_for_live "\$CONTAINER_A" "\$PORT_A"/u
     );
     expect(smokeTest).toContain("source maps");
     expect(smokeTest).toContain("SECPAL_API_URL");

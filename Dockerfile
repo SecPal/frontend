@@ -43,7 +43,7 @@ RUN find /usr/share/nginx/html /usr/share/licenses/secpal-frontend \
       /etc/nginx/nginx.conf \
       /etc/nginx/conf.d/default.conf \
       /etc/nginx/snippets/secpal-security-headers.conf \
-    && chmod 0555 /usr/local/bin/secpal-entrypoint
+    && chmod 0555 /etc/nginx/snippets /usr/local/bin/secpal-entrypoint
 
 USER 101:101
 
