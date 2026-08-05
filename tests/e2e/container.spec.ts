@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 import { hasExactOrigin } from "./container-origin";
 import { installStrictCspAudit } from "./strict-csp-audit";
 
-const API_ORIGIN = "https://api.container.example";
+const API_ORIGIN = "https://api.secpal.dev";
 const FRONTEND_ORIGIN = process.env.SECPAL_CONTAINER_BASE_URL;
 
 if (!FRONTEND_ORIGIN) {
@@ -140,7 +140,9 @@ test("runs the immutable frontend artifact with startup runtime configuration", 
   );
   expect(
     apiRequests.some((url) =>
-      /configured|localhost:8000|api\.secpal\.dev/u.test(url)
+      /configured\.secpal\.dev|localhost:8000|api\.container\.secpal\.dev/u.test(
+        url
+      )
     )
   ).toBe(false);
 

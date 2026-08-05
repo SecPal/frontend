@@ -81,7 +81,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   directory to mode `0555`, and hardened runtime verification with
   ownership-safe container creation plus bounded loopback port and readiness
   waits that report container state, exit status, Docker errors, and startup
-  logs before cleanup.
+  logs before cleanup while keeping the Chromium API-origin contract aligned
+  with the canonical SecPal API host.
 - Bound the embedded dependency SPDX document timestamp to the publishing
   commit through `SOURCE_DATE_EPOCH` and its namespace to the document content,
   making repeated builds of the same source produce identical application SBOM

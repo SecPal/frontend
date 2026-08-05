@@ -477,6 +477,26 @@ describe("container runtime lifecycle", () => {
     );
   });
 
+  it("keeps the browser runtime API origin aligned with the Chromium contract", () => {
+    const browserScript = readFileSync(
+      path.join(repoRoot, "scripts/container-browser.sh"),
+      "utf8"
+    );
+    const browserSpec = readFileSync(
+      path.join(repoRoot, "tests/e2e/container.spec.ts"),
+      "utf8"
+    );
+    const runtimeOrigin = browserScript.match(
+      /--env SECPAL_API_URL=(https:\/\/[^ ]+)/u
+    )?.[1];
+    const expectedOrigin = browserSpec.match(
+      /const API_ORIGIN = "(https:\/\/[^"]+)";/u
+    )?.[1];
+
+    expect(runtimeOrigin).toBe("https://api.secpal.dev");
+    expect(expectedOrigin).toBe(runtimeOrigin);
+  });
+
   it("removes the fragile nested port template from both active scripts", () => {
     for (const script of [
       "scripts/container-smoke.sh",
