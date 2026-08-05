@@ -118,7 +118,8 @@ wait_for_container_live() {
   fi
 
   for ((attempt = 1; attempt <= attempts; attempt++)); do
-    if curl --fail --silent --show-error \
+    if curl --connect-timeout 0.2 --max-time 0.5 \
+      --fail --silent --show-error \
       "http://127.0.0.1:${host_port}/health/live" >/dev/null 2>&1; then
       return 0
     fi

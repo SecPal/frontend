@@ -132,7 +132,32 @@ esac
 `
   );
 
-  executable(path.join(binDirectory, "curl"), "#!/bin/sh\nexit 0\n");
+  executable(
+    path.join(binDirectory, "curl"),
+    `#!/usr/bin/env bash
+set -u
+
+printf 'curl %s\n' "$*" >>"$FAKE_DOCKER_STATE_DIR/calls"
+
+if [ "$FAKE_DOCKER_SCENARIO" = "hanging-health" ]; then
+  request_is_bounded=0
+  while [ "$#" -gt 0 ]; do
+    if [ "$1" = "--max-time" ]; then
+      request_is_bounded=1
+      break
+    fi
+    shift
+  done
+
+  if [ "$request_is_bounded" = "0" ]; then
+    sleep 10
+  fi
+  exit 28
+fi
+
+exit 0
+`
+  );
   executable(path.join(binDirectory, "npm"), "#!/bin/sh\nexit 0\n");
 
   return { binDirectory, stateDirectory, temporaryDirectory };
@@ -186,6 +211,25 @@ cleanup() {
 trap cleanup EXIT HUP INT TERM
 source "$REPO_ROOT/scripts/container-runtime.sh"
 wait_for_container_port owned-container 8080 "$ATTEMPTS" 0
+`;
+
+  return runCommand(scenario, "bash", ["-c", harness], {
+    ATTEMPTS: String(attempts),
+    REPO_ROOT: repoRoot,
+  });
+}
+
+function runHealthHelper(scenario: string, attempts = 2): RuntimeResult {
+  const harness = `
+set -euo pipefail
+RUNTIME_TEMP_DIR=$(mktemp -d)
+cleanup() {
+  docker rm --force owned-container >/dev/null 2>&1 || true
+  rm -rf "$RUNTIME_TEMP_DIR"
+}
+trap cleanup EXIT HUP INT TERM
+source "$REPO_ROOT/scripts/container-runtime.sh"
+wait_for_container_live owned-container 49152 "$ATTEMPTS" 0
 `;
 
   return runCommand(scenario, "bash", ["-c", harness], {
@@ -300,6 +344,26 @@ describe("container runtime lifecycle", () => {
     );
     expect(execution.result.stderr.indexOf(originalError)).toBeLessThan(
       execution.result.stderr.indexOf("docker logs failed for owned-container")
+    );
+    expectOwnedContainerCleanup(execution);
+  });
+
+  it("bounds each readiness request as well as the retry count", () => {
+    const execution = runHealthHelper("hanging-health");
+    const curlCalls = execution.calls.filter((call) =>
+      call.startsWith("curl ")
+    );
+
+    expect(execution.result.error).toBeUndefined();
+    expect(execution.result.status).toBe(1);
+    expect(curlCalls).toHaveLength(2);
+    expect(
+      curlCalls.every((call) =>
+        call.includes("--connect-timeout 0.2 --max-time 0.5")
+      )
+    ).toBe(true);
+    expect(execution.result.stderr).toContain(
+      "ERROR: container did not expose /health/live before timeout"
     );
     expectOwnedContainerCleanup(execution);
   });
