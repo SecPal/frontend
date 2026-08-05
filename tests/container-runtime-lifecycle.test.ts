@@ -69,7 +69,31 @@ case "$command_name" in
       exit 0
     fi
     ;;
-  run | restart | exec | stop)
+  create)
+    if [ "$FAKE_DOCKER_SCENARIO" = "name-conflict" ]; then
+      printf 'docker: Error response from daemon: Conflict. The container name is already in use.\n' >&2
+      exit 125
+    fi
+    while [ "$#" -gt 0 ]; do
+      if [ "$1" = "--name" ]; then
+        printf 'fake-id-%s\n' "$2"
+        exit 0
+      fi
+      shift
+    done
+    exit 125
+    ;;
+  run)
+    exit 0
+    ;;
+  start)
+    if [ "$FAKE_DOCKER_SCENARIO" = "start-fails" ]; then
+      printf 'docker: controlled start failure\n' >&2
+      exit 125
+    fi
+    exit 0
+    ;;
+  restart | exec | stop)
     exit 0
     ;;
   port)
@@ -102,7 +126,11 @@ case "$command_name" in
         fi
         ;;
       status=*)
-        if [ "$FAKE_DOCKER_SCENARIO" = "exited" ]; then
+        if [ "$FAKE_DOCKER_SCENARIO" = "name-conflict" ]; then
+          printf 'status=running running=true exit=0 error="" ports={"foreign":true}\n'
+        elif [ "$FAKE_DOCKER_SCENARIO" = "start-fails" ]; then
+          printf 'status=created running=false exit=0 error="controlled start failure" ports={}\n'
+        elif [ "$FAKE_DOCKER_SCENARIO" = "exited" ]; then
           printf 'status=exited running=false exit=1 error="failed to create task" ports=null\n'
         else
           printf 'status=running running=true exit=0 error="" ports=null\n'
@@ -122,6 +150,10 @@ case "$command_name" in
   logs)
     if [ "$FAKE_DOCKER_SCENARIO" = "logs-fail" ]; then
       exit 125
+    fi
+    if [ "$FAKE_DOCKER_SCENARIO" = "name-conflict" ]; then
+      printf 'foreign-container-log-must-not-be-read\n'
+      exit 0
     fi
     printf 'nginx: [emerg] controlled startup error\n'
     ;;
@@ -293,12 +325,58 @@ describe("container runtime lifecycle", () => {
     expect(execution.removedContainers).toHaveLength(2);
     expect(
       execution.removedContainers.every((name) =>
-        name.startsWith("secpal-frontend-contract-")
+        name.startsWith("fake-id-secpal-frontend-contract-")
       )
     ).toBe(true);
     expect(execution.removedContainers).not.toContain("foreign-container");
     expect(readdirSync(execution.runtime.temporaryDirectory)).toEqual([]);
   });
+
+  it.each(["scripts/container-smoke.sh", "scripts/container-browser.sh"])(
+    "does not inspect or remove a container it did not create in %s",
+    (script) => {
+      const execution = runCommand("name-conflict", "bash", [script], {
+        SECPAL_CONTAINER_IMAGE: "example.invalid/frontend@sha256:fake",
+        SECPAL_CONTAINER_SKIP_BUILD: "1",
+      });
+
+      expect(execution.result.error).toBeUndefined();
+      expect(execution.result.status).toBe(1);
+      expect(execution.result.stderr).toContain(
+        "container name is already in use"
+      );
+      expect(execution.result.stderr).not.toContain(
+        "foreign-container-log-must-not-be-read"
+      );
+      expect(execution.calls).not.toContainEqual(
+        expect.stringMatching(/^inspect --format status=/u)
+      );
+      expect(execution.calls).not.toContainEqual(
+        expect.stringMatching(/^logs /u)
+      );
+      expect(execution.removedContainers).toEqual([]);
+    }
+  );
+
+  it.each(["scripts/container-smoke.sh", "scripts/container-browser.sh"])(
+    "diagnoses and removes only its created container when startup fails in %s",
+    (script) => {
+      const execution = runCommand("start-fails", "bash", [script], {
+        SECPAL_CONTAINER_IMAGE: "example.invalid/frontend@sha256:fake",
+        SECPAL_CONTAINER_SKIP_BUILD: "1",
+      });
+
+      expect(execution.result.error).toBeUndefined();
+      expect(execution.result.status).toBe(1);
+      expect(execution.result.stderr).toContain("controlled start failure");
+      expect(execution.result.stderr).toContain("could not start");
+      expect(execution.result.stderr).toContain("status=created running=false");
+      expect(execution.removedContainers).toHaveLength(1);
+      expect(execution.removedContainers[0]).toMatch(
+        /^fake-id-secpal-frontend-(?:contract|browser)-/u
+      );
+    }
+  );
 
   it("fails closed when Docker cannot inspect container state", () => {
     const execution = runHelper("inspect-fails");
@@ -387,7 +465,7 @@ describe("container runtime lifecycle", () => {
     expect(execution.result.stderr).not.toContain("template parsing error");
     expect(execution.removedContainers).toHaveLength(1);
     expect(execution.removedContainers[0]).toMatch(
-      /^secpal-frontend-browser-/u
+      /^fake-id-secpal-frontend-browser-/u
     );
   });
 

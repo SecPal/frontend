@@ -6,12 +6,14 @@ set -euo pipefail
 
 ROOT_DIR=$(git rev-parse --show-toplevel)
 # shellcheck source=scripts/container-runtime.sh
+# shellcheck disable=SC1091
 source "$ROOT_DIR/scripts/container-runtime.sh"
 DEFAULT_IMAGE_TAG=$(node "$ROOT_DIR/scripts/container-test-image-tag.mjs" "$ROOT_DIR")
 IMAGE_TAG=${SECPAL_CONTAINER_IMAGE:-$DEFAULT_IMAGE_TAG}
 CONTAINER_LABEL="secpal.dev/test-role=frontend-container-browser"
 RUN_ID=$(node -e 'process.stdout.write(require("node:crypto").randomUUID())')
 CONTAINER_NAME="secpal-frontend-browser-${RUN_ID}"
+CONTAINER_ID=
 PLATFORM_ARGS=()
 
 case ${SECPAL_CONTAINER_PLATFORM:-} in
@@ -27,7 +29,9 @@ case ${SECPAL_CONTAINER_PLATFORM:-} in
 esac
 
 cleanup_container() {
-  docker rm --force "$CONTAINER_NAME" >/dev/null 2>&1 || true
+  if [ -n "$CONTAINER_ID" ]; then
+    docker rm --force "$CONTAINER_ID" >/dev/null 2>&1 || true
+  fi
 }
 
 handle_signal() {
@@ -48,8 +52,7 @@ elif ! docker image inspect "$IMAGE_TAG" >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! docker run "${PLATFORM_ARGS[@]}" \
-  --detach \
+if ! CONTAINER_ID=$(docker create "${PLATFORM_ARGS[@]}" \
   --name "$CONTAINER_NAME" \
   --label "$CONTAINER_LABEL" \
   --label "secpal.dev/test-run=$RUN_ID" \
@@ -59,23 +62,29 @@ if ! docker run "${PLATFORM_ARGS[@]}" \
   --security-opt=no-new-privileges:true \
   --env SECPAL_API_URL=https://api.container.example \
   --publish 127.0.0.1::8080 \
-  "$IMAGE_TAG" >/dev/null; then
+  "$IMAGE_TAG"); then
+  printf 'ERROR: could not create frontend browser container %s\n' \
+    "$CONTAINER_NAME" >&2
+  exit 1
+fi
+
+if ! docker start "$CONTAINER_ID" >/dev/null; then
   fail_with_container_diagnostics \
-    "$CONTAINER_NAME" \
+    "$CONTAINER_ID" \
     "could not start frontend browser container"
   exit 1
 fi
 
-CONTAINER_PORT=$(wait_for_container_port "$CONTAINER_NAME" 8080)
+CONTAINER_PORT=$(wait_for_container_port "$CONTAINER_ID" 8080)
 
 SECPAL_CONTAINER_BASE_URL="http://127.0.0.1:${CONTAINER_PORT}"
 export SECPAL_CONTAINER_BASE_URL
 
-wait_for_container_live "$CONTAINER_NAME" "$CONTAINER_PORT"
+wait_for_container_live "$CONTAINER_ID" "$CONTAINER_PORT"
 
 if ! npm exec -- playwright test --config=playwright.container.config.ts; then
   fail_with_container_diagnostics \
-    "$CONTAINER_NAME" \
+    "$CONTAINER_ID" \
     "frontend container browser contract failed"
   exit 1
 fi

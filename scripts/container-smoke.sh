@@ -6,6 +6,7 @@ set -euo pipefail
 
 ROOT_DIR=$(git rev-parse --show-toplevel)
 # shellcheck source=scripts/container-runtime.sh
+# shellcheck disable=SC1091
 source "$ROOT_DIR/scripts/container-runtime.sh"
 DEFAULT_IMAGE_TAG=$(node "$ROOT_DIR/scripts/container-test-image-tag.mjs" "$ROOT_DIR")
 IMAGE_TAG=${SECPAL_CONTAINER_IMAGE:-$DEFAULT_IMAGE_TAG}
@@ -65,10 +66,9 @@ IMAGE_ID=$(docker image inspect --format '{{.Id}}' "$IMAGE_TAG")
 start_container() {
   local name=$1
   local api_origin=$2
+  local container_id
 
-  CONTAINERS+=("$name")
-  if ! docker run "${PLATFORM_ARGS[@]}" \
-    --detach \
+  if ! container_id=$(docker create "${PLATFORM_ARGS[@]}" \
     --name "$name" \
     --read-only \
     --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m \
@@ -77,8 +77,14 @@ start_container() {
     --env "SECPAL_API_URL=$api_origin" \
     --env "SECPAL_SMOKE_SENTINEL=must-not-be-serialized" \
     --publish 127.0.0.1::8080 \
-    "$IMAGE_TAG" >/dev/null; then
-    fail_with_container_diagnostics "$name" "could not start container"
+    "$IMAGE_TAG"); then
+    printf 'ERROR: could not create container %s\n' "$name" >&2
+    return 1
+  fi
+
+  CONTAINERS+=("$container_id")
+  if ! docker start "$container_id" >/dev/null; then
+    fail_with_container_diagnostics "$container_id" "could not start container"
     return 1
   fi
 }
