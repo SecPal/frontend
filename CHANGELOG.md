@@ -18,11 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ghcr.io/secpal/frontend` Web/PWA image with run-specific discovery tags,
   canonical OCI index digests, exact index-byte verification, deterministic
   OCI metadata, `linux/amd64` and `linux/arm64` runtime and Chromium checks,
-  per-platform BuildKit SPDX SBOM and `mode=max` provenance verification, and
-  digest-bound GitHub Artifact Attestations. Pull-request CI remains registry
-  read-only, deployment consumption remains pending, and Phase C remains in
-  progress. Frontend image publication is implemented but not yet
-  operationally verified.
+  per-platform BuildKit SPDX SBOM and SLSA v1 `mode=max` provenance
+  verification, and digest-bound GitHub Artifact Attestations. Pull-request CI
+  remains registry read-only, deployment consumption remains pending, and
+  Phase C remains in progress. Frontend image publication is implemented but
+  not yet operationally verified.
 - Added a production-ready unprivileged frontend container image that serves
   the existing Web/PWA artifact through static Nginx on port 8080, configures
   the API origin at startup through strict `SECPAL_API_URL` validation, and
@@ -91,6 +91,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   version 2.97.0 and verified the official release archive checksum before use.
 - Extended the frontend publisher policy tests to reject any additional
   attestation verification that bypasses the pinned GitHub CLI.
+- Requested SLSA v1 provenance to match the publisher's verification schema,
+  treated an empty Docker `SOURCE_DATE_EPOCH` build argument as unset, and made
+  unsupported container-platform diagnostics identify the rejected value
+  without leaking temporary smoke-test resources.
 - Normalized static artifact, license, Nginx configuration, and entrypoint
   modes inside the image so inherited workspace ACLs cannot make unprivileged
   runtime files unreadable or non-executable despite Dockerfile `COPY --chmod`

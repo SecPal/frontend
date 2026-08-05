@@ -10,7 +10,6 @@ IMAGE_TAG=${SECPAL_CONTAINER_IMAGE:-$DEFAULT_IMAGE_TAG}
 CONTAINER_PREFIX="secpal-frontend-contract-$$"
 CONTAINER_A="${CONTAINER_PREFIX}-a"
 CONTAINER_B="${CONTAINER_PREFIX}-b"
-TEMP_DIR=$(mktemp -d)
 CONTAINERS=()
 PLATFORM_ARGS=()
 
@@ -20,10 +19,13 @@ case ${SECPAL_CONTAINER_PLATFORM:-} in
     PLATFORM_ARGS+=(--platform "$SECPAL_CONTAINER_PLATFORM")
     ;;
   *)
-    echo "ERROR: unsupported container platform" >&2
+    printf 'ERROR: unsupported container platform: %s\n' \
+      "$SECPAL_CONTAINER_PLATFORM" >&2
     exit 1
     ;;
 esac
+
+TEMP_DIR=$(mktemp -d)
 
 cleanup() {
   for container in "${CONTAINERS[@]}"; do

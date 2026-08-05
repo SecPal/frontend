@@ -18,7 +18,8 @@ case ${SECPAL_CONTAINER_PLATFORM:-} in
     PLATFORM_ARGS+=(--platform "$SECPAL_CONTAINER_PLATFORM")
     ;;
   *)
-    echo "ERROR: unsupported container platform" >&2
+    printf 'ERROR: unsupported container platform: %s\n' \
+      "$SECPAL_CONTAINER_PLATFORM" >&2
     exit 1
     ;;
 esac

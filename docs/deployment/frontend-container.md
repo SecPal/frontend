@@ -44,7 +44,7 @@ ghcr.io/secpal/frontend@sha256:<oci-index-digest>
 Each successful publisher run creates exactly one discovery tag:
 
 ```text
-build-<source-sha>-<run-id>-<run-attempt>
+build-<40-character-source-sha>-<run-id>-<run-attempt>
 ```
 
 The discovery tag locates the output of one workflow attempt. It is not a
@@ -56,11 +56,11 @@ The publisher runs only after a push to `main`, always rebuilds the selected
 source commit, and publishes exactly `linux/amd64` and `linux/arm64`. The build
 uses the commit timestamp for `org.opencontainers.image.created` and combines
 the package version with the full source commit as
-`<package-version>+git.<source-sha>`.
+`<package-version>+git.<full-source-sha>`.
 
 For both platforms the workflow verifies all OCI labels, a non-empty BuildKit
-SPDX SBOM, and `mode=max` provenance bound to the exact source commit and
-repository build context. It hashes the exact OCI index response bytes,
+SPDX SBOM, and SLSA v1 provenance in `mode=max` bound to the exact source commit
+and repository build context. It hashes the exact OCI index response bytes,
 compares the result and the registry `Docker-Content-Digest` header with the
 Buildx digest, runs the complete container and Chromium contracts against the
 digest reference, and creates a GitHub Artifact Attestation for that digest.

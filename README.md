@@ -124,17 +124,18 @@ ghcr.io/secpal/frontend@sha256:<oci-index-digest>
 ```
 
 Publisher runs create one discovery tag with the format
-`build-<source-sha>-<run-id>-<run-attempt>`. That tag is not a deployment
-contract, rollback contract, or trust anchor and is not technically immutable
-against another authorized registry writer. The digest is the trust boundary.
+`build-<40-character-source-sha>-<run-id>-<run-attempt>`. That tag is not a
+deployment contract, rollback contract, or trust anchor and is not technically
+immutable against another authorized registry writer. The digest is the trust
+boundary.
 
 The multi-architecture image supports only `linux/amd64` and `linux/arm64`.
-Publishing generates and verifies a BuildKit SPDX SBOM, `mode=max` provenance,
-both runtime-platform contracts, both Chromium contracts, and a GitHub Artifact
-Attestation bound to the OCI index digest. The runtime remains a static,
-unprivileged `101:101` reference server without Node.js; `SECPAL_API_URL` is
-supplied only at startup. It does not publish Android or iOS artifacts and does
-not provide TLS or public-edge behavior.
+Publishing generates and verifies a BuildKit SPDX SBOM, SLSA v1 provenance in
+`mode=max`, both runtime-platform contracts, both Chromium contracts, and a
+GitHub Artifact Attestation bound to the OCI index digest. The runtime remains
+a static, unprivileged `101:101` reference server without Node.js;
+`SECPAL_API_URL` is supplied only at startup. It does not publish Android or
+iOS artifacts and does not provide TLS or public-edge behavior.
 
 Frontend image publication is implemented but not yet operationally verified.
 Digest consumption in `SecPal/deployment` remains pending in a separate change,

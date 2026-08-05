@@ -51,7 +51,7 @@ function normalizedLicense(license) {
 function resolveCreationDate() {
   const sourceDateEpoch = process.env.SOURCE_DATE_EPOCH;
 
-  if (sourceDateEpoch === undefined) {
+  if (sourceDateEpoch === undefined || sourceDateEpoch === "") {
     return new Date();
   }
 

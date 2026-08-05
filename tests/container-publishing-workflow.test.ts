@@ -270,6 +270,11 @@ function assertPinnedGitHubCliPolicy(workflow: string): void {
 
 function assertSecurityCriticalPolicy(workflow: string): void {
   assertPinnedGitHubCliPolicy(workflow);
+  const buildStep = stepBlock(
+    jobBlock(workflow, "publish"),
+    "Build and push run-scoped image"
+  );
+
   expect(workflow).toMatch(/on:\n {2}push:\n {4}branches: \[main\](?:\n|$)/u);
   expect(workflow).not.toMatch(/pull_request:|workflow_dispatch:|schedule:/u);
   expect(workflow).toContain("permissions: {}");
@@ -314,8 +319,12 @@ function assertSecurityCriticalPolicy(workflow: string): void {
   expect(workflow).toMatch(
     /image_version=.*\$\{package_version\}\+git\.\$\{GITHUB_SHA\}/u
   );
-  expect(workflow).toMatch(/sbom:\s*>-[^]*buildkit-syft-scanner[^@]*@sha256:/u);
-  expect(workflow).toContain("provenance: mode=max");
+  expect(countMatches(workflow, /^ {10}sbom:/gmu)).toBe(1);
+  expect(buildStep).toMatch(
+    /^ {10}sbom: >-\n {12}generator=docker\.io\/docker\/buildkit-syft-scanner:[^@\s]+@sha256:[0-9a-f]{64}$/mu
+  );
+  expect(countMatches(workflow, /^ {10}provenance:/gmu)).toBe(1);
+  expect(buildStep).toMatch(/^ {10}provenance: mode=max,version=v1$/mu);
   expect(workflow).toContain("pull: true");
   expect(workflow).toContain("no-cache: true");
   expect(workflow).not.toMatch(
@@ -635,6 +644,39 @@ describe("frontend container publishing workflow", () => {
     }
   });
 
+  it("treats an empty SOURCE_DATE_EPOCH build argument as unset", () => {
+    const outputDirectory = mkdtempSync(
+      path.join(tmpdir(), "secpal-sbom-empty-epoch-")
+    );
+    const earliestCreationTime = Date.now();
+
+    try {
+      execFileSync(
+        process.execPath,
+        ["scripts/generate-dependency-sbom.mjs", outputDirectory],
+        {
+          cwd: repoRoot,
+          env: { ...process.env, SOURCE_DATE_EPOCH: "" },
+          stdio: "pipe",
+        }
+      );
+
+      const parsedSbom = JSON.parse(
+        readFileSync(
+          path.join(outputDirectory, "dependencies.spdx.json"),
+          "utf8"
+        )
+      ) as { creationInfo: { created: string } };
+      const latestCreationTime = Date.now();
+      const creationTime = Date.parse(parsedSbom.creationInfo.created);
+
+      expect(creationTime).toBeGreaterThanOrEqual(earliestCreationTime);
+      expect(creationTime).toBeLessThanOrEqual(latestCreationTime);
+    } finally {
+      rmSync(outputDirectory, { recursive: true, force: true });
+    }
+  });
+
   it("uses different SPDX namespaces for different documents with the same creation time", () => {
     const firstProject = mkdtempSync(
       path.join(tmpdir(), "secpal-sbom-namespace-first-")
@@ -798,9 +840,14 @@ describe("frontend container publishing workflow", () => {
     expect(documentation).toContain(
       "ghcr.io/secpal/frontend@sha256:<oci-index-digest>"
     );
-    expect(documentation).toContain(
-      "build-<source-sha>-<run-id>-<run-attempt>"
-    );
+    for (const document of [readme, containerGuide]) {
+      expect(document).toContain(
+        "build-<40-character-source-sha>-<run-id>-<run-attempt>"
+      );
+      expect(document).not.toContain(
+        "build-<source-sha>-<run-id>-<run-attempt>"
+      );
+    }
     expect(documentation).toContain(
       "Frontend image publication is implemented but not yet operationally verified."
     );
@@ -840,7 +887,29 @@ describe("frontend container publishing workflow", () => {
       ".",
     ],
     ["disabled SBOM", "sbom: >-", "sbom: false #"],
-    ["weak provenance", "provenance: mode=max", "provenance: mode=min"],
+    [
+      "weak provenance",
+      "provenance: mode=max,version=v1",
+      "provenance: mode=min,version=v1",
+    ],
+    [
+      "legacy provenance schema",
+      "provenance: mode=max,version=v1",
+      "provenance: mode=max,version=v0.2",
+    ],
+    [
+      "duplicate overriding provenance",
+      "provenance: mode=max,version=v1",
+      [
+        "provenance: mode=max,version=v1",
+        "          provenance: mode=min,version=v0.2",
+      ].join("\n"),
+    ],
+    [
+      "duplicate overriding SBOM",
+      "provenance: mode=max,version=v1",
+      ["sbom: false", "          provenance: mode=max,version=v1"].join("\n"),
+    ],
     [
       "missing index byte check",
       'test "$byte_digest" = "$IMAGE_DIGEST"',
@@ -941,7 +1010,7 @@ describe("frontend container publishing workflow", () => {
         replaceRequired(
           value,
           "https://github.com/cli/cli/releases/download/",
-          "https://downloads.example.com/cli/cli/releases/download/"
+          "https://downloads.secpal.dev/cli/cli/releases/download/"
         ),
     ],
     [
