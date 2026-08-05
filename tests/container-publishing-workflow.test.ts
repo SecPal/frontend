@@ -104,6 +104,19 @@ function moveRequiredStepBefore(
   );
 }
 
+function mutateRequiredStep(
+  workflow: string,
+  jobName: string,
+  stepName: string,
+  searchValue: string,
+  replacement: string
+): string {
+  const currentStep = stepBlock(jobBlock(workflow, jobName), stepName);
+  const mutatedStep = replaceRequired(currentStep, searchValue, replacement);
+
+  return replaceRequired(workflow, currentStep, mutatedStep);
+}
+
 function provenanceVerificationPolicy(workflow: string): string {
   const match = workflow.match(
     /--arg revision "\$GITHUB_SHA" '\n(?<policy>[^]*?)\n {14}'\n {10}done/u
@@ -156,6 +169,101 @@ function evaluateProvenancePolicy(
   }
 
   return result;
+}
+
+function assertPlatformRuntimeVerificationPolicy(workflow: string): void {
+  const verify = jobBlock(workflow, "verify");
+  const verifyImage = stepBlock(
+    verify,
+    "Verify workflow-built digest and BuildKit attestations"
+  );
+  const runtime = stepBlock(
+    verify,
+    "Exercise both published runtime platforms"
+  );
+  const runtimeScript = shellScript(runtime).trimEnd();
+  const attest = jobBlock(workflow, "attest");
+  const generateAttestation = stepBlock(
+    attest,
+    "Generate GitHub artifact attestation"
+  );
+  const summary = stepBlock(attest, "Record published image identity");
+
+  expect(verifyImage).toMatch(
+    /select\(\(\.annotations\["vnd\.docker\.reference\.type"\] \/\/ ""\)\s*!= "attestation-manifest"\)/u
+  );
+  expect(verifyImage).toContain('select(.platform.os == "linux"');
+  expect(verifyImage).toContain("and .platform.architecture == $architecture)");
+  expect(verifyImage).toContain("| if length == 1 then .[0] else empty end");
+  expect(verifyImage).toContain("amd64_digest=$(runtime_digest amd64)");
+  expect(verifyImage).toContain("arm64_digest=$(runtime_digest arm64)");
+  expect(verifyImage).toContain(
+    "printf 'amd64_digest=%s\\n' \"$amd64_digest\""
+  );
+  expect(verifyImage).toContain(
+    "printf 'arm64_digest=%s\\n' \"$arm64_digest\""
+  );
+
+  expect(runtime).toMatch(
+    /^ {6}- name: Exercise both published runtime platforms\n {8}env:\n {10}RUNTIME_AMD64_DIGEST: \$\{\{ steps\.verify_image\.outputs\.amd64_digest \}\}\n {10}RUNTIME_ARM64_DIGEST: \$\{\{ steps\.verify_image\.outputs\.arm64_digest \}\}\n {8}run: \|$/mu
+  );
+  expect(countMatches(runtime, /^ {10}RUNTIME_AMD64_DIGEST:/gmu)).toBe(1);
+  expect(countMatches(runtime, /^ {10}RUNTIME_ARM64_DIGEST:/gmu)).toBe(1);
+  expect(runtimeScript).toBe(
+    [
+      "set -euo pipefail",
+      "",
+      `printf '%s\\n' "$RUNTIME_AMD64_DIGEST" |`,
+      "  grep -Eq '^sha256:[0-9a-f]{64}$'",
+      `printf '%s\\n' "$RUNTIME_ARM64_DIGEST" |`,
+      "  grep -Eq '^sha256:[0-9a-f]{64}$'",
+      "",
+      "runtime_contracts=(",
+      '  "linux/amd64|$RUNTIME_AMD64_DIGEST"',
+      '  "linux/arm64|$RUNTIME_ARM64_DIGEST"',
+      ")",
+      "",
+      'for contract in "${runtime_contracts[@]}"; do',
+      "  platform=${contract%%|*}",
+      "  runtime_digest=${contract#*|}",
+      '  runtime_ref="${CANONICAL_IMAGE}@${runtime_digest}"',
+      "",
+      '  docker pull --platform "$platform" "$runtime_ref"',
+      "",
+      '  SECPAL_CONTAINER_PLATFORM="$platform" \\',
+      "    SECPAL_CONTAINER_SKIP_BUILD=1 \\",
+      '    SECPAL_CONTAINER_IMAGE="$runtime_ref" \\',
+      "    npm run test:container",
+      "",
+      '  SECPAL_CONTAINER_PLATFORM="$platform" \\',
+      "    SECPAL_CONTAINER_SKIP_BUILD=1 \\",
+      '    SECPAL_CONTAINER_IMAGE="$runtime_ref" \\',
+      "    npm run test:e2e:container",
+      "done",
+    ].join("\n")
+  );
+  expect(runtime).not.toContain("IMAGE_DIGEST");
+  expect(runtime).not.toContain("PUBLISHED_TAG");
+  expect(runtime).not.toMatch(
+    /docker\s+(?:rmi|image rm)|continue-on-error:|\|\|\s*true/u
+  );
+
+  expect(generateAttestation).toContain(
+    "subject-digest: ${{ needs.publish.outputs.image_digest }}"
+  );
+  expect(countMatches(generateAttestation, /^ {10}subject-digest:/gmu)).toBe(1);
+  expect(generateAttestation).not.toMatch(/subject-digest:.*runtime_/iu);
+  expect(summary).toContain(
+    'printf -- "- Canonical digest: \\`%s@%s\\`\\n" "$CANONICAL_IMAGE" "$IMAGE_DIGEST"'
+  );
+  expect(countMatches(summary, /Canonical digest:/gu)).toBe(1);
+  expect(summary).toContain(
+    "linux/amd64 runtime manifest digest (evidence only)"
+  );
+  expect(summary).toContain(
+    "linux/arm64 runtime manifest digest (evidence only)"
+  );
+  expect(summary).not.toMatch(/Canonical digest[^\n]*RUNTIME_/u);
 }
 
 function assertPinnedGitHubCliPolicy(workflow: string): void {
@@ -561,18 +669,8 @@ describe("frontend container publishing workflow", () => {
     }
   });
 
-  it("runs both runtime and Chromium contracts against the digest on exactly two platforms", () => {
-    const verify = jobBlock(workflow, "verify");
-
-    expect(verify).toContain('DIGEST_REF="${CANONICAL_IMAGE}@${IMAGE_DIGEST}"');
-    expect(verify).toContain(
-      'docker pull --platform "$platform" "$DIGEST_REF"'
-    );
-    expect(verify).toContain('SECPAL_CONTAINER_PLATFORM="$platform"');
-    expect(verify).toContain("SECPAL_CONTAINER_SKIP_BUILD=1");
-    expect(verify).toContain('SECPAL_CONTAINER_IMAGE="$DIGEST_REF"');
-    expect(verify).toContain("npm run test:container");
-    expect(verify).toContain("npm run test:e2e:container");
+  it("binds both mandatory runtime and Chromium contracts to each verified platform manifest digest", () => {
+    assertPlatformRuntimeVerificationPolicy(workflow);
 
     for (const script of [smokeScript, browserScript]) {
       expect(script).toContain("SECPAL_CONTAINER_PLATFORM");
@@ -852,9 +950,237 @@ describe("frontend container publishing workflow", () => {
       "Frontend image publication is implemented but not yet operationally verified."
     );
     expect(documentation).toContain("Phase C remains in progress");
+    expect(containerGuide).toMatch(
+      /Platform child manifest digests are runtime-\s*verification evidence only/u
+    );
     expect(documentation).not.toMatch(
       /Phase C is complete|The frontend is deployed|SecPal is production-ready|Phase D is complete/u
     );
+  });
+
+  const platformRuntimeMutations: Array<[string, (value: string) => string]> = [
+    [
+      "amd64 using the OCI index digest",
+      (value) =>
+        mutateRequiredStep(
+          value,
+          "verify",
+          "Exercise both published runtime platforms",
+          '"linux/amd64|$RUNTIME_AMD64_DIGEST"',
+          '"linux/amd64|$IMAGE_DIGEST"'
+        ),
+    ],
+    [
+      "arm64 using the OCI index digest",
+      (value) =>
+        mutateRequiredStep(
+          value,
+          "verify",
+          "Exercise both published runtime platforms",
+          '"linux/arm64|$RUNTIME_ARM64_DIGEST"',
+          '"linux/arm64|$IMAGE_DIGEST"'
+        ),
+    ],
+    [
+      "both platforms using the amd64 digest",
+      (value) =>
+        mutateRequiredStep(
+          value,
+          "verify",
+          "Exercise both published runtime platforms",
+          '"linux/arm64|$RUNTIME_ARM64_DIGEST"',
+          '"linux/arm64|$RUNTIME_AMD64_DIGEST"'
+        ),
+    ],
+    [
+      "both platforms using the arm64 digest",
+      (value) =>
+        mutateRequiredStep(
+          value,
+          "verify",
+          "Exercise both published runtime platforms",
+          '"linux/amd64|$RUNTIME_AMD64_DIGEST"',
+          '"linux/amd64|$RUNTIME_ARM64_DIGEST"'
+        ),
+    ],
+    [
+      "swapped amd64 and arm64 digest mappings",
+      (value) =>
+        mutateRequiredStep(
+          value,
+          "verify",
+          "Exercise both published runtime platforms",
+          [
+            '"linux/amd64|$RUNTIME_AMD64_DIGEST"',
+            '            "linux/arm64|$RUNTIME_ARM64_DIGEST"',
+          ].join("\n"),
+          [
+            '"linux/amd64|$RUNTIME_ARM64_DIGEST"',
+            '            "linux/arm64|$RUNTIME_AMD64_DIGEST"',
+          ].join("\n")
+        ),
+    ],
+    [
+      "arm64 container verification removed",
+      (value) =>
+        mutateRequiredStep(
+          value,
+          "verify",
+          "Exercise both published runtime platforms",
+          "    npm run test:container",
+          [
+            '    if [ "$platform" != "linux/arm64" ]; then',
+            "      npm run test:container",
+            "    fi",
+          ].join("\n")
+        ),
+    ],
+    [
+      "arm64 Chromium verification removed",
+      (value) =>
+        mutateRequiredStep(
+          value,
+          "verify",
+          "Exercise both published runtime platforms",
+          "    npm run test:e2e:container",
+          [
+            '    if [ "$platform" != "linux/arm64" ]; then',
+            "      npm run test:e2e:container",
+            "    fi",
+          ].join("\n")
+        ),
+    ],
+    [
+      "child-digest format validation removed",
+      (value) =>
+        mutateRequiredStep(
+          value,
+          "verify",
+          "Exercise both published runtime platforms",
+          [
+            `          printf '%s\\n' "$RUNTIME_ARM64_DIGEST" |`,
+            "            grep -Eq '^sha256:[0-9a-f]{64}$'",
+          ].join("\n"),
+          "          true # arm64 digest validation removed"
+        ),
+    ],
+    [
+      "runtime reference falling back to a tag",
+      (value) =>
+        mutateRequiredStep(
+          value,
+          "verify",
+          "Exercise both published runtime platforms",
+          'runtime_ref="${CANONICAL_IMAGE}@${runtime_digest}"',
+          'runtime_ref="${CANONICAL_IMAGE}:${PUBLISHED_TAG}"'
+        ),
+    ],
+    [
+      "index digest replaced by a child digest in the attestation subject",
+      (value) =>
+        mutateRequiredStep(
+          value,
+          "attest",
+          "Generate GitHub artifact attestation",
+          "subject-digest: ${{ needs.publish.outputs.image_digest }}",
+          "subject-digest: ${{ needs.verify.outputs.runtime_amd64_digest }}"
+        ),
+    ],
+    [
+      "index digest replaced by a child digest in the canonical summary",
+      (value) =>
+        mutateRequiredStep(
+          value,
+          "attest",
+          "Record published image identity",
+          '"$CANONICAL_IMAGE" "$IMAGE_DIGEST"',
+          '"$CANONICAL_IMAGE" "$RUNTIME_ARM64_DIGEST"'
+        ),
+    ],
+    [
+      "Docker image removal introduced as an overwrite workaround",
+      (value) =>
+        mutateRequiredStep(
+          value,
+          "verify",
+          "Exercise both published runtime platforms",
+          "set -euo pipefail",
+          'set -euo pipefail\ndocker image rm "${CANONICAL_IMAGE}@${IMAGE_DIGEST}"'
+        ),
+    ],
+    [
+      "pull failure ignored with || true",
+      (value) =>
+        mutateRequiredStep(
+          value,
+          "verify",
+          "Exercise both published runtime platforms",
+          'docker pull --platform "$platform" "$runtime_ref"',
+          'docker pull --platform "$platform" "$runtime_ref" || true'
+        ),
+    ],
+    [
+      "runtime step made non-blocking",
+      (value) =>
+        mutateRequiredStep(
+          value,
+          "verify",
+          "Exercise both published runtime platforms",
+          "      - name: Exercise both published runtime platforms",
+          [
+            "      - name: Exercise both published runtime platforms",
+            "        continue-on-error: true",
+          ].join("\n")
+        ),
+    ],
+  ];
+
+  it.each(platformRuntimeMutations)(
+    "rejects the %s mutation",
+    (_name, mutateWorkflow) => {
+      const mutatedWorkflow = mutateWorkflow(workflow);
+      expect(() =>
+        assertPlatformRuntimeVerificationPolicy(mutatedWorkflow)
+      ).toThrow();
+    }
+  );
+
+  it("rejects loading both platform selections under the same OCI index digest reference", () => {
+    // A classic Docker image store cannot reliably load two platform selections under
+    // the same OCI index digest reference in one job.
+    const runtime = stepBlock(
+      jobBlock(workflow, "verify"),
+      "Exercise both published runtime platforms"
+    );
+    const historicalRuntimeStep = [
+      "      - name: Exercise both published runtime platforms",
+      "        env:",
+      "          RUNTIME_AMD64_DIGEST: ${{ steps.verify_image.outputs.amd64_digest }}",
+      "          RUNTIME_ARM64_DIGEST: ${{ steps.verify_image.outputs.arm64_digest }}",
+      "        run: |",
+      "          set -euo pipefail",
+      "          for platform in linux/amd64 linux/arm64; do",
+      '            docker pull --platform "$platform" \\',
+      '              "${CANONICAL_IMAGE}@${IMAGE_DIGEST}"',
+      '            SECPAL_CONTAINER_PLATFORM="$platform" \\',
+      "              SECPAL_CONTAINER_SKIP_BUILD=1 \\",
+      '              SECPAL_CONTAINER_IMAGE="${CANONICAL_IMAGE}@${IMAGE_DIGEST}" \\',
+      "              npm run test:container",
+      '            SECPAL_CONTAINER_PLATFORM="$platform" \\',
+      "              SECPAL_CONTAINER_SKIP_BUILD=1 \\",
+      '              SECPAL_CONTAINER_IMAGE="${CANONICAL_IMAGE}@${IMAGE_DIGEST}" \\',
+      "              npm run test:e2e:container",
+      "          done",
+    ].join("\n");
+    const mutatedWorkflow = replaceRequired(
+      workflow,
+      runtime,
+      historicalRuntimeStep
+    );
+
+    expect(() =>
+      assertPlatformRuntimeVerificationPolicy(mutatedWorkflow)
+    ).toThrow();
   });
 
   it.each([
