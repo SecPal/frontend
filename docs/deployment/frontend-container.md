@@ -64,7 +64,7 @@ and repository build context. It hashes the exact OCI index response bytes,
 compares the result and the registry `Docker-Content-Digest` header with the
 Buildx digest, and extracts each platform's runtime manifest digest from that
 verified index. The complete container and Chromium contracts use those exact
-child manifest references. Platform child manifest digests are runtime-
+child manifest references. Platform child manifest digests are runtime
 verification evidence only, not trust, deployment, update, or rollback
 identities. The publisher creates and verifies the GitHub Artifact Attestation
 for the canonical OCI index digest, binding the repository, publisher workflow,

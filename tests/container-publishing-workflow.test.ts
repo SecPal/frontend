@@ -951,8 +951,9 @@ describe("frontend container publishing workflow", () => {
     );
     expect(documentation).toContain("Phase C remains in progress");
     expect(containerGuide).toMatch(
-      /Platform child manifest digests are runtime-\s*verification evidence only/u
+      /Platform child manifest digests are runtime\s+verification evidence only/u
     );
+    expect(containerGuide).not.toMatch(/\bruntime-\s+verification\b/u);
     expect(documentation).not.toMatch(
       /Phase C is complete|The frontend is deployed|SecPal is production-ready|Phase D is complete/u
     );
