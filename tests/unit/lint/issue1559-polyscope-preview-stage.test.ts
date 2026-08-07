@@ -12,7 +12,7 @@ const repoRoot = path.resolve(
 );
 
 describe("Issue 1559 Polyscope preview staging regression", () => {
-  it("ignores transient preview assets", async () => {
+  it("ignores transient preview assets without ignoring tracked JavaScript", async () => {
     const eslint = new ESLint({ cwd: repoRoot });
     const previewAsset = path.join(
       repoRoot,
@@ -21,7 +21,15 @@ describe("Issue 1559 Polyscope preview staging regression", () => {
       "assets",
       "ActivityLogList-DZcvh31E.js"
     );
+    const trackedJavaScriptFile = path.join(
+      repoRoot,
+      "public",
+      "runtime-config.js"
+    );
 
     await expect(eslint.isPathIgnored(previewAsset)).resolves.toBe(true);
+    await expect(eslint.isPathIgnored(trackedJavaScriptFile)).resolves.toBe(
+      false
+    );
   });
 });
