@@ -76,9 +76,12 @@ jobs:
               return;
             }
 
-            // Get the first result (we test one URL)
-            const result = manifest[0];
-            const summary = result.summary;
+            // We test one URL. The report itself is uploaded as a workflow artifact.
+            const summary = manifest[0].summary;
+            const artifactUrl = new URL(
+              `${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}#artifacts`,
+              context.serverUrl
+            ).toString();
 
             const formatScore = (score) => {
               const pct = Math.round(score * 100);
@@ -95,7 +98,7 @@ jobs:
               `| Accessibility | ${formatScore(summary.accessibility)} |`,
               `| Best Practices | ${formatScore(summary['best-practices'])} |`,
               '',
-              `[View full report](${result.htmlPath || 'See artifacts'})`,
+              `[View full report artifact](${artifactUrl})`,
               '',
               '<details>',
               '<summary>Core Web Vitals</summary>',
