@@ -34,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Local pre-push advice now resolves the remote's advertised default branch
+  and falls back to `main`, instead of reusing a potentially stale local
+  `origin/HEAD` reference for branch scope and PR-size reporting.
 - Removed the retired standalone changelog host from domain policy and
   Polyscope preview-host parsing.
 - Changed local and hosted pull-request size reporting to treat 600 changed
