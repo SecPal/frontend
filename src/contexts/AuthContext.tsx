@@ -37,6 +37,28 @@ export const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
 const AUTH_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS = 5_000;
 const AUTH_LOGIN_AFTER_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS = 5_000;
 
+async function isNetworkAvailableWithinBootstrapTimeout(
+  isNetworkAvailable: () => Promise<boolean>
+): Promise<boolean> {
+  let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
+
+  try {
+    return await Promise.race([
+      isNetworkAvailable(),
+      new Promise<boolean>((resolve) => {
+        timeoutId = globalThis.setTimeout(
+          () => resolve(false),
+          BOOTSTRAP_REVALIDATION_TIMEOUT_MS
+        );
+      }),
+    ]);
+  } finally {
+    if (timeoutId !== null) {
+      globalThis.clearTimeout(timeoutId);
+    }
+  }
+}
+
 async function loadOfflineVaultModule() {
   return await import("../lib/offlineVault");
 }
@@ -1164,7 +1186,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const networkAvailable = await authTransport.isNetworkAvailable();
+      const networkAvailable = await isNetworkAvailableWithinBootstrapTimeout(
+        () => authTransport.isNetworkAvailable()
+      );
 
       if (
         !isActive ||

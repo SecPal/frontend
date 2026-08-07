@@ -3,7 +3,7 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, act, waitFor } from "@testing-library/react";
-import { AuthProvider } from "./AuthContext";
+import { AuthProvider, BOOTSTRAP_REVALIDATION_TIMEOUT_MS } from "./AuthContext";
 import { useAuth } from "../hooks/useAuth";
 import { getCurrentUser } from "../services/authApi";
 import { sanitizePersistedAuthUser } from "../services/authState";
@@ -236,6 +236,79 @@ describe("AuthContext", () => {
       await waitFor(() => {
         expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
       });
+    });
+  });
+
+  describe("native stored-snapshot bootstrap", () => {
+    it("finishes when native connectivity never settles without clearing the stored session", async () => {
+      const storedUser = {
+        id: "1",
+        name: "Native User",
+        email: "native.user@secpal.dev",
+        permissions: ["employees.read"],
+      };
+      await seedStoredUser(storedUser);
+
+      const authGlobal = globalThis as {
+        SecPalNativeAuthBridge?: unknown;
+      };
+      const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
+      const nativeBridge = {
+        login: vi.fn(),
+        logout: vi.fn().mockResolvedValue(undefined),
+        getCurrentUser: vi.fn(),
+        isNetworkAvailable: vi.fn().mockReturnValue(new Promise(() => {})),
+      };
+      authGlobal.SecPalNativeAuthBridge = nativeBridge;
+      const getUserSpy = vi
+        .spyOn(authStorage, "getUser")
+        .mockResolvedValue(storedUser);
+      vi.useFakeTimers();
+
+      function NativeBootstrapState() {
+        const auth = useAuth();
+
+        return (
+          <div>
+            <span data-testid="userEmail">{auth.user?.email ?? "none"}</span>
+            <span data-testid="isLoading">{String(auth.isLoading)}</span>
+          </div>
+        );
+      }
+
+      try {
+        render(
+          <AuthProvider>
+            <NativeBootstrapState />
+          </AuthProvider>
+        );
+
+        await act(async () => {
+          await Promise.resolve();
+          await Promise.resolve();
+        });
+
+        expect(screen.getByTestId("userEmail")).toHaveTextContent(
+          storedUser.email
+        );
+        expect(screen.getByTestId("isLoading")).toHaveTextContent("true");
+
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+        });
+
+        expect(screen.getByTestId("isLoading")).toHaveTextContent("false");
+        expect(nativeBridge.getCurrentUser).not.toHaveBeenCalled();
+        expect(authStorage.hasStoredUser()).toBe(true);
+      } finally {
+        vi.useRealTimers();
+        getUserSpy.mockRestore();
+        if (originalNativeBridge === undefined) {
+          delete authGlobal.SecPalNativeAuthBridge;
+        } else {
+          authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
+        }
+      }
     });
   });
 
