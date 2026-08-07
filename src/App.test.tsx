@@ -11,6 +11,7 @@ import App from "./App";
 import { AuthApiError } from "./services/authApi";
 import { sanitizePersistedAuthUser } from "./services/authState";
 import { authStorage } from "./services/storage";
+import { db } from "./lib/db";
 import { createRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
 
 const ROUTE_NAVIGATION_TIMEOUT_MS = 20_000;
@@ -237,7 +238,7 @@ async function selectDiscoveryLanguage(
   user: ReturnType<typeof userEvent.setup>,
   language: "English" | "Deutsch"
 ) {
-  await user.click(screen.getByLabelText(/select language/i));
+  await user.click(await screen.findByLabelText(/select language/i));
   await user.click(await screen.findByRole("option", { name: language }));
 }
 
@@ -334,6 +335,17 @@ async function seedPersistedAuthUser(user: Record<string, unknown>) {
   mockGetCurrentUser.mockResolvedValue(persistedUser);
 
   return persistedUser;
+}
+
+function createDeferredPromise<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+
+  return { promise, resolve, reject };
 }
 
 describe("App", () => {
@@ -472,6 +484,41 @@ describe("App", () => {
     expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
   });
 
+  it("stops runtime discovery after unmounting during logout cleanup", async () => {
+    const deleteDeferred = createDeferredPromise<void>();
+    const deleteSpy = vi
+      .spyOn(db, "delete")
+      .mockImplementationOnce(
+        () => deleteDeferred.promise as ReturnType<typeof db.delete>
+      );
+    const consoleError = vi.spyOn(console, "error");
+    createAndroidRuntimeBootstrapBridge({
+      getRuntimeBootstrap: vi
+        .fn()
+        .mockRejectedValue(new Error("Runtime bootstrap is unreadable")),
+    });
+
+    try {
+      const { unmount } = await renderWithI18n(<App />);
+
+      await waitFor(() => {
+        expect(deleteSpy).toHaveBeenCalledTimes(1);
+      });
+
+      unmount();
+      deleteDeferred.resolve();
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(consoleError).not.toHaveBeenCalled();
+    } finally {
+      deleteDeferred.resolve();
+      deleteSpy.mockRestore();
+      consoleError.mockRestore();
+    }
+  });
+
   it("requires Android runtime discovery when bootstrap state is unavailable for an Android runtime", async () => {
     createAndroidRuntimeBootstrapBridge({
       getRuntimeBootstrap: vi.fn().mockResolvedValue(null),
@@ -486,24 +533,51 @@ describe("App", () => {
   });
 
   it("clears stale authenticated state before Android runtime discovery starts", async () => {
+    const deleteDeferred = createDeferredPromise<void>();
+    const deleteSpy = vi
+      .spyOn(db, "delete")
+      .mockImplementationOnce(
+        () => deleteDeferred.promise as ReturnType<typeof db.delete>
+      );
+    const consoleWarn = vi.spyOn(console, "warn");
     createAndroidRuntimeBootstrapBridge({ configured: false });
-    await seedPersistedAuthUser({
-      id: "42",
-      name: "Stale Runtime User",
-      email: "stale.runtime.user@secpal.dev",
-      emailVerified: true,
-    });
-    mockAuthStorage.clear.mockClear();
+    try {
+      await seedPersistedAuthUser({
+        id: "42",
+        name: "Stale Runtime User",
+        email: "stale.runtime.user@secpal.dev",
+        emailVerified: true,
+      });
+      mockAuthStorage.clear.mockClear();
 
-    await renderWithI18n(<App />);
+      await renderWithI18n(<App />);
 
-    expect(
-      await screen.findByRole("heading", { name: /enter your instance url/i })
-    ).toBeInTheDocument();
-    await waitFor(() => {
-      expect(mockAuthStorage.clear).toHaveBeenCalled();
-    });
-    expect(mockLoadAuthenticatedAppModule).not.toHaveBeenCalled();
+      await waitFor(() => {
+        expect(deleteSpy).toHaveBeenCalledTimes(1);
+      });
+      expect(
+        screen.queryByRole("heading", { name: /enter your instance url/i })
+      ).not.toBeInTheDocument();
+
+      deleteDeferred.resolve();
+      expect(
+        await screen.findByRole("heading", {
+          name: /enter your instance url/i,
+        })
+      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(mockAuthStorage.clear).toHaveBeenCalled();
+        expect(consoleWarn).not.toHaveBeenCalledWith(
+          "Failed to reset analytics state during logout:",
+          expect.anything()
+        );
+      });
+      expect(mockLoadAuthenticatedAppModule).not.toHaveBeenCalled();
+    } finally {
+      deleteDeferred.resolve();
+      deleteSpy.mockRestore();
+      consoleWarn.mockRestore();
+    }
   });
 
   it("switches discovery UI language immediately when the user changes it", async () => {
