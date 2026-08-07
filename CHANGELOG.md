@@ -80,6 +80,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Bounded native stored-snapshot connectivity preflight during auth bootstrap,
+  so a stalled native availability call now completes as offline while retaining
+  the secure local session.
 - Required current-password confirmation before passkey removal, sent the
   step-up payload required by the passkey deletion API, and retained successful
   removal state if a subsequent list refresh fails. The confirmation dialog can
