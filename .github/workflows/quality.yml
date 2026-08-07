@@ -17,7 +17,8 @@ permissions:
 jobs:
   reuse:
     name: Check REUSE Compliance
-    uses: SecPal/.github/.github/workflows/reusable-reuse.yml@main
+    # main
+    uses: SecPal/.github/.github/workflows/reusable-reuse.yml@ffdfe1be8bbd8164d649f1c1d296e57ff4c6cc4a
 
   license-compatibility:
     name: Check License Compatibility
@@ -25,10 +26,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.x"
 
@@ -40,25 +41,30 @@ jobs:
 
   prettier:
     name: Formatting Check
-    uses: SecPal/.github/.github/workflows/reusable-prettier.yml@main
+    # main
+    uses: SecPal/.github/.github/workflows/reusable-prettier.yml@ffdfe1be8bbd8164d649f1c1d296e57ff4c6cc4a
 
   markdown-lint:
     name: Markdown Lint
-    uses: SecPal/.github/.github/workflows/reusable-markdown-lint.yml@main
+    # main
+    uses: SecPal/.github/.github/workflows/reusable-markdown-lint.yml@ffdfe1be8bbd8164d649f1c1d296e57ff4c6cc4a
 
   ai-instructions:
     name: AI Instructions
-    uses: SecPal/.github/.github/workflows/reusable-ai-instructions.yml@main
+    # main
+    uses: SecPal/.github/.github/workflows/reusable-ai-instructions.yml@ffdfe1be8bbd8164d649f1c1d296e57ff4c6cc4a
 
   eslint:
     name: ESLint
-    uses: SecPal/.github/.github/workflows/reusable-node-lint.yml@main
+    # main
+    uses: SecPal/.github/.github/workflows/reusable-node-lint.yml@ffdfe1be8bbd8164d649f1c1d296e57ff4c6cc4a
     with:
       node-version: "22"
 
   typecheck:
     name: TypeScript Check
-    uses: SecPal/.github/.github/workflows/reusable-node-build.yml@main
+    # main
+    uses: SecPal/.github/.github/workflows/reusable-node-build.yml@ffdfe1be8bbd8164d649f1c1d296e57ff4c6cc4a
     with:
       node-version: "22"
       build-command: "npm run typecheck"
@@ -78,10 +84,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: "22"
           cache: "npm"

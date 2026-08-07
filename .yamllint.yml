@@ -19,6 +19,10 @@ rules:
   # Allow comments to be indented differently
   comments-indentation: disable
 
+  # Match Prettier's single-space inline-comment formatting.
+  comments:
+    min-spaces-from-content: 1
+
   # Allow empty values in workflows
   empty-values:
     forbid-in-block-mappings: false

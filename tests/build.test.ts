@@ -22,6 +22,23 @@ function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(repoRoot, relativePath), "utf8");
 }
 
+function getWorkflowUsesReferences(): string[] {
+  const workflowFiles = execFileSync("git", ["ls-files", ".github/workflows"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  })
+    .trim()
+    .split("\n")
+    .filter((file) => /\.ya?ml$/u.test(file));
+
+  return workflowFiles.flatMap((workflowFile) =>
+    Array.from(
+      readRepoFile(workflowFile).matchAll(/^\s*uses:\s*([^\s#]+)/gmu),
+      (match) => match[1]
+    )
+  );
+}
+
 function expectVersionAtLeast(
   actualVersion: string | undefined,
   minimumVersion: string
@@ -445,6 +462,15 @@ describe("Build Configuration and Source Verification", () => {
 
       expect(jobSection).toContain("runs-on:");
       expect(jobSection).toContain("timeout-minutes:");
+    }
+  });
+
+  it("pins every GitHub Actions workflow reference to an immutable commit SHA", () => {
+    const references = getWorkflowUsesReferences();
+
+    expect(references.length).toBeGreaterThan(0);
+    for (const reference of references) {
+      expect(reference).toMatch(/@[0-9a-f]{40}$/u);
     }
   });
 
