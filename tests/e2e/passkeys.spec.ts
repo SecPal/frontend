@@ -212,6 +212,75 @@ test.describe("Passkeys", () => {
     expect(passkeyListCalls).toBe(2);
   });
 
+  test("confirms the current password before removing a passkey", async ({
+    page,
+  }) => {
+    await installPasskeyBrowserMocks(page);
+    await installStoredAuthUser(page, authUser, AUTH_STORAGE_CSRF_TOKEN);
+
+    let storedPasskeys = [registrationVerification.data.credential];
+    const deletionBodies: Array<string | null> = [];
+
+    await page.route("**/health/ready", async (route) => {
+      await fulfillJson(route, {
+        status: "ready",
+        checks: {
+          database: "ok",
+          tenant_keys: "ok",
+          kek_file: "ok",
+        },
+        timestamp: "2026-04-09T17:00:00Z",
+      });
+    });
+    await page.route("**/v1/me", async (route) => {
+      await fulfillJson(route, authUser);
+    });
+    await page.route("**/v1/me/mfa", async (route) => {
+      await fulfillJson(route, {
+        data: {
+          enabled: false,
+          method: null,
+          recovery_codes_remaining: 0,
+          recovery_codes_generated_at: null,
+          enrolled_at: null,
+        },
+      });
+    });
+    await page.route("**/v1/me/passkeys", async (route) => {
+      await fulfillJson(route, { data: storedPasskeys });
+    });
+    await page.route("**/v1/me/passkeys/*", async (route) => {
+      deletionBodies.push(route.request().postData());
+      storedPasskeys = [];
+      await fulfillJson(route, {
+        message: "Passkey deleted successfully.",
+        data: { remaining_passkeys: 0 },
+      });
+    });
+    await page.route("**/sanctum/csrf-cookie", async (route) => {
+      await route.fulfill({ status: 204, body: "" });
+    });
+
+    await page.goto("/settings");
+
+    await page.getByRole("button", { name: /^remove$/i }).click();
+    const dialog = page.getByRole("dialog", { name: /remove passkey/i });
+    await expect(dialog).toContainText("Security Key");
+    await expect(
+      dialog.getByRole("button", { name: /^remove passkey$/i })
+    ).toBeDisabled();
+
+    await dialog
+      .getByLabel(/current password to remove passkey/i)
+      .fill("test-password");
+    await dialog.getByRole("button", { name: /^remove passkey$/i }).click();
+
+    await expect(page.getByText(/no passkeys enrolled yet/i)).toBeVisible();
+    expect(deletionBodies).toEqual([
+      JSON.stringify({ current_password: "test-password" }),
+    ]);
+  });
+
   test("signs in with a passkey through the browser flow", async ({ page }) => {
     await installPasskeyBrowserMocks(page);
     await installCsrfToken(page);

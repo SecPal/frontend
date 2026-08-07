@@ -77,6 +77,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Required current-password confirmation before passkey removal, sent the
+  step-up payload required by the passkey deletion API, and retained successful
+  removal state if a subsequent list refresh fails.
 - Fixed Lighthouse pull-request comments to link readers to the current
   workflow run's uploaded report artifact instead of an inaccessible
   runner-local filesystem path, retaining the report artifact when the audit

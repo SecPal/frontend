@@ -227,7 +227,11 @@ async function addPasskey(page: Page, label: string, currentPassword: string) {
   }
 }
 
-async function removePasskey(page: Page, label: string) {
+async function removePasskey(
+  page: Page,
+  label: string,
+  currentPassword: string
+) {
   const card = page
     .locator("div.rounded-2xl")
     .filter({ hasText: label })
@@ -236,6 +240,12 @@ async function removePasskey(page: Page, label: string) {
 
   await expect(card).toBeVisible();
   await removeButton.click();
+
+  const dialog = page.getByRole("dialog", { name: /remove passkey/i });
+  await dialog
+    .getByLabel(/current password to remove passkey/i)
+    .fill(currentPassword);
+  await dialog.getByRole("button", { name: /^remove passkey$/i }).click();
 
   await expect(page.getByText(label)).toHaveCount(0, { timeout: 20_000 });
 }
@@ -345,7 +355,7 @@ test.describe("Live passkey proof", () => {
       });
 
       await test.step("remove one live passkey and keep UI plus API in sync", async () => {
-        await removePasskey(page, firstLabel);
+        await removePasskey(page, firstLabel, TEST_USER.password);
 
         const apiLabels = await getApiPasskeyLabels(page);
 
@@ -418,7 +428,7 @@ test.describe("Live passkey proof", () => {
 
       await test.step("clean up the remaining live passkey", async () => {
         await openSettings(page);
-        await removePasskey(page, secondLabel);
+        await removePasskey(page, secondLabel, TEST_USER.password);
 
         const apiLabels = await getApiPasskeyLabels(page);
 
