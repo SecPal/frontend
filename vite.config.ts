@@ -4,7 +4,6 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import babel, { defineRolldownBabelPreset } from "@rolldown/plugin-babel";
-import linguiMacroBabelPlugin from "@lingui/babel-plugin-lingui-macro";
 import * as linguiVitePlugin from "@lingui/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
@@ -13,21 +12,19 @@ import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
 import { fileURLToPath } from "url";
 import type { ProxyOptions } from "vite";
-import { resolveLinguiVitePluginExports } from "./linguiVitePluginInterop";
-import { applyInjectManifestCodeSplittingFix } from "./src/lib/pwaInjectManifestBuildConfig";
-import { buildPwaRuntimeCaching } from "./src/lib/pwaRuntimeCaching";
-import { resolveAppSurface } from "./src/platform/appSurfaceContract";
-import { thirdPartyDependencyNotices } from "./thirdPartyDependencyNotices";
+import { resolveLinguiVitePluginExports } from "./linguiVitePluginInterop.ts";
+import { applyInjectManifestCodeSplittingFix } from "./src/lib/pwaInjectManifestBuildConfig.ts";
+import { buildPwaRuntimeCaching } from "./src/lib/pwaRuntimeCaching.ts";
+import { resolveAppSurface } from "./src/platform/appSurfaceContract.ts";
+import { thirdPartyDependencyNotices } from "./thirdPartyDependencyNotices.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const { lingui } = resolveLinguiVitePluginExports(linguiVitePlugin);
 const linguiMacroImportPattern = /@lingui\/(?:core|react)\/macro/;
 const linguiMacroBabelPreset = defineRolldownBabelPreset({
-  preset: [
-    () => ({
-      plugins: [linguiMacroBabelPlugin],
-    }),
-  ],
+  preset: () => ({
+    plugins: ["@lingui/babel-plugin-lingui-macro"],
+  }),
   rolldown: {
     filter: {
       id: /\.[jt]sx?$/,

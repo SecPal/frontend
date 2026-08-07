@@ -80,6 +80,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Lighthouse pull-request comments to link readers to the current
   workflow run's uploaded report artifact instead of an inaccessible
   runner-local filesystem path.
+- Made local Vite config imports compatible with Vite's native config loader
+  and covered the config and its dependencies with strict TypeScript checks,
+  removing the future-default compatibility warning from test runs.
 - Changed published multi-architecture runtime verification to exercise each
   platform through its verified child manifest digest, avoiding classic Docker
   image-store conflicts while retaining the OCI index digest as the canonical
