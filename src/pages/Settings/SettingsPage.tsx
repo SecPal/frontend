@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
   type ReactNode,
@@ -228,6 +229,14 @@ export function SettingsPage() {
   const [removingPasskeyId, setRemovingPasskeyId] = useState<string | null>(
     null
   );
+  const [passkeyPendingRemoval, setPasskeyPendingRemoval] =
+    useState<PasskeyCredentialSummary | null>(null);
+  const [passkeyRemovalCurrentPassword, setPasskeyRemovalCurrentPassword] =
+    useState("");
+  const [passkeyRemovalError, setPasskeyRemovalError] = useState<string | null>(
+    null
+  );
+  const passkeyRemovalDismissedRef = useRef(false);
   const [passkeyLabel, setPasskeyLabel] = useState("");
   const [passkeyCurrentPassword, setPasskeyCurrentPassword] = useState("");
   const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
@@ -367,21 +376,63 @@ export function SettingsPage() {
     };
   }, [_]);
 
-  const handlePasskeyRemoval = async (credentialId: string) => {
+  const handleOpenPasskeyRemoval = (passkey: PasskeyCredentialSummary) => {
+    passkeyRemovalDismissedRef.current = false;
+    setPasskeyPendingRemoval(passkey);
+    setPasskeyRemovalCurrentPassword("");
+    setPasskeyRemovalError(null);
+  };
+
+  const handleClosePasskeyRemoval = () => {
+    passkeyRemovalDismissedRef.current = true;
+    setPasskeyPendingRemoval(null);
+    setPasskeyRemovalCurrentPassword("");
+    setPasskeyRemovalError(null);
+  };
+
+  const handlePasskeyRemoval = async (event: FormEvent) => {
+    event.preventDefault();
+
+    if (!passkeyPendingRemoval) {
+      return;
+    }
+
+    const credentialId = passkeyPendingRemoval.id;
+    passkeyRemovalDismissedRef.current = false;
     setPasskeyError(null);
+    setPasskeyRemovalError(null);
     setRemovingPasskeyId(credentialId);
 
     try {
-      await deletePasskey(credentialId);
-      const response = await getPasskeys();
-      setPasskeys(response.data);
+      await deletePasskey(credentialId, {
+        current_password: passkeyRemovalCurrentPassword,
+      });
+      setPasskeys((currentPasskeys) =>
+        currentPasskeys.filter((passkey) => passkey.id !== credentialId)
+      );
+      setPasskeyPendingRemoval(null);
+      setPasskeyRemovalCurrentPassword("");
+
+      try {
+        const response = await getPasskeys();
+        setPasskeys(response.data);
+      } catch {
+        setPasskeyError(
+          _(
+            msg`Passkey was removed, but the updated list could not be loaded. Reload the page to update it.`
+          )
+        );
+      }
     } catch (error) {
-      if (error instanceof AuthApiError) {
-        setPasskeyError(error.message);
-      } else if (error instanceof Error) {
-        setPasskeyError(error.message);
+      const errorMessage =
+        error instanceof AuthApiError || error instanceof Error
+          ? error.message
+          : _(msg`Failed to delete passkey.`);
+
+      if (passkeyRemovalDismissedRef.current) {
+        setPasskeyError(errorMessage);
       } else {
-        setPasskeyError(_(msg`Failed to delete passkey.`));
+        setPasskeyRemovalError(errorMessage);
       }
     } finally {
       setRemovingPasskeyId(null);
@@ -873,15 +924,9 @@ export function SettingsPage() {
                             type="button"
                             variant="destructive"
                             disabled={removingPasskeyId !== null}
-                            onClick={() =>
-                              void handlePasskeyRemoval(passkey.id)
-                            }
+                            onClick={() => handleOpenPasskeyRemoval(passkey)}
                           >
-                            {removingPasskeyId === passkey.id ? (
-                              <Trans>Removing...</Trans>
-                            ) : (
-                              <Trans>Remove</Trans>
-                            )}
+                            <Trans>Remove</Trans>
                           </Button>
                         </div>
                       </div>
@@ -911,6 +956,83 @@ export function SettingsPage() {
           <LanguageSwitcher />
         </div>
       </section>
+
+      <SettingsDialog
+        open={passkeyPendingRemoval !== null}
+        onClose={handleClosePasskeyRemoval}
+      >
+        <DialogTitle>
+          <Trans>Remove passkey</Trans>
+        </DialogTitle>
+        <DialogDescription>
+          <Trans>
+            Enter your current password to remove {passkeyPendingRemoval?.label}
+            .
+          </Trans>
+        </DialogDescription>
+
+        <DialogBody>
+          {passkeyPendingRemoval ? (
+            <form className="space-y-6" onSubmit={handlePasskeyRemoval}>
+              <Field>
+                <FieldLabel htmlFor="passkey-removal-current-password">
+                  <Trans>Current password to remove passkey</Trans>
+                </FieldLabel>
+                <Input
+                  id="passkey-removal-current-password"
+                  name="passkey-removal-current-password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={passkeyRemovalCurrentPassword}
+                  onChange={(event) =>
+                    setPasskeyRemovalCurrentPassword(event.target.value)
+                  }
+                  disabled={removingPasskeyId !== null}
+                  aria-describedby={
+                    passkeyRemovalError
+                      ? "passkey-removal-current-password-error"
+                      : undefined
+                  }
+                />
+                {passkeyRemovalError ? (
+                  <FieldError
+                    id="passkey-removal-current-password-error"
+                    role="alert"
+                  >
+                    {passkeyRemovalError}
+                  </FieldError>
+                ) : null}
+              </Field>
+
+              <DialogActions>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleClosePasskeyRemoval}
+                >
+                  <Trans>Cancel</Trans>
+                </Button>
+                <Button
+                  type="submit"
+                  variant="destructive"
+                  disabled={
+                    removingPasskeyId !== null ||
+                    passkeyRemovalCurrentPassword.trim().length === 0
+                  }
+                  aria-busy={removingPasskeyId !== null}
+                >
+                  {removingPasskeyId !== null ? (
+                    <Trans>Removing...</Trans>
+                  ) : (
+                    <Trans>Remove passkey</Trans>
+                  )}
+                </Button>
+              </DialogActions>
+            </form>
+          ) : null}
+        </DialogBody>
+      </SettingsDialog>
 
       <SettingsDialog
         open={revealedRecoveryCodes !== null}

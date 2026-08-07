@@ -958,7 +958,7 @@ describe("authApi", () => {
   });
 
   describe("deletePasskey", () => {
-    it("deletes an enrolled passkey with DELETE /v1/me/passkeys/:credentialId", async () => {
+    it("sends the current password when deleting an enrolled passkey", async () => {
       const mockResponse = {
         message: "Passkey deleted successfully.",
         data: { remaining_passkeys: 0 },
@@ -970,15 +970,16 @@ describe("authApi", () => {
         json: async () => mockResponse,
       } as Response);
 
-      await expect(deletePasskey("credential-id")).resolves.toEqual(
-        mockResponse
-      );
+      await expect(
+        deletePasskey("credential-id", { current_password: "password123" })
+      ).resolves.toEqual(mockResponse);
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining("/v1/me/passkeys/credential-id"),
         expect.objectContaining({
           method: "DELETE",
           credentials: "include",
           cache: "no-store",
+          body: JSON.stringify({ current_password: "password123" }),
         })
       );
     });
@@ -994,7 +995,9 @@ describe("authApi", () => {
       } as Response);
 
       try {
-        await deletePasskey("missing-credential-id");
+        await deletePasskey("missing-credential-id", {
+          current_password: "password123",
+        });
         expect.fail("Expected deletePasskey to throw");
       } catch (error) {
         expect(error).toBeInstanceOf(AuthApiError);
