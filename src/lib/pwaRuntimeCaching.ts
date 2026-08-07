@@ -1,17 +1,18 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-export interface PwaRuntimeCachingRule {
+import type { VitePWAOptions } from "vite-plugin-pwa";
+
+type WorkboxRuntimeCachingRule = NonNullable<
+  VitePWAOptions["workbox"]["runtimeCaching"]
+>[number];
+
+export type PwaRuntimeCachingRule = Omit<
+  WorkboxRuntimeCachingRule,
+  "urlPattern"
+> & {
   urlPattern: RegExp;
-  handler: string;
-  options?: {
-    cacheName: string;
-    expiration?: {
-      maxEntries: number;
-      maxAgeSeconds: number;
-    };
-  };
-}
+};
 
 export function buildPwaRuntimeCaching(): PwaRuntimeCachingRule[] {
   return [
