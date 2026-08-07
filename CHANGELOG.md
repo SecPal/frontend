@@ -79,7 +79,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Pinned every GitHub Actions and organization reusable-workflow reference to
   reviewed immutable commit SHAs, with version or branch comments and
-  regression coverage that rejects moving refs.
+  regression coverage that rejects moving refs in named and unnamed steps and
+  enforces the review-comment convention.
 - Fixed published frontend startup by explicitly setting the Nginx snippets
   directory to mode `0555`, and hardened runtime verification with
   ownership-safe container creation plus bounded loopback port and readiness

@@ -22,7 +22,40 @@ function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(repoRoot, relativePath), "utf8");
 }
 
-function getWorkflowUsesReferences(): string[] {
+interface WorkflowUsesReference {
+  reference: string;
+  reviewComment: string | undefined;
+}
+
+function getWorkflowUsesReferencesFromSource(
+  workflow: string
+): WorkflowUsesReference[] {
+  const lines = workflow.split("\n");
+
+  return lines.flatMap<WorkflowUsesReference>((line, index) => {
+    const match = line.match(
+      /^\s*(?:-\s*)?uses:\s*(?:"([^"]+)"|'([^']+)'|([^\s#]+))(?:\s+#\s*(.*))?\s*$/u
+    );
+    const reference = match?.[1] ?? match?.[2] ?? match?.[3];
+
+    if (reference === undefined) {
+      return [];
+    }
+
+    const precedingComment = lines[index - 1]
+      ?.match(/^\s*#\s*(.*?)\s*$/u)?.[1]
+      ?.trim();
+
+    return [
+      {
+        reference,
+        reviewComment: match?.[4]?.trim() || precedingComment,
+      },
+    ];
+  });
+}
+
+function getWorkflowUsesReferences(): WorkflowUsesReference[] {
   const workflowFiles = execFileSync("git", ["ls-files", ".github/workflows"], {
     cwd: repoRoot,
     encoding: "utf8",
@@ -32,10 +65,7 @@ function getWorkflowUsesReferences(): string[] {
     .filter((file) => /\.ya?ml$/u.test(file));
 
   return workflowFiles.flatMap((workflowFile) =>
-    Array.from(
-      readRepoFile(workflowFile).matchAll(/^\s*uses:\s*([^\s#]+)/gmu),
-      (match) => match[1]
-    )
+    getWorkflowUsesReferencesFromSource(readRepoFile(workflowFile))
   );
 }
 
@@ -469,8 +499,36 @@ describe("Build Configuration and Source Verification", () => {
     const references = getWorkflowUsesReferences();
 
     expect(references.length).toBeGreaterThan(0);
-    for (const reference of references) {
+    for (const { reference } of references) {
       expect(reference).toMatch(/@[0-9a-f]{40}$/u);
+    }
+  });
+
+  it("extracts workflow references from named and unnamed action steps", () => {
+    const workflow = `
+jobs:
+  test:
+    steps:
+      - uses: actions/checkout@main
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+`;
+
+    expect(
+      getWorkflowUsesReferencesFromSource(workflow).map(
+        ({ reference }) => reference
+      )
+    ).toEqual(["actions/checkout@main", "actions/setup-node@v7"]);
+  });
+
+  it("keeps the reviewed version or branch next to every workflow reference", () => {
+    const references = getWorkflowUsesReferences();
+
+    expect(references.length).toBeGreaterThan(0);
+    for (const { reference, reviewComment } of references) {
+      expect(reviewComment, reference).toMatch(
+        /^(?:main|v\d+(?:\.\d+)*)(?:\b|;)/u
+      );
     }
   });
 
