@@ -62,9 +62,12 @@ For both platforms the workflow verifies all OCI labels, a non-empty BuildKit
 SPDX SBOM, and SLSA v1 provenance in `mode=max` bound to the exact source commit
 and repository build context. It hashes the exact OCI index response bytes,
 compares the result and the registry `Docker-Content-Digest` header with the
-Buildx digest, runs the complete container and Chromium contracts against the
-digest reference, and creates a GitHub Artifact Attestation for that digest.
-The attestation verification binds the repository, publisher workflow,
+Buildx digest, and extracts each platform's runtime manifest digest from that
+verified index. The complete container and Chromium contracts use those exact
+child manifest references. Platform child manifest digests are runtime
+verification evidence only, not trust, deployment, update, or rollback
+identities. The publisher creates and verifies the GitHub Artifact Attestation
+for the canonical OCI index digest, binding the repository, publisher workflow,
 `refs/heads/main`, source commit, signer commit, and GitHub-hosted runner.
 
 This image contains only the browser Web/PWA artifact. It does not publish

@@ -77,6 +77,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Changed published multi-architecture runtime verification to exercise each
+  platform through its verified child manifest digest, avoiding classic Docker
+  image-store conflicts while retaining the OCI index digest as the canonical
+  trust and deployment identity.
 - Pinned every GitHub Actions and organization reusable-workflow reference to
   reviewed immutable commit SHAs, with version or branch comments and
   regression coverage that rejects moving refs in named and unnamed steps and
