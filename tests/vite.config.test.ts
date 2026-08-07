@@ -18,6 +18,8 @@ const tddWorkflowSource = readFileSync(
   path.join(repoRoot, "docs/development/TDD_WORKFLOW.md"),
   "utf8"
 );
+const containsVitestInvocation = (line: string): boolean =>
+  /(?:^|\s)vitest(?:\s|$)/u.test(line);
 
 describe("vite config native loading", () => {
   it("uses explicit TypeScript extensions for local config dependencies", () => {
@@ -71,7 +73,7 @@ describe("vite config native loading", () => {
         readFileSync(path.join(repoRoot, ".github/workflows", fileName), "utf8")
           .split("\n")
           .map((line) => line.trim())
-          .filter((line) => /\bvitest\s/u.test(line))
+          .filter(containsVitestInvocation)
           .map((line) => `${fileName}: ${line}`)
       );
     const nonNativeInvocations = [
@@ -80,6 +82,10 @@ describe("vite config native loading", () => {
     ].filter((invocation) => !/--configLoader=native\b/u.test(invocation));
 
     expect(nonNativeInvocations).toEqual([]);
+  });
+
+  it("recognizes Vitest invocations at the end of a workflow line", () => {
+    expect(containsVitestInvocation("npm exec -- vitest")).toBe(true);
   });
 
   it("documents native config loading for direct Vitest CLI invocations", () => {

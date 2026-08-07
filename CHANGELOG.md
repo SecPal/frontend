@@ -77,6 +77,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed Lighthouse pull-request comments to link readers to the current
+  workflow run's uploaded report artifact instead of an inaccessible
+  runner-local filesystem path, retaining the report artifact when the audit
+  fails.
 - Routed every checked-in Vitest command through Vite's native config loader
   and documented the required flag for direct CLI runs, so standard test paths
   no longer depend on the config-bundle boundary observed in issue #1579.
