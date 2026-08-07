@@ -34,10 +34,14 @@ for branch in "${PROTECTED_BRANCHES[@]}"; do
   fi
 done
 
-# Auto-detect default branch (fallback to main)
-# Use symbolic-ref instead of remote show to avoid network hang
-BASE_REF="$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null || true)"
-BASE="${BASE_REF#refs/remotes/origin/}"
+# Resolve the remote's advertised default branch first. The local origin/HEAD
+# symbolic ref can be stale (for example after a previously pushed topic
+# branch), which would make branch-aware gates measure the wrong PR scope.
+BASE_REF="$(git ls-remote --symref origin HEAD 2>/dev/null | awk '/^ref:/ { sub("refs/heads/", "", $2); print $2; exit }' || true)"
+BASE="$BASE_REF"
+
+# Keep local preflight usable when the remote cannot be reached without
+# reusing a potentially stale local origin/HEAD reference.
 [ -z "${BASE:-}" ] && BASE="main"
 
 echo "Using base branch: $BASE"

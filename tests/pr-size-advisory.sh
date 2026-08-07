@@ -7,6 +7,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 fixture="$(mktemp -d "${TMPDIR:-/tmp}/frontend-pr-size-advisory.XXXXXX")"
 trap 'rm -rf -- "$fixture"' EXIT
+remote="$fixture/remote.git"
 
 mkdir -p "$fixture/scripts" "$fixture/bin"
 cp "$repo_root/scripts/preflight.sh" "$fixture/scripts/preflight.sh"
@@ -16,6 +17,7 @@ for command in npx npm reuse; do
 done
 
 (
+  git init --bare --quiet "$remote"
   cd "$fixture"
   git init --quiet --initial-branch=main
   git config user.name "SecPal Test"
@@ -24,9 +26,22 @@ done
   : >seed.txt
   git add .
   git commit --quiet -m "test: seed fixture"
-  git remote add origin "$fixture"
-  git update-ref refs/remotes/origin/main HEAD
-  git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
+  git remote add origin "$remote"
+  git push --quiet -u origin main
+  git checkout --quiet -b stale-topic
+  awk 'BEGIN { for (line = 1; line <= 30; line++) print "stale " line }' >stale.txt
+  git add stale.txt
+  git commit --quiet -m "test: add stale topic changes"
+  git push --quiet -u origin stale-topic
+  git checkout --quiet main
+  awk 'BEGIN { for (line = 1; line <= 30; line++) print "main " line }' >main.txt
+  git add main.txt
+  git commit --quiet -m "test: advance main beyond stale topic"
+  git push --quiet origin main
+  git update-ref refs/remotes/origin/main main
+  git update-ref refs/remotes/origin/stale-topic stale-topic
+  git -C "$remote" symbolic-ref HEAD refs/heads/main
+  git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/stale-topic
   git checkout --quiet -b test-branch
   awk 'BEGIN { for (line = 1; line <= 601; line++) print "line " line }' >large.txt
   git add large.txt
@@ -40,9 +55,22 @@ status=$?
 set -e
 
 test "$status" -eq 0
+grep -Fq "Using base branch: main" "$fixture/stdout"
 grep -Fq "PR size: 601 changed lines (601 insertions, 0 deletions; advisory threshold: 600)" \
   "$fixture/stderr"
 grep -Fq "WARNING: PR size advisory threshold exceeded." "$fixture/stderr"
+
+(
+  cd "$fixture"
+  git remote set-url origin "$fixture/missing-remote.git"
+)
+set +e
+(cd "$fixture" && PATH="$fixture/bin:/usr/bin:/bin" bash scripts/preflight.sh) \
+  >"$fixture/offline-stdout" 2>"$fixture/offline-stderr"
+offline_status=$?
+set -e
+test "$offline_status" -eq 0
+grep -Fq "Using base branch: main" "$fixture/offline-stdout"
 
 printf '[\n' >"$fixture/.preflight-exclude"
 (
