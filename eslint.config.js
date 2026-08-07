@@ -12,6 +12,7 @@ export default tseslint.config(
     ignores: [
       "dist",
       "coverage",
+      ".polyscope-preview-stage",
       "src/locales/**/*.js",
       "src/locales/**/*.mjs",
     ],

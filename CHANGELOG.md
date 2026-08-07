@@ -80,6 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Excluded transient Polyscope preview-stage artifacts from ESLint so local
+  linting does not race files created and removed by the preview process.
 - Bounded native stored-snapshot connectivity preflight during auth bootstrap,
   so a stalled native availability call now completes as offline while retaining
   the secure local session.
