@@ -8,6 +8,8 @@ repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 fixture="$(mktemp -d "${TMPDIR:-/tmp}/frontend-pr-size-advisory.XXXXXX")"
 trap 'rm -rf -- "$fixture"' EXIT
 remote="$fixture/remote.git"
+system_git="$(command -v git)"
+system_timeout="$(command -v timeout || true)"
 
 mkdir -p "$fixture/scripts" "$fixture/bin"
 cp "$repo_root/scripts/preflight.sh" "$fixture/scripts/preflight.sh"
@@ -15,6 +17,23 @@ for command in npx npm reuse; do
   printf '#!/usr/bin/env bash\nexit 0\n' >"$fixture/bin/$command"
   chmod +x "$fixture/bin/$command"
 done
+# shellcheck disable=SC2016 # Generated wrapper must expand these variables when executed.
+printf '%s\n' \
+  '#!/usr/bin/env bash' \
+  'if [ "${1:-}" = "ls-remote" ]; then' \
+  '  printf "GIT_TERMINAL_PROMPT=%s\\n" "${GIT_TERMINAL_PROMPT:-}" >>"$GIT_PROBE_LOG"' \
+  'fi' \
+  'exec "$SYSTEM_GIT" "$@"' >"$fixture/bin/git"
+chmod +x "$fixture/bin/git"
+
+if [ -n "$system_timeout" ]; then
+  # shellcheck disable=SC2016 # Generated wrapper must expand these variables when executed.
+  printf '%s\n' \
+    '#!/usr/bin/env bash' \
+    'printf "timeout %s\\n" "$1" >>"$GIT_PROBE_LOG"' \
+    'exec "$SYSTEM_TIMEOUT" "$@"' >"$fixture/bin/timeout"
+  chmod +x "$fixture/bin/timeout"
+fi
 
 (
   git init --bare --quiet "$remote"
@@ -49,12 +68,16 @@ done
 )
 
 set +e
-(cd "$fixture" && PATH="$fixture/bin:/usr/bin:/bin" bash scripts/preflight.sh) \
+(cd "$fixture" && SYSTEM_GIT="$system_git" SYSTEM_TIMEOUT="$system_timeout" GIT_PROBE_LOG="$fixture/git-probe.log" PATH="$fixture/bin:/usr/bin:/bin" bash scripts/preflight.sh) \
   >"$fixture/stdout" 2>"$fixture/stderr"
 status=$?
 set -e
 
 test "$status" -eq 0
+grep -Fq "GIT_TERMINAL_PROMPT=0" "$fixture/git-probe.log"
+if [ -n "$system_timeout" ]; then
+  grep -Fq "timeout 5" "$fixture/git-probe.log"
+fi
 grep -Fq "Using base branch: main" "$fixture/stdout"
 grep -Fq "PR size: 601 changed lines (601 insertions, 0 deletions; advisory threshold: 600)" \
   "$fixture/stderr"
@@ -65,7 +88,7 @@ grep -Fq "WARNING: PR size advisory threshold exceeded." "$fixture/stderr"
   git remote set-url origin "$fixture/missing-remote.git"
 )
 set +e
-(cd "$fixture" && PATH="$fixture/bin:/usr/bin:/bin" bash scripts/preflight.sh) \
+(cd "$fixture" && SYSTEM_GIT="$system_git" SYSTEM_TIMEOUT="$system_timeout" GIT_PROBE_LOG="$fixture/git-probe.log" PATH="$fixture/bin:/usr/bin:/bin" bash scripts/preflight.sh) \
   >"$fixture/offline-stdout" 2>"$fixture/offline-stderr"
 offline_status=$?
 set -e
@@ -79,7 +102,7 @@ printf '[\n' >"$fixture/.preflight-exclude"
   git commit --quiet -m "test: add invalid exclusion"
 )
 set +e
-(cd "$fixture" && PATH="$fixture/bin:/usr/bin:/bin" bash scripts/preflight.sh) \
+(cd "$fixture" && SYSTEM_GIT="$system_git" SYSTEM_TIMEOUT="$system_timeout" GIT_PROBE_LOG="$fixture/git-probe.log" PATH="$fixture/bin:/usr/bin:/bin" bash scripts/preflight.sh) \
   >"$fixture/invalid-stdout" 2>"$fixture/invalid-stderr"
 invalid_status=$?
 set -e
