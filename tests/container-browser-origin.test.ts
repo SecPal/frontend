@@ -5,19 +5,19 @@ import { describe, expect, it } from "vitest";
 import { hasExactOrigin } from "./e2e/container-origin";
 
 describe("container browser request origin matching", () => {
-  const expectedOrigin = "https://api.container.example";
+  const expectedOrigin = "https://api.secpal.dev";
 
   it.each([
-    "https://api.container.example/v1/me",
-    "https://api.container.example:443/health/ready",
+    "https://api.secpal.dev/v1/me",
+    "https://api.secpal.dev:443/health/ready",
   ])("accepts the configured API origin: %s", (requestUrl) => {
     expect(hasExactOrigin(requestUrl, expectedOrigin)).toBe(true);
   });
 
   it.each([
-    "https://api.container.example.evil/v1/me",
-    "https://api.container.example@evil.example/v1/me",
-    "https://evil.example/?next=https://api.container.example",
+    "https://api.secpal.dev.evil.secpal.dev/v1/me",
+    "https://api.secpal.dev@evil.secpal.dev/v1/me",
+    "https://evil.secpal.dev/?next=https://api.secpal.dev",
     "not-a-url",
   ])("rejects a non-matching URL: %s", (requestUrl) => {
     expect(hasExactOrigin(requestUrl, expectedOrigin)).toBe(false);
