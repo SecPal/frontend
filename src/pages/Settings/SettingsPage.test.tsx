@@ -86,6 +86,14 @@ function fillPasskeyRegistrationForm(
   });
 }
 
+function submitPasskeyRemoval(currentPassword = "correct-password") {
+  fireEvent.change(
+    screen.getByLabelText(/current password to remove passkey/i),
+    { target: { value: currentPassword } }
+  );
+  fireEvent.click(screen.getByRole("button", { name: /^remove passkey$/i }));
+}
+
 async function selectLanguage(visibleName: string) {
   const trigger = screen.getByRole("combobox", { name: /select language/i });
   fireEvent.click(trigger, { button: 0 });
@@ -899,15 +907,53 @@ describe("SettingsPage", () => {
     await renderSettingsPage();
     fireEvent.click(screen.getByRole("button", { name: /remove/i }));
 
+    const dialog = await screen.findByRole("dialog", {
+      name: /remove passkey/i,
+    });
+    expect(dialog).toHaveTextContent(/work macbook touch id/i);
+
+    submitPasskeyRemoval();
+
     await waitFor(() => {
       expect(authAccountApi.deletePasskey).toHaveBeenCalledWith(
-        "credential-id"
+        "credential-id",
+        { current_password: "correct-password" }
       );
       expect(authAccountApi.getPasskeys).toHaveBeenCalledTimes(2);
       expect(
         screen.queryByText(/work macbook touch id/i)
       ).not.toBeInTheDocument();
       expect(screen.getByText(/no passkeys enrolled yet/i)).toBeInTheDocument();
+    });
+  });
+
+  it("keeps a successful passkey deletion complete when refreshing the list fails", async () => {
+    vi.mocked(authAccountApi.deletePasskey).mockResolvedValueOnce({
+      message: "Passkey deleted successfully.",
+      data: { remaining_passkeys: 0 },
+    });
+    vi.mocked(authAccountApi.getPasskeys)
+      .mockResolvedValueOnce(createPasskeyListResponse())
+      .mockRejectedValueOnce(new Error("Passkey list fetch failed."));
+
+    await renderSettingsPage();
+    fireEvent.click(screen.getByRole("button", { name: /remove/i }));
+    submitPasskeyRemoval();
+
+    await waitFor(() => {
+      expect(authAccountApi.deletePasskey).toHaveBeenCalledTimes(1);
+      expect(authAccountApi.getPasskeys).toHaveBeenCalledTimes(2);
+      expect(
+        screen.queryByRole("dialog", { name: /remove passkey/i })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/work macbook touch id/i)
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /passkey was removed, but the updated list could not be loaded/i
+        )
+      ).toBeInTheDocument();
     });
   });
 
@@ -952,6 +998,7 @@ describe("SettingsPage", () => {
     const removeButtons = screen.getAllByRole("button", { name: /remove/i });
     expect(removeButtons).toHaveLength(2);
     fireEvent.click(removeButtons[0]!);
+    submitPasskeyRemoval();
 
     // ALL remove buttons must be disabled while any deletion is in flight
     for (const button of screen.getAllByRole("button", {
@@ -990,6 +1037,43 @@ describe("SettingsPage", () => {
     }
   });
 
+  it("dismisses the removal dialog while an in-flight deletion settles", async () => {
+    let rejectDeletion: ((reason?: unknown) => void) | undefined;
+    vi.mocked(authAccountApi.deletePasskey).mockImplementationOnce(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectDeletion = reject;
+        })
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: /remove/i }));
+    submitPasskeyRemoval();
+
+    expect(screen.getByRole("button", { name: /removing/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /cancel/i })).toBeEnabled();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", { name: /remove passkey/i })
+      ).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByRole("button", { name: /^remove$/i })).toBeDisabled();
+
+    await act(async () => {
+      rejectDeletion?.(new Error("Deletion failed after dismissal."));
+    });
+
+    expect(
+      await screen.findByText(/deletion failed after dismissal/i)
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^remove$/i })).toBeEnabled();
+  });
+
   it("shows a busy state while passkey removal is in flight", async () => {
     let resolveDeletion:
       | ((value: {
@@ -1011,6 +1095,7 @@ describe("SettingsPage", () => {
     await renderSettingsPage();
 
     fireEvent.click(await screen.findByRole("button", { name: /remove/i }));
+    submitPasskeyRemoval();
 
     expect(screen.getByRole("button", { name: /removing/i })).toBeDisabled();
 
@@ -1032,6 +1117,7 @@ describe("SettingsPage", () => {
     await renderSettingsPage();
 
     fireEvent.click(await screen.findByRole("button", { name: /remove/i }));
+    submitPasskeyRemoval();
 
     expect(await screen.findByText(/deletion exploded/i)).toBeInTheDocument();
   });
@@ -1042,6 +1128,7 @@ describe("SettingsPage", () => {
     await renderSettingsPage();
 
     fireEvent.click(await screen.findByRole("button", { name: /remove/i }));
+    submitPasskeyRemoval();
 
     expect(
       await screen.findByText(/failed to delete passkey/i)
@@ -1056,16 +1143,19 @@ describe("SettingsPage", () => {
     await renderSettingsPage();
 
     fireEvent.click(await screen.findByRole("button", { name: /remove/i }));
+    submitPasskeyRemoval();
 
     const passkeyError = await screen.findByText(/passkey deletion failed/i);
-    const passkeyAlert = passkeyError.closest('[data-slot="alert"]');
-    expect(passkeyError).toBeInTheDocument();
-    expect(passkeyAlert).toHaveClass(
-      "border-destructive/30",
-      "bg-destructive/10"
+    const currentPassword = screen.getByLabelText(
+      /current password to remove passkey/i
     );
-    expect(passkeyAlert).toHaveAttribute("data-slot", "alert");
-    expect(screen.getByText(/work macbook touch id/i)).toBeInTheDocument();
+    expect(passkeyError).toBeInTheDocument();
+    expect(passkeyError).toHaveAttribute("role", "alert");
+    expect(currentPassword).toHaveAttribute(
+      "aria-describedby",
+      "passkey-removal-current-password-error"
+    );
+    expect(screen.getAllByText(/work macbook touch id/i)).toHaveLength(2);
   });
 
   it("displays language selection section", async () => {
