@@ -80,6 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Excluded transient Polyscope preview-stage artifacts from ESLint so local
+  linting does not race files created and removed by the preview process.
 - Required current-password confirmation before passkey removal, sent the
   step-up payload required by the passkey deletion API, and retained successful
   removal state if a subsequent list refresh fails. The confirmation dialog can
