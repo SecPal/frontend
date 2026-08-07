@@ -66,7 +66,8 @@ export async function clearBrowserPushClientState(): Promise<void> {
 
   if (
     typeof navigator === "undefined" ||
-    navigator.serviceWorker === undefined
+    navigator.serviceWorker === undefined ||
+    typeof navigator.serviceWorker.getRegistration !== "function"
   ) {
     return;
   }

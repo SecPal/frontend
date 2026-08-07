@@ -216,7 +216,9 @@ describe("clearSensitiveClientState", () => {
 
   it("does not wait for a future service worker registration during browser push cleanup", async () => {
     const getRegistration = vi.fn().mockResolvedValue(undefined);
-    const ready = new Promise<ServiceWorkerRegistration>(() => undefined);
+    const ready = new Promise<ServiceWorkerRegistration>(() => {
+      // Intentionally pending to prove cleanup never waits for readiness.
+    });
 
     Object.defineProperty(navigator, "serviceWorker", {
       configurable: true,
@@ -232,6 +234,24 @@ describe("clearSensitiveClientState", () => {
 
     expect(getRegistration).toHaveBeenCalledTimes(1);
     await cleanup;
+  });
+
+  it("treats a missing service worker registration lookup as unsupported", async () => {
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: {
+        ready: new Promise<ServiceWorkerRegistration>(() => {
+          // Intentionally pending to model an unsupported registration lookup.
+        }),
+      },
+      writable: true,
+    });
+
+    await expect(clearBrowserPushClientState()).resolves.toBeUndefined();
+
+    expect(consoleWarn).not.toHaveBeenCalled();
   });
 
   it("waits for IndexedDB cleanup to settle before rejecting after another sensitive cleanup fails", async () => {
