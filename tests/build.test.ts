@@ -28,8 +28,28 @@ interface WorkflowUsesReference {
   reviewComment: string | undefined;
 }
 
+interface WorkflowSource {
+  path: string;
+  source: string;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function getWorkflowSources(): WorkflowSource[] {
+  const workflowFiles = execFileSync("git", ["ls-files", ".github/workflows"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  })
+    .trim()
+    .split("\n")
+    .filter((file) => /\.ya?ml$/u.test(file));
+
+  return workflowFiles.map((workflowFile) => ({
+    path: workflowFile,
+    source: readRepoFile(workflowFile),
+  }));
 }
 
 function getReviewComments(
@@ -94,16 +114,8 @@ function getWorkflowUsesReferencesFromSource(
 }
 
 function getWorkflowUsesReferences(): WorkflowUsesReference[] {
-  const workflowFiles = execFileSync("git", ["ls-files", ".github/workflows"], {
-    cwd: repoRoot,
-    encoding: "utf8",
-  })
-    .trim()
-    .split("\n")
-    .filter((file) => /\.ya?ml$/u.test(file));
-
-  return workflowFiles.flatMap((workflowFile) =>
-    getWorkflowUsesReferencesFromSource(readRepoFile(workflowFile))
+  return getWorkflowSources().flatMap(({ source }) =>
+    getWorkflowUsesReferencesFromSource(source)
   );
 }
 
@@ -510,26 +522,40 @@ describe("Build Configuration and Source Verification", () => {
     }
   }, 120_000);
 
-  it("keeps timeout-minutes only on runnable quality workflow jobs", () => {
-    const qualityWorkflow = readRepoFile(".github/workflows/quality.yml");
-    const jobsSection = getIndentedSection(qualityWorkflow, "jobs");
-    const jobNames = Array.from(
-      jobsSection.matchAll(/^ {2}([a-z0-9-]+):$/gm),
-      (match) => match[1]
-    );
+  it("sets timeout-minutes on every runnable workflow job", () => {
+    const workflowSources = getWorkflowSources();
 
-    expect(jobNames.length).toBeGreaterThan(0);
+    expect(workflowSources.length).toBeGreaterThan(0);
 
-    for (const jobName of jobNames) {
-      const jobSection = getIndentedSection(jobsSection, jobName);
+    for (const workflow of workflowSources) {
+      const document = load(workflow.source);
 
-      if (jobSection.includes("\n    uses: ")) {
-        expect(jobSection).not.toContain("timeout-minutes:");
+      expect(isRecord(document), workflow.path).toBe(true);
+      if (!isRecord(document)) {
         continue;
       }
 
-      expect(jobSection).toContain("runs-on:");
-      expect(jobSection).toContain("timeout-minutes:");
+      expect(isRecord(document.jobs), workflow.path).toBe(true);
+      if (!isRecord(document.jobs)) {
+        continue;
+      }
+
+      for (const [jobName, job] of Object.entries(document.jobs)) {
+        const jobLocation = `${workflow.path}:jobs.${jobName}`;
+
+        expect(isRecord(job), jobLocation).toBe(true);
+        if (!isRecord(job)) {
+          continue;
+        }
+
+        if (typeof job.uses === "string") {
+          expect(job, jobLocation).not.toHaveProperty("timeout-minutes");
+          continue;
+        }
+
+        expect(job, jobLocation).toHaveProperty("runs-on");
+        expect(job, jobLocation).toHaveProperty("timeout-minutes");
+      }
     }
   });
 

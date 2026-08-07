@@ -18,6 +18,7 @@ jobs:
   lighthouse:
     name: Performance Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     # Skip for spike branches (exploration only)
     if: ${{ !startsWith(github.head_ref, 'spike/') && !startsWith(github.ref, 'refs/heads/spike/') }}
 
