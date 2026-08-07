@@ -1037,6 +1037,43 @@ describe("SettingsPage", () => {
     }
   });
 
+  it("dismisses the removal dialog while an in-flight deletion settles", async () => {
+    let rejectDeletion: ((reason?: unknown) => void) | undefined;
+    vi.mocked(authAccountApi.deletePasskey).mockImplementationOnce(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectDeletion = reject;
+        })
+    );
+
+    await renderSettingsPage();
+
+    fireEvent.click(await screen.findByRole("button", { name: /remove/i }));
+    submitPasskeyRemoval();
+
+    expect(screen.getByRole("button", { name: /removing/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /cancel/i })).toBeEnabled();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", { name: /remove passkey/i })
+      ).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByRole("button", { name: /^remove$/i })).toBeDisabled();
+
+    await act(async () => {
+      rejectDeletion?.(new Error("Deletion failed after dismissal."));
+    });
+
+    expect(
+      await screen.findByText(/deletion failed after dismissal/i)
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^remove$/i })).toBeEnabled();
+  });
+
   it("shows a busy state while passkey removal is in flight", async () => {
     let resolveDeletion:
       | ((value: {

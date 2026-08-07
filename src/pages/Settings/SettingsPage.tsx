@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
   type ReactNode,
@@ -235,6 +236,7 @@ export function SettingsPage() {
   const [passkeyRemovalError, setPasskeyRemovalError] = useState<string | null>(
     null
   );
+  const passkeyRemovalDismissedRef = useRef(false);
   const [passkeyLabel, setPasskeyLabel] = useState("");
   const [passkeyCurrentPassword, setPasskeyCurrentPassword] = useState("");
   const [isRegisteringPasskey, setIsRegisteringPasskey] = useState(false);
@@ -375,16 +377,14 @@ export function SettingsPage() {
   }, [_]);
 
   const handleOpenPasskeyRemoval = (passkey: PasskeyCredentialSummary) => {
+    passkeyRemovalDismissedRef.current = false;
     setPasskeyPendingRemoval(passkey);
     setPasskeyRemovalCurrentPassword("");
     setPasskeyRemovalError(null);
   };
 
   const handleClosePasskeyRemoval = () => {
-    if (removingPasskeyId !== null) {
-      return;
-    }
-
+    passkeyRemovalDismissedRef.current = true;
     setPasskeyPendingRemoval(null);
     setPasskeyRemovalCurrentPassword("");
     setPasskeyRemovalError(null);
@@ -398,6 +398,7 @@ export function SettingsPage() {
     }
 
     const credentialId = passkeyPendingRemoval.id;
+    passkeyRemovalDismissedRef.current = false;
     setPasskeyError(null);
     setPasskeyRemovalError(null);
     setRemovingPasskeyId(credentialId);
@@ -423,12 +424,15 @@ export function SettingsPage() {
         );
       }
     } catch (error) {
-      if (error instanceof AuthApiError) {
-        setPasskeyRemovalError(error.message);
-      } else if (error instanceof Error) {
-        setPasskeyRemovalError(error.message);
+      const errorMessage =
+        error instanceof AuthApiError || error instanceof Error
+          ? error.message
+          : _(msg`Failed to delete passkey.`);
+
+      if (passkeyRemovalDismissedRef.current) {
+        setPasskeyError(errorMessage);
       } else {
-        setPasskeyRemovalError(_(msg`Failed to delete passkey.`));
+        setPasskeyRemovalError(errorMessage);
       }
     } finally {
       setRemovingPasskeyId(null);
@@ -1006,7 +1010,6 @@ export function SettingsPage() {
                   type="button"
                   variant="outline"
                   onClick={handleClosePasskeyRemoval}
-                  disabled={removingPasskeyId !== null}
                 >
                   <Trans>Cancel</Trans>
                 </Button>
