@@ -80,8 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Ensured Android runtime discovery waits for logout cleanup before becoming
-  interactive, preventing analytics reset from racing a closed session database.
+- Ensured Android runtime discovery waits for logout cleanup without blocking
+  on a future browser service worker when no registration exists.
 - Excluded transient Polyscope preview-stage artifacts from ESLint so local
   linting does not race files created and removed by the preview process.
 - Bounded native stored-snapshot connectivity preflight during auth bootstrap,

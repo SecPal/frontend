@@ -8,6 +8,7 @@ import {
   peekBrowserPushInstallationId,
 } from "./browserPushState";
 import {
+  clearBrowserPushClientState,
   clearSensitiveClientState,
   SENSITIVE_CACHE_NAMES,
 } from "./clientStateCleanup";
@@ -60,6 +61,9 @@ describe("clearSensitiveClientState", () => {
 
     Object.defineProperty(navigator, "serviceWorker", {
       value: {
+        getRegistration: vi.fn().mockResolvedValue({
+          pushManager: mockPushManager,
+        }),
         ready: Promise.resolve({
           pushManager: mockPushManager,
         }),
@@ -208,6 +212,26 @@ describe("clearSensitiveClientState", () => {
     expect(mockPushSubscription.unsubscribe).toHaveBeenCalledTimes(1);
     expect(installationId).not.toBeNull();
     expect(peekBrowserPushInstallationId()).toBeNull();
+  });
+
+  it("does not wait for a future service worker registration during browser push cleanup", async () => {
+    const getRegistration = vi.fn().mockResolvedValue(undefined);
+    const ready = new Promise<ServiceWorkerRegistration>(() => undefined);
+
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: {
+        getRegistration,
+        ready,
+      },
+      writable: true,
+    });
+
+    const cleanup = clearBrowserPushClientState();
+    await Promise.resolve();
+
+    expect(getRegistration).toHaveBeenCalledTimes(1);
+    await cleanup;
   });
 
   it("waits for IndexedDB cleanup to settle before rejecting after another sensitive cleanup fails", async () => {

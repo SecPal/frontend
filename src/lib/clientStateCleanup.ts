@@ -72,7 +72,7 @@ export async function clearBrowserPushClientState(): Promise<void> {
   }
 
   try {
-    const registration = await navigator.serviceWorker.ready;
+    const registration = await navigator.serviceWorker.getRegistration();
 
     if (
       registration === undefined ||

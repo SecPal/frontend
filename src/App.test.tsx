@@ -580,6 +580,77 @@ describe("App", () => {
     }
   });
 
+  it("shows Android runtime discovery without waiting for trailing browser push cleanup", async () => {
+    const serviceWorkerReady = createDeferredPromise<{
+      pushManager: {
+        getSubscription: ReturnType<typeof vi.fn>;
+      };
+    }>();
+    const serviceWorkerDescriptor = Object.getOwnPropertyDescriptor(
+      navigator,
+      "serviceWorker"
+    );
+    const capacitorDescriptor = Object.getOwnPropertyDescriptor(
+      globalThis,
+      "Capacitor"
+    );
+
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: {
+        controller: null,
+        getRegistration: vi.fn().mockResolvedValue(undefined),
+        getRegistrations: vi.fn().mockResolvedValue([]),
+        ready: serviceWorkerReady.promise,
+      },
+    });
+    Object.defineProperty(globalThis, "Capacitor", {
+      configurable: true,
+      value: {
+        isNativePlatform: () => true,
+      },
+    });
+    createAndroidRuntimeBootstrapBridge({ configured: false });
+
+    try {
+      await renderWithI18n(<App />);
+
+      expect(
+        await screen.findByRole(
+          "heading",
+          { name: /enter your instance url/i },
+          { timeout: 1_000 }
+        )
+      ).toBeInTheDocument();
+    } finally {
+      serviceWorkerReady.resolve({
+        pushManager: {
+          getSubscription: vi.fn().mockResolvedValue(null),
+        },
+      });
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      if (serviceWorkerDescriptor) {
+        Object.defineProperty(
+          navigator,
+          "serviceWorker",
+          serviceWorkerDescriptor
+        );
+      } else {
+        delete (navigator as { serviceWorker?: unknown }).serviceWorker;
+      }
+
+      if (capacitorDescriptor) {
+        Object.defineProperty(globalThis, "Capacitor", capacitorDescriptor);
+      } else {
+        delete (globalThis as { Capacitor?: unknown }).Capacitor;
+      }
+    }
+  });
+
   it("switches discovery UI language immediately when the user changes it", async () => {
     const user = userEvent.setup();
     createAndroidRuntimeBootstrapBridge({ configured: false });
@@ -929,18 +1000,20 @@ describe("App", () => {
       navigator,
       "serviceWorker"
     );
+    const serviceWorkerRegistration = {
+      pushManager: {
+        getSubscription: vi.fn().mockResolvedValue({
+          endpoint: "https://app.secpal.dev/stale-registration",
+          unsubscribe,
+        }),
+      },
+    };
 
     Object.defineProperty(navigator, "serviceWorker", {
       configurable: true,
       value: {
-        ready: Promise.resolve({
-          pushManager: {
-            getSubscription: vi.fn().mockResolvedValue({
-              endpoint: "https://app.secpal.dev/stale-registration",
-              unsubscribe,
-            }),
-          },
-        }),
+        getRegistration: vi.fn().mockResolvedValue(serviceWorkerRegistration),
+        ready: Promise.resolve(serviceWorkerRegistration),
       },
     });
 
