@@ -44,7 +44,7 @@ jobs:
 
       - name: Run container publishing and source policy tests
         run: >-
-          npm exec -- vitest run
+          npm exec -- vitest --configLoader=native run
           tests/container-runtime-lifecycle.test.ts
           tests/container-publishing-workflow.test.ts
           tests/container-contract.test.ts
