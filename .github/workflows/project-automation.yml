@@ -1,6 +1,7 @@
-# SPDX-FileCopyrightText: 2025 SecPal
+# SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 # SPDX-License-Identifier: CC0-1.0
 
+---
 name: Project Board Automation
 
 on:
@@ -29,14 +30,16 @@ permissions:
 jobs:
   project-automation:
     name: Project automation
-    uses: SecPal/.github/.github/workflows/project-automation-core.yml@main
+    # main
+    uses: SecPal/.github/.github/workflows/project-automation-core.yml@ffdfe1be8bbd8164d649f1c1d296e57ff4c6cc4a
     secrets:
       APP_ID: ${{ secrets.APP_ID }}
       APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
 
   draft-reminder:
     name: Draft PR Reminder
-    uses: SecPal/.github/.github/workflows/draft-pr-reminder.yml@main
+    # main
+    uses: SecPal/.github/.github/workflows/draft-pr-reminder.yml@ffdfe1be8bbd8164d649f1c1d296e57ff4c6cc4a
     permissions:
       issues: write
       pull-requests: write

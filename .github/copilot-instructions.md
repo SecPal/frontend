@@ -197,3 +197,15 @@ This file auto-applies to all files in this repo so strict SecPal governance sta
   compatibility shims by default. If a legacy storage format, input alias, or
   deprecated frontend contract has no proven live caller, prefer removing it
   and updating tests and changelog coverage in the same change.
+
+## Additional Rules: github-workflows.instructions.md
+
+- Always set `timeout-minutes` on every job.
+- Set explicit `permissions` on every workflow and start with the least privilege needed.
+- Pin every `uses:` reference, including GitHub-maintained actions and organization reusable workflows,
+  to a full 40-character commit SHA. Preserve the reviewed version or branch in a nearby comment for
+  update visibility.
+- Use reusable workflows from the organization templates when they fit the task.
+- Use `continue-on-error: true` only for intentional polling or wait steps, never for build or test steps.
+- Reference secrets via `${{ secrets.NAME }}` and vars via `${{ vars.NAME }}`. Never hardcode or echo secrets.
+- Run `yamllint` on workflow changes before finalizing.
