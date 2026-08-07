@@ -79,7 +79,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed Lighthouse pull-request comments to link readers to the current
   workflow run's uploaded report artifact instead of an inaccessible
-  runner-local filesystem path.
+  runner-local filesystem path, retaining the report artifact when the audit
+  fails.
 - Made local Vite config imports compatible with Vite's native config loader
   and covered the config and its dependencies with strict TypeScript checks,
   removing the future-default compatibility warning from test runs.

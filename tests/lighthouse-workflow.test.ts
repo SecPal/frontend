@@ -53,6 +53,7 @@ describe("Lighthouse workflow report comment", () => {
     expect(uploadStep.uses).toBe(
       "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
     );
+    expect(uploadStep.if).toBe("${{ always() }}");
     expect(uploadStep.with).toMatchObject({
       "if-no-files-found": "error",
       "include-hidden-files": true,
@@ -117,6 +118,7 @@ describe("Lighthouse workflow report comment", () => {
     const comment = outputs.get("comment");
     expect(comment).toContain(`[View full report artifact](${artifactUrl})`);
     expect(comment).not.toContain("/home/runner/");
+    expect(comment).not.toContain(".lighthouseci/");
     expect(comment).not.toContain("#artifacts");
   });
 });
