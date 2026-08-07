@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { JSDOM } from "jsdom";
+import { load } from "js-yaml";
 import { describe, it, expect } from "vitest";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -27,32 +28,69 @@ interface WorkflowUsesReference {
   reviewComment: string | undefined;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function getReviewComments(
+  lines: string[],
+  references: string[]
+): Array<string | undefined> {
+  const remainingReferences = [...references];
+
+  return lines.flatMap((line, index) => {
+    const referenceIndex = remainingReferences.findIndex(
+      (reference) =>
+        /^\s*(?:-\s*)?uses:\s*|[,{]\s*uses:\s*/u.test(line) &&
+        line.includes(reference)
+    );
+
+    if (referenceIndex === -1) {
+      return [];
+    }
+
+    remainingReferences.splice(referenceIndex, 1);
+    const inlineComment = line.match(/\s#\s*(.*)$/u)?.[1]?.trim();
+
+    return [
+      inlineComment ||
+        lines[index - 1]?.match(/^\s*#\s*(.*?)\s*$/u)?.[1]?.trim(),
+    ];
+  });
+}
+
 function getWorkflowUsesReferencesFromSource(
   workflow: string
 ): WorkflowUsesReference[] {
   const lines = workflow.split("\n");
+  const document = load(workflow);
 
-  return lines.flatMap<WorkflowUsesReference>((line, index) => {
-    const match = line.match(
-      /^\s*(?:-\s*)?uses:\s*(?:"([^"]+)"|'([^']+)'|([^\s#]+))(?:\s+#\s*(.*))?\s*$/u
-    );
-    const reference = match?.[1] ?? match?.[2] ?? match?.[3];
+  if (!isRecord(document) || !isRecord(document.jobs)) {
+    return [];
+  }
 
-    if (reference === undefined) {
+  const references = Object.values(document.jobs).flatMap((job) => {
+    if (!isRecord(job)) {
       return [];
     }
 
-    const precedingComment = lines[index - 1]
-      ?.match(/^\s*#\s*(.*?)\s*$/u)?.[1]
-      ?.trim();
+    const reusableWorkflowReference =
+      typeof job.uses === "string" ? [job.uses] : [];
+    const stepReferences = Array.isArray(job.steps)
+      ? job.steps.flatMap((step) =>
+          isRecord(step) && typeof step.uses === "string" ? [step.uses] : []
+        )
+      : [];
 
-    return [
-      {
-        reference,
-        reviewComment: match?.[4]?.trim() || precedingComment,
-      },
-    ];
+    return [...reusableWorkflowReference, ...stepReferences];
   });
+
+  const reviewComments = getReviewComments(lines, references);
+
+  return references.map((reference, index) => ({
+    reference,
+    reviewComment: reviewComments[index],
+  }));
 }
 
 function getWorkflowUsesReferences(): WorkflowUsesReference[] {
@@ -512,13 +550,39 @@ jobs:
       - uses: actions/checkout@main
       - name: Setup Node.js
         uses: actions/setup-node@v7
+      - { name: Flow checkout, uses: actions/checkout@main }
 `;
 
     expect(
       getWorkflowUsesReferencesFromSource(workflow).map(
         ({ reference }) => reference
       )
-    ).toEqual(["actions/checkout@main", "actions/setup-node@v7"]);
+    ).toEqual([
+      "actions/checkout@main",
+      "actions/setup-node@v7",
+      "actions/checkout@main",
+    ]);
+  });
+
+  it("associates review comments with each repeated workflow reference", () => {
+    const workflow = `
+jobs:
+  test:
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+`;
+
+    expect(getWorkflowUsesReferencesFromSource(workflow)).toEqual([
+      {
+        reference: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        reviewComment: "v7",
+      },
+      {
+        reference: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        reviewComment: undefined,
+      },
+    ]);
   });
 
   it("keeps the reviewed version or branch next to every workflow reference", () => {

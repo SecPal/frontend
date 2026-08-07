@@ -19,7 +19,7 @@ rules:
   # Allow comments to be indented differently
   comments-indentation: disable
 
-  # Match Prettier's single-space inline-comment formatting.
+  # Allow Prettier-compatible inline comments with at least one preceding space.
   comments:
     min-spaces-from-content: 1
 
