@@ -77,6 +77,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Routed every checked-in Vitest command through Vite's native config loader
+  and documented the required flag for direct CLI runs, so standard test paths
+  no longer depend on the config-bundle boundary observed in issue #1579.
 - Made local Vite config imports compatible with Vite's native config loader
   and covered the config and its dependencies with strict TypeScript checks,
   removing the future-default compatibility warning from test runs.
