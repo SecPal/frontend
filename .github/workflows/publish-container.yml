@@ -345,18 +345,37 @@ jobs:
           done
 
       - name: Exercise both published runtime platforms
+        env:
+          RUNTIME_AMD64_DIGEST: ${{ steps.verify_image.outputs.amd64_digest }}
+          RUNTIME_ARM64_DIGEST: ${{ steps.verify_image.outputs.arm64_digest }}
         run: |
           set -euo pipefail
-          DIGEST_REF="${CANONICAL_IMAGE}@${IMAGE_DIGEST}"
-          for platform in linux/amd64 linux/arm64; do
-            docker pull --platform "$platform" "$DIGEST_REF"
+
+          printf '%s\n' "$RUNTIME_AMD64_DIGEST" |
+            grep -Eq '^sha256:[0-9a-f]{64}$'
+          printf '%s\n' "$RUNTIME_ARM64_DIGEST" |
+            grep -Eq '^sha256:[0-9a-f]{64}$'
+
+          runtime_contracts=(
+            "linux/amd64|$RUNTIME_AMD64_DIGEST"
+            "linux/arm64|$RUNTIME_ARM64_DIGEST"
+          )
+
+          for contract in "${runtime_contracts[@]}"; do
+            platform=${contract%%|*}
+            runtime_digest=${contract#*|}
+            runtime_ref="${CANONICAL_IMAGE}@${runtime_digest}"
+
+            docker pull --platform "$platform" "$runtime_ref"
+
             SECPAL_CONTAINER_PLATFORM="$platform" \
               SECPAL_CONTAINER_SKIP_BUILD=1 \
-              SECPAL_CONTAINER_IMAGE="$DIGEST_REF" \
+              SECPAL_CONTAINER_IMAGE="$runtime_ref" \
               npm run test:container
+
             SECPAL_CONTAINER_PLATFORM="$platform" \
               SECPAL_CONTAINER_SKIP_BUILD=1 \
-              SECPAL_CONTAINER_IMAGE="$DIGEST_REF" \
+              SECPAL_CONTAINER_IMAGE="$runtime_ref" \
               npm run test:e2e:container
           done
 
@@ -446,7 +465,7 @@ jobs:
       - name: Generate GitHub artifact attestation
         id: attest
         # v4.2.1
-        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
         with:
           subject-name: ${{ env.CANONICAL_IMAGE }}
           subject-digest: ${{ needs.publish.outputs.image_digest }}
