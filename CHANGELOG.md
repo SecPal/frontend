@@ -85,6 +85,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Isolated AuthContext tests from shared offline-vault state and awaited the
+  complete login handoff before teardown, so filtered runs no longer leave a
+  rejected vault persistence task. Closes #1629.
 - Aligned the local Prettier pre-commit matcher with the TypeScript, TSX,
   JavaScript, JSX, Markdown, YAML, and JSON extensions checked by CI, so
   unformatted TSX changes are rejected before commit. Closes #1625.
