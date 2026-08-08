@@ -137,9 +137,13 @@ a static, unprivileged `101:101` reference server without Node.js;
 `SECPAL_API_URL` is supplied only at startup. It does not publish Android or
 iOS artifacts and does not provide TLS or public-edge behavior.
 
-Frontend image publication is implemented but not yet operationally verified.
-Digest consumption in `SecPal/deployment` remains pending in a separate change,
-so Phase C remains in progress.
+Frontend image publication is operationally verified. Publisher run
+`31247196734` built source commit
+`b755ca0d0ee5a85eca5ad5688d457241f070b1b4` and verified the canonical image
+`ghcr.io/secpal/frontend@sha256:cdccded2eade53d9300aafff3a2663a779d3d158cfa74f1e9c182e5786285077`.
+The linked public package passed an anonymous digest pull and independent final
+artifact-attestation verification. Digest consumption remains pending in
+`SecPal/deployment#3`, so Phase C remains in progress.
 
 ### Customer-Owned Browser Web Push Rollout
 

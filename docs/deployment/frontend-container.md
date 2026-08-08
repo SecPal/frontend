@@ -76,12 +76,26 @@ static reference server without Node.js; deployments supply `SECPAL_API_URL`
 only when the container starts. TLS termination and public-edge controls remain
 deployment responsibilities.
 
-Frontend image publication is implemented but not yet operationally verified.
-After merge, operators must record the successful publisher run and complete
-the package linkage, public-visibility, anonymous digest-pull, final discovery
-snapshot, and final attestation checks. Digest consumption in
-`SecPal/deployment` remains a separate follow-up, so Phase C remains in
-progress.
+Frontend image publication is operationally verified. Post-merge publisher run
+`31247196734` (attempt `1`) built source commit
+`b755ca0d0ee5a85eca5ad5688d457241f070b1b4` and verified this canonical
+artifact:
+
+```text
+ghcr.io/secpal/frontend@sha256:cdccded2eade53d9300aafff3a2663a779d3d158cfa74f1e9c182e5786285077
+```
+
+The run verified the exact OCI index bytes and registry digest header, both
+runtime platforms, per-platform SBOM and provenance, both container and
+Chromium contracts, GitHub Artifact Attestation `39567451`, and the final
+discovery snapshot. The GHCR package is linked to `SecPal/frontend`, is public,
+and accepted a digest-only pull with an empty anonymous Docker configuration.
+An independent final attestation check with the pinned GitHub CLI `2.97.0`
+verified the same subject, digest, repository, workflow, source and signer
+commit, `refs/heads/main`, and GitHub-hosted runner binding.
+
+Digest consumption remains pending in `SecPal/deployment#3`; Phase C remains
+in progress.
 
 ## Run
 
