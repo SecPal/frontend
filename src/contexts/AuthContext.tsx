@@ -323,9 +323,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [bootstrapRetryKey, setBootstrapRetryKey] = useState(0);
   const isClearingSessionRef = useRef(false);
   const clearSessionCycleRef = useRef(0);
-  const clearAuthenticatedStatePromiseRef = useRef<Promise<void>>(
-    Promise.resolve()
-  );
   const clearAuthenticatedStateDestructivePromiseRef = useRef<Promise<void>>(
     Promise.resolve()
   );
@@ -662,32 +659,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             shouldClearSensitiveStateRef.current = false;
             shouldRedirectOpenClientsRef.current = false;
             isClearingSessionRef.current = false;
-            clearAuthenticatedStatePromiseRef.current = Promise.resolve();
             clearAuthenticatedStateDestructivePromiseRef.current =
               Promise.resolve();
             clearAuthenticatedStateCompletionPromiseRef.current =
               Promise.resolve();
           });
-
-      clearAuthenticatedStatePromiseRef.current = cleanupSettledPromise.then(
-        async () => {
-          if (!shouldClearSensitiveStateRef.current) {
-            return;
-          }
-
-          try {
-            await waitForLogoutCleanupWithTimeout(
-              runSensitiveLogoutCleanup(),
-              "Timed out waiting for trailing logout cleanup during logout; continuing with best-effort barrier teardown."
-            );
-          } catch (error: unknown) {
-            console.error(
-              "Failed to clear sensitive client state during logout:",
-              error
-            );
-          }
-        }
-      );
     },
     [
       beginSensitiveLogoutBarrierCleanup,
@@ -753,12 +729,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // part of every full-teardown path; no separate `resetPrefetchCache()`
     // call is needed here.
     clearAuthenticatedState(true, { redirectOpenClients: true });
-    await clearAuthenticatedStatePromiseRef.current;
+    await clearAuthenticatedStateCompletionPromiseRef.current;
   }, [clearAuthenticatedState]);
 
   const handleNativeLogout = useCallback(async () => {
     clearAuthenticatedState(true, { redirectOpenClients: false });
-    await clearAuthenticatedStatePromiseRef.current;
+    await clearAuthenticatedStateCompletionPromiseRef.current;
   }, [clearAuthenticatedState]);
 
   useEffect(() => {
