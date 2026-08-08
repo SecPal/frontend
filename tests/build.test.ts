@@ -23,6 +23,19 @@ function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(repoRoot, relativePath), "utf8");
 }
 
+function getPrettierFormatExtensions(formatCheck: string): string[] {
+  const formatCheckGlob = formatCheck.match(
+    /(?<quote>['"])\*\*\/\*\.\{(?<extensions>[^}]+)\}\k<quote>/u
+  );
+
+  return (
+    formatCheckGlob?.groups?.extensions
+      ?.split(",")
+      .map((extension) => extension.trim())
+      .filter(Boolean) ?? []
+  );
+}
+
 interface WorkflowUsesReference {
   reference: string;
   reviewComment: string | undefined;
@@ -823,6 +836,46 @@ jobs:
       "entry: ./node_modules/.bin/prettier --write"
     );
     expect(preCommitConfig).not.toContain("npx --no-install prettier");
+  });
+
+  it("formats every source extension checked by the CI Prettier command", () => {
+    const preCommitConfig = readRepoFile(".pre-commit-config.yaml");
+    const packageManifest = JSON.parse(readRepoFile("package.json")) as {
+      scripts: Record<string, string>;
+    };
+    const formatCheck = packageManifest.scripts["format:check"];
+    const extensions = getPrettierFormatExtensions(formatCheck);
+    const preCommitDocument = load(preCommitConfig);
+    const repositories =
+      isRecord(preCommitDocument) && Array.isArray(preCommitDocument.repos)
+        ? preCommitDocument.repos.filter(isRecord)
+        : [];
+    const prettierHook = repositories
+      .flatMap((repository) =>
+        Array.isArray(repository.hooks) ? repository.hooks.filter(isRecord) : []
+      )
+      .find((hook) => hook.id === "prettier");
+
+    expect(extensions).not.toHaveLength(0);
+    expect(
+      getPrettierFormatExtensions(formatCheck.replaceAll(",", ", "))
+    ).toEqual(extensions);
+    expect(
+      getPrettierFormatExtensions(formatCheck.replaceAll("'", '"'))
+    ).toEqual(extensions);
+    expect(prettierHook).toBeDefined();
+
+    const expectedMatcher = String.raw`\.(?:${extensions.join("|")})$`;
+    const hookMatcher =
+      typeof prettierHook?.files === "string" ? prettierHook.files : "";
+
+    expect(hookMatcher).toBe(expectedMatcher);
+
+    const matcher = new RegExp(hookMatcher);
+
+    for (const extension of extensions) {
+      expect(matcher.test(`src/fixture.${extension}`)).toBe(true);
+    }
   });
 
   it("installs Node dependencies before verifying local pre-commit hooks", () => {

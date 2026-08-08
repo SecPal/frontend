@@ -80,6 +80,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Aligned the local Prettier pre-commit matcher with the TypeScript, TSX,
+  JavaScript, JSX, Markdown, YAML, and JSON extensions checked by CI, so
+  unformatted TSX changes are rejected before commit. Closes #1625.
 - Updated the transitive `nanoid` dependency to 3.3.18, resolving
   GHSA-2v37-7h3g-55p8.
 - Stabilized the onboarding Select interaction tests by waiting for Base UI's
