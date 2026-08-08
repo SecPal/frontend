@@ -82,6 +82,7 @@ function PermissionTestComponent({ permission }: { permission?: string }) {
       <span data-testid="hasOrgAccess">
         {auth.hasOrganizationalAccess() ? "true" : "false"}
       </span>
+      <span data-testid="isLoading">{String(auth.isLoading)}</span>
     </div>
   );
 }
@@ -156,6 +157,7 @@ describe("AuthContext", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+        expect(screen.getByTestId("isLoading")).toHaveTextContent("false");
       });
     });
 
@@ -194,6 +196,7 @@ describe("AuthContext", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+        expect(screen.getByTestId("isLoading")).toHaveTextContent("false");
       });
     });
 
@@ -212,6 +215,7 @@ describe("AuthContext", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+        expect(screen.getByTestId("isLoading")).toHaveTextContent("false");
       });
     });
 
@@ -354,6 +358,7 @@ describe("AuthContext", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("hasOrgAccess")).toHaveTextContent("false");
+        expect(screen.getByTestId("isLoading")).toHaveTextContent("false");
       });
     });
 
@@ -372,6 +377,7 @@ describe("AuthContext", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("hasOrgAccess")).toHaveTextContent("false");
+        expect(screen.getByTestId("isLoading")).toHaveTextContent("false");
       });
     });
 
