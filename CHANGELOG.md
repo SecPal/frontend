@@ -80,6 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Updated the transitive `nanoid` dependency to 3.3.18, resolving
+  GHSA-2v37-7h3g-55p8.
 - Stabilized the onboarding Select interaction tests by waiting for Base UI's
   asynchronously exposed popup options before clicking them. Closes #1622.
 - Ensured Android runtime discovery waits for destructive logout cleanup
