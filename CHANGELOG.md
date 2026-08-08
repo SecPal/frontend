@@ -25,9 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   canonical image
   `ghcr.io/secpal/frontend@sha256:cdccded2eade53d9300aafff3a2663a779d3d158cfa74f1e9c182e5786285077`,
   including the public package linkage, anonymous digest pull, final discovery
-  snapshot, and independent artifact-attestation verification. Digest
-  consumption remains pending in `SecPal/deployment#3`, and Phase C remains in
-  progress.
+  snapshot, and independent artifact-attestation verification.
+  `SecPal/deployment#6` consumed the verified digest and closed
+  `SecPal/deployment#3`, completing Phase C.
 - Added a production-ready unprivileged frontend container image that serves
   the existing Web/PWA artifact through static Nginx on port 8080, configures
   the API origin at startup through strict `SECPAL_API_URL` validation, and

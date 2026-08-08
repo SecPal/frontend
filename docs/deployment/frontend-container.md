@@ -94,8 +94,9 @@ An independent final attestation check with the pinned GitHub CLI `2.97.0`
 verified the same subject, digest, repository, workflow, source and signer
 commit, `refs/heads/main`, and GitHub-hosted runner binding.
 
-Digest consumption remains pending in `SecPal/deployment#3`; Phase C remains
-in progress.
+`SecPal/deployment#6` consumed the verified digest at merge commit
+`4fc2796409b7c37a541f515ccf29236f143fc132`, closing `SecPal/deployment#3`.
+Phase C is complete.
 
 ## Run
 

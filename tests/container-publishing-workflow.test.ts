@@ -931,7 +931,7 @@ describe("frontend container publishing workflow", () => {
     expect(pullRequestWorkflow).toContain("npm run test:e2e:container");
   });
 
-  it("documents verified digest-only publication without claiming Phase C completion", () => {
+  it("documents verified digest-only publication and completed Phase C rollout", () => {
     const documentation = `${readme}\n${containerGuide}\n${changelog}`;
 
     expect(documentation).toContain("ghcr.io/secpal/frontend");
@@ -959,16 +959,19 @@ describe("frontend container publishing workflow", () => {
       "anonymous digest pull",
       "independent final",
       "SecPal/deployment#3",
+      "SecPal/deployment#6",
     ]) {
       expect(documentation).toContain(evidence);
     }
-    expect(documentation).toContain("Phase C remains in progress");
+    expect(documentation).toContain("Phase C is complete");
+    expect(documentation).not.toContain("Digest consumption remains pending");
+    expect(documentation).not.toContain("Phase C remains in progress");
     expect(containerGuide).toMatch(
       /Platform child manifest digests are runtime\s+verification evidence only/u
     );
     expect(containerGuide).not.toMatch(/\bruntime-\s+verification\b/u);
     expect(documentation).not.toMatch(
-      /Phase C is complete|The frontend is deployed|SecPal is production-ready|Phase D is complete/u
+      /The frontend is deployed|SecPal is production-ready|Phase D is complete/u
     );
   });
 

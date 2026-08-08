@@ -142,8 +142,8 @@ Frontend image publication is operationally verified. Publisher run
 `b755ca0d0ee5a85eca5ad5688d457241f070b1b4` and verified the canonical image
 `ghcr.io/secpal/frontend@sha256:cdccded2eade53d9300aafff3a2663a779d3d158cfa74f1e9c182e5786285077`.
 The linked public package passed an anonymous digest pull and independent final
-artifact-attestation verification. Digest consumption remains pending in
-`SecPal/deployment#3`, so Phase C remains in progress.
+artifact-attestation verification. `SecPal/deployment#6` consumed the verified
+digest and closed `SecPal/deployment#3`, so Phase C is complete.
 
 ### Customer-Owned Browser Web Push Rollout
 
