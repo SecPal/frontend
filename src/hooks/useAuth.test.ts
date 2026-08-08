@@ -1846,7 +1846,7 @@ describe("useAuth", () => {
     }
   });
 
-  it("does not accept login until destructive logout cleanup settles", async () => {
+  it("does not resolve logout or accept login until destructive cleanup settles", async () => {
     const firstUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
     const secondUser = {
       id: "2",
@@ -1901,7 +1901,7 @@ describe("useAuth", () => {
         await Promise.resolve();
       });
 
-      expect(logoutSettled).toBe(true);
+      expect(logoutSettled).toBe(false);
 
       act(() => {
         loginPromise = Promise.resolve(result.current.login(secondUser));
@@ -1926,7 +1926,7 @@ describe("useAuth", () => {
       expect(loginSettled).toBe(false);
       expect(result.current.user).toBeNull();
       expect(setUserSpy).not.toHaveBeenCalled();
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(consoleWarnSpy).not.toHaveBeenCalledWith(
         "Timed out waiting for trailing logout cleanup during logout; continuing with best-effort barrier teardown."
       );
 
@@ -1937,6 +1937,7 @@ describe("useAuth", () => {
         await Promise.resolve();
       });
 
+      expect(logoutSettled).toBe(true);
       expect(loginSettled).toBe(true);
       expect(setUserSpy).toHaveBeenCalledWith(
         expect.objectContaining({
