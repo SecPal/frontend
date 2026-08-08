@@ -80,6 +80,11 @@ export interface EncryptedProfileRecord extends EncryptedVaultRecord {
   id: "profile";
 }
 
+export interface VaultWrappingKeyRecord {
+  id: "native-auth-vault";
+  key: CryptoKey;
+}
+
 export interface VaultAnalyticsRecord extends EncryptedVaultRecord {
   id?: number;
   synced: boolean;
@@ -106,6 +111,7 @@ export const db = new Dexie(DB_NAME) as Dexie & {
   analytics: EntityTable<AnalyticsEvent, "id">;
   organizationalUnitCache: EntityTable<OrganizationalUnitCacheEntry, "id">;
   vaultProfile: EntityTable<EncryptedProfileRecord, "id">;
+  vaultWrappingKeys: EntityTable<VaultWrappingKeyRecord, "id">;
   vaultAnalytics: EntityTable<VaultAnalyticsRecord, "id">;
   vaultOrganizationalUnitCache: EntityTable<
     VaultOrganizationalUnitCacheRecord,
@@ -122,12 +128,13 @@ db.version(11).stores({
   vaultOrganizationalUnitCache: "id, cachedAt, lastSynced",
 });
 
-// Schema version 12 - Restores indexed vault organizational-unit lookups.
+// Schema version 13 - Adds non-extractable WebCrypto wrapping keys for native vault persistence.
 // 0.x keeps the IndexedDB schema focused on the currently supported offline data.
 db.version(DB_VERSION).stores({
   analytics: "++id, synced, timestamp, sessionId, type",
   organizationalUnitCache: "id, type, parent_id, updated_at, cachedAt",
   vaultProfile: "id",
+  vaultWrappingKeys: "id",
   vaultAnalytics: "++id, synced, timestamp",
   vaultOrganizationalUnitCache:
     "id, type, parentLookupKey, parent_id, cachedAt, lastSynced",

@@ -24,21 +24,16 @@ import {
 } from "../services/nativePasskeyCapabilities";
 import { sanitizeAuthUser } from "../services/authState";
 import { Logo } from "../components/Logo";
+import {
+  LoginRuntimeInstanceSection,
+  type LoginRuntimeBootstrapSummary,
+} from "@/ui/login-runtime-instance-section";
 import { loadLoginMfaDialogModule } from "../lib/lazyAppModules";
 import {
   isRecoverableLazyModuleError,
   isTransientModuleLoadError,
 } from "../lib/lazyModuleErrors";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
   LoginButton,
   LoginCard,
   LoginCardHeader,
@@ -72,15 +67,6 @@ const RECOVERY_CODE_LENGTH = 8;
 
 type Translate = ReturnType<typeof useLingui>["_"];
 type HealthStatus = import("../services/healthApi").HealthStatus;
-
-export interface LoginRuntimeBootstrapSummary {
-  readonly instanceDisplayName: string;
-  readonly apiOrigin: string;
-  readonly features?: {
-    readonly passwordLoginEnabled: boolean;
-    readonly passkeyLoginEnabled: boolean;
-  };
-}
 
 export interface LoginProps {
   readonly runtimeBootstrap?: LoginRuntimeBootstrapSummary | null;
@@ -380,8 +366,6 @@ export function Login({
   const [isCompletingLogin, setIsCompletingLogin] = useState(false);
   const [isSwitchingRuntimeBootstrap, setIsSwitchingRuntimeBootstrap] =
     useState(false);
-  const [isRuntimeSwitchConfirmationOpen, setIsRuntimeSwitchConfirmationOpen] =
-    useState(false);
   const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
   const normalizedMfaCode = mfaCode.trim();
   const isIncompleteTotpCode =
@@ -530,6 +514,7 @@ export function Login({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
     setError(null);
     setHasCredentialError(false);
 
@@ -595,29 +580,6 @@ export function Login({
       }
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const handleSwitchRuntimeBootstrap = async () => {
-    if (!runtimeBootstrap || !onSwitchRuntimeBootstrap) {
-      return;
-    }
-
-    setError(null);
-    setHasCredentialError(false);
-    setIsSwitchingRuntimeBootstrap(true);
-
-    try {
-      await onSwitchRuntimeBootstrap();
-    } catch (err) {
-      console.error("Runtime bootstrap reset error:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : _(msg`SecPal could not switch instances. Please try again.`)
-      );
-    } finally {
-      setIsSwitchingRuntimeBootstrap(false);
     }
   };
 
@@ -1106,84 +1068,23 @@ export function Login({
           ) : null}
         </LoginCard>
         {displayedRuntimeBootstrap ? (
-          <AlertDialog
-            open={isRuntimeSwitchConfirmationOpen}
-            onOpenChange={(open) => {
-              if (!isSwitchingRuntimeBootstrap) {
-                setIsRuntimeSwitchConfirmationOpen(open);
+          <LoginRuntimeInstanceSection
+            runtimeBootstrap={displayedRuntimeBootstrap}
+            onSwitchRuntimeBootstrap={onSwitchRuntimeBootstrap}
+            isSwitchDisabled={
+              isSubmitting ||
+              isSubmittingPasskey ||
+              isMfaChallengeActive ||
+              isCompletingLogin
+            }
+            onSwitchingChange={(isSwitching) => {
+              setIsSwitchingRuntimeBootstrap(isSwitching);
+              if (isSwitching) {
+                setError(null);
+                setHasCredentialError(false);
               }
             }}
-          >
-            <div
-              data-testid="runtime-instance-section"
-              className="row-start-3 flex w-full self-center justify-center px-6 [@media(max-height:42rem)]:mt-6 [@media(max-height:42rem)]:self-start"
-            >
-              <div
-                data-testid="runtime-instance"
-                className="w-full max-w-sm space-y-1 text-center"
-              >
-                <div className="space-y-1">
-                  <p className="text-sm">
-                    <Trans>
-                      Signed in to{" "}
-                      {displayedRuntimeBootstrap.instanceDisplayName}
-                    </Trans>
-                  </p>
-                  <p className="break-all text-xs text-muted-foreground">
-                    {displayedRuntimeBootstrap.apiOrigin}
-                  </p>
-                </div>
-                {onSwitchRuntimeBootstrap ? (
-                  <AlertDialogTrigger
-                    render={
-                      <LoginButton
-                        id="secpal-runtime-switch-instance"
-                        type="button"
-                        variant="outline"
-                        className="mx-auto w-full"
-                        disabled={
-                          isSubmitting ||
-                          isSubmittingPasskey ||
-                          isMfaChallengeActive ||
-                          isCompletingLogin ||
-                          isSwitchingRuntimeBootstrap
-                        }
-                        aria-busy={isSwitchingRuntimeBootstrap}
-                      />
-                    }
-                  >
-                    {isSwitchingRuntimeBootstrap ? (
-                      <Trans>Switching instance...</Trans>
-                    ) : (
-                      <Trans>Switch instance</Trans>
-                    )}
-                  </AlertDialogTrigger>
-                ) : null}
-              </div>
-            </div>
-            <AlertDialogContent size="sm">
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  <Trans>Switch instance?</Trans>
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  <Trans>
-                    You will be returned to the instance selection screen.
-                  </Trans>
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>
-                  <Trans>Cancel</Trans>
-                </AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => void handleSwitchRuntimeBootstrap()}
-                >
-                  <Trans>Switch instance</Trans>
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          />
         ) : null}
       </div>
 
