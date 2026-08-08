@@ -23,6 +23,19 @@ function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(repoRoot, relativePath), "utf8");
 }
 
+function getPrettierFormatExtensions(formatCheck: string): string[] {
+  const formatCheckGlob = formatCheck.match(
+    /(?<quote>['"])\*\*\/\*\.\{(?<extensions>[^}]+)\}\k<quote>/u
+  );
+
+  return (
+    formatCheckGlob?.groups?.extensions
+      ?.split(",")
+      .map((extension) => extension.trim())
+      .filter(Boolean) ?? []
+  );
+}
+
 interface WorkflowUsesReference {
   reference: string;
   reviewComment: string | undefined;
@@ -830,22 +843,35 @@ jobs:
     const packageManifest = JSON.parse(readRepoFile("package.json")) as {
       scripts: Record<string, string>;
     };
-    const formatCheckGlob = packageManifest.scripts["format:check"].match(
-      /'\*\*\/\*\.\{(?<extensions>[^}]+)\}'/u
-    );
-    const prettierHook = preCommitConfig.match(
-      /- id: prettier[\s\S]*?^\s{8}files: (.+)$/mu
-    );
+    const formatCheck = packageManifest.scripts["format:check"];
+    const extensions = getPrettierFormatExtensions(formatCheck);
+    const preCommitDocument = load(preCommitConfig);
+    const repositories =
+      isRecord(preCommitDocument) && Array.isArray(preCommitDocument.repos)
+        ? preCommitDocument.repos.filter(isRecord)
+        : [];
+    const prettierHook = repositories
+      .flatMap((repository) =>
+        Array.isArray(repository.hooks) ? repository.hooks.filter(isRecord) : []
+      )
+      .find((hook) => hook.id === "prettier");
 
-    expect(formatCheckGlob?.groups?.extensions).toBeDefined();
-    expect(prettierHook).not.toBeNull();
+    expect(extensions).not.toHaveLength(0);
+    expect(
+      getPrettierFormatExtensions(formatCheck.replaceAll(",", ", "))
+    ).toEqual(extensions);
+    expect(
+      getPrettierFormatExtensions(formatCheck.replaceAll("'", '"'))
+    ).toEqual(extensions);
+    expect(prettierHook).toBeDefined();
 
-    const extensions = formatCheckGlob?.groups?.extensions?.split(",") ?? [];
     const expectedMatcher = String.raw`\.(?:${extensions.join("|")})$`;
+    const hookMatcher =
+      typeof prettierHook?.files === "string" ? prettierHook.files : "";
 
-    expect(prettierHook?.[1]).toBe(expectedMatcher);
+    expect(hookMatcher).toBe(expectedMatcher);
 
-    const matcher = new RegExp(prettierHook?.[1] ?? "");
+    const matcher = new RegExp(hookMatcher);
 
     for (const extension of extensions) {
       expect(matcher.test(`src/fixture.${extension}`)).toBe(true);
