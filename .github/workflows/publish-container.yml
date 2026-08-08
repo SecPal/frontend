@@ -1,0 +1,563 @@
+---
+# SPDX-FileCopyrightText: 2026 SecPal Contributors
+# SPDX-License-Identifier: CC0-1.0
+
+name: Publish Container
+on:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: publish-container-${{ github.repository }}-${{ github.sha }}
+  cancel-in-progress: false
+
+env:
+  CANONICAL_IMAGE: ghcr.io/secpal/frontend
+
+jobs:
+  validate:
+    name: Validate Frontend Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout publishing commit
+        id: checkout
+        # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        # v7.0.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: "22.22.2"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --foreground-scripts
+
+      - name: Run container publishing and source policy tests
+        run: >-
+          npm exec -- vitest --configLoader=native run
+          tests/container-runtime-lifecycle.test.ts
+          tests/container-publishing-workflow.test.ts
+          tests/container-contract.test.ts
+
+      - name: Lint Dockerfile
+        run: >-
+          docker run --rm -i
+          hadolint/hadolint:v2.14.0-debian@sha256:158cd0184dcaa18bd8ec20b61f4c1cabdf8b32a592d062f57bdcb8e4c1d312e2
+          < Dockerfile
+
+      - name: Lint container scripts
+        run: >-
+          docker run --rm -v "$PWD:/mnt:ro" -w /mnt
+          koalaman/shellcheck:v0.10.0@sha256:2097951f02e735b613f4a34de20c40f937a6c8f18ecb170612c88c34517221fb
+          scripts/container-runtime.sh
+          scripts/container-smoke.sh
+          scripts/container-browser.sh
+          docker/secpal-entrypoint.sh
+
+  publish:
+    name: Publish Frontend Image
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_digest: ${{ steps.build.outputs.digest }}
+      image_created: ${{ steps.metadata.outputs.created }}
+      image_version: ${{ steps.metadata.outputs.version }}
+      published_tag: ${{ steps.published_tag.outputs.tag }}
+    steps:
+      - name: Checkout publishing commit
+        id: checkout
+        # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Log in to GHCR
+        id: registry-login
+        # v4.6.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve deterministic image metadata
+        id: metadata
+        run: |
+          set -euo pipefail
+          created=$(git show -s --format=%cI "$GITHUB_SHA")
+          source_epoch=$(git show -s --format=%ct "$GITHUB_SHA")
+          package_version=$(jq -er '.version' package.json)
+          printf '%s\n' "$source_epoch" | grep -Eq '^[0-9]+$'
+          printf '%s\n' "$package_version" \
+            | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'
+          image_version="${package_version}+git.${GITHUB_SHA}"
+          {
+            printf 'created=%s\n' "$created"
+            printf 'source_epoch=%s\n' "$source_epoch"
+            printf 'version=%s\n' "$image_version"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Resolve unique published tag
+        id: published_tag
+        run: >-
+          printf 'tag=build-%s-%s-%s\n'
+          "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT"
+          >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        # v4.2.0
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8
+        with:
+          image: >-
+            docker.io/tonistiigi/binfmt:latest@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        # v4.2.0
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
+        with:
+          version: v0.36.0
+          driver-opts: >-
+            image=docker.io/moby/buildkit:buildx-stable-1@sha256:2f5adac4ecd194d9f8c10b7b5d7bceb5186853db1b26e5abd3a657af0b7e26ec
+
+      - name: Build and push run-scoped image
+        id: build
+        # v7.3.0
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a
+        with:
+          context: https://github.com/SecPal/frontend.git#${{ github.sha }}
+          push: true
+          pull: true
+          no-cache: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ env.CANONICAL_IMAGE }}:${{ steps.published_tag.outputs.tag }}
+          build-args: |
+            SECPAL_IMAGE_REVISION=${{ github.sha }}
+            SECPAL_IMAGE_VERSION=${{ steps.metadata.outputs.version }}
+            SOURCE_DATE_EPOCH=${{ steps.metadata.outputs.source_epoch }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/SecPal/frontend
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.title=SecPal Frontend
+            org.opencontainers.image.description=Unprivileged static reference server for the SecPal frontend
+            org.opencontainers.image.licenses=AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+            org.opencontainers.image.created=${{ steps.metadata.outputs.created }}
+            org.opencontainers.image.version=${{ steps.metadata.outputs.version }}
+          sbom: >-
+            generator=docker.io/docker/buildkit-syft-scanner:stable-1@sha256:79e7b013cbec16bbb436f312819a49a4a57752b2270c1a9332ae1a10fcc82a68
+          provenance: mode=max,version=v1
+
+  verify:
+    name: Verify Published Frontend Image
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      runtime_amd64_digest: ${{ steps.verify_image.outputs.amd64_digest }}
+      runtime_arm64_digest: ${{ steps.verify_image.outputs.arm64_digest }}
+    env:
+      IMAGE_DIGEST: ${{ needs.publish.outputs.image_digest }}
+      IMAGE_CREATED: ${{ needs.publish.outputs.image_created }}
+      IMAGE_VERSION: ${{ needs.publish.outputs.image_version }}
+      PUBLISHED_TAG: ${{ needs.publish.outputs.published_tag }}
+    steps:
+      - name: Checkout publishing commit
+        id: checkout
+        # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        # v7.0.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: "22.22.2"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --foreground-scripts
+
+      - name: Install Chromium
+        run: npm exec -- playwright install --with-deps chromium
+
+      - name: Set up QEMU for runtime verification
+        # v4.2.0
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8
+        with:
+          image: >-
+            docker.io/tonistiigi/binfmt:latest@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        # v4.2.0
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
+        with:
+          version: v0.36.0
+          driver-opts: >-
+            image=docker.io/moby/buildkit:buildx-stable-1@sha256:2f5adac4ecd194d9f8c10b7b5d7bceb5186853db1b26e5abd3a657af0b7e26ec
+
+      - name: Log in to GHCR
+        id: registry-login
+        # v4.6.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify workflow-built digest and BuildKit attestations
+        id: verify_image
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$PUBLISHED_TAG" \
+            | grep -Eq "^build-${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}$"
+          printf '%s\n' "$IMAGE_DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'
+          TAG_REF="${CANONICAL_IMAGE}:${PUBLISHED_TAG}"
+          DIGEST_REF="${CANONICAL_IMAGE}@${IMAGE_DIGEST}"
+          manifest_file=$(mktemp)
+          headers_file=$(mktemp)
+          trap 'rm -f "$manifest_file" "$headers_file"' EXIT
+          registry_token=$(curl --fail --silent --show-error \
+            --user "${GITHUB_ACTOR}:${GHCR_TOKEN}" \
+            --get \
+            --data-urlencode 'scope=repository:secpal/frontend:pull' \
+            --data-urlencode 'service=ghcr.io' \
+            'https://ghcr.io/token' | jq -er '.token')
+          status=$(curl --silent --show-error \
+            --output "$manifest_file" \
+            --dump-header "$headers_file" \
+            --write-out '%{http_code}' \
+            --header "Authorization: Bearer ${registry_token}" \
+            --header 'Accept: application/vnd.oci.image.index.v1+json' \
+            "https://ghcr.io/v2/secpal/frontend/manifests/${PUBLISHED_TAG}")
+          test "$status" = 200
+          jq -e '.mediaType == "application/vnd.oci.image.index.v1+json"' "$manifest_file"
+          byte_digest="sha256:$(sha256sum "$manifest_file" | awk '{print $1}')"
+          registry_digest=$(awk '
+            index(tolower($0), "docker-content-digest:") == 1 {
+              sub("^[^:]+:[[:space:]]*", "")
+              sub("\\r$", "")
+              value = $0
+            }
+            END { print value }
+          ' "$headers_file")
+          test "$byte_digest" = "$IMAGE_DIGEST"
+          test "$registry_digest" = "$IMAGE_DIGEST"
+          printf 'Verified discovery snapshot %s at %s\n' "$TAG_REF" "$DIGEST_REF"
+          jq -e '
+            .mediaType == "application/vnd.oci.image.index.v1+json"
+            and ([.manifests[]
+              | select((.annotations["vnd.docker.reference.type"] // "") != "attestation-manifest")
+              | "\(.platform.os)/\(.platform.architecture)"] | sort)
+              == ["linux/amd64", "linux/arm64"]
+            and ([.manifests[]
+              | select((.annotations["vnd.docker.reference.type"] // "") == "attestation-manifest")]
+              | length) == 2
+            and all(.manifests[]
+              | select((.annotations["vnd.docker.reference.type"] // "") == "attestation-manifest");
+              .platform.os == "unknown" and .platform.architecture == "unknown")
+            and ([.manifests[]
+              | select((.annotations["vnd.docker.reference.type"] // "") != "attestation-manifest")
+              | .digest] | sort)
+              == ([.manifests[]
+                | select((.annotations["vnd.docker.reference.type"] // "") == "attestation-manifest")
+                | .annotations["vnd.docker.reference.digest"]] | sort)
+          ' "$manifest_file"
+          runtime_digest() {
+            local architecture=$1
+            jq -er --arg architecture "$architecture" '
+              [.manifests[]
+                | select((.annotations["vnd.docker.reference.type"] // "")
+                    != "attestation-manifest")
+                | select(.platform.os == "linux"
+                    and .platform.architecture == $architecture)
+                | .digest]
+                | if length == 1 then .[0] else empty end
+            ' "$manifest_file"
+          }
+          amd64_digest=$(runtime_digest amd64)
+          arm64_digest=$(runtime_digest arm64)
+          printf '%s\n' "$amd64_digest" | grep -Eq '^sha256:[0-9a-f]{64}$'
+          printf '%s\n' "$arm64_digest" | grep -Eq '^sha256:[0-9a-f]{64}$'
+          {
+            printf 'amd64_digest=%s\n' "$amd64_digest"
+            printf 'arm64_digest=%s\n' "$arm64_digest"
+          } >> "$GITHUB_OUTPUT"
+          for platform in linux/amd64 linux/arm64; do
+            image_config=$(docker buildx imagetools inspect "$DIGEST_REF" \
+              --format "{{json (index .Image \"${platform}\")}}")
+            printf '%s\n' "$image_config" | jq -e \
+              --arg source 'https://github.com/SecPal/frontend' \
+              --arg revision "$GITHUB_SHA" \
+              --arg title 'SecPal Frontend' \
+              --arg description 'Unprivileged static reference server for the SecPal frontend' \
+              --arg licenses 'AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution' \
+              --arg created "$IMAGE_CREATED" \
+              --arg version "$IMAGE_VERSION" '
+                .config.Labels["org.opencontainers.image.source"] == $source
+                and .config.Labels["org.opencontainers.image.revision"] == $revision
+                and .config.Labels["org.opencontainers.image.title"] == $title
+                and .config.Labels["org.opencontainers.image.description"] == $description
+                and .config.Labels["org.opencontainers.image.licenses"] == $licenses
+                and .config.Labels["org.opencontainers.image.created"] == $created
+                and .config.Labels["org.opencontainers.image.version"] == $version
+              '
+            docker buildx imagetools inspect "$DIGEST_REF" \
+              --format "{{json (index .SBOM \"${platform}\").SPDX}}" \
+              | jq -e '.SPDXID == "SPDXRef-DOCUMENT" and (.packages | length) > 0'
+            docker buildx imagetools inspect "$DIGEST_REF" \
+              --format "{{json (index .Provenance \"${platform}\").SLSA}}" \
+              | jq -e \
+                --arg source "https://github.com/SecPal/frontend.git#${GITHUB_SHA}" \
+                --arg revision "$GITHUB_SHA" '
+                .buildDefinition.buildType
+                  == "https://github.com/moby/buildkit/blob/master/docs/attestations/slsa-definitions.md"
+                and .runDetails.metadata.buildkit_completeness.request == true
+                and .runDetails.metadata.buildkit_completeness.resolvedDependencies == true
+                and ([.buildDefinition.resolvedDependencies[]
+                  | select(.digest.sha1? != null)]
+                  | length == 1
+                    and .[0].uri == $source
+                    and .[0].digest.sha1 == $revision)
+              '
+          done
+
+      - name: Exercise both published runtime platforms
+        env:
+          RUNTIME_AMD64_DIGEST: ${{ steps.verify_image.outputs.amd64_digest }}
+          RUNTIME_ARM64_DIGEST: ${{ steps.verify_image.outputs.arm64_digest }}
+        run: |
+          set -euo pipefail
+
+          printf '%s\n' "$RUNTIME_AMD64_DIGEST" |
+            grep -Eq '^sha256:[0-9a-f]{64}$'
+          printf '%s\n' "$RUNTIME_ARM64_DIGEST" |
+            grep -Eq '^sha256:[0-9a-f]{64}$'
+
+          runtime_contracts=(
+            "linux/amd64|$RUNTIME_AMD64_DIGEST"
+            "linux/arm64|$RUNTIME_ARM64_DIGEST"
+          )
+
+          for contract in "${runtime_contracts[@]}"; do
+            platform=${contract%%|*}
+            runtime_digest=${contract#*|}
+            runtime_ref="${CANONICAL_IMAGE}@${runtime_digest}"
+
+            docker pull --platform "$platform" "$runtime_ref"
+
+            SECPAL_CONTAINER_PLATFORM="$platform" \
+              SECPAL_CONTAINER_SKIP_BUILD=1 \
+              SECPAL_CONTAINER_IMAGE="$runtime_ref" \
+              npm run test:container
+
+            SECPAL_CONTAINER_PLATFORM="$platform" \
+              SECPAL_CONTAINER_SKIP_BUILD=1 \
+              SECPAL_CONTAINER_IMAGE="$runtime_ref" \
+              npm run test:e2e:container
+          done
+
+  attest:
+    name: Attest Verified Frontend Image
+    needs: [publish, verify]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    env:
+      IMAGE_DIGEST: ${{ needs.publish.outputs.image_digest }}
+      PUBLISHED_TAG: ${{ needs.publish.outputs.published_tag }}
+      RUNTIME_AMD64_DIGEST: ${{ needs.verify.outputs.runtime_amd64_digest }}
+      RUNTIME_ARM64_DIGEST: ${{ needs.verify.outputs.runtime_arm64_digest }}
+    steps:
+      - name: Checkout publishing commit
+        id: checkout
+        # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Install pinned GitHub CLI
+        env:
+          GH_VERSION: "2.97.0"
+          GH_LINUX_AMD64_SHA256: "a2c9b8497e1f85b1ad0dfcb78b5a622e098801b8e461e459e88e1ee12f018112"
+        run: |
+          set -euo pipefail
+
+          archive="$RUNNER_TEMP/gh_${GH_VERSION}_linux_amd64.tar.gz"
+          extracted="$RUNNER_TEMP/gh_${GH_VERSION}_linux_amd64"
+          install_dir="$RUNNER_TEMP/gh-bin"
+
+          curl --proto '=https' \
+            --tlsv1.2 \
+            --fail \
+            --location \
+            --silent \
+            --show-error \
+            "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz" \
+            --output "$archive"
+
+          printf '%s  %s\n' "$GH_LINUX_AMD64_SHA256" "$archive" |
+            sha256sum --check --strict
+
+          tar \
+            --extract \
+            --gzip \
+            --file "$archive" \
+            --directory "$RUNNER_TEMP" \
+            --no-same-owner
+
+          install -d -m 0700 "$install_dir"
+          install -m 0755 "$extracted/bin/gh" "$install_dir/gh"
+
+          PINNED_GH="$install_dir/gh"
+          printf '%s\n' "$install_dir" >> "$GITHUB_PATH"
+
+          actual_version=$("$PINNED_GH" version | head -n 1)
+          expected_version="gh version ${GH_VERSION}"
+          printf 'GitHub CLI version: %s\n' "$actual_version"
+          case "$actual_version" in
+            "$expected_version" | "$expected_version "*) ;;
+            *)
+              printf 'Unexpected GitHub CLI version: %s\n' "$actual_version" >&2
+              exit 1
+              ;;
+          esac
+
+          "$PINNED_GH" attestation verify --help >/dev/null
+          printf 'PINNED_GH=%s\n' "$PINNED_GH" >> "$GITHUB_ENV"
+
+      - name: Log in to GHCR
+        id: registry-login
+        # v4.6.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate GitHub artifact attestation
+        id: attest
+        # v4.2.1
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
+        with:
+          subject-name: ${{ env.CANONICAL_IMAGE }}
+          subject-digest: ${{ needs.publish.outputs.image_digest }}
+          push-to-registry: true
+          create-storage-record: false
+
+      - name: Verify selected GitHub artifact attestation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          DIGEST_REF="${CANONICAL_IMAGE}@${IMAGE_DIGEST}"
+          "$PINNED_GH" attestation verify "oci://${DIGEST_REF}" \
+            --bundle-from-oci \
+            --repo SecPal/frontend \
+            --signer-workflow SecPal/frontend/.github/workflows/publish-container.yml \
+            --signer-digest "$GITHUB_SHA" \
+            --source-ref refs/heads/main \
+            --source-digest "$GITHUB_SHA" \
+            --deny-self-hosted-runners
+
+      - name: Verify final discovery snapshot and artifact attestation
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$PUBLISHED_TAG" \
+            | grep -Eq "^build-${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}$"
+          TAG_REF="${CANONICAL_IMAGE}:${PUBLISHED_TAG}"
+          DIGEST_REF="${CANONICAL_IMAGE}@${IMAGE_DIGEST}"
+          manifest_file=$(mktemp)
+          headers_file=$(mktemp)
+          trap 'rm -f "$manifest_file" "$headers_file"' EXIT
+          registry_token=$(curl --fail --silent --show-error \
+            --user "${GITHUB_ACTOR}:${GHCR_TOKEN}" \
+            --get \
+            --data-urlencode 'scope=repository:secpal/frontend:pull' \
+            --data-urlencode 'service=ghcr.io' \
+            'https://ghcr.io/token' | jq -er '.token')
+          status=$(curl --silent --show-error \
+            --output "$manifest_file" \
+            --dump-header "$headers_file" \
+            --write-out '%{http_code}' \
+            --header "Authorization: Bearer ${registry_token}" \
+            --header 'Accept: application/vnd.oci.image.index.v1+json' \
+            "https://ghcr.io/v2/secpal/frontend/manifests/${PUBLISHED_TAG}")
+          test "$status" = 200
+          jq -e '.mediaType == "application/vnd.oci.image.index.v1+json"' "$manifest_file"
+          byte_digest="sha256:$(sha256sum "$manifest_file" | awk '{print $1}')"
+          registry_digest=$(awk '
+            index(tolower($0), "docker-content-digest:") == 1 {
+              sub("^[^:]+:[[:space:]]*", "")
+              sub("\\r$", "")
+              value = $0
+            }
+            END { print value }
+          ' "$headers_file")
+          test "$byte_digest" = "$IMAGE_DIGEST"
+          test "$registry_digest" = "$IMAGE_DIGEST"
+          "$PINNED_GH" attestation verify "oci://${DIGEST_REF}" \
+            --bundle-from-oci \
+            --repo SecPal/frontend \
+            --signer-workflow SecPal/frontend/.github/workflows/publish-container.yml \
+            --signer-digest "$GITHUB_SHA" \
+            --source-ref refs/heads/main \
+            --source-digest "$GITHUB_SHA" \
+            --deny-self-hosted-runners
+          printf 'Verified discovery snapshot %s at canonical digest %s\n' \
+            "$TAG_REF" "$DIGEST_REF"
+          printf '%s\n' \
+            'The recorded digest remains canonical even if a registry tag later changes.'
+
+      - name: Record published image identity
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$RUNTIME_AMD64_DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'
+          printf '%s\n' "$RUNTIME_ARM64_DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'
+          {
+            printf '## Published SecPal frontend image\n\n'
+            printf -- "- Source commit: \`%s\`\n" "$GITHUB_SHA"
+            printf -- "- Discovery tag: \`%s:%s\`\n" "$CANONICAL_IMAGE" "$PUBLISHED_TAG"
+            printf -- "- Canonical digest: \`%s@%s\`\n" "$CANONICAL_IMAGE" "$IMAGE_DIGEST"
+            printf -- "- Platforms: \`linux/amd64\`, \`linux/arm64\`\n"
+            printf -- "- linux/amd64 runtime manifest digest (evidence only): \`%s\`\n" \
+              "$RUNTIME_AMD64_DIGEST"
+            printf -- "- linux/arm64 runtime manifest digest (evidence only): \`%s\`\n" \
+              "$RUNTIME_ARM64_DIGEST"
+            printf -- '- BuildKit SBOM: verified for both platforms\n'
+            printf -- '- BuildKit provenance: verified for both platforms\n'
+            printf -- '- Runtime smoke: verified for both platforms\n'
+            printf -- '- Chromium smoke: verified for both platforms\n'
+            printf -- '- GitHub Artifact Attestation: verified\n\n'
+            printf 'The discovery tag is not a deployment or trust reference.\n'
+          } >> "$GITHUB_STEP_SUMMARY"

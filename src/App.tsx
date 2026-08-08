@@ -9,6 +9,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -392,6 +393,7 @@ function NativeRuntimeDiscoveryGate({
   const [isCheckingRuntime, setIsCheckingRuntime] = useState(true);
   const [isLoginBootstrapGateHeld, setIsLoginBootstrapGateHeld] =
     useState(false);
+  const isMountedRef = useRef(true);
   const androidMockRuntimeBootstrap = useMemo(
     () => getAndroidMockRuntimeBootstrap(),
     []
@@ -417,14 +419,26 @@ function NativeRuntimeDiscoveryGate({
   const requireRuntimeDiscovery = useCallback(
     async ({
       clearAuthState = true,
+      isActive = () => true,
     }: {
       clearAuthState?: boolean;
+      isActive?: () => boolean;
     } = {}) => {
+      const shouldContinue = () => isMountedRef.current && isActive();
+
+      if (!shouldContinue()) {
+        return;
+      }
+
       if (androidMockRuntimeBootstrap) {
         setLoginRuntimeBootstrap(null);
 
         if (clearAuthState) {
-          void logout();
+          await logout();
+        }
+
+        if (!shouldContinue()) {
+          return;
         }
 
         setRuntimeInfo(getAndroidMockRuntimeInfo());
@@ -434,11 +448,19 @@ function NativeRuntimeDiscoveryGate({
 
       const nextRuntimeInfo = await SecPalRuntimeBootstrap.getRuntimeInfo();
 
+      if (!shouldContinue()) {
+        return;
+      }
+
       setLoginRuntimeBootstrap(null);
 
       if (nextRuntimeInfo?.clientPlatform === "android") {
         if (clearAuthState) {
-          void logout();
+          await logout();
+        }
+
+        if (!shouldContinue()) {
+          return;
         }
 
         setRuntimeInfo(nextRuntimeInfo);
@@ -484,6 +506,14 @@ function NativeRuntimeDiscoveryGate({
   );
 
   useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
     let isMounted = true;
 
     async function checkRuntimeBootstrap() {
@@ -504,7 +534,7 @@ function NativeRuntimeDiscoveryGate({
         }
 
         if (!bootstrapState) {
-          await requireRuntimeDiscovery();
+          await requireRuntimeDiscovery({ isActive: () => isMounted });
           return;
         }
 
@@ -526,7 +556,7 @@ function NativeRuntimeDiscoveryGate({
 
         if (nextRuntimeInfo?.clientPlatform === "android") {
           setLoginRuntimeBootstrap(null);
-          void logout();
+          await logout();
           if (!isMounted) {
             return;
           }
@@ -539,7 +569,7 @@ function NativeRuntimeDiscoveryGate({
         }
       } catch {
         if (isMounted) {
-          await requireRuntimeDiscovery();
+          await requireRuntimeDiscovery({ isActive: () => isMounted });
         }
       } finally {
         if (isMounted) {

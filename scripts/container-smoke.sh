@@ -5,13 +5,30 @@
 set -euo pipefail
 
 ROOT_DIR=$(git rev-parse --show-toplevel)
+# shellcheck source=scripts/container-runtime.sh
+# shellcheck disable=SC1091
+source "$ROOT_DIR/scripts/container-runtime.sh"
 DEFAULT_IMAGE_TAG=$(node "$ROOT_DIR/scripts/container-test-image-tag.mjs" "$ROOT_DIR")
 IMAGE_TAG=${SECPAL_CONTAINER_IMAGE:-$DEFAULT_IMAGE_TAG}
 CONTAINER_PREFIX="secpal-frontend-contract-$$"
 CONTAINER_A="${CONTAINER_PREFIX}-a"
 CONTAINER_B="${CONTAINER_PREFIX}-b"
-TEMP_DIR=$(mktemp -d)
 CONTAINERS=()
+PLATFORM_ARGS=()
+
+case ${SECPAL_CONTAINER_PLATFORM:-} in
+  "") ;;
+  linux/amd64 | linux/arm64)
+    PLATFORM_ARGS+=(--platform "$SECPAL_CONTAINER_PLATFORM")
+    ;;
+  *)
+    printf 'ERROR: unsupported container platform: %s\n' \
+      "$SECPAL_CONTAINER_PLATFORM" >&2
+    exit 1
+    ;;
+esac
+
+TEMP_DIR=$(mktemp -d)
 
 cleanup() {
   for container in "${CONTAINERS[@]}"; do
@@ -19,15 +36,23 @@ cleanup() {
   done
   rm -rf "$TEMP_DIR"
 }
-trap cleanup EXIT HUP INT TERM
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 fail() {
-  echo "ERROR: $*" >&2
+  local container
+
+  printf 'ERROR: %s\n' "$*" >&2
+  for container in "${CONTAINERS[@]}"; do
+    print_container_diagnostics "$container"
+  done
   exit 1
 }
 
 if [ "${SECPAL_CONTAINER_SKIP_BUILD:-0}" != "1" ]; then
-  docker build \
+  docker build "${PLATFORM_ARGS[@]}" \
     --pull \
     --build-arg SECPAL_IMAGE_REVISION="${GITHUB_SHA:-local-test}" \
     --build-arg SECPAL_IMAGE_VERSION="${SECPAL_IMAGE_VERSION:-0.0.1-local}" \
@@ -41,9 +66,9 @@ IMAGE_ID=$(docker image inspect --format '{{.Id}}' "$IMAGE_TAG")
 start_container() {
   local name=$1
   local api_origin=$2
+  local container_id
 
-  docker run \
-    --detach \
+  if ! container_id=$(docker create "${PLATFORM_ARGS[@]}" \
     --name "$name" \
     --read-only \
     --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m \
@@ -52,28 +77,24 @@ start_container() {
     --env "SECPAL_API_URL=$api_origin" \
     --env "SECPAL_SMOKE_SENTINEL=must-not-be-serialized" \
     --publish 127.0.0.1::8080 \
-    "$IMAGE_TAG" >/dev/null
-  CONTAINERS+=("$name")
+    "$IMAGE_TAG"); then
+    printf 'ERROR: could not create container %s\n' "$name" >&2
+    return 1
+  fi
+
+  CONTAINERS+=("$container_id")
+  if ! docker start "$container_id" >/dev/null; then
+    fail_with_container_diagnostics "$container_id" "could not start container"
+    return 1
+  fi
 }
 
 container_port() {
-  docker inspect \
-    --format '{{(index (index .NetworkSettings.Ports "8080/tcp") 0).HostPort}}' \
-    "$1"
+  wait_for_container_port "$1" 8080
 }
 
 wait_for_live() {
-  local port=$1
-
-  for _attempt in $(seq 1 100); do
-    if curl --fail --silent --show-error \
-      "http://127.0.0.1:${port}/health/live" >/dev/null 2>&1; then
-      return
-    fi
-    sleep 0.1
-  done
-
-  fail "container did not expose /health/live"
+  wait_for_container_live "$1" "$2"
 }
 
 assert_status() {
@@ -112,8 +133,8 @@ start_container "$CONTAINER_B" "https://api.customer-b.example"
 
 PORT_A=$(container_port "$CONTAINER_A")
 PORT_B=$(container_port "$CONTAINER_B")
-wait_for_live "$PORT_A"
-wait_for_live "$PORT_B"
+wait_for_live "$CONTAINER_A" "$PORT_A"
+wait_for_live "$CONTAINER_B" "$PORT_B"
 
 [ "$(docker inspect --format '{{.Config.User}}' "$CONTAINER_A")" = "101:101" ] ||
   fail "image user is not 101:101"
@@ -121,6 +142,11 @@ wait_for_live "$PORT_B"
   fail "running process is root"
 docker exec "$CONTAINER_A" test ! -w /usr/share/nginx/html/index.html ||
   fail "static Web artifact is writable by the runtime user"
+[ "$(docker exec "$CONTAINER_A" stat -c '%a' /etc/nginx/snippets)" = "555" ] ||
+  fail "Nginx snippets directory mode is not 0555"
+docker exec "$CONTAINER_A" \
+  test -r /etc/nginx/snippets/secpal-security-headers.conf ||
+  fail "Nginx security headers are not readable by the runtime user"
 
 assert_status "$PORT_A" "/health/live" "200"
 [ "$(curl --fail --silent "http://127.0.0.1:${PORT_A}/health/live")" = '{"status":"ok"}' ] ||
@@ -167,7 +193,7 @@ cmp "$TEMP_DIR/style-${PORT_A}.css" "$TEMP_DIR/style-${PORT_B}.css" >/dev/null |
 
 docker restart "$CONTAINER_A" >/dev/null
 PORT_A=$(container_port "$CONTAINER_A")
-wait_for_live "$PORT_A"
+wait_for_live "$CONTAINER_A" "$PORT_A"
 curl --fail --silent "http://127.0.0.1:${PORT_A}/runtime-config.js" \
   >"$TEMP_DIR/runtime-a-restarted.js"
 cmp "$RUNTIME_A" "$TEMP_DIR/runtime-a-restarted.js" >/dev/null ||
@@ -209,7 +235,7 @@ assert_header "$PORT_A" "/THIRD-PARTY-NOTICES.md" '^Content-Type: text/markdown'
 assert_header "$PORT_A" "/" '^X-Content-Type-Options: nosniff$'
 assert_header "$PORT_A" "/runtime-config.js" '^X-Frame-Options: DENY$'
 
-docker run --rm --entrypoint /bin/sh "$IMAGE_TAG" -c '
+docker run "${PLATFORM_ARGS[@]}" --rm --entrypoint /bin/sh "$IMAGE_TAG" -c '
   ! command -v node >/dev/null 2>&1
   ! command -v npm >/dev/null 2>&1
   for path in /src /tests /node_modules /.git /package-lock.json /vite.config.ts /coverage /playwright-report; do
@@ -232,7 +258,8 @@ valid_origins=(
   "https://xn--bcher-kva.example"
 )
 for origin in "${valid_origins[@]}"; do
-  docker run --rm --env "SECPAL_API_URL=$origin" "$IMAGE_TAG" true >/dev/null 2>&1 ||
+  docker run "${PLATFORM_ARGS[@]}" --rm \
+    --env "SECPAL_API_URL=$origin" "$IMAGE_TAG" true >/dev/null 2>&1 ||
     fail "valid origin was rejected"
 done
 
@@ -272,14 +299,16 @@ invalid_origins=(
   "https://api.example.com:"
 )
 
-if docker run --rm "$IMAGE_TAG" true >"$TEMP_DIR/invalid.log" 2>&1; then
+if docker run "${PLATFORM_ARGS[@]}" --rm \
+  "$IMAGE_TAG" true >"$TEMP_DIR/invalid.log" 2>&1; then
   fail "container started without SECPAL_API_URL"
 fi
 grep -Fq 'SECPAL_API_URL must be an exact ASCII HTTPS origin' "$TEMP_DIR/invalid.log" ||
   fail "missing-value error did not describe the origin contract"
 
 for origin in "${invalid_origins[@]}"; do
-  if docker run --rm --env "SECPAL_API_URL=$origin" "$IMAGE_TAG" true \
+  if docker run "${PLATFORM_ARGS[@]}" --rm \
+    --env "SECPAL_API_URL=$origin" "$IMAGE_TAG" true \
     >"$TEMP_DIR/invalid.log" 2>&1; then
     fail "container accepted an invalid origin"
   fi

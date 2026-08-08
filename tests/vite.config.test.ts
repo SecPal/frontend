@@ -2,6 +2,98 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { readFileSync, readdirSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { loadConfigFromFile } from "vite";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(__dirname, "..");
+const viteConfigPath = path.join(repoRoot, "vite.config.ts");
+const viteConfigSource = readFileSync(viteConfigPath, "utf8");
+const packageJson = JSON.parse(
+  readFileSync(path.join(repoRoot, "package.json"), "utf8")
+) as { scripts: Record<string, string> };
+const tddWorkflowSource = readFileSync(
+  path.join(repoRoot, "docs/development/TDD_WORKFLOW.md"),
+  "utf8"
+);
+const containsVitestInvocation = (line: string): boolean =>
+  /(?:^|\s)vitest(?:\s|$)/u.test(line);
+
+describe("vite config native loading", () => {
+  it("uses explicit TypeScript extensions for local config dependencies", () => {
+    const localImportSpecifiers = Array.from(
+      viteConfigSource.matchAll(/^import .* from "(\.[^"]+)";$/gmu),
+      ([, specifier]) => specifier
+    );
+
+    expect(localImportSpecifiers).toEqual([
+      "./linguiVitePluginInterop.ts",
+      "./src/lib/pwaInjectManifestBuildConfig.ts",
+      "./src/lib/pwaRuntimeCaching.ts",
+      "./src/platform/appSurfaceContract.ts",
+      "./thirdPartyDependencyNotices.ts",
+    ]);
+  });
+
+  it("loads the config through Vite's native config loader", async () => {
+    const loadedConfig = await loadConfigFromFile(
+      {
+        command: "build",
+        mode: "preview",
+        isSsrBuild: false,
+        isPreview: false,
+      },
+      viteConfigPath,
+      repoRoot,
+      "error",
+      undefined,
+      "native"
+    );
+
+    expect(loadedConfig?.path).toBe(viteConfigPath);
+    expect(loadedConfig?.config).toBeDefined();
+  });
+
+  it("routes every checked-in Vitest invocation through Vite's native config loader", () => {
+    const npmInvocations = Object.entries(packageJson.scripts).flatMap(
+      ([scriptName, command]) =>
+        command
+          .split("&&")
+          .map((invocation) => invocation.trim())
+          .filter((invocation) => /\bvitest\b/u.test(invocation))
+          .map((invocation) => `${scriptName}: ${invocation}`)
+    );
+    const workflowInvocations = readdirSync(
+      path.join(repoRoot, ".github/workflows")
+    )
+      .filter((fileName) => /\.ya?ml$/u.test(fileName))
+      .flatMap((fileName) =>
+        readFileSync(path.join(repoRoot, ".github/workflows", fileName), "utf8")
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(containsVitestInvocation)
+          .map((line) => `${fileName}: ${line}`)
+      );
+    const nonNativeInvocations = [
+      ...npmInvocations,
+      ...workflowInvocations,
+    ].filter((invocation) => !/--configLoader=native\b/u.test(invocation));
+
+    expect(nonNativeInvocations).toEqual([]);
+  });
+
+  it("recognizes Vitest invocations at the end of a workflow line", () => {
+    expect(containsVitestInvocation("npm exec -- vitest")).toBe(true);
+  });
+
+  it("documents native config loading for direct Vitest CLI invocations", () => {
+    expect(tddWorkflowSource).toContain("npx vitest --configLoader=native run");
+    expect(tddWorkflowSource).toContain("npm test --");
+    expect(tddWorkflowSource).not.toContain("npx vitest run");
+  });
+});
 
 describe("vite config dev proxy", () => {
   afterEach(() => {

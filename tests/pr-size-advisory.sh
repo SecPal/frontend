@@ -7,6 +7,9 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 fixture="$(mktemp -d "${TMPDIR:-/tmp}/frontend-pr-size-advisory.XXXXXX")"
 trap 'rm -rf -- "$fixture"' EXIT
+remote="$fixture/remote.git"
+system_git="$(command -v git)"
+system_timeout="$(command -v timeout || true)"
 
 mkdir -p "$fixture/scripts" "$fixture/bin"
 cp "$repo_root/scripts/preflight.sh" "$fixture/scripts/preflight.sh"
@@ -14,8 +17,26 @@ for command in npx npm reuse; do
   printf '#!/usr/bin/env bash\nexit 0\n' >"$fixture/bin/$command"
   chmod +x "$fixture/bin/$command"
 done
+# shellcheck disable=SC2016 # Generated wrapper must expand these variables when executed.
+printf '%s\n' \
+  '#!/usr/bin/env bash' \
+  'if [ "${1:-}" = "ls-remote" ]; then' \
+  '  printf "GIT_TERMINAL_PROMPT=%s\\n" "${GIT_TERMINAL_PROMPT:-}" >>"$GIT_PROBE_LOG"' \
+  'fi' \
+  'exec "$SYSTEM_GIT" "$@"' >"$fixture/bin/git"
+chmod +x "$fixture/bin/git"
+
+if [ -n "$system_timeout" ]; then
+  # shellcheck disable=SC2016 # Generated wrapper must expand these variables when executed.
+  printf '%s\n' \
+    '#!/usr/bin/env bash' \
+    'printf "timeout %s\\n" "$1" >>"$GIT_PROBE_LOG"' \
+    'exec "$SYSTEM_TIMEOUT" "$@"' >"$fixture/bin/timeout"
+  chmod +x "$fixture/bin/timeout"
+fi
 
 (
+  git init --bare --quiet "$remote"
   cd "$fixture"
   git init --quiet --initial-branch=main
   git config user.name "SecPal Test"
@@ -24,9 +45,22 @@ done
   : >seed.txt
   git add .
   git commit --quiet -m "test: seed fixture"
-  git remote add origin "$fixture"
-  git update-ref refs/remotes/origin/main HEAD
-  git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
+  git remote add origin "$remote"
+  git push --quiet -u origin main
+  git checkout --quiet -b stale-topic
+  awk 'BEGIN { for (line = 1; line <= 30; line++) print "stale " line }' >stale.txt
+  git add stale.txt
+  git commit --quiet -m "test: add stale topic changes"
+  git push --quiet -u origin stale-topic
+  git checkout --quiet main
+  awk 'BEGIN { for (line = 1; line <= 30; line++) print "main " line }' >main.txt
+  git add main.txt
+  git commit --quiet -m "test: advance main beyond stale topic"
+  git push --quiet origin main
+  git update-ref refs/remotes/origin/main main
+  git update-ref refs/remotes/origin/stale-topic stale-topic
+  git -C "$remote" symbolic-ref HEAD refs/heads/main
+  git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/stale-topic
   git checkout --quiet -b test-branch
   awk 'BEGIN { for (line = 1; line <= 601; line++) print "line " line }' >large.txt
   git add large.txt
@@ -34,15 +68,32 @@ done
 )
 
 set +e
-(cd "$fixture" && PATH="$fixture/bin:/usr/bin:/bin" bash scripts/preflight.sh) \
+(cd "$fixture" && SYSTEM_GIT="$system_git" SYSTEM_TIMEOUT="$system_timeout" GIT_PROBE_LOG="$fixture/git-probe.log" PATH="$fixture/bin:/usr/bin:/bin" bash scripts/preflight.sh) \
   >"$fixture/stdout" 2>"$fixture/stderr"
 status=$?
 set -e
 
 test "$status" -eq 0
+grep -Fq "GIT_TERMINAL_PROMPT=0" "$fixture/git-probe.log"
+if [ -n "$system_timeout" ]; then
+  grep -Fq "timeout 5" "$fixture/git-probe.log"
+fi
+grep -Fq "Using base branch: main" "$fixture/stdout"
 grep -Fq "PR size: 601 changed lines (601 insertions, 0 deletions; advisory threshold: 600)" \
   "$fixture/stderr"
 grep -Fq "WARNING: PR size advisory threshold exceeded." "$fixture/stderr"
+
+(
+  cd "$fixture"
+  git remote set-url origin "$fixture/missing-remote.git"
+)
+set +e
+(cd "$fixture" && SYSTEM_GIT="$system_git" SYSTEM_TIMEOUT="$system_timeout" GIT_PROBE_LOG="$fixture/git-probe.log" PATH="$fixture/bin:/usr/bin:/bin" bash scripts/preflight.sh) \
+  >"$fixture/offline-stdout" 2>"$fixture/offline-stderr"
+offline_status=$?
+set -e
+test "$offline_status" -eq 0
+grep -Fq "Using base branch: main" "$fixture/offline-stdout"
 
 printf '[\n' >"$fixture/.preflight-exclude"
 (
@@ -51,7 +102,7 @@ printf '[\n' >"$fixture/.preflight-exclude"
   git commit --quiet -m "test: add invalid exclusion"
 )
 set +e
-(cd "$fixture" && PATH="$fixture/bin:/usr/bin:/bin" bash scripts/preflight.sh) \
+(cd "$fixture" && SYSTEM_GIT="$system_git" SYSTEM_TIMEOUT="$system_timeout" GIT_PROBE_LOG="$fixture/git-probe.log" PATH="$fixture/bin:/usr/bin:/bin" bash scripts/preflight.sh) \
   >"$fixture/invalid-stdout" 2>"$fixture/invalid-stderr"
 invalid_status=$?
 set -e

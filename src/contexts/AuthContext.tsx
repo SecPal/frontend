@@ -42,6 +42,28 @@ export const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
 const AUTH_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS = 5_000;
 export const AUTH_LOGIN_AFTER_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS = 5_000;
 
+async function isNetworkAvailableWithinBootstrapTimeout(
+  isNetworkAvailable: () => Promise<boolean>
+): Promise<boolean> {
+  let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
+
+  try {
+    return await Promise.race([
+      isNetworkAvailable(),
+      new Promise<boolean>((resolve) => {
+        timeoutId = globalThis.setTimeout(
+          () => resolve(false),
+          BOOTSTRAP_REVALIDATION_TIMEOUT_MS
+        );
+      }),
+    ]);
+  } finally {
+    if (timeoutId !== null) {
+      globalThis.clearTimeout(timeoutId);
+    }
+  }
+}
+
 async function loadOfflineVaultModule() {
   return await import("../lib/offlineVault");
 }
@@ -324,9 +346,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [bootstrapRetryKey, setBootstrapRetryKey] = useState(0);
   const isClearingSessionRef = useRef(false);
   const clearSessionCycleRef = useRef(0);
-  const clearAuthenticatedStatePromiseRef = useRef<Promise<void>>(
-    Promise.resolve()
-  );
   const clearAuthenticatedStateDestructivePromiseRef = useRef<Promise<void>>(
     Promise.resolve()
   );
@@ -683,32 +702,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             shouldClearSensitiveStateRef.current = false;
             shouldRedirectOpenClientsRef.current = false;
             isClearingSessionRef.current = false;
-            clearAuthenticatedStatePromiseRef.current = Promise.resolve();
             clearAuthenticatedStateDestructivePromiseRef.current =
               Promise.resolve();
             clearAuthenticatedStateCompletionPromiseRef.current =
               Promise.resolve();
           });
-
-      clearAuthenticatedStatePromiseRef.current = cleanupSettledPromise.then(
-        async () => {
-          if (!shouldClearSensitiveStateRef.current) {
-            return;
-          }
-
-          try {
-            await waitForLogoutCleanupWithTimeout(
-              runSensitiveLogoutCleanup(),
-              "Timed out waiting for trailing logout cleanup during logout; continuing with best-effort barrier teardown."
-            );
-          } catch (error: unknown) {
-            console.error(
-              "Failed to clear sensitive client state during logout:",
-              error
-            );
-          }
-        }
-      );
     },
     [
       beginSensitiveLogoutBarrierCleanup,
@@ -798,12 +796,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // part of every full-teardown path; no separate `resetPrefetchCache()`
     // call is needed here.
     clearAuthenticatedState(true, { redirectOpenClients: true });
-    await clearAuthenticatedStatePromiseRef.current;
+    await clearAuthenticatedStateCompletionPromiseRef.current;
   }, [clearAuthenticatedState]);
 
   const handleNativeLogout = useCallback(async () => {
     clearAuthenticatedState(true, { redirectOpenClients: false });
-    await clearAuthenticatedStatePromiseRef.current;
+    await clearAuthenticatedStateCompletionPromiseRef.current;
   }, [clearAuthenticatedState]);
 
   useEffect(() => {
@@ -1301,6 +1299,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         startBootstrapRevalidation(true);
+        return;
+      }
+
+      const networkAvailable = await isNetworkAvailableWithinBootstrapTimeout(
+        () => authTransport.isNetworkAvailable()
+      );
+
+      if (
+        !isActive ||
+        bootstrapRequestVersionRef.current !== requestVersion ||
+        hasLogoutBarrierRef.current
+      ) {
+        return;
+      }
+
+      if (!networkAvailable) {
+        setIsLoading(false);
         return;
       }
 

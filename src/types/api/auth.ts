@@ -227,19 +227,10 @@ export interface PasskeyAuthenticationVerificationRequest {
   credential: PasskeyAuthenticationCredential;
 }
 
-export interface PasskeyAttestationResponsePayload {
-  client_data_json: string;
-  attestation_object: string;
-  transports?: PasskeyTransport[];
-}
-
-export interface PasskeyRegistrationCredential {
-  id: string;
-  raw_id: string;
-  type: "public-key";
-  response: PasskeyAttestationResponsePayload;
-  client_extension_results?: Record<string, unknown>;
-}
+export type PasskeyAttestationResponsePayload =
+  Schemas["PasskeyAttestationResponse"];
+export type PasskeyRegistrationCredential =
+  Schemas["PasskeyRegistrationCredential"];
 
 export type PasskeyCurrentPasswordStepUpRequest =
   Schemas["PasskeyCurrentPasswordStepUpRequest"];

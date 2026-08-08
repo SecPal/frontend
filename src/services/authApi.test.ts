@@ -856,6 +856,10 @@ describe("authApi", () => {
 
   describe("passkey registration", () => {
     it("starts a passkey registration challenge", async () => {
+      const payload = {
+        current_password: "correct-password",
+        unexpected_sensitive_field: "must-not-be-sent",
+      };
       const mockResponse = {
         data: {
           challenge_id: "550e8400-e29b-41d4-a716-446655440099",
@@ -882,9 +886,9 @@ describe("authApi", () => {
         json: async () => mockResponse,
       } as Response);
 
-      await expect(
-        startPasskeyRegistrationChallenge("correct-password")
-      ).resolves.toEqual(mockResponse);
+      await expect(startPasskeyRegistrationChallenge(payload)).resolves.toEqual(
+        mockResponse
+      );
 
       expect(mockFetch.mock.calls[1]?.[0]).toEqual(
         expect.stringContaining("/v1/me/passkeys/challenges/registration")
@@ -954,7 +958,7 @@ describe("authApi", () => {
   });
 
   describe("deletePasskey", () => {
-    it("deletes an enrolled passkey with DELETE /v1/me/passkeys/:credentialId", async () => {
+    it("sends the current password when deleting an enrolled passkey", async () => {
       const mockResponse = {
         message: "Passkey deleted successfully.",
         data: { remaining_passkeys: 0 },
@@ -966,15 +970,16 @@ describe("authApi", () => {
         json: async () => mockResponse,
       } as Response);
 
-      await expect(deletePasskey("credential-id")).resolves.toEqual(
-        mockResponse
-      );
+      await expect(
+        deletePasskey("credential-id", { current_password: "password123" })
+      ).resolves.toEqual(mockResponse);
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining("/v1/me/passkeys/credential-id"),
         expect.objectContaining({
           method: "DELETE",
           credentials: "include",
           cache: "no-store",
+          body: JSON.stringify({ current_password: "password123" }),
         })
       );
     });
@@ -990,7 +995,9 @@ describe("authApi", () => {
       } as Response);
 
       try {
-        await deletePasskey("missing-credential-id");
+        await deletePasskey("missing-credential-id", {
+          current_password: "password123",
+        });
         expect.fail("Expected deletePasskey to throw");
       } catch (error) {
         expect(error).toBeInstanceOf(AuthApiError);

@@ -162,7 +162,7 @@ function noticeSections(notice: string): readonly [string, string][] {
   const sections: Array<[string, string]> = [];
   let currentHeading: string | null = null;
   let currentLines: string[] = [];
-  let fenceMarker: "```" | "~~~" | null = null;
+  let fenceMarker: string | null = null;
 
   const finishSection = () => {
     if (currentHeading) {
@@ -243,6 +243,7 @@ export function thirdPartyDependencyNotices({
     name: "secpal-third-party-dependency-notices",
     buildStart() {
       for (const relativePath of readdirSync(path.join(process.cwd(), "src"), {
+        encoding: "utf8",
         recursive: true,
       })) {
         if (!relativePath.endsWith(".css")) {

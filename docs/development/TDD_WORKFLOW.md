@@ -311,6 +311,37 @@ git log --oneline
 - **Coverage reports**: Check Codecov bot comment on PR
 - **Git history**: `git log --oneline --name-status main..HEAD`
 
+### Vitest Configuration Loading
+
+Use the repository script for focused Vitest runs so the Vite configuration is
+loaded through Node's native package-export resolution:
+
+```bash
+npm test -- src/hooks/useAuth.test.ts --reporter=verbose
+```
+
+If a direct Vitest CLI invocation is necessary, pass the loader explicitly:
+
+```bash
+npx vitest --configLoader=native run src/hooks/useAuth.test.ts --reporter=verbose
+```
+
+Do not omit `--configLoader=native` from direct CLI invocations. Vitest chooses
+the Vite config loader before `vite.config.ts` is evaluated, so the config file
+cannot change the loader used to load itself.
+
+Issue #1579 recorded one Vite 8.1.5 startup where the default Rolldown config
+bundle could not resolve the installed Vite plugins and then attempted the
+nonexistent legacy path `node_modules/vite/index.js`. The event did not
+reproduce on fresh installs of either the affected revision or current `main`.
+`node_modules/.vite-temp` was absent before the cold run; retaining or clearing
+the empty directory did not change subsequent results because bundled config
+files use unique names and are removed after import. The available evidence
+therefore rules out a retained temporary bundle as the cause but does not prove
+why that single resolver process ignored Vite's package export. Native loading
+bypasses the observed bundle-resolution boundary without retries or longer
+timeouts.
+
 ## References
 
 - [Test-Driven Development by Example (Kent Beck)](https://www.amazon.com/Test-Driven-Development-Kent-Beck/dp/0321146530)

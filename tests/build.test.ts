@@ -13,6 +13,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { JSDOM } from "jsdom";
+import { load } from "js-yaml";
 import { describe, it, expect } from "vitest";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -20,6 +21,115 @@ const repoRoot = path.resolve(__dirname, "..");
 
 function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(repoRoot, relativePath), "utf8");
+}
+
+function getPrettierFormatExtensions(formatCheck: string): string[] {
+  const formatCheckGlob = formatCheck.match(
+    /(?<quote>['"])\*\*\/\*\.\{(?<extensions>[^}]+)\}\k<quote>/u
+  );
+
+  return (
+    formatCheckGlob?.groups?.extensions
+      ?.split(",")
+      .map((extension) => extension.trim())
+      .filter(Boolean) ?? []
+  );
+}
+
+interface WorkflowUsesReference {
+  reference: string;
+  reviewComment: string | undefined;
+}
+
+interface WorkflowSource {
+  path: string;
+  source: string;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function getWorkflowSources(): WorkflowSource[] {
+  const workflowFiles = execFileSync("git", ["ls-files", ".github/workflows"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  })
+    .trim()
+    .split("\n")
+    .filter((file) => /\.ya?ml$/u.test(file));
+
+  return workflowFiles.map((workflowFile) => ({
+    path: workflowFile,
+    source: readRepoFile(workflowFile),
+  }));
+}
+
+function getReviewComments(
+  lines: string[],
+  references: string[]
+): Array<string | undefined> {
+  const remainingReferences = [...references];
+
+  return lines.flatMap((line, index) => {
+    const referenceIndex = remainingReferences.findIndex(
+      (reference) =>
+        /^\s*(?:-\s*)?uses:\s*|[,{]\s*uses:\s*/u.test(line) &&
+        line.includes(reference)
+    );
+
+    if (referenceIndex === -1) {
+      return [];
+    }
+
+    remainingReferences.splice(referenceIndex, 1);
+    const inlineComment = line.match(/\s#\s*(.*)$/u)?.[1]?.trim();
+
+    return [
+      inlineComment ||
+        lines[index - 1]?.match(/^\s*#\s*(.*?)\s*$/u)?.[1]?.trim(),
+    ];
+  });
+}
+
+function getWorkflowUsesReferencesFromSource(
+  workflow: string
+): WorkflowUsesReference[] {
+  const lines = workflow.split("\n");
+  const document = load(workflow);
+
+  if (!isRecord(document) || !isRecord(document.jobs)) {
+    return [];
+  }
+
+  const references = Object.values(document.jobs).flatMap((job) => {
+    if (!isRecord(job)) {
+      return [];
+    }
+
+    const reusableWorkflowReference =
+      typeof job.uses === "string" ? [job.uses] : [];
+    const stepReferences = Array.isArray(job.steps)
+      ? job.steps.flatMap((step) =>
+          isRecord(step) && typeof step.uses === "string" ? [step.uses] : []
+        )
+      : [];
+
+    return [...reusableWorkflowReference, ...stepReferences];
+  });
+
+  const reviewComments = getReviewComments(lines, references);
+
+  return references.map((reference, index) => ({
+    reference,
+    reviewComment: reviewComments[index],
+  }));
+}
+
+function getWorkflowUsesReferences(): WorkflowUsesReference[] {
+  return getWorkflowSources().flatMap(({ source }) =>
+    getWorkflowUsesReferencesFromSource(source)
+  );
 }
 
 function expectVersionAtLeast(
@@ -228,12 +338,12 @@ describe("Build Configuration and Source Verification", () => {
 
     expect(packageJson.scripts).toMatchObject({
       "test:ci":
-        "vitest run --silent=passed-only --exclude tests/build.test.ts --exclude tests/shadcn-provenance.test.ts && npm run --ignore-scripts test:ci:release-builds",
+        "vitest --configLoader=native run --silent=passed-only --exclude tests/build.test.ts --exclude tests/shadcn-provenance.test.ts && npm run --ignore-scripts test:ci:release-builds",
       "pretest:ci:release-builds": "npm run test:pr-size-advisory",
       "test:ci:release-builds":
-        "vitest run tests/build.test.ts --silent=passed-only --maxWorkers=1 --no-file-parallelism && vitest run tests/shadcn-provenance.test.ts --silent=passed-only --maxWorkers=1 --no-file-parallelism",
+        "vitest --configLoader=native run tests/build.test.ts --silent=passed-only --maxWorkers=1 --no-file-parallelism && vitest --configLoader=native run tests/shadcn-provenance.test.ts --silent=passed-only --maxWorkers=1 --no-file-parallelism",
       "test:coverage:ci":
-        "vitest run --coverage --silent=passed-only --exclude tests/build.test.ts --exclude tests/shadcn-provenance.test.ts && npm run --ignore-scripts test:ci:release-builds",
+        "vitest --configLoader=native run --coverage --silent=passed-only --exclude tests/build.test.ts --exclude tests/shadcn-provenance.test.ts && npm run --ignore-scripts test:ci:release-builds",
     });
   });
 
@@ -425,26 +535,103 @@ describe("Build Configuration and Source Verification", () => {
     }
   }, 120_000);
 
-  it("keeps timeout-minutes only on runnable quality workflow jobs", () => {
-    const qualityWorkflow = readRepoFile(".github/workflows/quality.yml");
-    const jobsSection = getIndentedSection(qualityWorkflow, "jobs");
-    const jobNames = Array.from(
-      jobsSection.matchAll(/^ {2}([a-z0-9-]+):$/gm),
-      (match) => match[1]
-    );
+  it("sets timeout-minutes on every runnable workflow job", () => {
+    const workflowSources = getWorkflowSources();
 
-    expect(jobNames.length).toBeGreaterThan(0);
+    expect(workflowSources.length).toBeGreaterThan(0);
 
-    for (const jobName of jobNames) {
-      const jobSection = getIndentedSection(jobsSection, jobName);
+    for (const workflow of workflowSources) {
+      const document = load(workflow.source);
 
-      if (jobSection.includes("\n    uses: ")) {
-        expect(jobSection).not.toContain("timeout-minutes:");
+      expect(isRecord(document), workflow.path).toBe(true);
+      if (!isRecord(document)) {
         continue;
       }
 
-      expect(jobSection).toContain("runs-on:");
-      expect(jobSection).toContain("timeout-minutes:");
+      expect(isRecord(document.jobs), workflow.path).toBe(true);
+      if (!isRecord(document.jobs)) {
+        continue;
+      }
+
+      for (const [jobName, job] of Object.entries(document.jobs)) {
+        const jobLocation = `${workflow.path}:jobs.${jobName}`;
+
+        expect(isRecord(job), jobLocation).toBe(true);
+        if (!isRecord(job)) {
+          continue;
+        }
+
+        if (typeof job.uses === "string") {
+          expect(job, jobLocation).not.toHaveProperty("timeout-minutes");
+          continue;
+        }
+
+        expect(job, jobLocation).toHaveProperty("runs-on");
+        expect(job, jobLocation).toHaveProperty("timeout-minutes");
+      }
+    }
+  });
+
+  it("pins every GitHub Actions workflow reference to an immutable commit SHA", () => {
+    const references = getWorkflowUsesReferences();
+
+    expect(references.length).toBeGreaterThan(0);
+    for (const { reference } of references) {
+      expect(reference).toMatch(/@[0-9a-f]{40}$/u);
+    }
+  });
+
+  it("extracts workflow references from named and unnamed action steps", () => {
+    const workflow = `
+jobs:
+  test:
+    steps:
+      - uses: actions/checkout@main
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+      - { name: Flow checkout, uses: actions/checkout@main }
+`;
+
+    expect(
+      getWorkflowUsesReferencesFromSource(workflow).map(
+        ({ reference }) => reference
+      )
+    ).toEqual([
+      "actions/checkout@main",
+      "actions/setup-node@v7",
+      "actions/checkout@main",
+    ]);
+  });
+
+  it("associates review comments with each repeated workflow reference", () => {
+    const workflow = `
+jobs:
+  test:
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+`;
+
+    expect(getWorkflowUsesReferencesFromSource(workflow)).toEqual([
+      {
+        reference: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        reviewComment: "v7",
+      },
+      {
+        reference: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+        reviewComment: undefined,
+      },
+    ]);
+  });
+
+  it("keeps the reviewed version or branch next to every workflow reference", () => {
+    const references = getWorkflowUsesReferences();
+
+    expect(references.length).toBeGreaterThan(0);
+    for (const { reference, reviewComment } of references) {
+      expect(reviewComment, reference).toMatch(
+        /^(?:main|v\d+(?:\.\d+)*)(?:\b|;)/u
+      );
     }
   });
 
@@ -651,6 +838,46 @@ describe("Build Configuration and Source Verification", () => {
     expect(preCommitConfig).not.toContain("npx --no-install prettier");
   });
 
+  it("formats every source extension checked by the CI Prettier command", () => {
+    const preCommitConfig = readRepoFile(".pre-commit-config.yaml");
+    const packageManifest = JSON.parse(readRepoFile("package.json")) as {
+      scripts: Record<string, string>;
+    };
+    const formatCheck = packageManifest.scripts["format:check"];
+    const extensions = getPrettierFormatExtensions(formatCheck);
+    const preCommitDocument = load(preCommitConfig);
+    const repositories =
+      isRecord(preCommitDocument) && Array.isArray(preCommitDocument.repos)
+        ? preCommitDocument.repos.filter(isRecord)
+        : [];
+    const prettierHook = repositories
+      .flatMap((repository) =>
+        Array.isArray(repository.hooks) ? repository.hooks.filter(isRecord) : []
+      )
+      .find((hook) => hook.id === "prettier");
+
+    expect(extensions).not.toHaveLength(0);
+    expect(
+      getPrettierFormatExtensions(formatCheck.replaceAll(",", ", "))
+    ).toEqual(extensions);
+    expect(
+      getPrettierFormatExtensions(formatCheck.replaceAll("'", '"'))
+    ).toEqual(extensions);
+    expect(prettierHook).toBeDefined();
+
+    const expectedMatcher = String.raw`\.(?:${extensions.join("|")})$`;
+    const hookMatcher =
+      typeof prettierHook?.files === "string" ? prettierHook.files : "";
+
+    expect(hookMatcher).toBe(expectedMatcher);
+
+    const matcher = new RegExp(hookMatcher);
+
+    for (const extension of extensions) {
+      expect(matcher.test(`src/fixture.${extension}`)).toBe(true);
+    }
+  });
+
   it("installs Node dependencies before verifying local pre-commit hooks", () => {
     const setupPreCommit = readRepoFile("scripts/setup-pre-commit.sh");
 
@@ -785,7 +1012,7 @@ describe("Build Configuration and Source Verification", () => {
       'import * as linguiVitePlugin from "@lingui/vite-plugin";'
     );
     expect(viteConfig).toContain(
-      'import { resolveLinguiVitePluginExports } from "./linguiVitePluginInterop";'
+      'import { resolveLinguiVitePluginExports } from "./linguiVitePluginInterop.ts";'
     );
     expect(viteConfig).toContain(
       "resolveLinguiVitePluginExports(linguiVitePlugin)"
@@ -795,6 +1022,28 @@ describe("Build Configuration and Source Verification", () => {
     );
     expect(interopHelper).toContain('"lingui"');
     expect(interopHelper).not.toContain('"linguiTransformerBabelPreset"');
+  });
+
+  it("typechecks the Vite config with TypeScript-extension imports enabled", () => {
+    const packageJson = JSON.parse(readRepoFile("package.json")) as {
+      scripts?: Record<string, string>;
+    };
+    const nodeTypeScriptConfig = JSON.parse(
+      readRepoFile("tsconfig.node.json")
+    ) as {
+      compilerOptions?: {
+        allowImportingTsExtensions?: boolean;
+        noEmit?: boolean;
+      };
+    };
+
+    expect(nodeTypeScriptConfig.compilerOptions).toMatchObject({
+      allowImportingTsExtensions: true,
+      noEmit: true,
+    });
+    expect(packageJson.scripts?.typecheck).toContain(
+      "tsc -p tsconfig.node.json --noEmit"
+    );
   });
 
   it("keeps nginx serving Digital Asset Links even when hidden directories are skipped during deploy", () => {

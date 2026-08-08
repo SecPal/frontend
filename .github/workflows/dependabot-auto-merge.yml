@@ -42,7 +42,8 @@ jobs:
             exit 0
           fi
 
-          if [[ "${PR_TITLE}" =~ from[[:space:]]+([0-9]+)(\.([0-9]+))?(\.([0-9]+))?[[:space:]]+to[[:space:]]+([0-9]+)(\.([0-9]+))?(\.([0-9]+))? ]]; then
+          if [[ "${PR_TITLE}" =~ from[[:space:]]+([0-9]+)(\.([0-9]+))?\
+          (\.([0-9]+))?[[:space:]]+to[[:space:]]+([0-9]+)(\.([0-9]+))?(\.([0-9]+))? ]]; then
             old_major="${BASH_REMATCH[1]}"
             old_minor="${BASH_REMATCH[3]:-0}"
             old_patch="${BASH_REMATCH[5]:-0}"

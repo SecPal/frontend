@@ -12,7 +12,7 @@ Applies when editing GitHub Actions workflows and Dependabot configuration in th
 
 - Always set `timeout-minutes` on every job.
 - Set explicit `permissions` on every workflow and start with the least privilege needed.
-- Pin third-party actions to immutable versions. GitHub-maintained `actions/*` may use supported major tags in this org.
+- Pin every `uses:` reference, including GitHub-maintained actions and organization reusable workflows, to a full 40-character commit SHA. Preserve the reviewed version or branch in a nearby comment for update visibility.
 - Use reusable workflows from the organization templates when they fit the task.
 - Use `continue-on-error: true` only for intentional polling or wait steps, never for build or test steps.
 - Reference secrets via `${{ secrets.NAME }}` and vars via `${{ vars.NAME }}`. Never hardcode or echo secrets.

@@ -8,6 +8,7 @@ import {
   peekBrowserPushInstallationId,
 } from "./browserPushState";
 import {
+  clearBrowserPushClientState,
   clearSensitiveClientState,
   SENSITIVE_CACHE_NAMES,
 } from "./clientStateCleanup";
@@ -60,6 +61,9 @@ describe("clearSensitiveClientState", () => {
 
     Object.defineProperty(navigator, "serviceWorker", {
       value: {
+        getRegistration: vi.fn().mockResolvedValue({
+          pushManager: mockPushManager,
+        }),
         ready: Promise.resolve({
           pushManager: mockPushManager,
         }),
@@ -208,6 +212,46 @@ describe("clearSensitiveClientState", () => {
     expect(mockPushSubscription.unsubscribe).toHaveBeenCalledTimes(1);
     expect(installationId).not.toBeNull();
     expect(peekBrowserPushInstallationId()).toBeNull();
+  });
+
+  it("does not wait for a future service worker registration during browser push cleanup", async () => {
+    const getRegistration = vi.fn().mockResolvedValue(undefined);
+    const ready = new Promise<ServiceWorkerRegistration>(() => {
+      // Intentionally pending to prove cleanup never waits for readiness.
+    });
+
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: {
+        getRegistration,
+        ready,
+      },
+      writable: true,
+    });
+
+    const cleanup = clearBrowserPushClientState();
+    await Promise.resolve();
+
+    expect(getRegistration).toHaveBeenCalledTimes(1);
+    await cleanup;
+  });
+
+  it("treats a missing service worker registration lookup as unsupported", async () => {
+    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: {
+        ready: new Promise<ServiceWorkerRegistration>(() => {
+          // Intentionally pending to model an unsupported registration lookup.
+        }),
+      },
+      writable: true,
+    });
+
+    await expect(clearBrowserPushClientState()).resolves.toBeUndefined();
+
+    expect(consoleWarn).not.toHaveBeenCalled();
   });
 
   it("waits for IndexedDB cleanup to settle before rejecting after another sensitive cleanup fails", async () => {

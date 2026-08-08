@@ -87,8 +87,12 @@ export async function getPasskeys(): Promise<PasskeyListResponse> {
 }
 
 export async function startPasskeyRegistrationChallenge(
-  currentPassword: PasskeyCurrentPasswordStepUpRequest["current_password"]
+  payload: PasskeyCurrentPasswordStepUpRequest
 ): Promise<PasskeyRegistrationChallengeResponse> {
+  const request: PasskeyCurrentPasswordStepUpRequest = {
+    current_password: payload.current_password,
+  };
+
   await fetchCsrfToken();
 
   const response = await apiFetch(
@@ -100,9 +104,7 @@ export async function startPasskeyRegistrationChallenge(
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({
-        current_password: currentPassword,
-      } satisfies PasskeyCurrentPasswordStepUpRequest),
+      body: JSON.stringify(request),
     }
   );
 
@@ -151,16 +153,23 @@ export async function verifyPasskeyRegistrationChallenge(
 }
 
 export async function deletePasskey(
-  credentialId: string
+  credentialId: string,
+  payload: PasskeyCurrentPasswordStepUpRequest
 ): Promise<PasskeyDeletionResponse> {
+  const request: PasskeyCurrentPasswordStepUpRequest = {
+    current_password: payload.current_password,
+  };
+
   const response = await apiFetch(
     buildApiUrl(`/v1/me/passkeys/${credentialId}`),
     {
       method: "DELETE",
       cache: "no-store",
       headers: {
+        "Content-Type": "application/json",
         Accept: "application/json",
       },
+      body: JSON.stringify(request),
     }
   );
 

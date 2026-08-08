@@ -14,6 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added push-to-`main` publication for the official
+  `ghcr.io/secpal/frontend` Web/PWA image with run-specific discovery tags,
+  canonical OCI index digests, exact index-byte verification, deterministic
+  OCI metadata, `linux/amd64` and `linux/arm64` runtime and Chromium checks,
+  per-platform BuildKit SPDX SBOM and SLSA v1 `mode=max` provenance
+  verification, and digest-bound GitHub Artifact Attestations. Pull-request CI
+  remains registry read-only, deployment consumption remains pending, and
+  Phase C remains in progress. Frontend image publication is implemented but
+  not yet operationally verified.
 - Added a production-ready unprivileged frontend container image that serves
   the existing Web/PWA artifact through static Nginx on port 8080, configures
   the API origin at startup through strict `SECPAL_API_URL` validation, and
@@ -25,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Local pre-push advice now resolves the remote's advertised default branch
+  and falls back to `main`, instead of reusing a potentially stale local
+  `origin/HEAD` reference for branch scope and PR-size reporting.
 - Removed the retired standalone changelog host from domain policy and
   Polyscope preview-host parsing.
 - Changed local and hosted pull-request size reporting to treat 600 changed
@@ -68,6 +80,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Aligned the local Prettier pre-commit matcher with the TypeScript, TSX,
+  JavaScript, JSX, Markdown, YAML, and JSON extensions checked by CI, so
+  unformatted TSX changes are rejected before commit. Closes #1625.
+- Updated the transitive `nanoid` dependency to 3.3.18, resolving
+  GHSA-2v37-7h3g-55p8.
+- Stabilized the onboarding Select interaction tests by waiting for Base UI's
+  asynchronously exposed popup options before clicking them. Closes #1622.
+- Ensured Android runtime discovery waits for destructive logout cleanup
+  without blocking on a future browser service worker when no registration
+  exists.
+- Excluded transient Polyscope preview-stage artifacts from ESLint so local
+  linting does not race files created and removed by the preview process.
+- Bounded native stored-snapshot connectivity preflight during auth bootstrap,
+  so a stalled native availability call now completes as offline while retaining
+  the secure local session.
+- Required current-password confirmation before passkey removal, sent the
+  step-up payload required by the passkey deletion API, and retained successful
+  removal state if a subsequent list refresh fails. The confirmation dialog can
+  also be dismissed while a pending request settles without trapping focus.
+- Fixed Lighthouse pull-request comments to link readers to the current
+  workflow run's uploaded report artifact instead of an inaccessible
+  runner-local filesystem path, retaining the report artifact when the audit
+  fails.
+- Routed every checked-in Vitest command through Vite's native config loader
+  and documented the required flag for direct CLI runs, so standard test paths
+  no longer depend on the config-bundle boundary observed in issue #1579.
+- Made local Vite config imports compatible with Vite's native config loader
+  and covered the config and its dependencies with strict TypeScript checks,
+  removing the future-default compatibility warning from test runs.
+- Changed published multi-architecture runtime verification to exercise each
+  platform through its verified child manifest digest, avoiding classic Docker
+  image-store conflicts while retaining the OCI index digest as the canonical
+  trust and deployment identity.
+- Pinned every GitHub Actions and organization reusable-workflow reference to
+  reviewed immutable commit SHAs, with version or branch comments and
+  regression coverage that rejects moving refs in named and unnamed steps and
+  enforces the review-comment convention. Added explicit timeouts to the
+  remaining runnable CodeQL and Lighthouse jobs and repository-wide regression
+  coverage for the timeout policy.
+- Fixed published frontend startup by explicitly setting the Nginx snippets
+  directory to mode `0555`, and hardened runtime verification with
+  ownership-safe container creation plus bounded loopback port and readiness
+  waits that report container state, exit status, Docker errors, and startup
+  logs before cleanup while keeping the Chromium API-origin contract aligned
+  with the canonical SecPal API host.
+- Bound the embedded dependency SPDX document timestamp to the publishing
+  commit through `SOURCE_DATE_EPOCH` and its namespace to the document content,
+  making repeated builds of the same source produce identical application SBOM
+  bytes without namespace collisions between different documents.
+- Required the verified BuildKit provenance to contain exactly one Git source
+  revision, rejected additional tag and registry-write paths in publisher
+  policy coverage, and recorded both runtime-platform manifest digests as
+  non-canonical post-merge evidence.
+- Made the provenance policy regression helper fail immediately with an
+  actionable error when its required `jq` executable is unavailable.
+- Pinned the GitHub CLI used for frontend artifact-attestation verification to
+  version 2.97.0 and verified the official release archive checksum before use.
+- Extended the frontend publisher policy tests to reject any additional
+  attestation verification that bypasses the pinned GitHub CLI.
+- Requested SLSA v1 provenance to match the publisher's verification schema,
+  treated an empty Docker `SOURCE_DATE_EPOCH` build argument as unset, and made
+  unsupported container-platform diagnostics identify the rejected value
+  without leaking temporary smoke-test resources.
+- Normalized static artifact, license, Nginx configuration, and entrypoint
+  modes inside the image so inherited workspace ACLs cannot make unprivileged
+  runtime files unreadable or non-executable despite Dockerfile `COPY --chmod`
+  declarations.
+- Updated the transitive `brace-expansion` dependency to 5.0.9 or newer to
+  remediate its denial-of-service vulnerability.
+- Kept passkey enrollment request payloads contract-derived end to end: both
+  client calls now accept the generated OpenAPI request types directly, and
+  type-level regression coverage prevents the client boundary from drifting
+  from those schemas.
 - Restored passkey enrollment after the API began requiring a current-password
   step-up: the settings form now collects the password and includes it in both
   registration requests, while live browser-test traffic redacts the password

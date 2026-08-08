@@ -1787,6 +1787,10 @@ msgstr "Keine Aktivitätsprotokolle gefunden."
 msgid "Failed to load customer"
 msgstr "Kunde konnte nicht geladen werden"
 
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Remove passkey"
+msgstr "Passkey entfernen"
+
 #: src/components/ScopeAssignmentForm.tsx
 #: src/pages/SourcePage.tsx
 msgid "Back"
@@ -2063,6 +2067,11 @@ msgstr "Browser-Benachrichtigungen sind für diesen angemeldeten Browser auf die
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to update contact field."
 msgstr "Kontaktfeld konnte nicht aktualisiert werden."
+
+#. placeholder {0}: passkeyPendingRemoval?.label
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Enter your current password to remove {0}."
+msgstr "Gib dein aktuelles Passwort ein, um {0} zu entfernen."
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "Generating BWR Export..."
@@ -2618,6 +2627,10 @@ msgstr "Passkey-Verfügbarkeit wird geprüft..."
 #: src/pages/Sites/SiteEdit.tsx
 msgid "Email"
 msgstr "E-Mail-Adresse"
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Current password to remove passkey"
+msgstr "Aktuelles Passwort zum Entfernen des Passkeys"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "User's own rank (FE{userRank}) is within viewable range. Should this user be able to view/edit their own HR data?"
@@ -3733,6 +3746,10 @@ msgstr "Melden Sie sich erneut an, bevor SecPal diesen Browser mit dem Server sy
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Saving passkey…"
 msgstr "Passkey speichern …"
+
+#: src/pages/Settings/SettingsPage.tsx
+msgid "Passkey was removed, but the updated list could not be loaded. Reload the page to update it."
+msgstr "Der Passkey wurde entfernt, aber die aktualisierte Liste konnte nicht geladen werden. Lade die Seite neu, um sie zu aktualisieren."
 
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Validating onboarding link"
