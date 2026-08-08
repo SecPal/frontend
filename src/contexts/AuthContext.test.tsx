@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, act, waitFor } from "@testing-library/react";
 import { AuthProvider, BOOTSTRAP_REVALIDATION_TIMEOUT_MS } from "./AuthContext";
 import { useAuth } from "../hooks/useAuth";
@@ -11,6 +11,8 @@ import { isOnline } from "../services/sessionEvents";
 import {
   AUTH_VAULT_STORAGE_KEY,
   clearOfflineVaultSession,
+  clearOfflineVaultTables,
+  clearRecentAuthVaultKeyMaterials,
 } from "../lib/offlineVault";
 import {
   clearBrowserPushClientState,
@@ -80,6 +82,7 @@ function PermissionTestComponent({ permission }: { permission?: string }) {
       <span data-testid="hasOrgAccess">
         {auth.hasOrganizationalAccess() ? "true" : "false"}
       </span>
+      <span data-testid="isLoading">{String(auth.isLoading)}</span>
     </div>
   );
 }
@@ -98,9 +101,11 @@ async function seedStoredUser(user: Record<string, unknown>) {
 }
 
 describe("AuthContext", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     localStorage.clear();
     clearOfflineVaultSession();
+    clearRecentAuthVaultKeyMaterials();
+    await clearOfflineVaultTables();
     document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
     document.cookie = "XSRF-TOKEN=test-csrf-token;path=/";
     sessionEventHandlers.clear();
@@ -110,8 +115,10 @@ describe("AuthContext", () => {
     vi.mocked(syncOfflineSessionAccess).mockClear();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await clearOfflineVaultTables();
     clearOfflineVaultSession();
+    clearRecentAuthVaultKeyMaterials();
   });
 
   describe("hasPermission", () => {
@@ -150,6 +157,7 @@ describe("AuthContext", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+        expect(screen.getByTestId("isLoading")).toHaveTextContent("false");
       });
     });
 
@@ -188,6 +196,7 @@ describe("AuthContext", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+        expect(screen.getByTestId("isLoading")).toHaveTextContent("false");
       });
     });
 
@@ -206,6 +215,7 @@ describe("AuthContext", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+        expect(screen.getByTestId("isLoading")).toHaveTextContent("false");
       });
     });
 
@@ -348,6 +358,7 @@ describe("AuthContext", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("hasOrgAccess")).toHaveTextContent("false");
+        expect(screen.getByTestId("isLoading")).toHaveTextContent("false");
       });
     });
 
@@ -366,6 +377,7 @@ describe("AuthContext", () => {
 
       await waitFor(() => {
         expect(screen.getByTestId("hasOrgAccess")).toHaveTextContent("false");
+        expect(screen.getByTestId("isLoading")).toHaveTextContent("false");
       });
     });
 
@@ -524,6 +536,13 @@ describe("AuthContext", () => {
           3,
           "Timed out waiting for trailing logout cleanup before login; continuing after destructive cleanup."
         );
+
+        vi.useRealTimers();
+        await waitFor(() => {
+          expect(screen.getByTestId("userEmail")).toHaveTextContent(
+            "next@secpal.dev"
+          );
+        });
       } finally {
         vi.useRealTimers();
         setUserSpy.mockRestore();

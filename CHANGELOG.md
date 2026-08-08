@@ -20,9 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   OCI metadata, `linux/amd64` and `linux/arm64` runtime and Chromium checks,
   per-platform BuildKit SPDX SBOM and SLSA v1 `mode=max` provenance
   verification, and digest-bound GitHub Artifact Attestations. Pull-request CI
-  remains registry read-only, deployment consumption remains pending, and
-  Phase C remains in progress. Frontend image publication is implemented but
-  not yet operationally verified.
+  remains registry read-only. Post-merge publisher run `31247196734` for source
+  commit `b755ca0d0ee5a85eca5ad5688d457241f070b1b4` operationally verified the
+  canonical image
+  `ghcr.io/secpal/frontend@sha256:cdccded2eade53d9300aafff3a2663a779d3d158cfa74f1e9c182e5786285077`,
+  including the public package linkage, anonymous digest pull, final discovery
+  snapshot, and independent artifact-attestation verification.
+  `SecPal/deployment#6` consumed the verified digest and closed
+  `SecPal/deployment#3`, completing Phase C.
 - Added a production-ready unprivileged frontend container image that serves
   the existing Web/PWA artifact through static Nginx on port 8080, configures
   the API origin at startup through strict `SECPAL_API_URL` validation, and
@@ -80,6 +85,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Isolated AuthContext tests from shared offline-vault state and awaited the
+  complete login handoff before teardown, so filtered runs no longer leave a
+  rejected vault persistence task. Closes #1629.
 - Aligned the local Prettier pre-commit matcher with the TypeScript, TSX,
   JavaScript, JSX, Markdown, YAML, and JSON extensions checked by CI, so
   unformatted TSX changes are rejected before commit. Closes #1625.
