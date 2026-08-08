@@ -825,6 +825,33 @@ jobs:
     expect(preCommitConfig).not.toContain("npx --no-install prettier");
   });
 
+  it("formats every source extension checked by the CI Prettier command", () => {
+    const preCommitConfig = readRepoFile(".pre-commit-config.yaml");
+    const packageManifest = JSON.parse(readRepoFile("package.json")) as {
+      scripts: Record<string, string>;
+    };
+    const formatCheckGlob = packageManifest.scripts["format:check"].match(
+      /'\*\*\/\*\.\{(?<extensions>[^}]+)\}'/u
+    );
+    const prettierHook = preCommitConfig.match(
+      /- id: prettier[\s\S]*?^\s{8}files: (.+)$/mu
+    );
+
+    expect(formatCheckGlob?.groups?.extensions).toBeDefined();
+    expect(prettierHook).not.toBeNull();
+
+    const extensions = formatCheckGlob?.groups?.extensions?.split(",") ?? [];
+    const expectedMatcher = String.raw`\.(?:${extensions.join("|")})$`;
+
+    expect(prettierHook?.[1]).toBe(expectedMatcher);
+
+    const matcher = new RegExp(prettierHook?.[1] ?? "");
+
+    for (const extension of extensions) {
+      expect(matcher.test(`src/fixture.${extension}`)).toBe(true);
+    }
+  });
+
   it("installs Node dependencies before verifying local pre-commit hooks", () => {
     const setupPreCommit = readRepoFile("scripts/setup-pre-commit.sh");
 
