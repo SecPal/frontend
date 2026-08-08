@@ -482,9 +482,6 @@ describe("AuthContext", () => {
 
       const pushCleanupPromise = new Promise<void>(() => {});
       const setUserSpy = vi.spyOn(authStorage, "setUser");
-      const consoleWarnSpy = vi
-        .spyOn(console, "warn")
-        .mockImplementation(() => undefined);
 
       vi.mocked(clearSensitiveClientState).mockClear();
       vi.mocked(clearBrowserPushClientState).mockClear();
@@ -523,19 +520,6 @@ describe("AuthContext", () => {
 
         expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
         expect(cleanupCallOrder).toBeLessThan(setUserCallOrder);
-        expect(consoleWarnSpy).toHaveBeenCalledTimes(3);
-        expect(consoleWarnSpy).toHaveBeenNthCalledWith(
-          1,
-          "Timed out waiting for analytics reset during logout; continuing with best-effort sensitive cleanup."
-        );
-        expect(consoleWarnSpy).toHaveBeenNthCalledWith(
-          2,
-          "Timed out waiting for trailing logout cleanup during logout; continuing with best-effort barrier teardown."
-        );
-        expect(consoleWarnSpy).toHaveBeenNthCalledWith(
-          3,
-          "Timed out waiting for trailing logout cleanup before login; continuing after destructive cleanup."
-        );
 
         vi.useRealTimers();
         await waitFor(() => {
@@ -546,7 +530,6 @@ describe("AuthContext", () => {
       } finally {
         vi.useRealTimers();
         setUserSpy.mockRestore();
-        consoleWarnSpy.mockRestore();
       }
     });
   });

@@ -77,18 +77,16 @@ const {
         storedUser = null;
         vaultPresent = false;
         vaultLocked = false;
+        logoutBarrier = false;
       }),
       clear: vi.fn(async () => {
         storedUser = null;
         vaultPresent = false;
         vaultLocked = false;
-        logoutBarrier = true;
+        logoutBarrier = false;
         skipVaultTableCleanup = false;
       }),
       hasLogoutBarrier: vi.fn(() => logoutBarrier),
-      clearLogoutBarrier: vi.fn(() => {
-        logoutBarrier = false;
-      }),
       shouldSkipBarrierVaultTableCleanup: vi.fn(() => skipVaultTableCleanup),
       setSkipBarrierVaultTableCleanup: vi.fn((shouldSkip: boolean) => {
         skipVaultTableCleanup = shouldSkip;
@@ -104,6 +102,8 @@ const {
       endSensitiveLogoutBarrierCleanup: vi.fn(() => {
         skipVaultTableCleanup = false;
       }),
+      abortPendingPersistence: vi.fn(),
+      abortPendingVaultCleanup: vi.fn(async () => undefined),
       waitForInFlightVaultTableCleanup: vi.fn(async () => undefined),
     },
   };
@@ -200,7 +200,7 @@ function createAndroidRuntimeBootstrapBridge({
   }),
   login = vi.fn(),
   getCurrentUser = vi.fn().mockRejectedValue(
-    Object.assign(new Error("Android auth token is not available"), {
+    Object.assign(new Error("No stored native token."), {
       code: "NO_STORED_TOKEN",
     })
   ),
@@ -383,9 +383,7 @@ describe("App", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     await authStorage.clear();
-    mockAuthStorage.clearLogoutBarrier();
     mockAuthStorage.clear.mockClear();
-    mockAuthStorage.clearLogoutBarrier.mockClear();
     localStorage.clear();
     sessionStorage.clear();
     delete (globalThis as { SecPalNativeAuthBridge?: unknown })
@@ -871,10 +869,7 @@ describe("App", () => {
       screen.getByRole("button", { name: /switch instance/i })
     );
     expect(
-      screen.getByRole("button", {
-        name: /switch instance/i,
-        expanded: false,
-      })
+      screen.getByRole("button", { name: /switch instance/i })
     ).toBeEnabled();
     expect(
       screen.queryByRole("heading", { name: /enter your instance url/i })
@@ -973,13 +968,6 @@ describe("App", () => {
       email: "configured.user@secpal.dev",
       emailVerified: true,
     });
-    mockAuthStorage.getUser.mockImplementationOnce(
-      () =>
-        new Promise(() => undefined) as ReturnType<
-          typeof mockAuthStorage.getUser
-        >
-    );
-
     await renderWithI18n(<App />);
 
     await confirmRuntimeInstanceSwitch(user);
@@ -1517,6 +1505,55 @@ describe("App", () => {
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
   });
 
+  it("keeps native login non-interactive while snapshotless rehydration is pending", async () => {
+    vi.useFakeTimers();
+    const currentUser = createDeferredPromise<{
+      id: string;
+      name: string;
+      email: string;
+      emailVerified: boolean;
+    }>();
+
+    createAndroidRuntimeBootstrapBridge({
+      configured: true,
+      getCurrentUser: vi.fn(() => currentUser.promise),
+    });
+
+    try {
+      await renderWithI18n(<App />);
+      await act(async () => {
+        await Promise.resolve();
+        vi.advanceTimersByTime(1_000);
+        await Promise.resolve();
+      });
+
+      expect(
+        screen.getByRole("status", { name: /loading login/i })
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText(/email/i)).toBeDisabled();
+      expect(
+        screen.queryByRole("form", { name: /login form/i })
+      ).not.toBeInTheDocument();
+
+      currentUser.resolve({
+        id: "42",
+        name: "Configured User",
+        email: "configured.user@secpal.dev",
+        emailVerified: true,
+      });
+      await act(async () => {
+        await Promise.resolve();
+      });
+      vi.useRealTimers();
+
+      await waitFor(() => {
+        expect(window.location.pathname).toBe("/");
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("renders language switcher on login page", async () => {
     await renderWithI18n(<App />);
     expect(screen.getByRole("combobox")).toBeInTheDocument();
@@ -1689,226 +1726,6 @@ describe("App", () => {
     expect(window.location.pathname).toBe("/");
   });
 
-  it("rehydrates a native session on the login route without exposing interactive login", async () => {
-    vi.useFakeTimers();
-    let resolveCurrentUser!: (user: {
-      id: string;
-      name: string;
-      email: string;
-      emailVerified: boolean;
-    }) => void;
-    const getCurrentUser = vi.fn(
-      () =>
-        new Promise<{
-          id: string;
-          name: string;
-          email: string;
-          emailVerified: boolean;
-        }>((resolve) => {
-          resolveCurrentUser = resolve;
-        })
-    );
-    const bridge = createAndroidRuntimeBootstrapBridge({
-      configured: true,
-      getCurrentUser,
-    });
-
-    try {
-      await renderWithI18n(<App />);
-
-      await act(async () => {
-        for (let attempt = 0; attempt < 20; attempt += 1) {
-          await Promise.resolve();
-        }
-      });
-
-      expect(
-        screen.getByRole("status", { name: /loading login/i })
-      ).toBeInTheDocument();
-      expect(screen.getByLabelText(/email/i)).toBeDisabled();
-
-      await act(async () => {
-        vi.advanceTimersByTime(1_000);
-        await Promise.resolve();
-      });
-
-      expect(
-        screen.getByRole("status", { name: /loading login/i })
-      ).toBeInTheDocument();
-      expect(screen.getByLabelText(/email/i)).toBeDisabled();
-      expect(screen.getByLabelText(/password/i)).toBeDisabled();
-      expect(screen.getByRole("button", { name: /^log in$/i })).toBeDisabled();
-      expect(
-        screen.queryByRole("form", { name: /login form/i })
-      ).not.toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /switch instance/i })
-      ).toBeEnabled();
-
-      await act(async () => {
-        resolveCurrentUser({
-          id: "42",
-          name: "Configured User",
-          email: "configured.user@secpal.dev",
-          emailVerified: true,
-        });
-        for (let attempt = 0; attempt < 20; attempt += 1) {
-          await Promise.resolve();
-        }
-      });
-
-      vi.useRealTimers();
-
-      expect(
-        await screen.findByRole(
-          "heading",
-          { name: /welcome to secpal/i },
-          { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-        )
-      ).toBeInTheDocument();
-      expect(window.location.pathname).toBe("/");
-      expect(bridge.getCurrentUser).toHaveBeenCalledTimes(1);
-      expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it("keeps native login non-interactive while switching instances during rehydration", async () => {
-    const user = userEvent.setup();
-    let resolveStorageClear!: () => void;
-    const storageClear = new Promise<void>((resolve) => {
-      resolveStorageClear = resolve;
-    });
-    const getCurrentUser = vi.fn(() => new Promise(() => undefined));
-    const bridge = createAndroidRuntimeBootstrapBridge({
-      configured: true,
-      getCurrentUser,
-    });
-
-    mockAuthStorage.clear.mockImplementationOnce(() => storageClear);
-
-    await renderWithI18n(<App />);
-
-    expect(
-      await screen.findByRole("status", { name: /loading login/i })
-    ).toBeInTheDocument();
-
-    await confirmRuntimeInstanceSwitch(user);
-
-    expect(
-      screen.getByRole("status", { name: /loading login/i })
-    ).toBeInTheDocument();
-    expect(screen.getByLabelText(/email/i)).toBeDisabled();
-    expect(screen.getByLabelText(/password/i)).toBeDisabled();
-    expect(screen.getByRole("button", { name: /^log in$/i })).toBeDisabled();
-    expect(
-      screen.queryByRole("form", { name: /login form/i })
-    ).not.toBeInTheDocument();
-    expect(bridge.clearRuntimeBootstrap).not.toHaveBeenCalled();
-
-    resolveStorageClear();
-
-    expect(
-      await screen.findByRole("heading", { name: /enter your instance url/i })
-    ).toBeInTheDocument();
-    expect(bridge.clearRuntimeBootstrap).toHaveBeenCalledTimes(1);
-  });
-
-  it("keeps native bootstrap switch failures visible without exposing login", async () => {
-    const user = userEvent.setup();
-    const getCurrentUser = vi.fn(() => new Promise(() => undefined));
-    const consoleError = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
-    const resetError = new Error("Runtime bootstrap reset failed");
-
-    createAndroidRuntimeBootstrapBridge({
-      configured: true,
-      getCurrentUser,
-      clearRuntimeBootstrap: vi.fn().mockRejectedValue(resetError),
-    });
-
-    await renderWithI18n(<App />);
-
-    expect(
-      await screen.findByRole("status", { name: /loading login/i })
-    ).toBeInTheDocument();
-
-    await confirmRuntimeInstanceSwitch(user);
-
-    expect(
-      await screen.findByText("Runtime bootstrap reset failed")
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("status", { name: /loading login/i })
-    ).toBeInTheDocument();
-    expect(screen.getByLabelText(/email/i)).toBeDisabled();
-    expect(
-      screen.queryByRole("form", { name: /login form/i })
-    ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", {
-        name: /switch instance/i,
-        expanded: false,
-      })
-    ).toBeEnabled();
-    expect(consoleError).toHaveBeenCalledWith(
-      "Runtime bootstrap reset error:",
-      resetError
-    );
-    consoleError.mockRestore();
-  });
-
-  it("shows retryable recovery when native no-snapshot rehydration detects offline state", async () => {
-    const user = userEvent.setup();
-    const nativeLogout = vi.fn().mockResolvedValue(undefined);
-    const getCurrentUser = vi
-      .fn()
-      .mockRejectedValueOnce(
-        Object.assign(
-          new Error("Android auth requires an active internet connection"),
-          { code: "NETWORK_OFFLINE" }
-        )
-      )
-      .mockResolvedValue({
-        id: "42",
-        name: "Configured User",
-        email: "configured.user@secpal.dev",
-        emailVerified: true,
-      });
-
-    createAndroidRuntimeBootstrapBridge({
-      configured: true,
-      getCurrentUser,
-      logout: nativeLogout,
-    });
-
-    await renderWithI18n(<App />);
-
-    expect(
-      await screen.findByRole("heading", {
-        name: /still loading your secure session/i,
-      })
-    ).toBeInTheDocument();
-    expect(window.location.pathname).toBe("/login");
-    expect(nativeLogout).not.toHaveBeenCalled();
-    expect(mockAuthStorage.clear).not.toHaveBeenCalled();
-
-    await user.click(screen.getByRole("button", { name: /^retry$/i }));
-
-    expect(
-      await screen.findByRole(
-        "heading",
-        { name: /welcome to secpal/i },
-        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-      )
-    ).toBeInTheDocument();
-    expect(window.location.pathname).toBe("/");
-    expect(getCurrentUser).toHaveBeenCalledTimes(2);
-    expect(nativeLogout).not.toHaveBeenCalled();
-  });
-
   it("keeps protected routes on a neutral loader while browser-session recovery is pending", async () => {
     window.history.replaceState({}, "", "/");
 
@@ -2026,118 +1843,99 @@ describe("App", () => {
     };
 
     window.history.replaceState({}, "", "/");
-    const bootstrapError = new AuthApiError(
-      "Current user fetch failed: expected application/json response from API",
-      undefined,
-      404
-    );
-    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
-
     mockGetCurrentUser
-      .mockRejectedValueOnce(bootstrapError)
+      .mockRejectedValueOnce(
+        new AuthApiError(
+          "Current user fetch failed: expected application/json response from API",
+          undefined,
+          404
+        )
+      )
       .mockResolvedValueOnce(recoveredUser);
 
-    try {
-      await renderWithI18n(<App />);
+    await renderWithI18n(<App />);
 
-      expect(window.location.pathname).toBe("/");
+    expect(window.location.pathname).toBe("/");
 
-      expect(
-        await screen.findByRole("heading", {
-          name: /still loading your secure session/i,
-        })
-      ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        name: /still loading your secure session/i,
+      })
+    ).toBeInTheDocument();
 
-      await act(async () => {
-        screen.getByRole("button", { name: /retry/i }).click();
-        await Promise.resolve();
-      });
+    await act(async () => {
+      screen.getByRole("button", { name: /retry/i }).click();
+      await Promise.resolve();
+    });
 
-      await waitFor(() => {
-        expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
-      });
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+    });
 
-      await waitFor(
-        () => {
-          expect(window.location.pathname).toBe("/");
-        },
+    await waitFor(
+      () => {
+        expect(window.location.pathname).toBe("/");
+      },
+      { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+    );
+
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: /welcome to secpal/i },
         { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-      );
-
-      expect(
-        await screen.findByRole(
-          "heading",
-          { name: /welcome to secpal/i },
-          { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-        )
-      ).toBeInTheDocument();
-      expect(consoleWarn).toHaveBeenCalledTimes(1);
-      expect(consoleWarn).toHaveBeenCalledWith(
-        "Auth bootstrap revalidation failed with a non-retriable response; holding protected routes behind recovery UI.",
-        bootstrapError
-      );
-    } finally {
-      consoleWarn.mockRestore();
-    }
+      )
+    ).toBeInTheDocument();
   });
 
   it("keeps protected deep links during bootstrap recovery and retry", async () => {
     window.history.replaceState({}, "", "/customers/new");
-    const bootstrapError = new AuthApiError(
-      "Current user fetch failed: Network down",
-      undefined,
-      undefined,
-      "NETWORK_ERROR"
+    mockGetCurrentUser.mockRejectedValue(
+      new AuthApiError(
+        "Current user fetch failed: Network down",
+        undefined,
+        undefined,
+        "NETWORK_ERROR"
+      )
     );
-    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    mockGetCurrentUser.mockRejectedValue(bootstrapError);
 
-    try {
-      await renderWithI18n(<App />);
+    await renderWithI18n(<App />);
 
-      expect(
-        await screen.findByRole("heading", {
-          name: /still loading your secure session/i,
-        })
-      ).toBeInTheDocument();
-      expect(window.location.pathname).toBe("/customers/new");
+    expect(
+      await screen.findByRole("heading", {
+        name: /still loading your secure session/i,
+      })
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/customers/new");
 
-      await act(async () => {
-        mockGetCurrentUser.mockResolvedValueOnce({
-          id: "1",
-          name: "Recovered Session User",
-          email: "recovered-session@secpal.dev",
-          emailVerified: true,
-          permissions: ["customers.read"],
-          roles: [],
-          hasOrganizationalScopes: false,
-          hasCustomerAccess: false,
-          hasSiteAccess: false,
-        });
-        screen.getByRole("button", { name: /retry/i }).click();
-        await Promise.resolve();
+    await act(async () => {
+      mockGetCurrentUser.mockResolvedValueOnce({
+        id: "1",
+        name: "Recovered Session User",
+        email: "recovered-session@secpal.dev",
+        emailVerified: true,
+        permissions: ["customers.read"],
+        roles: [],
+        hasOrganizationalScopes: false,
+        hasCustomerAccess: false,
+        hasSiteAccess: false,
       });
+      screen.getByRole("button", { name: /retry/i }).click();
+      await Promise.resolve();
+    });
 
-      await waitFor(() => {
-        expect(mockGetCurrentUser).toHaveBeenCalledTimes(3);
-      });
+    await waitFor(() => {
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(3);
+    });
 
-      expect(
-        await screen.findByText(
-          /Access Denied/i,
-          {},
-          { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
-        )
-      ).toBeInTheDocument();
-      expect(window.location.pathname).toBe("/customers/new");
-      expect(consoleWarn).toHaveBeenCalledTimes(1);
-      expect(consoleWarn).toHaveBeenCalledWith(
-        "Auth bootstrap revalidation failed; holding protected routes behind recovery UI.",
-        bootstrapError
-      );
-    } finally {
-      consoleWarn.mockRestore();
-    }
+    expect(
+      await screen.findByText(
+        /Access Denied/i,
+        {},
+        { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
+      )
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/customers/new");
   });
 
   it("keeps stale protected-route bootstrap recovery on the protected route instead of redirecting", async () => {
@@ -2147,32 +1945,23 @@ describe("App", () => {
       .mockImplementationOnce(() => true)
       .mockImplementationOnce(() => true);
     mockAuthStorage.getUser.mockResolvedValueOnce(null);
-    const bootstrapError = new AuthApiError(
-      "Current user fetch failed: expected application/json response from API",
-      undefined,
-      404
+    mockGetCurrentUser.mockRejectedValueOnce(
+      new AuthApiError(
+        "Current user fetch failed: expected application/json response from API",
+        undefined,
+        404
+      )
     );
-    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    mockGetCurrentUser.mockRejectedValueOnce(bootstrapError);
 
-    try {
-      await renderWithI18n(<App />);
+    await renderWithI18n(<App />);
 
-      expect(window.location.pathname).toBe("/");
+    expect(window.location.pathname).toBe("/");
 
-      expect(
-        await screen.findByRole("heading", {
-          name: /still loading your secure session/i,
-        })
-      ).toBeInTheDocument();
-      expect(consoleWarn).toHaveBeenCalledTimes(1);
-      expect(consoleWarn).toHaveBeenCalledWith(
-        "Auth bootstrap revalidation failed with a non-retriable response; holding protected routes behind recovery UI.",
-        bootstrapError
-      );
-    } finally {
-      consoleWarn.mockRestore();
-    }
+    expect(
+      await screen.findByRole("heading", {
+        name: /still loading your secure session/i,
+      })
+    ).toBeInTheDocument();
   });
 
   it("shows not found for activity-logs when the user cannot discover that feature", async () => {

@@ -257,59 +257,40 @@ export interface AuthStorage {
   hasStoredUser(): boolean;
   hasVaultLock(): boolean;
   getUserSnapshot(): User | null;
-  getUser(): Promise<User | null>;
+  getUser(options?: AuthStorageReadOptions): Promise<User | null>;
   setUser(
     user: User,
-    options?: AuthStorageSetUserOptions
+    options?: AuthStorageWriteOptions
   ): Promise<AuthUserPersistenceResult>;
   lockVault(): void;
   unlockVault(): Promise<User | null>;
   removeUser(options?: AuthStorageClearOptions): Promise<void>;
   clear(options?: AuthStorageClearOptions): Promise<void>;
   hasLogoutBarrier(): boolean;
-  clearLogoutBarrier(): void;
   shouldSkipBarrierVaultTableCleanup(): boolean;
   setSkipBarrierVaultTableCleanup(shouldSkip: boolean): void;
   beginSensitiveLogoutBarrierCleanup(): string;
   endSensitiveLogoutBarrierCleanup(ownerToken: string): void;
   completeStaleSensitiveLogoutBarrierCleanup(ownerToken: string): void;
+  abortPendingPersistence(): void;
+  abortPendingVaultCleanup(): Promise<void>;
   waitForInFlightVaultTableCleanup(): Promise<void>;
 }
 
-export interface AuthStorageSetUserOptions {
+export interface AuthStorageReadOptions {
+  signal?: AbortSignal;
+}
+
+export interface AuthStorageWriteOptions {
   shouldCommit?: () => boolean;
 }
 
 export type AuthUserPersistenceResult =
   { status: "persisted" } | { status: "superseded" };
 
-const RECOVERABLE_AUTH_STORAGE_ERROR_CODE =
-  "RECOVERABLE_AUTH_STORAGE_ERROR" as const;
-
-export class RecoverableAuthStorageError extends Error {
-  readonly code = RECOVERABLE_AUTH_STORAGE_ERROR_CODE;
-
-  constructor(message: string) {
-    super(message);
-    this.name = "RecoverableAuthStorageError";
-  }
-}
-
-export function isRecoverableAuthStorageError(
-  error: unknown
-): error is RecoverableAuthStorageError {
-  return (
-    error instanceof RecoverableAuthStorageError ||
-    (typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      error.code === RECOVERABLE_AUTH_STORAGE_ERROR_CODE)
-  );
-}
-
-class AuthUserPersistenceError extends Error {
-  constructor(message: string) {
-    super(message);
+export class AuthUserPersistenceError extends Error {
+  constructor() {
+    super("Secure auth persistence failed.");
     this.name = "AuthUserPersistenceError";
   }
 }
@@ -317,7 +298,15 @@ class AuthUserPersistenceError extends Error {
 interface AuthStorageClearOptions {
   clearOfflineVaultTables?: boolean;
   allowBarrierSkipUpgrade?: boolean;
-  shouldContinue?: () => boolean;
+}
+
+function isAbortError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    error.name === "AbortError"
+  );
 }
 
 /**
@@ -333,8 +322,9 @@ class LocalStorageAuthStorage implements AuthStorage {
   private readonly SENSITIVE_LOGOUT_BARRIER_CLEANUP_OWNER_KEY_PREFIX =
     "auth_logout_skip_vault_table_cleanup_owner:";
   private readonly VAULT_TABLE_CLEANUP_WAIT_TIMEOUT_MS = 5_000;
-  private vaultTableCleanupQueuePromise: Promise<void> = Promise.resolve();
-  private setUserOperationVersion = 0;
+  private activeCleanupController: AbortController | null = null;
+  private activeCleanupPromise: Promise<void> = Promise.resolve();
+  private activePersistenceController: AbortController | null = null;
 
   /**
    * Clean up any legacy auth_token that might exist from before migration.
@@ -349,7 +339,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     this.cleanupLegacyToken();
   }
 
-  clearLogoutBarrier(): void {
+  private clearLogoutBarrier(): void {
     localStorage.removeItem(this.LOGOUT_BARRIER_KEY);
   }
 
@@ -461,7 +451,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
     try {
       const waitResult = await Promise.race([
-        this.vaultTableCleanupQueuePromise
+        this.activeCleanupPromise
           .then(() => "completed" as const)
           .catch(() => "failed" as const),
         new Promise<"timed-out">((resolve) => {
@@ -486,27 +476,27 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
   }
 
-  private async clearVaultTables(
-    shouldContinue: () => boolean = () => true
-  ): Promise<void> {
-    const offlineVaultModulePromise = loadOfflineVaultModule();
-    const queuedCleanupPromise = this.vaultTableCleanupQueuePromise
-      .catch(() => {
-        // The cleanup initiator handles the vault-table failure; later
-        // cleanups still need to run in order.
-      })
-      .then(async () => {
-        const { clearOfflineVaultTables } = await offlineVaultModulePromise;
+  async abortPendingVaultCleanup(): Promise<void> {
+    const pendingCleanup = this.activeCleanupPromise;
+    this.activeCleanupController?.abort();
 
-        if (!shouldContinue()) {
-          return;
-        }
+    try {
+      await pendingCleanup;
+    } catch (error) {
+      if (!isAbortError(error)) {
+        throw error;
+      }
+    }
+  }
 
-        await clearOfflineVaultTables(shouldContinue);
-      });
+  abortPendingPersistence(): void {
+    this.activePersistenceController?.abort();
+  }
 
-    this.vaultTableCleanupQueuePromise = queuedCleanupPromise;
-    await queuedCleanupPromise;
+  private async clearVaultTables(signal: AbortSignal): Promise<void> {
+    const { clearOfflineVaultTables } = await loadOfflineVaultModule();
+    signal.throwIfAborted();
+    await clearOfflineVaultTables({ signal });
   }
 
   hasLogoutBarrier(): boolean {
@@ -541,14 +531,11 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   private clearInvalidStoredUser(): null {
     this.clearStoredUserMarkers();
-    void this.removeUser({ allowBarrierSkipUpgrade: true });
     return null;
   }
 
   private async clearInvalidStoredUserAsync(): Promise<null> {
-    this.clearStoredUserMarkers();
-    await this.removeUser({ allowBarrierSkipUpgrade: true });
-    return null;
+    return this.clearInvalidStoredUser();
   }
 
   private handleStoredUserError(message: string, error: unknown): null {
@@ -599,7 +586,10 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
   }
 
-  async getUser(): Promise<User | null> {
+  async getUser(options: AuthStorageReadOptions = {}): Promise<User | null> {
+    const { signal } = options;
+    signal?.throwIfAborted();
+
     if (this.hasLogoutBarrier()) {
       return null;
     }
@@ -613,6 +603,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
       try {
         ({ readPersistedAuthUserFromVault } = await loadOfflineVaultModule());
+        signal?.throwIfAborted();
       } catch (error) {
         if (isTransientModuleLoadError(error)) {
           throw createRecoverableLazyModuleError(
@@ -624,15 +615,8 @@ class LocalStorageAuthStorage implements AuthStorage {
         throw error;
       }
 
-      let storedVaultUser: PersistedAuthUser | null;
-
-      try {
-        storedVaultUser = await readPersistedAuthUserFromVault();
-      } catch {
-        throw new RecoverableAuthStorageError(
-          "Stored offline auth data is temporarily unavailable on this device."
-        );
-      }
+      const storedVaultUser = await readPersistedAuthUserFromVault({ signal });
+      signal?.throwIfAborted();
 
       if (!storedVaultUser) {
         return this.clearInvalidStoredUserAsync();
@@ -646,6 +630,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
     try {
       const sanitizedUser = await decryptPersistedAuthUser(storedUser);
+      signal?.throwIfAborted();
 
       if (!sanitizedUser) {
         return this.clearInvalidStoredUserAsync();
@@ -655,6 +640,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
       try {
         ({ initializeOfflineVault } = await loadOfflineVaultModule());
+        signal?.throwIfAborted();
       } catch (error) {
         if (isTransientModuleLoadError(error)) {
           throw createRecoverableLazyModuleError(
@@ -666,10 +652,15 @@ class LocalStorageAuthStorage implements AuthStorage {
         throw error;
       }
 
-      await initializeOfflineVault(sanitizedUser);
+      await initializeOfflineVault(sanitizedUser, { signal });
+      signal?.throwIfAborted();
 
       return sanitizedUser;
     } catch (error) {
+      if (isAbortError(error)) {
+        throw error;
+      }
+
       if (isRecoverableLazyModuleError(error)) {
         throw error;
       }
@@ -683,73 +674,46 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   async setUser(
     user: User,
-    options: AuthStorageSetUserOptions = {}
+    options: AuthStorageWriteOptions = {}
   ): Promise<AuthUserPersistenceResult> {
-    const operationVersion = ++this.setUserOperationVersion;
-    const guardedOptions: AuthStorageSetUserOptions = {
-      shouldCommit: () =>
-        operationVersion === this.setUserOperationVersion &&
-        this.shouldCommitSetUser(options),
-    };
-
-    return this.setUserImmediately(user, guardedOptions);
-  }
-
-  private shouldCommitSetUser(options: AuthStorageSetUserOptions): boolean {
-    try {
-      return options.shouldCommit?.() ?? true;
-    } catch {
-      return false;
-    }
-  }
-
-  private invalidateSetUserOperations(): void {
-    this.setUserOperationVersion += 1;
-  }
-
-  private async setUserImmediately(
-    user: User,
-    options: AuthStorageSetUserOptions
-  ): Promise<AuthUserPersistenceResult> {
-    if (!this.shouldCommitSetUser(options)) {
-      return { status: "superseded" };
-    }
-
+    await this.abortPendingVaultCleanup();
+    this.activePersistenceController?.abort();
+    const controller = new AbortController();
+    this.activePersistenceController = controller;
+    const shouldCommit = () =>
+      !controller.signal.aborted && (options.shouldCommit?.() ?? true);
     const sanitizedUser = sanitizePersistedAuthUser(user);
 
     if (!sanitizedUser) {
-      await this.removeUser();
-      throw new AuthUserPersistenceError("Authenticated user data is invalid.");
+      localStorage.removeItem(this.USER_KEY);
+      throw new AuthUserPersistenceError();
     }
 
     try {
       const { initializeOfflineVault } = await loadOfflineVaultModule();
-      const initializationResult = await initializeOfflineVault(sanitizedUser, {
-        shouldCommit: () => this.shouldCommitSetUser(options),
+      if (!shouldCommit()) {
+        return { status: "superseded" };
+      }
+
+      await initializeOfflineVault(sanitizedUser, {
+        signal: controller.signal,
       });
-
-      if (initializationResult.status === "superseded") {
-        return { status: "superseded" };
-      }
-    } catch {
-      if (!this.shouldCommitSetUser(options)) {
+    } catch (error) {
+      if (isAbortError(error) || !shouldCommit()) {
         return { status: "superseded" };
       }
 
-      const persistenceError = new AuthUserPersistenceError(
-        "Secure auth persistence failed."
-      );
+      const persistenceError = new AuthUserPersistenceError();
       console.error("Failed to persist stored user data:", persistenceError);
       localStorage.removeItem(this.USER_KEY);
-      clearActiveOfflineVaultSession();
       throw persistenceError;
+    } finally {
+      if (this.activePersistenceController === controller) {
+        this.activePersistenceController = null;
+      }
     }
 
-    if (!this.shouldCommitSetUser(options)) {
-      if (this.hasLogoutBarrier()) {
-        await this.removeUser({ clearOfflineVaultTables: true });
-      }
-
+    if (!shouldCommit()) {
       return { status: "superseded" };
     }
 
@@ -760,7 +724,7 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   lockVault(): void {
-    this.invalidateSetUserOperations();
+    this.activePersistenceController?.abort();
     this.clearLogoutBarrier();
     if (localStorage.getItem(this.VAULT_KEY) !== null) {
       localStorage.setItem(this.VAULT_LOCK_KEY, "1");
@@ -783,12 +747,33 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   async removeUser(options: AuthStorageClearOptions = {}): Promise<void> {
-    const shouldContinue = options.shouldContinue ?? (() => true);
-
-    if (!shouldContinue()) {
-      return;
+    if (this.activeCleanupController) {
+      return this.activeCleanupPromise;
     }
 
+    const controller = new AbortController();
+    this.activeCleanupController = controller;
+    const cleanup = this.removeUserWithSignal(options, controller.signal)
+      .catch((error: unknown) => {
+        if (!isAbortError(error)) {
+          throw error;
+        }
+      })
+      .finally(() => {
+        if (this.activeCleanupController === controller) {
+          this.activeCleanupController = null;
+          this.activeCleanupPromise = Promise.resolve();
+        }
+      });
+    this.activeCleanupPromise = cleanup;
+    return cleanup;
+  }
+
+  private async removeUserWithSignal(
+    options: AuthStorageClearOptions,
+    signal: AbortSignal
+  ): Promise<void> {
+    signal.throwIfAborted();
     const shouldClearOfflineVaultTables =
       options.clearOfflineVaultTables ?? true;
     const shouldForceVaultTableCleanup =
@@ -798,21 +783,16 @@ class LocalStorageAuthStorage implements AuthStorage {
     const shouldHonorBarrierSkipUpgrade =
       options.allowBarrierSkipUpgrade === true;
     const cleanupPromise =
-      shouldContinue() &&
       shouldClearOfflineVaultTables &&
       !hasLogoutBarrier &&
       !shouldHonorBarrierSkipUpgrade
-        ? this.clearVaultTables(shouldContinue)
+        ? this.clearVaultTables(signal)
         : null;
 
     this.clearStoredUserMarkers();
     const { clearOfflineVaultSession, clearRecentAuthVaultKeyMaterials } =
       await loadOfflineVaultModule();
-
-    if (!shouldContinue()) {
-      return;
-    }
-
+    signal.throwIfAborted();
     clearOfflineVaultSession();
     clearRecentAuthVaultKeyMaterials();
 
@@ -822,10 +802,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
     if (shouldHonorBarrierSkipUpgrade || hasLogoutBarrier) {
       await this.waitForBarrierCleanupUpgrade();
-
-      if (!shouldContinue()) {
-        return;
-      }
+      signal.throwIfAborted();
 
       if (
         !shouldForceVaultTableCleanup &&
@@ -836,19 +813,19 @@ class LocalStorageAuthStorage implements AuthStorage {
       }
     }
 
-    if (!shouldContinue()) {
-      return;
-    }
-
     try {
-      await (cleanupPromise ?? this.clearVaultTables(shouldContinue));
+      await (cleanupPromise ?? this.clearVaultTables(signal));
     } catch (error: unknown) {
+      if (isAbortError(error)) {
+        throw error;
+      }
+
       console.warn("Failed to clear offline vault tables on logout:", error);
     }
   }
 
   async clear(options?: AuthStorageClearOptions): Promise<void> {
-    this.invalidateSetUserOperations();
+    this.activePersistenceController?.abort();
     const shouldPreserveExistingSkipMarker =
       this.hasLogoutBarrier() && this.shouldSkipBarrierVaultTableCleanup();
 

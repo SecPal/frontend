@@ -12,10 +12,6 @@ import {
 } from "./LoginLegalMenu";
 import { Logo } from "./Logo";
 import {
-  LoginRuntimeInstanceSection,
-  type LoginRuntimeBootstrapSummary,
-} from "@/ui/login-runtime-instance-section";
-import {
   Alert,
   AlertDescription,
   LoginButton,
@@ -35,11 +31,6 @@ interface LoginRouteVaultLockedStateProps {
   onSignInAgain: () => void;
 }
 
-interface LoginRouteLoadingStateProps {
-  readonly runtimeBootstrap?: LoginRuntimeBootstrapSummary | null;
-  readonly onSwitchRuntimeBootstrap?: () => Promise<void>;
-}
-
 function LoginRouteFooter() {
   return (
     <footer className="mt-auto w-full max-w-sm pt-3 pb-[var(--app-footer-padding-bottom)] text-center text-xs">
@@ -57,10 +48,7 @@ function LoginRouteFooter() {
   );
 }
 
-export function LoginRouteLoadingState({
-  runtimeBootstrap = null,
-  onSwitchRuntimeBootstrap,
-}: LoginRouteLoadingStateProps = {}) {
+export function LoginRouteLoadingState() {
   const { i18n } = useLingui();
 
   return (
@@ -70,11 +58,8 @@ export function LoginRouteLoadingState({
     >
       <LoginTopControlsSkeleton />
 
-      <div className="grid w-full flex-1 grid-rows-[1fr_auto_1fr] justify-items-center">
-        <LoginCard
-          aria-labelledby="login-loading-title"
-          className="relative row-start-2"
-        >
+      <div className="flex w-full flex-1 items-center justify-center">
+        <LoginCard aria-labelledby="login-loading-title" className="relative">
           <div
             aria-busy="true"
             aria-live="polite"
@@ -146,12 +131,6 @@ export function LoginRouteLoadingState({
             </LoginFieldGroup>
           </div>
         </LoginCard>
-        {runtimeBootstrap ? (
-          <LoginRuntimeInstanceSection
-            runtimeBootstrap={runtimeBootstrap}
-            onSwitchRuntimeBootstrap={onSwitchRuntimeBootstrap}
-          />
-        ) : null}
       </div>
 
       <LoginRouteFooter />

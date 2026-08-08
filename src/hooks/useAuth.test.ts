@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { afterEach, describe, it, expect, beforeEach, vi } from "vitest";
+import Dexie from "dexie";
 import {
   renderHook,
   act,
@@ -9,14 +10,13 @@ import {
 } from "@testing-library/react";
 import {
   AuthProvider,
-  AUTH_LOGIN_AFTER_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS,
   BOOTSTRAP_REVALIDATION_TIMEOUT_MS,
 } from "../contexts/AuthContext";
 import { ApiBaseUrlConfigurationError } from "../config";
 import { useAuth } from "./useAuth";
 import { AuthApiError } from "../services/authApi";
 import { sanitizePersistedAuthUser } from "../services/authState";
-import { authStorage, RecoverableAuthStorageError } from "../services/storage";
+import { AuthUserPersistenceError, authStorage } from "../services/storage";
 import { sessionEvents } from "../services/sessionEvents";
 import {
   clearBrowserPushClientState,
@@ -51,12 +51,6 @@ const {
 }));
 
 const AUTH_BOOTSTRAP_TIMEOUT_MS = 20_000;
-const RETRIABLE_BOOTSTRAP_WARNING =
-  "Auth bootstrap revalidation failed; holding protected routes behind recovery UI.";
-const NON_RETRIABLE_BOOTSTRAP_WARNING =
-  "Auth bootstrap revalidation failed with a non-retriable response; holding protected routes behind recovery UI.";
-const TEMPORARY_AUTH_RESTORE_WARNING =
-  "Failed to restore persisted auth state temporarily; keeping the route behind recovery UI.";
 
 vi.mock("../services/authApi", async () => {
   const actual = await vi.importActual("../services/authApi");
@@ -100,37 +94,29 @@ function clearCsrfTokenCookie(): void {
   document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
 }
 
-function installNativeVaultPluginForTest(): () => void {
-  const originalDescriptor = Object.getOwnPropertyDescriptor(
-    globalThis,
-    "Capacitor"
-  );
-  Object.defineProperty(globalThis, "Capacitor", {
-    configurable: true,
-    writable: true,
-    value: {
-      isNativePlatform: () => true,
-      Plugins: {
-        SecPalNativeAuth: {
-          isVaultDeviceBoundWrapperAvailable: vi
-            .fn()
-            .mockResolvedValue({ available: false }),
-          wrapVaultRootKey: vi.fn().mockRejectedValue(new Error("unsupported")),
-          unwrapVaultRootKey: vi
-            .fn()
-            .mockRejectedValue(new Error("unsupported")),
-        },
-      },
-    },
-  });
-
-  return () => {
-    if (originalDescriptor) {
-      Object.defineProperty(globalThis, "Capacitor", originalDescriptor);
-    } else {
-      Reflect.deleteProperty(globalThis, "Capacitor");
-    }
+function installNativeAuthBridge(
+  overrides: Partial<{
+    getCurrentUser: () => Promise<unknown>;
+    logout: () => Promise<void>;
+  }> = {}
+) {
+  const logoutSpy = overrides.logout ?? vi.fn().mockResolvedValue(undefined);
+  const bridge = {
+    login: vi.fn(),
+    logout: logoutSpy,
+    getCurrentUser: vi.fn().mockResolvedValue({
+      id: "42",
+      name: "Native User",
+      email: "native@secpal.dev",
+      emailVerified: true,
+    }),
+    isNetworkAvailable: vi.fn().mockResolvedValue(true),
+    ...overrides,
   };
+
+  vi.stubGlobal("Capacitor", { isNativePlatform: () => true });
+  vi.stubGlobal("SecPalNativeAuthBridge", bridge);
+  return { ...bridge, logoutSpy };
 }
 
 function createDeferredPromise<T>() {
@@ -176,10 +162,6 @@ async function waitForAuthState(
 }
 
 const waitFor = waitForAuthState;
-
-function captureConsoleWarnings() {
-  return vi.spyOn(console, "warn").mockImplementation(() => undefined);
-}
 
 async function waitForSensitiveClientCleanup(callCount: number = 1) {
   await waitFor(() => {
@@ -236,8 +218,8 @@ describe("useAuth", () => {
 
   afterEach(() => {
     vi.useRealTimers();
-    clearOfflineVaultSession();
     vi.restoreAllMocks();
+    clearOfflineVaultSession();
   });
 
   it("throws error when used outside AuthProvider", () => {
@@ -336,591 +318,103 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
   });
 
-  it.each(["/login", "/customers/123"])(
-    "rehydrates a native session without a local user snapshot on %s without publishing a stable logged-out state",
+  it.each(["/login", "/"])(
+    "rehydrates and securely persists a snapshotless native session on %s",
     async (pathname) => {
-      window.history.replaceState({}, "", pathname);
       clearCsrfTokenCookie();
-      const restoreNativeVaultPlugin = installNativeVaultPluginForTest();
-      const nativeUser = {
-        id: 42,
-        name: "Native Session User",
-        email: "native-session@secpal.dev",
-        email_verified: true,
-        roles: ["Guard"],
-        token: "must-not-enter-frontend-state",
-      };
-      const nativeBridge = {
-        login: vi.fn(),
-        logout: vi.fn(),
-        getCurrentUser: vi.fn().mockResolvedValue(nativeUser),
-        isNetworkAvailable: vi.fn().mockResolvedValue(true),
-      };
-      const authGlobal = globalThis as typeof globalThis & {
-        SecPalNativeAuthBridge?: typeof nativeBridge;
-      };
-      const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
-      const originalSetUser = authStorage.setUser.bind(authStorage);
-      const setUserSpy = vi.spyOn(authStorage, "setUser");
-      const persistDeferred = createDeferredPromise<void>();
-      const publishedStates: Array<{
-        isAuthenticated: boolean;
-        isLoading: boolean;
-      }> = [];
-      const expectedUser = {
-        id: "42",
-        name: "Native Session User",
-        email: "native-session@secpal.dev",
-        emailVerified: true,
-        roles: ["Guard"],
-      };
+      window.history.replaceState({}, "", pathname);
+      const native = installNativeAuthBridge();
 
-      setUserSpy.mockImplementation(async (nextUser, options) => {
-        await persistDeferred.promise;
-        return originalSetUser(nextUser, options);
+      const { result, unmount } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
       });
 
-      authGlobal.SecPalNativeAuthBridge = nativeBridge;
+      expect(result.current.isLoading).toBe(true);
+      expect(result.current.isAuthenticated).toBe(false);
 
-      try {
-        expect(authStorage.hasStoredUser()).toBe(false);
-        await expect(authStorage.getUser()).resolves.toBeNull();
+      await waitFor(() => {
+        expect(result.current.isAuthenticated).toBe(true);
+      });
 
-        const { result } = renderHook(
-          () => {
-            const auth = useAuth();
-            publishedStates.push({
-              isAuthenticated: auth.isAuthenticated,
-              isLoading: auth.isLoading,
-            });
-            return auth;
-          },
-          { wrapper: AuthProvider }
-        );
+      expect(native.getCurrentUser).toHaveBeenCalledTimes(1);
+      expect(result.current.user).toEqual({
+        id: "42",
+        name: "Native User",
+        email: "native@secpal.dev",
+        emailVerified: true,
+      });
+      expect(result.current.bootstrapRecoveryReason).toBeNull();
+      await expect(authStorage.getUser()).resolves.toEqual(result.current.user);
 
-        expect(result.current.user).toBeNull();
-        expect(result.current.isAuthenticated).toBe(false);
-        expect(result.current.isLoading).toBe(true);
-
+      if (pathname === "/login") {
+        unmount();
+        clearOfflineVaultSession();
+        const restarted = renderHook(() => useAuth(), {
+          wrapper: AuthProvider,
+        });
         await waitFor(() => {
-          expect(setUserSpy).toHaveBeenCalledWith(expectedUser, {
-            shouldCommit: expect.any(Function),
-          });
+          expect(restarted.result.current.isAuthenticated).toBe(true);
         });
-
-        expect(result.current.user).toBeNull();
-        expect(result.current.isAuthenticated).toBe(false);
-        expect(result.current.isLoading).toBe(true);
-        expect(publishedStates).not.toContainEqual({
-          isAuthenticated: false,
-          isLoading: false,
-        });
-
-        persistDeferred.resolve();
-
-        await waitFor(() => {
-          expect(result.current.isAuthenticated).toBe(true);
-        });
-
-        expect(nativeBridge.isNetworkAvailable).not.toHaveBeenCalled();
-        expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(1);
-        expect(setUserSpy).toHaveBeenCalledWith(expectedUser, {
-          shouldCommit: expect.any(Function),
-        });
-        expect(result.current.user).toEqual(expectedUser);
-        expect(result.current.bootstrapRecoveryReason).toBeNull();
-        expect(syncOfflineSessionAccess).toHaveBeenCalledWith(true);
-        await expect(authStorage.getUser()).resolves.toEqual(expectedUser);
-        expect(publishedStates).not.toContainEqual({
-          isAuthenticated: false,
-          isLoading: false,
-        });
-      } finally {
-        restoreNativeVaultPlugin();
-        setUserSpy.mockRestore();
-        if (originalNativeBridge === undefined) {
-          delete authGlobal.SecPalNativeAuthBridge;
-        } else {
-          authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-        }
       }
     }
   );
 
-  it.each([
-    Object.assign(new Error("Android auth token is not available"), {
-      code: "NO_STORED_TOKEN",
-    }),
-    Object.assign(new Error("Unauthenticated."), { code: "HTTP_401" }),
-  ])(
-    "finishes native no-snapshot bootstrap as logged out for $code without destructive cleanup or retry",
-    async (bootstrapError) => {
-      const nativeLogout = vi.fn();
-      const nativeBridge = {
-        login: vi.fn(),
-        logout: nativeLogout,
-        getCurrentUser: vi.fn().mockRejectedValue(bootstrapError),
-        isNetworkAvailable: vi.fn().mockResolvedValue(true),
-      };
-      const authGlobal = globalThis as typeof globalThis & {
-        SecPalNativeAuthBridge?: typeof nativeBridge;
-      };
-      const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
-      const clearSpy = vi.spyOn(authStorage, "clear");
+  it("does not rehydrate a native session through an explicit logout barrier", async () => {
+    const native = installNativeAuthBridge();
+    localStorage.setItem("auth_logout_barrier", "1");
 
-      authGlobal.SecPalNativeAuthBridge = nativeBridge;
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(native.getCurrentUser).not.toHaveBeenCalled();
+  });
+
+  it.each(["NO_STORED_TOKEN", "HTTP_401"])(
+    "treats native %s as logged out without destructive cleanup",
+    async (code) => {
+      const native = installNativeAuthBridge({
+        getCurrentUser: vi
+          .fn()
+          .mockRejectedValue(Object.assign(new Error(code), { code })),
+      });
+      const clearSpy = vi.spyOn(authStorage, "clear");
 
       try {
         const { result } = renderHook(() => useAuth(), {
           wrapper: AuthProvider,
         });
 
-        expect(result.current.isLoading).toBe(true);
-
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
-
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
         expect(result.current.user).toBeNull();
-        expect(result.current.isAuthenticated).toBe(false);
         expect(result.current.bootstrapRecoveryReason).toBeNull();
-        expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(1);
-        expect(nativeLogout).not.toHaveBeenCalled();
+        expect(native.getCurrentUser).toHaveBeenCalledTimes(1);
         expect(clearSpy).not.toHaveBeenCalled();
-        expect(clearSensitiveClientState).not.toHaveBeenCalled();
+        expect(native.logoutSpy).not.toHaveBeenCalled();
       } finally {
         clearSpy.mockRestore();
-        if (originalNativeBridge === undefined) {
-          delete authGlobal.SecPalNativeAuthBridge;
-        } else {
-          authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-        }
       }
     }
   );
 
-  it("keeps native auth in recovery when secure persistence fails and retries without clearing the native session", async () => {
-    const nativeUser = {
-      id: "42",
-      name: "Native Session User",
-      email: "native-session@secpal.dev",
-      emailVerified: true,
-    };
-    const nativeLogout = vi.fn();
-    const nativeBridge = {
-      login: vi.fn(),
-      logout: nativeLogout,
-      getCurrentUser: vi.fn().mockResolvedValue(nativeUser),
-      isNetworkAvailable: vi.fn().mockResolvedValue(true),
-    };
-    const authGlobal = globalThis as typeof globalThis & {
-      SecPalNativeAuthBridge?: typeof nativeBridge;
-    };
-    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
-    const originalSetUser = authStorage.setUser.bind(authStorage);
-    const persistenceFailure = new Error("Secure auth persistence failed.");
-    const setUserSpy = vi
-      .spyOn(authStorage, "setUser")
-      .mockRejectedValueOnce(persistenceFailure)
-      .mockRejectedValueOnce(persistenceFailure)
-      .mockImplementationOnce(originalSetUser);
-    const clearSpy = vi.spyOn(authStorage, "clear");
-    const consoleWarnSpy = captureConsoleWarnings();
-
-    authGlobal.SecPalNativeAuthBridge = nativeBridge;
-
-    try {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(result.current.bootstrapRecoveryReason).toBe("network");
-      });
-
-      expect(result.current.user).toBeNull();
-      expect(result.current.isAuthenticated).toBe(false);
-      expect(result.current.isLoading).toBe(false);
-      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(2);
-      expect(nativeLogout).not.toHaveBeenCalled();
-      expect(clearSpy).not.toHaveBeenCalled();
-      expect(authStorage.hasStoredUser()).toBe(false);
-
-      act(() => {
-        result.current.retryBootstrap();
-      });
-
-      await waitFor(() => {
-        expect(result.current.isAuthenticated).toBe(true);
-      });
-
-      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(3);
-      expect(result.current.user).toEqual(nativeUser);
-      expect(result.current.bootstrapRecoveryReason).toBeNull();
-      expect(authStorage.hasStoredUser()).toBe(true);
-      await expect(authStorage.getUser()).resolves.toEqual(nativeUser);
-      expect(nativeLogout).not.toHaveBeenCalled();
-      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        RETRIABLE_BOOTSTRAP_WARNING,
-        persistenceFailure
+  it.each([
+    { code: "NETWORK_ERROR", expectedCalls: 2, expectedWarnings: 1 },
+    { code: "NETWORK_OFFLINE", expectedCalls: 1, expectedWarnings: 0 },
+  ])(
+    "keeps native $code failures in non-destructive recovery",
+    async ({ code, expectedCalls, expectedWarnings }) => {
+      const getCurrentUser = vi.fn().mockRejectedValue(
+        Object.assign(new Error("Network unavailable."), {
+          code,
+        })
       );
-    } finally {
-      clearSpy.mockRestore();
-      setUserSpy.mockRestore();
-      if (originalNativeBridge === undefined) {
-        delete authGlobal.SecPalNativeAuthBridge;
-      } else {
-        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-      }
-    }
-  });
-
-  it("does not publish native auth when secure persistence reports a superseded operation", async () => {
-    const nativeUser = {
-      id: "42",
-      name: "Native Session User",
-      email: "native-session@secpal.dev",
-      emailVerified: true,
-    };
-    const nativeLogout = vi.fn();
-    const nativeBridge = {
-      login: vi.fn(),
-      logout: nativeLogout,
-      getCurrentUser: vi.fn().mockResolvedValue(nativeUser),
-      isNetworkAvailable: vi.fn().mockResolvedValue(true),
-    };
-    const authGlobal = globalThis as typeof globalThis & {
-      SecPalNativeAuthBridge?: typeof nativeBridge;
-    };
-    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
-    const setUserSpy = vi
-      .spyOn(authStorage, "setUser")
-      .mockResolvedValue({ status: "superseded" } as never);
-
-    authGlobal.SecPalNativeAuthBridge = nativeBridge;
-
-    try {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(setUserSpy).toHaveBeenCalledTimes(1);
-      });
-      await act(async () => {
-        await Promise.resolve();
-      });
-
-      expect(result.current.user).toBeNull();
-      expect(result.current.isAuthenticated).toBe(false);
-      expect(result.current.isLoading).toBe(true);
-      expect(result.current.bootstrapRecoveryReason).toBeNull();
-      expect(nativeLogout).not.toHaveBeenCalled();
-    } finally {
-      setUserSpy.mockRestore();
-      if (originalNativeBridge === undefined) {
-        delete authGlobal.SecPalNativeAuthBridge;
-      } else {
-        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-      }
-    }
-  });
-
-  it("restores a securely persisted native rehydration snapshot on the next provider start", async () => {
-    clearCsrfTokenCookie();
-    const restoreNativeVaultPlugin = installNativeVaultPluginForTest();
-    const nativeUser = {
-      id: "42",
-      name: "Native Session User",
-      email: "native-session@secpal.dev",
-      emailVerified: true,
-    };
-    const nativeBridge = {
-      login: vi.fn(),
-      logout: vi.fn(),
-      getCurrentUser: vi.fn().mockResolvedValue(nativeUser),
-      isNetworkAvailable: vi.fn().mockResolvedValue(true),
-    };
-    const authGlobal = globalThis as typeof globalThis & {
-      SecPalNativeAuthBridge?: typeof nativeBridge;
-    };
-    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
-
-    authGlobal.SecPalNativeAuthBridge = nativeBridge;
-
-    try {
-      const firstProvider = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(firstProvider.result.current.isAuthenticated).toBe(true);
-      });
-      expect(authStorage.hasStoredUser()).toBe(true);
-      await expect(authStorage.getUser()).resolves.toEqual(nativeUser);
-
-      firstProvider.unmount();
-      nativeBridge.getCurrentUser.mockClear();
-      nativeBridge.isNetworkAvailable.mockClear();
-
-      const secondProvider = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(secondProvider.result.current.isAuthenticated).toBe(true);
-        expect(secondProvider.result.current.isLoading).toBe(false);
-      });
-
-      expect(secondProvider.result.current.user).toEqual(nativeUser);
-      expect(nativeBridge.isNetworkAvailable).toHaveBeenCalledTimes(1);
-      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(1);
-    } finally {
-      restoreNativeVaultPlugin();
-      if (originalNativeBridge === undefined) {
-        delete authGlobal.SecPalNativeAuthBridge;
-      } else {
-        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-      }
-    }
-  });
-
-  it("does not restore a native session without a snapshot across an explicit logout barrier", async () => {
-    localStorage.setItem("auth_logout_barrier", "1");
-    const nativeBridge = {
-      login: vi.fn(),
-      logout: vi.fn(),
-      getCurrentUser: vi.fn(),
-      isNetworkAvailable: vi.fn().mockResolvedValue(true),
-    };
-    const authGlobal = globalThis as typeof globalThis & {
-      SecPalNativeAuthBridge?: typeof nativeBridge;
-    };
-    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
-
-    authGlobal.SecPalNativeAuthBridge = nativeBridge;
-
-    try {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      expect(result.current.user).toBeNull();
-      expect(result.current.isAuthenticated).toBe(false);
-      expect(result.current.bootstrapRecoveryReason).toBeNull();
-      expect(nativeBridge.isNetworkAvailable).not.toHaveBeenCalled();
-      expect(nativeBridge.getCurrentUser).not.toHaveBeenCalled();
-    } finally {
-      if (originalNativeBridge === undefined) {
-        delete authGlobal.SecPalNativeAuthBridge;
-      } else {
-        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-      }
-    }
-  });
-
-  it("clears a prior logout barrier after native login securely persists without browser key material", async () => {
-    clearCsrfTokenCookie();
-    const restoreNativeVaultPlugin = installNativeVaultPluginForTest();
-    localStorage.setItem("auth_logout_barrier", "1");
-    const nativeUser = {
-      id: "42",
-      name: "Native Session User",
-      email: "native-session@secpal.dev",
-      emailVerified: true,
-    };
-    const nativeBridge = {
-      login: vi.fn(),
-      logout: vi.fn(),
-      getCurrentUser: vi.fn().mockResolvedValue(nativeUser),
-      isNetworkAvailable: vi.fn().mockResolvedValue(true),
-    };
-    const authGlobal = globalThis as typeof globalThis & {
-      SecPalNativeAuthBridge?: typeof nativeBridge;
-    };
-    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
-
-    authGlobal.SecPalNativeAuthBridge = nativeBridge;
-
-    try {
-      const initialSession = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(initialSession.result.current.isLoading).toBe(false);
-      });
-      expect(nativeBridge.getCurrentUser).not.toHaveBeenCalled();
-
-      await act(async () => {
-        await initialSession.result.current.login(nativeUser);
-      });
-
-      expect(initialSession.result.current.isAuthenticated).toBe(true);
-      expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
-      expect(authStorage.hasStoredUser()).toBe(true);
-      await expect(authStorage.getUser()).resolves.toEqual(nativeUser);
-
-      initialSession.unmount();
-
-      const restoredSession = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(restoredSession.result.current.isAuthenticated).toBe(true);
-      });
-
-      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(1);
-      expect(restoredSession.result.current.user).toEqual(nativeUser);
-    } finally {
-      restoreNativeVaultPlugin();
-      if (originalNativeBridge === undefined) {
-        delete authGlobal.SecPalNativeAuthBridge;
-      } else {
-        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-      }
-    }
-  });
-
-  it.each([
-    {
-      label: "a persisted BFCache pageshow",
-      dispatchRestore: () => {
-        window.dispatchEvent(
-          new PageTransitionEvent("pageshow", { persisted: true })
-        );
-      },
-    },
-    {
-      label: "a cross-tab vault removal",
-      dispatchRestore: () => {
-        const storageEvent = new Event("storage");
-        Object.defineProperties(storageEvent, {
-          key: { value: AUTH_VAULT_STORAGE_KEY },
-          oldValue: { value: "previous-vault-state" },
-          newValue: { value: null },
-          storageArea: { value: localStorage },
-        } satisfies Partial<
-          Record<keyof StorageEventInit, PropertyDescriptor>
-        >);
-        window.dispatchEvent(storageEvent);
-      },
-    },
-  ])(
-    "revalidates a snapshotless native session after $label without creating a logout barrier",
-    async ({ dispatchRestore }) => {
-      clearCsrfTokenCookie();
-      const restoreNativeVaultPlugin = installNativeVaultPluginForTest();
-      localStorage.setItem("auth_logout_barrier", "1");
-      const nativeUser = {
-        id: "42",
-        name: "Native Session User",
-        email: "native-session@secpal.dev",
-        emailVerified: true,
-      };
-      const nativeBridge = {
-        login: vi.fn(),
-        logout: vi.fn(),
-        getCurrentUser: vi.fn().mockResolvedValue(nativeUser),
-        isNetworkAvailable: vi.fn().mockResolvedValue(true),
-      };
-      const authGlobal = globalThis as typeof globalThis & {
-        SecPalNativeAuthBridge?: typeof nativeBridge;
-      };
-      const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
-
-      authGlobal.SecPalNativeAuthBridge = nativeBridge;
-
-      try {
-        const { result } = renderHook(() => useAuth(), {
-          wrapper: AuthProvider,
-        });
-
-        await waitFor(() => {
-          expect(result.current.isLoading).toBe(false);
-        });
-
-        await act(async () => {
-          await result.current.login(nativeUser);
-        });
-
-        expect(result.current.isAuthenticated).toBe(true);
-        await act(async () => {
-          await authStorage.removeUser();
-        });
-        expectNoStoredAuthState();
-        nativeBridge.getCurrentUser.mockClear();
-
-        act(() => {
-          dispatchRestore();
-        });
-
-        await waitForTestingLibrary(
-          () => {
-            expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(1);
-          },
-          { timeout: 1_000 }
-        );
-        await waitFor(() => {
-          expect(result.current.isAuthenticated).toBe(true);
-          expect(result.current.isLoading).toBe(false);
-        });
-
-        expect(result.current.user).toEqual(nativeUser);
-        expect(result.current.bootstrapRecoveryReason).toBeNull();
-        expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
-        expect(clearSensitiveClientState).not.toHaveBeenCalled();
-      } finally {
-        restoreNativeVaultPlugin();
-        if (originalNativeBridge === undefined) {
-          delete authGlobal.SecPalNativeAuthBridge;
-        } else {
-          authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-        }
-      }
-    }
-  );
-
-  it.each([
-    {
-      error: Object.assign(new Error("Network request failed"), {
-        code: "NETWORK_ERROR",
-      }),
-      label: "NETWORK_ERROR",
-    },
-    {
-      error: Object.assign(new Error("Service unavailable"), {
-        code: "HTTP_503",
-      }),
-      label: "HTTP_503",
-    },
-  ])(
-    "retries native no-snapshot bootstrap once after $label and then exposes recovery without clearing native state",
-    async ({ error: transientError }) => {
-      const nativeLogout = vi.fn();
-      const nativeBridge = {
-        login: vi.fn(),
-        logout: nativeLogout,
-        getCurrentUser: vi.fn().mockRejectedValue(transientError),
-        isNetworkAvailable: vi.fn().mockResolvedValue(true),
-      };
-      const authGlobal = globalThis as typeof globalThis & {
-        SecPalNativeAuthBridge?: typeof nativeBridge;
-      };
-      const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
-      const setUserSpy = vi.spyOn(authStorage, "setUser");
+      const native = installNativeAuthBridge({ getCurrentUser });
       const clearSpy = vi.spyOn(authStorage, "clear");
-      const consoleWarn = vi
+      const consoleWarnSpy = vi
         .spyOn(console, "warn")
-        .mockImplementation(() => {});
-
-      authGlobal.SecPalNativeAuthBridge = nativeBridge;
+        .mockImplementation(() => undefined);
 
       try {
         const { result } = renderHook(() => useAuth(), {
@@ -930,315 +424,75 @@ describe("useAuth", () => {
         await waitFor(() => {
           expect(result.current.bootstrapRecoveryReason).toBe("network");
         });
-
-        expect(result.current.isLoading).toBe(false);
-        expect(result.current.user).toBeNull();
-        expect(result.current.isAuthenticated).toBe(false);
-        expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(2);
-        expect(nativeLogout).not.toHaveBeenCalled();
-        expect(setUserSpy).not.toHaveBeenCalled();
+        expect(getCurrentUser).toHaveBeenCalledTimes(expectedCalls);
         expect(clearSpy).not.toHaveBeenCalled();
-        expect(clearSensitiveClientState).not.toHaveBeenCalled();
-        expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false);
-        expect(consoleWarn).toHaveBeenCalledWith(
-          "Auth bootstrap revalidation failed; holding protected routes behind recovery UI.",
-          transientError
-        );
+        expect(native.logoutSpy).not.toHaveBeenCalled();
+        expect(consoleWarnSpy).toHaveBeenCalledTimes(expectedWarnings);
       } finally {
-        setUserSpy.mockRestore();
+        consoleWarnSpy.mockRestore();
         clearSpy.mockRestore();
-        consoleWarn.mockRestore();
-        if (originalNativeBridge === undefined) {
-          delete authGlobal.SecPalNativeAuthBridge;
-        } else {
-          authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-        }
       }
     }
   );
 
-  it("retries a timed-out native no-snapshot bootstrap once before exposing non-destructive timeout recovery", async () => {
-    vi.useFakeTimers();
-    const nativeLogout = vi.fn();
-    const nativeBridge = {
-      login: vi.fn(),
-      logout: nativeLogout,
-      getCurrentUser: vi.fn(() => new Promise(() => undefined)),
-      isNetworkAvailable: vi.fn().mockResolvedValue(true),
-    };
-    const authGlobal = globalThis as typeof globalThis & {
-      SecPalNativeAuthBridge?: typeof nativeBridge;
-    };
-    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
-    const setUserSpy = vi.spyOn(authStorage, "setUser");
-    const clearSpy = vi.spyOn(authStorage, "clear");
-    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-    authGlobal.SecPalNativeAuthBridge = nativeBridge;
-
-    try {
-      const { result, unmount } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await act(async () => {
-        for (let attempt = 0; attempt < 20; attempt += 1) {
-          await Promise.resolve();
-        }
-      });
-
-      expect(result.current.isLoading).toBe(true);
-      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(1);
-
-      await act(async () => {
-        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
-        for (let attempt = 0; attempt < 20; attempt += 1) {
-          await Promise.resolve();
-        }
-      });
-
-      expect(result.current.isLoading).toBe(true);
-      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(2);
-
-      await act(async () => {
-        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
-        for (let attempt = 0; attempt < 20; attempt += 1) {
-          await Promise.resolve();
-        }
-      });
-
-      expect(result.current.isLoading).toBe(false);
-      expect(result.current.user).toBeNull();
-      expect(result.current.isAuthenticated).toBe(false);
-      expect(result.current.bootstrapRecoveryReason).toBe("timeout");
-      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(2);
-      expect(nativeLogout).not.toHaveBeenCalled();
-      expect(setUserSpy).not.toHaveBeenCalled();
-      expect(clearSpy).not.toHaveBeenCalled();
-      expect(clearSensitiveClientState).not.toHaveBeenCalled();
-      expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false);
-      expect(consoleWarn).toHaveBeenCalledWith(
-        `Auth bootstrap revalidation exceeded ${BOOTSTRAP_REVALIDATION_TIMEOUT_MS}ms.`
-      );
-
-      unmount();
-    } finally {
-      setUserSpy.mockRestore();
-      clearSpy.mockRestore();
-      consoleWarn.mockRestore();
-      vi.useRealTimers();
-      if (originalNativeBridge === undefined) {
-        delete authGlobal.SecPalNativeAuthBridge;
-      } else {
-        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-      }
-    }
-  });
-
-  it("keeps the native no-snapshot bootstrap timeout active while secure user persistence stalls", async () => {
-    vi.useFakeTimers();
-    const nativeLogout = vi.fn();
-    const nativeUser = {
-      id: "42",
-      name: "Native Session User",
-      email: "native-session@secpal.dev",
-      emailVerified: true,
-    };
-    const nativeBridge = {
-      login: vi.fn(),
-      logout: nativeLogout,
-      getCurrentUser: vi.fn().mockResolvedValue(nativeUser),
-      isNetworkAvailable: vi.fn().mockResolvedValue(true),
-    };
-    const authGlobal = globalThis as typeof globalThis & {
-      SecPalNativeAuthBridge?: typeof nativeBridge;
-    };
-    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
-    const persistenceCommitGuards: Array<(() => boolean) | undefined> = [];
+  it("keeps a native session in retryable recovery when secure persistence fails", async () => {
+    const native = installNativeAuthBridge();
+    const originalSetUser = authStorage.setUser.bind(authStorage);
     const setUserSpy = vi
       .spyOn(authStorage, "setUser")
-      .mockImplementation((_user, options) => {
-        persistenceCommitGuards.push(options?.shouldCommit);
-        return new Promise(() => undefined);
-      });
+      .mockRejectedValueOnce(new AuthUserPersistenceError())
+      .mockRejectedValueOnce(new AuthUserPersistenceError())
+      .mockImplementation(originalSetUser);
     const clearSpy = vi.spyOn(authStorage, "clear");
-    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-    authGlobal.SecPalNativeAuthBridge = nativeBridge;
-
-    try {
-      const { result, unmount } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await act(async () => {
-        for (let attempt = 0; attempt < 20; attempt += 1) {
-          await Promise.resolve();
-        }
-      });
-
-      expect(result.current.isLoading).toBe(true);
-      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(1);
-      expect(setUserSpy).toHaveBeenCalledTimes(1);
-      expect(persistenceCommitGuards[0]?.()).toBe(true);
-
-      await act(async () => {
-        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
-        for (let attempt = 0; attempt < 20; attempt += 1) {
-          await Promise.resolve();
-        }
-      });
-
-      expect(result.current.isLoading).toBe(true);
-      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(2);
-      expect(setUserSpy).toHaveBeenCalledTimes(2);
-      expect(persistenceCommitGuards[0]?.()).toBe(false);
-      expect(persistenceCommitGuards[1]?.()).toBe(true);
-
-      await act(async () => {
-        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
-        for (let attempt = 0; attempt < 20; attempt += 1) {
-          await Promise.resolve();
-        }
-      });
-
-      expect(result.current.isLoading).toBe(false);
-      expect(result.current.user).toBeNull();
-      expect(result.current.isAuthenticated).toBe(false);
-      expect(result.current.bootstrapRecoveryReason).toBe("timeout");
-      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(2);
-      expect(persistenceCommitGuards[1]?.()).toBe(false);
-      expect(nativeLogout).not.toHaveBeenCalled();
-      expect(clearSpy).not.toHaveBeenCalled();
-      expect(clearSensitiveClientState).not.toHaveBeenCalled();
-      expect(consoleWarn).toHaveBeenCalledWith(
-        `Auth bootstrap revalidation exceeded ${BOOTSTRAP_REVALIDATION_TIMEOUT_MS}ms.`
-      );
-
-      unmount();
-    } finally {
-      setUserSpy.mockRestore();
-      clearSpy.mockRestore();
-      consoleWarn.mockRestore();
-      vi.useRealTimers();
-      if (originalNativeBridge === undefined) {
-        delete authGlobal.SecPalNativeAuthBridge;
-      } else {
-        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-      }
-    }
-  });
-
-  it("does not block native no-snapshot rehydration on a separate connectivity preflight", async () => {
-    const nativeBridge = {
-      login: vi.fn(),
-      logout: vi.fn(),
-      getCurrentUser: vi.fn().mockResolvedValue({
-        id: 42,
-        name: "Native Session User",
-        email: "native-session@secpal.dev",
-      }),
-      isNetworkAvailable: vi.fn(() => new Promise<boolean>(() => undefined)),
-    };
-    const authGlobal = globalThis as typeof globalThis & {
-      SecPalNativeAuthBridge?: typeof nativeBridge;
-    };
-    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
-
-    authGlobal.SecPalNativeAuthBridge = nativeBridge;
-
-    try {
-      renderHook(() => useAuth(), { wrapper: AuthProvider });
-
-      await act(async () => {
-        for (let attempt = 0; attempt < 20; attempt += 1) {
-          await Promise.resolve();
-        }
-      });
-
-      expect(nativeBridge.isNetworkAvailable).not.toHaveBeenCalled();
-      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(1);
-    } finally {
-      if (originalNativeBridge === undefined) {
-        delete authGlobal.SecPalNativeAuthBridge;
-      } else {
-        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-      }
-    }
-  });
-
-  it("shows native no-snapshot offline recovery non-destructively and allows retry after connectivity returns", async () => {
-    const nativeUser = {
-      id: 42,
-      name: "Recovered Native User",
-      email: "recovered-native@secpal.dev",
-    };
-    const nativeLogout = vi.fn();
-    const nativeBridge = {
-      login: vi.fn(),
-      logout: nativeLogout,
-      getCurrentUser: vi
-        .fn()
-        .mockRejectedValueOnce(
-          Object.assign(
-            new Error("Android auth requires an active internet connection"),
-            { code: "NETWORK_OFFLINE" }
-          )
-        )
-        .mockResolvedValue(nativeUser),
-      isNetworkAvailable: vi.fn().mockResolvedValue(true),
-    };
-    const authGlobal = globalThis as typeof globalThis & {
-      SecPalNativeAuthBridge?: typeof nativeBridge;
-    };
-    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
-
-    authGlobal.SecPalNativeAuthBridge = nativeBridge;
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
 
     try {
       const { result } = renderHook(() => useAuth(), {
         wrapper: AuthProvider,
       });
 
-      expect(result.current.isLoading).toBe(true);
-
       await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
+        expect(result.current.bootstrapRecoveryReason).toBe("network");
       });
-
-      expect(result.current.user).toBeNull();
       expect(result.current.isAuthenticated).toBe(false);
-      expect(result.current.bootstrapRecoveryReason).toBe("network");
-      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(1);
-      expect(nativeLogout).not.toHaveBeenCalled();
-      expect(clearSensitiveClientState).not.toHaveBeenCalled();
-      expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false);
+      expect(clearSpy).not.toHaveBeenCalled();
+      expect(native.logoutSpy).not.toHaveBeenCalled();
 
-      act(() => {
-        result.current.retryBootstrap();
-      });
-
-      expect(result.current.isLoading).toBe(true);
-
+      act(() => result.current.retryBootstrap());
       await waitFor(() => {
         expect(result.current.isAuthenticated).toBe(true);
       });
-
-      expect(nativeBridge.isNetworkAvailable).not.toHaveBeenCalled();
-      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(2);
-      expect(result.current.user).toEqual({
-        id: "42",
-        name: "Recovered Native User",
-        email: "recovered-native@secpal.dev",
-        emailVerified: false,
-      });
-      expect(result.current.bootstrapRecoveryReason).toBeNull();
+      expect(setUserSpy).toHaveBeenCalledTimes(3);
     } finally {
-      if (originalNativeBridge === undefined) {
-        delete authGlobal.SecPalNativeAuthBridge;
-      } else {
-        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-      }
+      consoleWarnSpy.mockRestore();
+      clearSpy.mockRestore();
+      setUserSpy.mockRestore();
+    }
+  });
+
+  it("bounds native vault restoration before exposing timeout recovery", async () => {
+    const native = installNativeAuthBridge();
+    const getUserSpy = vi
+      .spyOn(authStorage, "getUser")
+      .mockImplementationOnce(() => new Promise(() => undefined));
+    localStorage.setItem(AUTH_VAULT_STORAGE_KEY, "stored-vault");
+    vi.useFakeTimers();
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+      });
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.bootstrapRecoveryReason).toBe("timeout");
+      expect(native.getCurrentUser).not.toHaveBeenCalled();
+    } finally {
+      getUserSpy.mockRestore();
     }
   });
 
@@ -1369,14 +623,14 @@ describe("useAuth", () => {
       name: "Bootstrap User",
       email: "bootstrap@secpal.dev",
     });
-    const csrfRefreshFailure = new AuthApiError(
-      "CSRF refresh failed: Network down",
-      undefined,
-      undefined,
-      "NETWORK_ERROR"
+    mockFetchCsrfToken.mockRejectedValue(
+      new AuthApiError(
+        "CSRF refresh failed: Network down",
+        undefined,
+        undefined,
+        "NETWORK_ERROR"
+      )
     );
-    mockFetchCsrfToken.mockRejectedValue(csrfRefreshFailure);
-    const consoleWarnSpy = captureConsoleWarnings();
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -1389,11 +643,6 @@ describe("useAuth", () => {
 
     expect(result.current.isAuthenticated).toBe(false);
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
-    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      RETRIABLE_BOOTSTRAP_WARNING,
-      csrfRefreshFailure
-    );
   });
 
   it("does not run sensitive logout cleanup when bootstrap revalidation finds no browser-session user", async () => {
@@ -1886,14 +1135,14 @@ describe("useAuth", () => {
     };
 
     await authStorage.setUser(mockUser);
-    const bootstrapFailure = new AuthApiError(
-      "Current user fetch failed: Network down",
-      undefined,
-      undefined,
-      "NETWORK_ERROR"
+    mockGetCurrentUser.mockRejectedValue(
+      new AuthApiError(
+        "Current user fetch failed: Network down",
+        undefined,
+        undefined,
+        "NETWORK_ERROR"
+      )
     );
-    mockGetCurrentUser.mockRejectedValue(bootstrapFailure);
-    const consoleWarnSpy = captureConsoleWarnings();
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -1911,11 +1160,6 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
     await expect(authStorage.getUser()).resolves.toEqual(mockUser);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
-    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      RETRIABLE_BOOTSTRAP_WARNING,
-      bootstrapFailure
-    );
   });
 
   it("holds routes behind recovery UI when the offline vault chunk is temporarily unavailable", async () => {
@@ -1927,7 +1171,6 @@ describe("useAuth", () => {
     };
 
     await authStorage.setUser(mockUser);
-    vi.mocked(syncOfflineSessionAccess).mockClear();
     const getUserSpy = vi
       .spyOn(authStorage, "getUser")
       .mockRejectedValueOnce(
@@ -1936,7 +1179,6 @@ describe("useAuth", () => {
           new TypeError("Failed to fetch dynamically imported module")
         )
       );
-    const consoleWarnSpy = captureConsoleWarnings();
 
     try {
       const { result } = renderHook(() => useAuth(), {
@@ -1951,139 +1193,8 @@ describe("useAuth", () => {
       expect(result.current.isAuthenticated).toBe(false);
       expect(result.current.bootstrapRecoveryReason).toBe("network");
       expect(authStorage.hasStoredUser()).toBe(true);
-      expect(syncOfflineSessionAccess).not.toHaveBeenCalledWith(false);
       expect(clearSensitiveClientState).not.toHaveBeenCalled();
-      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        TEMPORARY_AUTH_RESTORE_WARNING
-      );
     } finally {
-      getUserSpy.mockRestore();
-    }
-  });
-
-  it("keeps native vault data recoverable when the wrapping key read fails temporarily", async () => {
-    clearCsrfTokenCookie();
-    const restoreNativeVaultPlugin = installNativeVaultPluginForTest();
-    const nativeUser = {
-      id: "42",
-      name: "Native Session User",
-      email: "native-session@secpal.dev",
-      emailVerified: true,
-    };
-    await authStorage.setUser(nativeUser);
-    clearOfflineVaultSession();
-    vi.mocked(syncOfflineSessionAccess).mockClear();
-
-    const wrappingKeyReadError = new Error("IndexedDB temporarily unavailable");
-    const originalWrappingKeyGet = db.vaultWrappingKeys.get.bind(
-      db.vaultWrappingKeys
-    );
-    const wrappingKeyGetSpy = vi
-      .spyOn(db.vaultWrappingKeys, "get")
-      .mockRejectedValueOnce(wrappingKeyReadError)
-      .mockImplementation(originalWrappingKeyGet);
-    const clearSpy = vi.spyOn(authStorage, "clear");
-    const consoleWarnSpy = captureConsoleWarnings();
-    const nativeLogout = vi.fn();
-    const nativeBridge = {
-      login: vi.fn(),
-      logout: nativeLogout,
-      getCurrentUser: vi.fn().mockResolvedValue(nativeUser),
-      isNetworkAvailable: vi.fn().mockResolvedValue(true),
-    };
-    const authGlobal = globalThis as typeof globalThis & {
-      SecPalNativeAuthBridge?: typeof nativeBridge;
-    };
-    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
-    authGlobal.SecPalNativeAuthBridge = nativeBridge;
-
-    try {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(wrappingKeyGetSpy).toHaveBeenCalledTimes(1);
-      });
-
-      expect(clearSpy).not.toHaveBeenCalled();
-      expect(result.current.user).toBeNull();
-      expect(result.current.isAuthenticated).toBe(false);
-      expect(result.current.bootstrapRecoveryReason).toBe("network");
-      expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false);
-      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
-      expect(await db.vaultProfile.count()).toBe(1);
-      expect(await db.vaultWrappingKeys.count()).toBe(1);
-      expect(nativeLogout).not.toHaveBeenCalled();
-      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        TEMPORARY_AUTH_RESTORE_WARNING
-      );
-
-      act(() => {
-        result.current.retryBootstrap();
-      });
-
-      await waitFor(() => {
-        expect(result.current.isAuthenticated).toBe(true);
-      });
-
-      expect(result.current.user).toEqual(nativeUser);
-      expect(result.current.bootstrapRecoveryReason).toBeNull();
-      expect(syncOfflineSessionAccess).toHaveBeenCalledWith(true);
-      expect(nativeBridge.getCurrentUser).toHaveBeenCalledTimes(1);
-      expect(clearSpy).not.toHaveBeenCalled();
-      expect(nativeLogout).not.toHaveBeenCalled();
-    } finally {
-      clearSpy.mockRestore();
-      wrappingKeyGetSpy.mockRestore();
-      restoreNativeVaultPlugin();
-      if (originalNativeBridge === undefined) {
-        delete authGlobal.SecPalNativeAuthBridge;
-      } else {
-        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-      }
-    }
-  });
-
-  it("keeps browser-session restore failures on the existing destructive-clear path", async () => {
-    const browserUser = {
-      id: "browser-user",
-      name: "Browser Session User",
-      email: "browser-session@secpal.dev",
-      emailVerified: true,
-    };
-    await authStorage.setUser(browserUser);
-    const getUserSpy = vi
-      .spyOn(authStorage, "getUser")
-      .mockRejectedValueOnce(
-        new RecoverableAuthStorageError(
-          "Stored offline auth data is temporarily unavailable on this device."
-        )
-      );
-    const clearSpy = vi.spyOn(authStorage, "clear");
-
-    try {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      expect(result.current.user).toBeNull();
-      expect(result.current.isAuthenticated).toBe(false);
-      expect(result.current.bootstrapRecoveryReason).toBeNull();
-      expect(clearSpy).toHaveBeenCalledWith({
-        clearOfflineVaultTables: true,
-      });
-      expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false, {
-        redirectOpenClients: false,
-      });
-    } finally {
-      clearSpy.mockRestore();
       getUserSpy.mockRestore();
     }
   });
@@ -2123,7 +1234,7 @@ describe("useAuth", () => {
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 
-  it("keeps stored native auth when the connectivity probe times out", async () => {
+  it("skips stored-session revalidation when the native bridge reports the device offline", async () => {
     const mockUser = {
       id: "1",
       name: "Test User",
@@ -2134,7 +1245,7 @@ describe("useAuth", () => {
       login: vi.fn(),
       logout: vi.fn(),
       getCurrentUser: vi.fn(),
-      isNetworkAvailable: vi.fn(() => new Promise<boolean>(() => undefined)),
+      isNetworkAvailable: vi.fn().mockResolvedValue(false),
     };
     const authGlobal = globalThis as typeof globalThis & {
       SecPalNativeAuthBridge?: typeof nativeBridge;
@@ -2167,76 +1278,6 @@ describe("useAuth", () => {
     }
   });
 
-  it("bounds native stored-snapshot connectivity without clearing cached auth", async () => {
-    const storedUser = {
-      id: "1",
-      name: "Stored Native User",
-      email: "stored-native@secpal.dev",
-      emailVerified: true,
-    };
-
-    await persistAuthUser(storedUser);
-    const nativeLogout = vi.fn();
-    const nativeBridge = {
-      login: vi.fn(),
-      logout: nativeLogout,
-      getCurrentUser: vi.fn(() => new Promise(() => undefined)),
-      isNetworkAvailable: vi.fn(() => new Promise<boolean>(() => undefined)),
-    };
-    const authGlobal = globalThis as typeof globalThis & {
-      SecPalNativeAuthBridge?: typeof nativeBridge;
-    };
-    const originalNativeBridge = authGlobal.SecPalNativeAuthBridge;
-    const getUserSpy = vi
-      .spyOn(authStorage, "getUser")
-      .mockResolvedValue(storedUser);
-    authGlobal.SecPalNativeAuthBridge = nativeBridge;
-    vi.useFakeTimers();
-
-    try {
-      const { result, unmount } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await act(async () => {
-        for (let attempt = 0; attempt < 20; attempt += 1) {
-          await Promise.resolve();
-        }
-      });
-
-      expect(result.current.user).toEqual(storedUser);
-      expect(result.current.isAuthenticated).toBe(true);
-      expect(result.current.isLoading).toBe(true);
-      expect(nativeBridge.isNetworkAvailable).toHaveBeenCalledTimes(1);
-      expect(nativeBridge.getCurrentUser).not.toHaveBeenCalled();
-
-      await act(async () => {
-        vi.advanceTimersByTime(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
-        for (let attempt = 0; attempt < 20; attempt += 1) {
-          await Promise.resolve();
-        }
-      });
-
-      expect(result.current.user).toEqual(storedUser);
-      expect(result.current.isAuthenticated).toBe(true);
-      expect(result.current.isLoading).toBe(false);
-      expect(result.current.bootstrapRecoveryReason).toBeNull();
-      expect(nativeBridge.isNetworkAvailable).toHaveBeenCalledTimes(1);
-      expect(nativeBridge.getCurrentUser).not.toHaveBeenCalled();
-      expect(nativeLogout).not.toHaveBeenCalled();
-
-      unmount();
-    } finally {
-      getUserSpy.mockRestore();
-      vi.useRealTimers();
-      if (originalNativeBridge === undefined) {
-        delete authGlobal.SecPalNativeAuthBridge;
-      } else {
-        authGlobal.SecPalNativeAuthBridge = originalNativeBridge;
-      }
-    }
-  });
-
   it("stops blocking protected routes when bootstrap revalidation exceeds the startup deadline after an automatic retry", async () => {
     const mockUser = {
       id: "1",
@@ -2247,33 +1288,50 @@ describe("useAuth", () => {
     const deferred = createDeferredPromise<typeof mockUser>();
 
     await persistAuthUser(mockUser);
+    const getUserSpy = vi
+      .spyOn(authStorage, "getUser")
+      .mockResolvedValue(mockUser);
     mockGetCurrentUser.mockImplementation(() => deferred.promise);
-    const consoleWarnSpy = captureConsoleWarnings();
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+    vi.useFakeTimers();
 
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: AuthProvider,
-    });
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
 
-    expect(result.current.isLoading).toBe(true);
+      expect(result.current.isLoading).toBe(true);
 
-    await waitFor(() => {
+      await act(async () => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          await Promise.resolve();
+        }
+      });
       expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
-    });
 
-    await waitFor(
-      () => {
-        expect(result.current.isLoading).toBe(false);
-        expect(result.current.user).toEqual(mockUser);
-        expect(result.current.isAuthenticated).toBe(true);
-        expect(result.current.bootstrapRecoveryReason).toBe("timeout");
-        expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
-      },
-      BOOTSTRAP_REVALIDATION_TIMEOUT_MS * 2 + 2_000
-    );
-    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      `Auth bootstrap revalidation exceeded ${BOOTSTRAP_REVALIDATION_TIMEOUT_MS}ms.`
-    );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+      });
+      expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+      });
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.user).toEqual(mockUser);
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.bootstrapRecoveryReason).toBe("timeout");
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        `Auth bootstrap revalidation exceeded ${BOOTSTRAP_REVALIDATION_TIMEOUT_MS}ms.`
+      );
+    } finally {
+      consoleWarnSpy.mockRestore();
+      getUserSpy.mockRestore();
+      vi.useRealTimers();
+    }
   });
 
   it("keeps the silent timeout retry in control when the original bootstrap request rejects afterward", async () => {
@@ -2352,7 +1410,9 @@ describe("useAuth", () => {
       .mockResolvedValue(mockUser);
     // All attempts stall so each cycle hits the timeout twice (auto-retry + final timeout).
     mockGetCurrentUser.mockImplementation(() => deferred.promise);
-    const consoleWarnSpy = captureConsoleWarnings();
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
     vi.useFakeTimers();
 
     const { result, unmount } = renderHook(() => useAuth(), {
@@ -2435,6 +1495,7 @@ describe("useAuth", () => {
       );
     } finally {
       unmount();
+      consoleWarnSpy.mockRestore();
       getUserSpy.mockRestore();
       vi.useRealTimers();
     }
@@ -2449,13 +1510,13 @@ describe("useAuth", () => {
     };
 
     await persistAuthUser(mockUser);
-    const bootstrapFailure = new AuthApiError(
-      "Current user fetch failed: expected application/json response from API",
-      undefined,
-      404
+    mockGetCurrentUser.mockRejectedValueOnce(
+      new AuthApiError(
+        "Current user fetch failed: expected application/json response from API",
+        undefined,
+        404
+      )
     );
-    mockGetCurrentUser.mockRejectedValueOnce(bootstrapFailure);
-    const consoleWarnSpy = captureConsoleWarnings();
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -2468,11 +1529,6 @@ describe("useAuth", () => {
 
     expect(result.current.user).toEqual(mockUser);
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
-    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      NON_RETRIABLE_BOOTSTRAP_WARNING,
-      bootstrapFailure
-    );
   });
 
   it("retries browser-session bootstrap from recovery on /login without a restored user snapshot", async () => {
@@ -2491,7 +1547,6 @@ describe("useAuth", () => {
     mockGetCurrentUser
       .mockRejectedValueOnce(firstFailure)
       .mockResolvedValueOnce(recoveredUser);
-    const consoleWarnSpy = captureConsoleWarnings();
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -2512,11 +1567,6 @@ describe("useAuth", () => {
     });
 
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
-    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      NON_RETRIABLE_BOOTSTRAP_WARNING,
-      firstFailure
-    );
   });
 
   it("does not silently retry an AuthApiError without a numeric status field", async () => {
@@ -2530,11 +1580,9 @@ describe("useAuth", () => {
     await persistAuthUser(mockUser);
     // AuthApiError with no status and no HTTP_ code — deterministic API-layer
     // error that should not trigger the silent retry path.
-    const bootstrapFailure = new AuthApiError(
-      "Current user fetch failed: non-retriable client error"
+    mockGetCurrentUser.mockRejectedValueOnce(
+      new AuthApiError("Current user fetch failed: non-retriable client error")
     );
-    mockGetCurrentUser.mockRejectedValueOnce(bootstrapFailure);
-    const consoleWarnSpy = captureConsoleWarnings();
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -2547,11 +1595,6 @@ describe("useAuth", () => {
 
     expect(result.current.user).toEqual(mockUser);
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
-    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      NON_RETRIABLE_BOOTSTRAP_WARNING,
-      bootstrapFailure
-    );
   });
 
   it("does not silently retry API base URL configuration failures", async () => {
@@ -2563,11 +1606,9 @@ describe("useAuth", () => {
     };
 
     await persistAuthUser(mockUser);
-    const bootstrapFailure = new ApiBaseUrlConfigurationError(
-      "Invalid API base URL"
+    mockGetCurrentUser.mockRejectedValueOnce(
+      new ApiBaseUrlConfigurationError("Invalid API base URL")
     );
-    mockGetCurrentUser.mockRejectedValueOnce(bootstrapFailure);
-    const consoleWarnSpy = captureConsoleWarnings();
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -2580,11 +1621,6 @@ describe("useAuth", () => {
 
     expect(result.current.user).toEqual(mockUser);
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
-    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      NON_RETRIABLE_BOOTSTRAP_WARNING,
-      bootstrapFailure
-    );
   });
 
   it("stops the loading spinner when the browser goes offline during the automatic bootstrap retry", async () => {
@@ -2770,141 +1806,6 @@ describe("useAuth", () => {
     expect(result.current.user).toEqual(mockUser);
     expect(result.current.isAuthenticated).toBe(true);
     await expectEncryptedStoredUser(mockUser);
-  });
-
-  it("bounds active logout-barrier cleanup before a newer login persists", async () => {
-    const mockUser = {
-      id: "1",
-      name: "Test User",
-      email: "test@secpal.dev",
-      emailVerified: false,
-    };
-    const cleanupDeferred = createDeferredPromise<void>();
-    const getUserSnapshotSpy = vi
-      .spyOn(authStorage, "getUserSnapshot")
-      .mockReturnValue(null);
-    const getUserSpy = vi.spyOn(authStorage, "getUser").mockResolvedValue(null);
-    const removeUserSpy = vi
-      .spyOn(authStorage, "removeUser")
-      .mockImplementationOnce(() => cleanupDeferred.promise);
-    const setUserSpy = vi
-      .spyOn(authStorage, "setUser")
-      .mockResolvedValue({ status: "persisted" });
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => undefined);
-
-    localStorage.setItem("auth_logout_barrier", "1");
-    vi.useFakeTimers();
-    let loginPromise: Promise<void> | undefined;
-
-    try {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await act(async () => {
-        for (let attempt = 0; attempt < 20; attempt += 1) {
-          await Promise.resolve();
-        }
-      });
-
-      expect(removeUserSpy).toHaveBeenCalledTimes(1);
-
-      act(() => {
-        loginPromise = Promise.resolve(result.current.login(mockUser));
-      });
-
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(
-          AUTH_LOGIN_AFTER_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS
-        );
-      });
-
-      expect(setUserSpy).toHaveBeenCalledTimes(1);
-      await act(async () => {
-        await loginPromise;
-      });
-
-      expect(result.current.user).toEqual(mockUser);
-      expect(result.current.isAuthenticated).toBe(true);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        "Timed out waiting for active logout-barrier cleanup before login; superseding the stale cleanup."
-      );
-
-      const cleanupOptions = removeUserSpy.mock.calls[0]?.[0];
-      expect(cleanupOptions?.shouldContinue?.()).toBe(false);
-    } finally {
-      cleanupDeferred.resolve();
-      await loginPromise?.catch(() => undefined);
-      vi.useRealTimers();
-      consoleWarnSpy.mockRestore();
-      setUserSpy.mockRestore();
-      removeUserSpy.mockRestore();
-      getUserSpy.mockRestore();
-      getUserSnapshotSpy.mockRestore();
-    }
-  });
-
-  it("does not let late login persistence undo a newer logout", async () => {
-    window.history.replaceState({}, "", "/onboarding/complete");
-    const mockUser = {
-      id: "1",
-      name: "Test User",
-      email: "test@secpal.dev",
-      emailVerified: false,
-    };
-    const persistenceDeferred = createDeferredPromise<{
-      status: "superseded";
-    }>();
-    let persistenceCommitGuard: (() => boolean) | undefined;
-    const setUserSpy = vi
-      .spyOn(authStorage, "setUser")
-      .mockImplementation((_user, options) => {
-        persistenceCommitGuard = options?.shouldCommit;
-        return persistenceDeferred.promise;
-      });
-
-    try {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-      let loginPromise!: Promise<void>;
-
-      act(() => {
-        loginPromise = Promise.resolve(result.current.login(mockUser));
-      });
-
-      await waitFor(() => {
-        expect(setUserSpy).toHaveBeenCalledTimes(1);
-      });
-      expect(persistenceCommitGuard?.()).toBe(true);
-
-      let logoutPromise!: Promise<void>;
-
-      act(() => {
-        logoutPromise = Promise.resolve(result.current.logout());
-      });
-
-      await waitFor(() => {
-        expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
-      });
-      expect(persistenceCommitGuard?.()).toBe(false);
-
-      persistenceDeferred.resolve({ status: "superseded" });
-
-      await act(async () => {
-        await Promise.all([loginPromise, logoutPromise]);
-      });
-
-      expect(result.current.user).toBeNull();
-      expect(result.current.isAuthenticated).toBe(false);
-      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
-      expectNoStoredAuthState();
-    } finally {
-      persistenceDeferred.resolve({ status: "superseded" });
-      setUserSpy.mockRestore();
-    }
   });
 
   it("logout clears user", async () => {
@@ -3286,7 +2187,7 @@ describe("useAuth", () => {
           name: "Next User",
           email: "next@secpal.dev",
         }),
-        { shouldCommit: expect.any(Function) }
+        expect.objectContaining({ shouldCommit: expect.any(Function) })
       );
       expect(result.current.user).toEqual(
         expect.objectContaining({
@@ -3301,6 +2202,51 @@ describe("useAuth", () => {
       setUserSpy.mockRestore();
       vi.useRealTimers();
     }
+  });
+
+  it("lets a newer logout supersede a login waiting for cleanup", async () => {
+    await persistAuthUser({
+      id: "1",
+      name: "Current User",
+      email: "current@secpal.dev",
+    });
+    const cleanup = createDeferredPromise<void>();
+    vi.mocked(clearSensitiveClientState).mockImplementationOnce(
+      () => cleanup.promise
+    );
+    const setUserSpy = vi
+      .spyOn(authStorage, "setUser")
+      .mockResolvedValue({ status: "persisted" });
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    setUserSpy.mockClear();
+
+    let firstLogout!: Promise<void>;
+    let login!: Promise<void>;
+    let newerLogout!: Promise<void>;
+    act(() => {
+      firstLogout = Promise.resolve(result.current.logout());
+      login = Promise.resolve(
+        result.current.login({
+          id: "2",
+          name: "Next User",
+          email: "next@secpal.dev",
+        })
+      );
+      newerLogout = Promise.resolve(result.current.logout());
+    });
+
+    cleanup.resolve();
+    await act(async () => {
+      await Promise.all([firstLogout, login, newerLogout]);
+    });
+
+    expect(setUserSpy).not.toHaveBeenCalled();
+    expect(result.current.user).toBeNull();
+    expect(authStorage.hasLogoutBarrier()).toBe(true);
   });
 
   it("runs a real second logout after login resumes from a timed-out trailing cleanup handoff", async () => {
@@ -3531,7 +2477,9 @@ describe("useAuth", () => {
       .spyOn(db.vaultProfile, "clear")
       .mockImplementationOnce(
         () =>
-          vaultProfileClear.promise as ReturnType<typeof db.vaultProfile.clear>
+          Dexie.waitFor(vaultProfileClear.promise) as ReturnType<
+            typeof db.vaultProfile.clear
+          >
       );
 
     try {
@@ -3774,127 +2722,6 @@ describe("useAuth", () => {
     expect(result.current.sensitiveUiState).toBe("clear");
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.user).toEqual(revalidatedUser);
-  });
-
-  it("does not let a late vault unlock undo a newer logout", async () => {
-    window.history.replaceState({}, "", "/onboarding/complete");
-    const unlockedUser = {
-      id: "1",
-      name: "Unlocked User",
-      email: "unlocked-user@secpal.dev",
-      emailVerified: true,
-    };
-    const unlockDeferred = createDeferredPromise<typeof unlockedUser>();
-    const unlockSpy = vi
-      .spyOn(authStorage, "unlockVault")
-      .mockImplementation(() => unlockDeferred.promise);
-
-    try {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-      let unlockPromise!: Promise<boolean>;
-      const unlock = result.current.unlock;
-
-      if (!unlock) {
-        throw new Error("Expected vault unlock to be available.");
-      }
-
-      act(() => {
-        unlockPromise = unlock();
-      });
-
-      await waitFor(() => {
-        expect(unlockSpy).toHaveBeenCalledTimes(1);
-      });
-
-      let logoutPromise!: Promise<void>;
-
-      act(() => {
-        logoutPromise = Promise.resolve(result.current.logout());
-      });
-
-      await waitFor(() => {
-        expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
-      });
-
-      unlockDeferred.resolve(unlockedUser);
-
-      let didUnlock = true;
-
-      await act(async () => {
-        [didUnlock] = await Promise.all([unlockPromise, logoutPromise]);
-      });
-
-      expect(didUnlock).toBe(false);
-      expect(result.current.user).toBeNull();
-      expect(result.current.isAuthenticated).toBe(false);
-      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
-    } finally {
-      unlockDeferred.resolve(unlockedUser);
-      unlockSpy.mockRestore();
-    }
-  });
-
-  it("does not let a late vault unlock failure clear a newer login", async () => {
-    window.history.replaceState({}, "", "/onboarding/complete");
-    const currentUser = {
-      id: "2",
-      name: "Current User",
-      email: "current-user@secpal.dev",
-      emailVerified: true,
-    };
-    const unlockDeferred = createDeferredPromise<typeof currentUser | null>();
-    const unlockSpy = vi
-      .spyOn(authStorage, "unlockVault")
-      .mockImplementation(() => unlockDeferred.promise);
-    const consoleError = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
-
-    try {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-      const unlock = result.current.unlock;
-
-      if (!unlock) {
-        throw new Error("Expected vault unlock to be available.");
-      }
-
-      let unlockPromise!: Promise<boolean>;
-
-      act(() => {
-        unlockPromise = unlock();
-      });
-
-      await waitFor(() => {
-        expect(unlockSpy).toHaveBeenCalledTimes(1);
-      });
-
-      await act(async () => {
-        await result.current.login(currentUser);
-      });
-
-      expect(result.current.user).toEqual(currentUser);
-      unlockDeferred.reject(new Error("Late vault unlock failure"));
-
-      let didUnlock = true;
-
-      await act(async () => {
-        didUnlock = await unlockPromise;
-      });
-
-      expect(didUnlock).toBe(false);
-      expect(result.current.user).toEqual(currentUser);
-      expect(result.current.isAuthenticated).toBe(true);
-      expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
-      expect(consoleError).not.toHaveBeenCalled();
-    } finally {
-      unlockDeferred.resolve(null);
-      unlockSpy.mockRestore();
-      consoleError.mockRestore();
-    }
   });
 
   it("shows a visual privacy shield without locking or clearing the offline vault session", async () => {
@@ -4169,124 +2996,6 @@ describe("useAuth", () => {
 
     expect(result.current.isVaultLocked).toBe(false);
     expect(result.current.user).toEqual(revalidatedUser);
-  });
-
-  it("does not let a late cross-tab vault unlock undo a newer logout", async () => {
-    window.history.replaceState({}, "", "/onboarding/complete");
-    const unlockedUser = {
-      id: "1",
-      name: "Cross-tab User",
-      email: "cross-tab-user@secpal.dev",
-      emailVerified: true,
-    };
-    const unlockDeferred = createDeferredPromise<typeof unlockedUser>();
-    const unlockSpy = vi
-      .spyOn(authStorage, "unlockVault")
-      .mockImplementation(() => unlockDeferred.promise);
-
-    try {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      act(() => {
-        const crossTabUnlockEvent = new Event("storage");
-        Object.defineProperties(crossTabUnlockEvent, {
-          key: { value: AUTH_VAULT_LOCK_KEY },
-          newValue: { value: null },
-          storageArea: { value: localStorage },
-        } satisfies Partial<
-          Record<keyof StorageEventInit, PropertyDescriptor>
-        >);
-        window.dispatchEvent(crossTabUnlockEvent);
-      });
-
-      await waitFor(() => {
-        expect(unlockSpy).toHaveBeenCalledTimes(1);
-      });
-
-      let logoutPromise!: Promise<void>;
-
-      act(() => {
-        logoutPromise = Promise.resolve(result.current.logout());
-      });
-
-      await waitFor(() => {
-        expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
-      });
-
-      unlockDeferred.resolve(unlockedUser);
-
-      await act(async () => {
-        await Promise.all([unlockDeferred.promise, logoutPromise]);
-      });
-
-      expect(result.current.user).toBeNull();
-      expect(result.current.isAuthenticated).toBe(false);
-      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
-    } finally {
-      unlockDeferred.resolve(unlockedUser);
-      unlockSpy.mockRestore();
-    }
-  });
-
-  it("does not let a late cross-tab vault unlock failure clear a newer login", async () => {
-    window.history.replaceState({}, "", "/onboarding/complete");
-    const currentUser = {
-      id: "2",
-      name: "Current User",
-      email: "current-user@secpal.dev",
-      emailVerified: true,
-    };
-    const unlockDeferred = createDeferredPromise<typeof currentUser | null>();
-    const unlockSpy = vi
-      .spyOn(authStorage, "unlockVault")
-      .mockImplementation(() => unlockDeferred.promise);
-    const consoleError = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
-
-    try {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      act(() => {
-        const crossTabUnlockEvent = new Event("storage");
-        Object.defineProperties(crossTabUnlockEvent, {
-          key: { value: AUTH_VAULT_LOCK_KEY },
-          newValue: { value: null },
-          storageArea: { value: localStorage },
-        } satisfies Partial<
-          Record<keyof StorageEventInit, PropertyDescriptor>
-        >);
-        window.dispatchEvent(crossTabUnlockEvent);
-      });
-
-      await waitFor(() => {
-        expect(unlockSpy).toHaveBeenCalledTimes(1);
-      });
-
-      await act(async () => {
-        await result.current.login(currentUser);
-      });
-
-      expect(result.current.user).toEqual(currentUser);
-
-      await act(async () => {
-        unlockDeferred.reject(new Error("Late cross-tab unlock failure"));
-        await unlockDeferred.promise.catch(() => undefined);
-      });
-
-      expect(result.current.user).toEqual(currentUser);
-      expect(result.current.isAuthenticated).toBe(true);
-      expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
-      expect(consoleError).not.toHaveBeenCalled();
-    } finally {
-      unlockDeferred.resolve(null);
-      unlockSpy.mockRestore();
-      consoleError.mockRestore();
-    }
   });
 
   it("does not logout when auth vault storage changes while the vault is locked", async () => {

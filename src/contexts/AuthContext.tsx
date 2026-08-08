@@ -17,9 +17,9 @@ import { getAuthTransport } from "../services/authTransport";
 import { sanitizeAuthUser } from "../services/authState";
 import { NATIVE_AUTH_LOGOUT_EVENT_NAME } from "../services/nativeAuthEvents";
 import {
+  AuthUserPersistenceError,
   authStorage,
-  isRecoverableAuthStorageError,
-  type AuthStorageSetUserOptions,
+  type AuthStorageWriteOptions,
   type AuthUserPersistenceResult,
 } from "../services/storage";
 import { fetchCsrfToken, getCsrfTokenFromCookie } from "../services/csrf";
@@ -40,7 +40,7 @@ import { getSensitiveUiState } from "../lib/sensitiveUiState";
 
 export const BOOTSTRAP_REVALIDATION_TIMEOUT_MS = 3500;
 const AUTH_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS = 5_000;
-export const AUTH_LOGIN_AFTER_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS = 5_000;
+const AUTH_LOGIN_AFTER_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS = 5_000;
 
 async function isNetworkAvailableWithinBootstrapTimeout(
   isNetworkAvailable: () => Promise<boolean>
@@ -64,6 +64,32 @@ async function isNetworkAvailableWithinBootstrapTimeout(
   }
 }
 
+async function readStoredUserWithinBootstrapTimeout(): Promise<
+  { status: "completed"; user: User | null } | { status: "timed-out" }
+> {
+  const controller = new AbortController();
+  let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
+
+  try {
+    return await Promise.race([
+      authStorage.getUser({ signal: controller.signal }).then((user) => ({
+        status: "completed" as const,
+        user,
+      })),
+      new Promise<{ status: "timed-out" }>((resolve) => {
+        timeoutId = globalThis.setTimeout(() => {
+          resolve({ status: "timed-out" });
+          controller.abort();
+        }, BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timeoutId !== null) {
+      globalThis.clearTimeout(timeoutId);
+    }
+  }
+}
+
 async function loadOfflineVaultModule() {
   return await import("../lib/offlineVault");
 }
@@ -76,7 +102,7 @@ async function waitForLogoutCleanupWithTimeout(
   operation: Promise<void>,
   warningMessage: string,
   timeoutMs: number = AUTH_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS
-): Promise<"completed" | "timed-out"> {
+): Promise<void> {
   let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
 
   try {
@@ -92,8 +118,6 @@ async function waitForLogoutCleanupWithTimeout(
     if (result === "timed-out") {
       console.warn(warningMessage);
     }
-
-    return result;
   } finally {
     if (timeoutId !== null) {
       globalThis.clearTimeout(timeoutId);
@@ -138,16 +162,21 @@ function shouldBootstrapBrowserSessionWithoutStoredUser(
   return true;
 }
 
-function shouldBootstrapNativeSessionWithoutStoredUser(
+function shouldBootstrapSessionWithoutStoredUser(
   authTransportKind: string,
   hasLogoutBarrier: boolean
 ): boolean {
-  return authTransportKind === "native-bridge" && !hasLogoutBarrier;
+  return authTransportKind === "native-bridge"
+    ? !hasLogoutBarrier
+    : shouldBootstrapBrowserSessionWithoutStoredUser(
+        authTransportKind,
+        hasLogoutBarrier
+      );
 }
 
 function shouldTreatBootstrapFailureWithoutStoredUserAsLoggedOut(
-  authTransportKind: string,
-  clearSensitiveStateOnInvalidSession: boolean
+  clearSensitiveStateOnInvalidSession: boolean,
+  authTransportKind: string
 ): boolean {
   return (
     authTransportKind === "browser-session" &&
@@ -319,15 +348,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (!authStorage.hasStoredUser()) {
-      return (
-        shouldBootstrapBrowserSessionWithoutStoredUser(
-          authTransport.kind,
-          hasLogoutBarrier
-        ) ||
-        shouldBootstrapNativeSessionWithoutStoredUser(
-          authTransport.kind,
-          hasLogoutBarrier
-        )
+      return shouldBootstrapSessionWithoutStoredUser(
+        authTransport.kind,
+        hasLogoutBarrier
       );
     }
 
@@ -352,10 +375,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearAuthenticatedStateCompletionPromiseRef = useRef<Promise<void>>(
     Promise.resolve()
   );
-  const activeBarrierCleanupPromiseRef = useRef<Promise<void>>(
-    Promise.resolve()
-  );
-  const activeBarrierCleanupVersionRef = useRef(0);
   const shouldClearSensitiveStateRef = useRef(false);
   const shouldResetPrefetchCacheAfterStorageMismatchRef = useRef(false);
   const shouldRedirectOpenClientsRef = useRef(false);
@@ -405,7 +424,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const persistAuthenticatedUser = useCallback(
     async (
       nextUser: User,
-      options?: AuthStorageSetUserOptions
+      options: AuthStorageWriteOptions = {}
     ): Promise<AuthUserPersistenceResult> => {
       if (
         authTransport.kind === "browser-session" &&
@@ -468,7 +487,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const removeUserForActiveBarrier = useCallback(() => {
-    const cleanupVersion = ++activeBarrierCleanupVersionRef.current;
     const shouldSkipBarrierVaultTableCleanup =
       shouldSkipBarrierVaultTableCleanupRef.current ||
       authStorage.shouldSkipBarrierVaultTableCleanup();
@@ -476,22 +494,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     shouldSkipBarrierVaultTableCleanupRef.current =
       shouldSkipBarrierVaultTableCleanup;
 
-    activeBarrierCleanupPromiseRef.current =
-      activeBarrierCleanupPromiseRef.current
-        .catch(() => undefined)
-        .then(() =>
-          authStorage.removeUser({
-            clearOfflineVaultTables: !shouldSkipBarrierVaultTableCleanup,
-            allowBarrierSkipUpgrade: true,
-            shouldContinue: () =>
-              activeBarrierCleanupVersionRef.current === cleanupVersion,
-          })
-        )
-        .catch(() => {
-          console.warn(
-            "Failed to reconcile stored auth state for an active logout barrier."
-          );
-        });
+    void authStorage.removeUser({
+      clearOfflineVaultTables: !shouldSkipBarrierVaultTableCleanup,
+      allowBarrierSkipUpgrade: true,
+    });
   }, []);
 
   const reconcileActiveBarrierState = useCallback(() => {
@@ -516,6 +522,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearSensitiveState: boolean,
       options?: { redirectOpenClients?: boolean }
     ) => {
+      invalidateBootstrapRevalidation();
+
       if (isClearingSessionRef.current) {
         const shouldUpgradeSensitiveState =
           clearSensitiveState && !shouldClearSensitiveStateRef.current;
@@ -557,7 +565,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      invalidateBootstrapRevalidation();
       const clearSessionCycle = clearSessionCycleRef.current + 1;
       clearSessionCycleRef.current = clearSessionCycle;
       isClearingSessionRef.current = true;
@@ -726,6 +733,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      invalidateBootstrapRevalidation();
+      const loginVersion = bootstrapRequestVersionRef.current;
+      const isCurrentLogin = () =>
+        bootstrapRequestVersionRef.current === loginVersion;
+
+      try {
+        await authStorage.abortPendingVaultCleanup();
+      } catch {
+        setIsLoading(false);
+        setBootstrapRecoveryReason("network");
+        return;
+      }
+
+      if (!isCurrentLogin()) {
+        return;
+      }
+
       try {
         await clearAuthenticatedStateDestructivePromiseRef.current;
       } catch (error: unknown) {
@@ -735,14 +759,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
       }
 
-      const activeBarrierCleanupResult = await waitForLogoutCleanupWithTimeout(
-        activeBarrierCleanupPromiseRef.current,
-        "Timed out waiting for active logout-barrier cleanup before login; superseding the stale cleanup.",
-        AUTH_LOGIN_AFTER_LOGOUT_CLEANUP_WAIT_TIMEOUT_MS
-      );
-
-      if (activeBarrierCleanupResult === "timed-out") {
-        activeBarrierCleanupVersionRef.current += 1;
+      if (!isCurrentLogin()) {
+        return;
       }
 
       try {
@@ -758,22 +776,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
       }
 
-      invalidateBootstrapRevalidation();
-      const loginPersistenceVersion = bootstrapRequestVersionRef.current;
-
-      const persistenceResult = await persistAuthenticatedUser(sanitizedUser, {
-        shouldCommit: () =>
-          bootstrapRequestVersionRef.current === loginPersistenceVersion,
-      });
-
-      if (
-        persistenceResult.status === "superseded" ||
-        bootstrapRequestVersionRef.current !== loginPersistenceVersion
-      ) {
+      if (!isCurrentLogin()) {
         return;
       }
 
-      authStorage.clearLogoutBarrier();
+      let persistenceResult: AuthUserPersistenceResult;
+
+      try {
+        persistenceResult = await persistAuthenticatedUser(sanitizedUser, {
+          shouldCommit: isCurrentLogin,
+        });
+      } catch (error) {
+        if (!isCurrentLogin()) {
+          return;
+        }
+
+        if (!(error instanceof AuthUserPersistenceError)) {
+          throw error;
+        }
+
+        console.warn(
+          "Secure auth persistence failed after authentication; holding routes behind recovery UI."
+        );
+        setUser(null);
+        setIsLoading(false);
+        setBootstrapRecoveryReason("network");
+        syncOfflineAuthState(false);
+        return;
+      }
+
+      if (persistenceResult.status === "superseded" || !isCurrentLogin()) {
+        return;
+      }
+
       hasLogoutBarrierRef.current = false;
       shouldSkipBarrierVaultTableCleanupRef.current = false;
       setBootstrapRecoveryReason(null);
@@ -839,21 +874,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [invalidateBootstrapRevalidation, syncOfflineAuthState]);
 
   const unlock = useCallback(async (): Promise<boolean> => {
-    invalidateBootstrapRevalidation();
-    const unlockVersion = bootstrapRequestVersionRef.current;
     setIsLoading(true);
 
     try {
       const restoredUser = await authStorage.unlockVault?.();
-
-      if (bootstrapRequestVersionRef.current !== unlockVersion) {
-        return false;
-      }
-
-      if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
-        reconcileActiveBarrierState();
-        return false;
-      }
 
       if (!restoredUser) {
         clearAuthenticatedState(true);
@@ -870,21 +894,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       syncOfflineAuthState(true);
       return true;
     } catch (error) {
-      if (bootstrapRequestVersionRef.current !== unlockVersion) {
-        return false;
-      }
-
       console.error("Failed to unlock offline vault:", error);
       clearAuthenticatedState(true);
       return false;
     }
-  }, [
-    clearAuthenticatedState,
-    invalidateBootstrapRevalidation,
-    reconcileActiveBarrierState,
-    syncBarrierStateFromStorage,
-    syncOfflineAuthState,
-  ]);
+  }, [clearAuthenticatedState, syncOfflineAuthState]);
 
   const showPrivacyShield = useCallback(() => {
     if (isVaultLocked) {
@@ -913,7 +927,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (authStorage.hasLogoutBarrier()) {
+    if (hasLogoutBarrierRef.current || authStorage.hasLogoutBarrier()) {
       setBootstrapRecoveryReason(null);
       setIsLoading(false);
       return;
@@ -925,7 +939,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setBootstrapRetryKey((currentValue) => currentValue + 1);
   }, [authTransport.kind]);
 
-  const revalidateSessionAfterStorageMismatch = useCallback(() => {
+  const revalidateBrowserSessionAfterStorageMismatch = useCallback(() => {
     const hasLogoutBarrier =
       hasLogoutBarrierRef.current || syncBarrierStateFromStorage();
 
@@ -934,19 +948,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    const shouldRevalidateBrowserSession =
+    if (
       authTransport.kind === "browser-session" &&
+      isOnline() &&
       shouldBootstrapBrowserSessionWithoutStoredUser(
         authTransport.kind,
         hasLogoutBarrier
-      );
-    const shouldRevalidateNativeSession =
-      shouldBootstrapNativeSessionWithoutStoredUser(
-        authTransport.kind,
-        hasLogoutBarrier
-      );
-
-    if (shouldRevalidateBrowserSession || shouldRevalidateNativeSession) {
+      )
+    ) {
       shouldResetPrefetchCacheAfterStorageMismatchRef.current = true;
       hasLogoutBarrierRef.current = false;
       shouldSkipBarrierVaultTableCleanupRef.current = false;
@@ -1021,15 +1030,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const requestVersion = bootstrapRequestVersionRef.current + 1;
     bootstrapRequestVersionRef.current = requestVersion;
 
-    const clearBootstrapTimeout = () => {
-      if (timeoutId === null) {
-        return;
-      }
-
-      globalThis.clearTimeout(timeoutId);
-      timeoutId = null;
-    };
-
     const startBootstrapRevalidation = (
       clearSensitiveStateOnInvalidSession: boolean
     ) => {
@@ -1055,20 +1055,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setBootstrapRetryKey((currentValue) => currentValue + 1);
       };
 
-      const showBootstrapRecovery = (
-        reason: Exclude<AuthBootstrapRecoveryReason, null>
-      ) => {
-        setIsLoading(false);
-        if (!clearSensitiveStateOnInvalidSession) {
-          setUser(null);
-          setIsVaultLocked(false);
-          syncOfflineAuthState(false);
-        }
-        setBootstrapRecoveryReason(reason);
-      };
-
       timeoutId = globalThis.setTimeout(() => {
-        timeoutId = null;
         if (
           !isActive ||
           bootstrapRequestVersionRef.current !== requestVersion ||
@@ -1078,10 +1065,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         didTimeout = true;
+        authStorage.abortPendingPersistence();
         if (
           shouldTreatBootstrapFailureWithoutStoredUserAsLoggedOut(
-            authTransport.kind,
-            clearSensitiveStateOnInvalidSession
+            clearSensitiveStateOnInvalidSession,
+            authTransport.kind
           )
         ) {
           invalidateBootstrapRevalidation();
@@ -1094,8 +1082,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        invalidateBootstrapRevalidation();
-        showBootstrapRecovery("timeout");
+        setIsLoading(false);
+        setBootstrapRecoveryReason("timeout");
         console.warn(
           `Auth bootstrap revalidation exceeded ${BOOTSTRAP_REVALIDATION_TIMEOUT_MS}ms.`
         );
@@ -1109,30 +1097,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             bootstrapRequestVersionRef.current !== requestVersion ||
             hasLogoutBarrierRef.current
           ) {
-            clearBootstrapTimeout();
             return;
           }
 
-          try {
-            const persistenceResult = await persistAuthenticatedUser(
-              currentUser,
-              {
-                shouldCommit: () =>
-                  isActive &&
-                  bootstrapRequestVersionRef.current === requestVersion &&
-                  !hasLogoutBarrierRef.current &&
-                  !authStorage.hasLogoutBarrier(),
-              }
-            );
+          let persistenceResult: AuthUserPersistenceResult;
 
-            if (persistenceResult.status === "superseded") {
-              return;
-            }
+          try {
+            persistenceResult = await persistAuthenticatedUser(currentUser, {
+              shouldCommit: () =>
+                isActive &&
+                bootstrapRequestVersionRef.current === requestVersion &&
+                !hasLogoutBarrierRef.current,
+            });
           } catch (error: unknown) {
             throw createConfirmedBootstrapSessionError(error);
           }
 
-          clearBootstrapTimeout();
+          if (persistenceResult.status === "superseded") {
+            return;
+          }
+
+          if (timeoutId !== null) {
+            globalThis.clearTimeout(timeoutId);
+          }
 
           if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
             reconcileActiveBarrierState();
@@ -1156,7 +1143,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           syncOfflineAuthState(true);
         })
         .catch((error: unknown) => {
-          clearBootstrapTimeout();
+          if (timeoutId !== null) {
+            globalThis.clearTimeout(timeoutId);
+          }
 
           if (
             !isActive ||
@@ -1178,21 +1167,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           if (isOfflineBootstrapError(error)) {
-            if (clearSensitiveStateOnInvalidSession) {
-              setIsLoading(false);
-              setBootstrapRecoveryReason(null);
-              return;
-            }
-
-            showBootstrapRecovery("network");
+            setIsLoading(false);
+            setBootstrapRecoveryReason(
+              authTransport.kind === "native-bridge" &&
+                !clearSensitiveStateOnInvalidSession
+                ? "network"
+                : null
+            );
             return;
           }
 
           if (
             !isConfirmedBootstrapSessionError(error) &&
             shouldTreatBootstrapFailureWithoutStoredUserAsLoggedOut(
-              authTransport.kind,
-              clearSensitiveStateOnInvalidSession
+              clearSensitiveStateOnInvalidSession,
+              authTransport.kind
             )
           ) {
             clearBootstrapToLoggedOutState();
@@ -1204,7 +1193,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               "Auth bootstrap revalidation failed with a non-retriable response; holding protected routes behind recovery UI.",
               error
             );
-            showBootstrapRecovery("network");
+            setIsLoading(false);
+            setBootstrapRecoveryReason("network");
             return;
           }
 
@@ -1217,7 +1207,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             "Auth bootstrap revalidation failed; holding protected routes behind recovery UI.",
             error
           );
-          showBootstrapRecovery(didTimeout ? "timeout" : "network");
+          setIsLoading(false);
+          setBootstrapRecoveryReason(didTimeout ? "timeout" : "network");
         });
     };
 
@@ -1232,7 +1223,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const hadStoredUser = authStorage.hasStoredUser();
-      const storedUser = await authStorage.getUser();
+      const storedUserResult =
+        authTransport.kind === "native-bridge" && hadStoredUser
+          ? await readStoredUserWithinBootstrapTimeout()
+          : {
+              status: "completed" as const,
+              user: await authStorage.getUser(),
+            };
+
+      if (storedUserResult.status === "timed-out") {
+        setUser(null);
+        setIsVaultLocked(false);
+        setIsLoading(false);
+        setBootstrapRecoveryReason("timeout");
+        syncOfflineAuthState(false);
+        return;
+      }
+
+      const storedUser = storedUserResult.user;
 
       if (!isActive || bootstrapRequestVersionRef.current !== requestVersion) {
         return;
@@ -1244,13 +1252,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (!storedUser) {
-        const shouldBootstrapBrowserSessionWithoutUser =
-          shouldBootstrapBrowserSessionWithoutStoredUser(
-            authTransport.kind,
-            hasLogoutBarrierRef.current
-          );
-        const shouldBootstrapNativeSessionWithoutUser =
-          shouldBootstrapNativeSessionWithoutStoredUser(
+        const shouldBootstrapWithoutStoredUser =
+          shouldBootstrapSessionWithoutStoredUser(
             authTransport.kind,
             hasLogoutBarrierRef.current
           );
@@ -1268,12 +1271,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        if (shouldBootstrapNativeSessionWithoutUser) {
-          startBootstrapRevalidation(false);
-          return;
-        }
-
-        if (shouldBootstrapBrowserSessionWithoutUser) {
+        if (shouldBootstrapWithoutStoredUser) {
           startBootstrapRevalidation(false);
           return;
         }
@@ -1327,24 +1325,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (
-        isRecoverableLazyModuleError(error) ||
-        (authTransport.kind === "native-bridge" &&
-          isRecoverableAuthStorageError(error))
-      ) {
-        const shouldDisableOfflineSession =
-          authTransport.kind === "native-bridge" &&
-          isRecoverableAuthStorageError(error);
+      if (isRecoverableLazyModuleError(error)) {
         console.warn(
-          "Failed to restore persisted auth state temporarily; keeping the route behind recovery UI."
+          "Failed to restore persisted auth state because a lazy auth chunk could not be loaded; keeping the route behind recovery UI.",
+          error
         );
         setUser(null);
         setIsVaultLocked(false);
         setIsLoading(false);
         setBootstrapRecoveryReason("network");
-        if (shouldDisableOfflineSession) {
-          syncOfflineAuthState(false);
-        }
         return;
       }
 
@@ -1354,7 +1343,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       isActive = false;
-      clearBootstrapTimeout();
+      if (timeoutId !== null) {
+        globalThis.clearTimeout(timeoutId);
+      }
     };
   }, [
     authTransport,
@@ -1390,21 +1381,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        invalidateBootstrapRevalidation();
-        const crossTabUnlockVersion = bootstrapRequestVersionRef.current;
-
         void (async () => {
           try {
             const unlockedUser = await authStorage.unlockVault?.();
-
-            if (bootstrapRequestVersionRef.current !== crossTabUnlockVersion) {
-              return;
-            }
-
-            if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
-              reconcileActiveBarrierState();
-              return;
-            }
 
             if (!unlockedUser) {
               clearAuthenticatedState(true);
@@ -1414,16 +1393,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             hasLogoutBarrierRef.current = false;
             shouldSkipBarrierVaultTableCleanupRef.current = false;
             setBootstrapRecoveryReason(null);
+            invalidateBootstrapRevalidation();
             setUser(unlockedUser);
             setIsVaultLocked(false);
             setIsPrivacyShielded(false);
             setIsLoading(false);
             syncOfflineAuthState(true);
           } catch (error) {
-            if (bootstrapRequestVersionRef.current !== crossTabUnlockVersion) {
-              return;
-            }
-
             console.error("Failed to unlock cross-tab auth vault:", error);
             clearAuthenticatedState(true);
           }
@@ -1439,7 +1415,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.getItem("auth_user") === null &&
         localStorage.getItem(AUTH_VAULT_STORAGE_KEY) === null
       ) {
-        revalidateSessionAfterStorageMismatch();
+        revalidateBrowserSessionAfterStorageMismatch();
         return;
       }
 
@@ -1480,7 +1456,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           if (!nextUser) {
-            revalidateSessionAfterStorageMismatch();
+            revalidateBrowserSessionAfterStorageMismatch();
             return;
           }
 
@@ -1493,7 +1469,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           syncOfflineAuthState(true);
         } catch (error) {
           console.error("Failed to parse cross-tab auth state:", error);
-          revalidateSessionAfterStorageMismatch();
+          revalidateBrowserSessionAfterStorageMismatch();
         }
       })();
     };
@@ -1506,7 +1482,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [
     clearAuthenticatedState,
     invalidateBootstrapRevalidation,
-    revalidateSessionAfterStorageMismatch,
+    revalidateBrowserSessionAfterStorageMismatch,
     reconcileActiveBarrierState,
     syncBarrierStateFromStorage,
     syncOfflineAuthState,
@@ -1538,9 +1514,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         if (!storedUser) {
-          if (user && authTransport.kind === "native-bridge") {
-            revalidateSessionAfterStorageMismatch();
-          } else if (user) {
+          if (
+            authTransport.kind === "native-bridge" &&
+            !hasLogoutBarrierRef.current
+          ) {
+            hasAutomaticallyRetriedBootstrapRef.current = false;
+            invalidateBootstrapRevalidation();
+            setBootstrapRecoveryReason(null);
+            setIsLoading(true);
+            setBootstrapRetryKey((currentValue) => currentValue + 1);
+            return;
+          }
+
+          if (user) {
             clearAuthenticatedState(false);
           }
 
@@ -1567,7 +1553,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     authTransport.kind,
     clearAuthenticatedState,
     invalidateBootstrapRevalidation,
-    revalidateSessionAfterStorageMismatch,
     reconcileActiveBarrierState,
     syncBarrierStateFromStorage,
     syncOfflineAuthState,

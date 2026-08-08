@@ -128,8 +128,18 @@ db.version(11).stores({
   vaultOrganizationalUnitCache: "id, cachedAt, lastSynced",
 });
 
-// Schema version 13 - Adds non-extractable WebCrypto wrapping keys for native vault persistence.
+// Schema version 12 - Restores indexed vault organizational-unit lookups.
 // 0.x keeps the IndexedDB schema focused on the currently supported offline data.
+db.version(12).stores({
+  analytics: "++id, synced, timestamp, sessionId, type",
+  organizationalUnitCache: "id, type, parent_id, updated_at, cachedAt",
+  vaultProfile: "id",
+  vaultAnalytics: "++id, synced, timestamp",
+  vaultOrganizationalUnitCache:
+    "id, type, parentLookupKey, parent_id, cachedAt, lastSynced",
+});
+
+// Schema version 13 - Adds a non-extractable WebCrypto fallback key for native auth vaults.
 db.version(DB_VERSION).stores({
   analytics: "++id, synced, timestamp, sessionId, type",
   organizationalUnitCache: "id, type, parent_id, updated_at, cachedAt",

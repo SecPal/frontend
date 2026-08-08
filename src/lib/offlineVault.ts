@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-import Dexie from "dexie";
 import type { PersistedAuthUser } from "../services/authState";
 import { sanitizePersistedAuthUser } from "../services/authState";
 import { getCsrfTokenFromCookie } from "../services/csrf";
@@ -121,30 +120,35 @@ interface VaultRootKeyDecryptionResult {
   keyMaterialUsed: string | null;
 }
 
-export interface OfflineVaultInitializationOptions {
-  shouldCommit?: () => boolean;
+export interface OfflineVaultOperationOptions {
+  signal?: AbortSignal;
 }
 
-export type OfflineVaultInitializationResult =
-  { status: "persisted" } | { status: "superseded" };
+function throwIfVaultOperationAborted(signal?: AbortSignal): void {
+  signal?.throwIfAborted();
+}
 
-class OfflineVaultInitializationSupersededError extends Error {}
+async function awaitVaultOperation<T>(
+  operation: Promise<T>,
+  signal?: AbortSignal
+): Promise<T> {
+  throwIfVaultOperationAborted(signal);
 
-const alwaysCommitOfflineVaultInitialization = (): boolean => true;
-
-function assertOfflineVaultInitializationCurrent(
-  shouldCommit: () => boolean
-): void {
-  let isCurrent: boolean;
-
-  try {
-    isCurrent = shouldCommit();
-  } catch {
-    throw new OfflineVaultInitializationSupersededError();
+  if (!signal) {
+    return operation;
   }
 
-  if (!isCurrent) {
-    throw new OfflineVaultInitializationSupersededError();
+  let rejectAbort!: (reason: unknown) => void;
+  const aborted = new Promise<never>((_resolve, reject) => {
+    rejectAbort = reject;
+  });
+  const abort = () => rejectAbort(signal.reason);
+  signal.addEventListener("abort", abort, { once: true });
+
+  try {
+    return await Promise.race([operation, aborted]);
+  } finally {
+    signal.removeEventListener("abort", abort);
   }
 }
 
@@ -294,7 +298,7 @@ async function getNativeDeviceBoundVaultBridge(): Promise<NativeDeviceBoundVault
       : null;
   } catch {
     console.warn(
-      "[Offline Vault] Failed to detect native device-bound wrapper availability."
+      "[Offline Vault] Native device-bound wrapper detection failed; using the available fallback."
     );
     return null;
   }
@@ -355,7 +359,7 @@ function getStoredVaultWrapperCacheKey(
 function getSessionWrapperCacheKey(state: AuthVaultStateEnvelope): string {
   return (
     getStoredVaultWrapperCacheKey(state, getAuthVaultKeyMaterial()) ??
-    "device-bound"
+    "native-device-bound"
   );
 }
 
@@ -436,55 +440,13 @@ async function ensureVaultDatabaseOpen(): Promise<void> {
   }
 }
 
-interface ActiveVaultSubjectTransition {
-  abort: () => void;
-  promise: Promise<void>;
-  shouldContinue: () => boolean;
-}
-
-let activeVaultSubjectTransition: ActiveVaultSubjectTransition | null = null;
-
-async function waitForActiveVaultSubjectTransition(): Promise<void> {
-  const activeTransition = activeVaultSubjectTransition;
-
-  if (!activeTransition) {
-    return;
-  }
-
-  if (!activeTransition.shouldContinue()) {
-    activeTransition.abort();
-  }
-
-  try {
-    await activeTransition.promise;
-  } catch {
-    // The operation that owns the transition reports its error. A newer
-    // operation may continue because the IndexedDB transaction rolled back.
-  }
-}
-
-async function clearOfflineVaultForSubjectTransition(
-  shouldContinue: () => boolean
+export async function clearOfflineVaultTables(
+  options: OfflineVaultOperationOptions = {}
 ): Promise<void> {
   await ensureVaultDatabaseOpen();
-  assertOfflineVaultInitializationCurrent(shouldContinue);
+  throwIfVaultOperationAborted(options.signal);
 
-  const activeTransition: ActiveVaultSubjectTransition = {
-    abort: () => undefined,
-    promise: Promise.resolve(),
-    shouldContinue,
-  };
-  let transactionToAbort = Dexie.currentTransaction;
-  let rejectTransitionWait!: (reason: unknown) => void;
-  const transitionAbort = new Promise<never>((_resolve, reject) => {
-    rejectTransitionWait = reject;
-  });
-  activeTransition.abort = () => {
-    transactionToAbort?.abort();
-    rejectTransitionWait(new OfflineVaultInitializationSupersededError());
-  };
-
-  const transition = db.transaction(
+  await db.transaction(
     "rw",
     [
       db.vaultProfile,
@@ -493,75 +455,54 @@ async function clearOfflineVaultForSubjectTransition(
       db.vaultOrganizationalUnitCache,
     ],
     async () => {
-      transactionToAbort = Dexie.currentTransaction;
-      assertOfflineVaultInitializationCurrent(shouldContinue);
-      await Promise.race([
+      throwIfVaultOperationAborted(options.signal);
+      await awaitVaultOperation(
         Promise.all([
           db.vaultProfile.clear(),
           db.vaultWrappingKeys.clear(),
           db.vaultAnalytics.clear(),
           db.vaultOrganizationalUnitCache.clear(),
         ]),
-        transitionAbort,
-      ]);
-      assertOfflineVaultInitializationCurrent(shouldContinue);
+        options.signal
+      );
+      throwIfVaultOperationAborted(options.signal);
     }
   );
-
-  activeTransition.promise = transition;
-  activeVaultSubjectTransition = activeTransition;
-
-  try {
-    try {
-      await transition;
-    } catch (error) {
-      if (!shouldContinue()) {
-        throw new OfflineVaultInitializationSupersededError();
-      }
-
-      throw error;
-    }
-    clearStoredOfflineVaultState();
-  } finally {
-    if (activeVaultSubjectTransition === activeTransition) {
-      activeVaultSubjectTransition = null;
-    }
-  }
-}
-
-export async function clearOfflineVaultTables(
-  shouldContinue: () => boolean = alwaysCommitOfflineVaultInitialization
-): Promise<void> {
-  await waitForActiveVaultSubjectTransition();
-  await ensureVaultDatabaseOpen();
-
-  if (!shouldContinue()) {
-    return;
-  }
-
-  await Promise.all([
-    db.vaultProfile.clear(),
-    db.vaultWrappingKeys.clear(),
-    db.vaultAnalytics.clear(),
-    db.vaultOrganizationalUnitCache.clear(),
-  ]);
 }
 
 async function clearInvalidOfflineVaultArtifacts(
-  shouldContinue: () => boolean = alwaysCommitOfflineVaultInitialization
+  options: OfflineVaultOperationOptions = {}
 ): Promise<void> {
   await ensureVaultDatabaseOpen();
-
-  if (!shouldContinue()) {
-    return;
-  }
-
+  throwIfVaultOperationAborted(options.signal);
+  await db.transaction(
+    "rw",
+    [
+      db.vaultProfile,
+      db.vaultWrappingKeys,
+      db.vaultAnalytics,
+      db.vaultOrganizationalUnitCache,
+      db.analytics,
+      db.organizationalUnitCache,
+    ],
+    async () => {
+      throwIfVaultOperationAborted(options.signal);
+      await awaitVaultOperation(
+        Promise.all([
+          db.vaultProfile.clear(),
+          db.vaultWrappingKeys.clear(),
+          db.vaultAnalytics.clear(),
+          db.vaultOrganizationalUnitCache.clear(),
+          db.analytics.clear(),
+          db.organizationalUnitCache.clear(),
+        ]),
+        options.signal
+      );
+      throwIfVaultOperationAborted(options.signal);
+    }
+  );
+  throwIfVaultOperationAborted(options.signal);
   clearStoredOfflineVaultState();
-  await Promise.all([
-    clearOfflineVaultTables(shouldContinue),
-    db.analytics.clear(),
-    db.organizationalUnitCache.clear(),
-  ]);
 }
 
 async function deriveVaultWrapperKeys(
@@ -868,7 +809,7 @@ async function encryptNativeDeviceBoundVaultRootKeyBytes(
     });
   } catch {
     console.warn(
-      "[Offline Vault] Failed to wrap the vault root key with the native device-bound wrapper."
+      "[Offline Vault] Native device-bound wrapping failed; using the WebCrypto fallback."
     );
     return null;
   }
@@ -913,7 +854,7 @@ async function decryptNativeDeviceBoundVaultRootKeyBytes(
     });
   } catch {
     console.warn(
-      "[Offline Vault] Failed to unwrap the vault root key with the native device-bound wrapper."
+      "[Offline Vault] Native device-bound vault unwrapping failed."
     );
     return null;
   }
@@ -945,14 +886,14 @@ function buildWebCryptoDeviceBoundAdditionalData(
 }
 
 async function getOrCreateWebCryptoDeviceWrappingKey(
-  shouldCommit: () => boolean
+  signal?: AbortSignal
 ): Promise<CryptoKey> {
   await ensureVaultDatabaseOpen();
-  assertOfflineVaultInitializationCurrent(shouldCommit);
+  throwIfVaultOperationAborted(signal);
   const storedKey = await db.vaultWrappingKeys.get(
     NATIVE_VAULT_WRAPPING_KEY_ID
   );
-  assertOfflineVaultInitializationCurrent(shouldCommit);
+  throwIfVaultOperationAborted(signal);
 
   if (storedKey) {
     return storedKey.key;
@@ -963,46 +904,36 @@ async function getOrCreateWebCryptoDeviceWrappingKey(
     false,
     ["encrypt", "decrypt"]
   )) as CryptoKey;
-  assertOfflineVaultInitializationCurrent(shouldCommit);
-
-  return db.transaction("rw", db.vaultWrappingKeys, async () => {
-    assertOfflineVaultInitializationCurrent(shouldCommit);
-    const storedKey = await db.vaultWrappingKeys.get(
-      NATIVE_VAULT_WRAPPING_KEY_ID
-    );
-    assertOfflineVaultInitializationCurrent(shouldCommit);
-
-    if (storedKey) {
-      return storedKey.key;
-    }
-
-    assertOfflineVaultInitializationCurrent(shouldCommit);
-    await db.vaultWrappingKeys.put({
-      id: NATIVE_VAULT_WRAPPING_KEY_ID,
-      key: generatedKey,
-    });
-
-    return generatedKey;
+  throwIfVaultOperationAborted(signal);
+  await db.vaultWrappingKeys.put({
+    id: NATIVE_VAULT_WRAPPING_KEY_ID,
+    key: generatedKey,
   });
+  throwIfVaultOperationAborted(signal);
+
+  return generatedKey;
 }
 
 async function encryptWebCryptoDeviceBoundVaultRootKeyBytes(
   rootKeyBytes: Uint8Array,
   subjectHash: string,
-  shouldCommit: () => boolean
+  signal?: AbortSignal
 ): Promise<AuthVaultStateEnvelopeV2> {
-  const key = await getOrCreateWebCryptoDeviceWrappingKey(shouldCommit);
+  const key = await getOrCreateWebCryptoDeviceWrappingKey(signal);
   const iv = createRandomBytes(VAULT_RECORD_IV_BYTES);
-  const ciphertext = await crypto.subtle.encrypt(
-    {
-      name: "AES-GCM",
-      iv: toArrayBuffer(iv),
-      additionalData: toArrayBuffer(
-        buildWebCryptoDeviceBoundAdditionalData(subjectHash)
-      ),
-    },
-    key,
-    toArrayBuffer(rootKeyBytes)
+  const ciphertext = await awaitVaultOperation(
+    crypto.subtle.encrypt(
+      {
+        name: "AES-GCM",
+        iv: toArrayBuffer(iv),
+        additionalData: toArrayBuffer(
+          buildWebCryptoDeviceBoundAdditionalData(subjectHash)
+        ),
+      },
+      key,
+      toArrayBuffer(rootKeyBytes)
+    ),
+    signal
   );
 
   return {
@@ -1019,13 +950,15 @@ async function encryptWebCryptoDeviceBoundVaultRootKeyBytes(
 }
 
 async function decryptWebCryptoDeviceBoundVaultRootKeyBytes(
-  state: AuthVaultStateEnvelopeV2
+  state: AuthVaultStateEnvelopeV2,
+  signal?: AbortSignal
 ): Promise<Uint8Array | null> {
   if (state.wrapper.kind !== "webcrypto-device-bound") {
     return null;
   }
 
   await ensureVaultDatabaseOpen();
+  throwIfVaultOperationAborted(signal);
   const storedKey = await db.vaultWrappingKeys.get(state.wrapper.keyId);
 
   if (!storedKey) {
@@ -1034,21 +967,25 @@ async function decryptWebCryptoDeviceBoundVaultRootKeyBytes(
 
   try {
     const rootKeyBytes = new Uint8Array(
-      await crypto.subtle.decrypt(
-        {
-          name: "AES-GCM",
-          iv: toArrayBuffer(decodeBase64(state.wrapper.iv)),
-          additionalData: toArrayBuffer(
-            buildWebCryptoDeviceBoundAdditionalData(state.subjectHash)
-          ),
-        },
-        storedKey.key,
-        toArrayBuffer(decodeBase64(state.wrapper.ciphertext))
+      await awaitVaultOperation(
+        crypto.subtle.decrypt(
+          {
+            name: "AES-GCM",
+            iv: toArrayBuffer(decodeBase64(state.wrapper.iv)),
+            additionalData: toArrayBuffer(
+              buildWebCryptoDeviceBoundAdditionalData(state.subjectHash)
+            ),
+          },
+          storedKey.key,
+          toArrayBuffer(decodeBase64(state.wrapper.ciphertext))
+        ),
+        signal
       )
     );
 
     return rootKeyBytes.byteLength === 32 ? rootKeyBytes : null;
   } catch {
+    throwIfVaultOperationAborted(signal);
     return null;
   }
 }
@@ -1056,23 +993,31 @@ async function decryptWebCryptoDeviceBoundVaultRootKeyBytes(
 async function encryptVaultRootKeyBytes(
   rootKeyBytes: Uint8Array,
   subjectHash: string,
-  shouldCommit: () => boolean = alwaysCommitOfflineVaultInitialization
+  signal?: AbortSignal
 ): Promise<AuthVaultStateEnvelope | null> {
   const nativeBridge = await getNativeDeviceBoundVaultBridge();
+  throwIfVaultOperationAborted(signal);
 
   if (nativeBridge) {
-    return encryptNativeDeviceBoundVaultRootKeyBytes(
-      rootKeyBytes,
-      subjectHash,
-      nativeBridge
+    const nativeDeviceBoundState = await awaitVaultOperation(
+      encryptNativeDeviceBoundVaultRootKeyBytes(
+        rootKeyBytes,
+        subjectHash,
+        nativeBridge
+      ),
+      signal
     );
+
+    if (nativeDeviceBoundState) {
+      return nativeDeviceBoundState;
+    }
   }
 
   if (isCapacitorNativeRuntime()) {
     return encryptWebCryptoDeviceBoundVaultRootKeyBytes(
       rootKeyBytes,
       subjectHash,
-      shouldCommit
+      signal
     );
   }
 
@@ -1083,7 +1028,8 @@ async function encryptVaultRootKeyBytes(
 }
 
 async function decryptVaultRootKeyBytes(
-  state: AuthVaultStateEnvelope
+  state: AuthVaultStateEnvelope,
+  signal?: AbortSignal
 ): Promise<VaultRootKeyDecryptionResult> {
   if (state.version === AUTH_VAULT_LEGACY_VERSION) {
     return decryptLegacyVaultRootKeyBytes(state);
@@ -1102,7 +1048,10 @@ async function decryptVaultRootKeyBytes(
 
   if (state.wrapper.kind === "webcrypto-device-bound") {
     return {
-      rootKeyBytes: await decryptWebCryptoDeviceBoundVaultRootKeyBytes(state),
+      rootKeyBytes: await decryptWebCryptoDeviceBoundVaultRootKeyBytes(
+        state,
+        signal
+      ),
       keyMaterialUsed: null,
     };
   }
@@ -1376,9 +1325,9 @@ async function ensureVaultOrganizationalUnitIndexes(
 }
 
 async function ensureOfflineVaultSession(
-  shouldCommit = alwaysCommitOfflineVaultInitialization
+  signal?: AbortSignal
 ): Promise<VaultSession | null> {
-  assertOfflineVaultInitializationCurrent(shouldCommit);
+  throwIfVaultOperationAborted(signal);
   let activeVaultSession = getActiveOfflineVaultSession<VaultSession>();
   const currentKeyMaterial = getAuthVaultKeyMaterial();
   const storedState = getStoredVaultState();
@@ -1401,15 +1350,14 @@ async function ensureOfflineVaultSession(
       activeVaultSession = await maybeRewriteStoredVaultState(
         activeVaultSession,
         storedState,
-        shouldCommit
+        signal
       );
-      assertOfflineVaultInitializationCurrent(shouldCommit);
+      throwIfVaultOperationAborted(signal);
       setActiveOfflineVaultSession(activeVaultSession);
 
       return activeVaultSession;
     }
 
-    assertOfflineVaultInitializationCurrent(shouldCommit);
     clearOfflineVaultSession();
   }
 
@@ -1417,9 +1365,11 @@ async function ensureOfflineVaultSession(
     return null;
   }
 
-  const { rootKeyBytes, keyMaterialUsed } =
-    await decryptVaultRootKeyBytes(storedState);
-  assertOfflineVaultInitializationCurrent(shouldCommit);
+  const { rootKeyBytes, keyMaterialUsed } = await decryptVaultRootKeyBytes(
+    storedState,
+    signal
+  );
+  throwIfVaultOperationAborted(signal);
 
   if (!rootKeyBytes) {
     if (
@@ -1431,9 +1381,7 @@ async function ensureOfflineVaultSession(
       return null;
     }
 
-    assertOfflineVaultInitializationCurrent(shouldCommit);
-    await clearInvalidOfflineVaultArtifacts(shouldCommit);
-    assertOfflineVaultInitializationCurrent(shouldCommit);
+    await clearInvalidOfflineVaultArtifacts({ signal });
     return null;
   }
 
@@ -1456,11 +1404,11 @@ async function ensureOfflineVaultSession(
     activeVaultSession = await maybeRewriteStoredVaultState(
       activeVaultSession,
       storedState,
-      shouldCommit
+      signal
     );
   }
 
-  assertOfflineVaultInitializationCurrent(shouldCommit);
+  throwIfVaultOperationAborted(signal);
   setActiveOfflineVaultSession(activeVaultSession);
 
   return activeVaultSession;
@@ -1469,7 +1417,7 @@ async function ensureOfflineVaultSession(
 async function maybeRewriteStoredVaultState(
   session: VaultSession,
   storedState: AuthVaultStateEnvelope,
-  shouldCommit = alwaysCommitOfflineVaultInitialization
+  signal?: AbortSignal
 ): Promise<VaultSession> {
   const currentKeyMaterial = getAuthVaultKeyMaterial();
   const currentStoredWrapperCacheKey = getStoredVaultWrapperCacheKey(
@@ -1481,7 +1429,6 @@ async function maybeRewriteStoredVaultState(
     : isCapacitorNativeRuntime()
       ? "webcrypto-device-bound"
       : "browser-session";
-  assertOfflineVaultInitializationCurrent(shouldCommit);
   const currentWrapperKind =
     storedState.version === AUTH_VAULT_LEGACY_VERSION
       ? "browser-session"
@@ -1499,9 +1446,9 @@ async function maybeRewriteStoredVaultState(
   const rewrittenState = await encryptVaultRootKeyBytes(
     session.rootKeyBytes,
     session.subjectHash,
-    shouldCommit
+    signal
   );
-  assertOfflineVaultInitializationCurrent(shouldCommit);
+  throwIfVaultOperationAborted(signal);
 
   if (!rewrittenState) {
     return session;
@@ -1524,17 +1471,15 @@ async function maybeRewriteStoredVaultState(
 
 async function ensureVaultSessionForUser(
   user: PersistedAuthUser,
-  shouldCommit = alwaysCommitOfflineVaultInitialization
+  signal?: AbortSignal
 ): Promise<{
   session: VaultSession;
   pendingStoredState: AuthVaultStateEnvelope | null;
 }> {
-  await waitForActiveVaultSubjectTransition();
-  assertOfflineVaultInitializationCurrent(shouldCommit);
+  throwIfVaultOperationAborted(signal);
   const subjectHash = await computeSubjectHash(user.id);
-  assertOfflineVaultInitializationCurrent(shouldCommit);
-  const currentSession = await ensureOfflineVaultSession(shouldCommit);
-  assertOfflineVaultInitializationCurrent(shouldCommit);
+  throwIfVaultOperationAborted(signal);
+  const currentSession = await ensureOfflineVaultSession(signal);
   const existingStoredState = getStoredVaultState();
 
   if (currentSession && currentSession.subjectHash === subjectHash) {
@@ -1543,31 +1488,41 @@ async function ensureVaultSessionForUser(
         session: await maybeRewriteStoredVaultState(
           currentSession,
           existingStoredState,
-          shouldCommit
+          signal
         ),
         pendingStoredState: null,
       };
     }
 
+    const recreatedStoredState = await encryptVaultRootKeyBytes(
+      currentSession.rootKeyBytes,
+      subjectHash,
+      signal
+    );
+
+    if (!recreatedStoredState) {
+      throw new Error("Failed to recreate the auth vault wrapper.");
+    }
+
     return {
       session: currentSession,
-      pendingStoredState: null,
+      pendingStoredState: recreatedStoredState,
     };
   }
 
   if (currentSession && currentSession.subjectHash !== subjectHash) {
-    assertOfflineVaultInitializationCurrent(shouldCommit);
-    await clearOfflineVaultForSubjectTransition(shouldCommit);
-    assertOfflineVaultInitializationCurrent(shouldCommit);
+    await clearOfflineVaultTables({ signal });
+    throwIfVaultOperationAborted(signal);
+    clearStoredOfflineVaultState();
   }
 
   const rootKeyBytes = createRandomBytes(32);
   const storedState = await encryptVaultRootKeyBytes(
     rootKeyBytes,
     subjectHash,
-    shouldCommit
+    signal
   );
-  assertOfflineVaultInitializationCurrent(shouldCommit);
+  throwIfVaultOperationAborted(signal);
 
   if (!storedState) {
     throw new Error(
@@ -1580,8 +1535,6 @@ async function ensureVaultSessionForUser(
     subjectHash,
     wrapperCacheKey: getSessionWrapperCacheKey(storedState),
   };
-  setActiveOfflineVaultSession(activeVaultSession);
-
   return {
     session: activeVaultSession,
     pendingStoredState: storedState,
@@ -1591,10 +1544,10 @@ async function ensureVaultSessionForUser(
 async function persistProfileRecord(
   user: PersistedAuthUser,
   session: VaultSession,
-  shouldCommit = alwaysCommitOfflineVaultInitialization
+  signal?: AbortSignal
 ): Promise<void> {
   await ensureVaultDatabaseOpen();
-  assertOfflineVaultInitializationCurrent(shouldCommit);
+  throwIfVaultOperationAborted(signal);
 
   const encryptedRecord = await encryptVaultRecord(
     user,
@@ -1602,23 +1555,29 @@ async function persistProfileRecord(
     PROFILE_RECORD_ID,
     session
   );
-  assertOfflineVaultInitializationCurrent(shouldCommit);
+  throwIfVaultOperationAborted(signal);
 
-  await db.vaultProfile.put({
-    id: PROFILE_RECORD_ID,
-    ...encryptedRecord,
-  } satisfies EncryptedProfileRecord);
+  await db.transaction("rw", db.vaultProfile, async () => {
+    await awaitVaultOperation(
+      db.vaultProfile.put({
+        id: PROFILE_RECORD_ID,
+        ...encryptedRecord,
+      } satisfies EncryptedProfileRecord),
+      signal
+    );
+    throwIfVaultOperationAborted(signal);
+  });
 }
 
 async function migrateLegacyAnalyticsRecords(
   session: VaultSession,
-  shouldCommit = alwaysCommitOfflineVaultInitialization
+  signal?: AbortSignal
 ): Promise<void> {
   await ensureVaultDatabaseOpen();
-  assertOfflineVaultInitializationCurrent(shouldCommit);
+  throwIfVaultOperationAborted(signal);
 
   const legacyRecords = await db.analytics.toArray();
-  assertOfflineVaultInitializationCurrent(shouldCommit);
+  throwIfVaultOperationAborted(signal);
 
   if (legacyRecords.length === 0) {
     return;
@@ -1649,22 +1608,28 @@ async function migrateLegacyAnalyticsRecords(
       } satisfies Omit<VaultAnalyticsRecord, "id">;
     })
   );
-  assertOfflineVaultInitializationCurrent(shouldCommit);
 
-  await db.vaultAnalytics.bulkPut(encryptedRecords);
-  assertOfflineVaultInitializationCurrent(shouldCommit);
-  await db.analytics.clear();
+  await db.transaction("rw", [db.vaultAnalytics, db.analytics], async () => {
+    throwIfVaultOperationAborted(signal);
+    await awaitVaultOperation(
+      db.vaultAnalytics.bulkPut(encryptedRecords),
+      signal
+    );
+    throwIfVaultOperationAborted(signal);
+    await awaitVaultOperation(db.analytics.clear(), signal);
+    throwIfVaultOperationAborted(signal);
+  });
 }
 
 async function migrateLegacyOrganizationalUnitRecords(
   session: VaultSession,
-  shouldCommit = alwaysCommitOfflineVaultInitialization
+  signal?: AbortSignal
 ): Promise<void> {
   await ensureVaultDatabaseOpen();
-  assertOfflineVaultInitializationCurrent(shouldCommit);
+  throwIfVaultOperationAborted(signal);
 
   const legacyRecords = await db.organizationalUnitCache.toArray();
-  assertOfflineVaultInitializationCurrent(shouldCommit);
+  throwIfVaultOperationAborted(signal);
 
   if (legacyRecords.length === 0) {
     return;
@@ -1688,61 +1653,65 @@ async function migrateLegacyOrganizationalUnitRecords(
       } satisfies VaultOrganizationalUnitCacheRecord;
     })
   );
-  assertOfflineVaultInitializationCurrent(shouldCommit);
 
-  await db.vaultOrganizationalUnitCache.bulkPut(encryptedRecords);
-  assertOfflineVaultInitializationCurrent(shouldCommit);
-  await db.organizationalUnitCache.clear();
+  await db.transaction(
+    "rw",
+    [db.vaultOrganizationalUnitCache, db.organizationalUnitCache],
+    async () => {
+      await awaitVaultOperation(
+        db.vaultOrganizationalUnitCache.bulkPut(encryptedRecords),
+        signal
+      );
+      throwIfVaultOperationAborted(signal);
+      await awaitVaultOperation(db.organizationalUnitCache.clear(), signal);
+      throwIfVaultOperationAborted(signal);
+    }
+  );
 }
 
 export async function initializeOfflineVault(
   user: PersistedAuthUser,
-  options: OfflineVaultInitializationOptions = {}
-): Promise<OfflineVaultInitializationResult> {
-  const shouldCommit =
-    options.shouldCommit ?? alwaysCommitOfflineVaultInitialization;
+  options: OfflineVaultOperationOptions = {}
+): Promise<void> {
+  const { signal } = options;
+  const { session, pendingStoredState } = await ensureVaultSessionForUser(
+    user,
+    signal
+  );
 
-  try {
-    const { session, pendingStoredState } = await ensureVaultSessionForUser(
-      user,
-      shouldCommit
-    );
+  await persistProfileRecord(user, session, signal);
+  await Promise.all([
+    migrateLegacyAnalyticsRecords(session, signal),
+    migrateLegacyOrganizationalUnitRecords(session, signal),
+  ]);
+  throwIfVaultOperationAborted(signal);
 
-    await persistProfileRecord(user, session, shouldCommit);
-    await Promise.all([
-      migrateLegacyAnalyticsRecords(session, shouldCommit),
-      migrateLegacyOrganizationalUnitRecords(session, shouldCommit),
-    ]);
-    assertOfflineVaultInitializationCurrent(shouldCommit);
-
-    if (pendingStoredState) {
-      setStoredVaultState(pendingStoredState);
-    }
-
-    localStorage.removeItem("auth_user");
-    return { status: "persisted" };
-  } catch (error) {
-    if (error instanceof OfflineVaultInitializationSupersededError) {
-      return { status: "superseded" };
-    }
-
-    throw error;
+  if (pendingStoredState) {
+    setStoredVaultState(pendingStoredState);
   }
+
+  setActiveOfflineVaultSession(session);
+  localStorage.removeItem("auth_user");
 }
 
-export async function readPersistedAuthUserFromVault(): Promise<PersistedAuthUser | null> {
-  const session = await ensureOfflineVaultSession();
+export async function readPersistedAuthUserFromVault(
+  options: OfflineVaultOperationOptions = {}
+): Promise<PersistedAuthUser | null> {
+  const session = await ensureOfflineVaultSession(options.signal);
+  throwIfVaultOperationAborted(options.signal);
 
   if (!session) {
     return null;
   }
 
   await ensureVaultDatabaseOpen();
+  throwIfVaultOperationAborted(options.signal);
 
   const storedProfile = await db.vaultProfile.get(PROFILE_RECORD_ID);
+  throwIfVaultOperationAborted(options.signal);
 
   if (!storedProfile) {
-    await clearInvalidOfflineVaultArtifacts();
+    await clearInvalidOfflineVaultArtifacts(options);
     return null;
   }
 
@@ -1758,7 +1727,7 @@ export async function readPersistedAuthUserFromVault(): Promise<PersistedAuthUse
       "Failed to parse stored user data:",
       new SyntaxError("Invalid encrypted vault profile payload.")
     );
-    await clearInvalidOfflineVaultArtifacts();
+    await clearInvalidOfflineVaultArtifacts(options);
     return null;
   }
 

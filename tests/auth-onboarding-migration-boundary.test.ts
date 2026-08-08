@@ -26,7 +26,6 @@ const scopedEntries = [
 
 const requiredCoveredPaths = [
   "src/ui/index.ts",
-  "src/ui/login-runtime-instance-section.tsx",
   "src/ui/primitives.tsx",
   "src/ui/styles.ts",
   "src/pages/Login.tsx",
