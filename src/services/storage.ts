@@ -3,6 +3,7 @@
 
 import type { User } from "../contexts/auth-context";
 import {
+  AUTH_USER_REVALIDATION_REQUIRED_KEY,
   AUTH_VAULT_STORAGE_KEY,
   AUTH_VAULT_LOCK_KEY,
 } from "../lib/offlineVaultKeys";
@@ -256,6 +257,9 @@ async function decryptPersistedAuthUser(
  */
 export interface AuthStorage {
   hasStoredUser(): boolean;
+  getUserRevalidationOwnerToken(): string | null;
+  requireUserRevalidation(): string;
+  completeUserRevalidation(ownerToken: string | null): void;
   hasVaultLock(): boolean;
   getUserSnapshot(): User | null;
   getUser(options?: AuthStorageReadOptions): Promise<User | null>;
@@ -522,15 +526,42 @@ class LocalStorageAuthStorage implements AuthStorage {
     return (
       !this.hasLogoutBarrier() &&
       !this.hasVaultLock() &&
+      !this.isUserRevalidationRequired() &&
       (localStorage.getItem(this.VAULT_KEY) !== null ||
         hasStoredUserRecord(this.USER_KEY))
     );
+  }
+
+  getUserRevalidationOwnerToken(): string | null {
+    return localStorage.getItem(AUTH_USER_REVALIDATION_REQUIRED_KEY);
+  }
+
+  requireUserRevalidation(): string {
+    const ownerToken = crypto.randomUUID();
+    localStorage.setItem(AUTH_USER_REVALIDATION_REQUIRED_KEY, ownerToken);
+    return ownerToken;
+  }
+
+  completeUserRevalidation(ownerToken: string | null): void {
+    if (
+      ownerToken === null ||
+      this.getUserRevalidationOwnerToken() !== ownerToken
+    ) {
+      return;
+    }
+
+    localStorage.removeItem(AUTH_USER_REVALIDATION_REQUIRED_KEY);
+  }
+
+  private isUserRevalidationRequired(): boolean {
+    return this.getUserRevalidationOwnerToken() !== null;
   }
 
   private clearStoredUserMarkers(): void {
     localStorage.removeItem(this.USER_KEY);
     localStorage.removeItem(this.VAULT_KEY);
     localStorage.removeItem(this.VAULT_LOCK_KEY);
+    localStorage.removeItem(AUTH_USER_REVALIDATION_REQUIRED_KEY);
   }
 
   private clearInvalidStoredUser(): null {
@@ -549,6 +580,10 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   getUserSnapshot(): User | null {
     if (this.hasLogoutBarrier()) {
+      return null;
+    }
+
+    if (this.isUserRevalidationRequired()) {
       return null;
     }
 
@@ -590,6 +625,10 @@ class LocalStorageAuthStorage implements AuthStorage {
       return null;
     }
 
+    if (this.isUserRevalidationRequired()) {
+      return null;
+    }
+
     if (this.hasVaultLock()) {
       return null;
     }
@@ -615,6 +654,10 @@ class LocalStorageAuthStorage implements AuthStorage {
       throwIfAborted(signal);
 
       if (!storedVaultUser) {
+        if (localStorage.getItem(this.VAULT_KEY) !== null) {
+          return null;
+        }
+
         return this.clearInvalidStoredUserAsync();
       }
 

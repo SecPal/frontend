@@ -13,7 +13,10 @@ import {
   SENSITIVE_CACHE_NAMES,
 } from "./clientStateCleanup";
 import * as offlineVault from "./offlineVault";
-import { AUTH_VAULT_STORAGE_KEY } from "./offlineVault";
+import {
+  AUTH_USER_REVALIDATION_REQUIRED_KEY,
+  AUTH_VAULT_STORAGE_KEY,
+} from "./offlineVault";
 
 const mockCaches = {
   keys: vi.fn(),
@@ -94,6 +97,7 @@ describe("clearSensitiveClientState", () => {
       AUTH_VAULT_STORAGE_KEY,
       JSON.stringify({ scheme: "pbkdf2-aes-cbc-hmac-sha256-vault" })
     );
+    localStorage.setItem(AUTH_USER_REVALIDATION_REQUIRED_KEY, "1");
     localStorage.setItem("locale", "de");
     sessionStorage.setItem("share-draft", "pending");
 
@@ -130,6 +134,9 @@ describe("clearSensitiveClientState", () => {
     expect(localStorage.getItem("auth_token")).toBeNull();
     expect(localStorage.getItem("secpal-notification-preferences")).toBeNull();
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    expect(
+      localStorage.getItem(AUTH_USER_REVALIDATION_REQUIRED_KEY)
+    ).toBeNull();
     expect(localStorage.getItem("locale")).toBe("de");
     expect(sessionStorage.getItem("share-draft")).toBeNull();
 

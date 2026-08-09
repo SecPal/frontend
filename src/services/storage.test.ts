@@ -7,6 +7,7 @@ import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
 import { authStorage } from "./storage";
 import { createRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
 import {
+  AUTH_USER_REVALIDATION_REQUIRED_KEY,
   AUTH_VAULT_STORAGE_KEY,
   clearOfflineVaultSession,
 } from "../lib/offlineVault";
@@ -201,6 +202,21 @@ describe("authStorage", () => {
 
     await expect(authStorage.getUser()).resolves.toEqual(user);
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+  });
+
+  it("preserves a vault marker when the encrypted profile is temporarily unavailable", async () => {
+    const storedVaultState = JSON.stringify({
+      scheme: "secpal-auth-vault",
+      version: 2,
+    });
+    localStorage.setItem(AUTH_VAULT_STORAGE_KEY, storedVaultState);
+    vi.spyOn(offlineVault, "readPersistedAuthUserFromVault").mockResolvedValue(
+      null
+    );
+
+    await expect(authStorage.getUser()).resolves.toBeNull();
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(storedVaultState);
   });
 
   it("locks the offline vault without deleting encrypted records and restores them after unlock", async () => {
@@ -573,6 +589,54 @@ describe("authStorage", () => {
     expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
       "1"
     );
+  });
+
+  it("keeps user revalidation required until confirmed persistence is completed", async () => {
+    const storedUser = {
+      id: "stored-user",
+      name: "Stored User",
+      email: "stored-user@secpal.dev",
+      emailVerified: true,
+    };
+    const confirmedUser = {
+      id: "confirmed-user",
+      name: "Confirmed User",
+      email: "confirmed-user@secpal.dev",
+      emailVerified: true,
+    };
+    await authStorage.setUser(storedUser);
+    const revalidationOwnerToken = authStorage.requireUserRevalidation();
+
+    await authStorage.setUser(confirmedUser);
+
+    expect(localStorage.getItem(AUTH_USER_REVALIDATION_REQUIRED_KEY)).toBe(
+      revalidationOwnerToken
+    );
+    expect(authStorage.hasStoredUser()).toBe(false);
+    await expect(authStorage.getUser()).resolves.toBeNull();
+
+    authStorage.completeUserRevalidation(revalidationOwnerToken);
+
+    expect(authStorage.hasStoredUser()).toBe(true);
+    await expect(authStorage.getUser()).resolves.toEqual(confirmedUser);
+  });
+
+  it("does not let an older persistence completion clear a newer user revalidation", () => {
+    const olderOwnerToken = authStorage.requireUserRevalidation();
+    const newerOwnerToken = authStorage.requireUserRevalidation();
+
+    authStorage.completeUserRevalidation(olderOwnerToken);
+
+    expect(localStorage.getItem(AUTH_USER_REVALIDATION_REQUIRED_KEY)).toBe(
+      newerOwnerToken
+    );
+    expect(authStorage.hasStoredUser()).toBe(false);
+
+    authStorage.completeUserRevalidation(newerOwnerToken);
+
+    expect(
+      localStorage.getItem(AUTH_USER_REVALIDATION_REQUIRED_KEY)
+    ).toBeNull();
   });
 
   it("does not make a logout-barrier read start destructive cleanup", async () => {

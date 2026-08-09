@@ -8,9 +8,10 @@ import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import App from "./App";
+import type { User } from "./contexts/auth-context";
 import { AuthApiError } from "./services/authApi";
 import { sanitizePersistedAuthUser } from "./services/authState";
-import { authStorage } from "./services/storage";
+import { authStorage, type AuthStorage } from "./services/storage";
 import { db } from "./lib/db";
 import { createRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
 
@@ -23,11 +24,13 @@ const {
   mockLoadAuthenticatedAppModule,
   mockUpdatePrompt,
 } = vi.hoisted(() => {
-  let storedUser: unknown = null;
+  let storedUser: User | null = null;
   let vaultPresent = false;
   let vaultLocked = false;
   let logoutBarrier = false;
   let skipVaultTableCleanup = false;
+  let userRevalidationOwnerToken: string | null = null;
+  let nextUserRevalidationOwner = 0;
 
   return {
     mockGetCurrentUser: vi.fn(),
@@ -39,26 +42,47 @@ const {
         () =>
           !logoutBarrier &&
           !vaultLocked &&
+          userRevalidationOwnerToken === null &&
           (vaultPresent || storedUser !== null)
       ),
+      getUserRevalidationOwnerToken: vi.fn(() => userRevalidationOwnerToken),
+      requireUserRevalidation: vi.fn(() => {
+        nextUserRevalidationOwner += 1;
+        userRevalidationOwnerToken = `test-user-revalidation-${nextUserRevalidationOwner}`;
+        return userRevalidationOwnerToken;
+      }),
+      completeUserRevalidation: vi.fn((ownerToken: string | null) => {
+        if (ownerToken === userRevalidationOwnerToken) {
+          userRevalidationOwnerToken = null;
+        }
+      }),
       hasVaultLock: vi.fn(() => vaultLocked),
       // Mirror production: persisted users live in the offline vault, so the
       // synchronous snapshot is always null once a vault record exists.
       getUserSnapshot: vi.fn(() => {
-        if (logoutBarrier || vaultLocked || vaultPresent) {
+        if (
+          logoutBarrier ||
+          vaultLocked ||
+          vaultPresent ||
+          userRevalidationOwnerToken !== null
+        ) {
           return null;
         }
 
         return storedUser;
       }),
       getUser: vi.fn(async () => {
-        if (logoutBarrier || vaultLocked) {
+        if (
+          logoutBarrier ||
+          vaultLocked ||
+          userRevalidationOwnerToken !== null
+        ) {
           return null;
         }
 
         return storedUser;
       }),
-      setUser: vi.fn(async (user: unknown) => {
+      setUser: vi.fn(async (user: User) => {
         storedUser = user;
         vaultPresent = true;
         vaultLocked = false;
@@ -71,13 +95,14 @@ const {
       }),
       unlockVault: vi.fn(async () => {
         vaultLocked = false;
-        return storedUser;
+        return userRevalidationOwnerToken === null ? storedUser : null;
       }),
       removeUser: vi.fn(async () => {
         storedUser = null;
         vaultPresent = false;
         vaultLocked = false;
         logoutBarrier = false;
+        userRevalidationOwnerToken = null;
       }),
       clear: vi.fn(async () => {
         storedUser = null;
@@ -85,6 +110,7 @@ const {
         vaultLocked = false;
         logoutBarrier = false;
         skipVaultTableCleanup = false;
+        userRevalidationOwnerToken = null;
       }),
       hasLogoutBarrier: vi.fn(() => logoutBarrier),
       shouldSkipBarrierVaultTableCleanup: vi.fn(() => skipVaultTableCleanup),
@@ -105,7 +131,7 @@ const {
       abortPendingPersistence: vi.fn(),
       abortPendingVaultCleanup: vi.fn(async () => undefined),
       waitForInFlightVaultTableCleanup: vi.fn(async () => undefined),
-    },
+    } satisfies AuthStorage,
   };
 });
 

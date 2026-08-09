@@ -31,6 +31,7 @@ import {
   throwIfAborted,
 } from "./abortablePromise";
 export {
+  AUTH_USER_REVALIDATION_REQUIRED_KEY,
   AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
 } from "./offlineVaultKeys";
@@ -1363,10 +1364,10 @@ async function ensureOfflineVaultSession(
   if (!rootKeyBytes) {
     if (
       storedState.version === AUTH_VAULT_VERSION &&
-      storedState.wrapper.kind === "native-device-bound" &&
-      !(await getNativeDeviceBoundVaultBridge())
+      storedState.wrapper.kind === "native-device-bound"
     ) {
-      // Bridge is temporarily unavailable; treat the vault as locked, not corrupted.
+      // Native wrapper failures can be transient. Preserve the encrypted vault
+      // so a later bridge recovery can unlock it without losing offline data.
       return null;
     }
 
@@ -1470,6 +1471,10 @@ async function ensureVaultSessionForUser(
   throwIfVaultOperationAborted(signal);
   const currentSession = await ensureOfflineVaultSession(signal);
   const existingStoredState = getStoredVaultState();
+
+  if (!currentSession && existingStoredState) {
+    throw new Error("Stored auth vault is temporarily unavailable.");
+  }
 
   if (currentSession && currentSession.subjectHash === subjectHash) {
     if (existingStoredState) {

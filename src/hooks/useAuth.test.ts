@@ -25,6 +25,7 @@ import {
 import { createRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
 import * as prefetch from "./usePrefetch";
 import {
+  AUTH_USER_REVALIDATION_REQUIRED_KEY,
   AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
   clearRecentAuthVaultKeyMaterials,
@@ -676,6 +677,9 @@ describe("useAuth", () => {
         "NETWORK_ERROR"
       )
     );
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -688,6 +692,10 @@ describe("useAuth", () => {
 
     expect(result.current.isAuthenticated).toBe(false);
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy.mock.calls[0]?.[0]).toBe(
+      "Auth bootstrap revalidation failed; holding protected routes behind recovery UI."
+    );
   });
 
   it("does not run sensitive logout cleanup when bootstrap revalidation finds no browser-session user", async () => {
@@ -1188,6 +1196,9 @@ describe("useAuth", () => {
         "NETWORK_ERROR"
       )
     );
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -1205,6 +1216,10 @@ describe("useAuth", () => {
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
     await expect(authStorage.getUser()).resolves.toEqual(mockUser);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy.mock.calls[0]?.[0]).toBe(
+      "Auth bootstrap revalidation failed; holding protected routes behind recovery UI."
+    );
   });
 
   it("holds routes behind recovery UI when the offline vault chunk is temporarily unavailable", async () => {
@@ -1224,6 +1239,9 @@ describe("useAuth", () => {
           new TypeError("Failed to fetch dynamically imported module")
         )
       );
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
 
     try {
       const { result } = renderHook(() => useAuth(), {
@@ -1239,7 +1257,12 @@ describe("useAuth", () => {
       expect(result.current.bootstrapRecoveryReason).toBe("network");
       expect(authStorage.hasStoredUser()).toBe(true);
       expect(clearSensitiveClientState).not.toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+      expect(consoleWarnSpy.mock.calls[0]?.[0]).toBe(
+        "Failed to restore persisted auth state because a lazy auth chunk could not be loaded; keeping the route behind recovery UI."
+      );
     } finally {
+      consoleWarnSpy.mockRestore();
       getUserSpy.mockRestore();
     }
   });
@@ -1277,6 +1300,81 @@ describe("useAuth", () => {
     expect(result.current.bootstrapRecoveryReason).toBeNull();
     await expect(authStorage.getUser()).resolves.toEqual(mockUser);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
+  });
+
+  it("does not restore a superseded native user after replacement persistence fails", async () => {
+    const storedUser = {
+      id: "stored-user",
+      name: "Stored User",
+      email: "stored-user@secpal.dev",
+      emailVerified: true,
+    };
+    const confirmedUser = {
+      id: "confirmed-user",
+      name: "Confirmed User",
+      email: "confirmed-user@secpal.dev",
+      emailVerified: true,
+    };
+    await authStorage.setUser(storedUser);
+    const nativeGetCurrentUser = vi.fn().mockResolvedValue(confirmedUser);
+    installNativeAuthBridge({ getCurrentUser: nativeGetCurrentUser });
+    const vaultClearSpy = vi
+      .spyOn(db.vaultProfile, "clear")
+      .mockRejectedValue(new Error("IndexedDB clear failed"));
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
+    try {
+      const firstProvider = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(firstProvider.result.current.bootstrapRecoveryReason).toBe(
+          "network"
+        );
+      });
+
+      expect(firstProvider.result.current.user).toBeNull();
+      expect(firstProvider.result.current.isAuthenticated).toBe(false);
+      expect(authStorage.hasStoredUser()).toBe(false);
+      firstProvider.unmount();
+      clearOfflineVaultSession();
+      nativeGetCurrentUser.mockRejectedValue(
+        Object.assign(new Error("Network unavailable."), {
+          code: "NETWORK_OFFLINE",
+        })
+      );
+
+      const restartedProvider = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(restartedProvider.result.current.bootstrapRecoveryReason).toBe(
+          "network"
+        );
+      });
+      expect(restartedProvider.result.current.user).toBeNull();
+      expect(restartedProvider.result.current.isAuthenticated).toBe(false);
+
+      vaultClearSpy.mockRestore();
+      nativeGetCurrentUser.mockResolvedValue(confirmedUser);
+      act(() => restartedProvider.result.current.retryBootstrap());
+
+      await waitFor(() => {
+        expect(restartedProvider.result.current.user).toEqual(confirmedUser);
+      });
+      expect(restartedProvider.result.current.isAuthenticated).toBe(true);
+      expect(
+        restartedProvider.result.current.bootstrapRecoveryReason
+      ).toBeNull();
+      expect(authStorage.hasStoredUser()).toBe(true);
+    } finally {
+      consoleWarnSpy.mockRestore();
+      vaultClearSpy.mockRestore();
+    }
   });
 
   it("skips stored-session revalidation when the native bridge reports the device offline", async () => {
@@ -1562,6 +1660,9 @@ describe("useAuth", () => {
         404
       )
     );
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -1574,6 +1675,10 @@ describe("useAuth", () => {
 
     expect(result.current.user).toEqual(mockUser);
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy.mock.calls[0]?.[0]).toBe(
+      "Auth bootstrap revalidation failed with a non-retriable response; holding protected routes behind recovery UI."
+    );
   });
 
   it("retries browser-session bootstrap from recovery on /login without a restored user snapshot", async () => {
@@ -1592,6 +1697,9 @@ describe("useAuth", () => {
     mockGetCurrentUser
       .mockRejectedValueOnce(firstFailure)
       .mockResolvedValueOnce(recoveredUser);
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -1612,6 +1720,10 @@ describe("useAuth", () => {
     });
 
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy.mock.calls[0]?.[0]).toBe(
+      "Auth bootstrap revalidation failed with a non-retriable response; holding protected routes behind recovery UI."
+    );
   });
 
   it("does not silently retry an AuthApiError without a numeric status field", async () => {
@@ -1628,6 +1740,9 @@ describe("useAuth", () => {
     mockGetCurrentUser.mockRejectedValueOnce(
       new AuthApiError("Current user fetch failed: non-retriable client error")
     );
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -1640,6 +1755,10 @@ describe("useAuth", () => {
 
     expect(result.current.user).toEqual(mockUser);
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy.mock.calls[0]?.[0]).toBe(
+      "Auth bootstrap revalidation failed with a non-retriable response; holding protected routes behind recovery UI."
+    );
   });
 
   it("does not silently retry API base URL configuration failures", async () => {
@@ -1654,6 +1773,9 @@ describe("useAuth", () => {
     mockGetCurrentUser.mockRejectedValueOnce(
       new ApiBaseUrlConfigurationError("Invalid API base URL")
     );
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -1666,6 +1788,10 @@ describe("useAuth", () => {
 
     expect(result.current.user).toEqual(mockUser);
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+    expect(consoleWarnSpy.mock.calls[0]?.[0]).toBe(
+      "Auth bootstrap revalidation failed with a non-retriable response; holding protected routes behind recovery UI."
+    );
   });
 
   it("stops the loading spinner when the browser goes offline during the automatic bootstrap retry", async () => {
@@ -3486,6 +3612,39 @@ describe("useAuth", () => {
     });
 
     expect(result.current.isAuthenticated).toBe(false);
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+  });
+
+  it("drops a superseded user when another tab requires revalidation", async () => {
+    const storedUser = {
+      id: "stored-user",
+      name: "Stored User",
+      email: "stored-user@secpal.dev",
+      emailVerified: true,
+    };
+    await persistAuthUser(storedUser);
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      localStorage.setItem(AUTH_USER_REVALIDATION_REQUIRED_KEY, "1");
+      const revalidationEvent = new Event("storage");
+      Object.defineProperties(revalidationEvent, {
+        key: { value: AUTH_USER_REVALIDATION_REQUIRED_KEY },
+        newValue: { value: "1" },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
+      window.dispatchEvent(revalidationEvent);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.bootstrapRecoveryReason).toBe("network");
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 

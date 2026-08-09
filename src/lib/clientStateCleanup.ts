@@ -3,7 +3,10 @@
 
 import { clearBrowserPushInstallationId } from "./browserPushState";
 import { db } from "./db";
-import { AUTH_VAULT_STORAGE_KEY } from "./offlineVaultKeys";
+import {
+  AUTH_USER_REVALIDATION_REQUIRED_KEY,
+  AUTH_VAULT_STORAGE_KEY,
+} from "./offlineVaultKeys";
 
 async function loadOfflineVaultModule() {
   return await import("./offlineVault");
@@ -19,6 +22,7 @@ const USER_SCOPED_LOCAL_STORAGE_KEYS = [
   "auth_user",
   "auth_token",
   "secpal-notification-preferences",
+  AUTH_USER_REVALIDATION_REQUIRED_KEY,
   AUTH_VAULT_STORAGE_KEY,
 ] as const;
 

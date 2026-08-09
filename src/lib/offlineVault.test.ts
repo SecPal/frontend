@@ -13,6 +13,7 @@ import {
   listVaultOrganizationalUnits,
   readPersistedAuthUserFromVault,
   clearOfflineVaultTables,
+  storeVaultAnalyticsEvent,
 } from "./offlineVault";
 
 function setCsrfTokenCookie(value: string): void {
@@ -623,7 +624,7 @@ describe("offlineVault", () => {
     );
   });
 
-  it("returns null without clearing vault artifacts when native bridge is unavailable for a native-device-bound envelope", async () => {
+  it("preserves a native-device-bound vault until its wrapper is available again", async () => {
     // Initialize vault with an available native bridge → native-device-bound envelope
     installNativeVaultBridge({
       isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
@@ -639,7 +640,17 @@ describe("offlineVault", () => {
       ),
     });
     await initializeOfflineVault(persistedUser);
+    await storeVaultAnalyticsEvent({
+      type: "page_view",
+      category: "navigation",
+      action: "view_dashboard",
+      timestamp: Date.now(),
+      synced: false,
+      sessionId: "native-session",
+      userId: persistedUser.id,
+    });
 
+    const storedState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
     expect(readStoredVaultState()).toMatchObject({
       wrapper: { kind: "native-device-bound" },
     });
@@ -650,8 +661,30 @@ describe("offlineVault", () => {
 
     // Vault must be locked (null) — not corrupted and not cleared
     await expect(readPersistedAuthUserFromVault()).resolves.toBeNull();
+    await expect(initializeOfflineVault(persistedUser)).rejects.toThrow(
+      "Stored auth vault is temporarily unavailable."
+    );
 
-    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(storedState);
     expect(await db.vaultProfile.count()).toBe(1);
+    expect(await db.vaultAnalytics.count()).toBe(1);
+
+    installNativeVaultBridge({
+      isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
+      wrapVaultRootKey: vi.fn(),
+      unwrapVaultRootKey: vi.fn(
+        async ({ wrappedRootKey }: { wrappedRootKey: string }) => ({
+          rootKeyBase64: wrappedRootKey.replace("wrapped:", ""),
+        })
+      ),
+    });
+    clearOfflineVaultSession();
+
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
+    );
+    await expect(listVaultAnalyticsEvents()).resolves.toEqual([
+      expect.objectContaining({ sessionId: "native-session" }),
+    ]);
   });
 });

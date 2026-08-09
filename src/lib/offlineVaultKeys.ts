@@ -3,3 +3,5 @@
 
 export const AUTH_VAULT_STORAGE_KEY = "auth_vault_state";
 export const AUTH_VAULT_LOCK_KEY = "auth_vault_lock";
+export const AUTH_USER_REVALIDATION_REQUIRED_KEY =
+  "auth_user_revalidation_required";

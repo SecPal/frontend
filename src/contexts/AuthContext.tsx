@@ -33,6 +33,7 @@ import { isRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 import { resetPrefetchCache } from "../hooks/usePrefetch";
 import {
+  AUTH_USER_REVALIDATION_REQUIRED_KEY,
   AUTH_VAULT_STORAGE_KEY,
   AUTH_VAULT_LOCK_KEY,
 } from "../lib/offlineVaultKeys";
@@ -426,6 +427,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       nextUser: User,
       options: AuthStorageWriteOptions = {}
     ): Promise<AuthUserPersistenceResult> => {
+      const revalidationOwnerToken =
+        authStorage.getUserRevalidationOwnerToken();
+
       if (
         authTransport.kind === "browser-session" &&
         getCsrfTokenFromCookie() === null
@@ -436,7 +440,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         rememberCurrentAuthVaultKeyMaterial();
       }
 
-      return authStorage.setUser(nextUser, options);
+      const persistenceResult = await authStorage.setUser(nextUser, options);
+
+      if (persistenceResult.status === "persisted") {
+        authStorage.completeUserRevalidation(revalidationOwnerToken);
+      }
+
+      return persistenceResult;
     },
     [authTransport.kind]
   );
@@ -1031,7 +1041,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     bootstrapRequestVersionRef.current = requestVersion;
 
     const startBootstrapRevalidation = (
-      clearSensitiveStateOnInvalidSession: boolean
+      clearSensitiveStateOnInvalidSession: boolean,
+      restoredUser: User | null = null
     ) => {
       const clearBootstrapToLoggedOutState = () => {
         if (shouldResetPrefetchCacheAfterStorageMismatchRef.current) {
@@ -1098,6 +1109,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             hasLogoutBarrierRef.current
           ) {
             return;
+          }
+
+          if (
+            authTransport.kind === "native-bridge" &&
+            restoredUser !== null &&
+            currentUser.id !== restoredUser.id
+          ) {
+            authStorage.requireUserRevalidation();
+            setUser(null);
+            syncOfflineAuthState(false);
           }
 
           let persistenceResult: AuthUserPersistenceResult;
@@ -1317,7 +1338,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      startBootstrapRevalidation(true);
+      startBootstrapRevalidation(true, storedUser);
     };
 
     void restoreAndRevalidate().catch((error: unknown) => {
@@ -1366,6 +1387,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (event.key === "auth_logout_barrier" && event.newValue !== null) {
         clearAuthenticatedState(true);
+        return;
+      }
+
+      if (
+        event.key === AUTH_USER_REVALIDATION_REQUIRED_KEY &&
+        event.newValue !== null
+      ) {
+        if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
+          reconcileActiveBarrierState();
+          return;
+        }
+
+        invalidateBootstrapRevalidation();
+        setUser(null);
+        setIsVaultLocked(false);
+        setIsLoading(false);
+        setBootstrapRecoveryReason("network");
+        syncOfflineAuthState(false);
         return;
       }
 
