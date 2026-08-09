@@ -12,6 +12,7 @@ import {
   isTransientModuleLoadError,
 } from "../lib/lazyModuleErrors";
 import { clearActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
+import { awaitAbortable } from "../lib/abortablePromise";
 import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
 import { sanitizePersistedAuthUser, type PersistedAuthUser } from "./authState";
 import { getCsrfTokenFromCookie } from "./csrf";
@@ -494,7 +495,10 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   private async clearVaultTables(signal: AbortSignal): Promise<void> {
-    const { clearOfflineVaultTables } = await loadOfflineVaultModule();
+    const { clearOfflineVaultTables } = await awaitAbortable(
+      loadOfflineVaultModule(),
+      signal
+    );
     signal.throwIfAborted();
     await clearOfflineVaultTables({ signal });
   }
@@ -541,14 +545,6 @@ class LocalStorageAuthStorage implements AuthStorage {
   private handleStoredUserError(message: string, error: unknown): null {
     console.error(message, error);
     return this.clearInvalidStoredUser();
-  }
-
-  private async handleStoredUserErrorAsync(
-    message: string,
-    error: unknown
-  ): Promise<null> {
-    console.error(message, error);
-    return this.clearInvalidStoredUserAsync();
   }
 
   getUserSnapshot(): User | null {
@@ -627,6 +623,9 @@ class LocalStorageAuthStorage implements AuthStorage {
 
     const storedUser = localStorage.getItem(this.USER_KEY);
     if (!storedUser) return null;
+    let clearInvalidOfflineVaultArtifacts:
+      | typeof import("../lib/offlineVault").clearInvalidOfflineVaultArtifacts
+      | undefined;
 
     try {
       const sanitizedUser = await decryptPersistedAuthUser(storedUser);
@@ -639,7 +638,8 @@ class LocalStorageAuthStorage implements AuthStorage {
       let initializeOfflineVault: typeof import("../lib/offlineVault").initializeOfflineVault;
 
       try {
-        ({ initializeOfflineVault } = await loadOfflineVaultModule());
+        ({ initializeOfflineVault, clearInvalidOfflineVaultArtifacts } =
+          await loadOfflineVaultModule());
         signal?.throwIfAborted();
       } catch (error) {
         if (isTransientModuleLoadError(error)) {
@@ -665,10 +665,9 @@ class LocalStorageAuthStorage implements AuthStorage {
         throw error;
       }
 
-      return this.handleStoredUserErrorAsync(
-        "Failed to parse stored user data:",
-        error
-      );
+      console.error("Failed to parse stored user data:", error);
+      await clearInvalidOfflineVaultArtifacts?.({ signal });
+      return this.clearInvalidStoredUserAsync();
     }
   }
 
@@ -753,7 +752,10 @@ class LocalStorageAuthStorage implements AuthStorage {
 
     const controller = new AbortController();
     this.activeCleanupController = controller;
-    const cleanup = this.removeUserWithSignal(options, controller.signal)
+    const cleanup = awaitAbortable(
+      this.removeUserWithSignal(options, controller.signal),
+      controller.signal
+    )
       .catch((error: unknown) => {
         if (!isAbortError(error)) {
           throw error;
@@ -786,7 +788,10 @@ class LocalStorageAuthStorage implements AuthStorage {
       shouldClearOfflineVaultTables &&
       !hasLogoutBarrier &&
       !shouldHonorBarrierSkipUpgrade
-        ? this.clearVaultTables(signal)
+        ? this.clearVaultTables(signal).then(
+            () => ({ status: "completed" as const }),
+            (error: unknown) => ({ status: "failed" as const, error })
+          )
         : null;
 
     this.clearStoredUserMarkers();
@@ -814,7 +819,15 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
 
     try {
-      await (cleanupPromise ?? this.clearVaultTables(signal));
+      const cleanupResult = cleanupPromise
+        ? await cleanupPromise
+        : await this.clearVaultTables(signal).then(() => ({
+            status: "completed" as const,
+          }));
+
+      if (cleanupResult.status === "failed") {
+        throw cleanupResult.error;
+      }
     } catch (error: unknown) {
       if (isAbortError(error)) {
         throw error;

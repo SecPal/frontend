@@ -323,6 +323,72 @@ describe("offlineVault", () => {
     expect(await db.vaultAnalytics.count()).toBe(0);
   });
 
+  it("rolls back all legacy migrations when a sibling migration is superseded", async () => {
+    await db.analytics.add({
+      type: "page_view",
+      category: "navigation",
+      action: "view_dashboard",
+      timestamp: Date.now(),
+      synced: false,
+      sessionId: "session-1",
+      userId: persistedUser.id,
+    });
+    await db.organizationalUnitCache.put({
+      id: "org-1",
+      type: "company",
+      name: "SecPal GmbH",
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-02T00:00:00Z",
+      cachedAt: new Date("2026-01-03T00:00:00Z"),
+      lastSynced: new Date("2026-01-03T00:00:00Z"),
+      parent_id: null,
+      parent: null,
+    });
+
+    const organizationalUnitWriteStarted = createDeferredPromise<void>();
+    const releaseOrganizationalUnitWrite = createDeferredPromise<void>();
+    vi.spyOn(db.vaultOrganizationalUnitCache, "bulkPut").mockImplementationOnce(
+      () => {
+        organizationalUnitWriteStarted.resolve();
+        return Dexie.waitFor(releaseOrganizationalUnitWrite.promise).then(
+          () => "org-1"
+        ) as unknown as ReturnType<
+          typeof db.vaultOrganizationalUnitCache.bulkPut
+        >;
+      }
+    );
+
+    const controller = new AbortController();
+    const initialization = initializeOfflineVault(persistedUser, {
+      signal: controller.signal,
+    });
+
+    await organizationalUnitWriteStarted.promise;
+
+    controller.abort();
+    releaseOrganizationalUnitWrite.resolve();
+
+    await expect(initialization).rejects.toMatchObject({ name: "AbortError" });
+    expect(await db.analytics.count()).toBe(1);
+    expect(await db.vaultAnalytics.count()).toBe(0);
+    expect(await db.organizationalUnitCache.count()).toBe(1);
+    expect(await db.vaultOrganizationalUnitCache.count()).toBe(0);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+
+    await initializeOfflineVault(persistedUser);
+
+    expect(await db.analytics.count()).toBe(0);
+    expect(await db.vaultAnalytics.count()).toBe(1);
+    expect(await db.organizationalUnitCache.count()).toBe(0);
+    expect(await db.vaultOrganizationalUnitCache.count()).toBe(1);
+    await expect(listVaultAnalyticsEvents()).resolves.toEqual([
+      expect.objectContaining({ sessionId: "session-1" }),
+    ]);
+    await expect(listVaultOrganizationalUnits()).resolves.toEqual([
+      expect.objectContaining({ id: "org-1" }),
+    ]);
+  });
+
   it("removes invalid vault state from localStorage when JSON is malformed", async () => {
     localStorage.setItem(AUTH_VAULT_STORAGE_KEY, "not-valid-json{{{");
 

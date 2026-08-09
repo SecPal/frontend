@@ -25,6 +25,7 @@ import {
   setActiveOfflineVaultSession,
 } from "./offlineVaultRuntime";
 import { isCapacitorNativeRuntime } from "./nativeRuntime";
+import { awaitAbortable as awaitVaultOperation } from "./abortablePromise";
 export {
   AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
@@ -126,30 +127,6 @@ export interface OfflineVaultOperationOptions {
 
 function throwIfVaultOperationAborted(signal?: AbortSignal): void {
   signal?.throwIfAborted();
-}
-
-async function awaitVaultOperation<T>(
-  operation: Promise<T>,
-  signal?: AbortSignal
-): Promise<T> {
-  throwIfVaultOperationAborted(signal);
-
-  if (!signal) {
-    return operation;
-  }
-
-  let rejectAbort!: (reason: unknown) => void;
-  const aborted = new Promise<never>((_resolve, reject) => {
-    rejectAbort = reject;
-  });
-  const abort = () => rejectAbort(signal.reason);
-  signal.addEventListener("abort", abort, { once: true });
-
-  try {
-    return await Promise.race([operation, aborted]);
-  } finally {
-    signal.removeEventListener("abort", abort);
-  }
 }
 
 type VaultAnalyticsPayload = Omit<
@@ -470,7 +447,7 @@ export async function clearOfflineVaultTables(
   );
 }
 
-async function clearInvalidOfflineVaultArtifacts(
+export async function clearInvalidOfflineVaultArtifacts(
   options: OfflineVaultOperationOptions = {}
 ): Promise<void> {
   await ensureVaultDatabaseOpen();
@@ -1541,12 +1518,11 @@ async function ensureVaultSessionForUser(
   };
 }
 
-async function persistProfileRecord(
+async function buildEncryptedProfileRecord(
   user: PersistedAuthUser,
   session: VaultSession,
   signal?: AbortSignal
-): Promise<void> {
-  await ensureVaultDatabaseOpen();
+): Promise<EncryptedProfileRecord> {
   throwIfVaultOperationAborted(signal);
 
   const encryptedRecord = await encryptVaultRecord(
@@ -1557,31 +1533,20 @@ async function persistProfileRecord(
   );
   throwIfVaultOperationAborted(signal);
 
-  await db.transaction("rw", db.vaultProfile, async () => {
-    await awaitVaultOperation(
-      db.vaultProfile.put({
-        id: PROFILE_RECORD_ID,
-        ...encryptedRecord,
-      } satisfies EncryptedProfileRecord),
-      signal
-    );
-    throwIfVaultOperationAborted(signal);
-  });
+  return {
+    id: PROFILE_RECORD_ID,
+    ...encryptedRecord,
+  } satisfies EncryptedProfileRecord;
 }
 
-async function migrateLegacyAnalyticsRecords(
+async function buildLegacyAnalyticsMigrationRecords(
   session: VaultSession,
   signal?: AbortSignal
-): Promise<void> {
-  await ensureVaultDatabaseOpen();
+): Promise<Array<Omit<VaultAnalyticsRecord, "id">>> {
   throwIfVaultOperationAborted(signal);
 
   const legacyRecords = await db.analytics.toArray();
   throwIfVaultOperationAborted(signal);
-
-  if (legacyRecords.length === 0) {
-    return;
-  }
 
   const encryptedRecords = await Promise.all(
     legacyRecords.map(async (record) => {
@@ -1608,6 +1573,24 @@ async function migrateLegacyAnalyticsRecords(
       } satisfies Omit<VaultAnalyticsRecord, "id">;
     })
   );
+  throwIfVaultOperationAborted(signal);
+
+  return encryptedRecords;
+}
+
+async function migrateLegacyAnalyticsRecords(
+  session: VaultSession,
+  signal?: AbortSignal
+): Promise<void> {
+  await ensureVaultDatabaseOpen();
+  const encryptedRecords = await buildLegacyAnalyticsMigrationRecords(
+    session,
+    signal
+  );
+
+  if (encryptedRecords.length === 0) {
+    return;
+  }
 
   await db.transaction("rw", [db.vaultAnalytics, db.analytics], async () => {
     throwIfVaultOperationAborted(signal);
@@ -1621,19 +1604,14 @@ async function migrateLegacyAnalyticsRecords(
   });
 }
 
-async function migrateLegacyOrganizationalUnitRecords(
+async function buildLegacyOrganizationalUnitMigrationRecords(
   session: VaultSession,
   signal?: AbortSignal
-): Promise<void> {
-  await ensureVaultDatabaseOpen();
+): Promise<VaultOrganizationalUnitCacheRecord[]> {
   throwIfVaultOperationAborted(signal);
 
   const legacyRecords = await db.organizationalUnitCache.toArray();
   throwIfVaultOperationAborted(signal);
-
-  if (legacyRecords.length === 0) {
-    return;
-  }
 
   const encryptedRecords = await Promise.all(
     legacyRecords.map(async (record) => {
@@ -1653,11 +1631,30 @@ async function migrateLegacyOrganizationalUnitRecords(
       } satisfies VaultOrganizationalUnitCacheRecord;
     })
   );
+  throwIfVaultOperationAborted(signal);
+
+  return encryptedRecords;
+}
+
+async function migrateLegacyOrganizationalUnitRecords(
+  session: VaultSession,
+  signal?: AbortSignal
+): Promise<void> {
+  await ensureVaultDatabaseOpen();
+  const encryptedRecords = await buildLegacyOrganizationalUnitMigrationRecords(
+    session,
+    signal
+  );
+
+  if (encryptedRecords.length === 0) {
+    return;
+  }
 
   await db.transaction(
     "rw",
     [db.vaultOrganizationalUnitCache, db.organizationalUnitCache],
     async () => {
+      throwIfVaultOperationAborted(signal);
       await awaitVaultOperation(
         db.vaultOrganizationalUnitCache.bulkPut(encryptedRecords),
         signal
@@ -1665,6 +1662,59 @@ async function migrateLegacyOrganizationalUnitRecords(
       throwIfVaultOperationAborted(signal);
       await awaitVaultOperation(db.organizationalUnitCache.clear(), signal);
       throwIfVaultOperationAborted(signal);
+    }
+  );
+}
+
+async function persistInitialVaultRecords(
+  user: PersistedAuthUser,
+  session: VaultSession,
+  signal?: AbortSignal
+): Promise<void> {
+  await ensureVaultDatabaseOpen();
+  throwIfVaultOperationAborted(signal);
+
+  const [profileRecord, analyticsRecords, organizationalUnitRecords] =
+    await Promise.all([
+      buildEncryptedProfileRecord(user, session, signal),
+      buildLegacyAnalyticsMigrationRecords(session, signal),
+      buildLegacyOrganizationalUnitMigrationRecords(session, signal),
+    ]);
+  throwIfVaultOperationAborted(signal);
+
+  await db.transaction(
+    "rw",
+    [
+      db.vaultProfile,
+      db.vaultAnalytics,
+      db.analytics,
+      db.vaultOrganizationalUnitCache,
+      db.organizationalUnitCache,
+    ],
+    async () => {
+      throwIfVaultOperationAborted(signal);
+      await awaitVaultOperation(db.vaultProfile.put(profileRecord), signal);
+      throwIfVaultOperationAborted(signal);
+
+      if (analyticsRecords.length > 0) {
+        await awaitVaultOperation(
+          db.vaultAnalytics.bulkPut(analyticsRecords),
+          signal
+        );
+        throwIfVaultOperationAborted(signal);
+        await awaitVaultOperation(db.analytics.clear(), signal);
+        throwIfVaultOperationAborted(signal);
+      }
+
+      if (organizationalUnitRecords.length > 0) {
+        await awaitVaultOperation(
+          db.vaultOrganizationalUnitCache.bulkPut(organizationalUnitRecords),
+          signal
+        );
+        throwIfVaultOperationAborted(signal);
+        await awaitVaultOperation(db.organizationalUnitCache.clear(), signal);
+        throwIfVaultOperationAborted(signal);
+      }
     }
   );
 }
@@ -1679,11 +1729,7 @@ export async function initializeOfflineVault(
     signal
   );
 
-  await persistProfileRecord(user, session, signal);
-  await Promise.all([
-    migrateLegacyAnalyticsRecords(session, signal),
-    migrateLegacyOrganizationalUnitRecords(session, signal),
-  ]);
+  await persistInitialVaultRecords(user, session, signal);
   throwIfVaultOperationAborted(signal);
 
   if (pendingStoredState) {

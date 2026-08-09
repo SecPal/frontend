@@ -1231,6 +1231,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               user: await authStorage.getUser(),
             };
 
+      if (!isActive || bootstrapRequestVersionRef.current !== requestVersion) {
+        return;
+      }
+
+      if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
+        reconcileActiveBarrierState();
+        return;
+      }
+
       if (storedUserResult.status === "timed-out") {
         setUser(null);
         setIsVaultLocked(false);
@@ -1241,15 +1250,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const storedUser = storedUserResult.user;
-
-      if (!isActive || bootstrapRequestVersionRef.current !== requestVersion) {
-        return;
-      }
-
-      if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
-        reconcileActiveBarrierState();
-        return;
-      }
 
       if (!storedUser) {
         const shouldBootstrapWithoutStoredUser =

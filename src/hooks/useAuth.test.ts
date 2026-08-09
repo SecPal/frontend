@@ -477,7 +477,9 @@ describe("useAuth", () => {
     const getUserSpy = vi
       .spyOn(authStorage, "getUser")
       .mockImplementationOnce(() => new Promise(() => undefined));
-    localStorage.setItem(AUTH_VAULT_STORAGE_KEY, "stored-vault");
+    const hasStoredUserSpy = vi
+      .spyOn(authStorage, "hasStoredUser")
+      .mockReturnValue(true);
     vi.useFakeTimers();
 
     try {
@@ -492,6 +494,49 @@ describe("useAuth", () => {
       expect(result.current.bootstrapRecoveryReason).toBe("timeout");
       expect(native.getCurrentUser).not.toHaveBeenCalled();
     } finally {
+      hasStoredUserSpy.mockRestore();
+      getUserSpy.mockRestore();
+    }
+  });
+
+  it("ignores a stale native vault restoration timeout after logout", async () => {
+    installNativeAuthBridge();
+    const getUserSpy = vi
+      .spyOn(authStorage, "getUser")
+      .mockImplementationOnce(() => new Promise(() => undefined));
+    const hasStoredUserSpy = vi
+      .spyOn(authStorage, "hasStoredUser")
+      .mockReturnValue(true);
+    vi.useFakeTimers();
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      expect(result.current.isLoading).toBe(true);
+
+      act(() => {
+        void result.current.logout();
+      });
+
+      expect(result.current.bootstrapRecoveryReason).toBeNull();
+      expect(result.current.isLoading).toBe(false);
+      const offlineSyncCallCountAfterLogout = vi.mocked(
+        syncOfflineSessionAccess
+      ).mock.calls.length;
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+      });
+
+      expect(result.current.bootstrapRecoveryReason).toBeNull();
+      expect(result.current.isLoading).toBe(false);
+      expect(syncOfflineSessionAccess).toHaveBeenCalledTimes(
+        offlineSyncCallCountAfterLogout
+      );
+    } finally {
+      hasStoredUserSpy.mockRestore();
       getUserSpy.mockRestore();
     }
   });
@@ -1639,34 +1684,44 @@ describe("useAuth", () => {
     // the browser is offline, so revalidation must be skipped without
     // leaving protected routes spinning.
     mockGetCurrentUser.mockReturnValueOnce(new Promise(() => undefined));
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+    const onLineSpy = vi
+      .spyOn(window.navigator, "onLine", "get")
+      .mockReturnValue(true);
+    vi.useFakeTimers();
 
-    const { result } = renderHook(() => useAuth(), {
+    const { result, unmount } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
 
-    expect(result.current.isLoading).toBe(true);
-
-    await waitFor(() => {
-      expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
-    });
-
-    const onLineSpy = vi
-      .spyOn(window.navigator, "onLine", "get")
-      .mockReturnValue(false);
-
     try {
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      }, BOOTSTRAP_REVALIDATION_TIMEOUT_MS + 2_000);
+      expect(result.current.isLoading).toBe(true);
+      await vi.waitFor(() => {
+        expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+      });
+      onLineSpy.mockReturnValue(false);
 
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+      });
+
+      await vi.waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
       expect(result.current.user).toEqual(mockUser);
       expect(result.current.isAuthenticated).toBe(true);
       expect(result.current.bootstrapRecoveryReason).toBeNull();
       // The offline shortcut must not issue another revalidation after the
       // automatic retry re-runs the bootstrap effect.
       expect(mockGetCurrentUser).toHaveBeenCalledTimes(1);
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
     } finally {
+      unmount();
       onLineSpy.mockRestore();
+      consoleWarnSpy.mockRestore();
+      vi.useRealTimers();
     }
   });
 

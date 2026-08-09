@@ -320,6 +320,64 @@ describe("authStorage", () => {
     }
   });
 
+  it("purges orphaned vault and legacy rows when legacy auth migration fails", async () => {
+    const legacyUser = {
+      id: "1",
+      name: "Legacy User",
+      email: "legacy@secpal.dev",
+      emailVerified: false,
+    };
+    const migrationFailure = new Error("Simulated vault migration failure");
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const initializeOfflineVaultSpy = vi
+      .spyOn(offlineVault, "initializeOfflineVault")
+      .mockImplementationOnce(async () => {
+        await db.vaultProfile.put({
+          id: "profile",
+          recordId: "profile",
+          version: 1,
+          ciphertext: "orphaned-profile",
+          iv: "orphaned-iv",
+          authTag: "orphaned-tag",
+        });
+        await db.analytics.add({
+          type: "page_view",
+          category: "navigation",
+          action: "view_dashboard",
+          timestamp: Date.now(),
+          synced: false,
+          sessionId: "legacy-session",
+          userId: legacyUser.id,
+        });
+        throw migrationFailure;
+      });
+
+    try {
+      localStorage.setItem(
+        "auth_user",
+        await createEncryptedEnvelope(legacyUser, "test-csrf-token", {
+          version: CURRENT_AUTH_STORAGE_VERSION,
+          iterations: CURRENT_AUTH_STORAGE_PBKDF2_ITERATIONS,
+        })
+      );
+
+      await expect(authStorage.getUser()).resolves.toBeNull();
+
+      expect(localStorage.getItem("auth_user")).toBeNull();
+      expect(await db.vaultProfile.count()).toBe(0);
+      expect(await db.analytics.count()).toBe(0);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Failed to parse stored user data:",
+        migrationFailure
+      );
+    } finally {
+      initializeOfflineVaultSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
   it("clears invalid JSON snapshots and logs the parse failure", () => {
     const consoleErrorSpy = vi
       .spyOn(console, "error")
@@ -900,6 +958,34 @@ describe("authStorage", () => {
     } finally {
       vi.useRealTimers();
       consoleWarnSpy.mockRestore();
+    }
+  });
+
+  it("aborts cleanup while the offline vault module is still loading", async () => {
+    const moduleLoadStarted = createDeferredPromise<void>();
+    const releaseModuleLoad = createDeferredPromise<typeof offlineVault>();
+
+    vi.resetModules();
+    vi.doMock("../lib/offlineVault", () => {
+      moduleLoadStarted.resolve();
+      return releaseModuleLoad.promise;
+    });
+
+    const { authStorage: isolatedAuthStorage } = await import("./storage");
+    const cleanup = isolatedAuthStorage.removeUser();
+
+    try {
+      await moduleLoadStarted.promise;
+
+      await expect(
+        isolatedAuthStorage.abortPendingVaultCleanup()
+      ).resolves.toBeUndefined();
+      await expect(cleanup).resolves.toBeUndefined();
+    } finally {
+      releaseModuleLoad.resolve(offlineVault);
+      await Promise.allSettled([cleanup]);
+      vi.doUnmock("../lib/offlineVault");
+      vi.resetModules();
     }
   });
 });

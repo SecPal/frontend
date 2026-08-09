@@ -89,6 +89,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   local user snapshot, while preserving logout barriers, treating missing or
   unauthorized native tokens as logged out, and retaining retryable native
   sessions when secure persistence or connectivity is temporarily unavailable.
+  Stale native vault-read timeouts can no longer override a newer logout, and
+  initial profile and legacy-data persistence now commit atomically so a
+  superseded migration cannot orphan encrypted records.
 - Isolated AuthContext tests from shared offline-vault state and awaited the
   complete login handoff before teardown, so filtered runs no longer leave a
   rejected vault persistence task. Closes #1629.
