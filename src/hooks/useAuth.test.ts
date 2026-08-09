@@ -964,7 +964,7 @@ describe("useAuth", () => {
     await waitForSensitiveClientCleanup();
   });
 
-  it("skips vault-table cleanup when logout lands during bootstrap setUser", async () => {
+  it("serializes bootstrap barrier reconciliation behind sensitive logout cleanup", async () => {
     const mockUser = {
       id: "1",
       name: "Test User",
@@ -988,6 +988,8 @@ describe("useAuth", () => {
     vi.mocked(clearSensitiveClientState).mockImplementationOnce(
       () => sensitiveCleanupDeferred.promise
     );
+
+    let logoutPromise: Promise<void> | null = null;
 
     try {
       await actualSetUser(mockUser);
@@ -1015,7 +1017,7 @@ describe("useAuth", () => {
       });
 
       act(() => {
-        result.current.logout();
+        logoutPromise = Promise.resolve(result.current.logout());
       });
 
       expect(removeUserSpy).toHaveBeenNthCalledWith(
@@ -1028,21 +1030,25 @@ describe("useAuth", () => {
         await Promise.resolve();
       });
 
+      expect(removeUserSpy).toHaveBeenCalledTimes(1);
+      await waitForSensitiveClientCleanup();
+
+      await act(async () => {
+        sensitiveCleanupDeferred.resolve();
+        await logoutPromise;
+      });
+
       await waitFor(() => {
         expect(removeUserSpy).toHaveBeenCalledTimes(2);
       });
-
       expect(removeUserSpy).toHaveBeenNthCalledWith(
         2,
-        expect.objectContaining({ clearOfflineVaultTables: false })
+        expect.objectContaining({ clearOfflineVaultTables: true })
       );
-
-      await waitForSensitiveClientCleanup();
-      await act(async () => {
-        sensitiveCleanupDeferred.resolve();
-        await Promise.resolve();
-      });
     } finally {
+      setUserDeferred.resolve();
+      sensitiveCleanupDeferred.resolve();
+      await Promise.allSettled([logoutPromise]);
       setUserSpy.mockRestore();
       removeUserSpy.mockRestore();
     }
@@ -2615,14 +2621,16 @@ describe("useAuth", () => {
           clearOfflineVaultTables: true,
         });
       });
+      expect(clearSpy).toHaveBeenCalledTimes(1);
       expect(syncOfflineSessionAccess).toHaveBeenNthCalledWith(1, false, {
         redirectOpenClients: false,
       });
 
       expect(clearSensitiveClientState).not.toHaveBeenCalled();
 
+      let logoutPromise!: Promise<void>;
       act(() => {
-        result.current.logout();
+        logoutPromise = Promise.resolve(result.current.logout());
       });
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -2634,8 +2642,10 @@ describe("useAuth", () => {
         redirectOpenClients: true,
       });
 
-      storageClear.resolve();
-
+      await act(async () => {
+        storageClear.resolve();
+        await logoutPromise;
+      });
       await waitForSensitiveClientCleanup();
       expect(syncOfflineSessionAccess).toHaveBeenCalledTimes(2);
     } finally {
@@ -2893,37 +2903,47 @@ describe("useAuth", () => {
       expect(secondAuth.result.current.isAuthenticated).toBe(true);
     });
 
-    act(() => {
-      firstAuth.result.current.logout();
-      secondAuth.result.current.logout();
-    });
+    let firstLogout: Promise<void> | null = null;
+    let secondLogout: Promise<void> | null = null;
 
-    await waitForSensitiveClientCleanup(2);
+    try {
+      act(() => {
+        firstLogout = Promise.resolve(firstAuth.result.current.logout());
+        secondLogout = Promise.resolve(secondAuth.result.current.logout());
+      });
 
-    expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
-      "1"
-    );
+      await waitForSensitiveClientCleanup();
 
-    await act(async () => {
+      expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+        "1"
+      );
+
+      await act(async () => {
+        firstSensitiveCleanup.resolve();
+        await Promise.resolve();
+      });
+
+      await waitForSensitiveClientCleanup(2);
+      expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
+        "1"
+      );
+
+      await act(async () => {
+        secondSensitiveCleanup.resolve();
+        await Promise.all([firstLogout, secondLogout]);
+      });
+
+      await waitFor(() => {
+        expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
+        expect(
+          localStorage.getItem("auth_logout_skip_vault_table_cleanup")
+        ).toBeNull();
+      });
+    } finally {
       firstSensitiveCleanup.resolve();
-      await Promise.resolve();
-    });
-
-    expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
-      "1"
-    );
-
-    await act(async () => {
       secondSensitiveCleanup.resolve();
-      await Promise.resolve();
-    });
-
-    await waitFor(() => {
-      expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
-      expect(
-        localStorage.getItem("auth_logout_skip_vault_table_cleanup")
-      ).toBeNull();
-    });
+      await Promise.allSettled([firstLogout, secondLogout]);
+    }
   });
 
   it("locks the vault locally without deleting wrapped offline data and unlocks it again", async () => {

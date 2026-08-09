@@ -116,6 +116,7 @@ const {
         skipVaultTableCleanup = true;
         return "test-logout-barrier-owner";
       }),
+      waitForSensitiveLogoutCleanupLock: vi.fn(async () => undefined),
       completeStaleSensitiveLogoutBarrierCleanup: vi.fn(() => {
         skipVaultTableCleanup = false;
       }),
@@ -1862,15 +1863,18 @@ describe("App", () => {
       hasSiteAccess: false,
     };
 
+    const bootstrapError = new AuthApiError(
+      "Current user fetch failed: expected application/json response from API",
+      undefined,
+      404
+    );
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
     window.history.replaceState({}, "", "/");
     mockGetCurrentUser
-      .mockRejectedValueOnce(
-        new AuthApiError(
-          "Current user fetch failed: expected application/json response from API",
-          undefined,
-          404
-        )
-      )
+      .mockRejectedValueOnce(bootstrapError)
       .mockResolvedValueOnce(recoveredUser);
 
     await renderWithI18n(<App />);
@@ -1906,18 +1910,26 @@ describe("App", () => {
         { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
       )
     ).toBeInTheDocument();
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Auth bootstrap revalidation failed with a non-retriable response; holding protected routes behind recovery UI.",
+      bootstrapError
+    );
+    consoleWarnSpy.mockRestore();
   });
 
   it("keeps protected deep links during bootstrap recovery and retry", async () => {
-    window.history.replaceState({}, "", "/customers/new");
-    mockGetCurrentUser.mockRejectedValue(
-      new AuthApiError(
-        "Current user fetch failed: Network down",
-        undefined,
-        undefined,
-        "NETWORK_ERROR"
-      )
+    const bootstrapError = new AuthApiError(
+      "Current user fetch failed: Network down",
+      undefined,
+      undefined,
+      "NETWORK_ERROR"
     );
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
+    window.history.replaceState({}, "", "/customers/new");
+    mockGetCurrentUser.mockRejectedValue(bootstrapError);
 
     await renderWithI18n(<App />);
 
@@ -1956,22 +1968,30 @@ describe("App", () => {
       )
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/customers/new");
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Auth bootstrap revalidation failed; holding protected routes behind recovery UI.",
+      bootstrapError
+    );
+    consoleWarnSpy.mockRestore();
   });
 
   it("keeps stale protected-route bootstrap recovery on the protected route instead of redirecting", async () => {
+    const bootstrapError = new AuthApiError(
+      "Current user fetch failed: expected application/json response from API",
+      undefined,
+      404
+    );
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
     window.history.replaceState({}, "", "/");
     mockAuthStorage.hasStoredUser
       .mockImplementationOnce(() => true)
       .mockImplementationOnce(() => true)
       .mockImplementationOnce(() => true);
     mockAuthStorage.getUser.mockResolvedValueOnce(null);
-    mockGetCurrentUser.mockRejectedValueOnce(
-      new AuthApiError(
-        "Current user fetch failed: expected application/json response from API",
-        undefined,
-        404
-      )
-    );
+    mockGetCurrentUser.mockRejectedValueOnce(bootstrapError);
 
     await renderWithI18n(<App />);
 
@@ -1982,6 +2002,11 @@ describe("App", () => {
         name: /still loading your secure session/i,
       })
     ).toBeInTheDocument();
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Auth bootstrap revalidation failed with a non-retriable response; holding protected routes behind recovery UI.",
+      bootstrapError
+    );
+    consoleWarnSpy.mockRestore();
   });
 
   it("shows not found for activity-logs when the user cannot discover that feature", async () => {

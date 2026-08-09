@@ -15,6 +15,7 @@ import {
   type VaultOrganizationalUnitCacheRecord,
 } from "./db";
 import {
+  AUTH_VAULT_LIFECYCLE_LOCK_NAME,
   AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
 } from "./offlineVaultKeys";
@@ -51,7 +52,6 @@ const VAULT_RECORD_TAG_BYTES = 16;
 const NATIVE_VAULT_WRAPPING_KEY_ID = "native-auth-vault";
 const RECENT_AUTH_VAULT_KEY_MATERIALS_MAX = 3;
 const PROFILE_RECORD_ID = "profile";
-const VAULT_INITIALIZATION_LOCK_NAME = "secpal-auth-vault-initialization";
 const ROOT_ORGANIZATIONAL_UNIT_PARENT_LOOKUP_KEY = "__root__";
 
 const textEncoder = new TextEncoder();
@@ -1819,7 +1819,7 @@ export async function initializeOfflineVault(
   }
 
   await lockManager.request(
-    VAULT_INITIALIZATION_LOCK_NAME,
+    AUTH_VAULT_LIFECYCLE_LOCK_NAME,
     { mode: "exclusive", signal },
     async () => {
       throwIfVaultOperationCannotCommit(signal, shouldCommit);

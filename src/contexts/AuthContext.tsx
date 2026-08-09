@@ -633,19 +633,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         destructiveSensitiveLogoutCleanupPromise = (async () => {
+          const activeSensitiveLogoutCleanupOwnerToken =
+            sensitiveLogoutCleanupOwnerToken ??
+            sensitiveLogoutBarrierCleanupOwnerTokenRef.current;
+
           try {
-            await authStorage.waitForInFlightVaultTableCleanup();
-          } catch (error: unknown) {
-            console.warn(
-              "Failed while waiting for in-flight vault cleanup during logout:",
-              error
+            try {
+              await authStorage.waitForSensitiveLogoutCleanupLock(
+                activeSensitiveLogoutCleanupOwnerToken
+              );
+              await authStorage.waitForInFlightVaultTableCleanup();
+            } catch (error: unknown) {
+              console.warn(
+                "Failed while waiting for in-flight vault cleanup during logout:",
+                error
+              );
+            }
+
+            await clearDestructiveSensitiveClientState();
+          } finally {
+            endSensitiveLogoutBarrierCleanup(
+              activeSensitiveLogoutCleanupOwnerToken
             );
           }
-
-          await clearDestructiveSensitiveClientState();
-        })().finally(() => {
-          endSensitiveLogoutBarrierCleanup(sensitiveLogoutCleanupOwnerToken);
-        });
+        })();
 
         return destructiveSensitiveLogoutCleanupPromise;
       };

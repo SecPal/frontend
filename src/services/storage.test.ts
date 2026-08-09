@@ -14,6 +14,7 @@ import {
 import * as offlineVault from "../lib/offlineVault";
 import { db } from "../lib/db";
 import { getActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
+import { AUTH_VAULT_LIFECYCLE_LOCK_NAME } from "../lib/offlineVaultKeys";
 
 const AUTH_STORAGE_SCHEME = "pbkdf2-aes-cbc-hmac-sha256";
 const LEGACY_AUTH_STORAGE_VERSION = 1;
@@ -333,13 +334,14 @@ describe("authStorage", () => {
 
     const unlock = authStorage.unlockVault();
     await readStarted.promise;
-    authStorage.beginSensitiveLogoutBarrierCleanup();
+    const cleanupOwnerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
     releaseRead.resolve();
 
     await expect(unlock).resolves.toEqual({ status: "empty" });
     expect(authStorage.hasLogoutBarrier()).toBe(true);
     expect(authStorage.hasVaultLock()).toBe(false);
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    authStorage.endSensitiveLogoutBarrierCleanup(cleanupOwnerToken);
   });
 
   it("reports an unexpected IndexedDB AbortError as a persistence failure", async () => {
@@ -405,12 +407,13 @@ describe("authStorage", () => {
       emailVerified: false,
     });
     await persistenceStarted.promise;
-    authStorage.beginSensitiveLogoutBarrierCleanup();
+    const cleanupOwnerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
     expect(persistenceSignal?.aborted).toBe(true);
     releasePersistence.resolve();
 
     await expect(persistence).resolves.toEqual({ status: "superseded" });
     expect(authStorage.hasLogoutBarrier()).toBe(true);
+    authStorage.endSensitiveLogoutBarrierCleanup(cleanupOwnerToken);
   });
 
   it("rolls back vault records when another tab logs out during persistence", async () => {
@@ -1043,8 +1046,13 @@ describe("authStorage", () => {
 
     await authStorage.setUser(user);
 
-    const staleOwnerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
-    await authStorage.clear({ clearOfflineVaultTables: false });
+    const staleOwnerToken = "closed-context";
+    localStorage.setItem("auth_logout_barrier", "stale-barrier");
+    localStorage.setItem("auth_logout_skip_vault_table_cleanup", "1");
+    localStorage.setItem(
+      `${SENSITIVE_LOGOUT_CLEANUP_OWNER_KEY_PREFIX}${staleOwnerToken}`,
+      "1"
+    );
 
     expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
     expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
@@ -1091,6 +1099,129 @@ describe("authStorage", () => {
     );
   });
 
+  it("waits for cross-tab destructive logout cleanup before persisting a new user", async () => {
+    const lockRequestSpy = vi.spyOn(navigator.locks, "request");
+    const cleanupOwnerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
+    const cleanupLockAcquired = createDeferredPromise<void>();
+    const releaseCleanup = createDeferredPromise<void>();
+    let cleanup: Promise<void> | null = null;
+    let persistence: Promise<unknown> | null = null;
+
+    try {
+      expect(lockRequestSpy).toHaveBeenCalledTimes(1);
+
+      cleanup = (async () => {
+        await authStorage.waitForSensitiveLogoutCleanupLock(cleanupOwnerToken);
+        cleanupLockAcquired.resolve();
+        await releaseCleanup.promise;
+        await db.delete();
+        authStorage.endSensitiveLogoutBarrierCleanup(cleanupOwnerToken);
+      })();
+      await cleanupLockAcquired.promise;
+
+      let persistenceSettled = false;
+      persistence = authStorage
+        .setUser({
+          id: "next-user",
+          name: "Next User",
+          email: "next-user@secpal.dev",
+          emailVerified: true,
+        })
+        .then((result) => {
+          persistenceSettled = true;
+          return result;
+        });
+
+      await vi.waitFor(() => {
+        expect(lockRequestSpy).toHaveBeenCalledTimes(2);
+      });
+      expect(persistenceSettled).toBe(false);
+
+      releaseCleanup.resolve();
+      await cleanup;
+      await expect(persistence).resolves.toEqual({ status: "persisted" });
+      await expect(authStorage.getUser()).resolves.toEqual({
+        id: "next-user",
+        name: "Next User",
+        email: "next-user@secpal.dev",
+        emailVerified: true,
+      });
+    } finally {
+      releaseCleanup.resolve();
+      authStorage.endSensitiveLogoutBarrierCleanup(cleanupOwnerToken);
+      await Promise.allSettled(
+        [cleanup, persistence].filter(
+          (operation): operation is Promise<unknown> => operation !== null
+        )
+      );
+    }
+  });
+
+  it("reserves cross-tab destructive cleanup before publishing its logout barrier", async () => {
+    const acquisitionOrder: string[] = [];
+    const originalSetItem = Storage.prototype.setItem;
+    let competingLockRequest: Promise<void> | null = null;
+    const setItemSpy = vi
+      .spyOn(Storage.prototype, "setItem")
+      .mockImplementation(function (this: Storage, key, value) {
+        originalSetItem.call(this, key, value);
+
+        if (
+          this === localStorage &&
+          key === "auth_logout_barrier" &&
+          competingLockRequest === null
+        ) {
+          competingLockRequest = navigator.locks.request(
+            AUTH_VAULT_LIFECYCLE_LOCK_NAME,
+            { mode: "exclusive" },
+            async () => {
+              acquisitionOrder.push("competing-persistence");
+            }
+          );
+        }
+      });
+    let cleanupOwnerToken: string | null = null;
+
+    try {
+      cleanupOwnerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
+      await authStorage.waitForSensitiveLogoutCleanupLock(cleanupOwnerToken);
+      acquisitionOrder.push("destructive-cleanup");
+      authStorage.endSensitiveLogoutBarrierCleanup(cleanupOwnerToken);
+      await competingLockRequest;
+
+      expect(acquisitionOrder).toEqual([
+        "destructive-cleanup",
+        "competing-persistence",
+      ]);
+    } finally {
+      if (cleanupOwnerToken !== null) {
+        authStorage.endSensitiveLogoutBarrierCleanup(cleanupOwnerToken);
+      }
+      await competingLockRequest;
+      setItemSpy.mockRestore();
+    }
+  });
+
+  it("retains a failed cleanup-lock reservation until its logout owner ends", async () => {
+    const lockError = new Error("lock unavailable");
+    const lockRequestSpy = vi
+      .spyOn(navigator.locks, "request")
+      .mockRejectedValueOnce(lockError);
+    const cleanupOwnerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
+
+    try {
+      await expect(
+        authStorage.waitForSensitiveLogoutCleanupLock(cleanupOwnerToken)
+      ).rejects.toBe(lockError);
+      await expect(
+        authStorage.waitForSensitiveLogoutCleanupLock(cleanupOwnerToken)
+      ).rejects.toBe(lockError);
+    } finally {
+      authStorage.endSensitiveLogoutBarrierCleanup(cleanupOwnerToken);
+      lockRequestSpy.mockRestore();
+    }
+  });
+
   it("clears a stale single-tab sensitive logout cleanup owner", () => {
     const ownerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
 
@@ -1100,6 +1231,7 @@ describe("authStorage", () => {
       localStorage.getItem("auth_logout_skip_vault_table_cleanup")
     ).toBeNull();
     expect(getSensitiveLogoutCleanupOwnerKeys()).toHaveLength(0);
+    authStorage.endSensitiveLogoutBarrierCleanup(ownerToken);
   });
 
   it("preserves multi-tab sensitive logout cleanup owners during stale cleanup reconciliation", () => {
@@ -1115,6 +1247,7 @@ describe("authStorage", () => {
       "1"
     );
     expect(getSensitiveLogoutCleanupOwnerKeys()).toHaveLength(2);
+    authStorage.endSensitiveLogoutBarrierCleanup(ownerToken);
   });
 
   it("ignores stale owner markers when a new non-sensitive barrier starts", async () => {
@@ -1126,7 +1259,12 @@ describe("authStorage", () => {
     };
 
     await authStorage.setUser(user);
-    authStorage.beginSensitiveLogoutBarrierCleanup();
+    localStorage.setItem("auth_logout_barrier", "stale-barrier");
+    localStorage.setItem("auth_logout_skip_vault_table_cleanup", "1");
+    localStorage.setItem(
+      `${SENSITIVE_LOGOUT_CLEANUP_OWNER_KEY_PREFIX}closed-context`,
+      "1"
+    );
 
     await authStorage.setUser(user);
     expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
