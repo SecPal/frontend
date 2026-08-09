@@ -639,9 +639,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           try {
             try {
-              await authStorage.waitForSensitiveLogoutCleanupLock(
-                activeSensitiveLogoutCleanupOwnerToken
-              );
               await authStorage.waitForInFlightVaultTableCleanup();
             } catch (error: unknown) {
               console.warn(
@@ -1007,7 +1004,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setBootstrapRetryKey((currentValue) => currentValue + 1);
   }, [authTransport.kind]);
 
-  const revalidateBrowserSessionAfterStorageMismatch = useCallback(() => {
+  const revalidateSessionAfterStorageMismatch = useCallback(() => {
     const hasLogoutBarrier =
       hasLogoutBarrierRef.current || syncBarrierStateFromStorage();
 
@@ -1016,14 +1013,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (
-      authTransport.kind === "browser-session" &&
-      isOnline() &&
-      shouldBootstrapBrowserSessionWithoutStoredUser(
-        authTransport.kind,
-        hasLogoutBarrier
-      )
-    ) {
+    const shouldRevalidate =
+      authTransport.kind === "native-bridge" ||
+      (isOnline() &&
+        shouldBootstrapBrowserSessionWithoutStoredUser(
+          authTransport.kind,
+          hasLogoutBarrier
+        ));
+
+    if (shouldRevalidate) {
       shouldResetPrefetchCacheAfterStorageMismatchRef.current = true;
       hasLogoutBarrierRef.current = false;
       shouldSkipBarrierVaultTableCleanupRef.current = false;
@@ -1466,7 +1464,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           if (!nextUser) {
-            revalidateBrowserSessionAfterStorageMismatch();
+            revalidateSessionAfterStorageMismatch();
             return;
           }
 
@@ -1483,7 +1481,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
 
           console.error("Failed to parse cross-tab auth state:", error);
-          revalidateBrowserSessionAfterStorageMismatch();
+          revalidateSessionAfterStorageMismatch();
         }
       })();
     };
@@ -1571,7 +1569,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.getItem("auth_user") === null &&
         localStorage.getItem(AUTH_VAULT_STORAGE_KEY) === null
       ) {
-        revalidateBrowserSessionAfterStorageMismatch();
+        revalidateSessionAfterStorageMismatch();
         return;
       }
 
@@ -1607,7 +1605,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearAuthenticatedState,
     invalidateBootstrapRevalidation,
     preserveLockedVault,
-    revalidateBrowserSessionAfterStorageMismatch,
+    revalidateSessionAfterStorageMismatch,
     reconcileActiveBarrierState,
     syncBarrierStateFromStorage,
     syncOfflineAuthState,

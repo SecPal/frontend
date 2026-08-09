@@ -15,7 +15,6 @@ import {
   type VaultOrganizationalUnitCacheRecord,
 } from "./db";
 import {
-  AUTH_VAULT_LIFECYCLE_LOCK_NAME,
   AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
 } from "./offlineVaultKeys";
@@ -475,16 +474,18 @@ export function clearOfflineVaultLockState(): void {
   localStorage.removeItem(AUTH_VAULT_LOCK_KEY);
 }
 
-async function ensureVaultDatabaseOpen(): Promise<void> {
+async function ensureVaultDatabaseOpen(signal?: AbortSignal): Promise<void> {
   if (!db.isOpen()) {
-    await db.open();
+    await awaitVaultOperation(db.open(), signal);
   }
+
+  throwIfVaultOperationAborted(signal);
 }
 
 export async function clearOfflineVaultTables(
   options: OfflineVaultOperationOptions = {}
 ): Promise<void> {
-  await ensureVaultDatabaseOpen();
+  await ensureVaultDatabaseOpen(options.signal);
   throwIfVaultOperationAborted(options.signal);
 
   await db.transaction(
@@ -514,7 +515,7 @@ export async function clearOfflineVaultTables(
 export async function clearInvalidOfflineVaultArtifacts(
   options: OfflineVaultOperationOptions = {}
 ): Promise<void> {
-  await ensureVaultDatabaseOpen();
+  await ensureVaultDatabaseOpen(options.signal);
   throwIfVaultOperationAborted(options.signal);
   await db.transaction(
     "rw",
@@ -929,13 +930,14 @@ function buildWebCryptoDeviceBoundAdditionalData(
 async function getOrCreateWebCryptoDeviceWrappingKey(
   signal?: AbortSignal
 ): Promise<CryptoKey> {
-  await ensureVaultDatabaseOpen();
+  await ensureVaultDatabaseOpen(signal);
   throwIfVaultOperationAborted(signal);
 
   return db.transaction("rw", db.vaultWrappingKeys, async () => {
     throwIfVaultOperationAborted(signal);
-    const storedKey = await db.vaultWrappingKeys.get(
-      NATIVE_VAULT_WRAPPING_KEY_ID
+    const storedKey = await awaitVaultOperation(
+      db.vaultWrappingKeys.get(NATIVE_VAULT_WRAPPING_KEY_ID),
+      signal
     );
     throwIfVaultOperationAborted(signal);
 
@@ -953,10 +955,13 @@ async function getOrCreateWebCryptoDeviceWrappingKey(
       )
     )) as CryptoKey;
     throwIfVaultOperationAborted(signal);
-    await db.vaultWrappingKeys.add({
-      id: NATIVE_VAULT_WRAPPING_KEY_ID,
-      key: generatedKey,
-    });
+    await awaitVaultOperation(
+      db.vaultWrappingKeys.add({
+        id: NATIVE_VAULT_WRAPPING_KEY_ID,
+        key: generatedKey,
+      }),
+      signal
+    );
     throwIfVaultOperationAborted(signal);
 
     return generatedKey;
@@ -1006,9 +1011,12 @@ async function decryptWebCryptoDeviceBoundVaultRootKeyBytes(
     return null;
   }
 
-  await ensureVaultDatabaseOpen();
+  await ensureVaultDatabaseOpen(signal);
   throwIfVaultOperationAborted(signal);
-  const storedKey = await db.vaultWrappingKeys.get(state.wrapper.keyId);
+  const storedKey = await awaitVaultOperation(
+    db.vaultWrappingKeys.get(state.wrapper.keyId),
+    signal
+  );
 
   if (!storedKey) {
     return null;
@@ -1630,7 +1638,10 @@ async function buildLegacyAnalyticsMigrationRecords(
 ): Promise<Array<Omit<VaultAnalyticsRecord, "id">>> {
   throwIfVaultOperationAborted(signal);
 
-  const legacyRecords = await db.analytics.toArray();
+  const legacyRecords = await awaitVaultOperation(
+    db.analytics.toArray(),
+    signal
+  );
   throwIfVaultOperationAborted(signal);
 
   const encryptedRecords = await Promise.all(
@@ -1667,7 +1678,7 @@ async function migrateLegacyAnalyticsRecords(
   session: VaultSession,
   signal?: AbortSignal
 ): Promise<void> {
-  await ensureVaultDatabaseOpen();
+  await ensureVaultDatabaseOpen(signal);
   const encryptedRecords = await buildLegacyAnalyticsMigrationRecords(
     session,
     signal
@@ -1695,7 +1706,10 @@ async function buildLegacyOrganizationalUnitMigrationRecords(
 ): Promise<VaultOrganizationalUnitCacheRecord[]> {
   throwIfVaultOperationAborted(signal);
 
-  const legacyRecords = await db.organizationalUnitCache.toArray();
+  const legacyRecords = await awaitVaultOperation(
+    db.organizationalUnitCache.toArray(),
+    signal
+  );
   throwIfVaultOperationAborted(signal);
 
   const encryptedRecords = await Promise.all(
@@ -1725,7 +1739,7 @@ async function migrateLegacyOrganizationalUnitRecords(
   session: VaultSession,
   signal?: AbortSignal
 ): Promise<void> {
-  await ensureVaultDatabaseOpen();
+  await ensureVaultDatabaseOpen(signal);
   const encryptedRecords = await buildLegacyOrganizationalUnitMigrationRecords(
     session,
     signal
@@ -1757,7 +1771,7 @@ async function persistInitialVaultRecords(
   signal?: AbortSignal,
   shouldCommit?: () => boolean
 ): Promise<void> {
-  await ensureVaultDatabaseOpen();
+  await ensureVaultDatabaseOpen(signal);
   throwIfVaultOperationCannotCommit(signal, shouldCommit);
 
   const [profileRecord, analyticsRecords, organizationalUnitRecords] =
@@ -1812,39 +1826,28 @@ export async function initializeOfflineVault(
   options: OfflineVaultOperationOptions = {}
 ): Promise<void> {
   const { signal, shouldCommit } = options;
-  const lockManager = globalThis.navigator?.locks;
 
-  if (!lockManager) {
-    throw new Error("Secure offline vault initialization is unavailable.");
+  throwIfVaultOperationCannotCommit(signal, shouldCommit);
+  const { session, pendingStoredState } = await ensureVaultSessionForUser(
+    user,
+    signal
+  );
+  throwIfVaultOperationCannotCommit(signal, shouldCommit);
+
+  if (pendingStoredState) {
+    setStoredVaultState({
+      ...pendingStoredState,
+      initialization: "pending",
+    });
+    throwIfVaultOperationCannotCommit(signal, shouldCommit);
   }
 
-  await lockManager.request(
-    AUTH_VAULT_LIFECYCLE_LOCK_NAME,
-    { mode: "exclusive", signal },
-    async () => {
-      throwIfVaultOperationCannotCommit(signal, shouldCommit);
-      const { session, pendingStoredState } = await ensureVaultSessionForUser(
-        user,
-        signal
-      );
-      throwIfVaultOperationCannotCommit(signal, shouldCommit);
+  await persistInitialVaultRecords(user, session, signal, shouldCommit);
+  throwIfVaultOperationCannotCommit(signal, shouldCommit);
 
-      if (pendingStoredState) {
-        setStoredVaultState({
-          ...pendingStoredState,
-          initialization: "pending",
-        });
-        throwIfVaultOperationCannotCommit(signal, shouldCommit);
-      }
-
-      await persistInitialVaultRecords(user, session, signal, shouldCommit);
-      throwIfVaultOperationCannotCommit(signal, shouldCommit);
-
-      completeVaultInitialization(session.subjectHash);
-      setActiveOfflineVaultSession(session);
-      localStorage.removeItem("auth_user");
-    }
-  );
+  completeVaultInitialization(session.subjectHash);
+  setActiveOfflineVaultSession(session);
+  localStorage.removeItem("auth_user");
 }
 
 export async function readPersistedAuthUserFromVault(
@@ -1857,10 +1860,13 @@ export async function readPersistedAuthUserFromVault(
     return null;
   }
 
-  await ensureVaultDatabaseOpen();
+  await ensureVaultDatabaseOpen(options.signal);
   throwIfVaultOperationAborted(options.signal);
 
-  const storedProfile = await db.vaultProfile.get(PROFILE_RECORD_ID);
+  const storedProfile = await awaitVaultOperation(
+    db.vaultProfile.get(PROFILE_RECORD_ID),
+    options.signal
+  );
   throwIfVaultOperationAborted(options.signal);
 
   if (!storedProfile) {

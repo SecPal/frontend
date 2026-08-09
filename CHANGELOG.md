@@ -92,9 +92,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Stale native vault-read timeouts can no longer override a newer logout, and
   initial profile and legacy-data persistence now commit atomically so a
   superseded migration cannot orphan encrypted records. Cancellation remains
-  compatible with Android WebView 83, and one shared Web Lock serializes
-  destructive cross-tab logout cleanup with native-context initialization
-  around one transactionally created WebCrypto wrapping key. Auth lifecycle
+  compatible with Android WebView 83, supported browsers do not require the
+  Web Locks API, and cancellable database opening cannot retain a stalled auth
+  persistence attempt. Auth lifecycle
   owner tokens retain a cryptographically secure fallback on WebViews without
   `crypto.randomUUID()`. Temporarily locked native
   vaults are preserved across transient unlock failures instead of being
@@ -109,8 +109,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tabs restore the persisted native user when cross-tab revalidation completes,
   while lifecycle versioning prevents an older asynchronous read or vault
   unlock from replacing a newer confirmed identity or undoing a local vault
-  lock. A pending replacement wrapper is no longer purged when an orphaned
-  profile cannot be decrypted during the replacement transaction.
+  lock. Native tabs also restart bridge bootstrap when another context removes
+  an unavailable local snapshot without creating a logout barrier. A pending
+  replacement wrapper is no longer purged when an orphaned profile cannot be
+  decrypted during the replacement transaction.
 - Isolated AuthContext tests from shared offline-vault state and awaited the
   complete login handoff before teardown, so filtered runs no longer leave a
   rejected vault persistence task. Closes #1629.

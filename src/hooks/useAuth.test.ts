@@ -964,7 +964,7 @@ describe("useAuth", () => {
     await waitForSensitiveClientCleanup();
   });
 
-  it("serializes bootstrap barrier reconciliation behind sensitive logout cleanup", async () => {
+  it("reconciles bootstrap persistence after sensitive logout cleanup", async () => {
     const mockUser = {
       id: "1",
       name: "Test User",
@@ -2912,7 +2912,7 @@ describe("useAuth", () => {
         secondLogout = Promise.resolve(secondAuth.result.current.logout());
       });
 
-      await waitForSensitiveClientCleanup();
+      await waitForSensitiveClientCleanup(2);
 
       expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
         "1"
@@ -2923,7 +2923,6 @@ describe("useAuth", () => {
         await Promise.resolve();
       });
 
-      await waitForSensitiveClientCleanup(2);
       expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
         "1"
       );
@@ -3960,6 +3959,62 @@ describe("useAuth", () => {
     });
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.bootstrapRecoveryReason).toBeNull();
+  });
+
+  it("restarts native bootstrap when another tab removes the local snapshot", async () => {
+    const storedUser = {
+      id: "stored-user",
+      name: "Stored User",
+      email: "stored-user@secpal.dev",
+      emailVerified: true,
+    };
+    const rehydratedUser = {
+      id: "rehydrated-user",
+      name: "Rehydrated User",
+      email: "rehydrated-user@secpal.dev",
+      emailVerified: true,
+    };
+    await persistAuthUser(storedUser);
+    const getCurrentUser = vi
+      .fn()
+      .mockResolvedValueOnce(storedUser)
+      .mockResolvedValueOnce(rehydratedUser);
+    installNativeAuthBridge({ getCurrentUser });
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitForTestingLibrary(() => {
+      expect(result.current.user).toEqual(storedUser);
+      expect(result.current.isLoading).toBe(false);
+    });
+    expect(getCurrentUser).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      clearOfflineVaultSession();
+      const previousVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+      localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
+      dispatchLocalStorageEvent(
+        AUTH_VAULT_STORAGE_KEY,
+        null,
+        previousVaultState
+      );
+    });
+
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.bootstrapRecoveryReason).toBeNull();
+
+    await waitForTestingLibrary(() => {
+      expect(result.current.user).toEqual(rehydratedUser);
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(getCurrentUser).toHaveBeenCalledTimes(2);
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.bootstrapRecoveryReason).toBeNull();
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 
   it("does not let an older cross-tab restore overwrite a completed newer revalidation", async () => {

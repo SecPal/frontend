@@ -131,6 +131,73 @@ describe("offlineVault", () => {
     );
   });
 
+  it("persists the encrypted profile when Web Locks are unavailable", async () => {
+    const originalLocksDescriptor = Object.getOwnPropertyDescriptor(
+      navigator,
+      "locks"
+    );
+
+    Object.defineProperty(navigator, "locks", {
+      configurable: true,
+      value: undefined,
+    });
+
+    try {
+      await initializeOfflineVault(persistedUser);
+
+      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+      clearOfflineVaultSession();
+      await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+        persistedUser
+      );
+    } finally {
+      if (originalLocksDescriptor) {
+        Object.defineProperty(navigator, "locks", originalLocksDescriptor);
+      } else {
+        Reflect.deleteProperty(navigator, "locks");
+      }
+    }
+  });
+
+  it("abandons a stalled database open when vault persistence is cancelled", async () => {
+    db.close();
+    const databaseOpen = createDeferredPromise<typeof db>();
+    const extendedDatabaseOpen = Dexie.Promise.resolve(databaseOpen.promise);
+    const openSpy = vi
+      .spyOn(db, "open")
+      .mockReturnValueOnce(extendedDatabaseOpen);
+    const controller = new AbortController();
+    const initialization = initializeOfflineVault(persistedUser, {
+      signal: controller.signal,
+    });
+    let outcome = "pending";
+    const observedOutcome = initialization.then(
+      () => {
+        outcome = "completed";
+      },
+      (error: unknown) => {
+        outcome =
+          typeof error === "object" && error !== null && "name" in error
+            ? String(error.name)
+            : "failed";
+      }
+    );
+
+    try {
+      await vi.waitFor(() => {
+        expect(openSpy).toHaveBeenCalledTimes(1);
+      });
+
+      controller.abort();
+      await vi.waitFor(() => {
+        expect(outcome).toBe("AbortError");
+      });
+    } finally {
+      databaseOpen.resolve(db);
+      await observedOutcome;
+    }
+  });
+
   it.each([
     [vi.fn().mockRejectedValue(new Error("wrap failed")), true],
     [vi.fn().mockResolvedValue({ wrappedRootKey: "" }), false],
@@ -164,7 +231,7 @@ describe("offlineVault", () => {
     }
   );
 
-  it("serializes vault initialization across simultaneous native contexts", async () => {
+  it("uses one WebCrypto wrapping key across simultaneous native contexts", async () => {
     installNativeVaultBridge();
     const generatedKeys = await Promise.all([
       crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, [
@@ -192,7 +259,6 @@ describe("offlineVault", () => {
 
         return Promise.resolve(generatedKeys[1]);
       }) as typeof crypto.subtle.generateKey);
-    const lockRequestSpy = vi.spyOn(navigator.locks, "request");
     vi.resetModules();
     const firstVault = await import("./offlineVault");
     const firstDatabase = (await import("./db")).db;
@@ -208,7 +274,6 @@ describe("offlineVault", () => {
 
       secondInitialization = secondVault.initializeOfflineVault(persistedUser);
 
-      expect(lockRequestSpy).toHaveBeenCalledTimes(2);
       expect(generateKeySpy).toHaveBeenCalledTimes(1);
       releaseFirstGenerate.resolve();
 

@@ -36,52 +36,6 @@ const originalConfirm = globalThis.confirm;
 const originalAlert = globalThis.alert;
 const originalPrompt = globalThis.prompt;
 const originalLocationHref = window.location.href;
-const webLockQueues = new Map<string, Promise<void>>();
-
-const testLockManager = {
-  request: <T>(
-    name: string,
-    optionsOrCallback: LockOptions | ((lock: Lock | null) => Promise<T>),
-    callback?: (lock: Lock | null) => Promise<T>
-  ): Promise<T> => {
-    const options =
-      typeof optionsOrCallback === "function" ? {} : optionsOrCallback;
-    const operation =
-      typeof optionsOrCallback === "function" ? optionsOrCallback : callback;
-
-    if (!operation) {
-      return Promise.reject(new TypeError("A Web Lock callback is required."));
-    }
-
-    const previousOperation = webLockQueues.get(name) ?? Promise.resolve();
-    const result = previousOperation.then(async () => {
-      if (options.signal?.aborted) {
-        throw new DOMException("The operation was aborted.", "AbortError");
-      }
-
-      return operation({
-        name,
-        mode: options.mode ?? "exclusive",
-      });
-    });
-
-    webLockQueues.set(
-      name,
-      result.then(
-        () => undefined,
-        () => undefined
-      )
-    );
-
-    return result;
-  },
-  query: async (): Promise<LockManagerSnapshot> => ({ held: [], pending: [] }),
-} satisfies LockManager;
-
-Object.defineProperty(navigator, "locks", {
-  configurable: true,
-  value: testLockManager,
-});
 
 function clearXsrfCookie(): void {
   document.cookie = `XSRF-TOKEN=;expires=${new Date(0).toUTCString()};path=/`;
@@ -122,7 +76,6 @@ if (typeof document !== "undefined" && typeof MutationObserver === "function") {
 }
 
 beforeEach(() => {
-  webLockQueues.clear();
   clearXsrfCookie();
   document.cookie = `XSRF-TOKEN=${encodeURIComponent("test-csrf-token")};path=/`;
   inputOtpWasMounted = false;
