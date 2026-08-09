@@ -57,20 +57,6 @@ const {
         }
       }),
       hasVaultLock: vi.fn(() => vaultLocked),
-      // Mirror production: persisted users live in the offline vault, so the
-      // synchronous snapshot is always null once a vault record exists.
-      getUserSnapshot: vi.fn(() => {
-        if (
-          logoutBarrier ||
-          vaultLocked ||
-          vaultPresent ||
-          userRevalidationOwnerToken !== null
-        ) {
-          return null;
-        }
-
-        return storedUser;
-      }),
       getUser: vi.fn(async () => {
         if (
           logoutBarrier ||

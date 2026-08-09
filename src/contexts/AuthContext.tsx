@@ -330,13 +330,7 @@ function isRetriableBootstrapError(error: unknown): boolean {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const authTransport = useMemo(() => getAuthTransport(), []);
-  const [user, setUser] = useState<User | null>(() => {
-    if (authStorage.hasVaultLock?.()) {
-      return null;
-    }
-
-    return authStorage.getUserSnapshot();
-  });
+  const [user, setUser] = useState<User | null>(null);
   const [isVaultLocked, setIsVaultLocked] = useState(
     () => authStorage.hasVaultLock?.() === true
   );
@@ -353,14 +347,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         authTransport.kind,
         hasLogoutBarrier
       );
-    }
-
-    if (
-      authStorage.getUserSnapshot() !== null &&
-      authTransport.kind === "browser-session" &&
-      !isOnline()
-    ) {
-      return false;
     }
 
     return true;

@@ -394,21 +394,6 @@ describe("authStorage", () => {
     }
   });
 
-  it("clears invalid JSON snapshots and logs the parse failure", () => {
-    const consoleErrorSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
-
-    localStorage.setItem("auth_user", "invalid-json");
-
-    expect(authStorage.getUserSnapshot()).toBeNull();
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "Failed to parse stored user snapshot:",
-      expect.any(SyntaxError)
-    );
-    expect(localStorage.getItem("auth_user")).toBeNull();
-  });
-
   it("clears invalid JSON persisted auth state while decrypting", async () => {
     localStorage.setItem("auth_user", "invalid-json");
 
@@ -652,7 +637,7 @@ describe("authStorage", () => {
       await authStorage.setUser(user);
       localStorage.setItem("auth_logout_barrier", "1");
 
-      expect(authStorage.getUserSnapshot()).toBeNull();
+      await expect(authStorage.getUser()).resolves.toBeNull();
 
       expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
       expect(vaultProfileClearSpy).not.toHaveBeenCalled();
@@ -671,14 +656,89 @@ describe("authStorage", () => {
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
-  it("clears unsupported unencrypted auth snapshots", () => {
+  it("purges orphaned vault artifacts before dropping an invalid legacy marker", async () => {
     const unsupportedStoredUser =
       '{"id":"1","name":"Legacy User","email":"legacy@secpal.dev","emailVerified":false}';
 
+    await Promise.all([
+      db.vaultProfile.put({
+        id: "profile",
+        recordId: "profile",
+        version: 1,
+        ciphertext: "orphaned-profile",
+        iv: "orphaned-iv",
+        authTag: "orphaned-tag",
+      }),
+      db.vaultAnalytics.add({
+        recordId: "analytics:1",
+        version: 1,
+        ciphertext: "orphaned-analytics",
+        iv: "orphaned-iv",
+        authTag: "orphaned-tag",
+        synced: false,
+        timestamp: Date.now(),
+      }),
+      db.vaultOrganizationalUnitCache.put({
+        id: "orphaned-unit",
+        recordId: "organizational-unit:orphaned-unit",
+        version: 1,
+        ciphertext: "orphaned-unit",
+        iv: "orphaned-iv",
+        authTag: "orphaned-tag",
+        cachedAt: new Date(),
+        lastSynced: new Date(),
+      }),
+    ]);
     localStorage.setItem("auth_user", unsupportedStoredUser);
 
-    expect(authStorage.getUserSnapshot()).toBeNull();
+    expect(localStorage.getItem("auth_user")).toBe(unsupportedStoredUser);
+    expect(await db.vaultProfile.count()).toBe(1);
+    expect(await db.vaultAnalytics.count()).toBe(1);
+    expect(await db.vaultOrganizationalUnitCache.count()).toBe(1);
+
+    await expect(authStorage.getUser()).resolves.toBeNull();
+
     expect(localStorage.getItem("auth_user")).toBeNull();
+    expect(await db.vaultProfile.count()).toBe(0);
+    expect(await db.vaultAnalytics.count()).toBe(0);
+    expect(await db.vaultOrganizationalUnitCache.count()).toBe(0);
+  });
+
+  it("does not let invalid legacy cleanup erase a newer login", async () => {
+    const nextUser = {
+      id: "next-user",
+      name: "Next User",
+      email: "next-user@secpal.dev",
+      emailVerified: true,
+    };
+    const releaseInvalidCleanup = createDeferredPromise<void>();
+    const originalClearInvalidOfflineVaultArtifacts =
+      offlineVault.clearInvalidOfflineVaultArtifacts;
+    const clearInvalidArtifactsSpy = vi
+      .spyOn(offlineVault, "clearInvalidOfflineVaultArtifacts")
+      .mockImplementationOnce(async (options) => {
+        await releaseInvalidCleanup.promise;
+        await originalClearInvalidOfflineVaultArtifacts(options);
+      });
+    localStorage.setItem("auth_user", "invalid-json");
+    const invalidRead = authStorage.getUser();
+
+    try {
+      await vi.waitFor(() => {
+        expect(clearInvalidArtifactsSpy).toHaveBeenCalledTimes(1);
+      });
+
+      await expect(authStorage.setUser(nextUser)).resolves.toEqual({
+        status: "persisted",
+      });
+    } finally {
+      releaseInvalidCleanup.resolve();
+      await Promise.allSettled([invalidRead]);
+    }
+
+    await expect(invalidRead).resolves.toBeNull();
+
+    await expect(authStorage.getUser()).resolves.toEqual(nextUser);
   });
 
   it("clears unsupported unencrypted persisted auth state", async () => {

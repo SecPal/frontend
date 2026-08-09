@@ -96,7 +96,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reuse one transactionally created WebCrypto wrapping key. Temporarily locked
   native vaults are preserved instead of being replaced by a fallback key, and
   a server-confirmed user change invalidates the previous offline snapshot even
-  when secure persistence of the replacement fails.
+  when secure persistence of the replacement fails. Invalid legacy auth markers
+  are now removed only after their orphaned vault records have been purged.
 - Isolated AuthContext tests from shared offline-vault state and awaited the
   complete login handoff before teardown, so filtered runs no longer leave a
   rejected vault persistence task. Closes #1629.

@@ -1914,7 +1914,7 @@ describe("useAuth", () => {
     }
   });
 
-  it("ignores corrupted legacy auth_user data in localStorage", () => {
+  it("removes corrupted legacy auth state through async vault cleanup", async () => {
     localStorage.setItem("auth_user", "invalid-json");
 
     const { result } = renderHook(() => useAuth(), {
@@ -1922,7 +1922,9 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toBeNull();
-    expect(localStorage.getItem("auth_user")).toBeNull();
+    await waitFor(() => {
+      expect(localStorage.getItem("auth_user")).toBeNull();
+    });
   });
 
   it("skips broader client cleanup when persisted auth restore fails before login state exists", async () => {

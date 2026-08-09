@@ -261,7 +261,6 @@ export interface AuthStorage {
   requireUserRevalidation(): string;
   completeUserRevalidation(ownerToken: string | null): void;
   hasVaultLock(): boolean;
-  getUserSnapshot(): User | null;
   getUser(options?: AuthStorageReadOptions): Promise<User | null>;
   setUser(
     user: User,
@@ -564,57 +563,31 @@ class LocalStorageAuthStorage implements AuthStorage {
     localStorage.removeItem(AUTH_USER_REVALIDATION_REQUIRED_KEY);
   }
 
-  private clearInvalidStoredUser(): null {
-    this.clearStoredUserMarkers();
-    return null;
-  }
+  private async clearInvalidStoredUser(signal?: AbortSignal): Promise<null> {
+    await this.runExclusiveCleanup(async (cleanupSignal) => {
+      let clearInvalidOfflineVaultArtifacts: typeof import("../lib/offlineVault").clearInvalidOfflineVaultArtifacts;
 
-  private async clearInvalidStoredUserAsync(): Promise<null> {
-    return this.clearInvalidStoredUser();
-  }
+      try {
+        ({ clearInvalidOfflineVaultArtifacts } =
+          await loadOfflineVaultModule());
+        throwIfAborted(cleanupSignal);
+      } catch (error) {
+        if (isTransientModuleLoadError(error)) {
+          throw createRecoverableLazyModuleError(
+            "Stored offline auth data is temporarily unavailable on this device.",
+            error
+          );
+        }
 
-  private handleStoredUserError(message: string, error: unknown): null {
-    console.error(message, error);
-    return this.clearInvalidStoredUser();
-  }
-
-  getUserSnapshot(): User | null {
-    if (this.hasLogoutBarrier()) {
-      return null;
-    }
-
-    if (this.isUserRevalidationRequired()) {
-      return null;
-    }
-
-    if (this.hasVaultLock()) {
-      return null;
-    }
-
-    if (localStorage.getItem(this.VAULT_KEY) !== null) {
-      return null;
-    }
-
-    const storedUser = localStorage.getItem(this.USER_KEY);
-
-    if (!storedUser) {
-      return null;
-    }
-
-    try {
-      const parsedStoredUser = JSON.parse(storedUser) as unknown;
-
-      if (!isAuthStorageEnvelope(parsedStoredUser)) {
-        return this.clearInvalidStoredUser();
+        throw error;
       }
 
-      return null;
-    } catch (error) {
-      return this.handleStoredUserError(
-        "Failed to parse stored user snapshot:",
-        error
-      );
-    }
+      await clearInvalidOfflineVaultArtifacts({ signal: cleanupSignal });
+      throwIfAborted(cleanupSignal);
+      this.clearStoredUserMarkers();
+    }, signal);
+    throwIfAborted(signal);
+    return null;
   }
 
   async getUser(options: AuthStorageReadOptions = {}): Promise<User | null> {
@@ -658,7 +631,7 @@ class LocalStorageAuthStorage implements AuthStorage {
           return null;
         }
 
-        return this.clearInvalidStoredUserAsync();
+        return this.clearInvalidStoredUser(signal);
       }
 
       return storedVaultUser;
@@ -666,23 +639,18 @@ class LocalStorageAuthStorage implements AuthStorage {
 
     const storedUser = localStorage.getItem(this.USER_KEY);
     if (!storedUser) return null;
-    let clearInvalidOfflineVaultArtifacts:
-      | typeof import("../lib/offlineVault").clearInvalidOfflineVaultArtifacts
-      | undefined;
-
     try {
       const sanitizedUser = await decryptPersistedAuthUser(storedUser);
       throwIfAborted(signal);
 
       if (!sanitizedUser) {
-        return this.clearInvalidStoredUserAsync();
+        return this.clearInvalidStoredUser(signal);
       }
 
       let initializeOfflineVault: typeof import("../lib/offlineVault").initializeOfflineVault;
 
       try {
-        ({ initializeOfflineVault, clearInvalidOfflineVaultArtifacts } =
-          await loadOfflineVaultModule());
+        ({ initializeOfflineVault } = await loadOfflineVaultModule());
         throwIfAborted(signal);
       } catch (error) {
         if (isTransientModuleLoadError(error)) {
@@ -709,8 +677,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       }
 
       console.error("Failed to parse stored user data:", error);
-      await clearInvalidOfflineVaultArtifacts?.({ signal });
-      return this.clearInvalidStoredUserAsync();
+      return this.clearInvalidStoredUser(signal);
     }
   }
 
@@ -789,14 +756,27 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   async removeUser(options: AuthStorageClearOptions = {}): Promise<void> {
+    return this.runExclusiveCleanup((signal) =>
+      this.removeUserWithSignal(options, signal)
+    );
+  }
+
+  private runExclusiveCleanup(
+    operation: (signal: AbortSignal) => Promise<void>,
+    sourceSignal?: AbortSignal
+  ): Promise<void> {
+    throwIfAborted(sourceSignal);
+
     if (this.activeCleanupController) {
-      return this.activeCleanupPromise;
+      return awaitAbortable(this.activeCleanupPromise, sourceSignal);
     }
 
     const controller = new AbortController();
+    const abortFromSource = () => controller.abort();
+    sourceSignal?.addEventListener("abort", abortFromSource, { once: true });
     this.activeCleanupController = controller;
     const cleanup = awaitAbortable(
-      this.removeUserWithSignal(options, controller.signal),
+      operation(controller.signal),
       controller.signal
     )
       .catch((error: unknown) => {
@@ -805,6 +785,7 @@ class LocalStorageAuthStorage implements AuthStorage {
         }
       })
       .finally(() => {
+        sourceSignal?.removeEventListener("abort", abortFromSource);
         if (this.activeCleanupController === controller) {
           this.activeCleanupController = null;
           this.activeCleanupPromise = Promise.resolve();
