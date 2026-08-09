@@ -80,8 +80,16 @@ const {
         logoutBarrier = false;
       }),
       unlockVault: vi.fn(async () => {
+        if (userRevalidationOwnerToken !== null) {
+          return { status: "unavailable" as const };
+        }
+
+        if (storedUser === null) {
+          return { status: "empty" as const };
+        }
+
         vaultLocked = false;
-        return userRevalidationOwnerToken === null ? storedUser : null;
+        return { status: "unlocked" as const, user: storedUser };
       }),
       removeUser: vi.fn(async () => {
         storedUser = null;

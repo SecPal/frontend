@@ -92,10 +92,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Stale native vault-read timeouts can no longer override a newer logout, and
   initial profile and legacy-data persistence now commit atomically so a
   superseded migration cannot orphan encrypted records. Cancellation remains
-  compatible with Android WebView 83, and simultaneous native contexts now
-  reuse one transactionally created WebCrypto wrapping key. Temporarily locked
-  native vaults are preserved instead of being replaced by a fallback key, and
-  a server-confirmed user change invalidates the previous offline snapshot even
+  compatible with Android WebView 83, and a browser lock now serializes
+  simultaneous native-context initialization around one transactionally
+  created WebCrypto wrapping key. Temporarily locked native vaults are
+  preserved across transient unlock failures instead of being replaced by a
+  fallback key, unexpected storage aborts surface as persistence failures, and
+  newer cross-tab logout barriers supersede in-flight unlocks and persistence.
+  A server-confirmed user change invalidates the previous offline snapshot even
   when secure persistence of the replacement fails. Invalid legacy auth markers
   are now removed only after their orphaned vault records have been purged.
   Initial vault writes now publish a resumable encrypted-key wrapper before the

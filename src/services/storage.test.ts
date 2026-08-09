@@ -238,7 +238,10 @@ describe("authStorage", () => {
     expect(authStorage.hasVaultLock()).toBe(true);
     expect(getActiveOfflineVaultSession()).toBeNull();
 
-    await expect(authStorage.unlockVault()).resolves.toEqual(user);
+    await expect(authStorage.unlockVault()).resolves.toEqual({
+      status: "unlocked",
+      user,
+    });
     expect(authStorage.hasVaultLock()).toBe(false);
     await expect(authStorage.getUser()).resolves.toEqual(user);
   });
@@ -256,13 +259,16 @@ describe("authStorage", () => {
     authStorage.lockVault();
     setCsrfTokenCookie("rotated-csrf-token");
 
-    await expect(authStorage.unlockVault()).resolves.toEqual(user);
+    await expect(authStorage.unlockVault()).resolves.toEqual({
+      status: "unlocked",
+      user,
+    });
     expect(authStorage.hasVaultLock()).toBe(false);
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
     await expect(authStorage.getUser()).resolves.toEqual(user);
   });
 
-  it("clears auth state when unlockVault finds no readable user after removing the lock", async () => {
+  it("clears auth state when unlockVault finds no vault to unlock", async () => {
     const user = {
       id: "1",
       name: "Test User",
@@ -276,8 +282,135 @@ describe("authStorage", () => {
     // Corrupt the vault state so getUser returns null after unlock
     localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
 
-    await expect(authStorage.unlockVault()).resolves.toBeNull();
+    await expect(authStorage.unlockVault()).resolves.toEqual({
+      status: "empty",
+    });
     expect(authStorage.hasStoredUser()).toBe(false);
+  });
+
+  it("preserves a locked vault when its wrapper is temporarily unavailable", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    await authStorage.setUser(user);
+    authStorage.lockVault();
+    const storedVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+    vi.spyOn(offlineVault, "readPersistedAuthUserFromVault").mockResolvedValue(
+      null
+    );
+
+    await expect(authStorage.unlockVault()).resolves.toEqual({
+      status: "unavailable",
+    });
+
+    expect(authStorage.hasVaultLock()).toBe(true);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(storedVaultState);
+    expect(await db.vaultProfile.count()).toBe(1);
+  });
+
+  it("lets a logout barrier supersede an in-flight vault unlock", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    await authStorage.setUser(user);
+    authStorage.lockVault();
+    const readStarted = createDeferredPromise<void>();
+    const releaseRead = createDeferredPromise<void>();
+    vi.spyOn(
+      offlineVault,
+      "readPersistedAuthUserFromVault"
+    ).mockImplementationOnce(async () => {
+      readStarted.resolve();
+      await releaseRead.promise;
+      return user;
+    });
+
+    const unlock = authStorage.unlockVault();
+    await readStarted.promise;
+    authStorage.beginSensitiveLogoutBarrierCleanup();
+    releaseRead.resolve();
+
+    await expect(unlock).resolves.toEqual({ status: "empty" });
+    expect(authStorage.hasLogoutBarrier()).toBe(true);
+    expect(authStorage.hasVaultLock()).toBe(false);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+  });
+
+  it("reports an unexpected IndexedDB AbortError as a persistence failure", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const unexpectedAbort = new DOMException(
+      "IndexedDB transaction aborted.",
+      "AbortError"
+    );
+    vi.spyOn(offlineVault, "initializeOfflineVault").mockRejectedValueOnce(
+      unexpectedAbort
+    );
+
+    await expect(
+      authStorage.setUser({
+        id: "1",
+        name: "Test User",
+        email: "test@secpal.dev",
+        emailVerified: false,
+      })
+    ).rejects.toMatchObject({
+      name: "AuthUserPersistenceError",
+    });
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "Failed to persist stored user data:",
+      expect.objectContaining({ name: "AuthUserPersistenceError" })
+    );
+  });
+
+  it("reports an unexpected IndexedDB AbortError during vault cleanup", async () => {
+    const unexpectedAbort = new DOMException(
+      "IndexedDB transaction aborted.",
+      "AbortError"
+    );
+    vi.spyOn(offlineVault, "clearOfflineVaultTables").mockRejectedValueOnce(
+      unexpectedAbort
+    );
+
+    await expect(authStorage.removeUser()).rejects.toBe(unexpectedAbort);
+  });
+
+  it("does not clear a logout barrier raised during persistence", async () => {
+    const persistenceStarted = createDeferredPromise<void>();
+    const releasePersistence = createDeferredPromise<void>();
+    let persistenceSignal: AbortSignal | undefined;
+    vi.spyOn(offlineVault, "initializeOfflineVault").mockImplementationOnce(
+      async (_user, options) => {
+        persistenceSignal = options?.signal;
+        persistenceStarted.resolve();
+        await releasePersistence.promise;
+
+        if (persistenceSignal?.aborted) {
+          throw new DOMException("The operation was aborted.", "AbortError");
+        }
+      }
+    );
+
+    const persistence = authStorage.setUser({
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    });
+    await persistenceStarted.promise;
+    authStorage.beginSensitiveLogoutBarrierCleanup();
+    expect(persistenceSignal?.aborted).toBe(true);
+    releasePersistence.resolve();
+
+    await expect(persistence).resolves.toEqual({ status: "superseded" });
+    expect(authStorage.hasLogoutBarrier()).toBe(true);
   });
 
   it("migrates the legacy auth_user envelope into the encrypted vault and removes auth_user from localStorage", async () => {
@@ -805,7 +938,7 @@ describe("authStorage", () => {
       await authStorage.clear({ clearOfflineVaultTables: false });
 
       expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
-      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
       expect(await db.vaultProfile.count()).toBe(1);
     } finally {
       await db.vaultProfile.clear();
@@ -830,7 +963,7 @@ describe("authStorage", () => {
     await authStorage.clear();
 
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
-    expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+    expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
     expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
       "1"
     );
@@ -850,7 +983,7 @@ describe("authStorage", () => {
     const staleOwnerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
     await authStorage.clear({ clearOfflineVaultTables: false });
 
-    expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+    expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
     expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
       "1"
     );

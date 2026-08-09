@@ -114,7 +114,7 @@ describe("offlineVault", () => {
     expect(readStoredVaultState().wrapper).toMatchObject({
       kind: "browser-session",
     });
-    expect(readStoredVaultState()).not.toHaveProperty("initializationId");
+    expect(readStoredVaultState()).not.toHaveProperty("initialization");
     await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
       persistedUser
     );
@@ -164,7 +164,7 @@ describe("offlineVault", () => {
     }
   );
 
-  it("reuses one WebCrypto wrapping key across simultaneous native contexts", async () => {
+  it("serializes vault initialization across simultaneous native contexts", async () => {
     installNativeVaultBridge();
     const generatedKeys = await Promise.all([
       crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, [
@@ -177,7 +177,6 @@ describe("offlineVault", () => {
       ]),
     ]);
     const firstGenerateStarted = createDeferredPromise<void>();
-    const secondGenerateStarted = createDeferredPromise<void>();
     const releaseFirstGenerate = createDeferredPromise<void>();
     let generateCallCount = 0;
     const generateKeySpy = vi
@@ -191,9 +190,9 @@ describe("offlineVault", () => {
           return releaseFirstGenerate.promise.then(() => generatedKeys[0]);
         }
 
-        secondGenerateStarted.resolve();
         return Promise.resolve(generatedKeys[1]);
       }) as typeof crypto.subtle.generateKey);
+    const lockRequestSpy = vi.spyOn(navigator.locks, "request");
     vi.resetModules();
     const firstVault = await import("./offlineVault");
     const firstDatabase = (await import("./db")).db;
@@ -208,17 +207,18 @@ describe("offlineVault", () => {
       await firstGenerateStarted.promise;
 
       secondInitialization = secondVault.initializeOfflineVault(persistedUser);
-      await Promise.race([
-        secondGenerateStarted.promise,
-        new Promise<void>((resolve) => {
-          globalThis.setTimeout(resolve, 50);
-        }),
-      ]);
+
+      expect(lockRequestSpy).toHaveBeenCalledTimes(2);
+      expect(generateKeySpy).toHaveBeenCalledTimes(1);
       releaseFirstGenerate.resolve();
 
       await Promise.all([firstInitialization, secondInitialization]);
 
       expect(generateKeySpy).toHaveBeenCalledTimes(1);
+      clearOfflineVaultSession();
+      await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+        persistedUser
+      );
     } finally {
       releaseFirstGenerate.resolve();
       await Promise.allSettled(
@@ -247,10 +247,7 @@ describe("offlineVault", () => {
     const initializePromise = initializeOfflineVault(persistedUser);
 
     await profileWriteStarted.promise;
-    expect(readStoredVaultState()).toHaveProperty(
-      "initializationId",
-      expect.any(String)
-    );
+    expect(readStoredVaultState()).toHaveProperty("initialization", "pending");
 
     deferredProfileWrite.resolve();
     await initializePromise;
@@ -283,16 +280,10 @@ describe("offlineVault", () => {
     releaseProfileWrite.resolve();
     await expect(initialization).rejects.toMatchObject({ name: "AbortError" });
     expect(await db.vaultProfile.count()).toBe(0);
-    expect(readStoredVaultState()).toHaveProperty(
-      "initializationId",
-      expect.any(String)
-    );
+    expect(readStoredVaultState()).toHaveProperty("initialization", "pending");
     clearOfflineVaultSession();
     await expect(readPersistedAuthUserFromVault()).resolves.toBeNull();
-    expect(readStoredVaultState()).toHaveProperty(
-      "initializationId",
-      expect.any(String)
-    );
+    expect(readStoredVaultState()).toHaveProperty("initialization", "pending");
   });
 
   it("keeps the vault readable when the browser-session CSRF token rotates", async () => {
@@ -457,10 +448,7 @@ describe("offlineVault", () => {
     expect(await db.vaultAnalytics.count()).toBe(0);
     expect(await db.organizationalUnitCache.count()).toBe(1);
     expect(await db.vaultOrganizationalUnitCache.count()).toBe(0);
-    expect(readStoredVaultState()).toHaveProperty(
-      "initializationId",
-      expect.any(String)
-    );
+    expect(readStoredVaultState()).toHaveProperty("initialization", "pending");
 
     clearOfflineVaultSession();
     await initializeOfflineVault(persistedUser);
@@ -526,7 +514,7 @@ describe("offlineVault", () => {
 
     clearOfflineVaultSession();
     await initializeOfflineVault(persistedUser);
-    expect(readStoredVaultState()).not.toHaveProperty("initializationId");
+    expect(readStoredVaultState()).not.toHaveProperty("initialization");
     clearOfflineVaultSession();
 
     await expect(listVaultAnalyticsEvents()).resolves.toEqual([
@@ -535,36 +523,6 @@ describe("offlineVault", () => {
     await expect(listVaultOrganizationalUnits()).resolves.toEqual([
       expect.objectContaining({ id: "committed-org" }),
     ]);
-  });
-
-  it("does not complete a newer same-subject initialization from an older commit", async () => {
-    const originalProfilePut = db.vaultProfile.put.bind(db.vaultProfile);
-
-    vi.spyOn(db.vaultProfile, "put").mockImplementationOnce((record) => {
-      const transaction = Dexie.currentTransaction;
-
-      if (!transaction) {
-        throw new Error("Expected the profile write to use a transaction.");
-      }
-
-      transaction.on("complete", () => {
-        localStorage.setItem(
-          AUTH_VAULT_STORAGE_KEY,
-          JSON.stringify({
-            ...readStoredVaultState(),
-            initializationId: "newer-operation",
-          })
-        );
-      });
-      return originalProfilePut(record);
-    });
-
-    await initializeOfflineVault(persistedUser);
-
-    expect(readStoredVaultState()).toHaveProperty(
-      "initializationId",
-      "newer-operation"
-    );
   });
 
   it("removes invalid vault state from localStorage when JSON is malformed", async () => {

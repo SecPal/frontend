@@ -267,7 +267,7 @@ export interface AuthStorage {
     options?: AuthStorageWriteOptions
   ): Promise<AuthUserPersistenceResult>;
   lockVault(): void;
-  unlockVault(): Promise<User | null>;
+  unlockVault(): Promise<AuthVaultUnlockResult>;
   removeUser(options?: AuthStorageClearOptions): Promise<void>;
   clear(options?: AuthStorageClearOptions): Promise<void>;
   hasLogoutBarrier(): boolean;
@@ -283,6 +283,7 @@ export interface AuthStorage {
 
 export interface AuthStorageReadOptions {
   signal?: AbortSignal;
+  allowLockedVault?: boolean;
 }
 
 export interface AuthStorageWriteOptions {
@@ -291,6 +292,11 @@ export interface AuthStorageWriteOptions {
 
 export type AuthUserPersistenceResult =
   { status: "persisted" } | { status: "superseded" };
+
+export type AuthVaultUnlockResult =
+  | { status: "unlocked"; user: User }
+  | { status: "unavailable" }
+  | { status: "empty" };
 
 export class AuthUserPersistenceError extends Error {
   constructor() {
@@ -348,7 +354,8 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   private setLogoutBarrier(): void {
-    localStorage.setItem(this.LOGOUT_BARRIER_KEY, "1");
+    this.activePersistenceController?.abort();
+    localStorage.setItem(this.LOGOUT_BARRIER_KEY, crypto.randomUUID());
   }
 
   setSkipBarrierVaultTableCleanup(shouldSkip: boolean): void {
@@ -591,7 +598,7 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   async getUser(options: AuthStorageReadOptions = {}): Promise<User | null> {
-    const { signal } = options;
+    const { signal, allowLockedVault = false } = options;
     throwIfAborted(signal);
 
     if (this.hasLogoutBarrier()) {
@@ -602,7 +609,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       return null;
     }
 
-    if (this.hasVaultLock()) {
+    if (!allowLockedVault && this.hasVaultLock()) {
       return null;
     }
 
@@ -685,12 +692,25 @@ class LocalStorageAuthStorage implements AuthStorage {
     user: User,
     options: AuthStorageWriteOptions = {}
   ): Promise<AuthUserPersistenceResult> {
+    const logoutBarrierAtStart = localStorage.getItem(this.LOGOUT_BARRIER_KEY);
     await this.abortPendingVaultCleanup();
     this.activePersistenceController?.abort();
     const controller = new AbortController();
     this.activePersistenceController = controller;
+    const hasNewerLogoutBarrier = () => {
+      const currentLogoutBarrier = localStorage.getItem(
+        this.LOGOUT_BARRIER_KEY
+      );
+
+      return (
+        currentLogoutBarrier !== null &&
+        currentLogoutBarrier !== logoutBarrierAtStart
+      );
+    };
     const shouldCommit = () =>
-      !controller.signal.aborted && (options.shouldCommit?.() ?? true);
+      !controller.signal.aborted &&
+      !hasNewerLogoutBarrier() &&
+      (options.shouldCommit?.() ?? true);
     const sanitizedUser = sanitizePersistedAuthUser(user);
 
     if (!sanitizedUser) {
@@ -707,8 +727,8 @@ class LocalStorageAuthStorage implements AuthStorage {
       await initializeOfflineVault(sanitizedUser, {
         signal: controller.signal,
       });
-    } catch (error) {
-      if (isAbortError(error) || !shouldCommit()) {
+    } catch {
+      if (!shouldCommit()) {
         return { status: "superseded" };
       }
 
@@ -742,17 +762,30 @@ class LocalStorageAuthStorage implements AuthStorage {
     clearActiveOfflineVaultSession();
   }
 
-  async unlockVault(): Promise<User | null> {
-    localStorage.removeItem(this.VAULT_LOCK_KEY);
-
-    const unlockedUser = await this.getUser();
-
-    if (!unlockedUser) {
+  async unlockVault(): Promise<AuthVaultUnlockResult> {
+    if (this.hasLogoutBarrier()) {
       await this.removeUser();
-      return null;
+      return { status: "empty" };
     }
 
-    return unlockedUser;
+    const unlockedUser = await this.getUser({ allowLockedVault: true });
+
+    if (this.hasLogoutBarrier()) {
+      await this.removeUser();
+      return { status: "empty" };
+    }
+
+    if (!unlockedUser) {
+      if (localStorage.getItem(this.VAULT_KEY) !== null) {
+        return { status: "unavailable" };
+      }
+
+      await this.removeUser();
+      return { status: "empty" };
+    }
+
+    localStorage.removeItem(this.VAULT_LOCK_KEY);
+    return { status: "unlocked", user: unlockedUser };
   }
 
   async removeUser(options: AuthStorageClearOptions = {}): Promise<void> {
@@ -780,7 +813,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       controller.signal
     )
       .catch((error: unknown) => {
-        if (!isAbortError(error)) {
+        if (!isAbortError(error) || !controller.signal.aborted) {
           throw error;
         }
       })

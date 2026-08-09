@@ -2504,7 +2504,7 @@ describe("useAuth", () => {
         })
       );
       expect(beginBarrierSpy).toHaveBeenCalledTimes(2);
-      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         "Timed out waiting for trailing logout cleanup during logout; continuing with best-effort barrier teardown."
       );
@@ -2688,7 +2688,7 @@ describe("useAuth", () => {
       });
 
       await waitForSensitiveClientCleanup();
-      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
     } finally {
       vaultProfileClearSpy.mockRestore();
       getUserSpy.mockRestore();
@@ -2791,7 +2791,7 @@ describe("useAuth", () => {
 
     expect(localStorage.getItem("auth_user")).toBeNull();
     await waitFor(() => {
-      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
     });
     await waitForSensitiveClientCleanup();
   });
@@ -2850,7 +2850,7 @@ describe("useAuth", () => {
     });
 
     await waitFor(() => {
-      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
       expect(
         localStorage.getItem("auth_logout_skip_vault_table_cleanup")
       ).toBeNull();
@@ -2905,6 +2905,83 @@ describe("useAuth", () => {
     expect(result.current.sensitiveUiState).toBe("clear");
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.user).toEqual(revalidatedUser);
+  });
+
+  it("keeps a locked vault recoverable when its wrapper is temporarily unavailable", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    await authStorage.setUser(mockUser);
+    mockGetCurrentUser.mockResolvedValueOnce(mockUser);
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      result.current.lock?.();
+    });
+    const storedVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+    vi.spyOn(authStorage, "unlockVault").mockResolvedValueOnce({
+      status: "unavailable",
+    });
+
+    let didUnlock = true;
+    await act(async () => {
+      didUnlock = (await result.current.unlock?.()) ?? false;
+    });
+
+    expect(didUnlock).toBe(false);
+    expect(result.current.isVaultLocked).toBe(true);
+    expect(result.current.user).toBeNull();
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(storedVaultState);
+    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+  });
+
+  it("lets a logout barrier supersede a successful in-flight vault unlock", async () => {
+    const mockUser = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    await authStorage.setUser(mockUser);
+    mockGetCurrentUser.mockResolvedValueOnce(mockUser);
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      result.current.lock?.();
+    });
+    vi.spyOn(authStorage, "unlockVault").mockImplementationOnce(async () => {
+      localStorage.setItem("auth_logout_barrier", "1");
+      return { status: "unlocked", user: mockUser };
+    });
+
+    let didUnlock = true;
+    await act(async () => {
+      didUnlock = (await result.current.unlock?.()) ?? false;
+    });
+
+    expect(didUnlock).toBe(false);
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.user).toBeNull();
+    expect(result.current.isVaultLocked).toBe(false);
+    expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
+    expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false, {
+      redirectOpenClients: true,
+    });
   });
 
   it("shows a visual privacy shield without locking or clearing the offline vault session", async () => {
@@ -3490,7 +3567,7 @@ describe("useAuth", () => {
       });
 
       expect(vaultProfileClearSpy).not.toHaveBeenCalled();
-      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
       expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
         "1"
       );
@@ -3533,7 +3610,7 @@ describe("useAuth", () => {
       });
 
       expect(vaultProfileClearSpy).not.toHaveBeenCalled();
-      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
       expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
         "1"
       );
@@ -3586,7 +3663,7 @@ describe("useAuth", () => {
       });
 
       expect(vaultProfileClearSpy).not.toHaveBeenCalled();
-      expect(localStorage.getItem("auth_logout_barrier")).toBe("1");
+      expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
       expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
         "1"
       );

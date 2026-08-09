@@ -51,6 +51,7 @@ const VAULT_RECORD_TAG_BYTES = 16;
 const NATIVE_VAULT_WRAPPING_KEY_ID = "native-auth-vault";
 const RECENT_AUTH_VAULT_KEY_MATERIALS_MAX = 3;
 const PROFILE_RECORD_ID = "profile";
+const VAULT_INITIALIZATION_LOCK_NAME = "secpal-auth-vault-initialization";
 const ROOT_ORGANIZATIONAL_UNIT_PARENT_LOOKUP_KEY = "__root__";
 
 const textEncoder = new TextEncoder();
@@ -106,7 +107,7 @@ interface AuthVaultStateEnvelopeV2 {
   scheme: typeof AUTH_VAULT_SCHEME;
   version: typeof AUTH_VAULT_VERSION;
   subjectHash: string;
-  initializationId?: string;
+  initialization?: "pending";
   wrapper:
     | BrowserSessionVaultWrapper
     | NativeDeviceBoundVaultWrapper
@@ -187,9 +188,8 @@ function isAuthVaultStateEnvelopeV2(
     candidate.scheme === AUTH_VAULT_SCHEME &&
     candidate.version === AUTH_VAULT_VERSION &&
     typeof candidate.subjectHash === "string" &&
-    (candidate.initializationId === undefined ||
-      (typeof candidate.initializationId === "string" &&
-        candidate.initializationId.length > 0)) &&
+    (candidate.initialization === undefined ||
+      candidate.initialization === "pending") &&
     ((wrapperCandidate.kind === "browser-session" &&
       typeof wrapperCandidate.salt === "string" &&
       typeof wrapperCandidate.iv === "string" &&
@@ -379,10 +379,9 @@ function setStoredVaultState(state: AuthVaultStateEnvelope): void {
 
 function isVaultInitializationPending(
   state: AuthVaultStateEnvelope | null
-): state is AuthVaultStateEnvelopeV2 & { initializationId: string } {
+): state is AuthVaultStateEnvelopeV2 & { initialization: "pending" } {
   return (
-    state?.version === AUTH_VAULT_VERSION &&
-    typeof state.initializationId === "string"
+    state?.version === AUTH_VAULT_VERSION && state.initialization === "pending"
   );
 }
 
@@ -394,28 +393,23 @@ function preserveVaultInitializationState(
     state.version === AUTH_VAULT_VERSION &&
     isVaultInitializationPending(previousState)
   ) {
-    return { ...state, initializationId: previousState.initializationId };
+    return { ...state, initialization: "pending" };
   }
 
   return state;
 }
 
-function completeVaultInitialization(
-  initializationId: string | null,
-  subjectHash: string
-): void {
+function completeVaultInitialization(subjectHash: string): void {
   const state = getStoredVaultState();
 
   if (
-    initializationId === null ||
     !isVaultInitializationPending(state) ||
-    state.initializationId !== initializationId ||
     state.subjectHash !== subjectHash
   ) {
     return;
   }
 
-  setStoredVaultState({ ...state, initializationId: undefined });
+  setStoredVaultState({ ...state, initialization: undefined });
 }
 
 export function hasStoredOfflineVaultState(): boolean {
@@ -1792,36 +1786,37 @@ export async function initializeOfflineVault(
   options: OfflineVaultOperationOptions = {}
 ): Promise<void> {
   const { signal } = options;
-  const { session, pendingStoredState } = await ensureVaultSessionForUser(
-    user,
-    signal
-  );
-  let initializationId: string | null = null;
+  const lockManager = globalThis.navigator?.locks;
 
-  if (pendingStoredState) {
-    initializationId = createVaultRecordId("initialization");
-    setStoredVaultState({
-      ...pendingStoredState,
-      initializationId,
-    });
-  } else {
-    const storedState = getStoredVaultState();
-
-    if (
-      isVaultInitializationPending(storedState) &&
-      storedState.subjectHash === session.subjectHash
-    ) {
-      initializationId = storedState.initializationId;
-    }
+  if (!lockManager) {
+    throw new Error("Secure offline vault initialization is unavailable.");
   }
 
-  await persistInitialVaultRecords(user, session, signal);
-  throwIfVaultOperationAborted(signal);
+  await lockManager.request(
+    VAULT_INITIALIZATION_LOCK_NAME,
+    { mode: "exclusive", signal },
+    async () => {
+      throwIfVaultOperationAborted(signal);
+      const { session, pendingStoredState } = await ensureVaultSessionForUser(
+        user,
+        signal
+      );
 
-  completeVaultInitialization(initializationId, session.subjectHash);
+      if (pendingStoredState) {
+        setStoredVaultState({
+          ...pendingStoredState,
+          initialization: "pending",
+        });
+      }
 
-  setActiveOfflineVaultSession(session);
-  localStorage.removeItem("auth_user");
+      await persistInitialVaultRecords(user, session, signal);
+      throwIfVaultOperationAborted(signal);
+
+      completeVaultInitialization(session.subjectHash);
+      setActiveOfflineVaultSession(session);
+      localStorage.removeItem("auth_user");
+    }
+  );
 }
 
 export async function readPersistedAuthUserFromVault(
