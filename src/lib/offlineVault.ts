@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
+import Dexie from "dexie";
 import type { PersistedAuthUser } from "../services/authState";
 import { sanitizePersistedAuthUser } from "../services/authState";
 import { getCsrfTokenFromCookie } from "../services/csrf";
@@ -25,7 +26,10 @@ import {
   setActiveOfflineVaultSession,
 } from "./offlineVaultRuntime";
 import { isCapacitorNativeRuntime } from "./nativeRuntime";
-import { awaitAbortable as awaitVaultOperation } from "./abortablePromise";
+import {
+  awaitAbortable as awaitVaultOperation,
+  throwIfAborted,
+} from "./abortablePromise";
 export {
   AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
@@ -126,7 +130,7 @@ export interface OfflineVaultOperationOptions {
 }
 
 function throwIfVaultOperationAborted(signal?: AbortSignal): void {
-  signal?.throwIfAborted();
+  throwIfAborted(signal);
 }
 
 type VaultAnalyticsPayload = Omit<
@@ -867,28 +871,36 @@ async function getOrCreateWebCryptoDeviceWrappingKey(
 ): Promise<CryptoKey> {
   await ensureVaultDatabaseOpen();
   throwIfVaultOperationAborted(signal);
-  const storedKey = await db.vaultWrappingKeys.get(
-    NATIVE_VAULT_WRAPPING_KEY_ID
-  );
-  throwIfVaultOperationAborted(signal);
 
-  if (storedKey) {
-    return storedKey.key;
-  }
+  return db.transaction("rw", db.vaultWrappingKeys, async () => {
+    throwIfVaultOperationAborted(signal);
+    const storedKey = await db.vaultWrappingKeys.get(
+      NATIVE_VAULT_WRAPPING_KEY_ID
+    );
+    throwIfVaultOperationAborted(signal);
 
-  const generatedKey = (await crypto.subtle.generateKey(
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["encrypt", "decrypt"]
-  )) as CryptoKey;
-  throwIfVaultOperationAborted(signal);
-  await db.vaultWrappingKeys.put({
-    id: NATIVE_VAULT_WRAPPING_KEY_ID,
-    key: generatedKey,
+    if (storedKey) {
+      return storedKey.key;
+    }
+
+    const generatedKey = (await Dexie.waitFor(
+      awaitVaultOperation(
+        crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, [
+          "encrypt",
+          "decrypt",
+        ]),
+        signal
+      )
+    )) as CryptoKey;
+    throwIfVaultOperationAborted(signal);
+    await db.vaultWrappingKeys.add({
+      id: NATIVE_VAULT_WRAPPING_KEY_ID,
+      key: generatedKey,
+    });
+    throwIfVaultOperationAborted(signal);
+
+    return generatedKey;
   });
-  throwIfVaultOperationAborted(signal);
-
-  return generatedKey;
 }
 
 async function encryptWebCryptoDeviceBoundVaultRootKeyBytes(

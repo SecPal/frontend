@@ -12,7 +12,7 @@ import {
   isTransientModuleLoadError,
 } from "../lib/lazyModuleErrors";
 import { clearActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
-import { awaitAbortable } from "../lib/abortablePromise";
+import { awaitAbortable, throwIfAborted } from "../lib/abortablePromise";
 import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
 import { sanitizePersistedAuthUser, type PersistedAuthUser } from "./authState";
 import { getCsrfTokenFromCookie } from "./csrf";
@@ -499,7 +499,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       loadOfflineVaultModule(),
       signal
     );
-    signal.throwIfAborted();
+    throwIfAborted(signal);
     await clearOfflineVaultTables({ signal });
   }
 
@@ -584,7 +584,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   async getUser(options: AuthStorageReadOptions = {}): Promise<User | null> {
     const { signal } = options;
-    signal?.throwIfAborted();
+    throwIfAborted(signal);
 
     if (this.hasLogoutBarrier()) {
       return null;
@@ -599,7 +599,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
       try {
         ({ readPersistedAuthUserFromVault } = await loadOfflineVaultModule());
-        signal?.throwIfAborted();
+        throwIfAborted(signal);
       } catch (error) {
         if (isTransientModuleLoadError(error)) {
           throw createRecoverableLazyModuleError(
@@ -612,7 +612,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       }
 
       const storedVaultUser = await readPersistedAuthUserFromVault({ signal });
-      signal?.throwIfAborted();
+      throwIfAborted(signal);
 
       if (!storedVaultUser) {
         return this.clearInvalidStoredUserAsync();
@@ -629,7 +629,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
     try {
       const sanitizedUser = await decryptPersistedAuthUser(storedUser);
-      signal?.throwIfAborted();
+      throwIfAborted(signal);
 
       if (!sanitizedUser) {
         return this.clearInvalidStoredUserAsync();
@@ -640,7 +640,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       try {
         ({ initializeOfflineVault, clearInvalidOfflineVaultArtifacts } =
           await loadOfflineVaultModule());
-        signal?.throwIfAborted();
+        throwIfAborted(signal);
       } catch (error) {
         if (isTransientModuleLoadError(error)) {
           throw createRecoverableLazyModuleError(
@@ -653,7 +653,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       }
 
       await initializeOfflineVault(sanitizedUser, { signal });
-      signal?.throwIfAborted();
+      throwIfAborted(signal);
 
       return sanitizedUser;
     } catch (error) {
@@ -775,7 +775,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     options: AuthStorageClearOptions,
     signal: AbortSignal
   ): Promise<void> {
-    signal.throwIfAborted();
+    throwIfAborted(signal);
     const shouldClearOfflineVaultTables =
       options.clearOfflineVaultTables ?? true;
     const shouldForceVaultTableCleanup =
@@ -797,7 +797,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     this.clearStoredUserMarkers();
     const { clearOfflineVaultSession, clearRecentAuthVaultKeyMaterials } =
       await loadOfflineVaultModule();
-    signal.throwIfAborted();
+    throwIfAborted(signal);
     clearOfflineVaultSession();
     clearRecentAuthVaultKeyMaterials();
 
@@ -807,7 +807,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
     if (shouldHonorBarrierSkipUpgrade || hasLogoutBarrier) {
       await this.waitForBarrierCleanupUpgrade();
-      signal.throwIfAborted();
+      throwIfAborted(signal);
 
       if (
         !shouldForceVaultTableCleanup &&

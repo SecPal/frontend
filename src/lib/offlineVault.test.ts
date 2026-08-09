@@ -162,6 +162,74 @@ describe("offlineVault", () => {
     }
   );
 
+  it("reuses one WebCrypto wrapping key across simultaneous native contexts", async () => {
+    installNativeVaultBridge();
+    const generatedKeys = await Promise.all([
+      crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, [
+        "encrypt",
+        "decrypt",
+      ]),
+      crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, [
+        "encrypt",
+        "decrypt",
+      ]),
+    ]);
+    const firstGenerateStarted = createDeferredPromise<void>();
+    const secondGenerateStarted = createDeferredPromise<void>();
+    const releaseFirstGenerate = createDeferredPromise<void>();
+    let generateCallCount = 0;
+    const generateKeySpy = vi
+      .spyOn(crypto.subtle, "generateKey")
+      .mockImplementation((() => {
+        const callIndex = generateCallCount;
+        generateCallCount += 1;
+
+        if (callIndex === 0) {
+          firstGenerateStarted.resolve();
+          return releaseFirstGenerate.promise.then(() => generatedKeys[0]);
+        }
+
+        secondGenerateStarted.resolve();
+        return Promise.resolve(generatedKeys[1]);
+      }) as typeof crypto.subtle.generateKey);
+    vi.resetModules();
+    const firstVault = await import("./offlineVault");
+    const firstDatabase = (await import("./db")).db;
+    vi.resetModules();
+    const secondVault = await import("./offlineVault");
+    const secondDatabase = (await import("./db")).db;
+    let firstInitialization: Promise<void> | null = null;
+    let secondInitialization: Promise<void> | null = null;
+
+    try {
+      firstInitialization = firstVault.initializeOfflineVault(persistedUser);
+      await firstGenerateStarted.promise;
+
+      secondInitialization = secondVault.initializeOfflineVault(persistedUser);
+      await Promise.race([
+        secondGenerateStarted.promise,
+        new Promise<void>((resolve) => {
+          globalThis.setTimeout(resolve, 50);
+        }),
+      ]);
+      releaseFirstGenerate.resolve();
+
+      await Promise.all([firstInitialization, secondInitialization]);
+
+      expect(generateKeySpy).toHaveBeenCalledTimes(1);
+    } finally {
+      releaseFirstGenerate.resolve();
+      await Promise.allSettled(
+        [firstInitialization, secondInitialization].filter(
+          (initialization): initialization is Promise<void> =>
+            initialization !== null
+        )
+      );
+      firstDatabase.close();
+      secondDatabase.close();
+    }
+  });
+
   it("does not expose auth_vault_state before the encrypted profile record is persisted", async () => {
     const deferredProfileWrite = createDeferredPromise<void>();
     const originalPut = db.vaultProfile.put.bind(db.vaultProfile);
