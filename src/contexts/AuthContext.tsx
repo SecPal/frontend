@@ -1366,6 +1366,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ]);
 
   useEffect(() => {
+    const restoreCrossTabAuthState = () => {
+      // Stop any startup restore/revalidation that may have observed this
+      // storage write before the cross-tab storage handler adopts it.
+      invalidateBootstrapRevalidation();
+
+      void (async () => {
+        try {
+          const nextUser = await authStorage.getUser();
+
+          // Re-check the in-memory barrier after the async decrypt because
+          // an inflight setUser() from bootstrap may have already cleared the
+          // localStorage barrier (via clearLogoutBarrier()) before we got
+          // here.
+          if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
+            reconcileActiveBarrierState();
+            return;
+          }
+
+          if (authStorage.getUserRevalidationOwnerToken() !== null) {
+            return;
+          }
+
+          if (!nextUser) {
+            revalidateBrowserSessionAfterStorageMismatch();
+            return;
+          }
+
+          hasLogoutBarrierRef.current = false;
+          shouldSkipBarrierVaultTableCleanupRef.current = false;
+          setBootstrapRecoveryReason(null);
+          setUser(nextUser);
+          setIsVaultLocked(false);
+          setIsLoading(false);
+          syncOfflineAuthState(true);
+        } catch (error) {
+          console.error("Failed to parse cross-tab auth state:", error);
+          revalidateBrowserSessionAfterStorageMismatch();
+        }
+      })();
+    };
+
     const handleStorage = (event: StorageEvent) => {
       if (event.storageArea !== localStorage) {
         return;
@@ -1376,10 +1417,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (
-        event.key === AUTH_USER_REVALIDATION_REQUIRED_KEY &&
-        event.newValue !== null
-      ) {
+      if (event.key === AUTH_USER_REVALIDATION_REQUIRED_KEY) {
+        if (event.newValue === null) {
+          restoreCrossTabAuthState();
+          return;
+        }
+
         if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
           reconcileActiveBarrierState();
           return;
@@ -1463,40 +1506,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Stop any startup restore/revalidation that may have observed this
-      // storage write before the cross-tab storage handler adopts it.
-      invalidateBootstrapRevalidation();
-
-      void (async () => {
-        try {
-          const nextUser = await authStorage.getUser();
-
-          // Re-check the in-memory barrier after the async decrypt because
-          // an inflight setUser() from bootstrap may have already cleared the
-          // localStorage barrier (via clearLogoutBarrier()) before we got
-          // here.
-          if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {
-            reconcileActiveBarrierState();
-            return;
-          }
-
-          if (!nextUser) {
-            revalidateBrowserSessionAfterStorageMismatch();
-            return;
-          }
-
-          hasLogoutBarrierRef.current = false;
-          shouldSkipBarrierVaultTableCleanupRef.current = false;
-          setBootstrapRecoveryReason(null);
-          setUser(nextUser);
-          setIsVaultLocked(false);
-          setIsLoading(false);
-          syncOfflineAuthState(true);
-        } catch (error) {
-          console.error("Failed to parse cross-tab auth state:", error);
-          revalidateBrowserSessionAfterStorageMismatch();
-        }
-      })();
+      restoreCrossTabAuthState();
     };
 
     window.addEventListener("storage", handleStorage);

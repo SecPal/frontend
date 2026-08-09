@@ -106,6 +106,7 @@ interface AuthVaultStateEnvelopeV2 {
   scheme: typeof AUTH_VAULT_SCHEME;
   version: typeof AUTH_VAULT_VERSION;
   subjectHash: string;
+  initializationId?: string;
   wrapper:
     | BrowserSessionVaultWrapper
     | NativeDeviceBoundVaultWrapper
@@ -186,6 +187,9 @@ function isAuthVaultStateEnvelopeV2(
     candidate.scheme === AUTH_VAULT_SCHEME &&
     candidate.version === AUTH_VAULT_VERSION &&
     typeof candidate.subjectHash === "string" &&
+    (candidate.initializationId === undefined ||
+      (typeof candidate.initializationId === "string" &&
+        candidate.initializationId.length > 0)) &&
     ((wrapperCandidate.kind === "browser-session" &&
       typeof wrapperCandidate.salt === "string" &&
       typeof wrapperCandidate.iv === "string" &&
@@ -371,6 +375,47 @@ function getStoredVaultState(): AuthVaultStateEnvelope | null {
 
 function setStoredVaultState(state: AuthVaultStateEnvelope): void {
   localStorage.setItem(AUTH_VAULT_STORAGE_KEY, JSON.stringify(state));
+}
+
+function isVaultInitializationPending(
+  state: AuthVaultStateEnvelope | null
+): state is AuthVaultStateEnvelopeV2 & { initializationId: string } {
+  return (
+    state?.version === AUTH_VAULT_VERSION &&
+    typeof state.initializationId === "string"
+  );
+}
+
+function preserveVaultInitializationState(
+  state: AuthVaultStateEnvelope,
+  previousState: AuthVaultStateEnvelope
+): AuthVaultStateEnvelope {
+  if (
+    state.version === AUTH_VAULT_VERSION &&
+    isVaultInitializationPending(previousState)
+  ) {
+    return { ...state, initializationId: previousState.initializationId };
+  }
+
+  return state;
+}
+
+function completeVaultInitialization(
+  initializationId: string | null,
+  subjectHash: string
+): void {
+  const state = getStoredVaultState();
+
+  if (
+    initializationId === null ||
+    !isVaultInitializationPending(state) ||
+    state.initializationId !== initializationId ||
+    state.subjectHash !== subjectHash
+  ) {
+    return;
+  }
+
+  setStoredVaultState({ ...state, initializationId: undefined });
 }
 
 export function hasStoredOfflineVaultState(): boolean {
@@ -984,7 +1029,7 @@ async function encryptVaultRootKeyBytes(
   rootKeyBytes: Uint8Array,
   subjectHash: string,
   signal?: AbortSignal
-): Promise<AuthVaultStateEnvelope | null> {
+): Promise<AuthVaultStateEnvelopeV2 | null> {
   const nativeBridge = await getNativeDeviceBoundVaultBridge();
   throwIfVaultOperationAborted(signal);
 
@@ -1444,7 +1489,11 @@ async function maybeRewriteStoredVaultState(
     return session;
   }
 
-  setStoredVaultState(rewrittenState);
+  const rewrittenStateWithLifecycle = preserveVaultInitializationState(
+    rewrittenState,
+    storedState
+  );
+  setStoredVaultState(rewrittenStateWithLifecycle);
 
   // Re-read key material after the async encrypt so wrapperCacheKey is derived
   // from the same key material that encryptVaultRootKeyBytes used internally,
@@ -1454,8 +1503,10 @@ async function maybeRewriteStoredVaultState(
   return {
     ...session,
     wrapperCacheKey:
-      getStoredVaultWrapperCacheKey(rewrittenState, postWriteKeyMaterial) ??
-      session.wrapperCacheKey,
+      getStoredVaultWrapperCacheKey(
+        rewrittenStateWithLifecycle,
+        postWriteKeyMaterial
+      ) ?? session.wrapperCacheKey,
   };
 }
 
@@ -1464,7 +1515,7 @@ async function ensureVaultSessionForUser(
   signal?: AbortSignal
 ): Promise<{
   session: VaultSession;
-  pendingStoredState: AuthVaultStateEnvelope | null;
+  pendingStoredState: AuthVaultStateEnvelopeV2 | null;
 }> {
   throwIfVaultOperationAborted(signal);
   const subjectHash = await computeSubjectHash(user.id);
@@ -1745,13 +1796,29 @@ export async function initializeOfflineVault(
     user,
     signal
   );
+  let initializationId: string | null = null;
+
+  if (pendingStoredState) {
+    initializationId = createVaultRecordId("initialization");
+    setStoredVaultState({
+      ...pendingStoredState,
+      initializationId,
+    });
+  } else {
+    const storedState = getStoredVaultState();
+
+    if (
+      isVaultInitializationPending(storedState) &&
+      storedState.subjectHash === session.subjectHash
+    ) {
+      initializationId = storedState.initializationId;
+    }
+  }
 
   await persistInitialVaultRecords(user, session, signal);
   throwIfVaultOperationAborted(signal);
 
-  if (pendingStoredState) {
-    setStoredVaultState(pendingStoredState);
-  }
+  completeVaultInitialization(initializationId, session.subjectHash);
 
   setActiveOfflineVaultSession(session);
   localStorage.removeItem("auth_user");
@@ -1774,6 +1841,10 @@ export async function readPersistedAuthUserFromVault(
   throwIfVaultOperationAborted(options.signal);
 
   if (!storedProfile) {
+    if (isVaultInitializationPending(getStoredVaultState())) {
+      return null;
+    }
+
     await clearInvalidOfflineVaultArtifacts(options);
     return null;
   }

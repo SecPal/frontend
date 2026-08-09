@@ -98,6 +98,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a server-confirmed user change invalidates the previous offline snapshot even
   when secure persistence of the replacement fails. Invalid legacy auth markers
   are now removed only after their orphaned vault records have been purged.
+  Initial vault writes now publish a resumable encrypted-key wrapper before the
+  atomic record commit, so cancellation cannot orphan committed data, and other
+  tabs restore the persisted native user when cross-tab revalidation completes.
 - Isolated AuthContext tests from shared offline-vault state and awaited the
   complete login handoff before teardown, so filtered runs no longer leave a
   rejected vault persistence task. Closes #1629.

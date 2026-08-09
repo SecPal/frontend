@@ -3650,6 +3650,131 @@ describe("useAuth", () => {
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
   });
 
+  it("adopts a cross-tab native user when revalidation completes", async () => {
+    const storedUser = {
+      id: "stored-user",
+      name: "Stored User",
+      email: "stored-user@secpal.dev",
+      emailVerified: true,
+    };
+    const confirmedUser = {
+      id: "confirmed-user",
+      name: "Confirmed User",
+      email: "confirmed-user@secpal.dev",
+      emailVerified: true,
+    };
+    await persistAuthUser(storedUser);
+    installNativeAuthBridge({
+      getCurrentUser: vi.fn().mockResolvedValue(storedUser),
+    });
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitForTestingLibrary(() => {
+      expect(result.current.user).toEqual(storedUser);
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    act(() => {
+      localStorage.setItem(AUTH_USER_REVALIDATION_REQUIRED_KEY, "owner");
+      const markerAdded = new Event("storage");
+      Object.defineProperties(markerAdded, {
+        key: { value: AUTH_USER_REVALIDATION_REQUIRED_KEY },
+        newValue: { value: "owner" },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
+      window.dispatchEvent(markerAdded);
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+
+    await expect(authStorage.setUser(confirmedUser)).resolves.toEqual({
+      status: "persisted",
+    });
+
+    act(() => {
+      const vaultWritten = new Event("storage");
+      Object.defineProperties(vaultWritten, {
+        key: { value: AUTH_VAULT_STORAGE_KEY },
+        newValue: {
+          value: localStorage.getItem(AUTH_VAULT_STORAGE_KEY),
+        },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
+      window.dispatchEvent(vaultWritten);
+    });
+
+    act(() => {
+      localStorage.removeItem(AUTH_USER_REVALIDATION_REQUIRED_KEY);
+      const markerRemoved = new Event("storage");
+      Object.defineProperties(markerRemoved, {
+        key: { value: AUTH_USER_REVALIDATION_REQUIRED_KEY },
+        oldValue: { value: "owner" },
+        newValue: { value: null },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
+      window.dispatchEvent(markerRemoved);
+    });
+
+    await waitForTestingLibrary(() => {
+      expect(result.current.user).toEqual(confirmedUser);
+    });
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.bootstrapRecoveryReason).toBeNull();
+  });
+
+  it("does not adopt a cross-tab user after a newer revalidation starts", async () => {
+    const storedUser = {
+      id: "stored-user",
+      name: "Stored User",
+      email: "stored-user@secpal.dev",
+      emailVerified: true,
+    };
+    await persistAuthUser(storedUser);
+    installNativeAuthBridge({
+      getCurrentUser: vi.fn().mockResolvedValue(storedUser),
+    });
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitForTestingLibrary(() => {
+      expect(result.current.user).toEqual(storedUser);
+    });
+
+    const crossTabRead = createDeferredPromise<typeof storedUser>();
+    vi.spyOn(authStorage, "getUser").mockReturnValueOnce(crossTabRead.promise);
+
+    act(() => {
+      const markerRemoved = new Event("storage");
+      Object.defineProperties(markerRemoved, {
+        key: { value: AUTH_USER_REVALIDATION_REQUIRED_KEY },
+        newValue: { value: null },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
+      window.dispatchEvent(markerRemoved);
+
+      localStorage.setItem(AUTH_USER_REVALIDATION_REQUIRED_KEY, "new-owner");
+      const markerAdded = new Event("storage");
+      Object.defineProperties(markerAdded, {
+        key: { value: AUTH_USER_REVALIDATION_REQUIRED_KEY },
+        newValue: { value: "new-owner" },
+        storageArea: { value: localStorage },
+      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
+      window.dispatchEvent(markerAdded);
+    });
+
+    await act(async () => {
+      crossTabRead.resolve(storedUser);
+      await crossTabRead.promise;
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.bootstrapRecoveryReason).toBe("network");
+  });
+
   it("updates auth state when another tab logs in", async () => {
     window.history.replaceState({}, "", "/onboarding/complete");
 

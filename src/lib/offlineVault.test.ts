@@ -114,6 +114,7 @@ describe("offlineVault", () => {
     expect(readStoredVaultState().wrapper).toMatchObject({
       kind: "browser-session",
     });
+    expect(readStoredVaultState()).not.toHaveProperty("initializationId");
     await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
       persistedUser
     );
@@ -231,11 +232,13 @@ describe("offlineVault", () => {
     }
   });
 
-  it("does not expose auth_vault_state before the encrypted profile record is persisted", async () => {
+  it("keeps a recoverable pending wrapper before the encrypted profile record is persisted", async () => {
+    const profileWriteStarted = createDeferredPromise<void>();
     const deferredProfileWrite = createDeferredPromise<void>();
     const originalPut = db.vaultProfile.put.bind(db.vaultProfile);
 
     vi.spyOn(db.vaultProfile, "put").mockImplementationOnce((...args) => {
+      profileWriteStarted.resolve();
       return Dexie.waitFor(deferredProfileWrite.promise).then(() =>
         originalPut(...args)
       ) as ReturnType<typeof originalPut>;
@@ -243,8 +246,11 @@ describe("offlineVault", () => {
 
     const initializePromise = initializeOfflineVault(persistedUser);
 
-    await Promise.resolve();
-    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    await profileWriteStarted.promise;
+    expect(readStoredVaultState()).toHaveProperty(
+      "initializationId",
+      expect.any(String)
+    );
 
     deferredProfileWrite.resolve();
     await initializePromise;
@@ -277,7 +283,16 @@ describe("offlineVault", () => {
     releaseProfileWrite.resolve();
     await expect(initialization).rejects.toMatchObject({ name: "AbortError" });
     expect(await db.vaultProfile.count()).toBe(0);
-    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    expect(readStoredVaultState()).toHaveProperty(
+      "initializationId",
+      expect.any(String)
+    );
+    clearOfflineVaultSession();
+    await expect(readPersistedAuthUserFromVault()).resolves.toBeNull();
+    expect(readStoredVaultState()).toHaveProperty(
+      "initializationId",
+      expect.any(String)
+    );
   });
 
   it("keeps the vault readable when the browser-session CSRF token rotates", async () => {
@@ -442,8 +457,12 @@ describe("offlineVault", () => {
     expect(await db.vaultAnalytics.count()).toBe(0);
     expect(await db.organizationalUnitCache.count()).toBe(1);
     expect(await db.vaultOrganizationalUnitCache.count()).toBe(0);
-    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    expect(readStoredVaultState()).toHaveProperty(
+      "initializationId",
+      expect.any(String)
+    );
 
+    clearOfflineVaultSession();
     await initializeOfflineVault(persistedUser);
 
     expect(await db.analytics.count()).toBe(0);
@@ -456,6 +475,96 @@ describe("offlineVault", () => {
     await expect(listVaultOrganizationalUnits()).resolves.toEqual([
       expect.objectContaining({ id: "org-1" }),
     ]);
+  });
+
+  it("resumes committed initial records when cancellation lands at transaction completion", async () => {
+    await db.analytics.add({
+      type: "page_view",
+      category: "navigation",
+      action: "view_dashboard",
+      timestamp: Date.now(),
+      synced: false,
+      sessionId: "committed-session",
+      userId: persistedUser.id,
+    });
+    await db.organizationalUnitCache.put({
+      id: "committed-org",
+      type: "company",
+      name: "Committed Organization",
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-02T00:00:00Z",
+      cachedAt: new Date("2026-01-03T00:00:00Z"),
+      lastSynced: new Date("2026-01-03T00:00:00Z"),
+      parent_id: null,
+      parent: null,
+    });
+    const controller = new AbortController();
+    const originalProfilePut = db.vaultProfile.put.bind(db.vaultProfile);
+
+    vi.spyOn(db.vaultProfile, "put").mockImplementationOnce((record) => {
+      const transaction = Dexie.currentTransaction;
+
+      if (!transaction) {
+        throw new Error(
+          "Expected initial vault writes to share a transaction."
+        );
+      }
+
+      transaction.on("complete", () => controller.abort());
+      return originalProfilePut(record);
+    });
+
+    await expect(
+      initializeOfflineVault(persistedUser, { signal: controller.signal })
+    ).rejects.toMatchObject({ name: "AbortError" });
+
+    expect(await db.analytics.count()).toBe(0);
+    expect(await db.organizationalUnitCache.count()).toBe(0);
+    expect(await db.vaultAnalytics.count()).toBe(1);
+    expect(await db.vaultOrganizationalUnitCache.count()).toBe(1);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+
+    clearOfflineVaultSession();
+    await initializeOfflineVault(persistedUser);
+    expect(readStoredVaultState()).not.toHaveProperty("initializationId");
+    clearOfflineVaultSession();
+
+    await expect(listVaultAnalyticsEvents()).resolves.toEqual([
+      expect.objectContaining({ sessionId: "committed-session" }),
+    ]);
+    await expect(listVaultOrganizationalUnits()).resolves.toEqual([
+      expect.objectContaining({ id: "committed-org" }),
+    ]);
+  });
+
+  it("does not complete a newer same-subject initialization from an older commit", async () => {
+    const originalProfilePut = db.vaultProfile.put.bind(db.vaultProfile);
+
+    vi.spyOn(db.vaultProfile, "put").mockImplementationOnce((record) => {
+      const transaction = Dexie.currentTransaction;
+
+      if (!transaction) {
+        throw new Error("Expected the profile write to use a transaction.");
+      }
+
+      transaction.on("complete", () => {
+        localStorage.setItem(
+          AUTH_VAULT_STORAGE_KEY,
+          JSON.stringify({
+            ...readStoredVaultState(),
+            initializationId: "newer-operation",
+          })
+        );
+      });
+      return originalProfilePut(record);
+    });
+
+    await initializeOfflineVault(persistedUser);
+
+    expect(readStoredVaultState()).toHaveProperty(
+      "initializationId",
+      "newer-operation"
+    );
   });
 
   it("removes invalid vault state from localStorage when JSON is malformed", async () => {
