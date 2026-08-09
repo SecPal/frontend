@@ -930,16 +930,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const unlock = useCallback(async (): Promise<boolean> => {
+    invalidateBootstrapRevalidation();
+    const unlockVersion = bootstrapRequestVersionRef.current;
     setIsLoading(true);
 
     try {
-      return applyVaultUnlockResult(await authStorage.unlockVault());
+      const result = await authStorage.unlockVault();
+
+      if (bootstrapRequestVersionRef.current !== unlockVersion) {
+        return false;
+      }
+
+      return applyVaultUnlockResult(result);
     } catch (error) {
+      if (bootstrapRequestVersionRef.current !== unlockVersion) {
+        return false;
+      }
+
       console.error("Failed to unlock offline vault:", error);
       preserveLockedVault();
       return false;
     }
-  }, [applyVaultUnlockResult, preserveLockedVault]);
+  }, [
+    applyVaultUnlockResult,
+    invalidateBootstrapRevalidation,
+    preserveLockedVault,
+  ]);
 
   const showPrivacyShield = useCallback(() => {
     if (isVaultLocked) {
@@ -1415,10 +1431,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Stop any startup restore/revalidation that may have observed this
       // storage write before the cross-tab storage handler adopts it.
       invalidateBootstrapRevalidation();
+      const restoreVersion = bootstrapRequestVersionRef.current;
 
       void (async () => {
         try {
           const nextUser = await authStorage.getUser();
+
+          if (bootstrapRequestVersionRef.current !== restoreVersion) {
+            return;
+          }
 
           // Re-check the in-memory barrier after the async decrypt because
           // an inflight setUser() from bootstrap may have already cleared the
@@ -1446,6 +1467,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setIsLoading(false);
           syncOfflineAuthState(true);
         } catch (error) {
+          if (bootstrapRequestVersionRef.current !== restoreVersion) {
+            return;
+          }
+
           console.error("Failed to parse cross-tab auth state:", error);
           revalidateBrowserSessionAfterStorageMismatch();
         }
@@ -1455,6 +1480,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const handleStorage = (event: StorageEvent) => {
       if (event.storageArea !== localStorage) {
         return;
+      }
+
+      if (
+        event.key === "auth_logout_barrier" ||
+        event.key === AUTH_USER_REVALIDATION_REQUIRED_KEY ||
+        event.key === AUTH_VAULT_LOCK_KEY ||
+        event.key === "auth_user" ||
+        event.key === AUTH_VAULT_STORAGE_KEY
+      ) {
+        invalidateBootstrapRevalidation();
       }
 
       if (event.key === "auth_logout_barrier" && event.newValue !== null) {
@@ -1494,10 +1529,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
+        const unlockVersion = bootstrapRequestVersionRef.current;
+
         void (async () => {
           try {
-            applyVaultUnlockResult(await authStorage.unlockVault());
+            const result = await authStorage.unlockVault();
+
+            if (bootstrapRequestVersionRef.current !== unlockVersion) {
+              return;
+            }
+
+            applyVaultUnlockResult(result);
           } catch (error) {
+            if (bootstrapRequestVersionRef.current !== unlockVersion) {
+              return;
+            }
+
             console.error("Failed to unlock cross-tab auth vault:", error);
             preserveLockedVault();
           }
@@ -1561,6 +1608,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      invalidateBootstrapRevalidation();
+      const restoreVersion = bootstrapRequestVersionRef.current;
+
       void (async () => {
         if (authStorage.hasVaultLock?.()) {
           setBootstrapRecoveryReason(null);
@@ -1573,6 +1623,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         const storedUser = await authStorage.getUser();
+
+        if (bootstrapRequestVersionRef.current !== restoreVersion) {
+          return;
+        }
 
         // Re-check the in-memory barrier after the async decrypt.
         if (hasLogoutBarrierRef.current || syncBarrierStateFromStorage()) {

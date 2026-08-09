@@ -92,18 +92,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Stale native vault-read timeouts can no longer override a newer logout, and
   initial profile and legacy-data persistence now commit atomically so a
   superseded migration cannot orphan encrypted records. Cancellation remains
-  compatible with Android WebView 83, and a browser lock now serializes
-  simultaneous native-context initialization around one transactionally
-  created WebCrypto wrapping key. Temporarily locked native vaults are
-  preserved across transient unlock failures instead of being replaced by a
-  fallback key, unexpected storage aborts surface as persistence failures, and
-  newer cross-tab logout barriers supersede in-flight unlocks and persistence.
+  compatible with Android WebView 83, and Web Locks serialize simultaneous
+  native-context initialization around one transactionally created WebCrypto
+  wrapping key. Auth lifecycle owner tokens retain a cryptographically secure
+  fallback on WebViews without `crypto.randomUUID()`. Temporarily locked native
+  vaults are preserved across transient unlock failures instead of being
+  replaced by a fallback key, unexpected storage aborts surface as persistence
+  failures, native wrapper reads honor cancellation, and newer cross-tab logout
+  barriers roll back in-flight profile persistence.
   A server-confirmed user change invalidates the previous offline snapshot even
   when secure persistence of the replacement fails. Invalid legacy auth markers
   are now removed only after their orphaned vault records have been purged.
   Initial vault writes now publish a resumable encrypted-key wrapper before the
-  atomic record commit, so cancellation cannot orphan committed data, and other
-  tabs restore the persisted native user when cross-tab revalidation completes.
+  atomic record commit, so cancellation cannot orphan committed data. Other
+  tabs restore the persisted native user when cross-tab revalidation completes,
+  while lifecycle versioning prevents an older asynchronous read or vault
+  unlock from replacing a newer confirmed identity or undoing a local vault
+  lock. A pending replacement wrapper is no longer purged when an orphaned
+  profile cannot be decrypted during the replacement transaction.
 - Isolated AuthContext tests from shared offline-vault state and awaited the
   complete login handoff before teardown, so filtered runs no longer leave a
   rejected vault persistence task. Closes #1629.

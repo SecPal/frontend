@@ -132,6 +132,21 @@ function createDeferredPromise<T>() {
   return { promise, resolve, reject };
 }
 
+function dispatchLocalStorageEvent(
+  key: string,
+  newValue: string | null,
+  oldValue: string | null = null
+): void {
+  const event = new Event("storage");
+  Object.defineProperties(event, {
+    key: { value: key },
+    oldValue: { value: oldValue },
+    newValue: { value: newValue },
+    storageArea: { value: localStorage },
+  } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
+  window.dispatchEvent(event);
+}
+
 async function persistAuthUser(user: Record<string, unknown>): Promise<string> {
   const persistedUser = sanitizePersistedAuthUser(user);
 
@@ -1374,6 +1389,60 @@ describe("useAuth", () => {
     } finally {
       consoleWarnSpy.mockRestore();
       vaultClearSpy.mockRestore();
+    }
+  });
+
+  it("invalidates a superseded native user when randomUUID is unavailable", async () => {
+    const storedUser = {
+      id: "stored-user",
+      name: "Stored User",
+      email: "stored-user@secpal.dev",
+      emailVerified: true,
+    };
+    const confirmedUser = {
+      id: "confirmed-user",
+      name: "Confirmed User",
+      email: "confirmed-user@secpal.dev",
+      emailVerified: true,
+    };
+    await authStorage.setUser(storedUser);
+    installNativeAuthBridge({
+      getCurrentUser: vi.fn().mockResolvedValue(confirmedUser),
+    });
+    const originalCrypto = Object.getOwnPropertyDescriptor(
+      globalThis,
+      "crypto"
+    );
+    const currentCrypto = globalThis.crypto;
+
+    Object.defineProperty(globalThis, "crypto", {
+      configurable: true,
+      value: {
+        subtle: currentCrypto.subtle,
+        getRandomValues: currentCrypto.getRandomValues.bind(currentCrypto),
+        randomUUID: undefined,
+      } as unknown as Crypto,
+    });
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.user).toEqual(confirmedUser);
+      });
+
+      expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.bootstrapRecoveryReason).toBeNull();
+      expect(
+        localStorage.getItem(AUTH_USER_REVALIDATION_REQUIRED_KEY)
+      ).toBeNull();
+      await expect(authStorage.getUser()).resolves.toEqual(confirmedUser);
+    } finally {
+      if (originalCrypto) {
+        Object.defineProperty(globalThis, "crypto", originalCrypto);
+      }
     }
   });
 
@@ -2984,6 +3053,78 @@ describe("useAuth", () => {
     });
   });
 
+  it("does not let an older vault unlock overwrite a completed cross-tab revalidation", async () => {
+    const storedUser = {
+      id: "stored-user",
+      name: "Stored User",
+      email: "stored-user@secpal.dev",
+      emailVerified: true,
+    };
+    const confirmedUser = {
+      id: "confirmed-user",
+      name: "Confirmed User",
+      email: "confirmed-user@secpal.dev",
+      emailVerified: true,
+    };
+    await authStorage.setUser(storedUser);
+    mockGetCurrentUser.mockResolvedValueOnce(storedUser);
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isAuthenticated).toBe(true);
+    });
+
+    act(() => {
+      result.current.lock?.();
+    });
+
+    const deferredUnlock = createDeferredPromise<{
+      status: "unlocked";
+      user: typeof storedUser;
+    }>();
+    vi.spyOn(authStorage, "unlockVault").mockReturnValueOnce(
+      deferredUnlock.promise
+    );
+    vi.spyOn(authStorage, "getUser").mockResolvedValueOnce(confirmedUser);
+    let unlockPromise: Promise<boolean> | undefined;
+
+    await act(async () => {
+      unlockPromise = result.current.unlock?.();
+      await Promise.resolve();
+    });
+
+    act(() => {
+      localStorage.setItem(AUTH_USER_REVALIDATION_REQUIRED_KEY, "new-owner");
+      dispatchLocalStorageEvent(
+        AUTH_USER_REVALIDATION_REQUIRED_KEY,
+        "new-owner"
+      );
+
+      localStorage.removeItem(AUTH_USER_REVALIDATION_REQUIRED_KEY);
+      dispatchLocalStorageEvent(
+        AUTH_USER_REVALIDATION_REQUIRED_KEY,
+        null,
+        "new-owner"
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.user).toEqual(confirmedUser);
+    });
+
+    let didUnlock = true;
+    await act(async () => {
+      deferredUnlock.resolve({ status: "unlocked", user: storedUser });
+      didUnlock = (await unlockPromise) ?? false;
+    });
+
+    expect(didUnlock).toBe(false);
+    expect(result.current.user).toEqual(confirmedUser);
+    expect(result.current.isAuthenticated).toBe(true);
+  });
+
   it("shows a visual privacy shield without locking or clearing the offline vault session", async () => {
     const mockUser = {
       id: "1",
@@ -3801,7 +3942,131 @@ describe("useAuth", () => {
     expect(result.current.bootstrapRecoveryReason).toBeNull();
   });
 
-  it("does not adopt a cross-tab user after a newer revalidation starts", async () => {
+  it("does not let an older cross-tab restore overwrite a completed newer revalidation", async () => {
+    const storedUser = {
+      id: "stored-user",
+      name: "Stored User",
+      email: "stored-user@secpal.dev",
+      emailVerified: true,
+    };
+    await persistAuthUser(storedUser);
+    installNativeAuthBridge({
+      getCurrentUser: vi.fn().mockResolvedValue(storedUser),
+    });
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitForTestingLibrary(() => {
+      expect(result.current.user).toEqual(storedUser);
+    });
+
+    const confirmedUser = {
+      id: "confirmed-user",
+      name: "Confirmed User",
+      email: "confirmed-user@secpal.dev",
+      emailVerified: true,
+    };
+    const crossTabRead = createDeferredPromise<typeof storedUser>();
+    vi.spyOn(authStorage, "getUser")
+      .mockReturnValueOnce(crossTabRead.promise)
+      .mockResolvedValueOnce(confirmedUser);
+
+    act(() => {
+      dispatchLocalStorageEvent(AUTH_USER_REVALIDATION_REQUIRED_KEY, null);
+
+      localStorage.setItem(AUTH_USER_REVALIDATION_REQUIRED_KEY, "new-owner");
+      dispatchLocalStorageEvent(
+        AUTH_USER_REVALIDATION_REQUIRED_KEY,
+        "new-owner"
+      );
+    });
+
+    act(() => {
+      localStorage.removeItem(AUTH_USER_REVALIDATION_REQUIRED_KEY);
+      dispatchLocalStorageEvent(
+        AUTH_USER_REVALIDATION_REQUIRED_KEY,
+        null,
+        "new-owner"
+      );
+    });
+
+    await waitForTestingLibrary(() => {
+      expect(result.current.user).toEqual(confirmedUser);
+    });
+
+    await act(async () => {
+      crossTabRead.resolve(storedUser);
+      await crossTabRead.promise;
+    });
+
+    expect(result.current.user).toEqual(confirmedUser);
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.bootstrapRecoveryReason).toBeNull();
+  });
+
+  it("ignores an older cross-tab restore failure after a newer revalidation completes", async () => {
+    const storedUser = {
+      id: "stored-user",
+      name: "Stored User",
+      email: "stored-user@secpal.dev",
+      emailVerified: true,
+    };
+    const confirmedUser = {
+      id: "confirmed-user",
+      name: "Confirmed User",
+      email: "confirmed-user@secpal.dev",
+      emailVerified: true,
+    };
+    await persistAuthUser(storedUser);
+    installNativeAuthBridge({
+      getCurrentUser: vi.fn().mockResolvedValue(storedUser),
+    });
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitForTestingLibrary(() => {
+      expect(result.current.user).toEqual(storedUser);
+    });
+
+    const crossTabRead = createDeferredPromise<typeof storedUser>();
+    vi.spyOn(authStorage, "getUser")
+      .mockReturnValueOnce(crossTabRead.promise)
+      .mockResolvedValueOnce(confirmedUser);
+
+    act(() => {
+      dispatchLocalStorageEvent(AUTH_USER_REVALIDATION_REQUIRED_KEY, null);
+
+      localStorage.setItem(AUTH_USER_REVALIDATION_REQUIRED_KEY, "new-owner");
+      dispatchLocalStorageEvent(
+        AUTH_USER_REVALIDATION_REQUIRED_KEY,
+        "new-owner"
+      );
+
+      localStorage.removeItem(AUTH_USER_REVALIDATION_REQUIRED_KEY);
+      dispatchLocalStorageEvent(
+        AUTH_USER_REVALIDATION_REQUIRED_KEY,
+        null,
+        "new-owner"
+      );
+    });
+
+    await waitForTestingLibrary(() => {
+      expect(result.current.user).toEqual(confirmedUser);
+    });
+
+    await act(async () => {
+      crossTabRead.reject(new Error("stale vault read failed"));
+      await Promise.resolve();
+    });
+
+    expect(result.current.user).toEqual(confirmedUser);
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.bootstrapRecoveryReason).toBeNull();
+  });
+
+  it("does not let an in-flight cross-tab restore undo a local vault lock", async () => {
     const storedUser = {
       id: "stored-user",
       name: "Stored User",
@@ -3824,22 +4089,11 @@ describe("useAuth", () => {
     vi.spyOn(authStorage, "getUser").mockReturnValueOnce(crossTabRead.promise);
 
     act(() => {
-      const markerRemoved = new Event("storage");
-      Object.defineProperties(markerRemoved, {
-        key: { value: AUTH_USER_REVALIDATION_REQUIRED_KEY },
-        newValue: { value: null },
-        storageArea: { value: localStorage },
-      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
-      window.dispatchEvent(markerRemoved);
-
-      localStorage.setItem(AUTH_USER_REVALIDATION_REQUIRED_KEY, "new-owner");
-      const markerAdded = new Event("storage");
-      Object.defineProperties(markerAdded, {
-        key: { value: AUTH_USER_REVALIDATION_REQUIRED_KEY },
-        newValue: { value: "new-owner" },
-        storageArea: { value: localStorage },
-      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
-      window.dispatchEvent(markerAdded);
+      dispatchLocalStorageEvent(
+        AUTH_VAULT_STORAGE_KEY,
+        localStorage.getItem(AUTH_VAULT_STORAGE_KEY)
+      );
+      result.current.lock?.();
     });
 
     await act(async () => {
@@ -3849,7 +4103,7 @@ describe("useAuth", () => {
 
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.bootstrapRecoveryReason).toBe("network");
+    expect(result.current.isVaultLocked).toBe(true);
   });
 
   it("updates auth state when another tab logs in", async () => {

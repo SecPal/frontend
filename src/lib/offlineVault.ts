@@ -130,10 +130,22 @@ interface VaultRootKeyDecryptionResult {
 
 export interface OfflineVaultOperationOptions {
   signal?: AbortSignal;
+  shouldCommit?: () => boolean;
 }
 
 function throwIfVaultOperationAborted(signal?: AbortSignal): void {
   throwIfAborted(signal);
+}
+
+function throwIfVaultOperationCannotCommit(
+  signal?: AbortSignal,
+  shouldCommit?: () => boolean
+): void {
+  throwIfVaultOperationAborted(signal);
+
+  if (shouldCommit && !shouldCommit()) {
+    throw new DOMException("The vault operation was superseded.", "AbortError");
+  }
 }
 
 type VaultAnalyticsPayload = Omit<
@@ -253,7 +265,11 @@ function getAuthVaultKeyMaterialCandidates(): string[] {
   ];
 }
 
-async function getNativeDeviceBoundVaultBridge(): Promise<NativeDeviceBoundVaultBridge | null> {
+async function getNativeDeviceBoundVaultBridge(
+  signal?: AbortSignal
+): Promise<NativeDeviceBoundVaultBridge | null> {
+  throwIfVaultOperationAborted(signal);
+
   if (!isCapacitorNativeRuntime()) {
     return null;
   }
@@ -279,10 +295,14 @@ async function getNativeDeviceBoundVaultBridge(): Promise<NativeDeviceBoundVault
   }
 
   try {
-    return (await candidate.isVaultDeviceBoundWrapperAvailable()) === true
-      ? candidate
-      : null;
+    const isAvailable = await awaitVaultOperation(
+      Promise.resolve(candidate.isVaultDeviceBoundWrapperAvailable()),
+      signal
+    );
+
+    return isAvailable === true ? candidate : null;
   } catch {
+    throwIfVaultOperationAborted(signal);
     console.warn(
       "[Offline Vault] Native device-bound wrapper detection failed; using the available fallback."
     );
@@ -1024,7 +1044,7 @@ async function encryptVaultRootKeyBytes(
   subjectHash: string,
   signal?: AbortSignal
 ): Promise<AuthVaultStateEnvelopeV2 | null> {
-  const nativeBridge = await getNativeDeviceBoundVaultBridge();
+  const nativeBridge = await getNativeDeviceBoundVaultBridge(signal);
   throwIfVaultOperationAborted(signal);
 
   if (nativeBridge) {
@@ -1065,11 +1085,14 @@ async function decryptVaultRootKeyBytes(
   }
 
   if (state.wrapper.kind === "native-device-bound") {
-    const nativeBridge = await getNativeDeviceBoundVaultBridge();
+    const nativeBridge = await getNativeDeviceBoundVaultBridge(signal);
 
     return {
       rootKeyBytes: nativeBridge
-        ? await decryptNativeDeviceBoundVaultRootKeyBytes(state, nativeBridge)
+        ? await awaitVaultOperation(
+            decryptNativeDeviceBoundVaultRootKeyBytes(state, nativeBridge),
+            signal
+          )
         : null,
       keyMaterialUsed: null,
     };
@@ -1453,7 +1476,7 @@ async function maybeRewriteStoredVaultState(
     storedState,
     currentKeyMaterial
   );
-  const preferredWrapperKind = (await getNativeDeviceBoundVaultBridge())
+  const preferredWrapperKind = (await getNativeDeviceBoundVaultBridge(signal))
     ? "native-device-bound"
     : isCapacitorNativeRuntime()
       ? "webcrypto-device-bound"
@@ -1731,10 +1754,11 @@ async function migrateLegacyOrganizationalUnitRecords(
 async function persistInitialVaultRecords(
   user: PersistedAuthUser,
   session: VaultSession,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  shouldCommit?: () => boolean
 ): Promise<void> {
   await ensureVaultDatabaseOpen();
-  throwIfVaultOperationAborted(signal);
+  throwIfVaultOperationCannotCommit(signal, shouldCommit);
 
   const [profileRecord, analyticsRecords, organizationalUnitRecords] =
     await Promise.all([
@@ -1742,7 +1766,7 @@ async function persistInitialVaultRecords(
       buildLegacyAnalyticsMigrationRecords(session, signal),
       buildLegacyOrganizationalUnitMigrationRecords(session, signal),
     ]);
-  throwIfVaultOperationAborted(signal);
+  throwIfVaultOperationCannotCommit(signal, shouldCommit);
 
   await db.transaction(
     "rw",
@@ -1754,18 +1778,18 @@ async function persistInitialVaultRecords(
       db.organizationalUnitCache,
     ],
     async () => {
-      throwIfVaultOperationAborted(signal);
+      throwIfVaultOperationCannotCommit(signal, shouldCommit);
       await awaitVaultOperation(db.vaultProfile.put(profileRecord), signal);
-      throwIfVaultOperationAborted(signal);
+      throwIfVaultOperationCannotCommit(signal, shouldCommit);
 
       if (analyticsRecords.length > 0) {
         await awaitVaultOperation(
           db.vaultAnalytics.bulkPut(analyticsRecords),
           signal
         );
-        throwIfVaultOperationAborted(signal);
+        throwIfVaultOperationCannotCommit(signal, shouldCommit);
         await awaitVaultOperation(db.analytics.clear(), signal);
-        throwIfVaultOperationAborted(signal);
+        throwIfVaultOperationCannotCommit(signal, shouldCommit);
       }
 
       if (organizationalUnitRecords.length > 0) {
@@ -1773,10 +1797,12 @@ async function persistInitialVaultRecords(
           db.vaultOrganizationalUnitCache.bulkPut(organizationalUnitRecords),
           signal
         );
-        throwIfVaultOperationAborted(signal);
+        throwIfVaultOperationCannotCommit(signal, shouldCommit);
         await awaitVaultOperation(db.organizationalUnitCache.clear(), signal);
-        throwIfVaultOperationAborted(signal);
+        throwIfVaultOperationCannotCommit(signal, shouldCommit);
       }
+
+      throwIfVaultOperationCannotCommit(signal, shouldCommit);
     }
   );
 }
@@ -1785,7 +1811,7 @@ export async function initializeOfflineVault(
   user: PersistedAuthUser,
   options: OfflineVaultOperationOptions = {}
 ): Promise<void> {
-  const { signal } = options;
+  const { signal, shouldCommit } = options;
   const lockManager = globalThis.navigator?.locks;
 
   if (!lockManager) {
@@ -1796,21 +1822,23 @@ export async function initializeOfflineVault(
     VAULT_INITIALIZATION_LOCK_NAME,
     { mode: "exclusive", signal },
     async () => {
-      throwIfVaultOperationAborted(signal);
+      throwIfVaultOperationCannotCommit(signal, shouldCommit);
       const { session, pendingStoredState } = await ensureVaultSessionForUser(
         user,
         signal
       );
+      throwIfVaultOperationCannotCommit(signal, shouldCommit);
 
       if (pendingStoredState) {
         setStoredVaultState({
           ...pendingStoredState,
           initialization: "pending",
         });
+        throwIfVaultOperationCannotCommit(signal, shouldCommit);
       }
 
-      await persistInitialVaultRecords(user, session, signal);
-      throwIfVaultOperationAborted(signal);
+      await persistInitialVaultRecords(user, session, signal, shouldCommit);
+      throwIfVaultOperationCannotCommit(signal, shouldCommit);
 
       completeVaultInitialization(session.subjectHash);
       setActiveOfflineVaultSession(session);
@@ -1852,6 +1880,10 @@ export async function readPersistedAuthUserFromVault(
   const sanitizedUser = sanitizePersistedAuthUser(decryptedUser);
 
   if (!sanitizedUser) {
+    if (isVaultInitializationPending(getStoredVaultState())) {
+      return null;
+    }
+
     console.error(
       "Failed to parse stored user data:",
       new SyntaxError("Invalid encrypted vault profile payload.")

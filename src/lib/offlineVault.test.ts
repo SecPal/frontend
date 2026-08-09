@@ -258,6 +258,97 @@ describe("offlineVault", () => {
     );
   });
 
+  it("preserves a pending vault when an orphaned profile cannot decrypt", async () => {
+    await initializeOfflineVault(persistedUser);
+    const orphanedProfile = await db.vaultProfile.get("profile");
+    const replacementUser = {
+      ...persistedUser,
+      id: "replacement-user",
+      email: "replacement@secpal.dev",
+    };
+    const profileEncryptionStarted = createDeferredPromise<void>();
+    const releaseProfileEncryption = createDeferredPromise<void>();
+    const originalEncrypt = crypto.subtle.encrypt.bind(crypto.subtle);
+    let delayedProfileEncryption = false;
+    vi.spyOn(crypto.subtle, "encrypt").mockImplementation(
+      async (algorithm, key, data) => {
+        const encryption = originalEncrypt(algorithm, key, data);
+
+        if (
+          !delayedProfileEncryption &&
+          typeof algorithm !== "string" &&
+          algorithm.name === "AES-GCM"
+        ) {
+          delayedProfileEncryption = true;
+          profileEncryptionStarted.resolve();
+          await releaseProfileEncryption.promise;
+        }
+
+        return encryption;
+      }
+    );
+    const initialization = initializeOfflineVault(replacementUser);
+
+    try {
+      await profileEncryptionStarted.promise;
+      if (!orphanedProfile) {
+        throw new Error("Expected the original encrypted profile record.");
+      }
+      await db.vaultProfile.put(orphanedProfile);
+      const pendingVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+      expect(readStoredVaultState()).toHaveProperty(
+        "initialization",
+        "pending"
+      );
+      clearOfflineVaultSession();
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => undefined);
+
+      await expect(readPersistedAuthUserFromVault()).resolves.toBeNull();
+
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(
+        pendingVaultState
+      );
+      expect(await db.vaultProfile.count()).toBe(1);
+    } finally {
+      releaseProfileEncryption.resolve();
+      await Promise.allSettled([initialization]);
+    }
+
+    clearOfflineVaultSession();
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      replacementUser
+    );
+  });
+
+  it("releases vault initialization when native wrapper discovery is cancelled", async () => {
+    const availability = createDeferredPromise<boolean>();
+    const nativeBridge = installNativeVaultBridge({
+      isVaultDeviceBoundWrapperAvailable: vi.fn(() => availability.promise),
+    });
+    const controller = new AbortController();
+    const initialization = initializeOfflineVault(persistedUser, {
+      signal: controller.signal,
+    });
+
+    try {
+      await vi.waitFor(() => {
+        expect(
+          nativeBridge.isVaultDeviceBoundWrapperAvailable
+        ).toHaveBeenCalledTimes(1);
+      });
+      controller.abort();
+      await expect(initialization).rejects.toMatchObject({
+        name: "AbortError",
+      });
+    } finally {
+      availability.resolve(false);
+      await Promise.allSettled([initialization]);
+    }
+  });
+
   it("rolls back a profile write when persistence is superseded", async () => {
     const profileWritten = createDeferredPromise<void>();
     const releaseProfileWrite = createDeferredPromise<void>();
@@ -607,6 +698,44 @@ describe("offlineVault", () => {
         subjectHash,
       })
     );
+  });
+
+  it("cancels a stalled native vault unwrap", async () => {
+    let rootKeyBase64 = "";
+    installNativeVaultBridge({
+      isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
+      wrapVaultRootKey: vi.fn(
+        async ({ rootKeyBase64: nextRootKey }: { rootKeyBase64: string }) => {
+          rootKeyBase64 = nextRootKey;
+          return { wrappedRootKey: "wrapped-root-key" };
+        }
+      ),
+      unwrapVaultRootKey: vi.fn(),
+    });
+    await initializeOfflineVault(persistedUser);
+    clearOfflineVaultSession();
+
+    const unwrappedRootKey = createDeferredPromise<{
+      rootKeyBase64: string;
+    }>();
+    const nativeBridge = installNativeVaultBridge({
+      isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
+      wrapVaultRootKey: vi.fn(),
+      unwrapVaultRootKey: vi.fn(() => unwrappedRootKey.promise),
+    });
+    const controller = new AbortController();
+    const read = readPersistedAuthUserFromVault({ signal: controller.signal });
+
+    try {
+      await vi.waitFor(() => {
+        expect(nativeBridge.unwrapVaultRootKey).toHaveBeenCalledTimes(1);
+      });
+      controller.abort();
+      await expect(read).rejects.toMatchObject({ name: "AbortError" });
+    } finally {
+      unwrappedRootKey.resolve({ rootKeyBase64 });
+      await Promise.allSettled([read]);
+    }
   });
 
   it("decrypts a persisted auth user from a legacy v1 envelope after upgrade", async () => {

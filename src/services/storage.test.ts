@@ -413,6 +413,35 @@ describe("authStorage", () => {
     expect(authStorage.hasLogoutBarrier()).toBe(true);
   });
 
+  it("rolls back vault records when another tab logs out during persistence", async () => {
+    const profileWritten = createDeferredPromise<void>();
+    const releaseProfileWrite = createDeferredPromise<void>();
+    const originalPut = db.vaultProfile.put.bind(db.vaultProfile);
+    let attemptedProfile: Parameters<typeof originalPut>[0] | null = null;
+    vi.spyOn(db.vaultProfile, "put").mockImplementationOnce((...args) => {
+      [attemptedProfile] = args;
+      return originalPut(...args).then((result) => {
+        profileWritten.resolve();
+        return Dexie.waitFor(releaseProfileWrite.promise).then(() => result);
+      });
+    });
+
+    const persistence = authStorage.setUser({
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    });
+    await profileWritten.promise;
+    localStorage.setItem("auth_logout_barrier", "other-context");
+    releaseProfileWrite.resolve();
+
+    await expect(persistence).resolves.toEqual({ status: "superseded" });
+    expect(attemptedProfile).not.toBeNull();
+    expect(await db.vaultProfile.get("profile")).not.toEqual(attemptedProfile);
+    expect(authStorage.hasLogoutBarrier()).toBe(true);
+  });
+
   it("migrates the legacy auth_user envelope into the encrypted vault and removes auth_user from localStorage", async () => {
     const legacyUser = {
       id: "1",
@@ -755,6 +784,40 @@ describe("authStorage", () => {
     expect(
       localStorage.getItem(AUTH_USER_REVALIDATION_REQUIRED_KEY)
     ).toBeNull();
+  });
+
+  it("creates revalidation owner tokens when randomUUID is unavailable", () => {
+    const originalCrypto = Object.getOwnPropertyDescriptor(
+      globalThis,
+      "crypto"
+    );
+    const getRandomValues = vi.fn((values: Uint8Array) => {
+      values.fill(0x2a);
+      return values;
+    });
+
+    Object.defineProperty(globalThis, "crypto", {
+      configurable: true,
+      value: {
+        ...crypto,
+        getRandomValues,
+        randomUUID: undefined,
+      } as unknown as Crypto,
+    });
+
+    try {
+      const ownerToken = authStorage.requireUserRevalidation();
+
+      expect(getRandomValues).toHaveBeenCalledTimes(1);
+      expect(ownerToken).toMatch(/^[0-9a-f]{32}$/);
+      expect(localStorage.getItem(AUTH_USER_REVALIDATION_REQUIRED_KEY)).toBe(
+        ownerToken
+      );
+    } finally {
+      if (originalCrypto) {
+        Object.defineProperty(globalThis, "crypto", originalCrypto);
+      }
+    }
   });
 
   it("does not make a logout-barrier read start destructive cleanup", async () => {

@@ -14,6 +14,7 @@ import {
 } from "../lib/lazyModuleErrors";
 import { clearActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
 import { awaitAbortable, throwIfAborted } from "../lib/abortablePromise";
+import { createSecureRandomToken } from "../lib/secureRandom";
 import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
 import { sanitizePersistedAuthUser, type PersistedAuthUser } from "./authState";
 import { getCsrfTokenFromCookie } from "./csrf";
@@ -355,7 +356,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   private setLogoutBarrier(): void {
     this.activePersistenceController?.abort();
-    localStorage.setItem(this.LOGOUT_BARRIER_KEY, crypto.randomUUID());
+    localStorage.setItem(this.LOGOUT_BARRIER_KEY, createSecureRandomToken());
   }
 
   setSkipBarrierVaultTableCleanup(shouldSkip: boolean): void {
@@ -377,7 +378,7 @@ class LocalStorageAuthStorage implements AuthStorage {
   beginSensitiveLogoutBarrierCleanup(): string {
     const hasActiveSkipBarrier =
       this.hasLogoutBarrier() && this.shouldSkipBarrierVaultTableCleanup();
-    const ownerToken = crypto.randomUUID();
+    const ownerToken = createSecureRandomToken();
 
     if (!hasActiveSkipBarrier) {
       this.clearSensitiveLogoutBarrierCleanupOwners();
@@ -543,7 +544,7 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   requireUserRevalidation(): string {
-    const ownerToken = crypto.randomUUID();
+    const ownerToken = createSecureRandomToken();
     localStorage.setItem(AUTH_USER_REVALIDATION_REQUIRED_KEY, ownerToken);
     return ownerToken;
   }
@@ -726,6 +727,7 @@ class LocalStorageAuthStorage implements AuthStorage {
 
       await initializeOfflineVault(sanitizedUser, {
         signal: controller.signal,
+        shouldCommit,
       });
     } catch {
       if (!shouldCommit()) {
