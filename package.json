@@ -98,7 +98,7 @@
     "lighthouse:ci": "npx --yes @lhci/cli@0.15.1 autorun --config=lighthouserc.cjs"
   },
   "dependencies": {
-    "@base-ui/react": "^1.6.0",
+    "@base-ui/react": "^1.7.0",
     "@capacitor/core": "^8.5.0",
     "@lingui/core": "^6.6.0",
     "@lingui/react": "^6.6.0",
