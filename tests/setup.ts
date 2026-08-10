@@ -8,6 +8,18 @@ import "fake-indexeddb/auto";
 import { mockAnimationsApi } from "jsdom-testing-mocks";
 import { cleanup, configure } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
+import { installSerializedWebLocks } from "../src/testUtils/serializedWebLocks";
+
+let restoreSerializedWebLocks: (() => void) | null = null;
+
+beforeEach(() => {
+  restoreSerializedWebLocks = installSerializedWebLocks();
+});
+
+afterEach(() => {
+  restoreSerializedWebLocks?.();
+  restoreSerializedWebLocks = null;
+});
 
 // React Testing Library's `findBy*` and `waitFor` helpers default to a 1
 // second async timeout. That is generous in isolation but routinely too

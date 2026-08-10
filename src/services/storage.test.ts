@@ -559,9 +559,11 @@ describe("authStorage", () => {
   });
 
   it("clears invalid JSON persisted auth state while decrypting", async () => {
+    const lockRequestSpy = vi.spyOn(navigator.locks, "request");
     localStorage.setItem("auth_user", "invalid-json");
 
     await expect(authStorage.getUser()).resolves.toBeNull();
+    expect(lockRequestSpy).toHaveBeenCalledTimes(1);
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
@@ -1267,10 +1269,12 @@ describe("authStorage", () => {
       .mockImplementation(() => undefined);
 
     await authStorage.setUser(user);
+    const lockRequestSpy = vi.spyOn(navigator.locks, "request");
     vi.spyOn(db.vaultProfile, "clear").mockRejectedValue(cleanupError);
 
     await expect(authStorage.removeUser()).resolves.toBeUndefined();
 
+    expect(lockRequestSpy).toHaveBeenCalledTimes(1);
     expect(consoleWarnSpy).toHaveBeenCalledWith(
       "Failed to clear offline vault tables on logout:",
       cleanupError
@@ -1377,6 +1381,35 @@ describe("authStorage", () => {
     } finally {
       releaseModuleLoad.resolve(offlineVault);
       await Promise.allSettled([cleanup]);
+      vi.doUnmock("../lib/offlineVault");
+      vi.resetModules();
+    }
+  });
+
+  it("aborts invalid stored-user cleanup while the offline vault module is still loading", async () => {
+    const moduleLoadStarted = createDeferredPromise<void>();
+    const releaseModuleLoad = createDeferredPromise<typeof offlineVault>();
+
+    localStorage.setItem("auth_user", "not-json");
+    vi.resetModules();
+    vi.doMock("../lib/offlineVault", () => {
+      moduleLoadStarted.resolve();
+      return releaseModuleLoad.promise;
+    });
+
+    const { authStorage: isolatedAuthStorage } = await import("./storage");
+    const read = isolatedAuthStorage.getUser();
+
+    try {
+      await moduleLoadStarted.promise;
+
+      await expect(
+        isolatedAuthStorage.abortPendingVaultCleanup()
+      ).resolves.toBeUndefined();
+      await expect(read).resolves.toBeNull();
+    } finally {
+      releaseModuleLoad.resolve(offlineVault);
+      await Promise.allSettled([read]);
       vi.doUnmock("../lib/offlineVault");
       vi.resetModules();
     }

@@ -120,6 +120,7 @@ type AuthVaultStateEnvelope =
 interface VaultSession {
   rootKeyBytes: Uint8Array;
   subjectHash: string;
+  envelopeCacheKey: string;
   wrapperCacheKey: string;
 }
 
@@ -360,6 +361,46 @@ function getStoredVaultWrapperCacheKey(
   }
 
   return currentKeyMaterial ? `browser-session:${currentKeyMaterial}` : null;
+}
+
+function getStoredVaultEnvelopeCacheKey(state: AuthVaultStateEnvelope): string {
+  if (state.version === AUTH_VAULT_LEGACY_VERSION) {
+    return JSON.stringify([
+      state.scheme,
+      state.version,
+      state.salt,
+      state.iv,
+      state.ciphertext,
+      state.mac,
+    ]);
+  }
+
+  const { wrapper } = state;
+
+  if (wrapper.kind === "browser-session") {
+    return JSON.stringify([
+      wrapper.kind,
+      wrapper.salt,
+      wrapper.iv,
+      wrapper.ciphertext,
+      wrapper.mac,
+    ]);
+  }
+
+  if (wrapper.kind === "native-device-bound") {
+    return JSON.stringify([
+      wrapper.kind,
+      wrapper.wrappedRootKey,
+      wrapper.metadata ?? "",
+    ]);
+  }
+
+  return JSON.stringify([
+    wrapper.kind,
+    wrapper.keyId,
+    wrapper.iv,
+    wrapper.ciphertext,
+  ]);
 }
 
 function getSessionWrapperCacheKey(state: AuthVaultStateEnvelope): string {
@@ -1395,6 +1436,9 @@ async function ensureOfflineVaultSession(
   const storedWrapperCacheKey = storedState
     ? getStoredVaultWrapperCacheKey(storedState, currentKeyMaterial)
     : null;
+  const storedEnvelopeCacheKey = storedState
+    ? getStoredVaultEnvelopeCacheKey(storedState)
+    : null;
 
   if (activeVaultSession) {
     if (
@@ -1402,24 +1446,29 @@ async function ensureOfflineVaultSession(
       activeVaultSession.subjectHash === storedState.subjectHash
     ) {
       if (
+        storedEnvelopeCacheKey !== null &&
+        activeVaultSession.envelopeCacheKey !== storedEnvelopeCacheKey
+      ) {
+        clearOfflineVaultSession();
+      } else if (
         storedWrapperCacheKey === null ||
         activeVaultSession.wrapperCacheKey === storedWrapperCacheKey
       ) {
         return activeVaultSession;
+      } else {
+        activeVaultSession = await maybeRewriteStoredVaultState(
+          activeVaultSession,
+          storedState,
+          signal
+        );
+        throwIfVaultOperationAborted(signal);
+        setActiveOfflineVaultSession(activeVaultSession);
+
+        return activeVaultSession;
       }
-
-      activeVaultSession = await maybeRewriteStoredVaultState(
-        activeVaultSession,
-        storedState,
-        signal
-      );
-      throwIfVaultOperationAborted(signal);
-      setActiveOfflineVaultSession(activeVaultSession);
-
-      return activeVaultSession;
+    } else {
+      clearOfflineVaultSession();
     }
-
-    clearOfflineVaultSession();
   }
 
   if (!storedState) {
@@ -1449,6 +1498,7 @@ async function ensureOfflineVaultSession(
   activeVaultSession = {
     rootKeyBytes,
     subjectHash: storedState.subjectHash,
+    envelopeCacheKey: getStoredVaultEnvelopeCacheKey(storedState),
     wrapperCacheKey:
       (keyMaterialUsed
         ? getStoredVaultWrapperCacheKey(storedState, keyMaterialUsed)
@@ -1528,6 +1578,9 @@ async function maybeRewriteStoredVaultState(
 
   return {
     ...session,
+    envelopeCacheKey: getStoredVaultEnvelopeCacheKey(
+      rewrittenStateWithLifecycle
+    ),
     wrapperCacheKey:
       getStoredVaultWrapperCacheKey(
         rewrittenStateWithLifecycle,
@@ -1604,6 +1657,7 @@ async function ensureVaultSessionForUser(
   const activeVaultSession = {
     rootKeyBytes,
     subjectHash,
+    envelopeCacheKey: getStoredVaultEnvelopeCacheKey(storedState),
     wrapperCacheKey: getSessionWrapperCacheKey(storedState),
   };
   return {

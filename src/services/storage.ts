@@ -9,6 +9,7 @@ import {
 } from "../lib/offlineVaultKeys";
 import {
   reserveOfflineVaultLifecycleLock,
+  runWithOfflineVaultLifecycleLock,
   type VaultLifecycleLockReservation,
 } from "../lib/offlineVaultLifecycleLock";
 import {
@@ -551,12 +552,15 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   private async clearVaultTables(signal: AbortSignal): Promise<void> {
-    const { clearOfflineVaultTables } = await awaitAbortable(
-      loadOfflineVaultModule(),
-      signal
-    );
-    throwIfAborted(signal);
-    await clearOfflineVaultTables({ signal });
+    await runWithOfflineVaultLifecycleLock(async (lifecycleSignal) => {
+      const effectiveSignal = lifecycleSignal ?? signal;
+      const { clearOfflineVaultTables } = await awaitAbortable(
+        loadOfflineVaultModule(),
+        effectiveSignal
+      );
+      throwIfAborted(effectiveSignal);
+      await clearOfflineVaultTables({ signal: effectiveSignal });
+    }, signal);
   }
 
   hasLogoutBarrier(): boolean {
@@ -623,28 +627,37 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   private async clearInvalidStoredUser(signal?: AbortSignal): Promise<null> {
-    await this.runExclusiveCleanup(async (cleanupSignal) => {
-      let clearInvalidOfflineVaultArtifacts: typeof import("../lib/offlineVault").clearInvalidOfflineVaultArtifacts;
+    await this.runExclusiveCleanup(
+      (cleanupSignal) =>
+        runWithOfflineVaultLifecycleLock(async (lifecycleSignal) => {
+          const effectiveSignal = lifecycleSignal ?? cleanupSignal;
+          let clearInvalidOfflineVaultArtifacts: typeof import("../lib/offlineVault").clearInvalidOfflineVaultArtifacts;
 
-      try {
-        ({ clearInvalidOfflineVaultArtifacts } =
-          await loadOfflineVaultModule());
-        throwIfAborted(cleanupSignal);
-      } catch (error) {
-        if (isTransientModuleLoadError(error)) {
-          throw createRecoverableLazyModuleError(
-            "Stored offline auth data is temporarily unavailable on this device.",
-            error
-          );
-        }
+          try {
+            ({ clearInvalidOfflineVaultArtifacts } = await awaitAbortable(
+              loadOfflineVaultModule(),
+              effectiveSignal
+            ));
+            throwIfAborted(effectiveSignal);
+          } catch (error) {
+            if (isTransientModuleLoadError(error)) {
+              throw createRecoverableLazyModuleError(
+                "Stored offline auth data is temporarily unavailable on this device.",
+                error
+              );
+            }
 
-        throw error;
-      }
+            throw error;
+          }
 
-      await clearInvalidOfflineVaultArtifacts({ signal: cleanupSignal });
-      throwIfAborted(cleanupSignal);
-      this.clearStoredUserMarkers();
-    }, signal);
+          await clearInvalidOfflineVaultArtifacts({
+            signal: effectiveSignal,
+          });
+          throwIfAborted(effectiveSignal);
+          this.clearStoredUserMarkers();
+        }, cleanupSignal),
+      signal
+    );
     throwIfAborted(signal);
     return null;
   }

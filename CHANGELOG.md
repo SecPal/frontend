@@ -94,10 +94,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   superseded migration cannot orphan encrypted records. Cancellation remains
   compatible with Android WebView 83, while one shared lifecycle lock
   serializes vault initialization and destructive logout cleanup across tabs.
-  The lock uses Web Locks where available and a cancellable, renewable
-  IndexedDB owner lease otherwise, so the API is not a native-runtime
-  prerequisite, healthy long-running migrations retain ownership, and a
-  stalled fallback owner cannot indefinitely block authentication recovery.
+  Lifecycle serialization now requires the browser's suspension-safe Web
+  Locks implementation and fails closed on unsupported engines instead of
+  relying on an expiring IndexedDB owner lease. Cached native sessions are
+  additionally bound to the complete stored vault envelope, so replacing a
+  same-user WebCrypto vault cannot reuse an obsolete in-memory root key or
+  clear valid replacement data. Invalid-state and ordinary vault cleanup now
+  use the same lifecycle lock, and destructive logout cleanup stops safely if
+  that lock cannot be acquired.
   Cancellable database opening cannot retain a stalled auth persistence
   attempt. Concurrent tabs reuse an active revalidation owner token instead of
   invalidating each other's confirmed replacement persistence, adopt a newly

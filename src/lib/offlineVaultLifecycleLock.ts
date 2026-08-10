@@ -1,15 +1,8 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-import Dexie from "dexie";
-import { DB_NAME } from "./db-constants";
 import { AUTH_VAULT_LIFECYCLE_LOCK_NAME } from "./offlineVaultKeys";
-
-interface VaultLifecycleLockRecord {
-  name: string;
-  ownerToken: string;
-  expiresAt: number;
-}
+import { awaitAbortable } from "./abortablePromise";
 
 export type VaultLifecycleLockAcquisition =
   { status: "acquired" } | { status: "failed"; error: unknown };
@@ -20,186 +13,11 @@ export interface VaultLifecycleLockReservation {
   signal: AbortSignal;
 }
 
-const fallbackLockDatabase = new Dexie(`${DB_NAME}-VaultLifecycleLock`);
-fallbackLockDatabase.version(1).stores({ locks: "name" });
-const fallbackLocks = fallbackLockDatabase.table<
-  VaultLifecycleLockRecord,
-  string
->("locks");
-const FALLBACK_LOCK_LEASE_MS = 10_000;
-const FALLBACK_LOCK_RENEWAL_INTERVAL_MS = FALLBACK_LOCK_LEASE_MS / 2;
-
 function getAbortReason(signal: AbortSignal): unknown {
   return (
     signal.reason ??
     new DOMException("The operation was aborted.", "AbortError")
   );
-}
-
-function createOwnerToken(): string {
-  if (typeof globalThis.crypto.randomUUID === "function") {
-    return globalThis.crypto.randomUUID();
-  }
-
-  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
-  return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join(
-    ""
-  );
-}
-
-function waitForFallbackRetry(signal?: AbortSignal): Promise<void> {
-  if (signal?.aborted) {
-    return Promise.reject(getAbortReason(signal));
-  }
-
-  return new Promise<void>((resolve, reject) => {
-    const timeoutId = globalThis.setTimeout(() => {
-      signal?.removeEventListener("abort", handleAbort);
-      resolve();
-    }, 25);
-    const handleAbort = () => {
-      globalThis.clearTimeout(timeoutId);
-      signal?.removeEventListener("abort", handleAbort);
-      reject(getAbortReason(signal as AbortSignal));
-    };
-
-    signal?.addEventListener("abort", handleAbort, { once: true });
-    if (signal?.aborted) {
-      handleAbort();
-    }
-  });
-}
-
-async function tryAcquireFallbackLock(ownerToken: string): Promise<boolean> {
-  return fallbackLockDatabase.transaction("rw", fallbackLocks, async () => {
-    const activeLock = await fallbackLocks.get(AUTH_VAULT_LIFECYCLE_LOCK_NAME);
-
-    if (activeLock && activeLock.expiresAt > Date.now()) {
-      return false;
-    }
-
-    await fallbackLocks.put({
-      name: AUTH_VAULT_LIFECYCLE_LOCK_NAME,
-      ownerToken,
-      expiresAt: Date.now() + FALLBACK_LOCK_LEASE_MS,
-    });
-    return true;
-  });
-}
-
-async function releaseFallbackLock(ownerToken: string): Promise<void> {
-  await fallbackLockDatabase.transaction("rw", fallbackLocks, async () => {
-    const activeLock = await fallbackLocks.get(AUTH_VAULT_LIFECYCLE_LOCK_NAME);
-
-    if (activeLock?.ownerToken === ownerToken) {
-      await fallbackLocks.delete(AUTH_VAULT_LIFECYCLE_LOCK_NAME);
-    }
-  });
-}
-
-async function renewFallbackLock(ownerToken: string): Promise<boolean> {
-  return fallbackLockDatabase.transaction("rw", fallbackLocks, async () => {
-    const activeLock = await fallbackLocks.get(AUTH_VAULT_LIFECYCLE_LOCK_NAME);
-
-    if (activeLock?.ownerToken !== ownerToken) {
-      return false;
-    }
-
-    await fallbackLocks.put({
-      ...activeLock,
-      expiresAt: Date.now() + FALLBACK_LOCK_LEASE_MS,
-    });
-    return true;
-  });
-}
-
-async function runWithFallbackLifecycleLock<T>(
-  operation: (signal: AbortSignal) => Promise<T>,
-  signal?: AbortSignal
-): Promise<T> {
-  const ownerToken = createOwnerToken();
-
-  while (!(await tryAcquireFallbackLock(ownerToken))) {
-    await waitForFallbackRetry(signal);
-  }
-
-  if (signal?.aborted) {
-    await releaseFallbackLock(ownerToken);
-    throw getAbortReason(signal);
-  }
-
-  const lifecycleController = new AbortController();
-  const handleExternalAbort = () => {
-    lifecycleController.abort(getAbortReason(signal as AbortSignal));
-  };
-  signal?.addEventListener("abort", handleExternalAbort, { once: true });
-  if (signal?.aborted) {
-    handleExternalAbort();
-  }
-  let renewalTimeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
-  let renewalStopped = false;
-  const scheduleLeaseRenewal = () => {
-    renewalTimeoutId = globalThis.setTimeout(() => {
-      void renewFallbackLock(ownerToken)
-        .then((renewed) => {
-          if (!renewed) {
-            lifecycleController.abort(
-              new DOMException(
-                "The lifecycle lock owner changed.",
-                "AbortError"
-              )
-            );
-            return;
-          }
-
-          if (!renewalStopped && !lifecycleController.signal.aborted) {
-            scheduleLeaseRenewal();
-          }
-        })
-        .catch((error: unknown) => {
-          lifecycleController.abort(error);
-        });
-    }, FALLBACK_LOCK_RENEWAL_INTERVAL_MS);
-  };
-
-  if (!lifecycleController.signal.aborted) {
-    scheduleLeaseRenewal();
-  }
-
-  let rejectAbort!: (reason: unknown) => void;
-  const aborted = new Promise<never>((_resolve, reject) => {
-    rejectAbort = reject;
-  });
-  const handleAbort = () => {
-    rejectAbort(getAbortReason(lifecycleController.signal));
-  };
-
-  lifecycleController.signal.addEventListener("abort", handleAbort, {
-    once: true,
-  });
-  const result = Promise.resolve().then(() => {
-    if (lifecycleController.signal.aborted) {
-      throw getAbortReason(lifecycleController.signal);
-    }
-
-    return operation(lifecycleController.signal);
-  });
-
-  // The protected operation is expected to observe the same AbortSignal. Keep
-  // a late rejection handled if its caller has already observed cancellation.
-  void result.catch(() => undefined);
-
-  try {
-    return await Promise.race([result, aborted]);
-  } finally {
-    renewalStopped = true;
-    if (renewalTimeoutId !== null) {
-      globalThis.clearTimeout(renewalTimeoutId);
-    }
-    signal?.removeEventListener("abort", handleExternalAbort);
-    lifecycleController.signal.removeEventListener("abort", handleAbort);
-    await releaseFallbackLock(ownerToken);
-  }
 }
 
 export async function runWithOfflineVaultLifecycleLock<T>(
@@ -208,15 +26,22 @@ export async function runWithOfflineVaultLifecycleLock<T>(
 ): Promise<T> {
   const lockManager = globalThis.navigator?.locks;
 
-  if (lockManager) {
-    return lockManager.request(
-      AUTH_VAULT_LIFECYCLE_LOCK_NAME,
-      { mode: "exclusive", signal },
-      () => operation(signal)
+  if (!lockManager) {
+    throw new DOMException(
+      "Secure offline vault lifecycle coordination requires Web Locks.",
+      "NotSupportedError"
     );
   }
 
-  return runWithFallbackLifecycleLock(operation, signal);
+  return lockManager.request(
+    AUTH_VAULT_LIFECYCLE_LOCK_NAME,
+    { mode: "exclusive", signal },
+    () =>
+      awaitAbortable(
+        Promise.resolve().then(() => operation(signal)),
+        signal
+      )
+  );
 }
 
 export function reserveOfflineVaultLifecycleLock(): VaultLifecycleLockReservation {

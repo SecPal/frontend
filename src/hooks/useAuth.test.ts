@@ -2185,6 +2185,46 @@ describe("useAuth", () => {
     }
   });
 
+  it("does not run destructive logout cleanup when lifecycle lock acquisition fails", async () => {
+    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
+    const lockError = new DOMException(
+      "Secure offline vault lifecycle coordination requires Web Locks.",
+      "NotSupportedError"
+    );
+    const waitForLockSpy = vi
+      .spyOn(authStorage, "waitForSensitiveLogoutCleanupLock")
+      .mockRejectedValueOnce(lockError);
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    await persistAuthUser(mockUser);
+    vi.mocked(clearSensitiveClientState).mockClear();
+
+    try {
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: AuthProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      await act(async () => {
+        await result.current.logout();
+      });
+
+      expect(clearSensitiveClientState).not.toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Failed to clear sensitive client state during logout:",
+        lockError
+      );
+    } finally {
+      consoleErrorSpy.mockRestore();
+      waitForLockSpy.mockRestore();
+    }
+  });
+
   it("logout resolves only after sensitive client cleanup settles", async () => {
     const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
 

@@ -636,14 +636,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const activeSensitiveLogoutCleanupOwnerToken =
             sensitiveLogoutCleanupOwnerToken ??
             sensitiveLogoutBarrierCleanupOwnerTokenRef.current;
-          let lifecycleSignal: AbortSignal | null = null;
-
           try {
+            const lifecycleSignal =
+              await authStorage.waitForSensitiveLogoutCleanupLock(
+                activeSensitiveLogoutCleanupOwnerToken
+              );
+
             try {
-              lifecycleSignal =
-                await authStorage.waitForSensitiveLogoutCleanupLock(
-                  activeSensitiveLogoutCleanupOwnerToken
-                );
               await authStorage.waitForInFlightVaultTableCleanup();
             } catch (error: unknown) {
               console.warn(
