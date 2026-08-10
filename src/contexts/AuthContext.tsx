@@ -1508,8 +1508,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         invalidateBootstrapRevalidation();
       }
 
-      if (event.key === "auth_logout_barrier" && event.newValue !== null) {
-        clearAuthenticatedState(true);
+      if (event.key === "auth_logout_barrier") {
+        if (event.newValue !== null) {
+          clearAuthenticatedState(true);
+          return;
+        }
+
+        hasLogoutBarrierRef.current = false;
+        shouldSkipBarrierVaultTableCleanupRef.current = false;
+        if (authStorage.hasStoredUser()) {
+          restoreCrossTabAuthState();
+        }
         return;
       }
 

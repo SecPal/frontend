@@ -94,14 +94,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   superseded migration cannot orphan encrypted records. Cancellation remains
   compatible with Android WebView 83, while one shared lifecycle lock
   serializes vault initialization and destructive logout cleanup across tabs.
-  The lock uses Web Locks where available and a cancellable, bounded IndexedDB
-  owner lease otherwise, so the API is not a native-runtime prerequisite and a
+  The lock uses Web Locks where available and a cancellable, renewable
+  IndexedDB owner lease otherwise, so the API is not a native-runtime
+  prerequisite, healthy long-running migrations retain ownership, and a
   stalled fallback owner cannot indefinitely block authentication recovery.
   Cancellable database opening cannot retain a stalled auth persistence
   attempt. Concurrent tabs reuse an active revalidation owner token instead of
-  invalidating each other's confirmed replacement persistence, and lifecycle
-  owner tokens retain a cryptographically secure fallback on WebViews without
-  `crypto.randomUUID()`. Temporarily locked native
+  invalidating each other's confirmed replacement persistence, adopt a newly
+  persisted identity when the preceding cross-tab logout barrier is removed,
+  and lifecycle owner tokens retain a cryptographically secure fallback on
+  WebViews without `crypto.randomUUID()`. Temporarily locked native
   vaults are preserved across transient unlock failures instead of being
   replaced by a fallback key, unexpected storage aborts surface as persistence
   failures, native wrapper reads honor cancellation, and newer cross-tab logout

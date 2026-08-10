@@ -27,6 +27,7 @@ const fallbackLocks = fallbackLockDatabase.table<
   string
 >("locks");
 const FALLBACK_LOCK_LEASE_MS = 10_000;
+const FALLBACK_LOCK_RENEWAL_INTERVAL_MS = FALLBACK_LOCK_LEASE_MS / 2;
 
 function getAbortReason(signal: AbortSignal): unknown {
   return (
@@ -96,6 +97,22 @@ async function releaseFallbackLock(ownerToken: string): Promise<void> {
   });
 }
 
+async function renewFallbackLock(ownerToken: string): Promise<boolean> {
+  return fallbackLockDatabase.transaction("rw", fallbackLocks, async () => {
+    const activeLock = await fallbackLocks.get(AUTH_VAULT_LIFECYCLE_LOCK_NAME);
+
+    if (activeLock?.ownerToken !== ownerToken) {
+      return false;
+    }
+
+    await fallbackLocks.put({
+      ...activeLock,
+      expiresAt: Date.now() + FALLBACK_LOCK_LEASE_MS,
+    });
+    return true;
+  });
+}
+
 async function runWithFallbackLifecycleLock<T>(
   operation: (signal: AbortSignal) => Promise<T>,
   signal?: AbortSignal
@@ -119,11 +136,35 @@ async function runWithFallbackLifecycleLock<T>(
   if (signal?.aborted) {
     handleExternalAbort();
   }
-  const leaseTimeoutId = globalThis.setTimeout(() => {
-    lifecycleController.abort(
-      new DOMException("The lifecycle lock lease expired.", "AbortError")
-    );
-  }, FALLBACK_LOCK_LEASE_MS);
+  let renewalTimeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
+  let renewalStopped = false;
+  const scheduleLeaseRenewal = () => {
+    renewalTimeoutId = globalThis.setTimeout(() => {
+      void renewFallbackLock(ownerToken)
+        .then((renewed) => {
+          if (!renewed) {
+            lifecycleController.abort(
+              new DOMException(
+                "The lifecycle lock owner changed.",
+                "AbortError"
+              )
+            );
+            return;
+          }
+
+          if (!renewalStopped && !lifecycleController.signal.aborted) {
+            scheduleLeaseRenewal();
+          }
+        })
+        .catch((error: unknown) => {
+          lifecycleController.abort(error);
+        });
+    }, FALLBACK_LOCK_RENEWAL_INTERVAL_MS);
+  };
+
+  if (!lifecycleController.signal.aborted) {
+    scheduleLeaseRenewal();
+  }
 
   let rejectAbort!: (reason: unknown) => void;
   const aborted = new Promise<never>((_resolve, reject) => {
@@ -151,7 +192,10 @@ async function runWithFallbackLifecycleLock<T>(
   try {
     return await Promise.race([result, aborted]);
   } finally {
-    globalThis.clearTimeout(leaseTimeoutId);
+    renewalStopped = true;
+    if (renewalTimeoutId !== null) {
+      globalThis.clearTimeout(renewalTimeoutId);
+    }
     signal?.removeEventListener("abort", handleExternalAbort);
     lifecycleController.signal.removeEventListener("abort", handleAbort);
     await releaseFallbackLock(ownerToken);

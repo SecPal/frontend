@@ -112,6 +112,44 @@ describe("offline vault lifecycle lock fallback", () => {
     }
   });
 
+  it("keeps an active fallback owner alive beyond the initial lease", async () => {
+    vi.useFakeTimers({
+      toFake: ["Date", "setTimeout", "clearTimeout"],
+    });
+    const operationStarted = createDeferredPromise<void>();
+    const releaseOperation = createDeferredPromise<void>();
+    let lifecycleSignal: AbortSignal | undefined;
+    let waiting: Promise<string> | null = null;
+    const holder = runWithOfflineVaultLifecycleLock(async (signal) => {
+      lifecycleSignal = signal;
+      operationStarted.resolve();
+      await releaseOperation.promise;
+      return "completed";
+    });
+    void holder.catch(() => undefined);
+
+    try {
+      await operationStarted.promise;
+      await vi.advanceTimersByTimeAsync(10_001);
+
+      expect(lifecycleSignal?.aborted).toBe(false);
+      const waitingOperation = vi.fn().mockResolvedValue("next");
+      waiting = runWithOfflineVaultLifecycleLock(waitingOperation);
+      await vi.advanceTimersByTimeAsync(25);
+      expect(waitingOperation).not.toHaveBeenCalled();
+
+      releaseOperation.resolve();
+      await expect(holder).resolves.toBe("completed");
+      await vi.advanceTimersByTimeAsync(25);
+      await expect(waiting).resolves.toBe("next");
+      expect(waitingOperation).toHaveBeenCalledTimes(1);
+    } finally {
+      releaseOperation.resolve();
+      await Promise.allSettled([holder, ...(waiting ? [waiting] : [])]);
+      vi.useRealTimers();
+    }
+  });
+
   it("reclaims an expired fallback owner", async () => {
     const staleOwnerDatabase = new Dexie(`${DB_NAME}-VaultLifecycleLock`);
     staleOwnerDatabase.version(1).stores({ locks: "name" });

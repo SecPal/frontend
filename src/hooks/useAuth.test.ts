@@ -3662,6 +3662,65 @@ describe("useAuth", () => {
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
+  it("adopts a cross-tab user after the logout barrier is removed", async () => {
+    const nextUser = {
+      id: "next-user",
+      name: "Next User",
+      email: "next-user@secpal.dev",
+      emailVerified: true,
+    };
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitForTestingLibrary(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    act(() => {
+      localStorage.setItem("auth_logout_barrier", "other-tab");
+      dispatchLocalStorageEvent("auth_logout_barrier", "other-tab");
+    });
+
+    await waitForTestingLibrary(() => {
+      expect(result.current.isAuthenticated).toBe(false);
+    });
+
+    const persistedUser = await persistAuthUser(nextUser);
+
+    act(() => {
+      dispatchLocalStorageEvent(AUTH_VAULT_STORAGE_KEY, persistedUser);
+      dispatchLocalStorageEvent("auth_logout_barrier", null, "other-tab");
+    });
+
+    await waitForTestingLibrary(() => {
+      expect(result.current.user).toEqual(nextUser);
+    });
+    expect(result.current.isAuthenticated).toBe(true);
+  });
+
+  it("keeps a completed cross-tab logout logged out when no replacement snapshot exists", async () => {
+    const getUserSpy = vi.spyOn(authStorage, "getUser");
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitForTestingLibrary(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    getUserSpy.mockClear();
+
+    act(() => {
+      localStorage.setItem("auth_logout_barrier", "other-tab");
+      dispatchLocalStorageEvent("auth_logout_barrier", "other-tab");
+      localStorage.removeItem("auth_logout_barrier");
+      dispatchLocalStorageEvent("auth_logout_barrier", null, "other-tab");
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(getUserSpy).not.toHaveBeenCalled();
+  });
+
   it("rejects BFCache-style auth restoration after explicit logout", async () => {
     const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
 
