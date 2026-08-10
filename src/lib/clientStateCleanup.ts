@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { clearBrowserPushInstallationId } from "./browserPushState";
+import Dexie, { type Transaction } from "dexie";
 import { db } from "./db";
 import {
   AUTH_USER_REVALIDATION_REQUIRED_KEY,
@@ -26,6 +27,23 @@ const USER_SCOPED_LOCAL_STORAGE_KEYS = [
   AUTH_VAULT_STORAGE_KEY,
 ] as const;
 
+interface SensitiveClientStateCleanupOptions {
+  signal?: AbortSignal;
+}
+
+function getAbortReason(signal: AbortSignal): unknown {
+  return (
+    signal.reason ??
+    new DOMException("The operation was aborted.", "AbortError")
+  );
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw getAbortReason(signal);
+  }
+}
+
 async function clearSensitiveCaches(): Promise<void> {
   if (!("caches" in globalThis)) {
     return;
@@ -43,7 +61,50 @@ async function clearSensitiveCaches(): Promise<void> {
   );
 }
 
-async function clearSensitiveIndexedDbState(): Promise<void> {
+async function clearSensitiveIndexedDbState(
+  signal?: AbortSignal
+): Promise<void> {
+  throwIfAborted(signal);
+
+  if (signal) {
+    let activeTransaction: Transaction | null = null;
+    let rejectAbort!: (reason: unknown) => void;
+    const aborted = new Promise<never>((_resolve, reject) => {
+      rejectAbort = reject;
+    });
+    const handleAbort = () => {
+      activeTransaction?.abort();
+      rejectAbort(getAbortReason(signal));
+    };
+
+    signal.addEventListener("abort", handleAbort, { once: true });
+    if (signal.aborted) {
+      handleAbort();
+    }
+
+    const transaction = db.transaction("rw", db.tables, async () => {
+      activeTransaction = Dexie.currentTransaction;
+      throwIfAborted(signal);
+      await Promise.all(db.tables.map((table) => table.clear()));
+      throwIfAborted(signal);
+    });
+    void transaction.catch(() => undefined);
+
+    try {
+      await Promise.race([transaction, aborted]);
+    } catch (error) {
+      if (signal.aborted) {
+        throw getAbortReason(signal);
+      }
+
+      throw error;
+    } finally {
+      signal.removeEventListener("abort", handleAbort);
+    }
+
+    return;
+  }
+
   try {
     // Logout policy: remove the entire local session database because all
     // stores in SecPalDB are session- or user-adjacent and unnecessary once
@@ -126,7 +187,12 @@ async function waitForSensitiveCleanupTasks(
   );
 }
 
-export async function clearDestructiveSensitiveClientState(): Promise<void> {
+export async function clearDestructiveSensitiveClientState(
+  options: SensitiveClientStateCleanupOptions = {}
+): Promise<void> {
+  const { signal } = options;
+  throwIfAborted(signal);
+
   for (const key of USER_SCOPED_LOCAL_STORAGE_KEYS) {
     localStorage.removeItem(key);
   }
@@ -148,11 +214,14 @@ export async function clearDestructiveSensitiveClientState(): Promise<void> {
   await waitForSensitiveCleanupTasks([
     vaultCleanupTask,
     clearSensitiveCaches(),
-    clearSensitiveIndexedDbState(),
+    clearSensitiveIndexedDbState(signal),
   ]);
 }
 
-export async function clearSensitiveClientState(): Promise<void> {
-  await clearDestructiveSensitiveClientState();
+export async function clearSensitiveClientState(
+  options: SensitiveClientStateCleanupOptions = {}
+): Promise<void> {
+  await clearDestructiveSensitiveClientState(options);
+  throwIfAborted(options.signal);
   await clearBrowserPushClientState();
 }

@@ -281,7 +281,9 @@ export interface AuthStorage {
   beginSensitiveLogoutBarrierCleanup(): string;
   endSensitiveLogoutBarrierCleanup(ownerToken: string): void;
   completeStaleSensitiveLogoutBarrierCleanup(ownerToken: string): void;
-  waitForSensitiveLogoutCleanupLock(ownerToken: string | null): Promise<void>;
+  waitForSensitiveLogoutCleanupLock(
+    ownerToken: string | null
+  ): Promise<AbortSignal | null>;
   abortPendingPersistence(): void;
   abortPendingVaultCleanup(): Promise<void>;
   waitForInFlightVaultTableCleanup(): Promise<void>;
@@ -414,18 +416,20 @@ class LocalStorageAuthStorage implements AuthStorage {
 
   async waitForSensitiveLogoutCleanupLock(
     ownerToken: string | null
-  ): Promise<void> {
+  ): Promise<AbortSignal | null> {
     if (ownerToken === null) {
-      return;
+      return null;
     }
 
-    const acquisition =
-      await this.sensitiveLogoutCleanupLockReservations.get(ownerToken)
-        ?.acquired;
+    const reservation =
+      this.sensitiveLogoutCleanupLockReservations.get(ownerToken);
+    const acquisition = await reservation?.acquired;
 
     if (acquisition?.status === "failed") {
       throw acquisition.error;
     }
+
+    return reservation?.signal ?? null;
   }
 
   endSensitiveLogoutBarrierCleanup(ownerToken: string): void {
@@ -585,6 +589,12 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   requireUserRevalidation(): string {
+    const activeOwnerToken = this.getUserRevalidationOwnerToken();
+
+    if (activeOwnerToken !== null) {
+      return activeOwnerToken;
+    }
+
     const ownerToken = createSecureRandomToken();
     localStorage.setItem(AUTH_USER_REVALIDATION_REQUIRED_KEY, ownerToken);
     return ownerToken;

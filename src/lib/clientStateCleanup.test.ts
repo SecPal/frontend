@@ -202,6 +202,17 @@ describe("clearSensitiveClientState", () => {
     expect(await db.organizationalUnitCache.count()).toBe(0);
   });
 
+  it("does not start IndexedDB cleanup after lifecycle invalidation", async () => {
+    const controller = new AbortController();
+    const deleteSpy = vi.spyOn(db, "delete");
+    controller.abort();
+
+    await expect(
+      clearSensitiveClientState({ signal: controller.signal })
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(deleteSpy).not.toHaveBeenCalled();
+  });
+
   it("does not fail when Cache API is unavailable", async () => {
     // @ts-expect-error Simulate unsupported Cache API
     delete globalThis.caches;

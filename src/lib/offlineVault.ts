@@ -1827,24 +1827,31 @@ export async function initializeOfflineVault(
   options: OfflineVaultOperationOptions = {}
 ): Promise<void> {
   const { signal, shouldCommit } = options;
-  const initialize = async (): Promise<void> => {
-    throwIfVaultOperationCannotCommit(signal, shouldCommit);
+  const initialize = async (lifecycleSignal?: AbortSignal): Promise<void> => {
+    const effectiveSignal = lifecycleSignal ?? signal;
+
+    throwIfVaultOperationCannotCommit(effectiveSignal, shouldCommit);
     const { session, pendingStoredState } = await ensureVaultSessionForUser(
       user,
-      signal
+      effectiveSignal
     );
-    throwIfVaultOperationCannotCommit(signal, shouldCommit);
+    throwIfVaultOperationCannotCommit(effectiveSignal, shouldCommit);
 
     if (pendingStoredState) {
       setStoredVaultState({
         ...pendingStoredState,
         initialization: "pending",
       });
-      throwIfVaultOperationCannotCommit(signal, shouldCommit);
+      throwIfVaultOperationCannotCommit(effectiveSignal, shouldCommit);
     }
 
-    await persistInitialVaultRecords(user, session, signal, shouldCommit);
-    throwIfVaultOperationCannotCommit(signal, shouldCommit);
+    await persistInitialVaultRecords(
+      user,
+      session,
+      effectiveSignal,
+      shouldCommit
+    );
+    throwIfVaultOperationCannotCommit(effectiveSignal, shouldCommit);
 
     completeVaultInitialization(session.subjectHash);
     setActiveOfflineVaultSession(session);

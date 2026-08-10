@@ -636,12 +636,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const activeSensitiveLogoutCleanupOwnerToken =
             sensitiveLogoutCleanupOwnerToken ??
             sensitiveLogoutBarrierCleanupOwnerTokenRef.current;
+          let lifecycleSignal: AbortSignal | null = null;
 
           try {
             try {
-              await authStorage.waitForSensitiveLogoutCleanupLock(
-                activeSensitiveLogoutCleanupOwnerToken
-              );
+              lifecycleSignal =
+                await authStorage.waitForSensitiveLogoutCleanupLock(
+                  activeSensitiveLogoutCleanupOwnerToken
+                );
               await authStorage.waitForInFlightVaultTableCleanup();
             } catch (error: unknown) {
               console.warn(
@@ -650,7 +652,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               );
             }
 
-            await clearDestructiveSensitiveClientState();
+            await clearDestructiveSensitiveClientState({
+              signal: lifecycleSignal ?? undefined,
+            });
           } finally {
             endSensitiveLogoutBarrierCleanup(
               activeSensitiveLogoutCleanupOwnerToken

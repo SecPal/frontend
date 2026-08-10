@@ -771,11 +771,17 @@ describe("authStorage", () => {
     await expect(authStorage.getUser()).resolves.toEqual(confirmedUser);
   });
 
-  it("does not let an older persistence completion clear a newer user revalidation", () => {
-    const olderOwnerToken = authStorage.requireUserRevalidation();
+  it("reuses an active revalidation owner and fences a later lifecycle", () => {
+    const ownerToken = authStorage.requireUserRevalidation();
+
+    expect(authStorage.requireUserRevalidation()).toBe(ownerToken);
+
+    authStorage.completeUserRevalidation(ownerToken);
     const newerOwnerToken = authStorage.requireUserRevalidation();
 
-    authStorage.completeUserRevalidation(olderOwnerToken);
+    expect(newerOwnerToken).not.toBe(ownerToken);
+
+    authStorage.completeUserRevalidation(ownerToken);
 
     expect(localStorage.getItem(AUTH_USER_REVALIDATION_REQUIRED_KEY)).toBe(
       newerOwnerToken
