@@ -22,7 +22,7 @@ import { authStorage } from "../services/storage";
 import { resetPrefetchCache } from "../hooks/usePrefetch";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 import { NATIVE_AUTH_LOGOUT_EVENT_NAME } from "../services/nativeAuthEvents";
-import { installSerializedWebLocks } from "../../tests/serializedWebLocks";
+import { installSerializedWebLocks } from "../testUtils/serializedWebLocks";
 
 vi.mock("../services/authApi", () => ({
   getCurrentUser: vi.fn(),

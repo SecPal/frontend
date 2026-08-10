@@ -18,6 +18,16 @@ function readRepoFile(relativePath: string): string {
 }
 
 describe("frontend container source contract", () => {
+  it("keeps source-imported test helpers inside the container build context", () => {
+    const dockerignore = readRepoFile(".dockerignore");
+    const authContextTest = readRepoFile("src/contexts/AuthContext.test.tsx");
+    const useAuthTest = readRepoFile("src/hooks/useAuth.test.ts");
+
+    expect(dockerignore).toMatch(/^tests$/mu);
+    expect(authContextTest).toContain('from "../testUtils/serializedWebLocks"');
+    expect(useAuthTest).toContain('from "../testUtils/serializedWebLocks"');
+  });
+
   it("pins exact multi-architecture Debian base image manifests", () => {
     const dockerfile = readRepoFile("Dockerfile");
 

@@ -34,7 +34,7 @@ import {
 } from "../lib/offlineVault";
 import { db } from "../lib/db";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
-import { installSerializedWebLocks } from "../../tests/serializedWebLocks";
+import { installSerializedWebLocks } from "../testUtils/serializedWebLocks";
 
 const {
   mockGetCurrentUser,

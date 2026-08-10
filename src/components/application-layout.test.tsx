@@ -32,6 +32,7 @@ import { sanitizePersistedAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
 import { clearSensitiveClientState } from "../lib/clientStateCleanup";
 import { db } from "../lib/db";
+import { installSerializedWebLocks } from "../testUtils/serializedWebLocks";
 import {
   AUTH_VAULT_STORAGE_KEY,
   clearOfflineVaultSession,
@@ -193,6 +194,7 @@ async function openUserMenu() {
 
 describe("ApplicationLayout", () => {
   const SLOW_TEST_TIMEOUT = 20000;
+  let restoreSerializedWebLocks: (() => void) | undefined;
   const authenticatedUser = {
     id: 1,
     name: "John Doe",
@@ -201,6 +203,7 @@ describe("ApplicationLayout", () => {
   };
 
   beforeEach(async () => {
+    restoreSerializedWebLocks = installSerializedWebLocks();
     vi.clearAllMocks();
     appSurfaceMock.isAndroidSurface = true;
     await Promise.all([
@@ -227,6 +230,8 @@ describe("ApplicationLayout", () => {
   afterEach(() => {
     clearSidebarStateCookie();
     clearOfflineVaultSession();
+    restoreSerializedWebLocks?.();
+    restoreSerializedWebLocks = undefined;
   });
 
   describe("rendering", () => {
