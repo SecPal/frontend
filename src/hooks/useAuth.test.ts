@@ -34,6 +34,7 @@ import {
 } from "../lib/offlineVault";
 import { db } from "../lib/db";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
+import { installSerializedWebLocks } from "../../tests/serializedWebLocks";
 
 const {
   mockGetCurrentUser,
@@ -52,6 +53,7 @@ const {
 }));
 
 const AUTH_BOOTSTRAP_TIMEOUT_MS = 20_000;
+let restoreSerializedWebLocks: (() => void) | null = null;
 
 vi.mock("../services/authApi", async () => {
   const actual = await vi.importActual("../services/authApi");
@@ -202,6 +204,7 @@ async function expectEncryptedStoredUser(
 
 describe("useAuth", () => {
   beforeEach(() => {
+    restoreSerializedWebLocks = installSerializedWebLocks();
     localStorage.clear();
     sessionStorage.clear();
     clearOfflineVaultSession();
@@ -236,6 +239,8 @@ describe("useAuth", () => {
     vi.useRealTimers();
     vi.restoreAllMocks();
     clearOfflineVaultSession();
+    restoreSerializedWebLocks?.();
+    restoreSerializedWebLocks = null;
   });
 
   it("throws error when used outside AuthProvider", () => {
@@ -2912,7 +2917,7 @@ describe("useAuth", () => {
         secondLogout = Promise.resolve(secondAuth.result.current.logout());
       });
 
-      await waitForSensitiveClientCleanup(2);
+      await waitForSensitiveClientCleanup();
 
       expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
         "1"
@@ -2923,6 +2928,7 @@ describe("useAuth", () => {
         await Promise.resolve();
       });
 
+      await waitForSensitiveClientCleanup(2);
       expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
         "1"
       );

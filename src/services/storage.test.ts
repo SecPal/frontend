@@ -1099,6 +1099,58 @@ describe("authStorage", () => {
     );
   });
 
+  it("waits for cross-tab destructive logout cleanup before persisting a new user", async () => {
+    const cleanupOwnerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
+    const cleanupLockAcquired = createDeferredPromise<void>();
+    const releaseCleanup = createDeferredPromise<void>();
+    let cleanup: Promise<void> | null = null;
+    let persistence: Promise<unknown> | null = null;
+
+    try {
+      cleanup = (async () => {
+        await authStorage.waitForSensitiveLogoutCleanupLock(cleanupOwnerToken);
+        cleanupLockAcquired.resolve();
+        await releaseCleanup.promise;
+        await db.delete();
+        authStorage.endSensitiveLogoutBarrierCleanup(cleanupOwnerToken);
+      })();
+      await cleanupLockAcquired.promise;
+
+      let persistenceSettled = false;
+      persistence = authStorage
+        .setUser({
+          id: "next-user",
+          name: "Next User",
+          email: "next-user@secpal.dev",
+          emailVerified: true,
+        })
+        .finally(() => {
+          persistenceSettled = true;
+        });
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(persistenceSettled).toBe(false);
+
+      releaseCleanup.resolve();
+      await cleanup;
+      await expect(persistence).resolves.toEqual({ status: "persisted" });
+      await expect(authStorage.getUser()).resolves.toEqual({
+        id: "next-user",
+        name: "Next User",
+        email: "next-user@secpal.dev",
+        emailVerified: true,
+      });
+    } finally {
+      releaseCleanup.resolve();
+      authStorage.endSensitiveLogoutBarrierCleanup(cleanupOwnerToken);
+      await Promise.allSettled(
+        [cleanup, persistence].filter(
+          (operation): operation is Promise<unknown> => operation !== null
+        )
+      );
+    }
+  });
+
   it("clears a stale single-tab sensitive logout cleanup owner", () => {
     const ownerToken = authStorage.beginSensitiveLogoutBarrierCleanup();
 

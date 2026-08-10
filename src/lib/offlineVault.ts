@@ -18,6 +18,7 @@ import {
   AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
 } from "./offlineVaultKeys";
+import { runWithOfflineVaultLifecycleLock } from "./offlineVaultLifecycleLock";
 import {
   clearActiveOfflineVaultSession,
   getActiveOfflineVaultSession,
@@ -1826,28 +1827,30 @@ export async function initializeOfflineVault(
   options: OfflineVaultOperationOptions = {}
 ): Promise<void> {
   const { signal, shouldCommit } = options;
-
-  throwIfVaultOperationCannotCommit(signal, shouldCommit);
-  const { session, pendingStoredState } = await ensureVaultSessionForUser(
-    user,
-    signal
-  );
-  throwIfVaultOperationCannotCommit(signal, shouldCommit);
-
-  if (pendingStoredState) {
-    setStoredVaultState({
-      ...pendingStoredState,
-      initialization: "pending",
-    });
+  const initialize = async (): Promise<void> => {
     throwIfVaultOperationCannotCommit(signal, shouldCommit);
-  }
+    const { session, pendingStoredState } = await ensureVaultSessionForUser(
+      user,
+      signal
+    );
+    throwIfVaultOperationCannotCommit(signal, shouldCommit);
 
-  await persistInitialVaultRecords(user, session, signal, shouldCommit);
-  throwIfVaultOperationCannotCommit(signal, shouldCommit);
+    if (pendingStoredState) {
+      setStoredVaultState({
+        ...pendingStoredState,
+        initialization: "pending",
+      });
+      throwIfVaultOperationCannotCommit(signal, shouldCommit);
+    }
 
-  completeVaultInitialization(session.subjectHash);
-  setActiveOfflineVaultSession(session);
-  localStorage.removeItem("auth_user");
+    await persistInitialVaultRecords(user, session, signal, shouldCommit);
+    throwIfVaultOperationCannotCommit(signal, shouldCommit);
+
+    completeVaultInitialization(session.subjectHash);
+    setActiveOfflineVaultSession(session);
+    localStorage.removeItem("auth_user");
+  };
+  await runWithOfflineVaultLifecycleLock(initialize, signal);
 }
 
 export async function readPersistedAuthUserFromVault(

@@ -8,6 +8,10 @@ import {
   AUTH_VAULT_LOCK_KEY,
 } from "../lib/offlineVaultKeys";
 import {
+  reserveOfflineVaultLifecycleLock,
+  type VaultLifecycleLockReservation,
+} from "../lib/offlineVaultLifecycleLock";
+import {
   createRecoverableLazyModuleError,
   isRecoverableLazyModuleError,
   isTransientModuleLoadError,
@@ -277,6 +281,7 @@ export interface AuthStorage {
   beginSensitiveLogoutBarrierCleanup(): string;
   endSensitiveLogoutBarrierCleanup(ownerToken: string): void;
   completeStaleSensitiveLogoutBarrierCleanup(ownerToken: string): void;
+  waitForSensitiveLogoutCleanupLock(ownerToken: string | null): Promise<void>;
   abortPendingPersistence(): void;
   abortPendingVaultCleanup(): Promise<void>;
   waitForInFlightVaultTableCleanup(): Promise<void>;
@@ -336,6 +341,10 @@ class LocalStorageAuthStorage implements AuthStorage {
   private activeCleanupController: AbortController | null = null;
   private activeCleanupPromise: Promise<void> = Promise.resolve();
   private activePersistenceController: AbortController | null = null;
+  private readonly sensitiveLogoutCleanupLockReservations = new Map<
+    string,
+    VaultLifecycleLockReservation
+  >();
 
   /**
    * Clean up any legacy auth_token that might exist from before migration.
@@ -385,6 +394,10 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
 
     try {
+      this.sensitiveLogoutCleanupLockReservations.set(
+        ownerToken,
+        reserveOfflineVaultLifecycleLock()
+      );
       this.setLogoutBarrier();
       localStorage.setItem(
         this.getSensitiveLogoutBarrierCleanupOwnerKey(ownerToken),
@@ -399,16 +412,39 @@ class LocalStorageAuthStorage implements AuthStorage {
     return ownerToken;
   }
 
-  endSensitiveLogoutBarrierCleanup(ownerToken: string): void {
-    localStorage.removeItem(
-      this.getSensitiveLogoutBarrierCleanupOwnerKey(ownerToken)
-    );
-
-    if (this.hasSensitiveLogoutBarrierCleanupOwners()) {
+  async waitForSensitiveLogoutCleanupLock(
+    ownerToken: string | null
+  ): Promise<void> {
+    if (ownerToken === null) {
       return;
     }
 
-    this.setSkipBarrierVaultTableCleanup(false);
+    const acquisition =
+      await this.sensitiveLogoutCleanupLockReservations.get(ownerToken)
+        ?.acquired;
+
+    if (acquisition?.status === "failed") {
+      throw acquisition.error;
+    }
+  }
+
+  endSensitiveLogoutBarrierCleanup(ownerToken: string): void {
+    try {
+      localStorage.removeItem(
+        this.getSensitiveLogoutBarrierCleanupOwnerKey(ownerToken)
+      );
+
+      if (this.hasSensitiveLogoutBarrierCleanupOwners()) {
+        return;
+      }
+
+      this.setSkipBarrierVaultTableCleanup(false);
+    } finally {
+      const reservation =
+        this.sensitiveLogoutCleanupLockReservations.get(ownerToken);
+      this.sensitiveLogoutCleanupLockReservations.delete(ownerToken);
+      reservation?.release();
+    }
   }
 
   completeStaleSensitiveLogoutBarrierCleanup(ownerToken: string): void {

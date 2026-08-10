@@ -231,7 +231,33 @@ describe("offlineVault", () => {
     }
   );
 
-  it("uses one WebCrypto wrapping key across simultaneous native contexts", async () => {
+  it("serializes vault initialization across simultaneous native contexts", async () => {
+    const originalLocksDescriptor = Object.getOwnPropertyDescriptor(
+      navigator,
+      "locks"
+    );
+    let previousLock = Promise.resolve();
+    const lockRequest = vi.fn(
+      async <T>(
+        name: string,
+        options: LockOptions,
+        callback: (lock: Lock) => T | PromiseLike<T>
+      ): Promise<T> => {
+        const result = previousLock.then(() =>
+          callback({ name, mode: options.mode ?? "exclusive" } as Lock)
+        );
+        previousLock = result.then(
+          () => undefined,
+          () => undefined
+        );
+
+        return result;
+      }
+    );
+    Object.defineProperty(navigator, "locks", {
+      configurable: true,
+      value: { request: lockRequest },
+    });
     installNativeVaultBridge();
     const generatedKeys = await Promise.all([
       crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, [
@@ -274,6 +300,7 @@ describe("offlineVault", () => {
 
       secondInitialization = secondVault.initializeOfflineVault(persistedUser);
 
+      expect(lockRequest).toHaveBeenCalledTimes(2);
       expect(generateKeySpy).toHaveBeenCalledTimes(1);
       releaseFirstGenerate.resolve();
 
@@ -294,6 +321,84 @@ describe("offlineVault", () => {
       );
       firstDatabase.close();
       secondDatabase.close();
+      if (originalLocksDescriptor) {
+        Object.defineProperty(navigator, "locks", originalLocksDescriptor);
+      } else {
+        Reflect.deleteProperty(navigator, "locks");
+      }
+    }
+  });
+
+  it("serializes vault initialization across contexts without Web Locks", async () => {
+    const originalLocksDescriptor = Object.getOwnPropertyDescriptor(
+      navigator,
+      "locks"
+    );
+    Object.defineProperty(navigator, "locks", {
+      configurable: true,
+      value: undefined,
+    });
+    const firstWrapStarted = createDeferredPromise<void>();
+    const releaseFirstWrap = createDeferredPromise<void>();
+    const wrapVaultRootKey = vi.fn(
+      async ({ rootKeyBase64 }: { rootKeyBase64: string }) => {
+        if (wrapVaultRootKey.mock.calls.length === 1) {
+          firstWrapStarted.resolve();
+          await releaseFirstWrap.promise;
+        }
+
+        return { wrappedRootKey: rootKeyBase64 };
+      }
+    );
+    installNativeVaultBridge({
+      isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
+      wrapVaultRootKey,
+      unwrapVaultRootKey: vi.fn(
+        async ({ wrappedRootKey }: { wrappedRootKey: string }) => ({
+          rootKeyBase64: wrappedRootKey,
+        })
+      ),
+    });
+    vi.resetModules();
+    const firstVault = await import("./offlineVault");
+    const firstDatabase = (await import("./db")).db;
+    vi.resetModules();
+    const secondVault = await import("./offlineVault");
+    const secondDatabase = (await import("./db")).db;
+    let firstInitialization: Promise<void> | null = null;
+    let secondInitialization: Promise<void> | null = null;
+
+    try {
+      firstInitialization = firstVault.initializeOfflineVault(persistedUser);
+      await firstWrapStarted.promise;
+
+      secondInitialization = secondVault.initializeOfflineVault(persistedUser);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(wrapVaultRootKey).toHaveBeenCalledTimes(1);
+      releaseFirstWrap.resolve();
+      await Promise.all([firstInitialization, secondInitialization]);
+
+      expect(wrapVaultRootKey).toHaveBeenCalledTimes(1);
+      clearOfflineVaultSession();
+      await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+        persistedUser
+      );
+    } finally {
+      releaseFirstWrap.resolve();
+      await Promise.allSettled(
+        [firstInitialization, secondInitialization].filter(
+          (initialization): initialization is Promise<void> =>
+            initialization !== null
+        )
+      );
+      firstDatabase.close();
+      secondDatabase.close();
+      if (originalLocksDescriptor) {
+        Object.defineProperty(navigator, "locks", originalLocksDescriptor);
+      } else {
+        Reflect.deleteProperty(navigator, "locks");
+      }
     }
   });
 

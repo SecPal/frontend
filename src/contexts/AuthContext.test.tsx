@@ -22,6 +22,7 @@ import { authStorage } from "../services/storage";
 import { resetPrefetchCache } from "../hooks/usePrefetch";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 import { NATIVE_AUTH_LOGOUT_EVENT_NAME } from "../services/nativeAuthEvents";
+import { installSerializedWebLocks } from "../../tests/serializedWebLocks";
 
 vi.mock("../services/authApi", () => ({
   getCurrentUser: vi.fn(),
@@ -50,6 +51,7 @@ vi.mock("../lib/clientStateCleanup", () => ({
 type SessionEventName = "session:expired" | "session:invalid";
 type SessionEventHandler = () => void;
 const sessionEventHandlers = new Map<SessionEventName, SessionEventHandler[]>();
+let restoreSerializedWebLocks: (() => void) | null = null;
 
 vi.mock("../services/sessionEvents", () => ({
   isOnline: vi.fn(() => false),
@@ -102,6 +104,7 @@ async function seedStoredUser(user: Record<string, unknown>) {
 
 describe("AuthContext", () => {
   beforeEach(async () => {
+    restoreSerializedWebLocks = installSerializedWebLocks();
     localStorage.clear();
     clearOfflineVaultSession();
     clearRecentAuthVaultKeyMaterials();
@@ -116,9 +119,14 @@ describe("AuthContext", () => {
   });
 
   afterEach(async () => {
-    await clearOfflineVaultTables();
-    clearOfflineVaultSession();
-    clearRecentAuthVaultKeyMaterials();
+    try {
+      await clearOfflineVaultTables();
+      clearOfflineVaultSession();
+      clearRecentAuthVaultKeyMaterials();
+    } finally {
+      restoreSerializedWebLocks?.();
+      restoreSerializedWebLocks = null;
+    }
   });
 
   describe("hasPermission", () => {

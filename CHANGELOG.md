@@ -92,11 +92,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Stale native vault-read timeouts can no longer override a newer logout, and
   initial profile and legacy-data persistence now commit atomically so a
   superseded migration cannot orphan encrypted records. Cancellation remains
-  compatible with Android WebView 83, supported browsers do not require the
-  Web Locks API, and cancellable database opening cannot retain a stalled auth
-  persistence attempt. Auth lifecycle
-  owner tokens retain a cryptographically secure fallback on WebViews without
-  `crypto.randomUUID()`. Temporarily locked native
+  compatible with Android WebView 83, while one shared lifecycle lock
+  serializes vault initialization and destructive logout cleanup across tabs.
+  The lock uses Web Locks where available and a dedicated IndexedDB transaction
+  otherwise, so the API is not a native-runtime prerequisite. Cancellable
+  database opening cannot retain a stalled auth persistence attempt. Auth
+  lifecycle owner tokens retain a cryptographically secure fallback on WebViews
+  without `crypto.randomUUID()`. Temporarily locked native
   vaults are preserved across transient unlock failures instead of being
   replaced by a fallback key, unexpected storage aborts surface as persistence
   failures, native wrapper reads honor cancellation, and newer cross-tab logout

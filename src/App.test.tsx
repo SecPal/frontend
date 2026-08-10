@@ -124,6 +124,7 @@ const {
       }),
       abortPendingPersistence: vi.fn(),
       abortPendingVaultCleanup: vi.fn(async () => undefined),
+      waitForSensitiveLogoutCleanupLock: vi.fn(async () => undefined),
       waitForInFlightVaultTableCleanup: vi.fn(async () => undefined),
     } satisfies AuthStorage,
   };

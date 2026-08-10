@@ -639,6 +639,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           try {
             try {
+              await authStorage.waitForSensitiveLogoutCleanupLock(
+                activeSensitiveLogoutCleanupOwnerToken
+              );
               await authStorage.waitForInFlightVaultTableCleanup();
             } catch (error: unknown) {
               console.warn(
