@@ -11,11 +11,11 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
 import { fileURLToPath } from "url";
-import type { ProxyOptions } from "vite";
+import type { Plugin, ProxyOptions } from "vite";
 import { resolveLinguiVitePluginExports } from "./linguiVitePluginInterop.ts";
 import { applyInjectManifestCodeSplittingFix } from "./src/lib/pwaInjectManifestBuildConfig.ts";
 import { buildPwaRuntimeCaching } from "./src/lib/pwaRuntimeCaching.ts";
-import { resolveAppSurface } from "./src/platform/appSurfaceContract.ts";
+import * as appSurfaceContract from "./src/platform/appSurfaceContract.ts";
 import { thirdPartyDependencyNotices } from "./thirdPartyDependencyNotices.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -37,6 +37,20 @@ const defaultDevProxyTarget = "http://localhost:8000";
 const metaElementPattern = /[ \t]*<meta\b[^>]*\/?>[ \t]*(?:\r?\n)?/giu;
 const cspHttpEquivAttributePattern =
   /\bhttp-equiv\s*=\s*(?:(["'])Content-Security-Policy\1|Content-Security-Policy(?=[\s/>]))/iu;
+
+function appSurfaceBuildMetadataPlugin(metadataSource: string): Plugin {
+  return {
+    name: "app-surface-build-metadata",
+    apply: "build",
+    generateBundle() {
+      this.emitFile({
+        type: "asset",
+        fileName: "build-metadata.json",
+        source: metadataSource,
+      });
+    },
+  };
+}
 
 export function stripStaticCspForViteDev(html: string): string {
   const staticCspMetaElements = (html.match(metaElementPattern) ?? []).filter(
@@ -142,22 +156,41 @@ function getManualChunk(moduleId: string): string | undefined {
 export default defineConfig(({ mode, command }) => {
   // Load env file based on `mode` in the current working directory.
   const env = loadEnv(mode, process.cwd(), "");
-  resolveAppSurface(
+  const isProductionArtifact = command === "build" && mode !== "preview";
+  const resolvedAppSurface = appSurfaceContract.resolveAppSurface(
     env.VITE_APP_SURFACE,
-    command === "build" && mode !== "preview"
+    isProductionArtifact
   );
+  const appSurfaceBuildMetadata =
+    appSurfaceContract.createAppSurfaceBuildMetadata(
+      resolvedAppSurface,
+      mode,
+      isProductionArtifact
+    );
   const isCi = Boolean(process.env.CI);
   const devServerProxyConfig =
     command === "serve" ? buildDevServerProxyConfig(env.VITE_API_URL) : null;
   return {
-    define: devServerProxyConfig
-      ? {
-          "import.meta.env.VITE_API_URL": JSON.stringify(
-            devServerProxyConfig.clientApiBaseUrl
-          ),
-        }
-      : undefined,
+    define: {
+      ...(command === "build"
+        ? {
+            __SECPAL_RESOLVED_APP_SURFACE__: JSON.stringify(resolvedAppSurface),
+          }
+        : {}),
+      ...(devServerProxyConfig
+        ? {
+            "import.meta.env.VITE_API_URL": JSON.stringify(
+              devServerProxyConfig.clientApiBaseUrl
+            ),
+          }
+        : {}),
+    },
     plugins: [
+      appSurfaceBuildMetadataPlugin(
+        appSurfaceContract.serializeAppSurfaceBuildMetadata(
+          appSurfaceBuildMetadata
+        )
+      ),
       {
         name: "vite-dev-csp-compatibility",
         apply: "serve",

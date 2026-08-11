@@ -7,6 +7,10 @@ import {
 } from "./appSurfaceContract";
 
 const resolveRuntimeAppSurface = (): AppSurface => {
+  if (typeof __SECPAL_RESOLVED_APP_SURFACE__ !== "undefined") {
+    return __SECPAL_RESOLVED_APP_SURFACE__;
+  }
+
   const isProductionArtifact =
     import.meta.env.PROD && import.meta.env.MODE !== "preview";
 
