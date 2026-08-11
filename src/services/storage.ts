@@ -719,10 +719,13 @@ class LocalStorageAuthStorage implements AuthStorage {
     }
 
     if (localStorage.getItem(this.VAULT_KEY) !== null) {
+      const expectedMarkers = this.captureStoredUserMarkers();
+      let hasInvalidStoredOfflineVaultState: typeof import("../lib/offlineVault").hasInvalidStoredOfflineVaultState;
       let readPersistedAuthUserFromVault: typeof import("../lib/offlineVault").readPersistedAuthUserFromVault;
 
       try {
-        ({ readPersistedAuthUserFromVault } = await loadOfflineVaultModule());
+        ({ hasInvalidStoredOfflineVaultState, readPersistedAuthUserFromVault } =
+          await loadOfflineVaultModule());
         throwIfAborted(signal);
       } catch (error) {
         if (isTransientModuleLoadError(error)) {
@@ -742,11 +745,15 @@ class LocalStorageAuthStorage implements AuthStorage {
       throwIfAborted(signal);
 
       if (!storedVaultUser) {
+        if (hasInvalidStoredOfflineVaultState()) {
+          return this.clearInvalidStoredUser(signal, expectedMarkers);
+        }
+
         if (localStorage.getItem(this.VAULT_KEY) !== null) {
           return null;
         }
 
-        return this.clearInvalidStoredUser(signal);
+        return this.clearInvalidStoredUser(signal, expectedMarkers);
       }
 
       return storedVaultUser;

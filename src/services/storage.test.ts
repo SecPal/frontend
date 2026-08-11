@@ -206,11 +206,17 @@ describe("authStorage", () => {
   });
 
   it("preserves a vault marker when the encrypted profile is temporarily unavailable", async () => {
-    const storedVaultState = JSON.stringify({
-      scheme: "secpal-auth-vault",
-      version: 2,
-    });
-    localStorage.setItem(AUTH_VAULT_STORAGE_KEY, storedVaultState);
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    await authStorage.setUser(user);
+    const storedVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+
+    expect(storedVaultState).not.toBeNull();
+    clearOfflineVaultSession();
     vi.spyOn(offlineVault, "readPersistedAuthUserFromVault").mockResolvedValue(
       null
     );
@@ -1002,6 +1008,59 @@ describe("authStorage", () => {
 
     await expect(authStorage.getUser()).resolves.toEqual(nextUser);
   });
+
+  it.each([
+    ["invalid JSON", "{not-valid-json"],
+    ["an unsupported envelope", "{}"],
+  ])(
+    "does not let %s parsing erase a replacement login",
+    async (_description, malformedVaultState) => {
+      const nextUser = {
+        id: "next-user",
+        name: "Next User",
+        email: "next-user@secpal.dev",
+        emailVerified: true,
+      };
+      await expect(authStorage.setUser(nextUser)).resolves.toEqual({
+        status: "persisted",
+      });
+      const nextVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+      const nextProfile = await db.vaultProfile.get("profile");
+
+      if (!nextVaultState || !nextProfile) {
+        throw new Error("Expected a complete replacement vault.");
+      }
+
+      localStorage.setItem(AUTH_VAULT_STORAGE_KEY, malformedVaultState);
+      clearOfflineVaultSession();
+      const originalParse = JSON.parse;
+      let replacementCommitted = false;
+      const parseSpy = vi
+        .spyOn(JSON, "parse")
+        .mockImplementation((serializedValue: string) => {
+          if (
+            serializedValue === malformedVaultState &&
+            !replacementCommitted
+          ) {
+            replacementCommitted = true;
+            localStorage.setItem(AUTH_VAULT_STORAGE_KEY, nextVaultState);
+          }
+
+          return originalParse(serializedValue);
+        });
+
+      try {
+        await expect(authStorage.getUser()).resolves.toBeNull();
+      } finally {
+        parseSpy.mockRestore();
+      }
+
+      expect(replacementCommitted).toBe(true);
+      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(nextVaultState);
+      expect(await db.vaultProfile.get("profile")).toEqual(nextProfile);
+      await expect(authStorage.getUser()).resolves.toEqual(nextUser);
+    }
+  );
 
   it("clears unsupported unencrypted persisted auth state", async () => {
     const unsupportedStoredUser =

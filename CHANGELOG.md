@@ -101,10 +101,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   same-user WebCrypto vault cannot reuse an obsolete in-memory root key or
   clear valid replacement data. Invalid cleanup and asynchronous wrapper
   rewrites now revalidate the exact observed vault under the lifecycle lock,
-  so stale work cannot purge or overwrite a newer login. Invalid-state and
-  ordinary vault cleanup use the same lifecycle lock, and destructive logout
-  cleanup stops safely if that lock cannot be acquired. Aborted queued lock
-  requests are rejected before their protected operation is created,
+  so stale work cannot purge or overwrite a newer login. Malformed envelope
+  parsing now leaves marker removal to that fenced cleanup, preventing a stale
+  parser from deleting a replacement login committed by another tab.
+  Invalid-state and ordinary vault cleanup use the same lifecycle lock, and
+  destructive logout cleanup stops safely if that lock cannot be acquired.
+  Aborted queued lock requests are rejected before their protected operation
+  is created,
   preventing stray cleanup work and unhandled cancellation rejections during
   a following authentication lifecycle. Destructive session cleanup now drops
   in-memory vault key material synchronously, bounds and fences the IndexedDB

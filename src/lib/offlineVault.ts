@@ -406,6 +406,18 @@ function getSessionWrapperCacheKey(state: AuthVaultStateEnvelope): string {
   );
 }
 
+function parseStoredVaultState(
+  storedState: string
+): AuthVaultStateEnvelope | null {
+  try {
+    const parsedState = JSON.parse(storedState) as unknown;
+
+    return isAuthVaultStateEnvelope(parsedState) ? parsedState : null;
+  } catch {
+    return null;
+  }
+}
+
 function getStoredVaultState(): AuthVaultStateEnvelope | null {
   const storedState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
 
@@ -413,21 +425,19 @@ function getStoredVaultState(): AuthVaultStateEnvelope | null {
     return null;
   }
 
-  try {
-    const parsedState = JSON.parse(storedState) as unknown;
+  const parsedState = parseStoredVaultState(storedState);
 
-    if (isAuthVaultStateEnvelope(parsedState)) {
-      return parsedState;
-    }
-
-    localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
+  if (!parsedState) {
     clearOfflineVaultSession();
-    return null;
-  } catch {
-    localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
-    clearOfflineVaultSession();
-    return null;
   }
+
+  return parsedState;
+}
+
+export function hasInvalidStoredOfflineVaultState(): boolean {
+  const storedState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+
+  return storedState !== null && parseStoredVaultState(storedState) === null;
 }
 
 function setStoredVaultState(state: AuthVaultStateEnvelope): void {
