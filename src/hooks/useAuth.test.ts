@@ -75,6 +75,7 @@ vi.mock("../lib/clientStateCleanup", () => ({
   clearSensitiveClientState: mockClearSensitiveClientState,
   clearDestructiveSensitiveClientState: mockClearSensitiveClientState,
   clearBrowserPushClientState: mockClearBrowserPushClientState,
+  clearTrailingSensitiveClientState: mockClearBrowserPushClientState,
 }));
 
 vi.mock("../lib/analytics", () => ({
@@ -2505,6 +2506,43 @@ describe("useAuth", () => {
       setUserSpy.mockRestore();
       vi.useRealTimers();
     }
+  });
+
+  it("does not accept a new login after destructive cleanup fails", async () => {
+    const firstUser = {
+      id: "cleanup-owner",
+      name: "Cleanup Owner",
+      email: "cleanup-owner@secpal.dev",
+    };
+    const secondUser = {
+      id: "next-user",
+      name: "Next User",
+      email: "next-user@secpal.dev",
+    };
+    const cleanupError = new Error("IndexedDB cleanup rolled back");
+
+    await persistAuthUser(firstUser);
+    vi.mocked(clearSensitiveClientState).mockRejectedValueOnce(cleanupError);
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    const setUserSpy = vi.spyOn(authStorage, "setUser");
+
+    await act(async () => {
+      await result.current.logout();
+    });
+    setUserSpy.mockClear();
+
+    await act(async () => {
+      await result.current.login(secondUser);
+    });
+
+    expect(setUserSpy).not.toHaveBeenCalled();
+    expect(result.current.user).toBeNull();
+    expect(authStorage.hasLogoutBarrier()).toBe(true);
+    setUserSpy.mockRestore();
   });
 
   it("lets a newer logout supersede a login waiting for cleanup", async () => {

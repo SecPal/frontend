@@ -106,7 +106,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cleanup stops safely if that lock cannot be acquired. Aborted queued lock
   requests are rejected before their protected operation is created,
   preventing stray cleanup work and unhandled cancellation rejections during
-  a following authentication lifecycle.
+  a following authentication lifecycle. Destructive session cleanup now drops
+  in-memory vault key material synchronously, bounds and fences the IndexedDB
+  purge before releasing its lifecycle lock, retains the logout barrier after
+  a rollback or timeout, and leaves potentially unbounded Cache and push work
+  outside the critical section. Superseded persistence requests also return
+  before they can abort the active writer for a newer authentication cycle.
   Cancellable database opening cannot retain a stalled auth persistence
   attempt. Concurrent tabs reuse an active revalidation owner token instead of
   invalidating each other's confirmed replacement persistence, adopt a newly

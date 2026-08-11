@@ -21,9 +21,12 @@ import {
 import { runWithOfflineVaultLifecycleLock } from "./offlineVaultLifecycleLock";
 import {
   clearActiveOfflineVaultSession,
+  clearRecentAuthVaultKeyMaterials,
   getActiveOfflineVaultSession,
+  getRecentAuthVaultKeyMaterials,
   isVaultOrgUnitIndexEnsured,
   markVaultOrgUnitIndexEnsured,
+  rememberAuthVaultKeyMaterial,
   setActiveOfflineVaultSession,
 } from "./offlineVaultRuntime";
 import { isCapacitorNativeRuntime } from "./nativeRuntime";
@@ -50,7 +53,6 @@ const AUTH_VAULT_DERIVED_KEY_BYTES = AUTH_VAULT_HALF_KEY_BYTES * 2;
 const VAULT_RECORD_IV_BYTES = 12;
 const VAULT_RECORD_TAG_BYTES = 16;
 const NATIVE_VAULT_WRAPPING_KEY_ID = "native-auth-vault";
-const RECENT_AUTH_VAULT_KEY_MATERIALS_MAX = 3;
 const PROFILE_RECORD_ID = "profile";
 const ROOT_ORGANIZATIONAL_UNIT_PARENT_LOOKUP_KEY = "__root__";
 
@@ -159,8 +161,6 @@ type VaultOrganizationalUnitIndexFields = Pick<
   "type" | "parent_id" | "parentLookupKey"
 >;
 
-let recentAuthVaultKeyMaterials: string[] = [];
-
 function isAuthVaultStateEnvelopeV1(
   value: unknown
 ): value is AuthVaultStateEnvelopeV1 {
@@ -233,16 +233,7 @@ function getAuthVaultKeyMaterial(): string | null {
   }
 
   const keyMaterial = `secpal-auth-vault:${csrfToken}`;
-
-  if (!hasStoredOfflineVaultState()) {
-    recentAuthVaultKeyMaterials = [keyMaterial];
-    return keyMaterial;
-  }
-
-  recentAuthVaultKeyMaterials = [
-    keyMaterial,
-    ...recentAuthVaultKeyMaterials.filter((entry) => entry !== keyMaterial),
-  ].slice(0, RECENT_AUTH_VAULT_KEY_MATERIALS_MAX);
+  rememberAuthVaultKeyMaterial(keyMaterial, !hasStoredOfflineVaultState());
 
   return keyMaterial;
 }
@@ -253,6 +244,7 @@ export function rememberCurrentAuthVaultKeyMaterial(): void {
 
 function getAuthVaultKeyMaterialCandidates(): string[] {
   const currentKeyMaterial = getAuthVaultKeyMaterial();
+  const recentAuthVaultKeyMaterials = getRecentAuthVaultKeyMaterials();
 
   if (!currentKeyMaterial) {
     return [...recentAuthVaultKeyMaterials];
@@ -492,9 +484,7 @@ export function clearOfflineVaultSession(): void {
   clearActiveOfflineVaultSession();
 }
 
-export function clearRecentAuthVaultKeyMaterials(): void {
-  recentAuthVaultKeyMaterials = [];
-}
+export { clearRecentAuthVaultKeyMaterials };
 
 export function clearStoredOfflineVaultState(): void {
   localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);

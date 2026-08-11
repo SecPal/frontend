@@ -445,6 +445,48 @@ describe("authStorage", () => {
     expect(authStorage.hasLogoutBarrier()).toBe(true);
   });
 
+  it("does not let a stale writer abort newer active persistence", async () => {
+    const newerPersistenceStarted = createDeferredPromise<void>();
+    const releaseNewerPersistence = createDeferredPromise<void>();
+    const originalInitializeOfflineVault = offlineVault.initializeOfflineVault;
+    vi.spyOn(offlineVault, "initializeOfflineVault").mockImplementationOnce(
+      async (user, options) => {
+        newerPersistenceStarted.resolve();
+        await releaseNewerPersistence.promise;
+        await originalInitializeOfflineVault(user, options);
+      }
+    );
+    const newerPersistence = authStorage.setUser({
+      id: "newer-user",
+      name: "Newer User",
+      email: "newer@secpal.dev",
+      emailVerified: true,
+    });
+
+    await newerPersistenceStarted.promise;
+    const stalePersistence = authStorage.setUser(
+      {
+        id: "stale-user",
+        name: "Stale User",
+        email: "stale@secpal.dev",
+        emailVerified: true,
+      },
+      { shouldCommit: () => false }
+    );
+
+    await expect(stalePersistence).resolves.toEqual({
+      status: "superseded",
+    });
+    releaseNewerPersistence.resolve();
+    await expect(newerPersistence).resolves.toEqual({ status: "persisted" });
+    await expect(authStorage.getUser()).resolves.toEqual({
+      id: "newer-user",
+      name: "Newer User",
+      email: "newer@secpal.dev",
+      emailVerified: true,
+    });
+  });
+
   it("migrates the legacy auth_user envelope into the encrypted vault and removes auth_user from localStorage", async () => {
     const legacyUser = {
       id: "1",

@@ -17,7 +17,10 @@ import {
   isRecoverableLazyModuleError,
   isTransientModuleLoadError,
 } from "../lib/lazyModuleErrors";
-import { clearActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
+import {
+  clearActiveOfflineVaultSession,
+  clearRecentAuthVaultKeyMaterials,
+} from "../lib/offlineVaultRuntime";
 import { awaitAbortable, throwIfAborted } from "../lib/abortablePromise";
 import { createSecureRandomToken } from "../lib/secureRandom";
 import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
@@ -794,8 +797,17 @@ class LocalStorageAuthStorage implements AuthStorage {
     user: User,
     options: AuthStorageWriteOptions = {}
   ): Promise<AuthUserPersistenceResult> {
+    if (options.shouldCommit && !options.shouldCommit()) {
+      return { status: "superseded" };
+    }
+
     const logoutBarrierAtStart = localStorage.getItem(this.LOGOUT_BARRIER_KEY);
     await this.abortPendingVaultCleanup();
+
+    if (options.shouldCommit && !options.shouldCommit()) {
+      return { status: "superseded" };
+    }
+
     this.activePersistenceController?.abort();
     const controller = new AbortController();
     this.activePersistenceController = controller;
@@ -955,10 +967,8 @@ class LocalStorageAuthStorage implements AuthStorage {
         : null;
 
     this.clearStoredUserMarkers();
-    const { clearOfflineVaultSession, clearRecentAuthVaultKeyMaterials } =
-      await loadOfflineVaultModule();
     throwIfAborted(signal);
-    clearOfflineVaultSession();
+    clearActiveOfflineVaultSession();
     clearRecentAuthVaultKeyMaterials();
 
     if (!shouldClearOfflineVaultTables) {

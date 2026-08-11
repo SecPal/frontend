@@ -7,6 +7,8 @@ interface OfflineVaultSessionRuntime {
 
 let activeOfflineVaultSession: OfflineVaultSessionRuntime | null = null;
 let vaultOrgUnitIndexEnsured = false;
+let recentAuthVaultKeyMaterials: string[] = [];
+const RECENT_AUTH_VAULT_KEY_MATERIALS_MAX = 3;
 
 export function getActiveOfflineVaultSession<
   T extends OfflineVaultSessionRuntime,
@@ -27,6 +29,29 @@ export function clearActiveOfflineVaultSession(): void {
 
   activeOfflineVaultSession = null;
   vaultOrgUnitIndexEnsured = false;
+}
+
+export function rememberAuthVaultKeyMaterial(
+  keyMaterial: string,
+  replaceExisting = false
+): void {
+  if (replaceExisting) {
+    recentAuthVaultKeyMaterials = [keyMaterial];
+    return;
+  }
+
+  recentAuthVaultKeyMaterials = [
+    keyMaterial,
+    ...recentAuthVaultKeyMaterials.filter((entry) => entry !== keyMaterial),
+  ].slice(0, RECENT_AUTH_VAULT_KEY_MATERIALS_MAX);
+}
+
+export function getRecentAuthVaultKeyMaterials(): string[] {
+  return [...recentAuthVaultKeyMaterials];
+}
+
+export function clearRecentAuthVaultKeyMaterials(): void {
+  recentAuthVaultKeyMaterials = [];
 }
 
 export function isVaultOrgUnitIndexEnsured(): boolean {

@@ -63,6 +63,7 @@ vi.mock("../lib/clientStateCleanup", () => ({
   clearSensitiveClientState: mockClearSensitiveClientState,
   clearDestructiveSensitiveClientState: mockClearSensitiveClientState,
   clearBrowserPushClientState: mockClearBrowserPushClientState,
+  clearTrailingSensitiveClientState: mockClearBrowserPushClientState,
 }));
 vi.mock("../lib/analytics", () => ({
   analytics: {

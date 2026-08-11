@@ -473,6 +473,7 @@ describe("offlineVault", () => {
     const firstWrapper = createDeferredPromise<{
       wrappedRootKey: string;
     }>();
+    const wrapperRewriteStarted = createDeferredPromise<void>();
     let firstRootKeyBase64: string | null = null;
     const nativeBridge = installNativeVaultBridge({
       isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
@@ -480,6 +481,7 @@ describe("offlineVault", () => {
         async ({ rootKeyBase64 }: { rootKeyBase64: string }) => {
           if (firstRootKeyBase64 === null) {
             firstRootKeyBase64 = rootKeyBase64;
+            wrapperRewriteStarted.resolve();
             return firstWrapper.promise;
           }
 
@@ -494,9 +496,8 @@ describe("offlineVault", () => {
     });
     const staleRead = readPersistedAuthUserFromVault();
 
-    await vi.waitFor(() => {
-      expect(nativeBridge.wrapVaultRootKey).toHaveBeenCalledTimes(1);
-    });
+    await wrapperRewriteStarted.promise;
+    expect(nativeBridge.wrapVaultRootKey).toHaveBeenCalledTimes(1);
 
     const replacementUser = {
       ...persistedUser,

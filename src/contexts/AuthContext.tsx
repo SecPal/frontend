@@ -26,8 +26,8 @@ import {
 import { fetchCsrfToken, getCsrfTokenFromCookie } from "../services/csrf";
 import { sessionEvents, isOnline } from "../services/sessionEvents";
 import {
-  clearBrowserPushClientState,
   clearDestructiveSensitiveClientState,
+  clearTrailingSensitiveClientState,
 } from "../lib/clientStateCleanup";
 import { hasUserPermission } from "../lib/capabilities";
 import { isRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
@@ -360,6 +360,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearAuthenticatedStateDestructivePromiseRef = useRef<Promise<void>>(
     Promise.resolve()
   );
+  const destructiveSensitiveCleanupFailedRef = useRef(false);
   const clearAuthenticatedStateCompletionPromiseRef = useRef<Promise<void>>(
     Promise.resolve()
   );
@@ -654,6 +655,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await clearDestructiveSensitiveClientState({
               signal: lifecycleSignal ?? undefined,
             });
+            destructiveSensitiveCleanupFailedRef.current = false;
           } finally {
             endSensitiveLogoutBarrierCleanup(
               activeSensitiveLogoutCleanupOwnerToken
@@ -671,7 +673,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         sensitiveLogoutCleanupPromise =
           runDestructiveSensitiveLogoutCleanup().finally(async () => {
-            await clearBrowserPushClientState();
+            await clearTrailingSensitiveClientState();
           });
 
         return sensitiveLogoutCleanupPromise;
@@ -686,6 +688,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             await runDestructiveSensitiveLogoutCleanup();
           } catch (error: unknown) {
+            destructiveSensitiveCleanupFailedRef.current = true;
             console.error(
               "Failed to clear sensitive client state during logout:",
               error
@@ -765,10 +768,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         await clearAuthenticatedStateDestructivePromiseRef.current;
       } catch (error: unknown) {
+        destructiveSensitiveCleanupFailedRef.current = true;
         console.warn(
-          "Failed while waiting for destructive logout cleanup before login; continuing with best-effort session handoff:",
+          "Failed while waiting for destructive logout cleanup before login; blocking session handoff:",
           error
         );
+      }
+
+      if (destructiveSensitiveCleanupFailedRef.current) {
+        setIsLoading(false);
+        setBootstrapRecoveryReason("network");
+        return;
       }
 
       if (!isCurrentLogin()) {

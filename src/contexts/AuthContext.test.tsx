@@ -46,6 +46,7 @@ vi.mock("../lib/clientStateCleanup", () => ({
   clearSensitiveClientState: mockClearSensitiveClientState,
   clearDestructiveSensitiveClientState: mockClearSensitiveClientState,
   clearBrowserPushClientState: mockClearBrowserPushClientState,
+  clearTrailingSensitiveClientState: mockClearBrowserPushClientState,
 }));
 
 type SessionEventName = "session:expired" | "session:invalid";

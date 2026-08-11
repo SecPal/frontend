@@ -9,10 +9,14 @@ import {
 } from "./browserPushState";
 import {
   clearBrowserPushClientState,
+  clearDestructiveSensitiveClientState,
   clearSensitiveClientState,
   SENSITIVE_CACHE_NAMES,
 } from "./clientStateCleanup";
-import * as offlineVault from "./offlineVault";
+import {
+  getActiveOfflineVaultSession,
+  setActiveOfflineVaultSession,
+} from "./offlineVaultRuntime";
 import {
   AUTH_USER_REVALIDATION_REQUIRED_KEY,
   AUTH_VAULT_STORAGE_KEY,
@@ -213,6 +217,53 @@ describe("clearSensitiveClientState", () => {
     expect(deleteSpy).not.toHaveBeenCalled();
   });
 
+  it("does not start a delayed IndexedDB transaction after cleanup times out", async () => {
+    vi.useFakeTimers();
+    const transactionMayStart = createDeferredPromise<void>();
+    const clearSpies = db.tables.map((table) => vi.spyOn(table, "clear"));
+    vi.spyOn(db, "transaction").mockImplementation((async (
+      ...args: unknown[]
+    ) => {
+      const operation = args[args.length - 1] as () => Promise<void>;
+      await transactionMayStart.promise;
+      return operation();
+    }) as typeof db.transaction);
+    const controller = new AbortController();
+
+    try {
+      const cleanupPromise = clearDestructiveSensitiveClientState({
+        signal: controller.signal,
+      });
+      const cleanupAssertion = expect(cleanupPromise).rejects.toMatchObject({
+        name: "TimeoutError",
+      });
+      await vi.advanceTimersByTimeAsync(5_000);
+
+      await cleanupAssertion;
+      transactionMayStart.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      for (const clearSpy of clearSpies) {
+        expect(clearSpy).not.toHaveBeenCalled();
+      }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps unbounded Cache API work outside destructive lifecycle cleanup", async () => {
+    mockCaches.keys.mockResolvedValue([SENSITIVE_CACHE_NAMES[0]]);
+    mockCaches.delete.mockReturnValue(new Promise<boolean>(() => {}));
+
+    await expect(
+      clearDestructiveSensitiveClientState()
+    ).resolves.toBeUndefined();
+
+    expect(mockCaches.keys).not.toHaveBeenCalled();
+    expect(mockCaches.delete).not.toHaveBeenCalled();
+  });
+
   it("does not fail when Cache API is unavailable", async () => {
     // @ts-expect-error Simulate unsupported Cache API
     delete globalThis.caches;
@@ -313,17 +364,9 @@ describe("clearSensitiveClientState", () => {
     await expect(clearPromise).rejects.toBe(cacheError);
   });
 
-  it("continues the remaining logout cleanup when offline vault runtime cleanup fails", async () => {
-    const chunkError = new TypeError(
-      "Failed to fetch dynamically imported module"
-    );
-    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    vi.spyOn(offlineVault, "clearOfflineVaultSession").mockImplementationOnce(
-      () => {
-        throw chunkError;
-      }
-    );
-
+  it("clears the offline vault runtime without lazy module work", async () => {
+    const rootKeyBytes = new Uint8Array([1, 2, 3]);
+    setActiveOfflineVaultSession({ rootKeyBytes });
     localStorage.setItem("auth_user", "opaque-auth-storage-envelope");
     localStorage.setItem("auth_vault_state", '{"scheme":"secpal-auth-vault"}');
     sessionStorage.setItem("share-draft", "pending");
@@ -344,9 +387,7 @@ describe("clearSensitiveClientState", () => {
     expect(sessionStorage.getItem("share-draft")).toBeNull();
     await db.open();
     expect(await db.analytics.count()).toBe(0);
-    expect(consoleWarn).toHaveBeenCalledWith(
-      "Failed to clear the offline vault runtime during logout cleanup; continuing with the remaining sensitive cleanup tasks:",
-      chunkError
-    );
+    expect(getActiveOfflineVaultSession()).toBeNull();
+    expect(rootKeyBytes).toEqual(new Uint8Array([0, 0, 0]));
   });
 });
