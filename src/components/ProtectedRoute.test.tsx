@@ -581,10 +581,13 @@ describe("ProtectedRoute", () => {
     expect(screen.queryByText("test@secpal.dev")).not.toBeInTheDocument();
 
     vi.spyOn(authStorage, "unlockVault").mockResolvedValueOnce({
-      id: "1",
-      name: "Test",
-      email: "test@secpal.dev",
-      emailVerified: true,
+      status: "unlocked",
+      user: {
+        id: "1",
+        name: "Test",
+        email: "test@secpal.dev",
+        emailVerified: true,
+      },
     });
 
     await act(async () => {

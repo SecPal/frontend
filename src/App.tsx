@@ -168,6 +168,7 @@ function LoginRoute() {
 
 function LoginRouteBootstrapGate() {
   const [showInteractiveLogin, setShowInteractiveLogin] = useState(false);
+  const isNativeBootstrap = getAuthTransport().kind === "native-bridge";
   const { logout } = useAuth();
   const { loginRuntimeBootstrap, returnToRuntimeDiscovery } =
     useNativeRuntimeBootstrapContext();
@@ -181,6 +182,10 @@ function LoginRouteBootstrapGate() {
   }, [logout, returnToRuntimeDiscovery]);
 
   useEffect(() => {
+    if (isNativeBootstrap) {
+      return;
+    }
+
     const timeoutId = globalThis.setTimeout(() => {
       setShowInteractiveLogin(true);
     }, LOGIN_ROUTE_BOOTSTRAP_INTERACTIVE_DELAY_MS);
@@ -188,7 +193,7 @@ function LoginRouteBootstrapGate() {
     return () => {
       globalThis.clearTimeout(timeoutId);
     };
-  }, []);
+  }, [isNativeBootstrap]);
 
   return showInteractiveLogin ? (
     <Login

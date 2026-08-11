@@ -2,12 +2,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { clearBrowserPushInstallationId } from "./browserPushState";
+import Dexie, { type Transaction } from "dexie";
 import { db } from "./db";
-import { AUTH_VAULT_STORAGE_KEY } from "./offlineVaultKeys";
-
-async function loadOfflineVaultModule() {
-  return await import("./offlineVault");
-}
+import {
+  AUTH_USER_REVALIDATION_REQUIRED_KEY,
+  AUTH_VAULT_STORAGE_KEY,
+} from "./offlineVaultKeys";
+import {
+  clearActiveOfflineVaultSession,
+  clearRecentAuthVaultKeyMaterials,
+} from "./offlineVaultRuntime";
 
 export const SENSITIVE_CACHE_NAMES = [
   "api-cache",
@@ -19,8 +23,27 @@ const USER_SCOPED_LOCAL_STORAGE_KEYS = [
   "auth_user",
   "auth_token",
   "secpal-notification-preferences",
+  AUTH_USER_REVALIDATION_REQUIRED_KEY,
   AUTH_VAULT_STORAGE_KEY,
 ] as const;
+const SENSITIVE_INDEXED_DB_CLEANUP_TIMEOUT_MS = 5_000;
+
+interface SensitiveClientStateCleanupOptions {
+  signal?: AbortSignal;
+}
+
+function getAbortReason(signal: AbortSignal): unknown {
+  return (
+    signal.reason ??
+    new DOMException("The operation was aborted.", "AbortError")
+  );
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw getAbortReason(signal);
+  }
+}
 
 async function clearSensitiveCaches(): Promise<void> {
   if (!("caches" in globalThis)) {
@@ -39,7 +62,73 @@ async function clearSensitiveCaches(): Promise<void> {
   );
 }
 
-async function clearSensitiveIndexedDbState(): Promise<void> {
+async function clearSensitiveIndexedDbState(
+  signal?: AbortSignal
+): Promise<void> {
+  throwIfAborted(signal);
+
+  if (signal) {
+    let activeTransaction: Transaction | null = null;
+    let cleanupTimedOut = false;
+    let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
+    const timeoutError = new DOMException(
+      "Sensitive IndexedDB cleanup timed out.",
+      "TimeoutError"
+    );
+    const throwIfCleanupCannotContinue = () => {
+      if (cleanupTimedOut) {
+        throw timeoutError;
+      }
+
+      throwIfAborted(signal);
+    };
+    let rejectAbort!: (reason: unknown) => void;
+    const aborted = new Promise<never>((_resolve, reject) => {
+      rejectAbort = reject;
+    });
+    const handleAbort = () => {
+      activeTransaction?.abort();
+      rejectAbort(getAbortReason(signal));
+    };
+
+    signal.addEventListener("abort", handleAbort, { once: true });
+    if (signal.aborted) {
+      handleAbort();
+    }
+
+    const transaction = db.transaction("rw", db.tables, async () => {
+      activeTransaction = Dexie.currentTransaction;
+      throwIfCleanupCannotContinue();
+      await Promise.all(db.tables.map((table) => table.clear()));
+      throwIfCleanupCannotContinue();
+    });
+    void transaction.catch(() => undefined);
+    const timedOut = new Promise<never>((_resolve, reject) => {
+      timeoutId = globalThis.setTimeout(() => {
+        cleanupTimedOut = true;
+        activeTransaction?.abort();
+        reject(timeoutError);
+      }, SENSITIVE_INDEXED_DB_CLEANUP_TIMEOUT_MS);
+    });
+
+    try {
+      await Promise.race([transaction, aborted, timedOut]);
+    } catch (error) {
+      if (signal.aborted) {
+        throw getAbortReason(signal);
+      }
+
+      throw error;
+    } finally {
+      signal.removeEventListener("abort", handleAbort);
+      if (timeoutId !== null) {
+        globalThis.clearTimeout(timeoutId);
+      }
+    }
+
+    return;
+  }
+
   try {
     // Logout policy: remove the entire local session database because all
     // stores in SecPalDB are session- or user-adjacent and unnecessary once
@@ -55,6 +144,7 @@ async function clearSensitiveIndexedDbState(): Promise<void> {
       db.analytics.clear(),
       db.organizationalUnitCache.clear(),
       db.vaultProfile.clear(),
+      db.vaultWrappingKeys.clear(),
       db.vaultAnalytics.clear(),
       db.vaultOrganizationalUnitCache.clear(),
     ]);
@@ -121,33 +211,33 @@ async function waitForSensitiveCleanupTasks(
   );
 }
 
-export async function clearDestructiveSensitiveClientState(): Promise<void> {
+export async function clearDestructiveSensitiveClientState(
+  options: SensitiveClientStateCleanupOptions = {}
+): Promise<void> {
+  const { signal } = options;
+  throwIfAborted(signal);
+
   for (const key of USER_SCOPED_LOCAL_STORAGE_KEYS) {
     localStorage.removeItem(key);
   }
 
   sessionStorage.clear();
+  clearActiveOfflineVaultSession();
+  clearRecentAuthVaultKeyMaterials();
+  await clearSensitiveIndexedDbState(signal);
+}
 
-  const vaultCleanupTask = loadOfflineVaultModule()
-    .then(({ clearOfflineVaultSession, clearRecentAuthVaultKeyMaterials }) => {
-      clearOfflineVaultSession();
-      clearRecentAuthVaultKeyMaterials();
-    })
-    .catch((error: unknown) => {
-      console.warn(
-        "Failed to clear the offline vault runtime during logout cleanup; continuing with the remaining sensitive cleanup tasks:",
-        error
-      );
-    });
-
+export async function clearTrailingSensitiveClientState(): Promise<void> {
   await waitForSensitiveCleanupTasks([
-    vaultCleanupTask,
     clearSensitiveCaches(),
-    clearSensitiveIndexedDbState(),
+    clearBrowserPushClientState(),
   ]);
 }
 
-export async function clearSensitiveClientState(): Promise<void> {
-  await clearDestructiveSensitiveClientState();
-  await clearBrowserPushClientState();
+export async function clearSensitiveClientState(
+  options: SensitiveClientStateCleanupOptions = {}
+): Promise<void> {
+  await clearDestructiveSensitiveClientState(options);
+  throwIfAborted(options.signal);
+  await clearTrailingSensitiveClientState();
 }

@@ -8,9 +8,10 @@ import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import App from "./App";
+import type { User } from "./contexts/auth-context";
 import { AuthApiError } from "./services/authApi";
 import { sanitizePersistedAuthUser } from "./services/authState";
-import { authStorage } from "./services/storage";
+import { authStorage, type AuthStorage } from "./services/storage";
 import { db } from "./lib/db";
 import { createRecoverableLazyModuleError } from "./lib/lazyModuleErrors";
 
@@ -23,11 +24,13 @@ const {
   mockLoadAuthenticatedAppModule,
   mockUpdatePrompt,
 } = vi.hoisted(() => {
-  let storedUser: unknown = null;
+  let storedUser: User | null = null;
   let vaultPresent = false;
   let vaultLocked = false;
   let logoutBarrier = false;
   let skipVaultTableCleanup = false;
+  let userRevalidationOwnerToken: string | null = null;
+  let nextUserRevalidationOwner = 0;
 
   return {
     mockGetCurrentUser: vi.fn(),
@@ -39,44 +42,61 @@ const {
         () =>
           !logoutBarrier &&
           !vaultLocked &&
+          userRevalidationOwnerToken === null &&
           (vaultPresent || storedUser !== null)
       ),
+      getUserRevalidationOwnerToken: vi.fn(() => userRevalidationOwnerToken),
+      requireUserRevalidation: vi.fn(() => {
+        nextUserRevalidationOwner += 1;
+        userRevalidationOwnerToken = `test-user-revalidation-${nextUserRevalidationOwner}`;
+        return userRevalidationOwnerToken;
+      }),
+      completeUserRevalidation: vi.fn((ownerToken: string | null) => {
+        if (ownerToken === userRevalidationOwnerToken) {
+          userRevalidationOwnerToken = null;
+        }
+      }),
       hasVaultLock: vi.fn(() => vaultLocked),
-      // Mirror production: persisted users live in the offline vault, so the
-      // synchronous snapshot is always null once a vault record exists.
-      getUserSnapshot: vi.fn(() => {
-        if (logoutBarrier || vaultLocked || vaultPresent) {
-          return null;
-        }
-
-        return storedUser;
-      }),
       getUser: vi.fn(async () => {
-        if (logoutBarrier || vaultLocked) {
+        if (
+          logoutBarrier ||
+          vaultLocked ||
+          userRevalidationOwnerToken !== null
+        ) {
           return null;
         }
 
         return storedUser;
       }),
-      setUser: vi.fn(async (user: unknown) => {
+      setUser: vi.fn(async (user: User) => {
         storedUser = user;
         vaultPresent = true;
         vaultLocked = false;
         logoutBarrier = false;
+        return { status: "persisted" as const };
       }),
       lockVault: vi.fn(() => {
         vaultLocked = true;
         logoutBarrier = false;
       }),
       unlockVault: vi.fn(async () => {
+        if (userRevalidationOwnerToken !== null) {
+          return { status: "unavailable" as const };
+        }
+
+        if (storedUser === null) {
+          return { status: "empty" as const };
+        }
+
         vaultLocked = false;
-        return storedUser;
+        return { status: "unlocked" as const, user: storedUser };
       }),
       removeUser: vi.fn(async () => {
         storedUser = null;
         vaultPresent = false;
         vaultLocked = false;
         logoutBarrier = false;
+        userRevalidationOwnerToken = null;
       }),
       clear: vi.fn(async () => {
         storedUser = null;
@@ -84,6 +104,7 @@ const {
         vaultLocked = false;
         logoutBarrier = false;
         skipVaultTableCleanup = false;
+        userRevalidationOwnerToken = null;
       }),
       hasLogoutBarrier: vi.fn(() => logoutBarrier),
       shouldSkipBarrierVaultTableCleanup: vi.fn(() => skipVaultTableCleanup),
@@ -101,8 +122,11 @@ const {
       endSensitiveLogoutBarrierCleanup: vi.fn(() => {
         skipVaultTableCleanup = false;
       }),
+      abortPendingPersistence: vi.fn(),
+      abortPendingVaultCleanup: vi.fn(async () => undefined),
+      waitForSensitiveLogoutCleanupLock: vi.fn(async () => null),
       waitForInFlightVaultTableCleanup: vi.fn(async () => undefined),
-    },
+    } satisfies AuthStorage,
   };
 });
 
@@ -196,12 +220,11 @@ function createAndroidRuntimeBootstrapBridge({
     appBuild: 10400,
   }),
   login = vi.fn(),
-  getCurrentUser = vi.fn().mockResolvedValue({
-    id: "42",
-    name: "Configured User",
-    email: "configured.user@secpal.dev",
-    emailVerified: true,
-  }),
+  getCurrentUser = vi.fn().mockRejectedValue(
+    Object.assign(new Error("No stored native token."), {
+      code: "NO_STORED_TOKEN",
+    })
+  ),
   setRuntimeBootstrap = vi.fn().mockResolvedValue(undefined),
   clearRuntimeBootstrap = vi.fn().mockResolvedValue(undefined),
   logout = vi.fn().mockResolvedValue(undefined),
@@ -966,13 +989,6 @@ describe("App", () => {
       email: "configured.user@secpal.dev",
       emailVerified: true,
     });
-    mockAuthStorage.getUser.mockImplementationOnce(
-      () =>
-        new Promise(() => undefined) as ReturnType<
-          typeof mockAuthStorage.getUser
-        >
-    );
-
     await renderWithI18n(<App />);
 
     await confirmRuntimeInstanceSwitch(user);
@@ -1510,6 +1526,55 @@ describe("App", () => {
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
   });
 
+  it("keeps native login non-interactive while snapshotless rehydration is pending", async () => {
+    vi.useFakeTimers();
+    const currentUser = createDeferredPromise<{
+      id: string;
+      name: string;
+      email: string;
+      emailVerified: boolean;
+    }>();
+
+    createAndroidRuntimeBootstrapBridge({
+      configured: true,
+      getCurrentUser: vi.fn(() => currentUser.promise),
+    });
+
+    try {
+      await renderWithI18n(<App />);
+      await act(async () => {
+        await Promise.resolve();
+        vi.advanceTimersByTime(1_000);
+        await Promise.resolve();
+      });
+
+      expect(
+        screen.getByRole("status", { name: /loading login/i })
+      ).toBeInTheDocument();
+      expect(screen.getByLabelText(/email/i)).toBeDisabled();
+      expect(
+        screen.queryByRole("form", { name: /login form/i })
+      ).not.toBeInTheDocument();
+
+      currentUser.resolve({
+        id: "42",
+        name: "Configured User",
+        email: "configured.user@secpal.dev",
+        emailVerified: true,
+      });
+      await act(async () => {
+        await Promise.resolve();
+      });
+      vi.useRealTimers();
+
+      await waitFor(() => {
+        expect(window.location.pathname).toBe("/");
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("renders language switcher on login page", async () => {
     await renderWithI18n(<App />);
     expect(screen.getByRole("combobox")).toBeInTheDocument();
@@ -1798,15 +1863,18 @@ describe("App", () => {
       hasSiteAccess: false,
     };
 
+    const bootstrapError = new AuthApiError(
+      "Current user fetch failed: expected application/json response from API",
+      undefined,
+      404
+    );
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
     window.history.replaceState({}, "", "/");
     mockGetCurrentUser
-      .mockRejectedValueOnce(
-        new AuthApiError(
-          "Current user fetch failed: expected application/json response from API",
-          undefined,
-          404
-        )
-      )
+      .mockRejectedValueOnce(bootstrapError)
       .mockResolvedValueOnce(recoveredUser);
 
     await renderWithI18n(<App />);
@@ -1842,18 +1910,26 @@ describe("App", () => {
         { timeout: ROUTE_NAVIGATION_TIMEOUT_MS }
       )
     ).toBeInTheDocument();
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Auth bootstrap revalidation failed with a non-retriable response; holding protected routes behind recovery UI.",
+      bootstrapError
+    );
+    consoleWarnSpy.mockRestore();
   });
 
   it("keeps protected deep links during bootstrap recovery and retry", async () => {
-    window.history.replaceState({}, "", "/customers/new");
-    mockGetCurrentUser.mockRejectedValue(
-      new AuthApiError(
-        "Current user fetch failed: Network down",
-        undefined,
-        undefined,
-        "NETWORK_ERROR"
-      )
+    const bootstrapError = new AuthApiError(
+      "Current user fetch failed: Network down",
+      undefined,
+      undefined,
+      "NETWORK_ERROR"
     );
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
+    window.history.replaceState({}, "", "/customers/new");
+    mockGetCurrentUser.mockRejectedValue(bootstrapError);
 
     await renderWithI18n(<App />);
 
@@ -1892,22 +1968,30 @@ describe("App", () => {
       )
     ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/customers/new");
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Auth bootstrap revalidation failed; holding protected routes behind recovery UI.",
+      bootstrapError
+    );
+    consoleWarnSpy.mockRestore();
   });
 
   it("keeps stale protected-route bootstrap recovery on the protected route instead of redirecting", async () => {
+    const bootstrapError = new AuthApiError(
+      "Current user fetch failed: expected application/json response from API",
+      undefined,
+      404
+    );
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
+
     window.history.replaceState({}, "", "/");
     mockAuthStorage.hasStoredUser
       .mockImplementationOnce(() => true)
       .mockImplementationOnce(() => true)
       .mockImplementationOnce(() => true);
     mockAuthStorage.getUser.mockResolvedValueOnce(null);
-    mockGetCurrentUser.mockRejectedValueOnce(
-      new AuthApiError(
-        "Current user fetch failed: expected application/json response from API",
-        undefined,
-        404
-      )
-    );
+    mockGetCurrentUser.mockRejectedValueOnce(bootstrapError);
 
     await renderWithI18n(<App />);
 
@@ -1918,6 +2002,11 @@ describe("App", () => {
         name: /still loading your secure session/i,
       })
     ).toBeInTheDocument();
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      "Auth bootstrap revalidation failed with a non-retriable response; holding protected routes behind recovery UI.",
+      bootstrapError
+    );
+    consoleWarnSpy.mockRestore();
   });
 
   it("shows not found for activity-logs when the user cannot discover that feature", async () => {

@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
+import Dexie from "dexie";
 import type { PersistedAuthUser } from "../services/authState";
 import { sanitizePersistedAuthUser } from "../services/authState";
 import { getCsrfTokenFromCookie } from "../services/csrf";
@@ -17,15 +18,24 @@ import {
   AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
 } from "./offlineVaultKeys";
+import { runWithOfflineVaultLifecycleLock } from "./offlineVaultLifecycleLock";
 import {
   clearActiveOfflineVaultSession,
+  clearRecentAuthVaultKeyMaterials,
   getActiveOfflineVaultSession,
+  getRecentAuthVaultKeyMaterials,
   isVaultOrgUnitIndexEnsured,
   markVaultOrgUnitIndexEnsured,
+  rememberAuthVaultKeyMaterial,
   setActiveOfflineVaultSession,
 } from "./offlineVaultRuntime";
 import { isCapacitorNativeRuntime } from "./nativeRuntime";
+import {
+  awaitAbortable as awaitVaultOperation,
+  throwIfAborted,
+} from "./abortablePromise";
 export {
+  AUTH_USER_REVALIDATION_REQUIRED_KEY,
   AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
 } from "./offlineVaultKeys";
@@ -42,7 +52,7 @@ const AUTH_VAULT_HALF_KEY_BYTES = 32;
 const AUTH_VAULT_DERIVED_KEY_BYTES = AUTH_VAULT_HALF_KEY_BYTES * 2;
 const VAULT_RECORD_IV_BYTES = 12;
 const VAULT_RECORD_TAG_BYTES = 16;
-const RECENT_AUTH_VAULT_KEY_MATERIALS_MAX = 3;
+const NATIVE_VAULT_WRAPPING_KEY_ID = "native-auth-vault";
 const PROFILE_RECORD_ID = "profile";
 const ROOT_ORGANIZATIONAL_UNIT_PARENT_LOOKUP_KEY = "__root__";
 
@@ -61,6 +71,13 @@ interface NativeDeviceBoundVaultWrapper {
   kind: "native-device-bound";
   wrappedRootKey: string;
   metadata?: string;
+}
+
+interface WebCryptoDeviceBoundVaultWrapper {
+  kind: "webcrypto-device-bound";
+  keyId: typeof NATIVE_VAULT_WRAPPING_KEY_ID;
+  iv: string;
+  ciphertext: string;
 }
 
 type NativeDeviceBoundVaultBridge = {
@@ -92,7 +109,11 @@ interface AuthVaultStateEnvelopeV2 {
   scheme: typeof AUTH_VAULT_SCHEME;
   version: typeof AUTH_VAULT_VERSION;
   subjectHash: string;
-  wrapper: BrowserSessionVaultWrapper | NativeDeviceBoundVaultWrapper;
+  initialization?: "pending";
+  wrapper:
+    | BrowserSessionVaultWrapper
+    | NativeDeviceBoundVaultWrapper
+    | WebCryptoDeviceBoundVaultWrapper;
 }
 
 type AuthVaultStateEnvelope =
@@ -101,12 +122,37 @@ type AuthVaultStateEnvelope =
 interface VaultSession {
   rootKeyBytes: Uint8Array;
   subjectHash: string;
+  envelopeCacheKey: string;
   wrapperCacheKey: string;
 }
 
 interface VaultRootKeyDecryptionResult {
   rootKeyBytes: Uint8Array | null;
   keyMaterialUsed: string | null;
+}
+
+export interface OfflineVaultOperationOptions {
+  signal?: AbortSignal;
+  shouldCommit?: () => boolean;
+}
+
+interface OfflineVaultReadOptions extends OfflineVaultOperationOptions {
+  allowLockedVault?: boolean;
+}
+
+function throwIfVaultOperationAborted(signal?: AbortSignal): void {
+  throwIfAborted(signal);
+}
+
+function throwIfVaultOperationCannotCommit(
+  signal?: AbortSignal,
+  shouldCommit?: () => boolean
+): void {
+  throwIfVaultOperationAborted(signal);
+
+  if (shouldCommit && !shouldCommit()) {
+    throw new DOMException("The vault operation was superseded.", "AbortError");
+  }
 }
 
 type VaultAnalyticsPayload = Omit<
@@ -118,8 +164,6 @@ type VaultOrganizationalUnitIndexFields = Pick<
   VaultOrganizationalUnitCacheRecord,
   "type" | "parent_id" | "parentLookupKey"
 >;
-
-let recentAuthVaultKeyMaterials: string[] = [];
 
 function isAuthVaultStateEnvelopeV1(
   value: unknown
@@ -161,6 +205,8 @@ function isAuthVaultStateEnvelopeV2(
     candidate.scheme === AUTH_VAULT_SCHEME &&
     candidate.version === AUTH_VAULT_VERSION &&
     typeof candidate.subjectHash === "string" &&
+    (candidate.initialization === undefined ||
+      candidate.initialization === "pending") &&
     ((wrapperCandidate.kind === "browser-session" &&
       typeof wrapperCandidate.salt === "string" &&
       typeof wrapperCandidate.iv === "string" &&
@@ -169,7 +215,11 @@ function isAuthVaultStateEnvelopeV2(
       (wrapperCandidate.kind === "native-device-bound" &&
         typeof wrapperCandidate.wrappedRootKey === "string" &&
         (wrapperCandidate.metadata === undefined ||
-          typeof wrapperCandidate.metadata === "string")))
+          typeof wrapperCandidate.metadata === "string")) ||
+      (wrapperCandidate.kind === "webcrypto-device-bound" &&
+        wrapperCandidate.keyId === NATIVE_VAULT_WRAPPING_KEY_ID &&
+        typeof wrapperCandidate.iv === "string" &&
+        typeof wrapperCandidate.ciphertext === "string"))
   );
 }
 
@@ -187,16 +237,7 @@ function getAuthVaultKeyMaterial(): string | null {
   }
 
   const keyMaterial = `secpal-auth-vault:${csrfToken}`;
-
-  if (!hasStoredOfflineVaultState()) {
-    recentAuthVaultKeyMaterials = [keyMaterial];
-    return keyMaterial;
-  }
-
-  recentAuthVaultKeyMaterials = [
-    keyMaterial,
-    ...recentAuthVaultKeyMaterials.filter((entry) => entry !== keyMaterial),
-  ].slice(0, RECENT_AUTH_VAULT_KEY_MATERIALS_MAX);
+  rememberAuthVaultKeyMaterial(keyMaterial, !hasStoredOfflineVaultState());
 
   return keyMaterial;
 }
@@ -207,6 +248,7 @@ export function rememberCurrentAuthVaultKeyMaterial(): void {
 
 function getAuthVaultKeyMaterialCandidates(): string[] {
   const currentKeyMaterial = getAuthVaultKeyMaterial();
+  const recentAuthVaultKeyMaterials = getRecentAuthVaultKeyMaterials();
 
   if (!currentKeyMaterial) {
     return [...recentAuthVaultKeyMaterials];
@@ -220,7 +262,11 @@ function getAuthVaultKeyMaterialCandidates(): string[] {
   ];
 }
 
-async function getNativeDeviceBoundVaultBridge(): Promise<NativeDeviceBoundVaultBridge | null> {
+async function getNativeDeviceBoundVaultBridge(
+  signal?: AbortSignal
+): Promise<NativeDeviceBoundVaultBridge | null> {
+  throwIfVaultOperationAborted(signal);
+
   if (!isCapacitorNativeRuntime()) {
     return null;
   }
@@ -246,13 +292,16 @@ async function getNativeDeviceBoundVaultBridge(): Promise<NativeDeviceBoundVault
   }
 
   try {
-    return (await candidate.isVaultDeviceBoundWrapperAvailable()) === true
-      ? candidate
-      : null;
-  } catch (error) {
+    const isAvailable = await awaitVaultOperation(
+      Promise.resolve(candidate.isVaultDeviceBoundWrapperAvailable()),
+      signal
+    );
+
+    return isAvailable === true ? candidate : null;
+  } catch {
+    throwIfVaultOperationAborted(signal);
     console.warn(
-      "[Offline Vault] Failed to detect native device-bound wrapper availability:",
-      error
+      "[Offline Vault] Native device-bound wrapper detection failed; using the available fallback."
     );
     return null;
   }
@@ -303,7 +352,51 @@ function getStoredVaultWrapperCacheKey(
     return "native-device-bound";
   }
 
+  if (state.wrapper.kind === "webcrypto-device-bound") {
+    return `webcrypto-device-bound:${state.wrapper.keyId}`;
+  }
+
   return currentKeyMaterial ? `browser-session:${currentKeyMaterial}` : null;
+}
+
+function getStoredVaultEnvelopeCacheKey(state: AuthVaultStateEnvelope): string {
+  if (state.version === AUTH_VAULT_LEGACY_VERSION) {
+    return JSON.stringify([
+      state.scheme,
+      state.version,
+      state.salt,
+      state.iv,
+      state.ciphertext,
+      state.mac,
+    ]);
+  }
+
+  const { wrapper } = state;
+
+  if (wrapper.kind === "browser-session") {
+    return JSON.stringify([
+      wrapper.kind,
+      wrapper.salt,
+      wrapper.iv,
+      wrapper.ciphertext,
+      wrapper.mac,
+    ]);
+  }
+
+  if (wrapper.kind === "native-device-bound") {
+    return JSON.stringify([
+      wrapper.kind,
+      wrapper.wrappedRootKey,
+      wrapper.metadata ?? "",
+    ]);
+  }
+
+  return JSON.stringify([
+    wrapper.kind,
+    wrapper.keyId,
+    wrapper.iv,
+    wrapper.ciphertext,
+  ]);
 }
 
 function getSessionWrapperCacheKey(state: AuthVaultStateEnvelope): string {
@@ -313,6 +406,18 @@ function getSessionWrapperCacheKey(state: AuthVaultStateEnvelope): string {
   );
 }
 
+function parseStoredVaultState(
+  storedState: string
+): AuthVaultStateEnvelope | null {
+  try {
+    const parsedState = JSON.parse(storedState) as unknown;
+
+    return isAuthVaultStateEnvelope(parsedState) ? parsedState : null;
+  } catch {
+    return null;
+  }
+}
+
 function getStoredVaultState(): AuthVaultStateEnvelope | null {
   const storedState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
 
@@ -320,25 +425,58 @@ function getStoredVaultState(): AuthVaultStateEnvelope | null {
     return null;
   }
 
-  try {
-    const parsedState = JSON.parse(storedState) as unknown;
+  const parsedState = parseStoredVaultState(storedState);
 
-    if (isAuthVaultStateEnvelope(parsedState)) {
-      return parsedState;
-    }
-
-    localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
+  if (!parsedState) {
     clearOfflineVaultSession();
-    return null;
-  } catch {
-    localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
-    clearOfflineVaultSession();
-    return null;
   }
+
+  return parsedState;
+}
+
+export function hasInvalidStoredOfflineVaultState(): boolean {
+  const storedState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+
+  return storedState !== null && parseStoredVaultState(storedState) === null;
 }
 
 function setStoredVaultState(state: AuthVaultStateEnvelope): void {
   localStorage.setItem(AUTH_VAULT_STORAGE_KEY, JSON.stringify(state));
+}
+
+function isVaultInitializationPending(
+  state: AuthVaultStateEnvelope | null
+): state is AuthVaultStateEnvelopeV2 & { initialization: "pending" } {
+  return (
+    state?.version === AUTH_VAULT_VERSION && state.initialization === "pending"
+  );
+}
+
+function preserveVaultInitializationState(
+  state: AuthVaultStateEnvelope,
+  previousState: AuthVaultStateEnvelope
+): AuthVaultStateEnvelope {
+  if (
+    state.version === AUTH_VAULT_VERSION &&
+    isVaultInitializationPending(previousState)
+  ) {
+    return { ...state, initialization: "pending" };
+  }
+
+  return state;
+}
+
+function completeVaultInitialization(subjectHash: string): void {
+  const state = getStoredVaultState();
+
+  if (
+    !isVaultInitializationPending(state) ||
+    state.subjectHash !== subjectHash
+  ) {
+    return;
+  }
+
+  setStoredVaultState({ ...state, initialization: undefined });
 }
 
 export function hasStoredOfflineVaultState(): boolean {
@@ -360,9 +498,7 @@ export function clearOfflineVaultSession(): void {
   clearActiveOfflineVaultSession();
 }
 
-export function clearRecentAuthVaultKeyMaterials(): void {
-  recentAuthVaultKeyMaterials = [];
-}
+export { clearRecentAuthVaultKeyMaterials };
 
 export function clearStoredOfflineVaultState(): void {
   localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
@@ -384,29 +520,98 @@ export function clearOfflineVaultLockState(): void {
   localStorage.removeItem(AUTH_VAULT_LOCK_KEY);
 }
 
-async function ensureVaultDatabaseOpen(): Promise<void> {
+async function ensureVaultDatabaseOpen(signal?: AbortSignal): Promise<void> {
   if (!db.isOpen()) {
-    await db.open();
+    await awaitVaultOperation(db.open(), signal);
   }
+
+  throwIfVaultOperationAborted(signal);
 }
 
-export async function clearOfflineVaultTables(): Promise<void> {
-  await ensureVaultDatabaseOpen();
+export async function clearOfflineVaultTables(
+  options: OfflineVaultOperationOptions = {}
+): Promise<void> {
+  await ensureVaultDatabaseOpen(options.signal);
+  throwIfVaultOperationAborted(options.signal);
 
-  await Promise.all([
-    db.vaultProfile.clear(),
-    db.vaultAnalytics.clear(),
-    db.vaultOrganizationalUnitCache.clear(),
-  ]);
+  await db.transaction(
+    "rw",
+    [
+      db.vaultProfile,
+      db.vaultWrappingKeys,
+      db.vaultAnalytics,
+      db.vaultOrganizationalUnitCache,
+    ],
+    async () => {
+      throwIfVaultOperationAborted(options.signal);
+      await awaitVaultOperation(
+        Promise.all([
+          db.vaultProfile.clear(),
+          db.vaultWrappingKeys.clear(),
+          db.vaultAnalytics.clear(),
+          db.vaultOrganizationalUnitCache.clear(),
+        ]),
+        options.signal
+      );
+      throwIfVaultOperationAborted(options.signal);
+    }
+  );
 }
 
-async function clearInvalidOfflineVaultArtifacts(): Promise<void> {
+export async function clearInvalidOfflineVaultArtifacts(
+  options: OfflineVaultOperationOptions = {}
+): Promise<void> {
+  await ensureVaultDatabaseOpen(options.signal);
+  throwIfVaultOperationAborted(options.signal);
+  await db.transaction(
+    "rw",
+    [
+      db.vaultProfile,
+      db.vaultWrappingKeys,
+      db.vaultAnalytics,
+      db.vaultOrganizationalUnitCache,
+      db.analytics,
+      db.organizationalUnitCache,
+    ],
+    async () => {
+      throwIfVaultOperationAborted(options.signal);
+      await awaitVaultOperation(
+        Promise.all([
+          db.vaultProfile.clear(),
+          db.vaultWrappingKeys.clear(),
+          db.vaultAnalytics.clear(),
+          db.vaultOrganizationalUnitCache.clear(),
+          db.analytics.clear(),
+          db.organizationalUnitCache.clear(),
+        ]),
+        options.signal
+      );
+      throwIfVaultOperationAborted(options.signal);
+    }
+  );
+  throwIfVaultOperationAborted(options.signal);
   clearStoredOfflineVaultState();
-  await Promise.all([
-    clearOfflineVaultTables(),
-    db.analytics.clear(),
-    db.organizationalUnitCache.clear(),
-  ]);
+}
+
+async function clearInvalidOfflineVaultArtifactsIfCurrent(
+  expectedState: AuthVaultStateEnvelope,
+  options: OfflineVaultOperationOptions = {},
+  lifecycleLockHeld = false
+): Promise<void> {
+  const clearIfCurrent = async (): Promise<void> => {
+    throwIfVaultOperationAborted(options.signal);
+    const currentState = getStoredVaultState();
+
+    if (JSON.stringify(currentState) !== JSON.stringify(expectedState)) {
+      return;
+    }
+
+    await clearInvalidOfflineVaultArtifacts(options);
+  };
+
+  await (lifecycleLockHeld
+    ? clearIfCurrent()
+    : runWithOfflineVaultLifecycleLock(clearIfCurrent, options.signal));
 }
 
 async function deriveVaultWrapperKeys(
@@ -711,10 +916,9 @@ async function encryptNativeDeviceBoundVaultRootKeyBytes(
       rootKeyBase64: encodeBase64(rootKeyBytes),
       subjectHash,
     });
-  } catch (error) {
+  } catch {
     console.warn(
-      "[Offline Vault] Failed to wrap the vault root key with the native device-bound wrapper:",
-      error
+      "[Offline Vault] Native device-bound wrapping failed; using the WebCrypto fallback."
     );
     return null;
   }
@@ -757,10 +961,9 @@ async function decryptNativeDeviceBoundVaultRootKeyBytes(
       subjectHash: state.subjectHash,
       metadata: state.wrapper.metadata,
     });
-  } catch (error) {
+  } catch {
     console.warn(
-      "[Offline Vault] Failed to unwrap the vault root key with the native device-bound wrapper:",
-      error
+      "[Offline Vault] Native device-bound vault unwrapping failed."
     );
     return null;
   }
@@ -783,23 +986,163 @@ async function decryptNativeDeviceBoundVaultRootKeyBytes(
   }
 }
 
+function buildWebCryptoDeviceBoundAdditionalData(
+  subjectHash: string
+): Uint8Array {
+  return textEncoder.encode(
+    `${AUTH_VAULT_SCHEME}:webcrypto-device-bound:${subjectHash}`
+  );
+}
+
+async function getOrCreateWebCryptoDeviceWrappingKey(
+  signal?: AbortSignal
+): Promise<CryptoKey> {
+  await ensureVaultDatabaseOpen(signal);
+  throwIfVaultOperationAborted(signal);
+
+  return db.transaction("rw", db.vaultWrappingKeys, async () => {
+    throwIfVaultOperationAborted(signal);
+    const storedKey = await awaitVaultOperation(
+      db.vaultWrappingKeys.get(NATIVE_VAULT_WRAPPING_KEY_ID),
+      signal
+    );
+    throwIfVaultOperationAborted(signal);
+
+    if (storedKey) {
+      return storedKey.key;
+    }
+
+    const generatedKey = (await Dexie.waitFor(
+      awaitVaultOperation(
+        crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, [
+          "encrypt",
+          "decrypt",
+        ]),
+        signal
+      )
+    )) as CryptoKey;
+    throwIfVaultOperationAborted(signal);
+    await awaitVaultOperation(
+      db.vaultWrappingKeys.add({
+        id: NATIVE_VAULT_WRAPPING_KEY_ID,
+        key: generatedKey,
+      }),
+      signal
+    );
+    throwIfVaultOperationAborted(signal);
+
+    return generatedKey;
+  });
+}
+
+async function encryptWebCryptoDeviceBoundVaultRootKeyBytes(
+  rootKeyBytes: Uint8Array,
+  subjectHash: string,
+  signal?: AbortSignal
+): Promise<AuthVaultStateEnvelopeV2> {
+  const key = await getOrCreateWebCryptoDeviceWrappingKey(signal);
+  const iv = createRandomBytes(VAULT_RECORD_IV_BYTES);
+  const ciphertext = await awaitVaultOperation(
+    crypto.subtle.encrypt(
+      {
+        name: "AES-GCM",
+        iv: toArrayBuffer(iv),
+        additionalData: toArrayBuffer(
+          buildWebCryptoDeviceBoundAdditionalData(subjectHash)
+        ),
+      },
+      key,
+      toArrayBuffer(rootKeyBytes)
+    ),
+    signal
+  );
+
+  return {
+    scheme: AUTH_VAULT_SCHEME,
+    version: AUTH_VAULT_VERSION,
+    subjectHash,
+    wrapper: {
+      kind: "webcrypto-device-bound",
+      keyId: NATIVE_VAULT_WRAPPING_KEY_ID,
+      iv: encodeBase64(iv),
+      ciphertext: encodeBase64(new Uint8Array(ciphertext)),
+    },
+  };
+}
+
+async function decryptWebCryptoDeviceBoundVaultRootKeyBytes(
+  state: AuthVaultStateEnvelopeV2,
+  signal?: AbortSignal
+): Promise<Uint8Array | null> {
+  if (state.wrapper.kind !== "webcrypto-device-bound") {
+    return null;
+  }
+
+  await ensureVaultDatabaseOpen(signal);
+  throwIfVaultOperationAborted(signal);
+  const storedKey = await awaitVaultOperation(
+    db.vaultWrappingKeys.get(state.wrapper.keyId),
+    signal
+  );
+
+  if (!storedKey) {
+    return null;
+  }
+
+  try {
+    const rootKeyBytes = new Uint8Array(
+      await awaitVaultOperation(
+        crypto.subtle.decrypt(
+          {
+            name: "AES-GCM",
+            iv: toArrayBuffer(decodeBase64(state.wrapper.iv)),
+            additionalData: toArrayBuffer(
+              buildWebCryptoDeviceBoundAdditionalData(state.subjectHash)
+            ),
+          },
+          storedKey.key,
+          toArrayBuffer(decodeBase64(state.wrapper.ciphertext))
+        ),
+        signal
+      )
+    );
+
+    return rootKeyBytes.byteLength === 32 ? rootKeyBytes : null;
+  } catch {
+    throwIfVaultOperationAborted(signal);
+    return null;
+  }
+}
+
 async function encryptVaultRootKeyBytes(
   rootKeyBytes: Uint8Array,
-  subjectHash: string
-): Promise<AuthVaultStateEnvelope | null> {
-  const nativeBridge = await getNativeDeviceBoundVaultBridge();
+  subjectHash: string,
+  signal?: AbortSignal
+): Promise<AuthVaultStateEnvelopeV2 | null> {
+  const nativeBridge = await getNativeDeviceBoundVaultBridge(signal);
+  throwIfVaultOperationAborted(signal);
 
   if (nativeBridge) {
-    const nativeDeviceBoundState =
-      await encryptNativeDeviceBoundVaultRootKeyBytes(
+    const nativeDeviceBoundState = await awaitVaultOperation(
+      encryptNativeDeviceBoundVaultRootKeyBytes(
         rootKeyBytes,
         subjectHash,
         nativeBridge
-      );
+      ),
+      signal
+    );
 
     if (nativeDeviceBoundState) {
       return nativeDeviceBoundState;
     }
+  }
+
+  if (isCapacitorNativeRuntime()) {
+    return encryptWebCryptoDeviceBoundVaultRootKeyBytes(
+      rootKeyBytes,
+      subjectHash,
+      signal
+    );
   }
 
   return encryptBrowserSessionWrappedVaultRootKeyBytes(
@@ -809,19 +1152,33 @@ async function encryptVaultRootKeyBytes(
 }
 
 async function decryptVaultRootKeyBytes(
-  state: AuthVaultStateEnvelope
+  state: AuthVaultStateEnvelope,
+  signal?: AbortSignal
 ): Promise<VaultRootKeyDecryptionResult> {
   if (state.version === AUTH_VAULT_LEGACY_VERSION) {
     return decryptLegacyVaultRootKeyBytes(state);
   }
 
   if (state.wrapper.kind === "native-device-bound") {
-    const nativeBridge = await getNativeDeviceBoundVaultBridge();
+    const nativeBridge = await getNativeDeviceBoundVaultBridge(signal);
 
     return {
       rootKeyBytes: nativeBridge
-        ? await decryptNativeDeviceBoundVaultRootKeyBytes(state, nativeBridge)
+        ? await awaitVaultOperation(
+            decryptNativeDeviceBoundVaultRootKeyBytes(state, nativeBridge),
+            signal
+          )
         : null,
+      keyMaterialUsed: null,
+    };
+  }
+
+  if (state.wrapper.kind === "webcrypto-device-bound") {
+    return {
+      rootKeyBytes: await decryptWebCryptoDeviceBoundVaultRootKeyBytes(
+        state,
+        signal
+      ),
       keyMaterialUsed: null,
     };
   }
@@ -1094,12 +1451,25 @@ async function ensureVaultOrganizationalUnitIndexes(
   markVaultOrgUnitIndexEnsured();
 }
 
-async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
+async function ensureOfflineVaultSession(
+  signal?: AbortSignal,
+  lifecycleLockHeld = false,
+  allowLockedVault = false
+): Promise<VaultSession | null> {
+  throwIfVaultOperationAborted(signal);
+
+  if (!allowLockedVault && isOfflineVaultLocked()) {
+    return null;
+  }
+
   let activeVaultSession = getActiveOfflineVaultSession<VaultSession>();
   const currentKeyMaterial = getAuthVaultKeyMaterial();
   const storedState = getStoredVaultState();
   const storedWrapperCacheKey = storedState
     ? getStoredVaultWrapperCacheKey(storedState, currentKeyMaterial)
+    : null;
+  const storedEnvelopeCacheKey = storedState
+    ? getStoredVaultEnvelopeCacheKey(storedState)
     : null;
 
   if (activeVaultSession) {
@@ -1108,48 +1478,79 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
       activeVaultSession.subjectHash === storedState.subjectHash
     ) {
       if (
+        storedEnvelopeCacheKey !== null &&
+        activeVaultSession.envelopeCacheKey !== storedEnvelopeCacheKey
+      ) {
+        clearOfflineVaultSession();
+      } else if (
         storedWrapperCacheKey === null ||
         activeVaultSession.wrapperCacheKey === storedWrapperCacheKey
       ) {
         return activeVaultSession;
+      } else {
+        const rewrittenSession = await maybeRewriteStoredVaultState(
+          activeVaultSession,
+          storedState,
+          signal,
+          lifecycleLockHeld
+        );
+        throwIfVaultOperationAborted(signal);
+
+        if (!rewrittenSession) {
+          clearOfflineVaultSession();
+          return null;
+        }
+
+        if (!allowLockedVault && isOfflineVaultLocked()) {
+          return null;
+        }
+
+        setActiveOfflineVaultSession(rewrittenSession);
+
+        return rewrittenSession;
       }
-
-      activeVaultSession = await maybeRewriteStoredVaultState(
-        activeVaultSession,
-        storedState
-      );
-      setActiveOfflineVaultSession(activeVaultSession);
-
-      return activeVaultSession;
+    } else {
+      clearOfflineVaultSession();
     }
-
-    clearOfflineVaultSession();
   }
 
   if (!storedState) {
     return null;
   }
 
-  const { rootKeyBytes, keyMaterialUsed } =
-    await decryptVaultRootKeyBytes(storedState);
+  const { rootKeyBytes, keyMaterialUsed } = await decryptVaultRootKeyBytes(
+    storedState,
+    signal
+  );
+  throwIfVaultOperationAborted(signal);
+
+  if (!allowLockedVault && isOfflineVaultLocked()) {
+    rootKeyBytes?.fill(0);
+    return null;
+  }
 
   if (!rootKeyBytes) {
     if (
       storedState.version === AUTH_VAULT_VERSION &&
-      storedState.wrapper.kind === "native-device-bound" &&
-      !(await getNativeDeviceBoundVaultBridge())
+      storedState.wrapper.kind === "native-device-bound"
     ) {
-      // Bridge is temporarily unavailable; treat the vault as locked, not corrupted.
+      // Native wrapper failures can be transient. Preserve the encrypted vault
+      // so a later bridge recovery can unlock it without losing offline data.
       return null;
     }
 
-    await clearInvalidOfflineVaultArtifacts();
+    await clearInvalidOfflineVaultArtifactsIfCurrent(
+      storedState,
+      { signal },
+      lifecycleLockHeld
+    );
     return null;
   }
 
   activeVaultSession = {
     rootKeyBytes,
     subjectHash: storedState.subjectHash,
+    envelopeCacheKey: getStoredVaultEnvelopeCacheKey(storedState),
     wrapperCacheKey:
       (keyMaterialUsed
         ? getStoredVaultWrapperCacheKey(storedState, keyMaterialUsed)
@@ -1163,10 +1564,26 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
     storedWrapperCacheKey !== null &&
     activeVaultSession.wrapperCacheKey !== storedWrapperCacheKey
   ) {
-    activeVaultSession = await maybeRewriteStoredVaultState(
+    const rewrittenSession = await maybeRewriteStoredVaultState(
       activeVaultSession,
-      storedState
+      storedState,
+      signal,
+      lifecycleLockHeld
     );
+
+    if (!rewrittenSession) {
+      clearOfflineVaultSession();
+      return null;
+    }
+
+    activeVaultSession = rewrittenSession;
+  }
+
+  throwIfVaultOperationAborted(signal);
+
+  if (!allowLockedVault && isOfflineVaultLocked()) {
+    activeVaultSession.rootKeyBytes.fill(0);
+    return null;
   }
 
   setActiveOfflineVaultSession(activeVaultSession);
@@ -1176,16 +1593,20 @@ async function ensureOfflineVaultSession(): Promise<VaultSession | null> {
 
 async function maybeRewriteStoredVaultState(
   session: VaultSession,
-  storedState: AuthVaultStateEnvelope
-): Promise<VaultSession> {
+  storedState: AuthVaultStateEnvelope,
+  signal?: AbortSignal,
+  lifecycleLockHeld = false
+): Promise<VaultSession | null> {
   const currentKeyMaterial = getAuthVaultKeyMaterial();
   const currentStoredWrapperCacheKey = getStoredVaultWrapperCacheKey(
     storedState,
     currentKeyMaterial
   );
-  const preferredWrapperKind = (await getNativeDeviceBoundVaultBridge())
+  const preferredWrapperKind = (await getNativeDeviceBoundVaultBridge(signal))
     ? "native-device-bound"
-    : "browser-session";
+    : isCapacitorNativeRuntime()
+      ? "webcrypto-device-bound"
+      : "browser-session";
   const currentWrapperKind =
     storedState.version === AUTH_VAULT_LEGACY_VERSION
       ? "browser-session"
@@ -1202,60 +1623,117 @@ async function maybeRewriteStoredVaultState(
 
   const rewrittenState = await encryptVaultRootKeyBytes(
     session.rootKeyBytes,
-    session.subjectHash
+    session.subjectHash,
+    signal
   );
+  throwIfVaultOperationAborted(signal);
 
   if (!rewrittenState) {
     return session;
   }
 
-  setStoredVaultState(rewrittenState);
+  const rewrittenStateWithLifecycle = preserveVaultInitializationState(
+    rewrittenState,
+    storedState
+  );
+  const expectedStoredState = JSON.stringify(storedState);
+  const commitRewrite = async (): Promise<VaultSession | null> => {
+    throwIfVaultOperationAborted(signal);
 
-  // Re-read key material after the async encrypt so wrapperCacheKey is derived
-  // from the same key material that encryptVaultRootKeyBytes used internally,
-  // reducing drift if XSRF-TOKEN rotated during the await.
-  const postWriteKeyMaterial = getAuthVaultKeyMaterial();
+    if (localStorage.getItem(AUTH_VAULT_STORAGE_KEY) !== expectedStoredState) {
+      return null;
+    }
 
-  return {
-    ...session,
-    wrapperCacheKey:
-      getStoredVaultWrapperCacheKey(rewrittenState, postWriteKeyMaterial) ??
-      session.wrapperCacheKey,
+    setStoredVaultState(rewrittenStateWithLifecycle);
+
+    // Re-read key material after the async encrypt so wrapperCacheKey is
+    // derived from the same key material that encryptVaultRootKeyBytes used
+    // internally, reducing drift if XSRF-TOKEN rotated during the await.
+    const postWriteKeyMaterial = getAuthVaultKeyMaterial();
+
+    return {
+      ...session,
+      envelopeCacheKey: getStoredVaultEnvelopeCacheKey(
+        rewrittenStateWithLifecycle
+      ),
+      wrapperCacheKey:
+        getStoredVaultWrapperCacheKey(
+          rewrittenStateWithLifecycle,
+          postWriteKeyMaterial
+        ) ?? session.wrapperCacheKey,
+    };
   };
+
+  return lifecycleLockHeld
+    ? commitRewrite()
+    : runWithOfflineVaultLifecycleLock(commitRewrite, signal);
 }
 
-async function ensureVaultSessionForUser(user: PersistedAuthUser): Promise<{
+async function ensureVaultSessionForUser(
+  user: PersistedAuthUser,
+  signal?: AbortSignal
+): Promise<{
   session: VaultSession;
-  pendingStoredState: AuthVaultStateEnvelope | null;
+  pendingStoredState: AuthVaultStateEnvelopeV2 | null;
 }> {
+  throwIfVaultOperationAborted(signal);
   const subjectHash = await computeSubjectHash(user.id);
-  const currentSession = await ensureOfflineVaultSession();
+  throwIfVaultOperationAborted(signal);
+  const currentSession = await ensureOfflineVaultSession(signal, true);
   const existingStoredState = getStoredVaultState();
+
+  if (!currentSession && existingStoredState) {
+    throw new Error("Stored auth vault is temporarily unavailable.");
+  }
 
   if (currentSession && currentSession.subjectHash === subjectHash) {
     if (existingStoredState) {
+      const rewrittenSession = await maybeRewriteStoredVaultState(
+        currentSession,
+        existingStoredState,
+        signal,
+        true
+      );
+
+      if (!rewrittenSession) {
+        throw new Error("Stored auth vault changed during wrapper update.");
+      }
+
       return {
-        session: await maybeRewriteStoredVaultState(
-          currentSession,
-          existingStoredState
-        ),
+        session: rewrittenSession,
         pendingStoredState: null,
       };
     }
 
+    const recreatedStoredState = await encryptVaultRootKeyBytes(
+      currentSession.rootKeyBytes,
+      subjectHash,
+      signal
+    );
+
+    if (!recreatedStoredState) {
+      throw new Error("Failed to recreate the auth vault wrapper.");
+    }
+
     return {
       session: currentSession,
-      pendingStoredState: null,
+      pendingStoredState: recreatedStoredState,
     };
   }
 
   if (currentSession && currentSession.subjectHash !== subjectHash) {
-    await clearOfflineVaultTables();
+    await clearOfflineVaultTables({ signal });
+    throwIfVaultOperationAborted(signal);
     clearStoredOfflineVaultState();
   }
 
   const rootKeyBytes = createRandomBytes(32);
-  const storedState = await encryptVaultRootKeyBytes(rootKeyBytes, subjectHash);
+  const storedState = await encryptVaultRootKeyBytes(
+    rootKeyBytes,
+    subjectHash,
+    signal
+  );
+  throwIfVaultOperationAborted(signal);
 
   if (!storedState) {
     throw new Error(
@@ -1266,21 +1744,21 @@ async function ensureVaultSessionForUser(user: PersistedAuthUser): Promise<{
   const activeVaultSession = {
     rootKeyBytes,
     subjectHash,
+    envelopeCacheKey: getStoredVaultEnvelopeCacheKey(storedState),
     wrapperCacheKey: getSessionWrapperCacheKey(storedState),
   };
-  setActiveOfflineVaultSession(activeVaultSession);
-
   return {
     session: activeVaultSession,
     pendingStoredState: storedState,
   };
 }
 
-async function persistProfileRecord(
+async function buildEncryptedProfileRecord(
   user: PersistedAuthUser,
-  session: VaultSession
-): Promise<void> {
-  await ensureVaultDatabaseOpen();
+  session: VaultSession,
+  signal?: AbortSignal
+): Promise<EncryptedProfileRecord> {
+  throwIfVaultOperationAborted(signal);
 
   const encryptedRecord = await encryptVaultRecord(
     user,
@@ -1288,23 +1766,25 @@ async function persistProfileRecord(
     PROFILE_RECORD_ID,
     session
   );
+  throwIfVaultOperationAborted(signal);
 
-  await db.vaultProfile.put({
+  return {
     id: PROFILE_RECORD_ID,
     ...encryptedRecord,
-  } satisfies EncryptedProfileRecord);
+  } satisfies EncryptedProfileRecord;
 }
 
-async function migrateLegacyAnalyticsRecords(
-  session: VaultSession
-): Promise<void> {
-  await ensureVaultDatabaseOpen();
+async function buildLegacyAnalyticsMigrationRecords(
+  session: VaultSession,
+  signal?: AbortSignal
+): Promise<Array<Omit<VaultAnalyticsRecord, "id">>> {
+  throwIfVaultOperationAborted(signal);
 
-  const legacyRecords = await db.analytics.toArray();
-
-  if (legacyRecords.length === 0) {
-    return;
-  }
+  const legacyRecords = await awaitVaultOperation(
+    db.analytics.toArray(),
+    signal
+  );
+  throwIfVaultOperationAborted(signal);
 
   const encryptedRecords = await Promise.all(
     legacyRecords.map(async (record) => {
@@ -1331,21 +1811,48 @@ async function migrateLegacyAnalyticsRecords(
       } satisfies Omit<VaultAnalyticsRecord, "id">;
     })
   );
+  throwIfVaultOperationAborted(signal);
 
-  await db.vaultAnalytics.bulkPut(encryptedRecords);
-  await db.analytics.clear();
+  return encryptedRecords;
 }
 
-async function migrateLegacyOrganizationalUnitRecords(
-  session: VaultSession
+async function migrateLegacyAnalyticsRecords(
+  session: VaultSession,
+  signal?: AbortSignal
 ): Promise<void> {
-  await ensureVaultDatabaseOpen();
+  await ensureVaultDatabaseOpen(signal);
+  const encryptedRecords = await buildLegacyAnalyticsMigrationRecords(
+    session,
+    signal
+  );
 
-  const legacyRecords = await db.organizationalUnitCache.toArray();
-
-  if (legacyRecords.length === 0) {
+  if (encryptedRecords.length === 0) {
     return;
   }
+
+  await db.transaction("rw", [db.vaultAnalytics, db.analytics], async () => {
+    throwIfVaultOperationAborted(signal);
+    await awaitVaultOperation(
+      db.vaultAnalytics.bulkPut(encryptedRecords),
+      signal
+    );
+    throwIfVaultOperationAborted(signal);
+    await awaitVaultOperation(db.analytics.clear(), signal);
+    throwIfVaultOperationAborted(signal);
+  });
+}
+
+async function buildLegacyOrganizationalUnitMigrationRecords(
+  session: VaultSession,
+  signal?: AbortSignal
+): Promise<VaultOrganizationalUnitCacheRecord[]> {
+  throwIfVaultOperationAborted(signal);
+
+  const legacyRecords = await awaitVaultOperation(
+    db.organizationalUnitCache.toArray(),
+    signal
+  );
+  throwIfVaultOperationAborted(signal);
 
   const encryptedRecords = await Promise.all(
     legacyRecords.map(async (record) => {
@@ -1365,42 +1872,175 @@ async function migrateLegacyOrganizationalUnitRecords(
       } satisfies VaultOrganizationalUnitCacheRecord;
     })
   );
+  throwIfVaultOperationAborted(signal);
 
-  await db.vaultOrganizationalUnitCache.bulkPut(encryptedRecords);
-  await db.organizationalUnitCache.clear();
+  return encryptedRecords;
+}
+
+async function migrateLegacyOrganizationalUnitRecords(
+  session: VaultSession,
+  signal?: AbortSignal
+): Promise<void> {
+  await ensureVaultDatabaseOpen(signal);
+  const encryptedRecords = await buildLegacyOrganizationalUnitMigrationRecords(
+    session,
+    signal
+  );
+
+  if (encryptedRecords.length === 0) {
+    return;
+  }
+
+  await db.transaction(
+    "rw",
+    [db.vaultOrganizationalUnitCache, db.organizationalUnitCache],
+    async () => {
+      throwIfVaultOperationAborted(signal);
+      await awaitVaultOperation(
+        db.vaultOrganizationalUnitCache.bulkPut(encryptedRecords),
+        signal
+      );
+      throwIfVaultOperationAborted(signal);
+      await awaitVaultOperation(db.organizationalUnitCache.clear(), signal);
+      throwIfVaultOperationAborted(signal);
+    }
+  );
+}
+
+async function persistInitialVaultRecords(
+  user: PersistedAuthUser,
+  session: VaultSession,
+  signal?: AbortSignal,
+  shouldCommit?: () => boolean
+): Promise<void> {
+  await ensureVaultDatabaseOpen(signal);
+  throwIfVaultOperationCannotCommit(signal, shouldCommit);
+
+  const [profileRecord, analyticsRecords, organizationalUnitRecords] =
+    await Promise.all([
+      buildEncryptedProfileRecord(user, session, signal),
+      buildLegacyAnalyticsMigrationRecords(session, signal),
+      buildLegacyOrganizationalUnitMigrationRecords(session, signal),
+    ]);
+  throwIfVaultOperationCannotCommit(signal, shouldCommit);
+
+  await db.transaction(
+    "rw",
+    [
+      db.vaultProfile,
+      db.vaultAnalytics,
+      db.analytics,
+      db.vaultOrganizationalUnitCache,
+      db.organizationalUnitCache,
+    ],
+    async () => {
+      throwIfVaultOperationCannotCommit(signal, shouldCommit);
+      await awaitVaultOperation(db.vaultProfile.put(profileRecord), signal);
+      throwIfVaultOperationCannotCommit(signal, shouldCommit);
+
+      if (analyticsRecords.length > 0) {
+        await awaitVaultOperation(
+          db.vaultAnalytics.bulkPut(analyticsRecords),
+          signal
+        );
+        throwIfVaultOperationCannotCommit(signal, shouldCommit);
+        await awaitVaultOperation(db.analytics.clear(), signal);
+        throwIfVaultOperationCannotCommit(signal, shouldCommit);
+      }
+
+      if (organizationalUnitRecords.length > 0) {
+        await awaitVaultOperation(
+          db.vaultOrganizationalUnitCache.bulkPut(organizationalUnitRecords),
+          signal
+        );
+        throwIfVaultOperationCannotCommit(signal, shouldCommit);
+        await awaitVaultOperation(db.organizationalUnitCache.clear(), signal);
+        throwIfVaultOperationCannotCommit(signal, shouldCommit);
+      }
+
+      throwIfVaultOperationCannotCommit(signal, shouldCommit);
+    }
+  );
 }
 
 export async function initializeOfflineVault(
-  user: PersistedAuthUser
+  user: PersistedAuthUser,
+  options: OfflineVaultOperationOptions = {}
 ): Promise<void> {
-  const { session, pendingStoredState } = await ensureVaultSessionForUser(user);
+  const { signal, shouldCommit } = options;
+  const initialize = async (lifecycleSignal?: AbortSignal): Promise<void> => {
+    const effectiveSignal = lifecycleSignal ?? signal;
 
-  await persistProfileRecord(user, session);
-  await Promise.all([
-    migrateLegacyAnalyticsRecords(session),
-    migrateLegacyOrganizationalUnitRecords(session),
-  ]);
+    throwIfVaultOperationCannotCommit(effectiveSignal, shouldCommit);
+    const { session, pendingStoredState } = await ensureVaultSessionForUser(
+      user,
+      effectiveSignal
+    );
+    throwIfVaultOperationCannotCommit(effectiveSignal, shouldCommit);
 
-  if (pendingStoredState) {
-    setStoredVaultState(pendingStoredState);
-  }
+    if (pendingStoredState) {
+      setStoredVaultState({
+        ...pendingStoredState,
+        initialization: "pending",
+      });
+      throwIfVaultOperationCannotCommit(effectiveSignal, shouldCommit);
+    }
 
-  localStorage.removeItem("auth_user");
+    await persistInitialVaultRecords(
+      user,
+      session,
+      effectiveSignal,
+      shouldCommit
+    );
+    throwIfVaultOperationCannotCommit(effectiveSignal, shouldCommit);
+
+    completeVaultInitialization(session.subjectHash);
+    setActiveOfflineVaultSession(session);
+    localStorage.removeItem("auth_user");
+  };
+  await runWithOfflineVaultLifecycleLock(initialize, signal);
 }
 
-export async function readPersistedAuthUserFromVault(): Promise<PersistedAuthUser | null> {
-  const session = await ensureOfflineVaultSession();
+export async function readPersistedAuthUserFromVault(
+  options: OfflineVaultReadOptions = {}
+): Promise<PersistedAuthUser | null> {
+  const session = await ensureOfflineVaultSession(
+    options.signal,
+    false,
+    options.allowLockedVault ?? false
+  );
+  throwIfVaultOperationAborted(options.signal);
 
   if (!session) {
     return null;
   }
 
-  await ensureVaultDatabaseOpen();
+  const observedState = getStoredVaultState();
 
-  const storedProfile = await db.vaultProfile.get(PROFILE_RECORD_ID);
+  if (
+    !observedState ||
+    observedState.subjectHash !== session.subjectHash ||
+    getStoredVaultEnvelopeCacheKey(observedState) !== session.envelopeCacheKey
+  ) {
+    clearOfflineVaultSession();
+    return null;
+  }
+
+  await ensureVaultDatabaseOpen(options.signal);
+  throwIfVaultOperationAborted(options.signal);
+
+  const storedProfile = await awaitVaultOperation(
+    db.vaultProfile.get(PROFILE_RECORD_ID),
+    options.signal
+  );
+  throwIfVaultOperationAborted(options.signal);
 
   if (!storedProfile) {
-    await clearInvalidOfflineVaultArtifacts();
+    if (isVaultInitializationPending(getStoredVaultState())) {
+      return null;
+    }
+
+    await clearInvalidOfflineVaultArtifactsIfCurrent(observedState, options);
     return null;
   }
 
@@ -1412,11 +2052,15 @@ export async function readPersistedAuthUserFromVault(): Promise<PersistedAuthUse
   const sanitizedUser = sanitizePersistedAuthUser(decryptedUser);
 
   if (!sanitizedUser) {
+    if (isVaultInitializationPending(getStoredVaultState())) {
+      return null;
+    }
+
     console.error(
       "Failed to parse stored user data:",
       new SyntaxError("Invalid encrypted vault profile payload.")
     );
-    await clearInvalidOfflineVaultArtifacts();
+    await clearInvalidOfflineVaultArtifactsIfCurrent(observedState, options);
     return null;
   }
 

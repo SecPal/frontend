@@ -85,6 +85,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Rehydrated native Android sessions after process restarts without requiring a
+  local user snapshot, while preserving logout barriers, treating missing or
+  unauthorized native tokens as logged out, and retaining retryable native
+  sessions when secure persistence or connectivity is temporarily unavailable.
+  Stale native vault-read timeouts can no longer override a newer logout, and
+  initial profile and legacy-data persistence now commit atomically so a
+  superseded migration cannot orphan encrypted records. Cancellation remains
+  compatible with Android WebView 83, while one shared lifecycle lock
+  serializes vault initialization and destructive logout cleanup across tabs.
+  Lifecycle serialization now requires the browser's suspension-safe Web
+  Locks implementation and fails closed on unsupported engines instead of
+  relying on an expiring IndexedDB owner lease. Cached native sessions are
+  additionally bound to the complete stored vault envelope, so replacing a
+  same-user WebCrypto vault cannot reuse an obsolete in-memory root key or
+  clear valid replacement data. Invalid cleanup and asynchronous wrapper
+  rewrites now revalidate the exact observed vault under the lifecycle lock,
+  so stale work cannot purge or overwrite a newer login. Malformed envelope
+  parsing now leaves marker removal to that fenced cleanup, preventing a stale
+  parser from deleting a replacement login committed by another tab.
+  Invalid-state and ordinary vault cleanup use the same lifecycle lock, and
+  destructive logout cleanup stops safely if that lock cannot be acquired.
+  Aborted queued lock requests are rejected before their protected operation
+  is created,
+  preventing stray cleanup work and unhandled cancellation rejections during
+  a following authentication lifecycle. Destructive session cleanup now drops
+  in-memory vault key material synchronously, bounds and fences the IndexedDB
+  purge before releasing its lifecycle lock, retains the logout barrier after
+  a rollback or timeout, and leaves potentially unbounded Cache and push work
+  outside the critical section. Superseded persistence requests also return
+  before they can abort the active writer for a newer authentication cycle.
+  Native identity revalidation now zeroizes the superseded in-memory vault
+  root key immediately in both the confirming tab and other open tabs before
+  replacement persistence can begin. Vault locks observed through cross-tab
+  storage changes or BFCache restoration now also zeroize the active in-memory
+  root key before exposing the locked UI state, and ordinary background vault
+  reads and writes remain blocked while the lock marker is active.
+  Cancellable database opening cannot retain a stalled auth persistence
+  attempt. Concurrent tabs reuse an active revalidation owner token instead of
+  invalidating each other's confirmed replacement persistence, adopt a newly
+  persisted identity when the preceding cross-tab logout barrier is removed,
+  and lifecycle owner tokens retain a cryptographically secure fallback on
+  WebViews without `crypto.randomUUID()`. Temporarily locked native
+  vaults are preserved across transient unlock failures instead of being
+  replaced by a fallback key, unexpected storage aborts surface as persistence
+  failures, native wrapper reads honor cancellation, and newer cross-tab logout
+  barriers roll back in-flight profile persistence.
+  A server-confirmed user change invalidates the previous offline snapshot even
+  when secure persistence of the replacement fails. Invalid legacy auth markers
+  are now removed only after their orphaned vault records have been purged.
+  Initial vault writes now publish a resumable encrypted-key wrapper before the
+  atomic record commit, so cancellation cannot orphan committed data. Other
+  tabs restore the persisted native user when cross-tab revalidation completes,
+  while lifecycle versioning prevents an older asynchronous read or vault
+  unlock from replacing a newer confirmed identity or undoing a local vault
+  lock. Native tabs also restart bridge bootstrap when another context removes
+  an unavailable local snapshot without creating a logout barrier. A pending
+  replacement wrapper is no longer purged when an orphaned profile cannot be
+  decrypted during the replacement transaction.
 - Isolated AuthContext tests from shared offline-vault state and awaited the
   complete login handoff before teardown, so filtered runs no longer leave a
   rejected vault persistence task. Closes #1629.

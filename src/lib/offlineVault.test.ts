@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import Dexie from "dexie";
 import type { PersistedAuthUser } from "../services/authState";
 import { db, type OrganizationalUnitCacheEntry } from "./db";
 import {
+  AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
   clearOfflineVaultSession,
   initializeOfflineVault,
@@ -12,6 +14,7 @@ import {
   listVaultOrganizationalUnits,
   readPersistedAuthUserFromVault,
   clearOfflineVaultTables,
+  storeVaultAnalyticsEvent,
 } from "./offlineVault";
 
 function setCsrfTokenCookie(value: string): void {
@@ -106,19 +109,13 @@ describe("offlineVault", () => {
   });
 
   it("stores the persisted profile in the encrypted vault and keeps auth_user out of localStorage", async () => {
-    vi.spyOn(console, "warn").mockImplementation(() => {});
-    installNativeVaultBridge({
-      isVaultDeviceBoundWrapperAvailable: vi
-        .fn()
-        .mockRejectedValue(new Error("bridge unavailable")),
-    });
-
     await initializeOfflineVault(persistedUser);
 
     expect(localStorage.getItem("auth_user")).toBeNull();
     expect(readStoredVaultState().wrapper).toMatchObject({
       kind: "browser-session",
     });
+    expect(readStoredVaultState()).not.toHaveProperty("initialization");
     await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
       persistedUser
     );
@@ -135,20 +132,221 @@ describe("offlineVault", () => {
     );
   });
 
-  it("does not expose auth_vault_state before the encrypted profile record is persisted", async () => {
+  it("blocks cached vault reads and writes while another tab's lock marker is active", async () => {
+    await initializeOfflineVault(persistedUser);
+    await storeVaultAnalyticsEvent({
+      type: "page_view",
+      category: "navigation",
+      action: "view_dashboard",
+      timestamp: Date.now(),
+      synced: false,
+      sessionId: "session-before-lock",
+      userId: persistedUser.id,
+    });
+
+    localStorage.setItem(AUTH_VAULT_LOCK_KEY, "1");
+
+    await expect(
+      storeVaultAnalyticsEvent({
+        type: "page_view",
+        category: "navigation",
+        action: "view_locked_dashboard",
+        timestamp: Date.now(),
+        synced: false,
+        sessionId: "session-after-lock",
+        userId: persistedUser.id,
+      })
+    ).rejects.toThrow("Offline vault is not available.");
+    await expect(listVaultAnalyticsEvents()).resolves.toEqual([]);
+    expect(await db.vaultAnalytics.count()).toBe(1);
+  });
+
+  it("abandons a stalled database open when vault persistence is cancelled", async () => {
+    db.close();
+    const databaseOpen = createDeferredPromise<typeof db>();
+    const extendedDatabaseOpen = Dexie.Promise.resolve(databaseOpen.promise);
+    const openSpy = vi
+      .spyOn(db, "open")
+      .mockReturnValueOnce(extendedDatabaseOpen);
+    const controller = new AbortController();
+    const initialization = initializeOfflineVault(persistedUser, {
+      signal: controller.signal,
+    });
+    let outcome = "pending";
+    const observedOutcome = initialization.then(
+      () => {
+        outcome = "completed";
+      },
+      (error: unknown) => {
+        outcome =
+          typeof error === "object" && error !== null && "name" in error
+            ? String(error.name)
+            : "failed";
+      }
+    );
+
+    try {
+      await vi.waitFor(() => {
+        expect(openSpy).toHaveBeenCalledTimes(1);
+      });
+
+      controller.abort();
+      await vi.waitFor(() => {
+        expect(outcome).toBe("AbortError");
+      });
+    } finally {
+      databaseOpen.resolve(db);
+      await observedOutcome;
+    }
+  });
+
+  it.each([
+    [vi.fn().mockRejectedValue(new Error("wrap failed")), true],
+    [vi.fn().mockResolvedValue({ wrappedRootKey: "" }), false],
+  ])(
+    "falls back to WebCrypto when the optional native vault wrapper fails",
+    async (wrapVaultRootKey, expectsWarning) => {
+      const consoleWarnSpy = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => undefined);
+      installNativeVaultBridge({
+        isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
+        wrapVaultRootKey,
+      });
+
+      await initializeOfflineVault(persistedUser);
+
+      expect(readStoredVaultState().wrapper).toMatchObject({
+        kind: "webcrypto-device-bound",
+      });
+      clearOfflineVaultSession();
+      await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+        persistedUser
+      );
+      if (expectsWarning) {
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          "[Offline Vault] Native device-bound wrapping failed; using the WebCrypto fallback."
+        );
+      } else {
+        expect(consoleWarnSpy).not.toHaveBeenCalled();
+      }
+    }
+  );
+
+  it("serializes vault initialization across simultaneous native contexts", async () => {
+    const originalLocksDescriptor = Object.getOwnPropertyDescriptor(
+      navigator,
+      "locks"
+    );
+    let previousLock = Promise.resolve();
+    const lockRequest = vi.fn(
+      async <T>(
+        name: string,
+        options: LockOptions,
+        callback: (lock: Lock) => T | PromiseLike<T>
+      ): Promise<T> => {
+        const result = previousLock.then(() =>
+          callback({ name, mode: options.mode ?? "exclusive" } as Lock)
+        );
+        previousLock = result.then(
+          () => undefined,
+          () => undefined
+        );
+
+        return result;
+      }
+    );
+    Object.defineProperty(navigator, "locks", {
+      configurable: true,
+      value: { request: lockRequest },
+    });
+    installNativeVaultBridge();
+    const generatedKeys = await Promise.all([
+      crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, [
+        "encrypt",
+        "decrypt",
+      ]),
+      crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, [
+        "encrypt",
+        "decrypt",
+      ]),
+    ]);
+    const firstGenerateStarted = createDeferredPromise<void>();
+    const releaseFirstGenerate = createDeferredPromise<void>();
+    let generateCallCount = 0;
+    const generateKeySpy = vi
+      .spyOn(crypto.subtle, "generateKey")
+      .mockImplementation((() => {
+        const callIndex = generateCallCount;
+        generateCallCount += 1;
+
+        if (callIndex === 0) {
+          firstGenerateStarted.resolve();
+          return releaseFirstGenerate.promise.then(() => generatedKeys[0]);
+        }
+
+        return Promise.resolve(generatedKeys[1]);
+      }) as typeof crypto.subtle.generateKey);
+    vi.resetModules();
+    const firstVault = await import("./offlineVault");
+    const firstDatabase = (await import("./db")).db;
+    vi.resetModules();
+    const secondVault = await import("./offlineVault");
+    const secondDatabase = (await import("./db")).db;
+    let firstInitialization: Promise<void> | null = null;
+    let secondInitialization: Promise<void> | null = null;
+
+    try {
+      firstInitialization = firstVault.initializeOfflineVault(persistedUser);
+      await firstGenerateStarted.promise;
+
+      secondInitialization = secondVault.initializeOfflineVault(persistedUser);
+
+      expect(lockRequest).toHaveBeenCalledTimes(2);
+      expect(generateKeySpy).toHaveBeenCalledTimes(1);
+      releaseFirstGenerate.resolve();
+
+      await Promise.all([firstInitialization, secondInitialization]);
+
+      expect(generateKeySpy).toHaveBeenCalledTimes(1);
+      clearOfflineVaultSession();
+      await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+        persistedUser
+      );
+    } finally {
+      releaseFirstGenerate.resolve();
+      await Promise.allSettled(
+        [firstInitialization, secondInitialization].filter(
+          (initialization): initialization is Promise<void> =>
+            initialization !== null
+        )
+      );
+      firstDatabase.close();
+      secondDatabase.close();
+      if (originalLocksDescriptor) {
+        Object.defineProperty(navigator, "locks", originalLocksDescriptor);
+      } else {
+        Reflect.deleteProperty(navigator, "locks");
+      }
+    }
+  });
+
+  it("keeps a recoverable pending wrapper before the encrypted profile record is persisted", async () => {
+    const profileWriteStarted = createDeferredPromise<void>();
     const deferredProfileWrite = createDeferredPromise<void>();
     const originalPut = db.vaultProfile.put.bind(db.vaultProfile);
 
     vi.spyOn(db.vaultProfile, "put").mockImplementationOnce((...args) => {
-      return deferredProfileWrite.promise.then(() =>
+      profileWriteStarted.resolve();
+      return Dexie.waitFor(deferredProfileWrite.promise).then(() =>
         originalPut(...args)
       ) as ReturnType<typeof originalPut>;
     });
 
     const initializePromise = initializeOfflineVault(persistedUser);
 
-    await Promise.resolve();
-    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    await profileWriteStarted.promise;
+    expect(readStoredVaultState()).toHaveProperty("initialization", "pending");
 
     deferredProfileWrite.resolve();
     await initializePromise;
@@ -157,6 +355,125 @@ describe("offlineVault", () => {
     await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
       persistedUser
     );
+  });
+
+  it("preserves a pending vault when an orphaned profile cannot decrypt", async () => {
+    await initializeOfflineVault(persistedUser);
+    const orphanedProfile = await db.vaultProfile.get("profile");
+    const replacementUser = {
+      ...persistedUser,
+      id: "replacement-user",
+      email: "replacement@secpal.dev",
+    };
+    const profileEncryptionStarted = createDeferredPromise<void>();
+    const releaseProfileEncryption = createDeferredPromise<void>();
+    const originalEncrypt = crypto.subtle.encrypt.bind(crypto.subtle);
+    let delayedProfileEncryption = false;
+    vi.spyOn(crypto.subtle, "encrypt").mockImplementation(
+      async (algorithm, key, data) => {
+        const encryption = originalEncrypt(algorithm, key, data);
+
+        if (
+          !delayedProfileEncryption &&
+          typeof algorithm !== "string" &&
+          algorithm.name === "AES-GCM"
+        ) {
+          delayedProfileEncryption = true;
+          profileEncryptionStarted.resolve();
+          await releaseProfileEncryption.promise;
+        }
+
+        return encryption;
+      }
+    );
+    const initialization = initializeOfflineVault(replacementUser);
+
+    try {
+      await profileEncryptionStarted.promise;
+      if (!orphanedProfile) {
+        throw new Error("Expected the original encrypted profile record.");
+      }
+      await db.vaultProfile.put(orphanedProfile);
+      const pendingVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+      expect(readStoredVaultState()).toHaveProperty(
+        "initialization",
+        "pending"
+      );
+      clearOfflineVaultSession();
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => undefined);
+
+      await expect(readPersistedAuthUserFromVault()).resolves.toBeNull();
+
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(
+        pendingVaultState
+      );
+      expect(await db.vaultProfile.count()).toBe(1);
+    } finally {
+      releaseProfileEncryption.resolve();
+      await Promise.allSettled([initialization]);
+    }
+
+    clearOfflineVaultSession();
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      replacementUser
+    );
+  });
+
+  it("releases vault initialization when native wrapper discovery is cancelled", async () => {
+    const availability = createDeferredPromise<boolean>();
+    const nativeBridge = installNativeVaultBridge({
+      isVaultDeviceBoundWrapperAvailable: vi.fn(() => availability.promise),
+    });
+    const controller = new AbortController();
+    const initialization = initializeOfflineVault(persistedUser, {
+      signal: controller.signal,
+    });
+
+    try {
+      await vi.waitFor(() => {
+        expect(
+          nativeBridge.isVaultDeviceBoundWrapperAvailable
+        ).toHaveBeenCalledTimes(1);
+      });
+      controller.abort();
+      await expect(initialization).rejects.toMatchObject({
+        name: "AbortError",
+      });
+    } finally {
+      availability.resolve(false);
+      await Promise.allSettled([initialization]);
+    }
+  });
+
+  it("rolls back a profile write when persistence is superseded", async () => {
+    const profileWritten = createDeferredPromise<void>();
+    const releaseProfileWrite = createDeferredPromise<void>();
+    const originalPut = db.vaultProfile.put.bind(db.vaultProfile);
+
+    vi.spyOn(db.vaultProfile, "put").mockImplementationOnce((...args) =>
+      originalPut(...args).then((result) => {
+        profileWritten.resolve();
+        return Dexie.waitFor(releaseProfileWrite.promise).then(() => result);
+      })
+    );
+
+    const controller = new AbortController();
+    const initialization = initializeOfflineVault(persistedUser, {
+      signal: controller.signal,
+    });
+
+    await profileWritten.promise;
+    controller.abort();
+    releaseProfileWrite.resolve();
+    await expect(initialization).rejects.toMatchObject({ name: "AbortError" });
+    expect(await db.vaultProfile.count()).toBe(0);
+    expect(readStoredVaultState()).toHaveProperty("initialization", "pending");
+    clearOfflineVaultSession();
+    await expect(readPersistedAuthUserFromVault()).resolves.toBeNull();
+    expect(readStoredVaultState()).toHaveProperty("initialization", "pending");
   });
 
   it("keeps the vault readable when the browser-session CSRF token rotates", async () => {
@@ -178,6 +495,100 @@ describe("offlineVault", () => {
     expect(rotatedVaultState).not.toBe(initialVaultState);
   });
 
+  it("does not let a stale wrapper rewrite replace a newer user's vault", async () => {
+    await initializeOfflineVault(persistedUser);
+    clearOfflineVaultSession();
+    setCsrfTokenCookie("rotated-csrf-token");
+
+    const firstWrapper = createDeferredPromise<{
+      wrappedRootKey: string;
+    }>();
+    const wrapperRewriteStarted = createDeferredPromise<void>();
+    let firstRootKeyBase64: string | null = null;
+    const nativeBridge = installNativeVaultBridge({
+      isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
+      wrapVaultRootKey: vi.fn(
+        async ({ rootKeyBase64 }: { rootKeyBase64: string }) => {
+          if (firstRootKeyBase64 === null) {
+            firstRootKeyBase64 = rootKeyBase64;
+            wrapperRewriteStarted.resolve();
+            return firstWrapper.promise;
+          }
+
+          return { wrappedRootKey: `wrapped:${rootKeyBase64}` };
+        }
+      ),
+      unwrapVaultRootKey: vi.fn(
+        async ({ wrappedRootKey }: { wrappedRootKey: string }) => ({
+          rootKeyBase64: wrappedRootKey.replace("wrapped:", ""),
+        })
+      ),
+    });
+    const staleRead = readPersistedAuthUserFromVault();
+
+    await wrapperRewriteStarted.promise;
+    expect(nativeBridge.wrapVaultRootKey).toHaveBeenCalledTimes(1);
+
+    const replacementUser = {
+      ...persistedUser,
+      id: "replacement-user",
+      email: "replacement@secpal.dev",
+    };
+    await initializeOfflineVault(replacementUser);
+    const replacementState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+    const replacementProfile = await db.vaultProfile.get("profile");
+
+    if (firstRootKeyBase64 === null) {
+      throw new Error("Expected the stale wrapper rewrite to start.");
+    }
+
+    firstWrapper.resolve({
+      wrappedRootKey: `wrapped:${firstRootKeyBase64}`,
+    });
+    await expect(staleRead).resolves.toBeNull();
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(replacementState);
+    expect(await db.vaultProfile.get("profile")).toEqual(replacementProfile);
+    clearOfflineVaultSession();
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      replacementUser
+    );
+  });
+
+  it("does not let a stale profile read purge a newer user's vault", async () => {
+    await initializeOfflineVault(persistedUser);
+    const releaseProfileRead = createDeferredPromise<void>();
+    const profileReadStarted = createDeferredPromise<void>();
+    const originalGet = db.vaultProfile.get.bind(db.vaultProfile);
+    vi.spyOn(db.vaultProfile, "get").mockImplementationOnce((key) => {
+      profileReadStarted.resolve();
+      return Dexie.Promise.resolve(releaseProfileRead.promise).then(() =>
+        originalGet(key)
+      );
+    });
+    const staleRead = readPersistedAuthUserFromVault();
+
+    await profileReadStarted.promise;
+    const replacementUser = {
+      ...persistedUser,
+      id: "profile-replacement-user",
+      email: "profile-replacement@secpal.dev",
+    };
+    await initializeOfflineVault(replacementUser);
+    const replacementState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+    const replacementProfile = await originalGet("profile");
+
+    releaseProfileRead.resolve();
+    await expect(staleRead).resolves.toBeNull();
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(replacementState);
+    expect(await originalGet("profile")).toEqual(replacementProfile);
+    clearOfflineVaultSession();
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      replacementUser
+    );
+  });
+
   it("keeps the vault readable when the current csrf cookie is missing but a recent key is cached", async () => {
     await initializeOfflineVault(persistedUser);
 
@@ -188,6 +599,46 @@ describe("offlineVault", () => {
       persistedUser
     );
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+  });
+
+  it("replaces a stale cached session when the same user gets a new WebCrypto vault envelope", async () => {
+    installNativeVaultBridge();
+    await initializeOfflineVault(persistedUser);
+
+    const originalState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+    const originalProfile = await db.vaultProfile.get("profile");
+
+    localStorage.removeItem(AUTH_VAULT_STORAGE_KEY);
+    clearOfflineVaultSession();
+    await initializeOfflineVault(persistedUser);
+
+    const replacementState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+    const replacementProfile = await db.vaultProfile.get("profile");
+
+    if (
+      !originalState ||
+      !originalProfile ||
+      !replacementState ||
+      !replacementProfile
+    ) {
+      throw new Error("Expected complete original and replacement vaults.");
+    }
+
+    localStorage.setItem(AUTH_VAULT_STORAGE_KEY, originalState);
+    await db.vaultProfile.put(originalProfile);
+    clearOfflineVaultSession();
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
+    );
+
+    localStorage.setItem(AUTH_VAULT_STORAGE_KEY, replacementState);
+    await db.vaultProfile.put(replacementProfile);
+
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
+    );
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(replacementState);
+    expect(await db.vaultProfile.get("profile")).toEqual(replacementProfile);
   });
 
   it("migrates legacy IndexedDB PII into vault-backed stores and clears plaintext records", async () => {
@@ -232,6 +683,169 @@ describe("offlineVault", () => {
         id: "org-1",
         name: "SecPal GmbH",
       }),
+    ]);
+  });
+
+  it("rolls back legacy analytics migration when persistence is superseded", async () => {
+    await db.analytics.add({
+      type: "page_view",
+      category: "navigation",
+      action: "view_dashboard",
+      timestamp: Date.now(),
+      synced: false,
+      sessionId: "session-1",
+      userId: persistedUser.id,
+    });
+    const destinationWritten = createDeferredPromise<void>();
+    const releaseDestinationWrite = createDeferredPromise<void>();
+    const originalBulkPut = db.vaultAnalytics.bulkPut.bind(db.vaultAnalytics);
+
+    vi.spyOn(db.vaultAnalytics, "bulkPut").mockImplementationOnce((records) =>
+      originalBulkPut(records).then((result) => {
+        destinationWritten.resolve();
+        return Dexie.waitFor(releaseDestinationWrite.promise).then(
+          () => result
+        );
+      })
+    );
+
+    const controller = new AbortController();
+    const initialization = initializeOfflineVault(persistedUser, {
+      signal: controller.signal,
+    });
+
+    await destinationWritten.promise;
+    controller.abort();
+    releaseDestinationWrite.resolve();
+    await expect(initialization).rejects.toMatchObject({ name: "AbortError" });
+    expect(await db.analytics.count()).toBe(1);
+    expect(await db.vaultAnalytics.count()).toBe(0);
+  });
+
+  it("rolls back all legacy migrations when a sibling migration is superseded", async () => {
+    await db.analytics.add({
+      type: "page_view",
+      category: "navigation",
+      action: "view_dashboard",
+      timestamp: Date.now(),
+      synced: false,
+      sessionId: "session-1",
+      userId: persistedUser.id,
+    });
+    await db.organizationalUnitCache.put({
+      id: "org-1",
+      type: "company",
+      name: "SecPal GmbH",
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-02T00:00:00Z",
+      cachedAt: new Date("2026-01-03T00:00:00Z"),
+      lastSynced: new Date("2026-01-03T00:00:00Z"),
+      parent_id: null,
+      parent: null,
+    });
+
+    const organizationalUnitWriteStarted = createDeferredPromise<void>();
+    const releaseOrganizationalUnitWrite = createDeferredPromise<void>();
+    vi.spyOn(db.vaultOrganizationalUnitCache, "bulkPut").mockImplementationOnce(
+      () => {
+        organizationalUnitWriteStarted.resolve();
+        return Dexie.waitFor(releaseOrganizationalUnitWrite.promise).then(
+          () => "org-1"
+        ) as unknown as ReturnType<
+          typeof db.vaultOrganizationalUnitCache.bulkPut
+        >;
+      }
+    );
+
+    const controller = new AbortController();
+    const initialization = initializeOfflineVault(persistedUser, {
+      signal: controller.signal,
+    });
+
+    await organizationalUnitWriteStarted.promise;
+
+    controller.abort();
+    releaseOrganizationalUnitWrite.resolve();
+
+    await expect(initialization).rejects.toMatchObject({ name: "AbortError" });
+    expect(await db.analytics.count()).toBe(1);
+    expect(await db.vaultAnalytics.count()).toBe(0);
+    expect(await db.organizationalUnitCache.count()).toBe(1);
+    expect(await db.vaultOrganizationalUnitCache.count()).toBe(0);
+    expect(readStoredVaultState()).toHaveProperty("initialization", "pending");
+
+    clearOfflineVaultSession();
+    await initializeOfflineVault(persistedUser);
+
+    expect(await db.analytics.count()).toBe(0);
+    expect(await db.vaultAnalytics.count()).toBe(1);
+    expect(await db.organizationalUnitCache.count()).toBe(0);
+    expect(await db.vaultOrganizationalUnitCache.count()).toBe(1);
+    await expect(listVaultAnalyticsEvents()).resolves.toEqual([
+      expect.objectContaining({ sessionId: "session-1" }),
+    ]);
+    await expect(listVaultOrganizationalUnits()).resolves.toEqual([
+      expect.objectContaining({ id: "org-1" }),
+    ]);
+  });
+
+  it("resumes committed initial records when cancellation lands at transaction completion", async () => {
+    await db.analytics.add({
+      type: "page_view",
+      category: "navigation",
+      action: "view_dashboard",
+      timestamp: Date.now(),
+      synced: false,
+      sessionId: "committed-session",
+      userId: persistedUser.id,
+    });
+    await db.organizationalUnitCache.put({
+      id: "committed-org",
+      type: "company",
+      name: "Committed Organization",
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-02T00:00:00Z",
+      cachedAt: new Date("2026-01-03T00:00:00Z"),
+      lastSynced: new Date("2026-01-03T00:00:00Z"),
+      parent_id: null,
+      parent: null,
+    });
+    const controller = new AbortController();
+    const originalProfilePut = db.vaultProfile.put.bind(db.vaultProfile);
+
+    vi.spyOn(db.vaultProfile, "put").mockImplementationOnce((record) => {
+      const transaction = Dexie.currentTransaction;
+
+      if (!transaction) {
+        throw new Error(
+          "Expected initial vault writes to share a transaction."
+        );
+      }
+
+      transaction.on("complete", () => controller.abort());
+      return originalProfilePut(record);
+    });
+
+    await expect(
+      initializeOfflineVault(persistedUser, { signal: controller.signal })
+    ).rejects.toMatchObject({ name: "AbortError" });
+
+    expect(await db.analytics.count()).toBe(0);
+    expect(await db.organizationalUnitCache.count()).toBe(0);
+    expect(await db.vaultAnalytics.count()).toBe(1);
+    expect(await db.vaultOrganizationalUnitCache.count()).toBe(1);
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+
+    clearOfflineVaultSession();
+    await initializeOfflineVault(persistedUser);
+    expect(readStoredVaultState()).not.toHaveProperty("initialization");
+    clearOfflineVaultSession();
+
+    await expect(listVaultAnalyticsEvents()).resolves.toEqual([
+      expect.objectContaining({ sessionId: "committed-session" }),
+    ]);
+    await expect(listVaultOrganizationalUnits()).resolves.toEqual([
+      expect.objectContaining({ id: "committed-org" }),
     ]);
   });
 
@@ -319,6 +933,44 @@ describe("offlineVault", () => {
     );
   });
 
+  it("cancels a stalled native vault unwrap", async () => {
+    let rootKeyBase64 = "";
+    installNativeVaultBridge({
+      isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
+      wrapVaultRootKey: vi.fn(
+        async ({ rootKeyBase64: nextRootKey }: { rootKeyBase64: string }) => {
+          rootKeyBase64 = nextRootKey;
+          return { wrappedRootKey: "wrapped-root-key" };
+        }
+      ),
+      unwrapVaultRootKey: vi.fn(),
+    });
+    await initializeOfflineVault(persistedUser);
+    clearOfflineVaultSession();
+
+    const unwrappedRootKey = createDeferredPromise<{
+      rootKeyBase64: string;
+    }>();
+    const nativeBridge = installNativeVaultBridge({
+      isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
+      wrapVaultRootKey: vi.fn(),
+      unwrapVaultRootKey: vi.fn(() => unwrappedRootKey.promise),
+    });
+    const controller = new AbortController();
+    const read = readPersistedAuthUserFromVault({ signal: controller.signal });
+
+    try {
+      await vi.waitFor(() => {
+        expect(nativeBridge.unwrapVaultRootKey).toHaveBeenCalledTimes(1);
+      });
+      controller.abort();
+      await expect(read).rejects.toMatchObject({ name: "AbortError" });
+    } finally {
+      unwrappedRootKey.resolve({ rootKeyBase64 });
+      await Promise.allSettled([read]);
+    }
+  });
+
   it("decrypts a persisted auth user from a legacy v1 envelope after upgrade", async () => {
     // 1. Create a real vault — produces V2 browser-session envelope with no native bridge installed
     await initializeOfflineVault(persistedUser);
@@ -401,7 +1053,7 @@ describe("offlineVault", () => {
     );
   });
 
-  it("returns null without clearing vault artifacts when native bridge is unavailable for a native-device-bound envelope", async () => {
+  it("preserves a native-device-bound vault until its wrapper is available again", async () => {
     // Initialize vault with an available native bridge → native-device-bound envelope
     installNativeVaultBridge({
       isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
@@ -417,7 +1069,17 @@ describe("offlineVault", () => {
       ),
     });
     await initializeOfflineVault(persistedUser);
+    await storeVaultAnalyticsEvent({
+      type: "page_view",
+      category: "navigation",
+      action: "view_dashboard",
+      timestamp: Date.now(),
+      synced: false,
+      sessionId: "native-session",
+      userId: persistedUser.id,
+    });
 
+    const storedState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
     expect(readStoredVaultState()).toMatchObject({
       wrapper: { kind: "native-device-bound" },
     });
@@ -428,8 +1090,30 @@ describe("offlineVault", () => {
 
     // Vault must be locked (null) — not corrupted and not cleared
     await expect(readPersistedAuthUserFromVault()).resolves.toBeNull();
+    await expect(initializeOfflineVault(persistedUser)).rejects.toThrow(
+      "Stored auth vault is temporarily unavailable."
+    );
 
-    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(storedState);
     expect(await db.vaultProfile.count()).toBe(1);
+    expect(await db.vaultAnalytics.count()).toBe(1);
+
+    installNativeVaultBridge({
+      isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
+      wrapVaultRootKey: vi.fn(),
+      unwrapVaultRootKey: vi.fn(
+        async ({ wrappedRootKey }: { wrappedRootKey: string }) => ({
+          rootKeyBase64: wrappedRootKey.replace("wrapped:", ""),
+        })
+      ),
+    });
+    clearOfflineVaultSession();
+
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
+    );
+    await expect(listVaultAnalyticsEvents()).resolves.toEqual([
+      expect.objectContaining({ sessionId: "native-session" }),
+    ]);
   });
 });

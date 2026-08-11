@@ -9,11 +9,18 @@ import {
 } from "./browserPushState";
 import {
   clearBrowserPushClientState,
+  clearDestructiveSensitiveClientState,
   clearSensitiveClientState,
   SENSITIVE_CACHE_NAMES,
 } from "./clientStateCleanup";
-import * as offlineVault from "./offlineVault";
-import { AUTH_VAULT_STORAGE_KEY } from "./offlineVault";
+import {
+  getActiveOfflineVaultSession,
+  setActiveOfflineVaultSession,
+} from "./offlineVaultRuntime";
+import {
+  AUTH_USER_REVALIDATION_REQUIRED_KEY,
+  AUTH_VAULT_STORAGE_KEY,
+} from "./offlineVault";
 
 const mockCaches = {
   keys: vi.fn(),
@@ -94,6 +101,7 @@ describe("clearSensitiveClientState", () => {
       AUTH_VAULT_STORAGE_KEY,
       JSON.stringify({ scheme: "pbkdf2-aes-cbc-hmac-sha256-vault" })
     );
+    localStorage.setItem(AUTH_USER_REVALIDATION_REQUIRED_KEY, "1");
     localStorage.setItem("locale", "de");
     sessionStorage.setItem("share-draft", "pending");
 
@@ -130,6 +138,9 @@ describe("clearSensitiveClientState", () => {
     expect(localStorage.getItem("auth_token")).toBeNull();
     expect(localStorage.getItem("secpal-notification-preferences")).toBeNull();
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+    expect(
+      localStorage.getItem(AUTH_USER_REVALIDATION_REQUIRED_KEY)
+    ).toBeNull();
     expect(localStorage.getItem("locale")).toBe("de");
     expect(sessionStorage.getItem("share-draft")).toBeNull();
 
@@ -193,6 +204,64 @@ describe("clearSensitiveClientState", () => {
     expect(sessionStorage.getItem("share-draft")).toBeNull();
     expect(await db.analytics.count()).toBe(0);
     expect(await db.organizationalUnitCache.count()).toBe(0);
+  });
+
+  it("does not start IndexedDB cleanup after lifecycle invalidation", async () => {
+    const controller = new AbortController();
+    const deleteSpy = vi.spyOn(db, "delete");
+    controller.abort();
+
+    await expect(
+      clearSensitiveClientState({ signal: controller.signal })
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(deleteSpy).not.toHaveBeenCalled();
+  });
+
+  it("does not start a delayed IndexedDB transaction after cleanup times out", async () => {
+    vi.useFakeTimers();
+    const transactionMayStart = createDeferredPromise<void>();
+    const clearSpies = db.tables.map((table) => vi.spyOn(table, "clear"));
+    vi.spyOn(db, "transaction").mockImplementation((async (
+      ...args: unknown[]
+    ) => {
+      const operation = args[args.length - 1] as () => Promise<void>;
+      await transactionMayStart.promise;
+      return operation();
+    }) as typeof db.transaction);
+    const controller = new AbortController();
+
+    try {
+      const cleanupPromise = clearDestructiveSensitiveClientState({
+        signal: controller.signal,
+      });
+      const cleanupAssertion = expect(cleanupPromise).rejects.toMatchObject({
+        name: "TimeoutError",
+      });
+      await vi.advanceTimersByTimeAsync(5_000);
+
+      await cleanupAssertion;
+      transactionMayStart.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      for (const clearSpy of clearSpies) {
+        expect(clearSpy).not.toHaveBeenCalled();
+      }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps unbounded Cache API work outside destructive lifecycle cleanup", async () => {
+    mockCaches.keys.mockResolvedValue([SENSITIVE_CACHE_NAMES[0]]);
+    mockCaches.delete.mockReturnValue(new Promise<boolean>(() => {}));
+
+    await expect(
+      clearDestructiveSensitiveClientState()
+    ).resolves.toBeUndefined();
+
+    expect(mockCaches.keys).not.toHaveBeenCalled();
+    expect(mockCaches.delete).not.toHaveBeenCalled();
   });
 
   it("does not fail when Cache API is unavailable", async () => {
@@ -295,17 +364,9 @@ describe("clearSensitiveClientState", () => {
     await expect(clearPromise).rejects.toBe(cacheError);
   });
 
-  it("continues the remaining logout cleanup when offline vault runtime cleanup fails", async () => {
-    const chunkError = new TypeError(
-      "Failed to fetch dynamically imported module"
-    );
-    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    vi.spyOn(offlineVault, "clearOfflineVaultSession").mockImplementationOnce(
-      () => {
-        throw chunkError;
-      }
-    );
-
+  it("clears the offline vault runtime without lazy module work", async () => {
+    const rootKeyBytes = new Uint8Array([1, 2, 3]);
+    setActiveOfflineVaultSession({ rootKeyBytes });
     localStorage.setItem("auth_user", "opaque-auth-storage-envelope");
     localStorage.setItem("auth_vault_state", '{"scheme":"secpal-auth-vault"}');
     sessionStorage.setItem("share-draft", "pending");
@@ -326,9 +387,7 @@ describe("clearSensitiveClientState", () => {
     expect(sessionStorage.getItem("share-draft")).toBeNull();
     await db.open();
     expect(await db.analytics.count()).toBe(0);
-    expect(consoleWarn).toHaveBeenCalledWith(
-      "Failed to clear the offline vault runtime during logout cleanup; continuing with the remaining sensitive cleanup tasks:",
-      chunkError
-    );
+    expect(getActiveOfflineVaultSession()).toBeNull();
+    expect(rootKeyBytes).toEqual(new Uint8Array([0, 0, 0]));
   });
 });

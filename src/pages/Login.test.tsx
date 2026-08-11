@@ -21,7 +21,7 @@ import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
 import * as healthApi from "../services/healthApi";
 import * as passkeyBrowser from "../services/passkeyBrowser";
-import { authStorage } from "../services/storage";
+import { AuthUserPersistenceError, authStorage } from "../services/storage";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import * as i18nModule from "../i18n";
 import { createRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
@@ -128,6 +128,13 @@ function mockBrowserPasskeySupport(supported: boolean) {
     value: supported ? { get: vi.fn() } : undefined,
   });
 }
+
+const mockNoStoredNativeUser = () =>
+  vi.fn().mockRejectedValue(
+    Object.assign(new Error("No stored native token."), {
+      code: "NO_STORED_TOKEN",
+    })
+  );
 
 // Helper to create a healthy response
 const createHealthyResponse = (): healthApi.HealthStatus => ({
@@ -695,7 +702,7 @@ describe("Login", () => {
         reason: "PASSKEY_ANDROID_VERSION_UNSUPPORTED",
       }),
       logout: vi.fn(),
-      getCurrentUser: vi.fn(),
+      getCurrentUser: mockNoStoredNativeUser(),
     };
 
     authGlobal.SecPalNativeAuthBridge = nativeBridge;
@@ -731,7 +738,7 @@ describe("Login", () => {
         reason: "PASSKEY_ANDROID_VERSION_UNSUPPORTED",
       }),
       logout: vi.fn(),
-      getCurrentUser: vi.fn(),
+      getCurrentUser: mockNoStoredNativeUser(),
     };
     (
       globalThis as { SecPalNativeAuthBridge?: typeof nativeBridge }
@@ -839,7 +846,7 @@ describe("Login", () => {
         .fn()
         .mockRejectedValue(new authApi.AuthApiError("Native passkey failed.")),
       logout: vi.fn(),
-      getCurrentUser: vi.fn(),
+      getCurrentUser: mockNoStoredNativeUser(),
     };
 
     authGlobal.SecPalNativeAuthBridge = nativeBridge;
@@ -884,7 +891,7 @@ describe("Login", () => {
           })
       ),
       logout: vi.fn(),
-      getCurrentUser: vi.fn(),
+      getCurrentUser: mockNoStoredNativeUser(),
     };
 
     authGlobal.SecPalNativeAuthBridge = nativeBridge;
@@ -924,7 +931,7 @@ describe("Login", () => {
         .fn()
         .mockRejectedValue(new Error("Native passkey crashed.")),
       logout: vi.fn(),
-      getCurrentUser: vi.fn(),
+      getCurrentUser: mockNoStoredNativeUser(),
     };
 
     authGlobal.SecPalNativeAuthBridge = nativeBridge;
@@ -964,7 +971,7 @@ describe("Login", () => {
         .fn()
         .mockRejectedValue(new Error("Passkey sign-in was cancelled.")),
       logout: vi.fn(),
-      getCurrentUser: vi.fn(),
+      getCurrentUser: mockNoStoredNativeUser(),
     };
 
     authGlobal.SecPalNativeAuthBridge = nativeBridge;
@@ -1043,7 +1050,7 @@ describe("Login", () => {
         .fn()
         .mockRejectedValue(new Error("Passkey sign-in was interrupted.")),
       logout: vi.fn(),
-      getCurrentUser: vi.fn(),
+      getCurrentUser: mockNoStoredNativeUser(),
     };
 
     authGlobal.SecPalNativeAuthBridge = nativeBridge;
@@ -1085,7 +1092,7 @@ describe("Login", () => {
           new Error("No credential provider is available on this device.")
         ),
       logout: vi.fn(),
-      getCurrentUser: vi.fn(),
+      getCurrentUser: mockNoStoredNativeUser(),
     };
 
     authGlobal.SecPalNativeAuthBridge = nativeBridge;
@@ -1125,7 +1132,7 @@ describe("Login", () => {
         .mockResolvedValue({ passkeysAvailable: true }),
       loginWithPasskey: vi.fn().mockRejectedValue("unexpected-native-failure"),
       logout: vi.fn(),
-      getCurrentUser: vi.fn(),
+      getCurrentUser: mockNoStoredNativeUser(),
     };
 
     authGlobal.SecPalNativeAuthBridge = nativeBridge;
@@ -3016,6 +3023,39 @@ describe("Login", () => {
       expect(stored).not.toBeNull();
       const parsed = JSON.parse(stored!);
       expect(parsed.attempts).toBe(1);
+    });
+
+    it("does not count secure persistence failures as credential failures", async () => {
+      vi.mocked(authApi.login).mockResolvedValueOnce({
+        user: createAuthUser(),
+      });
+      const setUserSpy = vi
+        .spyOn(authStorage, "setUser")
+        .mockRejectedValueOnce(new AuthUserPersistenceError());
+      const consoleWarnSpy = vi
+        .spyOn(console, "warn")
+        .mockImplementation(() => undefined);
+
+      renderLogin();
+      fireEvent.change(await screen.findByLabelText(/email/i), {
+        target: { value: "test@secpal.dev" },
+      });
+      fireEvent.change(screen.getByLabelText(/password/i), {
+        target: { value: "correct-password" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+      await waitFor(() => {
+        expect(setUserSpy).toHaveBeenCalledTimes(1);
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          "Secure auth persistence failed after authentication; holding routes behind recovery UI."
+        );
+      });
+      expect(localStorage.getItem("login_rate_limit")).toBeNull();
+      expect(screen.getByLabelText(/email/i)).not.toHaveAttribute(
+        "aria-invalid",
+        "true"
+      );
     });
 
     it("shows remaining attempts warning after 3 failed attempts", async () => {
