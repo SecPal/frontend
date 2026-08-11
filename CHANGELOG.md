@@ -112,6 +112,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a rollback or timeout, and leaves potentially unbounded Cache and push work
   outside the critical section. Superseded persistence requests also return
   before they can abort the active writer for a newer authentication cycle.
+  Native identity revalidation now zeroizes the superseded in-memory vault
+  root key immediately in both the confirming tab and other open tabs before
+  replacement persistence can begin.
   Cancellable database opening cannot retain a stalled auth persistence
   attempt. Concurrent tabs reuse an active revalidation owner token instead of
   invalidating each other's confirmed replacement persistence, adopt a newly

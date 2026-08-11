@@ -31,6 +31,7 @@ import {
 } from "../lib/clientStateCleanup";
 import { hasUserPermission } from "../lib/capabilities";
 import { isRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
+import { clearActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 import { resetPrefetchCache } from "../hooks/usePrefetch";
 import {
@@ -1189,6 +1190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             currentUser.id !== restoredUser.id
           ) {
             authStorage.requireUserRevalidation();
+            clearActiveOfflineVaultSession();
             setUser(null);
             syncOfflineAuthState(false);
           }
@@ -1543,6 +1545,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         invalidateBootstrapRevalidation();
+        clearActiveOfflineVaultSession();
         setUser(null);
         setIsVaultLocked(false);
         setIsLoading(false);

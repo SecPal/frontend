@@ -33,6 +33,7 @@ import {
   readPersistedAuthUserFromVault,
 } from "../lib/offlineVault";
 import { db } from "../lib/db";
+import { getActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 import { installSerializedWebLocks } from "../testUtils/serializedWebLocks";
 
@@ -169,6 +170,16 @@ async function persistAuthUser(user: Record<string, unknown>): Promise<string> {
 function expectNoStoredAuthState(): void {
   expect(localStorage.getItem("auth_user")).toBeNull();
   expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
+}
+
+function requireActiveOfflineVaultSession() {
+  const session = getActiveOfflineVaultSession();
+
+  if (!session) {
+    throw new Error("Expected an active offline vault session");
+  }
+
+  return session;
 }
 
 async function waitForAuthState(
@@ -1401,6 +1412,54 @@ describe("useAuth", () => {
     } finally {
       consoleWarnSpy.mockRestore();
       vaultClearSpy.mockRestore();
+    }
+  });
+
+  it("clears the cached vault session before persisting a revalidated native identity", async () => {
+    const storedUser = {
+      id: "stored-user",
+      name: "Stored User",
+      email: "stored-user@secpal.dev",
+      emailVerified: true,
+    };
+    const confirmedUser = {
+      id: "confirmed-user",
+      name: "Confirmed User",
+      email: "confirmed-user@secpal.dev",
+      emailVerified: true,
+    };
+    await authStorage.setUser(storedUser);
+    const activeVaultSession = requireActiveOfflineVaultSession();
+    installNativeAuthBridge({
+      getCurrentUser: vi.fn().mockResolvedValue(confirmedUser),
+    });
+    const replacementPersistence = createDeferredPromise<{
+      status: "superseded";
+    }>();
+    vi.spyOn(authStorage, "setUser").mockReturnValueOnce(
+      replacementPersistence.promise
+    );
+    const provider = renderHook(() => useAuth(), {
+      wrapper: AuthProvider,
+    });
+
+    try {
+      await waitFor(() => {
+        expect(
+          localStorage.getItem(AUTH_USER_REVALIDATION_REQUIRED_KEY)
+        ).not.toBeNull();
+      });
+
+      expect(getActiveOfflineVaultSession()).toBeNull();
+      expect(activeVaultSession.rootKeyBytes).toEqual(
+        new Uint8Array(activeVaultSession.rootKeyBytes.length)
+      );
+    } finally {
+      await act(async () => {
+        replacementPersistence.resolve({ status: "superseded" });
+        await replacementPersistence.promise;
+      });
+      provider.unmount();
     }
   });
 
@@ -4012,6 +4071,7 @@ describe("useAuth", () => {
     await waitFor(() => {
       expect(result.current.isAuthenticated).toBe(true);
     });
+    const activeVaultSession = requireActiveOfflineVaultSession();
 
     act(() => {
       localStorage.setItem(AUTH_USER_REVALIDATION_REQUIRED_KEY, "1");
@@ -4028,6 +4088,10 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.bootstrapRecoveryReason).toBe("network");
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(getActiveOfflineVaultSession()).toBeNull();
+    expect(activeVaultSession.rootKeyBytes).toEqual(
+      new Uint8Array(activeVaultSession.rootKeyBytes.length)
+    );
   });
 
   it("adopts a cross-tab native user when revalidation completes", async () => {
