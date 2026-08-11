@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { AUTH_VAULT_LIFECYCLE_LOCK_NAME } from "./offlineVaultKeys";
-import { awaitAbortable } from "./abortablePromise";
+import { awaitAbortable, throwIfAborted } from "./abortablePromise";
 
 export type VaultLifecycleLockAcquisition =
   { status: "acquired" } | { status: "failed"; error: unknown };
@@ -36,11 +36,14 @@ export async function runWithOfflineVaultLifecycleLock<T>(
   return lockManager.request(
     AUTH_VAULT_LIFECYCLE_LOCK_NAME,
     { mode: "exclusive", signal },
-    () =>
-      awaitAbortable(
+    () => {
+      throwIfAborted(signal);
+
+      return awaitAbortable(
         Promise.resolve().then(() => operation(signal)),
         signal
-      )
+      );
+    }
   );
 }
 

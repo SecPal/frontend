@@ -69,4 +69,34 @@ describe("offline vault lifecycle lock", () => {
       name: "AbortError",
     });
   });
+
+  it("does not start an operation after its queued Web Lock request was aborted", async () => {
+    const controller = new AbortController();
+    const operation = vi.fn().mockResolvedValue("unsafe");
+    Object.defineProperty(navigator, "locks", {
+      configurable: true,
+      value: {
+        request: vi.fn(
+          async <T>(
+            name: string,
+            options: LockOptions,
+            callback: (lock: Lock) => T | PromiseLike<T>
+          ): Promise<T> => {
+            controller.abort();
+            return callback({
+              name,
+              mode: options.mode ?? "exclusive",
+            } as Lock);
+          }
+        ),
+      },
+    });
+
+    await expect(
+      runWithOfflineVaultLifecycleLock(operation, controller.signal)
+    ).rejects.toMatchObject({ name: "AbortError" });
+    await Promise.resolve();
+
+    expect(operation).not.toHaveBeenCalled();
+  });
 });
