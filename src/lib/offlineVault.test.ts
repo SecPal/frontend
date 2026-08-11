@@ -6,6 +6,7 @@ import Dexie from "dexie";
 import type { PersistedAuthUser } from "../services/authState";
 import { db, type OrganizationalUnitCacheEntry } from "./db";
 import {
+  AUTH_VAULT_LOCK_KEY,
   AUTH_VAULT_STORAGE_KEY,
   clearOfflineVaultSession,
   initializeOfflineVault,
@@ -129,6 +130,35 @@ describe("offlineVault", () => {
         authTag: expect.any(String),
       })
     );
+  });
+
+  it("blocks cached vault reads and writes while another tab's lock marker is active", async () => {
+    await initializeOfflineVault(persistedUser);
+    await storeVaultAnalyticsEvent({
+      type: "page_view",
+      category: "navigation",
+      action: "view_dashboard",
+      timestamp: Date.now(),
+      synced: false,
+      sessionId: "session-before-lock",
+      userId: persistedUser.id,
+    });
+
+    localStorage.setItem(AUTH_VAULT_LOCK_KEY, "1");
+
+    await expect(
+      storeVaultAnalyticsEvent({
+        type: "page_view",
+        category: "navigation",
+        action: "view_locked_dashboard",
+        timestamp: Date.now(),
+        synced: false,
+        sessionId: "session-after-lock",
+        userId: persistedUser.id,
+      })
+    ).rejects.toThrow("Offline vault is not available.");
+    await expect(listVaultAnalyticsEvents()).resolves.toEqual([]);
+    expect(await db.vaultAnalytics.count()).toBe(1);
   });
 
   it("abandons a stalled database open when vault persistence is cancelled", async () => {

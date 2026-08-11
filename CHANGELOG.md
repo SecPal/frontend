@@ -114,7 +114,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   before they can abort the active writer for a newer authentication cycle.
   Native identity revalidation now zeroizes the superseded in-memory vault
   root key immediately in both the confirming tab and other open tabs before
-  replacement persistence can begin.
+  replacement persistence can begin. Vault locks observed through cross-tab
+  storage changes or BFCache restoration now also zeroize the active in-memory
+  root key before exposing the locked UI state, and ordinary background vault
+  reads and writes remain blocked while the lock marker is active.
   Cancellable database opening cannot retain a stalled auth persistence
   attempt. Concurrent tabs reuse an active revalidation owner token instead of
   invalidating each other's confirmed replacement persistence, adopt a newly

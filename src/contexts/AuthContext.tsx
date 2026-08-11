@@ -884,9 +884,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [handleNativeLogout]);
 
-  const lock = useCallback(() => {
-    authStorage.lockVault();
-    invalidateBootstrapRevalidation();
+  const enterLockedVaultState = useCallback(() => {
+    clearActiveOfflineVaultSession();
     setBootstrapRecoveryReason(null);
     setUser(null);
     setIsPrivacyShielded(false);
@@ -894,7 +893,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
     // Vault lock is a recoverable local state, so keep offline session access enabled.
     syncOfflineAuthState(true);
-  }, [invalidateBootstrapRevalidation, syncOfflineAuthState]);
+  }, [syncOfflineAuthState]);
+
+  const lock = useCallback(() => {
+    authStorage.lockVault();
+    invalidateBootstrapRevalidation();
+    enterLockedVaultState();
+  }, [enterLockedVaultState, invalidateBootstrapRevalidation]);
 
   const reconcileVaultUnlockLogoutBarrier = useCallback(() => {
     if (!hasLogoutBarrierRef.current && !syncBarrierStateFromStorage()) {
@@ -910,13 +915,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    setBootstrapRecoveryReason(null);
-    setUser(null);
-    setIsPrivacyShielded(false);
-    setIsVaultLocked(true);
-    setIsLoading(false);
-    syncOfflineAuthState(true);
-  }, [reconcileVaultUnlockLogoutBarrier, syncOfflineAuthState]);
+    enterLockedVaultState();
+  }, [enterLockedVaultState, reconcileVaultUnlockLogoutBarrier]);
 
   const applyVaultUnlockResult = useCallback(
     (result: AuthVaultUnlockResult): boolean => {
@@ -1309,11 +1309,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const restoreAndRevalidate = async () => {
       if (authStorage.hasVaultLock?.()) {
-        setBootstrapRecoveryReason(null);
-        setUser(null);
-        setIsVaultLocked(true);
-        setIsLoading(false);
-        syncOfflineAuthState(true);
+        enterLockedVaultState();
         return;
       }
 
@@ -1446,6 +1442,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     authTransport,
     bootstrapRetryKey,
     clearAuthenticatedState,
+    enterLockedVaultState,
     invalidateBootstrapRevalidation,
     persistAuthenticatedUser,
     reconcileActiveBarrierState,
@@ -1557,12 +1554,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event.key === AUTH_VAULT_LOCK_KEY) {
         if (event.newValue !== null) {
           invalidateBootstrapRevalidation();
-          setBootstrapRecoveryReason(null);
-          setUser(null);
-          setIsPrivacyShielded(false);
-          setIsVaultLocked(true);
-          setIsLoading(false);
-          syncOfflineAuthState(true);
+          enterLockedVaultState();
           return;
         }
 
@@ -1612,11 +1604,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         );
         invalidateBootstrapRevalidation();
-        setBootstrapRecoveryReason(null);
-        setUser(null);
-        setIsVaultLocked(true);
-        setIsLoading(false);
-        syncOfflineAuthState(true);
+        enterLockedVaultState();
         return;
       }
 
@@ -1631,6 +1619,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [
     applyVaultUnlockResult,
     clearAuthenticatedState,
+    enterLockedVaultState,
     invalidateBootstrapRevalidation,
     preserveLockedVault,
     revalidateSessionAfterStorageMismatch,
@@ -1650,12 +1639,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       void (async () => {
         if (authStorage.hasVaultLock?.()) {
-          setBootstrapRecoveryReason(null);
-          setUser(null);
-          setIsPrivacyShielded(false);
-          setIsVaultLocked(true);
-          setIsLoading(false);
-          syncOfflineAuthState(true);
+          enterLockedVaultState();
           return;
         }
 
@@ -1710,6 +1694,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [
     authTransport.kind,
     clearAuthenticatedState,
+    enterLockedVaultState,
     invalidateBootstrapRevalidation,
     reconcileActiveBarrierState,
     syncBarrierStateFromStorage,

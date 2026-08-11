@@ -3345,7 +3345,8 @@ describe("useAuth", () => {
     };
 
     await authStorage.setUser(mockUser);
-    authStorage.lockVault();
+    const activeVaultSession = requireActiveOfflineVaultSession();
+    localStorage.setItem(AUTH_VAULT_LOCK_KEY, "1");
     vi.mocked(syncOfflineSessionAccess).mockClear();
 
     const { result } = renderHook(() => useAuth(), {
@@ -3360,6 +3361,10 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(syncOfflineSessionAccess).toHaveBeenCalledWith(true);
     expect(syncOfflineSessionAccess).not.toHaveBeenCalledWith(false);
+    expect(getActiveOfflineVaultSession()).toBeNull();
+    expect(activeVaultSession.rootKeyBytes).toEqual(
+      new Uint8Array(activeVaultSession.rootKeyBytes.length)
+    );
   });
 
   it("unlocks the vault after a browser-session CSRF token rotation while locked", async () => {
@@ -3522,6 +3527,7 @@ describe("useAuth", () => {
     await waitFor(() => {
       expect(result.current.isAuthenticated).toBe(true);
     });
+    const activeVaultSession = requireActiveOfflineVaultSession();
 
     act(() => {
       localStorage.setItem(AUTH_VAULT_LOCK_KEY, "1");
@@ -3541,6 +3547,10 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(getActiveOfflineVaultSession()).toBeNull();
+    expect(activeVaultSession.rootKeyBytes).toEqual(
+      new Uint8Array(activeVaultSession.rootKeyBytes.length)
+    );
 
     act(() => {
       localStorage.removeItem(AUTH_VAULT_LOCK_KEY);
@@ -3582,23 +3592,10 @@ describe("useAuth", () => {
     await waitFor(() => {
       expect(result.current.isAuthenticated).toBe(true);
     });
+    const activeVaultSession = requireActiveOfflineVaultSession();
 
     act(() => {
       localStorage.setItem(AUTH_VAULT_LOCK_KEY, "1");
-      const crossTabLockEvent = new Event("storage");
-      Object.defineProperties(crossTabLockEvent, {
-        key: { value: AUTH_VAULT_LOCK_KEY },
-        newValue: { value: "1" },
-        storageArea: { value: localStorage },
-      } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
-      window.dispatchEvent(crossTabLockEvent);
-    });
-
-    await waitFor(() => {
-      expect(result.current.isVaultLocked).toBe(true);
-    });
-
-    act(() => {
       localStorage.setItem(AUTH_VAULT_STORAGE_KEY, storedVaultState as string);
       const crossTabVaultStateEvent = new Event("storage");
       Object.defineProperties(crossTabVaultStateEvent, {
@@ -3618,6 +3615,10 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
     expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(getActiveOfflineVaultSession()).toBeNull();
+    expect(activeVaultSession.rootKeyBytes).toEqual(
+      new Uint8Array(activeVaultSession.rootKeyBytes.length)
+    );
   });
 
   it("updates isAuthenticated when user changes", async () => {
@@ -4662,6 +4663,7 @@ describe("useAuth", () => {
     await waitFor(() => {
       expect(result.current.isAuthenticated).toBe(true);
     });
+    const activeVaultSession = requireActiveOfflineVaultSession();
 
     act(() => {
       result.current.showPrivacyShield?.();
@@ -4671,7 +4673,7 @@ describe("useAuth", () => {
     expect(result.current.sensitiveUiState).toBe("privacy-shield");
 
     act(() => {
-      authStorage.lockVault?.();
+      localStorage.setItem(AUTH_VAULT_LOCK_KEY, "1");
       window.dispatchEvent(
         new PageTransitionEvent("pageshow", { persisted: true })
       );
@@ -4685,6 +4687,10 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(result.current.isPrivacyShielded).toBe(false);
     expect(result.current.sensitiveUiState).toBe("vault-locked");
+    expect(getActiveOfflineVaultSession()).toBeNull();
+    expect(activeVaultSession.rootKeyBytes).toEqual(
+      new Uint8Array(activeVaultSession.rootKeyBytes.length)
+    );
   });
 
   it("ignores pageshow that is not a BFCache restore (persisted=false)", () => {

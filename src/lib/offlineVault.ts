@@ -136,6 +136,10 @@ export interface OfflineVaultOperationOptions {
   shouldCommit?: () => boolean;
 }
 
+interface OfflineVaultReadOptions extends OfflineVaultOperationOptions {
+  allowLockedVault?: boolean;
+}
+
 function throwIfVaultOperationAborted(signal?: AbortSignal): void {
   throwIfAborted(signal);
 }
@@ -1439,9 +1443,15 @@ async function ensureVaultOrganizationalUnitIndexes(
 
 async function ensureOfflineVaultSession(
   signal?: AbortSignal,
-  lifecycleLockHeld = false
+  lifecycleLockHeld = false,
+  allowLockedVault = false
 ): Promise<VaultSession | null> {
   throwIfVaultOperationAborted(signal);
+
+  if (!allowLockedVault && isOfflineVaultLocked()) {
+    return null;
+  }
+
   let activeVaultSession = getActiveOfflineVaultSession<VaultSession>();
   const currentKeyMaterial = getAuthVaultKeyMaterial();
   const storedState = getStoredVaultState();
@@ -1481,6 +1491,10 @@ async function ensureOfflineVaultSession(
           return null;
         }
 
+        if (!allowLockedVault && isOfflineVaultLocked()) {
+          return null;
+        }
+
         setActiveOfflineVaultSession(rewrittenSession);
 
         return rewrittenSession;
@@ -1499,6 +1513,11 @@ async function ensureOfflineVaultSession(
     signal
   );
   throwIfVaultOperationAborted(signal);
+
+  if (!allowLockedVault && isOfflineVaultLocked()) {
+    rootKeyBytes?.fill(0);
+    return null;
+  }
 
   if (!rootKeyBytes) {
     if (
@@ -1551,6 +1570,12 @@ async function ensureOfflineVaultSession(
   }
 
   throwIfVaultOperationAborted(signal);
+
+  if (!allowLockedVault && isOfflineVaultLocked()) {
+    activeVaultSession.rootKeyBytes.fill(0);
+    return null;
+  }
+
   setActiveOfflineVaultSession(activeVaultSession);
 
   return activeVaultSession;
@@ -1967,9 +1992,13 @@ export async function initializeOfflineVault(
 }
 
 export async function readPersistedAuthUserFromVault(
-  options: OfflineVaultOperationOptions = {}
+  options: OfflineVaultReadOptions = {}
 ): Promise<PersistedAuthUser | null> {
-  const session = await ensureOfflineVaultSession(options.signal);
+  const session = await ensureOfflineVaultSession(
+    options.signal,
+    false,
+    options.allowLockedVault ?? false
+  );
   throwIfVaultOperationAborted(options.signal);
 
   if (!session) {

@@ -735,7 +735,10 @@ class LocalStorageAuthStorage implements AuthStorage {
         throw error;
       }
 
-      const storedVaultUser = await readPersistedAuthUserFromVault({ signal });
+      const storedVaultUser = await readPersistedAuthUserFromVault({
+        signal,
+        allowLockedVault,
+      });
       throwIfAborted(signal);
 
       if (!storedVaultUser) {
