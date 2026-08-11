@@ -589,6 +589,27 @@ export async function clearInvalidOfflineVaultArtifacts(
   clearStoredOfflineVaultState();
 }
 
+async function clearInvalidOfflineVaultArtifactsIfCurrent(
+  expectedState: AuthVaultStateEnvelope,
+  options: OfflineVaultOperationOptions = {},
+  lifecycleLockHeld = false
+): Promise<void> {
+  const clearIfCurrent = async (): Promise<void> => {
+    throwIfVaultOperationAborted(options.signal);
+    const currentState = getStoredVaultState();
+
+    if (JSON.stringify(currentState) !== JSON.stringify(expectedState)) {
+      return;
+    }
+
+    await clearInvalidOfflineVaultArtifacts(options);
+  };
+
+  await (lifecycleLockHeld
+    ? clearIfCurrent()
+    : runWithOfflineVaultLifecycleLock(clearIfCurrent, options.signal));
+}
+
 async function deriveVaultWrapperKeys(
   keyMaterial: string,
   salt: Uint8Array
@@ -1427,7 +1448,8 @@ async function ensureVaultOrganizationalUnitIndexes(
 }
 
 async function ensureOfflineVaultSession(
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  lifecycleLockHeld = false
 ): Promise<VaultSession | null> {
   throwIfVaultOperationAborted(signal);
   let activeVaultSession = getActiveOfflineVaultSession<VaultSession>();
@@ -1456,15 +1478,22 @@ async function ensureOfflineVaultSession(
       ) {
         return activeVaultSession;
       } else {
-        activeVaultSession = await maybeRewriteStoredVaultState(
+        const rewrittenSession = await maybeRewriteStoredVaultState(
           activeVaultSession,
           storedState,
-          signal
+          signal,
+          lifecycleLockHeld
         );
         throwIfVaultOperationAborted(signal);
-        setActiveOfflineVaultSession(activeVaultSession);
 
-        return activeVaultSession;
+        if (!rewrittenSession) {
+          clearOfflineVaultSession();
+          return null;
+        }
+
+        setActiveOfflineVaultSession(rewrittenSession);
+
+        return rewrittenSession;
       }
     } else {
       clearOfflineVaultSession();
@@ -1491,7 +1520,11 @@ async function ensureOfflineVaultSession(
       return null;
     }
 
-    await clearInvalidOfflineVaultArtifacts({ signal });
+    await clearInvalidOfflineVaultArtifactsIfCurrent(
+      storedState,
+      { signal },
+      lifecycleLockHeld
+    );
     return null;
   }
 
@@ -1512,11 +1545,19 @@ async function ensureOfflineVaultSession(
     storedWrapperCacheKey !== null &&
     activeVaultSession.wrapperCacheKey !== storedWrapperCacheKey
   ) {
-    activeVaultSession = await maybeRewriteStoredVaultState(
+    const rewrittenSession = await maybeRewriteStoredVaultState(
       activeVaultSession,
       storedState,
-      signal
+      signal,
+      lifecycleLockHeld
     );
+
+    if (!rewrittenSession) {
+      clearOfflineVaultSession();
+      return null;
+    }
+
+    activeVaultSession = rewrittenSession;
   }
 
   throwIfVaultOperationAborted(signal);
@@ -1528,8 +1569,9 @@ async function ensureOfflineVaultSession(
 async function maybeRewriteStoredVaultState(
   session: VaultSession,
   storedState: AuthVaultStateEnvelope,
-  signal?: AbortSignal
-): Promise<VaultSession> {
+  signal?: AbortSignal,
+  lifecycleLockHeld = false
+): Promise<VaultSession | null> {
   const currentKeyMaterial = getAuthVaultKeyMaterial();
   const currentStoredWrapperCacheKey = getStoredVaultWrapperCacheKey(
     storedState,
@@ -1569,24 +1611,37 @@ async function maybeRewriteStoredVaultState(
     rewrittenState,
     storedState
   );
-  setStoredVaultState(rewrittenStateWithLifecycle);
+  const expectedStoredState = JSON.stringify(storedState);
+  const commitRewrite = async (): Promise<VaultSession | null> => {
+    throwIfVaultOperationAborted(signal);
 
-  // Re-read key material after the async encrypt so wrapperCacheKey is derived
-  // from the same key material that encryptVaultRootKeyBytes used internally,
-  // reducing drift if XSRF-TOKEN rotated during the await.
-  const postWriteKeyMaterial = getAuthVaultKeyMaterial();
+    if (localStorage.getItem(AUTH_VAULT_STORAGE_KEY) !== expectedStoredState) {
+      return null;
+    }
 
-  return {
-    ...session,
-    envelopeCacheKey: getStoredVaultEnvelopeCacheKey(
-      rewrittenStateWithLifecycle
-    ),
-    wrapperCacheKey:
-      getStoredVaultWrapperCacheKey(
-        rewrittenStateWithLifecycle,
-        postWriteKeyMaterial
-      ) ?? session.wrapperCacheKey,
+    setStoredVaultState(rewrittenStateWithLifecycle);
+
+    // Re-read key material after the async encrypt so wrapperCacheKey is
+    // derived from the same key material that encryptVaultRootKeyBytes used
+    // internally, reducing drift if XSRF-TOKEN rotated during the await.
+    const postWriteKeyMaterial = getAuthVaultKeyMaterial();
+
+    return {
+      ...session,
+      envelopeCacheKey: getStoredVaultEnvelopeCacheKey(
+        rewrittenStateWithLifecycle
+      ),
+      wrapperCacheKey:
+        getStoredVaultWrapperCacheKey(
+          rewrittenStateWithLifecycle,
+          postWriteKeyMaterial
+        ) ?? session.wrapperCacheKey,
+    };
   };
+
+  return lifecycleLockHeld
+    ? commitRewrite()
+    : runWithOfflineVaultLifecycleLock(commitRewrite, signal);
 }
 
 async function ensureVaultSessionForUser(
@@ -1599,7 +1654,7 @@ async function ensureVaultSessionForUser(
   throwIfVaultOperationAborted(signal);
   const subjectHash = await computeSubjectHash(user.id);
   throwIfVaultOperationAborted(signal);
-  const currentSession = await ensureOfflineVaultSession(signal);
+  const currentSession = await ensureOfflineVaultSession(signal, true);
   const existingStoredState = getStoredVaultState();
 
   if (!currentSession && existingStoredState) {
@@ -1608,12 +1663,19 @@ async function ensureVaultSessionForUser(
 
   if (currentSession && currentSession.subjectHash === subjectHash) {
     if (existingStoredState) {
+      const rewrittenSession = await maybeRewriteStoredVaultState(
+        currentSession,
+        existingStoredState,
+        signal,
+        true
+      );
+
+      if (!rewrittenSession) {
+        throw new Error("Stored auth vault changed during wrapper update.");
+      }
+
       return {
-        session: await maybeRewriteStoredVaultState(
-          currentSession,
-          existingStoredState,
-          signal
-        ),
+        session: rewrittenSession,
         pendingStoredState: null,
       };
     }
@@ -1924,6 +1986,17 @@ export async function readPersistedAuthUserFromVault(
     return null;
   }
 
+  const observedState = getStoredVaultState();
+
+  if (
+    !observedState ||
+    observedState.subjectHash !== session.subjectHash ||
+    getStoredVaultEnvelopeCacheKey(observedState) !== session.envelopeCacheKey
+  ) {
+    clearOfflineVaultSession();
+    return null;
+  }
+
   await ensureVaultDatabaseOpen(options.signal);
   throwIfVaultOperationAborted(options.signal);
 
@@ -1938,7 +2011,7 @@ export async function readPersistedAuthUserFromVault(
       return null;
     }
 
-    await clearInvalidOfflineVaultArtifacts(options);
+    await clearInvalidOfflineVaultArtifactsIfCurrent(observedState, options);
     return null;
   }
 
@@ -1958,7 +2031,7 @@ export async function readPersistedAuthUserFromVault(
       "Failed to parse stored user data:",
       new SyntaxError("Invalid encrypted vault profile payload.")
     );
-    await clearInvalidOfflineVaultArtifacts(options);
+    await clearInvalidOfflineVaultArtifactsIfCurrent(observedState, options);
     return null;
   }
 

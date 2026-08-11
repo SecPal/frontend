@@ -465,6 +465,99 @@ describe("offlineVault", () => {
     expect(rotatedVaultState).not.toBe(initialVaultState);
   });
 
+  it("does not let a stale wrapper rewrite replace a newer user's vault", async () => {
+    await initializeOfflineVault(persistedUser);
+    clearOfflineVaultSession();
+    setCsrfTokenCookie("rotated-csrf-token");
+
+    const firstWrapper = createDeferredPromise<{
+      wrappedRootKey: string;
+    }>();
+    let firstRootKeyBase64: string | null = null;
+    const nativeBridge = installNativeVaultBridge({
+      isVaultDeviceBoundWrapperAvailable: vi.fn().mockResolvedValue(true),
+      wrapVaultRootKey: vi.fn(
+        async ({ rootKeyBase64 }: { rootKeyBase64: string }) => {
+          if (firstRootKeyBase64 === null) {
+            firstRootKeyBase64 = rootKeyBase64;
+            return firstWrapper.promise;
+          }
+
+          return { wrappedRootKey: `wrapped:${rootKeyBase64}` };
+        }
+      ),
+      unwrapVaultRootKey: vi.fn(
+        async ({ wrappedRootKey }: { wrappedRootKey: string }) => ({
+          rootKeyBase64: wrappedRootKey.replace("wrapped:", ""),
+        })
+      ),
+    });
+    const staleRead = readPersistedAuthUserFromVault();
+
+    await vi.waitFor(() => {
+      expect(nativeBridge.wrapVaultRootKey).toHaveBeenCalledTimes(1);
+    });
+
+    const replacementUser = {
+      ...persistedUser,
+      id: "replacement-user",
+      email: "replacement@secpal.dev",
+    };
+    await initializeOfflineVault(replacementUser);
+    const replacementState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+    const replacementProfile = await db.vaultProfile.get("profile");
+
+    if (firstRootKeyBase64 === null) {
+      throw new Error("Expected the stale wrapper rewrite to start.");
+    }
+
+    firstWrapper.resolve({
+      wrappedRootKey: `wrapped:${firstRootKeyBase64}`,
+    });
+    await expect(staleRead).resolves.toBeNull();
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(replacementState);
+    expect(await db.vaultProfile.get("profile")).toEqual(replacementProfile);
+    clearOfflineVaultSession();
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      replacementUser
+    );
+  });
+
+  it("does not let a stale profile read purge a newer user's vault", async () => {
+    await initializeOfflineVault(persistedUser);
+    const releaseProfileRead = createDeferredPromise<void>();
+    const profileReadStarted = createDeferredPromise<void>();
+    const originalGet = db.vaultProfile.get.bind(db.vaultProfile);
+    vi.spyOn(db.vaultProfile, "get").mockImplementationOnce((key) => {
+      profileReadStarted.resolve();
+      return Dexie.Promise.resolve(releaseProfileRead.promise).then(() =>
+        originalGet(key)
+      );
+    });
+    const staleRead = readPersistedAuthUserFromVault();
+
+    await profileReadStarted.promise;
+    const replacementUser = {
+      ...persistedUser,
+      id: "profile-replacement-user",
+      email: "profile-replacement@secpal.dev",
+    };
+    await initializeOfflineVault(replacementUser);
+    const replacementState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+    const replacementProfile = await originalGet("profile");
+
+    releaseProfileRead.resolve();
+    await expect(staleRead).resolves.toBeNull();
+
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(replacementState);
+    expect(await originalGet("profile")).toEqual(replacementProfile);
+    clearOfflineVaultSession();
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      replacementUser
+    );
+  });
+
   it("keeps the vault readable when the current csrf cookie is missing but a recent key is cached", async () => {
     await initializeOfflineVault(persistedUser);
 

@@ -99,12 +99,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   relying on an expiring IndexedDB owner lease. Cached native sessions are
   additionally bound to the complete stored vault envelope, so replacing a
   same-user WebCrypto vault cannot reuse an obsolete in-memory root key or
-  clear valid replacement data. Invalid-state and ordinary vault cleanup now
-  use the same lifecycle lock, and destructive logout cleanup stops safely if
-  that lock cannot be acquired. Aborted queued lock requests are rejected
-  before their protected operation is created, preventing stray cleanup work
-  and unhandled cancellation rejections during a following authentication
-  lifecycle.
+  clear valid replacement data. Invalid cleanup and asynchronous wrapper
+  rewrites now revalidate the exact observed vault under the lifecycle lock,
+  so stale work cannot purge or overwrite a newer login. Invalid-state and
+  ordinary vault cleanup use the same lifecycle lock, and destructive logout
+  cleanup stops safely if that lock cannot be acquired. Aborted queued lock
+  requests are rejected before their protected operation is created,
+  preventing stray cleanup work and unhandled cancellation rejections during
+  a following authentication lifecycle.
   Cancellable database opening cannot retain a stalled auth persistence
   attempt. Concurrent tabs reuse an active revalidation owner token instead of
   invalidating each other's confirmed replacement persistence, adopt a newly

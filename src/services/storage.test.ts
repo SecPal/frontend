@@ -14,6 +14,7 @@ import {
 import * as offlineVault from "../lib/offlineVault";
 import { db } from "../lib/db";
 import { getActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
+import { runWithOfflineVaultLifecycleLock } from "../lib/offlineVaultLifecycleLock";
 
 const AUTH_STORAGE_SCHEME = "pbkdf2-aes-cbc-hmac-sha256";
 const LEGACY_AUTH_STORAGE_VERSION = 1;
@@ -918,29 +919,41 @@ describe("authStorage", () => {
       email: "next-user@secpal.dev",
       emailVerified: true,
     };
-    const releaseInvalidCleanup = createDeferredPromise<void>();
-    const originalClearInvalidOfflineVaultArtifacts =
-      offlineVault.clearInvalidOfflineVaultArtifacts;
-    const clearInvalidArtifactsSpy = vi
-      .spyOn(offlineVault, "clearInvalidOfflineVaultArtifacts")
-      .mockImplementationOnce(async (options) => {
-        await releaseInvalidCleanup.promise;
-        await originalClearInvalidOfflineVaultArtifacts(options);
-      });
+    await expect(authStorage.setUser(nextUser)).resolves.toEqual({
+      status: "persisted",
+    });
+    const nextVaultState = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+    const nextProfile = await db.vaultProfile.get("profile");
+
+    if (!nextVaultState || !nextProfile) {
+      throw new Error("Expected a complete replacement vault.");
+    }
+
+    await db.vaultProfile.clear();
+    localStorage.clear();
+    clearOfflineVaultSession();
     localStorage.setItem("auth_user", "invalid-json");
+    const releaseNewLogin = createDeferredPromise<void>();
+    const newLoginLockAcquired = createDeferredPromise<void>();
+    const lockRequestSpy = vi.spyOn(navigator.locks, "request");
+    const newLogin = runWithOfflineVaultLifecycleLock(async () => {
+      newLoginLockAcquired.resolve();
+      await releaseNewLogin.promise;
+      localStorage.removeItem("auth_user");
+      localStorage.setItem(AUTH_VAULT_STORAGE_KEY, nextVaultState);
+      await db.vaultProfile.put(nextProfile);
+    });
+
+    await newLoginLockAcquired.promise;
     const invalidRead = authStorage.getUser();
 
     try {
       await vi.waitFor(() => {
-        expect(clearInvalidArtifactsSpy).toHaveBeenCalledTimes(1);
-      });
-
-      await expect(authStorage.setUser(nextUser)).resolves.toEqual({
-        status: "persisted",
+        expect(lockRequestSpy).toHaveBeenCalledTimes(2);
       });
     } finally {
-      releaseInvalidCleanup.resolve();
-      await Promise.allSettled([invalidRead]);
+      releaseNewLogin.resolve();
+      await Promise.allSettled([newLogin, invalidRead]);
     }
 
     await expect(invalidRead).resolves.toBeNull();

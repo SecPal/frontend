@@ -319,6 +319,13 @@ interface AuthStorageClearOptions {
   allowBarrierSkipUpgrade?: boolean;
 }
 
+interface StoredUserMarkerSnapshot {
+  user: string | null;
+  vault: string | null;
+  vaultLock: string | null;
+  revalidationOwner: string | null;
+}
+
 function isAbortError(error: unknown): boolean {
   return (
     typeof error === "object" &&
@@ -626,11 +633,41 @@ class LocalStorageAuthStorage implements AuthStorage {
     localStorage.removeItem(AUTH_USER_REVALIDATION_REQUIRED_KEY);
   }
 
-  private async clearInvalidStoredUser(signal?: AbortSignal): Promise<null> {
+  private captureStoredUserMarkers(): StoredUserMarkerSnapshot {
+    return {
+      user: localStorage.getItem(this.USER_KEY),
+      vault: localStorage.getItem(this.VAULT_KEY),
+      vaultLock: localStorage.getItem(this.VAULT_LOCK_KEY),
+      revalidationOwner: localStorage.getItem(
+        AUTH_USER_REVALIDATION_REQUIRED_KEY
+      ),
+    };
+  }
+
+  private storedUserMarkersMatch(expected: StoredUserMarkerSnapshot): boolean {
+    const current = this.captureStoredUserMarkers();
+
+    return (
+      current.user === expected.user &&
+      current.vault === expected.vault &&
+      current.vaultLock === expected.vaultLock &&
+      current.revalidationOwner === expected.revalidationOwner
+    );
+  }
+
+  private async clearInvalidStoredUser(
+    signal?: AbortSignal,
+    expectedMarkers = this.captureStoredUserMarkers()
+  ): Promise<null> {
     await this.runExclusiveCleanup(
       (cleanupSignal) =>
         runWithOfflineVaultLifecycleLock(async (lifecycleSignal) => {
           const effectiveSignal = lifecycleSignal ?? cleanupSignal;
+
+          if (!this.storedUserMarkersMatch(expectedMarkers)) {
+            return;
+          }
+
           let clearInvalidOfflineVaultArtifacts: typeof import("../lib/offlineVault").clearInvalidOfflineVaultArtifacts;
 
           try {
