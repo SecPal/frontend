@@ -31,7 +31,7 @@ jobs:
   project-automation:
     name: Project automation
     # main
-    uses: SecPal/.github/.github/workflows/project-automation-core.yml@fa88c750f53091e08d051df9c60a2a3c06d5ec03
+    uses: SecPal/.github/.github/workflows/project-automation-core.yml@1e32f4903bb62943eaf77bed9550bade29c8076f
     secrets:
       APP_ID: ${{ secrets.APP_ID }}
       APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
@@ -39,7 +39,7 @@ jobs:
   draft-reminder:
     name: Draft PR Reminder
     # main
-    uses: SecPal/.github/.github/workflows/draft-pr-reminder.yml@fa88c750f53091e08d051df9c60a2a3c06d5ec03
+    uses: SecPal/.github/.github/workflows/draft-pr-reminder.yml@1e32f4903bb62943eaf77bed9550bade29c8076f
     permissions:
       issues: write
       pull-requests: write
