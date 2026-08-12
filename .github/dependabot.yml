@@ -64,7 +64,32 @@ updates:
     pull-request-branch-name:
       separator: "-"
     groups:
-      minor-and-patch:
+      # These refs intentionally track a branch commit rather than a release,
+      # so Dependabot cannot assign them a semantic update type. Give them a
+      # readable title while keeping them on the manual-review path.
+      shared-workflow-pins:
+        patterns:
+          - "SecPal/.github/.github/workflows/*"
+      # Keep each versioned action group semver-homogeneous so PATCH, MINOR,
+      # and MAJOR remain visible and can be handled independently.
+      github-actions-patch:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "SecPal/.github/.github/workflows/*"
+        update-types:
+          - "patch"
+      github-actions-minor:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "SecPal/.github/.github/workflows/*"
         update-types:
           - "minor"
-          - "patch"
+      github-actions-major:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "SecPal/.github/.github/workflows/*"
+        update-types:
+          - "major"

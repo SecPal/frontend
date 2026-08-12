@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -105,11 +105,60 @@ describe("Dependabot configuration", () => {
     expect(reactRuntimeGroup).toContain('- "patch"');
   });
 
-  it("groups non-breaking GitHub Actions updates to reduce Dependabot PR noise", () => {
-    const configText = readConfigText();
+  it("keeps GitHub Actions update groups semver-homogeneous", () => {
+    const githubActionsUpdates = getPackageEcosystemSection(
+      readConfigText(),
+      "github-actions"
+    );
 
-    expect(configText).toContain('package-ecosystem: "github-actions"');
-    expect(configText).toContain("minor-and-patch:");
+    expect(githubActionsUpdates).not.toContain("minor-and-patch:");
+
+    for (const updateType of ["patch", "minor", "major"] as const) {
+      const group = getIndentedSection(
+        githubActionsUpdates,
+        `github-actions-${updateType}`
+      );
+
+      expect(group).toContain('- "*"');
+      expect(group).toContain('- "SecPal/.github/.github/workflows/*"');
+      expect(group).toContain(`- "${updateType}"`);
+
+      for (const otherType of ["patch", "minor", "major"] as const) {
+        if (otherType !== updateType) {
+          expect(group).not.toContain(`- "${otherType}"`);
+        }
+      }
+    }
+  });
+
+  it("groups SHA-pinned shared workflows without assigning a fake semver type", () => {
+    const githubActionsUpdates = getPackageEcosystemSection(
+      readConfigText(),
+      "github-actions"
+    );
+    const sharedWorkflowPins = getIndentedSection(
+      githubActionsUpdates,
+      "shared-workflow-pins"
+    );
+
+    expect(sharedWorkflowPins).toContain(
+      '- "SecPal/.github/.github/workflows/*"'
+    );
+    expect(sharedWorkflowPins).not.toContain("update-types:");
+
+    const workflowsPath = join(process.cwd(), ".github", "workflows");
+    const sharedWorkflowRefs = readdirSync(workflowsPath)
+      .filter((fileName) => /\.ya?ml$/u.test(fileName))
+      .flatMap((fileName) => [
+        ...readFileSync(join(workflowsPath, fileName), "utf8").matchAll(
+          /uses:\s+SecPal\/.github\/.github\/workflows\/[^@\s]+@([^\s]+)/gu
+        ),
+      ]);
+
+    expect(sharedWorkflowRefs.length).toBeGreaterThan(0);
+    for (const [, ref] of sharedWorkflowRefs) {
+      expect(ref).toMatch(/^[a-f0-9]{40}$/u);
+    }
   });
 
   it("keeps top-level react runtime versions aligned", () => {

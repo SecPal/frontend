@@ -85,6 +85,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restored explicit PATCH, MINOR, and MAJOR grouping for versioned GitHub
+  Actions updates, while keeping unversioned SecPal reusable workflows pinned
+  to immutable commit SHAs in a separate, readable manual-review group.
 - Rehydrated native Android sessions after process restarts without requiring a
   local user snapshot, while preserving logout barriers, treating missing or
   unauthorized native tokens as logged out, and retaining retryable native
