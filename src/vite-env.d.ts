@@ -4,6 +4,8 @@
 /// <reference types="vite/client" />
 /// <reference types="vite-plugin-pwa/client" />
 
+declare const __SECPAL_RESOLVED_APP_SURFACE__: import("./platform/appSurfaceContract").AppSurface;
+
 interface ImportMetaEnv {
   readonly VITEST?: boolean;
   readonly VITE_API_URL?: string;

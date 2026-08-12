@@ -65,6 +65,28 @@ build modes such as `web`, `android`, and `ios` reject mock surfaces before an
 artifact is emitted. Use `android-native` for the Android WebView artifact and
 `web` for browser/PWA deployments.
 
+Every Vite build emits `build-metadata.json` at the artifact root as the stable
+downstream packaging contract. Its deterministic schema contains only the
+resolved application surface, Vite build mode, and whether the mode produces a
+production artifact. For example, `npm run build:android` emits:
+
+```json
+{
+  "schemaVersion": 1,
+  "applicationSurface": "android-native",
+  "buildMode": "android",
+  "production": true
+}
+```
+
+The application selector and this file receive the same value after
+`VITE_APP_SURFACE` has been resolved and validated once. Android and iOS
+packaging must verify `applicationSurface` in this file instead of inferring a
+surface from optimized JavaScript. `buildMode` and `production` distinguish
+preview/mock artifacts from deployable browser and native artifacts. The file
+is immutable build metadata: it contains no secrets, API credentials, runtime
+configuration, timestamps, or host-specific values.
+
 Playwright defaults local HTTP/HTTPS development and CI preview runs to the
 Android route surface so Android-specific shared UI stays covered. Select a
 surface explicitly with `PLAYWRIGHT_APP_SURFACE`:

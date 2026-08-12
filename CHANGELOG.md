@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added deterministic `build-metadata.json` artifacts that expose the resolved
+  application surface and build classification for downstream native packaging
+  verification without inspecting optimized JavaScript.
 - Added push-to-`main` publication for the official
   `ghcr.io/secpal/frontend` Web/PWA image with run-specific discovery tags,
   canonical OCI index digests, exact index-byte verification, deterministic

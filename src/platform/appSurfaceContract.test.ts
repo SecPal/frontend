@@ -2,7 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
 
 import { describe, expect, it } from "vitest";
-import { getAppSurfaceMode, resolveAppSurface } from "./appSurfaceContract";
+import {
+  createAppSurfaceBuildMetadata,
+  getAppSurfaceMode,
+  resolveAppSurface,
+  serializeAppSurfaceBuildMetadata,
+} from "./appSurfaceContract";
 
 describe("appSurfaceContract", () => {
   it.each([
@@ -46,4 +51,31 @@ describe("appSurfaceContract", () => {
   ] as const)("maps %s to the %s Vite mode family", (surface, expectedMode) => {
     expect(getAppSurfaceMode(surface)).toBe(expectedMode);
   });
+
+  it.each([
+    ["web", "web", true],
+    ["android-native", "android", true],
+    ["ios-native", "ios", true],
+    ["android-mock", "preview", false],
+    ["ios-mock", "preview", false],
+  ] as const)(
+    "creates deterministic metadata for the %s surface in %s mode",
+    (surface, buildMode, production) => {
+      const metadata = createAppSurfaceBuildMetadata(
+        surface,
+        buildMode,
+        production
+      );
+
+      expect(metadata).toEqual({
+        schemaVersion: 1,
+        applicationSurface: surface,
+        buildMode,
+        production,
+      });
+      expect(serializeAppSurfaceBuildMetadata(metadata)).toBe(
+        `{\n  "schemaVersion": 1,\n  "applicationSurface": "${surface}",\n  "buildMode": "${buildMode}",\n  "production": ${production}\n}\n`
+      );
+    }
+  );
 });
