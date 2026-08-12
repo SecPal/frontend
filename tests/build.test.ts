@@ -347,7 +347,7 @@ describe("Build Configuration and Source Verification", () => {
     });
   });
 
-  it("forwards custom Vite output directories to the build artifact and SBOM", () => {
+  it("forwards custom Vite output directories to the web artifact and SBOM", () => {
     const distRoot = mkdtempSync(path.join(tmpdir(), "secpal-build-output-"));
     const safeEnv = { ...process.env, VITE_APP_SURFACE: "web" };
     delete safeEnv.NODE_V8_COVERAGE;
@@ -355,7 +355,7 @@ describe("Build Configuration and Source Verification", () => {
     try {
       execFileSync(
         "npm",
-        ["run", "build", "--", "--outDir", distRoot, "--base", "/custom/"],
+        ["run", "build:web", "--", "--outDir", distRoot, "--base", "/custom/"],
         {
           cwd: repoRoot,
           stdio: "pipe",
@@ -395,6 +395,16 @@ describe("Build Configuration and Source Verification", () => {
         true
       );
       expect(existsSync(path.join(distRoot, "LICENSES/MIT.txt"))).toBe(true);
+      expect(
+        JSON.parse(
+          readFileSync(path.join(distRoot, "build-metadata.json"), "utf8")
+        )
+      ).toEqual({
+        schemaVersion: 1,
+        applicationSurface: "web",
+        buildMode: "web",
+        production: true,
+      });
       expect(readFileSync(path.join(distRoot, "index.html"), "utf8")).toContain(
         'src="/custom/'
       );
@@ -530,6 +540,16 @@ describe("Build Configuration and Source Verification", () => {
       expect(existsSync(path.join(distRoot, "THIRD-PARTY-NOTICES.md"))).toBe(
         true
       );
+      expect(
+        JSON.parse(
+          readFileSync(path.join(distRoot, "build-metadata.json"), "utf8")
+        )
+      ).toEqual({
+        schemaVersion: 1,
+        applicationSurface: "android-native",
+        buildMode: "android",
+        production: true,
+      });
     } finally {
       rmSync(distRoot, { recursive: true, force: true });
     }
@@ -784,6 +804,9 @@ jobs:
     expect(readme).toContain("npm run build:android:mock");
     expect(readme).toContain("PLAYWRIGHT_APP_SURFACE=android-mock");
     expect(readme).toContain("workspace previews keep the deployed bundle");
+    expect(readme).toContain("build-metadata.json");
+    expect(readme).toContain('"applicationSurface": "android-native"');
+    expect(readme).toContain("downstream packaging");
 
     expect(envExample).toContain("VITE_APP_SURFACE=web");
     expect(envExample).toContain(

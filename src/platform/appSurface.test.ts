@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 describe("app surface", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
     vi.resetModules();
   });
 
@@ -23,6 +24,17 @@ describe("app surface", () => {
     expect(surface.isIosNativeSurface).toBe(false);
     expect(surface.isIosSurface).toBe(false);
     expect(surface.isNativeSurface).toBe(false);
+  });
+
+  it("uses the build-resolved surface instead of parsing a decoy runtime value", async () => {
+    vi.stubEnv("VITE_APP_SURFACE", "web");
+    vi.stubGlobal("__SECPAL_RESOLVED_APP_SURFACE__", "android-native");
+
+    const surface = await import("./appSurface");
+
+    expect(surface.appSurface).toBe("android-native");
+    expect(surface.isAndroidNativeSurface).toBe(true);
+    expect(surface.isWebSurface).toBe(false);
   });
 
   it.each([

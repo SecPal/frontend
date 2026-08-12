@@ -12,6 +12,13 @@ export const appSurfaces = [
 export type AppSurface = (typeof appSurfaces)[number];
 export type AppSurfaceMode = "web" | "android" | "ios";
 
+export interface AppSurfaceBuildMetadata {
+  readonly schemaVersion: 1;
+  readonly applicationSurface: AppSurface;
+  readonly buildMode: string;
+  readonly production: boolean;
+}
+
 export const isAppSurface = (value: string): value is AppSurface =>
   appSurfaces.includes(value as AppSurface);
 
@@ -46,4 +53,23 @@ export function getAppSurfaceMode(surface: AppSurface): AppSurfaceMode {
   }
 
   return "ios";
+}
+
+export function createAppSurfaceBuildMetadata(
+  applicationSurface: AppSurface,
+  buildMode: string,
+  production: boolean
+): AppSurfaceBuildMetadata {
+  return {
+    schemaVersion: 1,
+    applicationSurface,
+    buildMode,
+    production,
+  };
+}
+
+export function serializeAppSurfaceBuildMetadata(
+  metadata: AppSurfaceBuildMetadata
+): string {
+  return `${JSON.stringify(metadata, null, 2)}\n`;
 }
