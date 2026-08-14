@@ -184,7 +184,7 @@ describe("EmployeeList", () => {
     expect(screen.getByText("Designer")).toBeInTheDocument();
   });
 
-  it("keeps employee rows visible with ID fallbacks when names fail", async () => {
+  it("keeps employee rows visible without exposing IDs when names fail", async () => {
     vi.mocked(legalEntityApi.listCustomerLegalEntities).mockRejectedValue(
       new Error("Names unavailable")
     );
@@ -192,12 +192,14 @@ describe("EmployeeList", () => {
     renderWithProviders();
 
     expect(await screen.findByText("John Doe")).toBeInTheDocument();
+    expect((await screen.findAllByText("Unavailable")).length).toBeGreaterThan(
+      0
+    );
     expect(
-      (await screen.findAllByText("legal-entity-1")).length
-    ).toBeGreaterThan(0);
-    expect(
-      (await screen.findAllByText("establishment-1")).length
-    ).toBeGreaterThan(0);
+      await screen.findByText(/assignment names could not be loaded/i)
+    ).toBeInTheDocument();
+    expect(screen.queryByText("legal-entity-1")).not.toBeInTheDocument();
+    expect(screen.queryByText("establishment-1")).not.toBeInTheDocument();
   });
 
   it("renders employees as mobile cards on narrow viewports", async () => {

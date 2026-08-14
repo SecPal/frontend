@@ -1558,6 +1558,10 @@ msgstr "We couldn't prepare this step for file uploads. Please try saving your d
 msgid "The customer was created, but its establishment assignments could not be completed. Review and save the assignments again."
 msgstr "The customer was created, but its establishment assignments could not be completed. Review and save the assignments again."
 
+#: src/pages/Employees/EmployeeList.tsx
+msgid "Assignment names could not be loaded"
+msgstr "Assignment names could not be loaded"
+
 #: src/components/EncryptionProgress.tsx
 msgid "Encrypting files..."
 msgstr "Encrypting files..."
@@ -1987,6 +1991,10 @@ msgstr "View"
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Validity Period"
 msgstr "Validity Period"
+
+#: src/pages/Employees/EmployeeList.tsx
+msgid "Unavailable"
+msgstr "Unavailable"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Authenticator app QR code"
@@ -3926,6 +3934,10 @@ msgstr "Activity Log Details"
 #: src/AuthenticatedApp.tsx
 msgid "View Profile"
 msgstr "View Profile"
+
+#: src/pages/Employees/EmployeeList.tsx
+msgid "Some Legal Entity or Establishment names are temporarily unavailable. Internal identifiers are hidden."
+msgstr "Some Legal Entity or Establishment names are temporarily unavailable. Internal identifiers are hidden."
 
 #. placeholder {0}: err.statusCode
 #: src/pages/Onboarding/OnboardingWizard.tsx

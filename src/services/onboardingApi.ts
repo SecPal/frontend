@@ -4,6 +4,7 @@
 import type { EmployeeStatus } from "@/types/api";
 import { apiConfig } from "../config";
 import { detectLocale } from "../i18n";
+import { createSecureRandomToken } from "../lib/secureRandom";
 import { ApiError } from "./ApiError";
 import { apiFetch, getCsrfTokenFromCookie } from "./csrf";
 
@@ -147,6 +148,32 @@ export interface OnboardingApiError {
 export interface OnboardingNationalityOption {
   code: string;
   name: string;
+}
+
+const onboardingUploadIdempotencyKeys = new WeakMap<
+  File,
+  Map<string, string>
+>();
+
+function getOnboardingUploadIdempotencyKey(
+  file: File,
+  submissionId: string,
+  documentType: string,
+  documentSubtype?: string
+): string {
+  const operation = JSON.stringify([
+    submissionId,
+    documentType,
+    documentSubtype ?? "",
+  ]);
+  const fileKeys = onboardingUploadIdempotencyKeys.get(file) ?? new Map();
+  const existingKey = fileKeys.get(operation);
+  if (existingKey) return existingKey;
+
+  const key = createSecureRandomToken();
+  fileKeys.set(operation, key);
+  onboardingUploadIdempotencyKeys.set(file, fileKeys);
+  return key;
 }
 
 async function parseErrorData(
@@ -496,6 +523,15 @@ export async function uploadOnboardingFile(
 
   const formData = new FormData();
   formData.append("file", file);
+  formData.append(
+    "idempotency_key",
+    getOnboardingUploadIdempotencyKey(
+      file,
+      submissionId,
+      documentType,
+      documentSubtype
+    )
+  );
   formData.append("document_type", documentType);
   if (documentSubtype) {
     formData.append("document_subtype", documentSubtype);

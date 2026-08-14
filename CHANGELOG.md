@@ -88,6 +88,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Bound employee establishment-name lookup fan-out so Android pages remain
+  within the native authenticated-request admission limit, surface lookup
+  failures without exposing raw domain identifiers, and attach a stable
+  per-file-and-operation idempotency key to onboarding upload retries (issues
+  #1677 and #1678).
+
 - Restored explicit PATCH, MINOR, and MAJOR grouping for versioned GitHub
   Actions updates, while keeping unversioned SecPal reusable workflows pinned
   to immutable commit SHAs in a separate, readable manual-review group.
