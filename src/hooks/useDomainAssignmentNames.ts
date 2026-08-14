@@ -31,6 +31,47 @@ const EMPTY_NAMES: DomainAssignmentNames = {
   hasError: false,
 };
 
+const MAX_CONCURRENT_ESTABLISHMENT_LOOKUPS = 8;
+
+async function settleWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  shouldContinue: () => boolean,
+  operation: (item: T) => Promise<R>
+): Promise<PromiseSettledResult<R>[]> {
+  const results: Array<PromiseSettledResult<R> | undefined> = new Array(
+    items.length
+  );
+  let nextIndex = 0;
+
+  async function worker() {
+    while (shouldContinue()) {
+      const index = nextIndex;
+      if (index >= items.length) return;
+      nextIndex += 1;
+
+      try {
+        results[index] = {
+          status: "fulfilled",
+          value: await operation(items[index]!),
+        };
+      } catch (reason) {
+        results[index] = { status: "rejected", reason };
+      }
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, items.length) }, async () =>
+      worker()
+    )
+  );
+
+  return results.filter(
+    (result): result is PromiseSettledResult<R> => result !== undefined
+  );
+}
+
 export function useDomainAssignmentNames(
   references: DomainAssignmentReference[]
 ): DomainAssignmentNames {
@@ -87,11 +128,14 @@ export function useDomainAssignmentNames(
               .map(([legalEntityId]) => legalEntityId)
           ),
         ];
-        const establishmentResults = await Promise.allSettled(
-          legalEntityIdsWithEstablishments.map(async (legalEntityId) => ({
+        const establishmentResults = await settleWithConcurrency(
+          legalEntityIdsWithEstablishments,
+          MAX_CONCURRENT_ESTABLISHMENT_LOOKUPS,
+          () => active,
+          async (legalEntityId) => ({
             legalEntityId,
             items: await listEstablishmentLookups(legalEntityId),
-          }))
+          })
         );
         if (!active) return;
 

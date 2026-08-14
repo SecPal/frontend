@@ -1558,6 +1558,10 @@ msgstr "Wir konnten diesen Schritt nicht für Dateiuploads vorbereiten. Bitte ve
 msgid "The customer was created, but its establishment assignments could not be completed. Review and save the assignments again."
 msgstr "Der Kunde wurde angelegt, aber seine Betriebsstättenzuordnungen konnten nicht abgeschlossen werden. Überprüfen und speichern Sie die Zuordnungen erneut."
 
+#: src/pages/Employees/EmployeeList.tsx
+msgid "Assignment names could not be loaded"
+msgstr "Zuordnungsnamen konnten nicht geladen werden"
+
 #: src/components/EncryptionProgress.tsx
 msgid "Encrypting files..."
 msgstr "Dateien verschlüsseln..."
@@ -1987,6 +1991,10 @@ msgstr "Anzeigen"
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Validity Period"
 msgstr "Gültigkeitsdauer"
+
+#: src/pages/Employees/EmployeeList.tsx
+msgid "Unavailable"
+msgstr "Nicht verfügbar"
 
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Authenticator app QR code"
@@ -3926,6 +3934,10 @@ msgstr "Details zum Aktivitätsprotokoll"
 #: src/AuthenticatedApp.tsx
 msgid "View Profile"
 msgstr "Profil ansehen"
+
+#: src/pages/Employees/EmployeeList.tsx
+msgid "Some Legal Entity or Establishment names are temporarily unavailable. Internal identifiers are hidden."
+msgstr "Einige Namen von Rechtsträgern oder Betriebsstätten sind vorübergehend nicht verfügbar. Interne Kennungen werden ausgeblendet."
 
 #. placeholder {0}: err.statusCode
 #: src/pages/Onboarding/OnboardingWizard.tsx

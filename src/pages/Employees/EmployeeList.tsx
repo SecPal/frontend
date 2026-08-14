@@ -107,6 +107,16 @@ function EmployeeTableSkeletonRows({
   );
 }
 
+function resolveDomainAssignmentLabel(
+  names: Record<string, string>,
+  id: string,
+  lookupFailed: boolean,
+  unavailableLabel: string
+): string {
+  if (!id) return "-";
+  return names[id] ?? (lookupFailed ? unavailableLabel : id);
+}
+
 /**
  * Employee List Page
  */
@@ -128,6 +138,7 @@ export function EmployeeList() {
   });
   const [useDesktopTable, setUseDesktopTable] = useState(readUseDesktopTable);
   const domainNames = useDomainAssignmentNames(employees);
+  const unavailableDomainLabel = _(msg`Unavailable`);
 
   useEffect(() => {
     if (
@@ -324,6 +335,20 @@ export function EmployeeList() {
         </Alert>
       )}
 
+      {domainNames.hasError && !domainNames.loading ? (
+        <Alert role="alert">
+          <AlertTitle>
+            <Trans>Assignment names could not be loaded</Trans>
+          </AlertTitle>
+          <AlertDescription>
+            <Trans>
+              Some Legal Entity or Establishment names are temporarily
+              unavailable. Internal identifiers are hidden.
+            </Trans>
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       {/* Employee Table */}
       <LoadingRegion
         loading={loading}
@@ -398,14 +423,20 @@ export function EmployeeList() {
                       <StatusBadge status={employee.status} />
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {(domainNames.legalEntities[employee.legal_entity_id] ??
-                        employee.legal_entity_id) ||
-                        "-"}
+                      {resolveDomainAssignmentLabel(
+                        domainNames.legalEntities,
+                        employee.legal_entity_id,
+                        domainNames.hasError,
+                        unavailableDomainLabel
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {(domainNames.establishments[employee.establishment_id] ??
-                        employee.establishment_id) ||
-                        "-"}
+                      {resolveDomainAssignmentLabel(
+                        domainNames.establishments,
+                        employee.establishment_id,
+                        domainNames.hasError,
+                        unavailableDomainLabel
+                      )}
                     </TableCell>
                     <TableCell>
                       <LinkButton
@@ -479,9 +510,12 @@ export function EmployeeList() {
                       <Trans>Legal Entity</Trans>
                     </p>
                     <p className="text-foreground">
-                      {(domainNames.legalEntities[employee.legal_entity_id] ??
-                        employee.legal_entity_id) ||
-                        "-"}
+                      {resolveDomainAssignmentLabel(
+                        domainNames.legalEntities,
+                        employee.legal_entity_id,
+                        domainNames.hasError,
+                        unavailableDomainLabel
+                      )}
                     </p>
                   </div>
                   <div>
@@ -489,9 +523,12 @@ export function EmployeeList() {
                       <Trans>Establishment</Trans>
                     </p>
                     <p className="text-foreground">
-                      {(domainNames.establishments[employee.establishment_id] ??
-                        employee.establishment_id) ||
-                        "-"}
+                      {resolveDomainAssignmentLabel(
+                        domainNames.establishments,
+                        employee.establishment_id,
+                        domainNames.hasError,
+                        unavailableDomainLabel
+                      )}
                     </p>
                   </div>
                   <div className="col-span-2">
