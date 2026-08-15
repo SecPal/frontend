@@ -914,6 +914,14 @@ jobs:
       )
     ).toEqual([]);
 
+    const preservedAssetAnnotation = reuseAnnotations.find(
+      (annotation) =>
+        annotation.includes('"public/apple-touch-icon.png"') &&
+        annotation.includes("LicenseRef-SecPal-Attribution")
+    );
+
+    expect(preservedAssetAnnotation).toContain('precedence = "override"');
+
     const contributingGuide = readRepoFile("CONTRIBUTING.md");
 
     expect(contributingGuide).toContain(
