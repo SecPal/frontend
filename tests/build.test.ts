@@ -828,10 +828,20 @@ jobs:
     expect(deploymentDoc).not.toContain("customer.example");
   });
 
-  it("keeps SecPal-owned governance files on the attribution license expression", () => {
+  it("keeps SecPal-owned governance files on their intended license expressions", () => {
+    for (const relativePath of [".pre-commit-config.yaml", ".yamllint.yml"]) {
+      const fileContents = readRepoFile(relativePath);
+
+      expect(fileContents).toContain("SecPal Contributors");
+      expect(fileContents).toContain(
+        [
+          "SPDX-License-Identifier",
+          "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
+        ].join(": ")
+      );
+    }
+
     for (const relativePath of [
-      ".pre-commit-config.yaml",
-      ".yamllint.yml",
       ".github/copilot-instructions.md",
       ".github/instructions/org-shared.instructions.md",
       ".github/instructions/react-typescript.instructions.md",
@@ -841,6 +851,9 @@ jobs:
 
       expect(fileContents).toContain("SecPal Contributors");
       expect(fileContents).toContain(
+        ["SPDX-License-Identifier", "AGPL-3.0-or-later"].join(": ")
+      );
+      expect(fileContents).not.toContain(
         [
           "SPDX-License-Identifier",
           "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",

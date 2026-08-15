@@ -88,6 +88,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Corrected the SPDX expressions for frontend agent-governance files to use
+  plain AGPL-3.0-or-later, while retaining the attribution expression for the
+  repository configurations that intentionally require it.
+
 - Bound employee establishment-name lookup fan-out so Android pages remain
   within the native authenticated-request admission limit, surface lookup
   failures without exposing raw domain identifiers, and attach a stable
