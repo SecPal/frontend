@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2026 SecPal Contributors
+SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 SPDX-License-Identifier: CC0-1.0
 -->
 
@@ -87,6 +87,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   intact.
 
 ### Fixed
+
+- Corrected the SPDX expressions for frontend agent-governance files to use
+  plain AGPL-3.0-or-later, while retaining the attribution expression where
+  repository policy declares it for application code, tests, and selected
+  configurations; the guardrail now also preserves first-publication years.
 
 - Bound employee establishment-name lookup fan-out so Android pages remain
   within the native authenticated-request admission limit, surface lookup

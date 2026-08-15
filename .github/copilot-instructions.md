@@ -1,6 +1,6 @@
 <!--
-SPDX-FileCopyrightText: 2026 SecPal Contributors
-SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
+SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
 # SecPal/frontend Copilot Instructions
@@ -58,6 +58,29 @@ Do not assume instructions from sibling repositories or comment-based inheritanc
   branch, prune remotes, refresh Node dependencies with `npm ci` where
   applicable, run `npm run build` when available, and confirm the working tree
   is clean.
+
+## Licensing, REUSE, and Branding
+
+- Use `AGPL-3.0-or-later` for SecPal-owned agent-governance material migrated
+  by this licensing rollout. Never add or restore
+  `LicenseRef-SecPal-Attribution` to that material.
+- Application code and tests retain `AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution`
+  wherever it is declared by `REUSE.toml` or file-level SPDX metadata.
+- Preserve deliberately different licenses, including `CC0-1.0`, `MIT`,
+  `Apache-2.0`, third-party and generated-file licenses, and unrelated custom
+  license references. Do not rewrite third-party copyright or license metadata.
+- Use `SecPal Contributors` where the project copyright convention applies.
+  Preserve each file's first-publication year and extend its year range through
+  the current year when an edited file requires a copyright-year update.
+- Run the relevant REUSE or license validation after changing copyright or
+  license metadata.
+- On user-facing official SecPal product surfaces, preserve
+  `Powered by SecPal – A guard's best friend` where it is intentionally present.
+  A licensing change must not remove, weaken, parameterize, genericize, or make
+  that SecPal branding optional.
+- Do not add fork-oriented `Based on SecPal` guidance to AI instructions, and
+  do not introduce white-label or fork-branding configuration as part of a
+  licensing change.
 
 ## Design Principles
 
@@ -171,6 +194,17 @@ This file auto-applies to all files in this repo so strict SecPal governance sta
   attribution unless the task explicitly requires documenting AI tooling.
 - Keep changes repo-local, minimal, and consistent with React, strict TypeScript, and generated API type conventions.
 - Apply the SecPal domain policy and immediate warning and issue triage rules from the repo baseline.
+- Apply the baseline licensing and REUSE rules: plain `AGPL-3.0-or-later` for
+  SecPal-owned agent-governance material migrated by this rollout; the declared
+  attribution expression preserved for application code and tests; deliberately
+  different licenses and third-party metadata preserved; `SecPal Contributors`
+  used where the project convention applies; first-publication years retained
+  and extended when required; and relevant license validation run after
+  metadata changes.
+- Preserve `Powered by SecPal – A guard's best friend` on official user-facing
+  SecPal surfaces where intentionally present. Licensing work must not weaken
+  or make this branding optional, add `Based on SecPal` guidance, or introduce
+  white-label or fork-branding configuration.
 
 ## Additional Rules: react-typescript.instructions.md
 
