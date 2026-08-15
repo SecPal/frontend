@@ -881,10 +881,16 @@ jobs:
       ".github/instructions/org-shared.instructions.md",
     ]) {
       const fileContents = readRepoFile(relativePath);
+      const normalizedFileContents = fileContents.replace(/\s+/g, " ");
 
-      expect(fileContents).toContain("SecPal-owned agent-governance material");
-      expect(fileContents).toMatch(
-        /Application\s+code and tests retain `AGPL-3\.0-or-later AND LicenseRef-SecPal-Attribution`/
+      expect(normalizedFileContents).toContain(
+        "Use `AGPL-3.0-or-later` for SecPal-owned material intentionally covered by the AGPL."
+      );
+      expect(normalizedFileContents).toContain(
+        "Never add or restore `LicenseRef-SecPal-Attribution` after the licensing rollout."
+      );
+      expect(fileContents).not.toContain(
+        "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution"
       );
     }
   });
