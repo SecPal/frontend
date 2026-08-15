@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2026 SecPal Contributors
+SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
@@ -61,9 +61,11 @@ Do not assume instructions from sibling repositories or comment-based inheritanc
 
 ## Licensing, REUSE, and Branding
 
-- Use `AGPL-3.0-or-later` for SecPal-owned material intentionally covered by
-  the AGPL. Never add or restore `LicenseRef-SecPal-Attribution` after the
-  licensing rollout.
+- Use `AGPL-3.0-or-later` for SecPal-owned agent-governance material migrated
+  by this licensing rollout. Never add or restore
+  `LicenseRef-SecPal-Attribution` to that material.
+- Application code and tests retain `AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution`
+  wherever it is declared by `REUSE.toml` or file-level SPDX metadata.
 - Preserve deliberately different licenses, including `CC0-1.0`, `MIT`,
   `Apache-2.0`, third-party and generated-file licenses, and unrelated custom
   license references. Do not rewrite third-party copyright or license metadata.
@@ -193,10 +195,12 @@ This file auto-applies to all files in this repo so strict SecPal governance sta
 - Keep changes repo-local, minimal, and consistent with React, strict TypeScript, and generated API type conventions.
 - Apply the SecPal domain policy and immediate warning and issue triage rules from the repo baseline.
 - Apply the baseline licensing and REUSE rules: plain `AGPL-3.0-or-later` for
-  SecPal-owned AGPL material, deliberately different licenses and third-party
-  metadata preserved, `SecPal Contributors` where the project convention
-  applies, first-publication years retained and extended when required, and
-  relevant license validation after metadata changes.
+  SecPal-owned agent-governance material migrated by this rollout; the declared
+  attribution expression preserved for application code and tests; deliberately
+  different licenses and third-party metadata preserved; `SecPal Contributors`
+  used where the project convention applies; first-publication years retained
+  and extended when required; and relevant license validation run after
+  metadata changes.
 - Preserve `Powered by SecPal – A guard's best friend` on official user-facing
   SecPal surfaces where intentionally present. Licensing work must not weaken
   or make this branding optional, add `Based on SecPal` guidance, or introduce

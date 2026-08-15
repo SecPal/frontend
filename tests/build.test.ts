@@ -829,10 +829,21 @@ jobs:
   });
 
   it("keeps SecPal-owned governance files on their intended license expressions", () => {
+    const changelog = readRepoFile("CHANGELOG.md");
+
+    expect(changelog).toContain(
+      "SPDX-FileCopyrightText: 2025-2026 SecPal Contributors"
+    );
+    expect(changelog).toContain(
+      ["SPDX-License-Identifier", "CC0-1.0"].join(": ")
+    );
+
     for (const relativePath of [".pre-commit-config.yaml", ".yamllint.yml"]) {
       const fileContents = readRepoFile(relativePath);
 
-      expect(fileContents).toContain("SecPal Contributors");
+      expect(fileContents).toContain(
+        "SPDX-FileCopyrightText: 2025-2026 SecPal Contributors"
+      );
       expect(fileContents).toContain(
         [
           "SPDX-License-Identifier",
@@ -841,15 +852,18 @@ jobs:
       );
     }
 
-    for (const relativePath of [
-      ".github/copilot-instructions.md",
-      ".github/instructions/org-shared.instructions.md",
-      ".github/instructions/react-typescript.instructions.md",
-      ".github/instructions/github-workflows.instructions.md",
-    ]) {
+    for (const [relativePath, copyrightYears] of [
+      ["AGENTS.md", "2026"],
+      [".github/copilot-instructions.md", "2025-2026"],
+      [".github/instructions/org-shared.instructions.md", "2026"],
+      [".github/instructions/react-typescript.instructions.md", "2026"],
+      [".github/instructions/github-workflows.instructions.md", "2026"],
+    ] as const) {
       const fileContents = readRepoFile(relativePath);
 
-      expect(fileContents).toContain("SecPal Contributors");
+      expect(fileContents).toContain(
+        `SPDX-FileCopyrightText: ${copyrightYears} SecPal Contributors`
+      );
       expect(fileContents).toContain(
         ["SPDX-License-Identifier", "AGPL-3.0-or-later"].join(": ")
       );
@@ -858,6 +872,19 @@ jobs:
           "SPDX-License-Identifier",
           "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
         ].join(": ")
+      );
+    }
+
+    for (const relativePath of [
+      "AGENTS.md",
+      ".github/copilot-instructions.md",
+      ".github/instructions/org-shared.instructions.md",
+    ]) {
+      const fileContents = readRepoFile(relativePath);
+
+      expect(fileContents).toContain("SecPal-owned agent-governance material");
+      expect(fileContents).toMatch(
+        /Application\s+code and tests retain `AGPL-3\.0-or-later AND LicenseRef-SecPal-Attribution`/
       );
     }
   });
