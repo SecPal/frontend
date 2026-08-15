@@ -889,10 +889,59 @@ jobs:
       expect(normalizedFileContents).toContain(
         "Never add or restore `LicenseRef-SecPal-Attribution` after the licensing rollout."
       );
-      expect(fileContents).not.toContain(
+      expect(normalizedFileContents).not.toContain(
         "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution"
       );
     }
+
+    const reuseConfig = readRepoFile("REUSE.toml");
+    const reuseAnnotations = reuseConfig.split("[[annotations]]").slice(1);
+
+    for (const pathPattern of ["src/**", "public/**", "tests/**"]) {
+      expect(reuseConfig).toContain(
+        [
+          `path = "${pathPattern}"`,
+          'SPDX-License-Identifier = "AGPL-3.0-or-later"',
+        ].join("\n")
+      );
+    }
+
+    expect(
+      reuseAnnotations.filter(
+        (annotation) =>
+          annotation.includes("LicenseRef-SecPal-Attribution") &&
+          annotation.includes("*")
+      )
+    ).toEqual([]);
+
+    const contributingGuide = readRepoFile("CONTRIBUTING.md");
+
+    expect(contributingGuide).toContain(
+      "| **Application Code** | `AGPL-3.0-or-later`"
+    );
+    expect(contributingGuide).toContain(
+      'reuse annotate --license "AGPL-3.0-or-later"'
+    );
+    expect(contributingGuide).not.toContain(
+      'reuse annotate --license "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution"'
+    );
+    expect(contributingGuide).not.toContain(
+      "your contributions will be licensed under [AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution]"
+    );
+
+    const spdxExamples = contributingGuide.slice(
+      contributingGuide.indexOf("### SPDX Header Examples"),
+      contributingGuide.indexOf("### Verification")
+    );
+
+    expect(spdxExamples.match(/REUSE-IgnoreStart/gu)).toHaveLength(1);
+    expect(spdxExamples.match(/REUSE-IgnoreEnd/gu)).toHaveLength(1);
+    expect(spdxExamples.indexOf("REUSE-IgnoreStart")).toBeLessThan(
+      spdxExamples.indexOf("SPDX-License-Identifier")
+    );
+    expect(spdxExamples.indexOf("REUSE-IgnoreEnd")).toBeGreaterThan(
+      spdxExamples.lastIndexOf("SPDX-License-Identifier")
+    );
   });
 
   it("runs Prettier as a local system hook compatible with npm 12", () => {

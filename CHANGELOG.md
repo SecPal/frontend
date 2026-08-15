@@ -90,9 +90,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Corrected the SPDX expressions for frontend agent-governance files to use
   plain AGPL-3.0-or-later, made the project-wide prohibition against adding or
-  restoring the obsolete SecPal attribution expression explicit, and preserved
-  first-publication-year and branding safeguards without migrating product or
-  source-file metadata.
+  restoring the obsolete SecPal attribution expression explicit, aligned REUSE
+  defaults for future SecPal-owned source, public, and test files, and preserved
+  existing declarations plus first-publication-year and branding safeguards.
 
 - Bound employee establishment-name lookup fan-out so Android pages remain
   within the native authenticated-request admission limit, surface lookup

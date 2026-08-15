@@ -6,14 +6,42 @@ SPDX-FileCopyrightText = "SecPal Contributors"
 
 [[annotations]]
 path = "src/**"
-SPDX-License-Identifier = "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
 
 [[annotations]]
 path = "public/**"
-SPDX-License-Identifier = "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
 
 [[annotations]]
-path = ["public/logo-*.png", "public/logo-*.svg", "public/favicon-*.png", "public/favicon-*.ico", "public/pwa-*.png", "public/apple-touch-icon*.png", "public/mask-icon.svg"]
+path = [
+  "public/apple-touch-icon.png",
+  "public/favicon-16x16.png",
+  "public/favicon-32x32.png",
+  "public/favicon-dark.ico",
+  "public/favicon-light.ico",
+  "public/logo-dark-128.png",
+  "public/logo-dark-16.png",
+  "public/logo-dark-256.png",
+  "public/logo-dark-32.png",
+  "public/logo-dark-48.png",
+  "public/logo-dark-512.png",
+  "public/logo-dark-64.png",
+  "public/logo-dark.svg",
+  "public/logo-light-128.png",
+  "public/logo-light-16.png",
+  "public/logo-light-256.png",
+  "public/logo-light-32.png",
+  "public/logo-light-48.png",
+  "public/logo-light-512.png",
+  "public/logo-light-64.png",
+  "public/logo-light.svg",
+  "public/logo-source.png",
+  "public/mask-icon.svg",
+  "public/pwa-192x192-maskable.png",
+  "public/pwa-192x192.png",
+  "public/pwa-512x512-maskable.png",
+  "public/pwa-512x512.png",
+]
 SPDX-FileCopyrightText = "2025-2026 SecPal Contributors"
 SPDX-License-Identifier = "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution"
 
@@ -78,7 +106,7 @@ SPDX-License-Identifier = "CC0-1.0"
 
 [[annotations]]
 path = "tests/**"
-SPDX-License-Identifier = "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
 
 [[annotations]]
 path = [
