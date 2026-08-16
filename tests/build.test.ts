@@ -845,10 +845,7 @@ jobs:
         "SPDX-FileCopyrightText: 2025-2026 SecPal Contributors"
       );
       expect(fileContents).toContain(
-        [
-          "SPDX-License-Identifier",
-          "AGPL-3.0-or-later",
-        ].join(": ")
+        ["SPDX-License-Identifier", "AGPL-3.0-or-later"].join(": ")
       );
     }
 
@@ -867,11 +864,8 @@ jobs:
       expect(fileContents).toContain(
         ["SPDX-License-Identifier", "AGPL-3.0-or-later"].join(": ")
       );
-      expect(fileContents).not.toContain(
-        "LicenseRef-SecPal-Attribution"
-      );
+      expect(fileContents).not.toContain("LicenseRef-SecPal-Attribution");
     }
-
   });
 
   it("runs Prettier as a local system hook compatible with npm 12", () => {

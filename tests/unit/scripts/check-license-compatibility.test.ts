@@ -143,9 +143,7 @@ describe("check-license-compatibility", () => {
 
     try {
       const result = runCheck(tempDir, {
-        reuseEntries: [
-          { licenseExpressions: ["LicenseRef-Obsolete"] },
-        ],
+        reuseEntries: [{ licenseExpressions: ["LicenseRef-Obsolete"] }],
       });
 
       expect(result.status).toBe(1);
@@ -166,9 +164,7 @@ describe("check-license-compatibility", () => {
       const result = runCheck(tempDir, {
         reuseEntries: [
           {
-            licenseExpressions: [
-              "AGPL-3.0-or-later OR LicenseRef-Obsolete",
-            ],
+            licenseExpressions: ["AGPL-3.0-or-later OR LicenseRef-Obsolete"],
           },
         ],
       });
