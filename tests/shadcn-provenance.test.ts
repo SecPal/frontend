@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { execFileSync } from "node:child_process";
 import {
@@ -79,7 +79,7 @@ describe("shadcn source provenance", () => {
       const source = readFileSync(path.join(repoRoot, sourcePath), "utf8");
 
       expect(source, sourcePath).toContain(
-        "SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution"
+        "SPDX-License-Identifier: AGPL-3.0-or-later"
       );
     }
 

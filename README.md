@@ -275,7 +275,7 @@ inventory at zero.
 **Routing:** React Router v7 with client-side navigation
 **Typography:** Inter font family
 **Icons:** Lucide React
-**License:** AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+**License:** AGPL-3.0-or-later
 **Architecture Notes:** [`src/ui/MIGRATION.md`](src/ui/MIGRATION.md)
 
 UI and UX work must build on the existing `src/ui`, shadcn/Base UI, Tailwind,
@@ -473,12 +473,7 @@ See [Project Automation docs](https://github.com/SecPal/.github/blob/main/docs/w
 
 ## 📜 License
 
-**AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution** - See [LICENSE](LICENSE) and [LICENSES/LicenseRef-SecPal-Attribution.txt](LICENSES/LicenseRef-SecPal-Attribution.txt) for details.
-
-SecPal applies additional attribution terms under AGPLv3 section 7(b) and
-section 7(c). Appropriate legal notices for unmodified versions must preserve
-`Powered by SecPal`; the full tagline and `https://secpal.app` remain preferred
-requests, not mandatory license conditions.
+**AGPL-3.0-or-later** - See [LICENSE](LICENSE) for details.
 
 This project is REUSE 3.3 compliant. All files contain SPDX license headers.
 

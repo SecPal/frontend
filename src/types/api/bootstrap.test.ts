@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it } from "vitest";
 
@@ -22,9 +22,9 @@ describe("bootstrap API types", () => {
         },
         legal: {
           license: {
-            spdx_id: "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
-            name: "GNU Affero General Public License v3.0 or later with SecPal attribution additional terms",
-            url: "https://github.com/SecPal/api/blob/main/LICENSES/LicenseRef-SecPal-Attribution.txt",
+            spdx_id: "AGPL-3.0-or-later",
+            name: "GNU Affero General Public License v3.0 or later",
+            url: "https://github.com/SecPal/api/blob/main/LICENSES/AGPL-3.0-or-later.txt",
             base_license_url: "https://www.gnu.org/licenses/agpl-3.0.html",
           },
           source_url: "https://api.secpal.dev/v1/source",

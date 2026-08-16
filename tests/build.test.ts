@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { execFileSync } from "node:child_process";
 import {
@@ -845,10 +845,7 @@ jobs:
         "SPDX-FileCopyrightText: 2025-2026 SecPal Contributors"
       );
       expect(fileContents).toContain(
-        [
-          "SPDX-License-Identifier",
-          "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
-        ].join(": ")
+        ["SPDX-License-Identifier", "AGPL-3.0-or-later"].join(": ")
       );
     }
 
@@ -867,12 +864,7 @@ jobs:
       expect(fileContents).toContain(
         ["SPDX-License-Identifier", "AGPL-3.0-or-later"].join(": ")
       );
-      expect(fileContents).not.toContain(
-        [
-          "SPDX-License-Identifier",
-          "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
-        ].join(": ")
-      );
+      expect(fileContents).not.toContain("LicenseRef-SecPal-Attribution");
     }
 
     for (const relativePath of [
@@ -880,11 +872,8 @@ jobs:
       ".github/copilot-instructions.md",
       ".github/instructions/org-shared.instructions.md",
     ]) {
-      const fileContents = readRepoFile(relativePath);
-
-      expect(fileContents).toContain("SecPal-owned agent-governance material");
-      expect(fileContents).toMatch(
-        /Application\s+code and tests retain `AGPL-3\.0-or-later AND LicenseRef-SecPal-Attribution`/
+      expect(readRepoFile(relativePath)).toContain(
+        "SecPal-owned material where declared. Preserve deliberately different"
       );
     }
   });

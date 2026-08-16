@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { AUTH_VAULT_LIFECYCLE_LOCK_NAME } from "./offlineVaultKeys";
 import { awaitAbortable, throwIfAborted } from "./abortablePromise";

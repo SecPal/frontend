@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 export const OFFLINE_SESSION_CACHE_NAME = "auth-session-state";
 export const OFFLINE_SESSION_STATE_PATH = "/__session-state__";
