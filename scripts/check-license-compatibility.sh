@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 # SPDX-FileCopyrightText: 2026 SecPal Contributors
-# SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
 set -euo pipefail
 
 echo "Checking for AGPL-3.0-or-later compatibility..."
-reuse spdx -o reuse.spdx
+reuse_spdx_dir=$(mktemp -d)
+reuse_spdx="$reuse_spdx_dir/reuse.spdx"
+trap 'rm -rf "$reuse_spdx_dir"' EXIT
+reuse spdx -o "$reuse_spdx"
 
 compatible_licenses=(
   "0BSD"
@@ -26,7 +29,6 @@ compatible_licenses=(
   "OFL-1.1"
   "ODbL-1.0"
   "Python-2.0"
-  "LicenseRef-SecPal-Attribution"
 )
 
 incompatible_found=0
@@ -34,19 +36,10 @@ incompatible_found=0
 validate_license_subject() {
   local subject_name=$1
   local license_lines=$2
-  local has_agpl=0
-  local has_secpal_attribution=0
-  local has_invalid_secpal_attribution_pairing=0
-
   [ -z "$subject_name" ] && return
 
   while IFS= read -r license_expression; do
     [ -z "$license_expression" ] && continue
-
-    if [[ "$license_expression" == *"LicenseRef-SecPal-Attribution"* ]] &&
-      [[ "$license_expression" == *" OR "* ]]; then
-      has_invalid_secpal_attribution_pairing=1
-    fi
 
     normalized_expression=${license_expression//\(/( }
     normalized_expression=${normalized_expression//\)/ )}
@@ -57,14 +50,6 @@ validate_license_subject() {
           continue
           ;;
       esac
-
-      if [[ "$license" == "AGPL-3.0-or-later" ]]; then
-        has_agpl=1
-      fi
-
-      if [[ "$license" == "LicenseRef-SecPal-Attribution" ]]; then
-        has_secpal_attribution=1
-      fi
 
       found=0
       for compatible in "${compatible_licenses[@]}"; do
@@ -81,15 +66,6 @@ validate_license_subject() {
     done
   done <<< "$license_lines"
 
-  if [ $has_invalid_secpal_attribution_pairing -eq 1 ]; then
-    echo "ERROR: LicenseRef-SecPal-Attribution must be conjoined with AGPL-3.0-or-later in ${subject_name}" >&2
-    incompatible_found=1
-  fi
-
-  if [ $has_secpal_attribution -eq 1 ] && [ $has_agpl -eq 0 ]; then
-    echo "ERROR: LicenseRef-SecPal-Attribution must be paired with AGPL-3.0-or-later in ${subject_name}" >&2
-    incompatible_found=1
-  fi
 }
 
 echo "Found file license entries:"
@@ -112,7 +88,7 @@ while IFS= read -r line; do
       current_license_lines+="$license_expression"
       ;;
   esac
-done < reuse.spdx
+done < "$reuse_spdx"
 
 validate_license_subject "$current_file" "$current_license_lines"
 

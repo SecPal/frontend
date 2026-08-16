@@ -20,7 +20,7 @@ ARG SECPAL_IMAGE_VERSION=0.0.1
 LABEL org.opencontainers.image.title="SecPal Frontend" \
       org.opencontainers.image.description="Unprivileged static reference server for the SecPal frontend" \
       org.opencontainers.image.source="https://github.com/SecPal/frontend" \
-      org.opencontainers.image.licenses="AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution" \
+      org.opencontainers.image.licenses="AGPL-3.0-or-later" \
       org.opencontainers.image.revision="${SECPAL_IMAGE_REVISION}" \
       org.opencontainers.image.version="${SECPAL_IMAGE_VERSION}"
 

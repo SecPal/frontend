@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { execFileSync } from "node:child_process";
 import {
@@ -847,7 +847,7 @@ jobs:
       expect(fileContents).toContain(
         [
           "SPDX-License-Identifier",
-          "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
+          "AGPL-3.0-or-later",
         ].join(": ")
       );
     }
@@ -868,25 +868,10 @@ jobs:
         ["SPDX-License-Identifier", "AGPL-3.0-or-later"].join(": ")
       );
       expect(fileContents).not.toContain(
-        [
-          "SPDX-License-Identifier",
-          "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
-        ].join(": ")
+        "LicenseRef-SecPal-Attribution"
       );
     }
 
-    for (const relativePath of [
-      "AGENTS.md",
-      ".github/copilot-instructions.md",
-      ".github/instructions/org-shared.instructions.md",
-    ]) {
-      const fileContents = readRepoFile(relativePath);
-
-      expect(fileContents).toContain("SecPal-owned agent-governance material");
-      expect(fileContents).toMatch(
-        /Application\s+code and tests retain `AGPL-3\.0-or-later AND LicenseRef-SecPal-Attribution`/
-      );
-    }
   });
 
   it("runs Prettier as a local system hook compatible with npm 12", () => {

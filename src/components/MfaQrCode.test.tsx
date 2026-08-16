@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";

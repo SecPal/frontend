@@ -1,6 +1,6 @@
 <!--
 SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
-SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
 # Contributing to SecPal
@@ -397,29 +397,29 @@ All files must include SPDX license headers. **SecPal uses different licenses de
 
 | File Type            | License                                               | Use For                                         |
 | -------------------- | ----------------------------------------------------- | ----------------------------------------------- |
-| **Application Code** | `AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution` | PHP, TypeScript, JavaScript, React components   |
+| **Application Code** | `AGPL-3.0-or-later` | PHP, TypeScript, JavaScript, React components   |
 | **Configuration**    | `CC0-1.0`                                             | YAML, JSON, TOML, `.gitignore`, `.editorconfig` |
 | **Helper Scripts**   | `MIT`                                                 | Standalone bash/shell scripts, build utilities  |
 | **Documentation**    | `CC0-1.0`                                             | Markdown files (except LICENSE itself)          |
 
 ### SPDX Header Examples
 
-**For application code (AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution):**
+**For application code (AGPL-3.0-or-later):**
 
 ```php
 <?php
 // SPDX-FileCopyrightText: 2025 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+// SPDX-License-Identifier: AGPL-3.0-or-later
 ```
 
 ```javascript
 // SPDX-FileCopyrightText: 2025 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+// SPDX-License-Identifier: AGPL-3.0-or-later
 ```
 
 ```typescript
 // SPDX-FileCopyrightText: 2025 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+// SPDX-License-Identifier: AGPL-3.0-or-later
 ```
 
 **For configuration files (CC0-1.0):**
@@ -466,7 +466,7 @@ Run `reuse lint` before committing to verify compliance:
 reuse lint
 
 # Add headers to new files automatically
-reuse annotate --license "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution" --copyright "SecPal Contributors" path/to/file.php
+reuse annotate --license "AGPL-3.0-or-later" --copyright "SecPal Contributors" path/to/file.php
 ```
 
 ### Bulk Licensing with REUSE.toml
@@ -574,6 +574,6 @@ If you have questions or need help:
 
 ## License
 
-By contributing to SecPal, you agree that your contributions will be licensed under [AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution](https://spdx.org/licenses/AGPL-3.0-or-later.html), including the additional SecPal attribution terms in [LICENSES/LicenseRef-SecPal-Attribution.txt](LICENSES/LicenseRef-SecPal-Attribution.txt).
+By contributing to SecPal, you agree that your contributions will be licensed under [AGPL-3.0-or-later](https://spdx.org/licenses/AGPL-3.0-or-later.html).
 
 Thank you for contributing to SecPal! 🎉

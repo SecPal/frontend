@@ -1,8 +1,9 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it } from "vitest";
 import {
+  existsSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
@@ -109,7 +110,7 @@ function runCheck(tempDir: string, fixture: TestRepositoryFixture) {
 }
 
 describe("check-license-compatibility", () => {
-  it("accepts AGPL files with the SecPal attribution term", () => {
+  it("accepts files licensed under plain AGPL-3.0-or-later", () => {
     const tempDir = mkdtempSync(
       path.join(os.tmpdir(), "secpal-license-check-")
     );
@@ -118,9 +119,7 @@ describe("check-license-compatibility", () => {
       const result = runCheck(tempDir, {
         reuseEntries: [
           {
-            licenseExpressions: [
-              "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
-            ],
+            licenseExpressions: ["AGPL-3.0-or-later"],
           },
           { licenseExpressions: ["CC0-1.0"] },
           { licenseExpressions: ["MIT"] },
@@ -131,12 +130,13 @@ describe("check-license-compatibility", () => {
       expect(result.stdout).toContain(
         "All licenses are compatible with AGPL-3.0-or-later"
       );
+      expect(existsSync(path.join(tempDir, "reuse.spdx"))).toBe(false);
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }
   });
 
-  it("rejects the SecPal attribution term without AGPL", () => {
+  it("rejects an unknown LicenseRef", () => {
     const tempDir = mkdtempSync(
       path.join(os.tmpdir(), "secpal-license-check-")
     );
@@ -144,20 +144,20 @@ describe("check-license-compatibility", () => {
     try {
       const result = runCheck(tempDir, {
         reuseEntries: [
-          { licenseExpressions: ["LicenseRef-SecPal-Attribution"] },
+          { licenseExpressions: ["LicenseRef-Obsolete"] },
         ],
       });
 
       expect(result.status).toBe(1);
-      expect(result.stdout + result.stderr).toContain(
-        "LicenseRef-SecPal-Attribution must be paired with AGPL-3.0-or-later"
+      expect(result.stderr).toContain(
+        "ERROR: Incompatible license found in ./file-1.txt: LicenseRef-Obsolete"
       );
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }
   });
 
-  it("rejects OR expressions that leave the attribution term standalone", () => {
+  it("rejects expressions containing an unknown LicenseRef", () => {
     const tempDir = mkdtempSync(
       path.join(os.tmpdir(), "secpal-license-check-")
     );
@@ -167,15 +167,15 @@ describe("check-license-compatibility", () => {
         reuseEntries: [
           {
             licenseExpressions: [
-              "AGPL-3.0-or-later OR LicenseRef-SecPal-Attribution",
+              "AGPL-3.0-or-later OR LicenseRef-Obsolete",
             ],
           },
         ],
       });
 
       expect(result.status).toBe(1);
-      expect(result.stdout + result.stderr).toContain(
-        "LicenseRef-SecPal-Attribution must be conjoined with AGPL-3.0-or-later"
+      expect(result.stderr).toContain(
+        "ERROR: Incompatible license found in ./file-1.txt: LicenseRef-Obsolete"
       );
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
@@ -204,7 +204,7 @@ describe("check-license-compatibility", () => {
     }
   });
 
-  it("accepts split REUSE license lines for one AGPL-covered file", () => {
+  it("accepts one plain AGPL REUSE license line", () => {
     const tempDir = mkdtempSync(
       path.join(os.tmpdir(), "secpal-license-check-")
     );
@@ -214,10 +214,7 @@ describe("check-license-compatibility", () => {
         reuseEntries: [
           {
             fileName: "./AGENTS.md",
-            licenseExpressions: [
-              "AGPL-3.0-or-later",
-              "LicenseRef-SecPal-Attribution",
-            ],
+            licenseExpressions: ["AGPL-3.0-or-later"],
           },
         ],
       });
@@ -245,7 +242,7 @@ describe("check-license-compatibility", () => {
             lockfileVersion: 3,
             packages: {
               "": {
-                license: "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
+                license: "AGPL-3.0-or-later",
               },
               "node_modules/caniuse-lite": {
                 license: "CC-BY-4.0",
@@ -298,7 +295,7 @@ describe("check-license-compatibility", () => {
             lockfileVersion: 3,
             packages: {
               "": {
-                license: "AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution",
+                license: "AGPL-3.0-or-later",
               },
               "node_modules/bad-license-package": {
                 license: "LicenseRef-Proprietary",

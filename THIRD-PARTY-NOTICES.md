@@ -1,6 +1,6 @@
 <!--
 SPDX-FileCopyrightText: 2026 SecPal Contributors
-SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
 # Third-Party Notices
@@ -91,8 +91,8 @@ source provenance recorded above.
 ## Audit status (2026-07-11)
 
 - `reuse lint` passes. The repository uses only `AGPL-3.0-or-later`,
-  `CC0-1.0`, `MIT`, and `LicenseRef-SecPal-Attribution` in its REUSE metadata;
-  each has a corresponding text in `LICENSES/`.
+  `CC0-1.0`, and `MIT` in its REUSE metadata; each has a corresponding text in
+  `LICENSES/`.
 - The Lingui catalogs and compiled messages contain SecPal translation content.
   Their checked-in `.license` sidecars therefore remain the authority for
   their SecPal licensing. The obsolete `CC0-1.0` Lingui annotations were

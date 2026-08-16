@@ -1,5 +1,5 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
  * Format a `Date` as `YYYY-MM-DD` in the **local** timezone.

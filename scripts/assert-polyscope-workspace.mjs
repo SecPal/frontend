@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution
+// SPDX-License-Identifier: AGPL-3.0-or-later
 
 // Workspace-preview preflight for live-only npm scripts. Fails fast (exit 1)
 // when no Polyscope workspace can be resolved, preventing Playwright from

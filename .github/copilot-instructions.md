@@ -61,11 +61,9 @@ Do not assume instructions from sibling repositories or comment-based inheritanc
 
 ## Licensing, REUSE, and Branding
 
-- Use `AGPL-3.0-or-later` for SecPal-owned agent-governance material migrated
-  by this licensing rollout. Never add or restore
-  `LicenseRef-SecPal-Attribution` to that material.
-- Application code and tests retain `AGPL-3.0-or-later AND LicenseRef-SecPal-Attribution`
-  wherever it is declared by `REUSE.toml` or file-level SPDX metadata.
+- Use `AGPL-3.0-or-later` for SecPal-owned agent-governance material,
+  application code, and tests wherever it is declared by `REUSE.toml` or
+  file-level SPDX metadata.
 - Preserve deliberately different licenses, including `CC0-1.0`, `MIT`,
   `Apache-2.0`, third-party and generated-file licenses, and unrelated custom
   license references. Do not rewrite third-party copyright or license metadata.
