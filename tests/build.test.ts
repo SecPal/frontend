@@ -866,6 +866,16 @@ jobs:
       );
       expect(fileContents).not.toContain("LicenseRef-SecPal-Attribution");
     }
+
+    for (const relativePath of [
+      "AGENTS.md",
+      ".github/copilot-instructions.md",
+      ".github/instructions/org-shared.instructions.md",
+    ]) {
+      expect(readRepoFile(relativePath)).toContain(
+        "SecPal-owned material where declared. Preserve deliberately different"
+      );
+    }
   });
 
   it("runs Prettier as a local system hook compatible with npm 12", () => {

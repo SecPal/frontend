@@ -190,12 +190,10 @@ This file auto-applies to all files in this repo so strict SecPal governance sta
 - Keep changes repo-local, minimal, and consistent with React, strict TypeScript, and generated API type conventions.
 - Apply the SecPal domain policy and immediate warning and issue triage rules from the repo baseline.
 - Apply the baseline licensing and REUSE rules: plain `AGPL-3.0-or-later` for
-  SecPal-owned agent-governance material migrated by this rollout; the declared
-  attribution expression preserved for application code and tests; deliberately
-  different licenses and third-party metadata preserved; `SecPal Contributors`
-  used where the project convention applies; first-publication years retained
-  and extended when required; and relevant license validation run after
-  metadata changes.
+  SecPal-owned material where declared. Preserve deliberately different
+  licenses and third-party metadata, use `SecPal Contributors` where the
+  project convention applies, retain and extend first-publication years when
+  required, and run relevant license validation after metadata changes.
 - Preserve `Powered by SecPal – A guard's best friend` on official user-facing
   SecPal surfaces where intentionally present. Licensing work must not weaken
   or make this branding optional, add `Based on SecPal` guidance, or introduce
