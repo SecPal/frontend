@@ -19,15 +19,46 @@ function normalized(source: string) {
     .toLowerCase();
 }
 
-function expectNativeGraphAuthority(source: string) {
-  const prose = normalized(source);
+function authorityStatement(source: string, subject: RegExp) {
+  const statement = normalized(source)
+    .split(/[.!?]+/)
+    .find((candidate) => subject.test(candidate));
 
-  expect(prose).toMatch(/github-native issue (data|state).*authoritative/);
-  expect(prose).toMatch(/body .*mirrors.*not.*authoritative/);
-  expect(prose).not.toMatch(/native (github )?graph.*not authoritative/);
-  expect(prose).not.toMatch(
-    /body (status|relationships?|mirrors?).*\b(is|are) authoritative/
+  expect(statement).toBeDefined();
+  return statement ?? "";
+}
+
+function expectNativeAuthority(source: string) {
+  const statement = authorityStatement(
+    source,
+    /github-native issue (data|state)/
   );
+
+  expect(statement).toMatch(/parent\/sub-issue relationships?|hierarch/);
+  expect(statement).toMatch(/dependenc/);
+  expect(statement).toMatch(/(?:sibling )?order/);
+  expect(statement).toMatch(/(?:open\/closed )?state/);
+  expect(statement).toMatch(/\b(is|are) authoritative\b/);
+  expect(statement).not.toMatch(
+    /\b(is|are) (not|never) authoritative\b|\b(is|are) non-authoritative\b/
+  );
+}
+
+function expectBodyMirrorNonAuthority(source: string) {
+  const statement = authorityStatement(
+    source,
+    /body .*relationship.*status.*mirrors/
+  );
+
+  expect(statement).toMatch(
+    /\b(is|are) (not|never) authoritative\b|\b(is|are) non-authoritative\b/
+  );
+  expect(statement).not.toMatch(/\b(is|are) authoritative\b/);
+}
+
+function expectNativeGraphAuthority(source: string) {
+  expectNativeAuthority(source);
+  expectBodyMirrorNonAuthority(source);
 }
 
 describe("frontend work-graph governance", () => {
@@ -47,11 +78,35 @@ describe("frontend work-graph governance", () => {
     }
 
     expectNativeGraphAuthority(agents);
+
+    const nativeAuthority =
+      "GitHub-native issue data, parent/sub-issue relationships, dependencies, sibling order, and open/closed state are authoritative.";
+    const nativeNonAuthority =
+      "GitHub-native issue data, parent/sub-issue relationships, dependencies, sibling order, and open/closed state are not authoritative.";
+    const bodyNonAuthority =
+      "Body relationship/status mirrors are not authoritative.";
+    const bodyAuthority = "Body relationship/status mirrors are authoritative.";
+
     expect(() =>
-      expectNativeGraphAuthority(
-        "The native graph is not authoritative. Body status is authoritative."
-      )
+      expectNativeAuthority(`${nativeNonAuthority} ${bodyNonAuthority}`)
     ).toThrow();
+    expectBodyMirrorNonAuthority(`${nativeNonAuthority} ${bodyNonAuthority}`);
+
+    expectNativeAuthority(`${nativeAuthority} ${bodyAuthority}`);
+    expect(() =>
+      expectBodyMirrorNonAuthority(`${nativeAuthority} ${bodyAuthority}`)
+    ).toThrow();
+
+    expect(() =>
+      expectNativeAuthority(`${nativeNonAuthority} ${bodyAuthority}`)
+    ).toThrow();
+    expect(() =>
+      expectBodyMirrorNonAuthority(`${nativeNonAuthority} ${bodyAuthority}`)
+    ).toThrow();
+
+    expectNativeGraphAuthority(
+      "GitHub-native issue state, including hierarchy, dependencies, order, and open/closed state, is authoritative. Body relationship and status mirrors are not authoritative."
+    );
   });
 
   it("keeps decomposition, findings, review, and evidence finite", () => {
