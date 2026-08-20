@@ -11,6 +11,10 @@ applyTo: "src/**/*.ts,src/**/*.tsx,tests/**/*.ts,tests/**/*.tsx,vite.config.ts"
 - Keep components presentational where possible and move reusable logic into hooks or API clients.
 - Use functional components, named exports, and explicit props interfaces.
 - Preserve strict TypeScript and generated API types from `@/types/api`.
+- Prefer maintained browser/framework primitives for URL parsing, cryptography,
+  auth/session handling, IndexedDB, Web Locks, request cancellation, schema
+  validation, and accessibility. Do not add dependencies for existing
+  primitives; use allowlists only for finite known sets.
 - Test user-visible behavior with Testing Library. Prefer MSW for API boundaries.
 - Run the smallest relevant validation for each change: tests, typecheck, and lint.
 - Maintain accessibility, semantic markup, and responsive behavior.
