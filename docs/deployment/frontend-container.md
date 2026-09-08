@@ -180,10 +180,11 @@ load so an old customer configuration cannot be served offline.
 ## Deployment Boundary
 
 This repository owns the image and its workload contract only: UID/GID
-`101:101`, a read-only root filesystem, no added capabilities, a
-non-executable writable `/tmp`, HTTP port `8080`, `/health/live`, and the
-non-secret `SECPAL_API_URL` runtime setting. Runtime composition and all
-public-edge behavior are owned by
+`101:101`, a read-only root filesystem, every Linux capability dropped, and
+privilege escalation prohibited. It also requires a non-executable writable
+`/tmp`, HTTP port `8080`, `/health/live`, and the non-secret
+`SECPAL_API_URL` runtime setting. Runtime composition and all public-edge
+behavior are owned by
 [SecPal/deployment#248](https://github.com/SecPal/deployment/issues/248).
 
 ## Base Image Updates

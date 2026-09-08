@@ -314,6 +314,37 @@ describe("Build Configuration and Source Verification", () => {
     expect(containerConfig).toContain("location ~ ^/(?:v1|sanctum|health)");
   });
 
+  it("keeps the deployment workload contract explicitly least-privileged", () => {
+    const containerGuide = readRepoFile(
+      "docs/deployment/frontend-container.md"
+    );
+
+    expect(containerGuide).toMatch(/UID\/GID\s+`101:101`/u);
+    expect(containerGuide).toContain("read-only root filesystem");
+    expect(containerGuide).toMatch(/every Linux capability dropped/u);
+    expect(containerGuide).toContain("privilege escalation");
+    expect(containerGuide).toMatch(/writable\s+`\/tmp`/u);
+    expect(containerGuide).toContain("HTTP port `8080`");
+    expect(containerGuide).not.toContain("no added capabilities");
+  });
+
+  it("documents the deployment source-offer handoff without prescribing host implementation", () => {
+    const deploymentGuide = readRepoFile("docs/deployment-spa-routing.md");
+
+    expect(deploymentGuide).toContain("same-origin `/source-offer.json`");
+    expect(deploymentGuide).toContain('"version": 1');
+    expect(deploymentGuide).toContain('"frontend"');
+    expect(deploymentGuide).toContain('"contracts"');
+    expect(deploymentGuide).toMatch(/`android` is optional/u);
+    expect(deploymentGuide).toContain("immutable published");
+    expect(deploymentGuide).toContain("`GET /v1/release`");
+    expect(deploymentGuide).toContain("fallback");
+    expect(deploymentGuide).toContain("SecPal/deployment");
+    expect(deploymentGuide).not.toMatch(
+      /Uberspace|\.htaccess|rsync|Vercel|Netlify|Certbot|Kubernetes/u
+    );
+  });
+
   it("keeps Vite static-copy scoped to distributable frontend artifacts", () => {
     const viteConfig = readRepoFile("vite.config.ts");
 

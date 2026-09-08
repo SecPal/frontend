@@ -30,6 +30,43 @@ The image, runtime API-origin validation, cache rules, source-offer delivery,
 PWA files, and local container verification are documented in the
 [frontend container guide](deployment/frontend-container.md).
 
+## Source Offer Handoff
+
+Deployment composition must make a valid same-origin `/source-offer.json`
+available with the deployed frontend. The immutable image has the serving
+boundary for this file, but not deployment-specific corresponding-source
+values.
+
+The file must satisfy the frontend parser's version-1 manifest contract and
+provide immutable published corresponding-source URLs for `frontend` and
+`contracts`. `android` is optional when it is part of the deployed source
+offer.
+
+```json
+{
+  "version": 1,
+  "repositories": {
+    "frontend": {
+      "sourceUrl": "<immutable published frontend corresponding-source URL>"
+    },
+    "contracts": {
+      "sourceUrl": "<immutable published contracts corresponding-source URL>"
+    }
+  }
+}
+```
+
+Do not use mutable repository-root URLs, branch archives, `releases/latest`,
+or other mutable pseudo-release URLs. If the file is absent, malformed, or
+omits a required entry, the frontend uses its fallback source links; that does
+not establish a deployed immutable source offer.
+
+API corresponding-source metadata remains separate: the frontend obtains it
+from `GET /v1/release` at the canonical API origin, rather than adding it to
+this frontend manifest. Exact runtime materialization of the manifest is owned
+by [SecPal/deployment#248](https://github.com/SecPal/deployment/issues/248);
+this repository defines the handoff contract, not a host implementation.
+
 ## Deployment Ownership
 
 Host runtime composition, public routing, TLS, certificates, ACME, public
