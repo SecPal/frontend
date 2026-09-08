@@ -210,10 +210,6 @@ export default defineConfig(({ mode, command }) => {
       viteStaticCopy({
         targets: [
           {
-            src: "public/.htaccess",
-            dest: ".",
-          },
-          {
             src: "config/assetlinks.json",
             dest: ".well-known",
             rename: {

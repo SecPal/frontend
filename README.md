@@ -121,12 +121,12 @@ Important operational entry points for the current app:
 - `app.secpal.dev` is the canonical live frontend host
 - `https://api.secpal.dev` is the canonical API origin for production builds
 - browser sessions use Laravel Sanctum SPA auth with CSRF bootstrapping
-- production deployments must preserve the SPA routing and header hardening documented below
+- deployment owners consume the immutable frontend image and apply public-edge policy
 
 Current operational references:
 
-- [docs/deployment/frontend-container.md](docs/deployment/frontend-container.md) - production frontend image, startup configuration, and hardened runtime contract
-- [docs/deployment-spa-routing.md](docs/deployment-spa-routing.md) - Apache/Nginx SPA routing, security headers, and `VITE_API_URL` requirements
+- [docs/deployment/frontend-container.md](docs/deployment/frontend-container.md) - frontend image, startup configuration, and hardened runtime contract
+- [docs/deployment-spa-routing.md](docs/deployment-spa-routing.md) - frontend artifact/container and deployment ownership boundary
 - [PWA_OFFLINE_PERSISTENCE_AUDIT.md](PWA_OFFLINE_PERSISTENCE_AUDIT.md) - active offline-storage audit and follow-up issue mapping
 - [CONTRIBUTING.md](CONTRIBUTING.md) - local workflow, preflight usage, and PR rules
 - [SECURITY.md](SECURITY.md) - vulnerability reporting and security process

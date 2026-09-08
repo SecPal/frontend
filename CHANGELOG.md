@@ -42,6 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Removed superseded shared-hosting and host-edge deployment artifacts from the
+  frontend repository. The current documentation and regression coverage now
+  define only the immutable frontend artifact/container contract and direct
+  runtime and public-edge ownership to `SecPal/deployment`.
 - Local pre-push advice now resolves the remote's advertised default branch
   and falls back to `main`, instead of reusing a potentially stale local
   `origin/HEAD` reference for branch scope and PR-size reporting.

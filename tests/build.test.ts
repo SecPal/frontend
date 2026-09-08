@@ -176,12 +176,6 @@ function getIndentedSection(text: string, sectionName: string): string {
   return sectionLines.join("\n");
 }
 
-function expectWarningFreeShippedNginxConfigSyntax(nginxConfig: string): void {
-  expect(nginxConfig).toMatch(/^\s*http2\s+on;$/mu);
-  expect(nginxConfig).not.toMatch(/^\s*listen\b[^#;\n]*\bhttp2\b[^;\n]*;$/mu);
-  expect(nginxConfig).not.toMatch(/^\s*ssi_types\s+text\/html;$/mu);
-}
-
 function expectStrictBuildAssets(distRoot: string): void {
   const assetRoot = path.join(distRoot, "assets");
   const assetNames = readdirSync(assetRoot);
@@ -268,13 +262,15 @@ describe("Build Configuration and Source Verification", () => {
     );
   });
 
-  it("keeps the Apache SPA routing file in the build inputs", () => {
-    expect(existsSync(path.join(repoRoot, "public/.htaccess"))).toBe(true);
-    expect(existsSync(path.join(repoRoot, "index.html"))).toBe(true);
+  it("excludes superseded host deployment artifacts from the frontend build", () => {
+    expect(existsSync(path.join(repoRoot, "public/.htaccess"))).toBe(false);
+    expect(
+      existsSync(path.join(repoRoot, "deploy/nginx/app.secpal.dev.conf"))
+    ).toBe(false);
 
-    const htaccess = readRepoFile("public/.htaccess");
-    expect(htaccess).toContain("RewriteEngine On");
-    expect(htaccess).toContain("RewriteRule . /index.html [L]");
+    const viteConfig = readRepoFile("vite.config.ts");
+
+    expect(viteConfig).not.toContain("public/.htaccess");
   });
 
   it("ships Android Digital Asset Links for passkey trust on app.secpal.dev", () => {
@@ -310,25 +306,20 @@ describe("Build Configuration and Source Verification", () => {
     ]);
   });
 
-  it("ships a versioned Nginx config for app.secpal.dev", () => {
-    expect(
-      existsSync(path.join(repoRoot, "deploy/nginx/app.secpal.dev.conf"))
-    ).toBe(true);
+  it("keeps the container-local SPA routing contract", () => {
+    const containerConfig = readRepoFile("docker/default.conf");
 
-    const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");
-
-    expect(nginxConfig).toContain("server_name app.secpal.dev;");
-    expect(nginxConfig).toContain("try_files $uri $uri/ /index.html;");
-    expect(nginxConfig).toContain("location ~ ^/(v1|sanctum)(/|$)");
-    expect(nginxConfig).toContain("location ~ ^/health(/|$)");
+    expect(containerConfig).toContain("listen 8080;");
+    expect(containerConfig).toContain("try_files $uri $uri/ /index.html;");
+    expect(containerConfig).toContain("location ~ ^/(?:v1|sanctum|health)");
   });
 
-  it("keeps vite-plugin-static-copy configured for .htaccess", () => {
+  it("keeps Vite static-copy scoped to distributable frontend artifacts", () => {
     const viteConfig = readRepoFile("vite.config.ts");
 
     expect(viteConfig).toContain("vite-plugin-static-copy");
-    expect(viteConfig).toContain('src: "public/.htaccess"');
-    expect(viteConfig).toContain('dest: "."');
+    expect(viteConfig).toContain('src: "config/assetlinks.json"');
+    expect(viteConfig).not.toContain(".htaccess");
   });
 
   it("runs release-build artifact checks separately from the parallel CI suite", () => {
@@ -824,7 +815,6 @@ jobs:
     expect(envExample).toContain("https://api.secpal.dev");
     expect(envExample).not.toContain("customer.example");
     expect(deploymentDoc).toContain("https://api.secpal.dev");
-    expect(deploymentDoc).toContain("https://customer-api.secpal.dev");
     expect(deploymentDoc).not.toContain("customer.example");
   });
 
@@ -1098,65 +1088,49 @@ jobs:
     );
   });
 
-  it("keeps nginx serving Digital Asset Links even when hidden directories are skipped during deploy", () => {
-    const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");
+  it("keeps the container serving Digital Asset Links", () => {
+    const nginxConfig = readRepoFile("docker/default.conf");
 
     expect(nginxConfig).toContain("location = /.well-known/assetlinks.json");
     expect(nginxConfig).toContain("default_type application/json");
     expect(nginxConfig).toContain("try_files $uri /assetlinks.json =404;");
   });
 
-  it("hardens browser responses with the required security headers", () => {
-    const htaccess = readRepoFile("public/.htaccess");
-    const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");
+  it("hardens container-local static responses", () => {
+    const securityHeaders = readRepoFile("docker/security-headers.conf");
 
     const requiredHeaders = [
-      "Content-Security-Policy",
       "Permissions-Policy",
-      "Strict-Transport-Security",
       "Referrer-Policy",
       "X-Frame-Options",
       "X-Content-Type-Options",
-      "Cross-Origin-Opener-Policy",
-      "Cross-Origin-Resource-Policy",
-      "Origin-Agent-Cluster",
       "X-Permitted-Cross-Domain-Policies",
     ];
 
     for (const header of requiredHeaders) {
-      expect(htaccess).toContain(header);
-      expect(nginxConfig).toContain(header);
+      expect(securityHeaders).toContain(header);
     }
   });
 
   it("ships an enforceable CSP that fits the PWA runtime", () => {
-    const htaccess = readRepoFile("public/.htaccess");
-    const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");
+    const indexHtml = readRepoFile("index.html");
     const viteConfig = readRepoFile("vite.config.ts");
 
-    expect(htaccess).toContain("default-src 'self'");
-    expect(htaccess).toContain("script-src 'self'");
-    expect(htaccess).toContain("object-src 'none'");
-    expect(htaccess).toContain("frame-ancestors 'none'");
-    expect(htaccess).toContain("worker-src 'self'");
-    expect(htaccess).toContain("manifest-src 'self'");
-    expect(htaccess).toContain("connect-src 'self'");
-    expect(htaccess).toContain("style-src 'self'");
-    expect(htaccess).toContain("style-src-elem 'self'");
-    expect(htaccess).toContain("style-src-attr 'none'");
-    expect(htaccess).not.toMatch(/unsafe-|nonce-|csp_nonce|UNIQUE_ID/u);
-
-    expect(nginxConfig).toContain("default-src 'self'");
-    expect(nginxConfig).toContain("script-src 'self'");
-    expect(nginxConfig).toContain("object-src 'none'");
-    expect(nginxConfig).toContain("frame-ancestors 'none'");
-    expect(nginxConfig).toContain("worker-src 'self'");
-    expect(nginxConfig).toContain("manifest-src 'self'");
-    expect(nginxConfig).toContain("connect-src 'self'");
-    expect(nginxConfig).toContain("style-src 'self'");
-    expect(nginxConfig).toContain("style-src-elem 'self'");
-    expect(nginxConfig).toContain("style-src-attr 'none'");
-    expect(nginxConfig).not.toMatch(/unsafe-|nonce-|csp_nonce|\bssi\b/u);
+    for (const directive of [
+      "default-src 'self'",
+      "script-src 'self'",
+      "object-src 'none'",
+      "frame-src 'none'",
+      "worker-src 'self'",
+      "manifest-src 'self'",
+      "connect-src 'self'",
+      "style-src 'self'",
+      "style-src-elem 'self'",
+      "style-src-attr 'none'",
+    ]) {
+      expect(indexHtml).toContain(directive);
+    }
+    expect(indexHtml).not.toMatch(/unsafe-|nonce-|csp_nonce|UNIQUE_ID/u);
     expect(viteConfig).not.toMatch(/cspNonce|nonce-|#echo|\bssi\b/u);
     expect(viteConfig).toContain(
       'globPatterns: ["**/*.{js,css,ico,png,svg,woff,woff2,md}"]'
@@ -1236,26 +1210,8 @@ jobs:
     expect(`${main}\n${indexHtml}`).not.toMatch(/nonce-|cspNonce|#echo/u);
   });
 
-  it("adds dedicated delivery rules for service worker and manifest files", () => {
-    const htaccess = readRepoFile("public/.htaccess");
-    const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");
-
-    expect(htaccess).toContain('Files "sw.js"');
-    expect(htaccess).toContain("Service-Worker-Allowed");
-    expect(htaccess).toContain("application/manifest+json");
-    expect(htaccess).toContain("manifest.webmanifest");
-    expect(htaccess).toContain("RewriteCond %{REQUEST_FILENAME} !-f");
-    expect(htaccess).toContain("RewriteRule ^source-offer\\.json$ - [R=404,L]");
-    expect(htaccess).toContain(
-      "RewriteCond %{REQUEST_FILENAME} !-f\n  RewriteRule ^source-offer\\.json$ - [R=404,L]"
-    );
-    expect(htaccess).toContain('Files "source-offer.json"');
-    expect(htaccess).toContain('Cache-Control "no-cache, must-revalidate"');
-    expect(htaccess).toContain('Files "theme-color.js"');
-    expect(htaccess).toContain('Files "document-language.js"');
-    expect(htaccess).toContain(
-      'Cache-Control "no-cache, no-store, must-revalidate"'
-    );
+  it("adds container-local delivery rules for PWA files", () => {
+    const nginxConfig = readRepoFile("docker/default.conf");
 
     expect(nginxConfig).toContain("location = /sw.js");
     expect(nginxConfig).toContain("Service-Worker-Allowed");
@@ -1265,61 +1221,6 @@ jobs:
     expect(nginxConfig).toContain("location = /theme-color.js");
     expect(nginxConfig).toContain("location = /document-language.js");
     expect(nginxConfig).toContain("default_type application/json");
-  });
-
-  it("keeps the shipped nginx config free of known syntax warnings", () => {
-    const nginxConfig = readRepoFile("deploy/nginx/app.secpal.dev.conf");
-
-    expectWarningFreeShippedNginxConfigSyntax(nginxConfig);
-  });
-
-  it("rejects commented http2 toggles", () => {
-    expect(() =>
-      expectWarningFreeShippedNginxConfigSyntax(
-        ["server {", "  listen 443 ssl;", "  # http2 on;", "}"].join("\n")
-      )
-    ).toThrowError();
-  });
-
-  it("rejects deprecated http2 listen parameters with extra flags", () => {
-    expect(() =>
-      expectWarningFreeShippedNginxConfigSyntax(
-        [
-          "server {",
-          "  listen 443 ssl http2 reuseport;",
-          "  http2 on;",
-          "}",
-        ].join("\n")
-      )
-    ).toThrowError(/listen\\b.*http2/u);
-  });
-
-  it("rejects a live ssi_types text/html override", () => {
-    expect(() =>
-      expectWarningFreeShippedNginxConfigSyntax(
-        ["server {", "  http2 on;", "  ssi_types text/html;", "}"].join("\n")
-      )
-    ).toThrowError(/ssi_types/u);
-  });
-
-  it("ships a live smoke check for deployed PWA security headers", () => {
-    expect(
-      existsSync(path.join(repoRoot, "scripts/check-live-pwa-headers.sh"))
-    ).toBe(true);
-    expect(
-      existsSync(
-        path.join(repoRoot, "scripts/check-workspace-preview-pwa-headers.mjs")
-      )
-    ).toBe(true);
-
-    const packageJson = readRepoFile("package.json");
-
-    expect(packageJson).toContain(
-      '"test:live:pwa-headers": "bash ./scripts/check-live-pwa-headers.sh"'
-    );
-    expect(packageJson).toContain(
-      '"test:preview:pwa-headers": "node ./scripts/check-workspace-preview-pwa-headers.mjs"'
-    );
   });
 
   it("ships a live smoke check for deployed assetlinks delivery", () => {
@@ -1385,19 +1286,3 @@ jobs:
     );
   });
 });
-
-/**
- * Manual Verification Checklist
- *
- * After running `npm run build`, manually verify:
- *
- * 1. dist/.htaccess exists
- * 2. dist/.htaccess contains "RewriteEngine On"
- * 3. dist/.htaccess contains "RewriteRule . /index.html [L]"
- * 4. dist/index.html exists
- *
- * Command to verify:
- * ```bash
- * npm run build && ls -la dist/.htaccess && grep "RewriteEngine On" dist/.htaccess
- * ```
- */

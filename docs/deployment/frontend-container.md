@@ -10,8 +10,8 @@ existing production Web/PWA artifact. It does not contain Node.js and does not
 rewrite HTML, JavaScript, CSS, the service worker, or any other build output at
 startup.
 
-The same immutable image is intended for every deployment. A deployment
-selects its API origin only when the container starts.
+The same immutable image is consumed by deployment owners. The runtime selects
+its API origin only when the container starts.
 
 ## Build
 
@@ -98,7 +98,7 @@ commit, `refs/heads/main`, and GitHub-hosted runner binding.
 `4fc2796409b7c37a541f515ccf29236f143fc132`, closing `SecPal/deployment#3`.
 Phase C is complete.
 
-## Run
+## Local Container Verification
 
 `SECPAL_API_URL` is required and must be one exact ASCII HTTPS origin. Paths,
 trailing slashes, user information, queries, fragments, whitespace, control
@@ -177,21 +177,14 @@ may add a stricter policy without changing the artifact.
 generic script runtime caching. It is fetched from the network on every app
 load so an old customer configuration cannot be served offline.
 
-## Orchestrator Assumptions
+## Deployment Boundary
 
-Docker and Kubernetes-compatible runtimes should preserve these settings:
-
-- `runAsNonRoot: true` with UID/GID `101`;
-- `readOnlyRootFilesystem: true`;
-- `allowPrivilegeEscalation: false`;
-- drop every Linux capability;
-- provide a non-executable tmpfs or memory-backed `emptyDir` at `/tmp`;
-- expose container port `8080` over HTTP;
-- use `/health/live` as the liveness endpoint;
-- pass `SECPAL_API_URL` as ordinary non-secret deployment configuration.
-
-Docker Compose and complete Kubernetes manifests are intentionally deferred to
-deployment integration work.
+This repository owns the image and its workload contract only: UID/GID
+`101:101`, a read-only root filesystem, no added capabilities, a
+non-executable writable `/tmp`, HTTP port `8080`, `/health/live`, and the
+non-secret `SECPAL_API_URL` runtime setting. Runtime composition and all
+public-edge behavior are owned by
+[SecPal/deployment#248](https://github.com/SecPal/deployment/issues/248).
 
 ## Base Image Updates
 
