@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { apiConfig } from "../config";
 import type { CustomerTransactionalEditRequest } from "@/types/api/customers";
 import {
+  CustomerTransactionalEditError,
   getCustomerEditSnapshot,
   transactionallyEditCustomer,
 } from "./customersApi";
@@ -92,25 +93,33 @@ describe("transactional customer edit API", () => {
     );
   });
 
-  it("surfaces the neutral API failure message", async () => {
+  it("preserves the stale transactional failure status and code", async () => {
     vi.mocked(csrf.apiFetch).mockResolvedValue(
       new Response(
         JSON.stringify({
-          message: "Insufficient permissions",
-          code: "FORBIDDEN",
+          message: "The customer changed while you were editing.",
+          code: "CUSTOMER_EDIT_STALE",
         }),
         {
-          status: 403,
+          status: 412,
           headers: { "Content-Type": "application/json" },
         }
       )
     );
 
-    await expect(
-      transactionallyEditCustomer(customer.id, '"customer-v1"', {
+    try {
+      await transactionallyEditCustomer(customer.id, '"customer-v1"', {
         customer: {},
         customer_establishments: [],
-      })
-    ).rejects.toThrow("Insufficient permissions");
+      });
+      expect.fail("Expected transactional edit to fail");
+    } catch (error) {
+      expect(error).toBeInstanceOf(CustomerTransactionalEditError);
+      expect(error).toMatchObject({
+        message: "The customer changed while you were editing.",
+        status: 412,
+        code: "CUSTOMER_EDIT_STALE",
+      });
+    }
   });
 });

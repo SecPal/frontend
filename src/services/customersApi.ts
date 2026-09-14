@@ -151,6 +151,18 @@ export interface CustomerEditSnapshot {
   etag: StrongEntityTag;
 }
 
+export class CustomerTransactionalEditError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly code?: string,
+    public readonly errors?: Record<string, string[]>
+  ) {
+    super(message);
+    this.name = "CustomerTransactionalEditError";
+  }
+}
+
 /**
  * Gets the complete customer representation and validator required for an
  * atomic customer edit.
@@ -201,10 +213,17 @@ export async function transactionallyEditCustomer(
   );
 
   if (!response.ok) {
-    const error = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-    throw handleApiValidationError(error);
+    const error: {
+      message?: string;
+      code?: unknown;
+      errors?: Record<string, string[]>;
+    } = await response.json().catch(() => ({ message: response.statusText }));
+    throw new CustomerTransactionalEditError(
+      formatValidationErrors(error),
+      response.status,
+      typeof error.code === "string" ? error.code : undefined,
+      error.errors
+    );
   }
 
   const data = await response.json();

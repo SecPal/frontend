@@ -28,6 +28,7 @@ import type {
   UpdateCustomerRequest,
 } from "@/types/api/customers";
 import {
+  CustomerTransactionalEditError,
   getCustomerEditSnapshot,
   transactionallyEditCustomer,
 } from "../../services/customersApi";
@@ -45,6 +46,35 @@ function emptyAssignment(): CustomerEstablishmentFormValue {
   };
 }
 const optional = (value: string) => value.trim() || null;
+
+function formFromCustomer(customer: Customer): UpdateCustomerRequest {
+  return {
+    name: customer.name,
+    vat_id: customer.vat_id ?? null,
+    billing_address: customer.billing_address,
+    is_active: customer.is_active,
+  };
+}
+
+function assignmentsFromCustomer(
+  customer: Customer
+): CustomerEstablishmentFormValue[] {
+  const values = customer.customer_establishments.map((link) => ({
+    key: link.id,
+    id: link.id,
+    establishment_id: link.establishment_id,
+    contact_name: link.contact_name ?? "",
+    email: link.email ?? "",
+    phone: link.phone ?? "",
+    comments: link.comments ?? "",
+  }));
+  return values.length ? values : [emptyAssignment()];
+}
+
+interface CustomerEditIntent {
+  form: UpdateCustomerRequest;
+  assignments: CustomerEstablishmentFormValue[];
+}
 
 export default function CustomerEdit() {
   const { id } = useParams<{ id: string }>();
@@ -73,6 +103,9 @@ export default function CustomerEdit() {
   const [submitError, setSubmitError] = useState<string | null>(
     typeof recoveryError === "string" ? recoveryError : null
   );
+  const [staleIntent, setStaleIntent] = useState<CustomerEditIntent | null>(
+    null
+  );
   const domainNames = useDomainAssignmentNames(
     customer ? [{ legal_entity_id: customer.legal_entity_id }] : []
   );
@@ -91,6 +124,7 @@ export default function CustomerEdit() {
       setEstablishments([]);
       setLoadError(null);
       setAssignmentLoadError(null);
+      setStaleIntent(null);
       if (!id) {
         setLoading(false);
         return;
@@ -102,22 +136,8 @@ export default function CustomerEdit() {
         const loadedCustomer = snapshot.customer;
         setCustomer(loadedCustomer);
         setEtag(snapshot.etag);
-        setForm({
-          name: loadedCustomer.name,
-          vat_id: loadedCustomer.vat_id ?? null,
-          billing_address: loadedCustomer.billing_address,
-          is_active: loadedCustomer.is_active,
-        });
-        const values = loadedCustomer.customer_establishments.map((link) => ({
-          key: link.id,
-          id: link.id,
-          establishment_id: link.establishment_id,
-          contact_name: link.contact_name ?? "",
-          email: link.email ?? "",
-          phone: link.phone ?? "",
-          comments: link.comments ?? "",
-        }));
-        setAssignments(values.length ? values : [emptyAssignment()]);
+        setForm(formFromCustomer(loadedCustomer));
+        setAssignments(assignmentsFromCustomer(loadedCustomer));
         setEstablishmentsLoading(true);
         try {
           const options = await listEstablishmentLookups(
@@ -213,11 +233,41 @@ export default function CustomerEdit() {
       });
       navigate(`/customers/${id}`);
     } catch (reason) {
-      setSubmitError(
-        reason instanceof Error
-          ? reason.message
-          : _(msg`Failed to update customer`)
-      );
+      if (
+        reason instanceof CustomerTransactionalEditError &&
+        reason.status === 412 &&
+        reason.code === "CUSTOMER_EDIT_STALE"
+      ) {
+        const intent = { form, assignments };
+        setEtag(null);
+        try {
+          const currentSnapshot = await getCustomerEditSnapshot(id);
+          if (activeRouteId.current !== id) return;
+          setCustomer(currentSnapshot.customer);
+          setEtag(currentSnapshot.etag);
+          setForm(formFromCustomer(currentSnapshot.customer));
+          setAssignments(assignmentsFromCustomer(currentSnapshot.customer));
+          setStaleIntent(intent);
+          setSubmitError(
+            _(
+              msg`This customer changed while you were editing. Your changes were not saved. The latest customer data is shown below; review it before saving again.`
+            )
+          );
+        } catch {
+          if (activeRouteId.current !== id) return;
+          setSubmitError(
+            _(
+              msg`This customer changed while you were editing, and the latest customer data could not be loaded. Reload the page before trying again.`
+            )
+          );
+        }
+      } else {
+        setSubmitError(
+          reason instanceof Error
+            ? reason.message
+            : _(msg`Failed to update customer`)
+        );
+      }
     } finally {
       setSaving(false);
     }
@@ -244,7 +294,22 @@ export default function CustomerEdit() {
           {submitError && (
             <Alert className="border-destructive/30 bg-destructive/10">
               <AlertDescription className="text-destructive">
-                {submitError}
+                <span className="block">{submitError}</span>
+                {staleIntent ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-3"
+                    onClick={() => {
+                      setForm(staleIntent.form);
+                      setAssignments(staleIntent.assignments);
+                      setStaleIntent(null);
+                      setSubmitError(null);
+                    }}
+                  >
+                    <Trans>Restore My Changes</Trans>
+                  </Button>
+                ) : null}
               </AlertDescription>
             </Alert>
           )}
