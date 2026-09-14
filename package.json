@@ -102,7 +102,7 @@
     "@lingui/react": "^6.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "dexie": "^4.4.5",
+    "dexie": "^4.4.6",
     "dexie-react-hooks": "^4.4.0",
     "lucide-react": "^1.42.0",
     "qrcode": "^1.5.4",
