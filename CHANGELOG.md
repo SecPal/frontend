@@ -42,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Customer edits now submit master data and the complete desired establishment
+  assignment snapshot through the transactional API, removing compensating
+  frontend reconciliation and rollback requests.
 - Removed superseded shared-hosting and host-edge deployment artifacts from the
   frontend repository. The current documentation and regression coverage now
   define only the immutable frontend artifact/container contract and direct

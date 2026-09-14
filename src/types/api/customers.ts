@@ -19,3 +19,8 @@ export type UpdateCustomerEstablishmentRequest =
 export type Address = Schemas["Address"];
 export type Contact = Schemas["Contact"];
 export type UpdateCustomerRequest = Schemas["CustomerUpdateRequest"];
+export type CustomerTransactionalEditRequest =
+  Schemas["CustomerTransactionalEditRequest"];
+export type CustomerTransactionalEditResult =
+  Schemas["CustomerTransactionalEditResult"];
+export type StrongEntityTag = Schemas["StrongEntityTag"];

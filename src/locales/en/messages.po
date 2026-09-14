@@ -534,6 +534,7 @@ msgstr "Local contact name {number}"
 
 #: src/components/OrganizationalUnitTree.tsx
 #: src/components/RouteGuardState.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Login.tsx
 msgid "Retry"
 msgstr "Retry"
@@ -1089,6 +1090,7 @@ msgid "Lowest rank number the user can view (1 = CEO, higher numbers = lower pos
 msgstr "Lowest rank number the user can view (1 = CEO, higher numbers = lower positions). Range: 1-255"
 
 #: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 msgid "Some establishment details could not be loaded."
 msgstr "Some establishment details could not be loaded."
 
@@ -1816,10 +1818,6 @@ msgstr "All units"
 msgid "Legal-entity master data"
 msgstr "Legal-entity master data"
 
-#: src/pages/Customers/CustomerEdit.tsx
-msgid "The establishment assignments could not be fully restored. Reload the page before making further changes."
-msgstr "The establishment assignments could not be fully restored. Reload the page before making further changes."
-
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload File"
 msgstr "Upload File"
@@ -2396,10 +2394,6 @@ msgstr "Passwords do not match"
 #: src/components/CustomerEstablishmentFields.tsx
 msgid "Remove establishment {number}"
 msgstr "Remove establishment {number}"
-
-#: src/pages/Customers/CustomerEdit.tsx
-msgid "Customer data could not be fully restored. Reload the page before making further changes."
-msgstr "Customer data could not be fully restored. Reload the page before making further changes."
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "The end date must be on or after the start date."

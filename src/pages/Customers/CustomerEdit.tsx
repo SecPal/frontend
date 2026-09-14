@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -23,19 +23,15 @@ import { CustomerEstablishmentFields } from "@/components/CustomerEstablishmentF
 import type { CustomerEstablishmentFormValue } from "@/components/CustomerEstablishmentFields";
 import type {
   Customer,
-  CustomerEstablishment,
   EstablishmentLookup,
+  StrongEntityTag,
   UpdateCustomerRequest,
 } from "@/types/api/customers";
-import { getCustomer, updateCustomer } from "../../services/customersApi";
 import {
-  listAllCustomerEstablishments,
-  listEstablishmentLookups,
-} from "../../services/customerDomainApi";
-import {
-  CustomerEstablishmentRecoveryError,
-  reconcileCustomerEstablishments,
-} from "./customerEstablishmentReconciliation";
+  getCustomerEditSnapshot,
+  transactionallyEditCustomer,
+} from "../../services/customersApi";
+import { listEstablishmentLookups } from "../../services/customerDomainApi";
 import { useDomainAssignmentNames } from "../../hooks/useDomainAssignmentNames";
 
 function emptyAssignment(): CustomerEstablishmentFormValue {
@@ -50,15 +46,6 @@ function emptyAssignment(): CustomerEstablishmentFormValue {
 }
 const optional = (value: string) => value.trim() || null;
 
-function originalCustomerUpdate(customer: Customer): UpdateCustomerRequest {
-  return {
-    name: customer.name,
-    vat_id: customer.vat_id ?? null,
-    billing_address: customer.billing_address,
-    is_active: customer.is_active,
-  };
-}
-
 export default function CustomerEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -66,20 +53,23 @@ export default function CustomerEdit() {
   const { _ } = useLingui();
   const recoveryError = (location.state as { recoveryError?: unknown } | null)
     ?.recoveryError;
+  const activeRouteId = useRef(id);
   const [customer, setCustomer] = useState<Customer | null>(null);
+  const [etag, setEtag] = useState<StrongEntityTag | null>(null);
   const [form, setForm] = useState<UpdateCustomerRequest>({});
   const [assignments, setAssignments] = useState<
     CustomerEstablishmentFormValue[]
-  >([]);
-  const [originalAssignments, setOriginalAssignments] = useState<
-    CustomerEstablishment[]
   >([]);
   const [establishments, setEstablishments] = useState<EstablishmentLookup[]>(
     []
   );
   const [loading, setLoading] = useState(true);
+  const [establishmentsLoading, setEstablishmentsLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [assignmentLoadError, setAssignmentLoadError] = useState<string | null>(
+    null
+  );
   const [submitError, setSubmitError] = useState<string | null>(
     typeof recoveryError === "string" ? recoveryError : null
   );
@@ -87,37 +77,38 @@ export default function CustomerEdit() {
     customer ? [{ legal_entity_id: customer.legal_entity_id }] : []
   );
 
+  useLayoutEffect(() => {
+    activeRouteId.current = id;
+  }, [id]);
+
   useEffect(() => {
     let cancelled = false;
 
     async function loadCustomer() {
       setCustomer(null);
+      setEtag(null);
       setAssignments([]);
-      setOriginalAssignments([]);
       setEstablishments([]);
       setLoadError(null);
+      setAssignmentLoadError(null);
       if (!id) {
         setLoading(false);
         return;
       }
       setLoading(true);
       try {
-        const [loadedCustomer, links] = await Promise.all([
-          getCustomer(id),
-          listAllCustomerEstablishments({ customer_id: id }),
-        ]);
-        const options = await listEstablishmentLookups(
-          loadedCustomer.legal_entity_id
-        );
+        const snapshot = await getCustomerEditSnapshot(id);
         if (cancelled) return;
+        const loadedCustomer = snapshot.customer;
         setCustomer(loadedCustomer);
+        setEtag(snapshot.etag);
         setForm({
           name: loadedCustomer.name,
           vat_id: loadedCustomer.vat_id ?? null,
           billing_address: loadedCustomer.billing_address,
           is_active: loadedCustomer.is_active,
         });
-        const values = links.map((link) => ({
+        const values = loadedCustomer.customer_establishments.map((link) => ({
           key: link.id,
           id: link.id,
           establishment_id: link.establishment_id,
@@ -127,8 +118,22 @@ export default function CustomerEdit() {
           comments: link.comments ?? "",
         }));
         setAssignments(values.length ? values : [emptyAssignment()]);
-        setOriginalAssignments(links);
-        setEstablishments(options);
+        setEstablishmentsLoading(true);
+        try {
+          const options = await listEstablishmentLookups(
+            loadedCustomer.legal_entity_id
+          );
+          if (cancelled) return;
+          setEstablishments(options);
+        } catch {
+          if (!cancelled) {
+            setAssignmentLoadError(
+              _(msg`Some establishment details could not be loaded.`)
+            );
+          }
+        } finally {
+          if (!cancelled) setEstablishmentsLoading(false);
+        }
       } catch (reason: unknown) {
         if (!cancelled)
           setLoadError(
@@ -146,9 +151,41 @@ export default function CustomerEdit() {
     };
   }, [_, id]);
 
+  async function retryEstablishmentLookups() {
+    const activeCustomer = customer?.id === id ? customer : null;
+    if (!activeCustomer) return;
+    const customerId = activeCustomer.id;
+    setEstablishmentsLoading(true);
+    setAssignmentLoadError(null);
+    try {
+      const options = await listEstablishmentLookups(
+        activeCustomer.legal_entity_id
+      );
+      if (activeRouteId.current !== customerId) return;
+      setEstablishments(options);
+    } catch {
+      if (activeRouteId.current !== customerId) return;
+      setAssignmentLoadError(
+        _(msg`Some establishment details could not be loaded.`)
+      );
+    } finally {
+      if (activeRouteId.current === customerId) {
+        setEstablishmentsLoading(false);
+      }
+    }
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!id || !customer || customer.id !== id) return;
+    if (
+      !id ||
+      !customer ||
+      customer.id !== id ||
+      !etag ||
+      establishmentsLoading ||
+      assignmentLoadError
+    )
+      return;
     const selected = assignments.map((item) => item.establishment_id);
     if (
       selected.some((value) => !value) ||
@@ -159,40 +196,27 @@ export default function CustomerEdit() {
     }
     setSaving(true);
     setSubmitError(null);
-    let masterDataUpdated = false;
     try {
-      await updateCustomer(id, {
-        ...form,
-        vat_id: optional(form.vat_id ?? ""),
+      await transactionallyEditCustomer(id, etag, {
+        customer: {
+          ...form,
+          vat_id: optional(form.vat_id ?? ""),
+        },
+        customer_establishments: assignments.map((assignment) => ({
+          customer_id: id,
+          establishment_id: assignment.establishment_id,
+          contact_name: optional(assignment.contact_name),
+          email: optional(assignment.email),
+          phone: optional(assignment.phone),
+          comments: optional(assignment.comments),
+        })),
       });
-      masterDataUpdated = true;
-      await reconcileCustomerEstablishments(
-        id,
-        assignments,
-        originalAssignments
-      );
       navigate(`/customers/${id}`);
     } catch (reason) {
-      if (masterDataUpdated) {
-        try {
-          await updateCustomer(id, originalCustomerUpdate(customer));
-        } catch {
-          setSubmitError(
-            _(
-              msg`Customer data could not be fully restored. Reload the page before making further changes.`
-            )
-          );
-          return;
-        }
-      }
       setSubmitError(
-        reason instanceof CustomerEstablishmentRecoveryError
-          ? _(
-              msg`The establishment assignments could not be fully restored. Reload the page before making further changes.`
-            )
-          : reason instanceof Error
-            ? reason.message
-            : _(msg`Failed to update customer`)
+        reason instanceof Error
+          ? reason.message
+          : _(msg`Failed to update customer`)
       );
     } finally {
       setSaving(false);
@@ -360,9 +384,26 @@ export default function CustomerEdit() {
                 establishment.
               </Trans>
             </p>
+            {assignmentLoadError ? (
+              <Alert role="alert" className="mb-4">
+                <AlertDescription>
+                  <p>{assignmentLoadError}</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-3"
+                    disabled={establishmentsLoading}
+                    onClick={() => void retryEstablishmentLookups()}
+                  >
+                    <Trans>Retry</Trans>
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            ) : null}
             <CustomerEstablishmentFields
               assignments={assignments}
               establishments={establishments}
+              disabled={establishmentsLoading || Boolean(assignmentLoadError)}
               onChange={(key, value) =>
                 setAssignments((current) =>
                   current.map((item) => (item.key === key ? value : item))
@@ -394,7 +435,15 @@ export default function CustomerEdit() {
             </FieldLabel>
           </FormCheckboxField>
           <div className="flex gap-4">
-            <Button type="submit" disabled={saving}>
+            <Button
+              type="submit"
+              disabled={
+                saving ||
+                establishmentsLoading ||
+                Boolean(assignmentLoadError) ||
+                !etag
+              }
+            >
               {saving ? <Trans>Saving...</Trans> : <Trans>Save Changes</Trans>}
             </Button>
             <Button

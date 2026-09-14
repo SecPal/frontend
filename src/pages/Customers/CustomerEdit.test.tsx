@@ -11,6 +11,7 @@ import CustomerEdit from "./CustomerEdit";
 import * as customersApi from "../../services/customersApi";
 import * as domainApi from "../../services/customerDomainApi";
 import * as legalEntityApi from "../../services/customerLegalEntitiesApi";
+import type { Customer } from "@/types/api/customers";
 
 vi.mock("../../services/customersApi");
 vi.mock("../../services/customerDomainApi");
@@ -21,7 +22,7 @@ vi.mock("react-router", async () => ({
   useNavigate: () => navigate,
 }));
 
-const customer = {
+const customer: Customer = {
   id: "customer-1",
   customer_number: "KD-1",
   legal_entity_id: "legal-1",
@@ -33,10 +34,24 @@ const customer = {
     country: "DE",
   },
   is_active: true,
-  customer_establishments: [],
+  customer_establishments: [
+    {
+      id: "link-1",
+      customer_id: "customer-1",
+      establishment_id: "est-1",
+      contact_name: "Local Contact",
+      email: "local@secpal.dev",
+      created_at: "2026-01-01T00:00:00Z",
+      updated_at: "2026-01-01T00:00:00Z",
+    },
+  ],
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
 };
+
+function snapshot(value: Customer = customer, etag = '"customer-v1"') {
+  return { customer: value, etag };
+}
 
 function renderPage() {
   window.history.pushState({}, "", "/customers/customer-1/edit");
@@ -51,21 +66,22 @@ function renderPage() {
   );
 }
 
+function expectNoLegacyWrites() {
+  expect(customersApi.updateCustomer).not.toHaveBeenCalled();
+  expect(domainApi.updateCustomerEstablishment).not.toHaveBeenCalled();
+  expect(domainApi.createCustomerEstablishment).not.toHaveBeenCalled();
+  expect(domainApi.deleteCustomerEstablishment).not.toHaveBeenCalled();
+}
+
 describe("CustomerEdit", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(customersApi.getCustomer).mockResolvedValue(customer);
-    vi.mocked(domainApi.listAllCustomerEstablishments).mockResolvedValue([
-      {
-        id: "link-1",
-        customer_id: "customer-1",
-        establishment_id: "est-1",
-        contact_name: "Local Contact",
-        email: "local@secpal.dev",
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      },
-    ]);
+    vi.mocked(customersApi.getCustomerEditSnapshot).mockResolvedValue(
+      snapshot()
+    );
+    vi.mocked(customersApi.transactionallyEditCustomer).mockResolvedValue(
+      customer
+    );
     vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue([
       { id: "est-1", name: "Berlin" },
       { id: "est-2", name: "Hamburg" },
@@ -73,135 +89,71 @@ describe("CustomerEdit", () => {
     vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
       { id: "legal-1", name: "SecPal GmbH" },
     ]);
-    vi.mocked(customersApi.updateCustomer).mockResolvedValue(customer);
-    vi.mocked(domainApi.updateCustomerEstablishment).mockResolvedValue({
-      id: "link-1",
-      customer_id: "customer-1",
-      establishment_id: "est-1",
-      created_at: "2026-01-01T00:00:00Z",
-      updated_at: "2026-01-01T00:00:00Z",
-    });
   });
 
-  it("loads local contacts into their establishment group", async () => {
+  it("loads the complete customer snapshot into the edit form", async () => {
     renderPage();
+
     expect(
       await screen.findByRole("textbox", { name: /local contact name 1/i })
     ).toHaveValue("Local Contact");
     expect(screen.getByRole("textbox", { name: /local email 1/i })).toHaveValue(
       "local@secpal.dev"
     );
-    expect(screen.queryByText(/organizational unit/i)).not.toBeInTheDocument();
+    expect(customersApi.getCustomerEditSnapshot).toHaveBeenCalledWith(
+      "customer-1"
+    );
+    expect(domainApi.listAllCustomerEstablishments).not.toHaveBeenCalled();
     expect(await screen.findByText(/SecPal GmbH/)).toBeInTheDocument();
-    expect(
-      screen.queryByText(/Legal Entity:\s*legal-1/)
-    ).not.toBeInTheDocument();
   });
 
-  it("updates customer master data separately from the local assignment", async () => {
+  it("submits master data and the complete desired assignments atomically", async () => {
     const user = userEvent.setup();
     renderPage();
-    const localContact = await screen.findByRole("textbox", {
+
+    const name = await screen.findByLabelText(/customer name/i);
+    await user.clear(name);
+    await user.type(name, "Updated ACME GmbH");
+    const localContact = screen.getByRole("textbox", {
       name: /local contact name 1/i,
     });
     await user.clear(localContact);
     await user.type(localContact, "Updated Local Contact");
     await user.click(screen.getByRole("button", { name: /save changes/i }));
+
     await waitFor(() =>
-      expect(domainApi.updateCustomerEstablishment).toHaveBeenCalledWith(
-        "link-1",
-        expect.objectContaining({ contact_name: "Updated Local Contact" })
+      expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledWith(
+        "customer-1",
+        '"customer-v1"',
+        {
+          customer: {
+            name: "Updated ACME GmbH",
+            vat_id: null,
+            billing_address: customer.billing_address,
+            is_active: true,
+          },
+          customer_establishments: [
+            {
+              customer_id: "customer-1",
+              establishment_id: "est-1",
+              contact_name: "Updated Local Contact",
+              email: "local@secpal.dev",
+              phone: null,
+              comments: null,
+            },
+          ],
+        }
       )
     );
-    expect(customersApi.updateCustomer).toHaveBeenCalledWith(
-      "customer-1",
-      expect.not.objectContaining({
-        contact: expect.anything(),
-        notes: expect.anything(),
-      })
-    );
+    expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(1);
+    expectNoLegacyWrites();
     expect(navigate).toHaveBeenCalledWith("/customers/customer-1");
   });
 
-  it("replaces an immutable assignment when its establishment changes", async () => {
+  it("keeps the edited snapshot intact when the atomic request fails", async () => {
     const user = userEvent.setup();
-    vi.mocked(domainApi.deleteCustomerEstablishment).mockResolvedValue();
-    vi.mocked(domainApi.createCustomerEstablishment).mockResolvedValue({
-      id: "link-2",
-      customer_id: "customer-1",
-      establishment_id: "est-2",
-      created_at: "2026-01-01T00:00:00Z",
-      updated_at: "2026-01-01T00:00:00Z",
-    });
-    renderPage();
-
-    await user.selectOptions(
-      await screen.findByRole("combobox", { name: /^establishment 1/i }),
-      "est-2"
-    );
-    await user.click(screen.getByRole("button", { name: /save changes/i }));
-
-    await waitFor(() =>
-      expect(domainApi.deleteCustomerEstablishment).toHaveBeenCalledWith(
-        "link-1"
-      )
-    );
-    expect(domainApi.createCustomerEstablishment).toHaveBeenCalledWith(
-      expect.objectContaining({
-        customer_id: "customer-1",
-        establishment_id: "est-2",
-      })
-    );
-    expect(domainApi.updateCustomerEstablishment).not.toHaveBeenCalled();
-    expect(
-      vi.mocked(domainApi.createCustomerEstablishment).mock
-        .invocationCallOrder[0]
-    ).toBeLessThan(
-      vi.mocked(domainApi.deleteCustomerEstablishment).mock
-        .invocationCallOrder[0]!
-    );
-  });
-
-  it("keeps the original assignment when replacement creation fails", async () => {
-    const user = userEvent.setup();
-    vi.mocked(domainApi.createCustomerEstablishment).mockRejectedValue(
-      new Error("Replacement failed")
-    );
-    renderPage();
-
-    await user.selectOptions(
-      await screen.findByRole("combobox", { name: /^establishment 1/i }),
-      "est-2"
-    );
-    await user.click(screen.getByRole("button", { name: /save changes/i }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Replacement failed"
-    );
-    expect(domainApi.deleteCustomerEstablishment).not.toHaveBeenCalled();
-  });
-
-  it("does not start assignment writes when the master update fails", async () => {
-    const user = userEvent.setup();
-    vi.mocked(customersApi.updateCustomer).mockRejectedValue(
-      new Error("Master update failed")
-    );
-    renderPage();
-
-    await screen.findByLabelText(/customer name/i);
-    await user.click(screen.getByRole("button", { name: /save changes/i }));
-
-    expect(await screen.findByText("Master update failed")).toBeVisible();
-    expect(domainApi.updateCustomerEstablishment).not.toHaveBeenCalled();
-    expect(domainApi.createCustomerEstablishment).not.toHaveBeenCalled();
-    expect(domainApi.deleteCustomerEstablishment).not.toHaveBeenCalled();
-    expect(navigate).not.toHaveBeenCalled();
-  });
-
-  it("restores customer master data when assignment reconciliation fails", async () => {
-    const user = userEvent.setup();
-    vi.mocked(domainApi.createCustomerEstablishment).mockRejectedValue(
-      new Error("Assignment failed")
+    vi.mocked(customersApi.transactionallyEditCustomer).mockRejectedValue(
+      new Error("The customer edit conflicts with the current resource state.")
     );
     renderPage();
 
@@ -214,178 +166,38 @@ describe("CustomerEdit", () => {
     );
     await user.click(screen.getByRole("button", { name: /save changes/i }));
 
-    expect(await screen.findByText("Assignment failed")).toBeVisible();
-    expect(customersApi.updateCustomer).toHaveBeenCalledTimes(2);
-    expect(customersApi.updateCustomer).toHaveBeenNthCalledWith(
-      2,
-      "customer-1",
-      expect.objectContaining({
-        name: "ACME GmbH",
-        billing_address: customer.billing_address,
-        is_active: true,
-      })
-    );
-    expect(navigate).not.toHaveBeenCalled();
-  });
-
-  it("requires a reload when customer master recovery fails", async () => {
-    const user = userEvent.setup();
-    vi.mocked(customersApi.updateCustomer)
-      .mockResolvedValueOnce(customer)
-      .mockRejectedValueOnce(new Error("Master recovery failed"));
-    vi.mocked(domainApi.createCustomerEstablishment).mockRejectedValue(
-      new Error("Assignment failed")
-    );
-    renderPage();
-
-    await user.selectOptions(
-      await screen.findByRole("combobox", { name: /^establishment 1/i }),
-      "est-2"
-    );
-    await user.click(screen.getByRole("button", { name: /save changes/i }));
-
     expect(
       await screen.findByText(
-        /customer data could not be fully restored.*reload the page/i
+        "The customer edit conflicts with the current resource state."
       )
     ).toBeVisible();
-    expect(navigate).not.toHaveBeenCalled();
-  });
-
-  it("restores earlier contact updates when a later contact update fails", async () => {
-    const user = userEvent.setup();
-    vi.mocked(domainApi.listAllCustomerEstablishments).mockResolvedValue([
-      {
-        id: "link-1",
-        customer_id: "customer-1",
-        establishment_id: "est-1",
-        contact_name: "Berlin Contact",
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      },
-      {
-        id: "link-2",
-        customer_id: "customer-1",
-        establishment_id: "est-2",
-        contact_name: "Hamburg Contact",
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      },
-    ]);
-    vi.mocked(domainApi.updateCustomerEstablishment)
-      .mockResolvedValueOnce({
-        id: "link-1",
-        customer_id: "customer-1",
-        establishment_id: "est-1",
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      })
-      .mockRejectedValueOnce(new Error("Second contact failed"))
-      .mockResolvedValueOnce({
-        id: "link-1",
-        customer_id: "customer-1",
-        establishment_id: "est-1",
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      });
-    renderPage();
-
-    const firstContact = await screen.findByRole("textbox", {
-      name: /local contact name 1/i,
-    });
-    await user.clear(firstContact);
-    await user.type(firstContact, "Changed Berlin Contact");
-    const secondContact = screen.getByRole("textbox", {
-      name: /local contact name 2/i,
-    });
-    await user.clear(secondContact);
-    await user.type(secondContact, "Changed Hamburg Contact");
-    await user.click(screen.getByRole("button", { name: /save changes/i }));
-
-    expect(await screen.findByText("Second contact failed")).toBeVisible();
-    expect(domainApi.updateCustomerEstablishment).toHaveBeenCalledTimes(3);
-    expect(domainApi.updateCustomerEstablishment).toHaveBeenNthCalledWith(
-      3,
-      "link-1",
-      expect.objectContaining({ contact_name: "Berlin Contact" })
-    );
-    expect(customersApi.updateCustomer).toHaveBeenCalledTimes(2);
-    expect(navigate).not.toHaveBeenCalled();
-  });
-
-  it("requires a reload when an earlier contact update cannot be restored", async () => {
-    const user = userEvent.setup();
-    vi.mocked(domainApi.listAllCustomerEstablishments).mockResolvedValue([
-      {
-        id: "link-1",
-        customer_id: "customer-1",
-        establishment_id: "est-1",
-        contact_name: "Berlin Contact",
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      },
-      {
-        id: "link-2",
-        customer_id: "customer-1",
-        establishment_id: "est-2",
-        contact_name: "Hamburg Contact",
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      },
-    ]);
-    vi.mocked(domainApi.updateCustomerEstablishment)
-      .mockResolvedValueOnce({
-        id: "link-1",
-        customer_id: "customer-1",
-        establishment_id: "est-1",
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      })
-      .mockRejectedValueOnce(new Error("Second contact failed"))
-      .mockRejectedValueOnce(new Error("Contact recovery failed"));
-    renderPage();
-
-    await screen.findByRole("textbox", { name: /local contact name 1/i });
-    await user.click(screen.getByRole("button", { name: /save changes/i }));
-
+    expect(name).toHaveValue("Changed Customer");
     expect(
-      await screen.findByText(
-        /establishment assignments could not be fully restored.*reload the page/i
-      )
-    ).toBeVisible();
-    expect(customersApi.updateCustomer).toHaveBeenCalledTimes(2);
+      screen.getByRole("combobox", { name: /^establishment 1/i })
+    ).toHaveValue("est-2");
+    expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(1);
+    expectNoLegacyWrites();
     expect(navigate).not.toHaveBeenCalled();
   });
 
-  it("frees occupied establishments before swapping assignments", async () => {
+  it("sends a swap cycle as one complete desired snapshot", async () => {
     const user = userEvent.setup();
-    vi.mocked(domainApi.listAllCustomerEstablishments).mockResolvedValue([
-      {
-        id: "link-1",
-        customer_id: "customer-1",
-        establishment_id: "est-1",
-        contact_name: "Berlin Contact",
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      },
-      {
-        id: "link-2",
-        customer_id: "customer-1",
-        establishment_id: "est-2",
-        contact_name: "Hamburg Contact",
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      },
-    ]);
-    vi.mocked(domainApi.deleteCustomerEstablishment).mockResolvedValue();
-    vi.mocked(domainApi.createCustomerEstablishment).mockImplementation(
-      async (request) => ({
-        id: request.establishment_id === "est-1" ? "link-1" : "link-2",
-        customer_id: "customer-1",
-        establishment_id: request.establishment_id,
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      })
+    const twoAssignments = {
+      ...customer,
+      customer_establishments: [
+        customer.customer_establishments[0]!,
+        {
+          id: "link-2",
+          customer_id: "customer-1",
+          establishment_id: "est-2",
+          contact_name: "Hamburg Contact",
+          created_at: "2026-01-01T00:00:00Z",
+          updated_at: "2026-01-01T00:00:00Z",
+        },
+      ],
+    };
+    vi.mocked(customersApi.getCustomerEditSnapshot).mockResolvedValue(
+      snapshot(twoAssignments)
     );
     renderPage();
 
@@ -399,92 +211,104 @@ describe("CustomerEdit", () => {
     );
     await user.click(screen.getByRole("button", { name: /save changes/i }));
 
+    await waitFor(() =>
+      expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledWith(
+        "customer-1",
+        '"customer-v1"',
+        expect.objectContaining({
+          customer_establishments: [
+            expect.objectContaining({ establishment_id: "est-2" }),
+            expect.objectContaining({ establishment_id: "est-1" }),
+          ],
+        })
+      )
+    );
+    expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(1);
+    expectNoLegacyWrites();
+  });
+
+  it("shows authorization drift as a save error without compensating writes", async () => {
+    const user = userEvent.setup();
+    vi.mocked(customersApi.transactionallyEditCustomer).mockRejectedValue(
+      new Error("Insufficient permissions")
+    );
+    renderPage();
+
+    await screen.findByLabelText(/customer name/i);
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    expect(await screen.findByText("Insufficient permissions")).toBeVisible();
+    expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(1);
+    expectNoLegacyWrites();
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it("retries the same atomic edit after a transient failure", async () => {
+    const user = userEvent.setup();
+    vi.mocked(customersApi.transactionallyEditCustomer)
+      .mockRejectedValueOnce(new Error("Temporary failure"))
+      .mockResolvedValueOnce(customer);
+    renderPage();
+
+    await screen.findByLabelText(/customer name/i);
+    const save = screen.getByRole("button", { name: /save changes/i });
+    await user.click(save);
+    expect(await screen.findByText("Temporary failure")).toBeVisible();
+
+    await user.click(save);
     await waitFor(() => expect(navigate).toHaveBeenCalled());
-    expect(domainApi.deleteCustomerEstablishment).toHaveBeenCalledTimes(2);
-    expect(domainApi.createCustomerEstablishment).toHaveBeenCalledTimes(2);
+    expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(2);
     expect(
-      vi.mocked(domainApi.deleteCustomerEstablishment).mock
-        .invocationCallOrder[1]
-    ).toBeLessThan(
-      vi.mocked(domainApi.createCustomerEstablishment).mock
-        .invocationCallOrder[0]!
+      vi.mocked(customersApi.transactionallyEditCustomer).mock.calls[1]
+    ).toEqual(
+      vi.mocked(customersApi.transactionallyEditCustomer).mock.calls[0]
     );
+    expectNoLegacyWrites();
   });
 
-  it("restores original assignments when a swap creation fails", async () => {
+  it("keeps partial lookup failures separate from later save errors", async () => {
     const user = userEvent.setup();
-    vi.mocked(domainApi.listAllCustomerEstablishments).mockResolvedValue([
-      {
-        id: "link-1",
-        customer_id: "customer-1",
-        establishment_id: "est-1",
-        contact_name: "Berlin Contact",
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      },
-      {
-        id: "link-2",
-        customer_id: "customer-1",
-        establishment_id: "est-2",
-        contact_name: "Hamburg Contact",
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      },
-    ]);
-    vi.mocked(domainApi.deleteCustomerEstablishment).mockResolvedValue();
-    vi.mocked(domainApi.createCustomerEstablishment)
-      .mockResolvedValueOnce({
-        id: "link-2",
-        customer_id: "customer-1",
-        establishment_id: "est-2",
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      })
-      .mockRejectedValueOnce(new Error("Second replacement failed"))
-      .mockResolvedValueOnce({
-        id: "link-1",
-        customer_id: "customer-1",
-        establishment_id: "est-1",
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      })
-      .mockResolvedValueOnce({
-        id: "link-2",
-        customer_id: "customer-1",
-        establishment_id: "est-2",
-        created_at: "2026-01-01T00:00:00Z",
-        updated_at: "2026-01-01T00:00:00Z",
-      });
+    vi.mocked(domainApi.listEstablishmentLookups)
+      .mockRejectedValueOnce(new Error("Lookup failed"))
+      .mockResolvedValueOnce([
+        { id: "est-1", name: "Berlin" },
+        { id: "est-2", name: "Hamburg" },
+      ]);
+    vi.mocked(customersApi.transactionallyEditCustomer).mockRejectedValue(
+      new Error("Save failed")
+    );
     renderPage();
 
-    await user.selectOptions(
-      await screen.findByRole("combobox", { name: /^establishment 1/i }),
-      "est-2"
+    expect(await screen.findByLabelText(/customer name/i)).toBeVisible();
+    const partialLoadAlert = await screen.findByRole("alert");
+    expect(partialLoadAlert).toHaveTextContent(
+      "Some establishment details could not be loaded."
     );
-    await user.selectOptions(
-      screen.getByRole("combobox", { name: /^establishment 2/i }),
-      "est-1"
+    expect(
+      screen.getByRole("button", { name: /save changes/i })
+    ).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: /retry/i }));
+    await waitFor(() =>
+      expect(
+        screen.queryByText("Some establishment details could not be loaded.")
+      ).not.toBeInTheDocument()
     );
     await user.click(screen.getByRole("button", { name: /save changes/i }));
 
-    expect(await screen.findByText("Second replacement failed")).toBeVisible();
-    expect(domainApi.createCustomerEstablishment).toHaveBeenCalledTimes(4);
-    expect(domainApi.createCustomerEstablishment).toHaveBeenNthCalledWith(
-      3,
-      expect.objectContaining({ establishment_id: "est-1" })
-    );
-    expect(domainApi.createCustomerEstablishment).toHaveBeenNthCalledWith(
-      4,
-      expect.objectContaining({ establishment_id: "est-2" })
-    );
-    expect(navigate).not.toHaveBeenCalled();
+    expect(await screen.findByText("Save failed")).toBeVisible();
+    expect(
+      screen.queryByText("Some establishment details could not be loaded.")
+    ).not.toBeInTheDocument();
   });
 
   it("shows the new route error when a customer route transition fails", async () => {
-    vi.mocked(customersApi.getCustomer).mockImplementation(async (id) => {
-      if (id === "customer-1") return customer;
-      throw new Error("Customer 2 failed to load");
-    });
+    vi.mocked(customersApi.getCustomerEditSnapshot).mockImplementation(
+      async (id) => {
+        if (id === "customer-1") return snapshot();
+        throw new Error("Customer 2 failed to load");
+      }
+    );
     renderPage();
     expect(
       await screen.findByRole("textbox", { name: /local contact name 1/i })
