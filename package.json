@@ -97,7 +97,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
-    "@capacitor/core": "^8.5.1",
+    "@capacitor/core": "^8.5.2",
     "@lingui/core": "^6.6.0",
     "@lingui/react": "^6.6.0",
     "class-variance-authority": "^0.7.1",
