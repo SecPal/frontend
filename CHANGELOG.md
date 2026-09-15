@@ -98,6 +98,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Bound site edit save completions to the route instance that initiated them,
+  preventing late navigation, errors, and loading updates after leaving and
+  returning to the same site route.
+
 - Bound customer edit save completions to the route instance that initiated
   them, preventing late navigation, errors, and loading updates after leaving
   and returning to the same customer route.

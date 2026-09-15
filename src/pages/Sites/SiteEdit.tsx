@@ -6,7 +6,7 @@
  * Epic #210 - Customer & Site Management
  */
 
-import { useState, useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -48,6 +48,7 @@ export default function SiteEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { _ } = useLingui();
+  const activeRouteOwner = useRef<object | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +58,16 @@ export default function SiteEdit() {
   const [site, setSite] = useState<Site | null>(null);
 
   const [formData, setFormData] = useState<UpdateSiteRequest>({});
+
+  useLayoutEffect(() => {
+    const routeOwner = {};
+    activeRouteOwner.current = routeOwner;
+    return () => {
+      if (activeRouteOwner.current === routeOwner) {
+        activeRouteOwner.current = null;
+      }
+    };
+  }, [id]);
 
   useEffect(() => {
     // Per-`id` cancellation flag: if a slow `getSite(prevId)` finishes
@@ -79,6 +90,7 @@ export default function SiteEdit() {
       setSite(null);
       setFormData({});
       setLoading(true);
+      setSaving(false);
       setError(null);
       setFieldErrors({});
       try {
@@ -182,14 +194,20 @@ export default function SiteEdit() {
       return;
     }
 
+    const siteId = id;
+    const routeOwner = activeRouteOwner.current;
+    if (!routeOwner) return;
+
     setSaving(true);
     setError(null);
     setFieldErrors({});
 
     try {
-      await updateSite(id, buildUpdatePayload());
-      navigate(`/sites/${id}`);
+      await updateSite(siteId, buildUpdatePayload());
+      if (activeRouteOwner.current !== routeOwner) return;
+      navigate(`/sites/${siteId}`);
     } catch (err: unknown) {
+      if (activeRouteOwner.current !== routeOwner) return;
       // Parse validation errors from Laravel API
       const error = err as Error & { errors?: Record<string, string[]> };
       if (error.errors && typeof error.errors === "object") {
@@ -199,7 +217,7 @@ export default function SiteEdit() {
         setError(error.message || _(msg`Failed to update site`));
       }
     } finally {
-      setSaving(false);
+      if (activeRouteOwner.current === routeOwner) setSaving(false);
     }
   }
 
