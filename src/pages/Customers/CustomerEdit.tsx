@@ -34,47 +34,13 @@ import {
 } from "../../services/customersApi";
 import { listEstablishmentLookups } from "../../services/customerDomainApi";
 import { useDomainAssignmentNames } from "../../hooks/useDomainAssignmentNames";
-
-function emptyAssignment(): CustomerEstablishmentFormValue {
-  return {
-    key: crypto.randomUUID(),
-    establishment_id: "",
-    contact_name: "",
-    email: "",
-    phone: "",
-    comments: "",
-  };
-}
+import {
+  customerEditIntentFromCustomer,
+  emptyCustomerAssignment,
+  reconcileCustomerEditIntent,
+} from "./customerEditIntent";
+import type { CustomerEditIntent } from "./customerEditIntent";
 const optional = (value: string) => value.trim() || null;
-
-function formFromCustomer(customer: Customer): UpdateCustomerRequest {
-  return {
-    name: customer.name,
-    vat_id: customer.vat_id ?? null,
-    billing_address: customer.billing_address,
-    is_active: customer.is_active,
-  };
-}
-
-function assignmentsFromCustomer(
-  customer: Customer
-): CustomerEstablishmentFormValue[] {
-  const values = customer.customer_establishments.map((link) => ({
-    key: link.id,
-    id: link.id,
-    establishment_id: link.establishment_id,
-    contact_name: link.contact_name ?? "",
-    email: link.email ?? "",
-    phone: link.phone ?? "",
-    comments: link.comments ?? "",
-  }));
-  return values.length ? values : [emptyAssignment()];
-}
-
-interface CustomerEditIntent {
-  form: UpdateCustomerRequest;
-  assignments: CustomerEstablishmentFormValue[];
-}
 
 export default function CustomerEdit() {
   const { id } = useParams<{ id: string }>();
@@ -106,6 +72,9 @@ export default function CustomerEdit() {
   const [staleIntent, setStaleIntent] = useState<CustomerEditIntent | null>(
     null
   );
+  const [editBaseline, setEditBaseline] = useState<CustomerEditIntent | null>(
+    null
+  );
   const domainNames = useDomainAssignmentNames(
     customer ? [{ legal_entity_id: customer.legal_entity_id }] : []
   );
@@ -125,6 +94,7 @@ export default function CustomerEdit() {
       setLoadError(null);
       setAssignmentLoadError(null);
       setStaleIntent(null);
+      setEditBaseline(null);
       if (!id) {
         setLoading(false);
         return;
@@ -134,10 +104,12 @@ export default function CustomerEdit() {
         const snapshot = await getCustomerEditSnapshot(id);
         if (cancelled) return;
         const loadedCustomer = snapshot.customer;
+        const loadedIntent = customerEditIntentFromCustomer(loadedCustomer);
         setCustomer(loadedCustomer);
         setEtag(snapshot.etag);
-        setForm(formFromCustomer(loadedCustomer));
-        setAssignments(assignmentsFromCustomer(loadedCustomer));
+        setForm(loadedIntent.form);
+        setAssignments(loadedIntent.assignments);
+        setEditBaseline(loadedIntent);
         setEstablishmentsLoading(true);
         try {
           const options = await listEstablishmentLookups(
@@ -217,7 +189,7 @@ export default function CustomerEdit() {
     setSaving(true);
     setSubmitError(null);
     try {
-      await transactionallyEditCustomer(id, etag, {
+      const committedCustomer = await transactionallyEditCustomer(id, etag, {
         customer: {
           ...form,
           vat_id: optional(form.vat_id ?? ""),
@@ -231,7 +203,7 @@ export default function CustomerEdit() {
           comments: optional(assignment.comments),
         })),
       });
-      navigate(`/customers/${id}`);
+      navigate(`/customers/${id}`, { state: { committedCustomer } });
     } catch (reason) {
       if (
         reason instanceof CustomerTransactionalEditError &&
@@ -243,11 +215,19 @@ export default function CustomerEdit() {
         try {
           const currentSnapshot = await getCustomerEditSnapshot(id);
           if (activeRouteId.current !== id) return;
+          const freshIntent = customerEditIntentFromCustomer(
+            currentSnapshot.customer
+          );
           setCustomer(currentSnapshot.customer);
           setEtag(currentSnapshot.etag);
-          setForm(formFromCustomer(currentSnapshot.customer));
-          setAssignments(assignmentsFromCustomer(currentSnapshot.customer));
-          setStaleIntent(intent);
+          setForm(freshIntent.form);
+          setAssignments(freshIntent.assignments);
+          setStaleIntent(
+            editBaseline
+              ? reconcileCustomerEditIntent(editBaseline, intent, freshIntent)
+              : null
+          );
+          setEditBaseline(freshIntent);
           setSubmitError(
             _(
               msg`This customer changed while you were editing. Your changes were not saved. The latest customer data is shown below; review it before saving again.`
@@ -475,7 +455,10 @@ export default function CustomerEdit() {
                 )
               }
               onAdd={() =>
-                setAssignments((current) => [...current, emptyAssignment()])
+                setAssignments((current) => [
+                  ...current,
+                  emptyCustomerAssignment(),
+                ])
               }
               onRemove={(key) =>
                 setAssignments((current) =>

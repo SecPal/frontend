@@ -93,6 +93,8 @@ describe("CustomerEdit", () => {
     vi.mocked(domainApi.listEstablishmentLookups).mockResolvedValue([
       { id: "est-1", name: "Berlin" },
       { id: "est-2", name: "Hamburg" },
+      { id: "est-3", name: "Munich" },
+      { id: "est-4", name: "Cologne" },
     ]);
     vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
       { id: "legal-1", name: "SecPal GmbH" },
@@ -155,7 +157,9 @@ describe("CustomerEdit", () => {
     );
     expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(1);
     expectNoLegacyWrites();
-    expect(navigate).toHaveBeenCalledWith("/customers/customer-1");
+    expect(navigate).toHaveBeenCalledWith("/customers/customer-1", {
+      state: { committedCustomer: customer },
+    });
   });
 
   it("keeps the edited snapshot intact when the atomic request fails", async () => {
@@ -274,21 +278,40 @@ describe("CustomerEdit", () => {
     expectNoLegacyWrites();
   });
 
-  it("refreshes a stale edit for review and only resubmits explicitly with the new ETag", async () => {
+  it("reconciles actual edits onto a refreshed baseline before explicit stale retry", async () => {
     const user = userEvent.setup();
-    const currentCustomer: Customer = {
+    const originalCustomer: Customer = {
       ...customer,
-      name: "Server Changed Customer",
       customer_establishments: [
+        customer.customer_establishments[0]!,
         {
           ...customer.customer_establishments[0]!,
+          id: "link-2",
           establishment_id: "est-2",
+          contact_name: "Original Second Contact",
+        },
+      ],
+    };
+    const currentCustomer: Customer = {
+      ...originalCustomer,
+      billing_address: {
+        ...originalCustomer.billing_address,
+        city: "Munich",
+      },
+      customer_establishments: [
+        {
+          ...originalCustomer.customer_establishments[0]!,
+          establishment_id: "est-3",
           contact_name: "Server Changed Contact",
+        },
+        {
+          ...originalCustomer.customer_establishments[1]!,
+          contact_name: "Server Changed Second Contact",
         },
       ],
     };
     vi.mocked(customersApi.getCustomerEditSnapshot)
-      .mockResolvedValueOnce(snapshot())
+      .mockResolvedValueOnce(snapshot(originalCustomer))
       .mockResolvedValueOnce(snapshot(currentCustomer, '"customer-v2"'));
     vi.mocked(customersApi.transactionallyEditCustomer)
       .mockRejectedValueOnce(
@@ -304,6 +327,15 @@ describe("CustomerEdit", () => {
     const name = await screen.findByLabelText(/customer name/i);
     await user.clear(name);
     await user.type(name, "My Intended Customer Name");
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: /^establishment 2/i }),
+      "est-4"
+    );
+    const secondContact = screen.getByRole("textbox", {
+      name: /local contact name 2/i,
+    });
+    await user.clear(secondContact);
+    await user.type(secondContact, "My Intended Second Contact");
     await user.click(screen.getByRole("button", { name: /save changes/i }));
 
     expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledWith(
@@ -315,22 +347,31 @@ describe("CustomerEdit", () => {
     await waitFor(() =>
       expect(customersApi.getCustomerEditSnapshot).toHaveBeenCalledTimes(2)
     );
-    expect(name).toHaveValue("Server Changed Customer");
+    expect(name).toHaveValue("ACME GmbH");
+    expect(screen.getByLabelText(/city/i)).toHaveValue("Munich");
     expect(
       screen.getByRole("textbox", { name: /local contact name 1/i })
     ).toHaveValue("Server Changed Contact");
     expect(
       screen.getByRole("combobox", { name: /^establishment 1/i })
-    ).toHaveValue("est-2");
+    ).toHaveValue("est-3");
     expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(1);
 
     await user.click(
       screen.getByRole("button", { name: /restore my changes/i })
     );
     expect(name).toHaveValue("My Intended Customer Name");
+    expect(screen.getByLabelText(/city/i)).toHaveValue("Munich");
     expect(
       screen.getByRole("combobox", { name: /^establishment 1/i })
-    ).toHaveValue("est-1");
+    ).toHaveValue("est-3");
+    expect(
+      screen.getByRole("textbox", { name: /local contact name 1/i })
+    ).toHaveValue("Server Changed Contact");
+    expect(
+      screen.getByRole("combobox", { name: /^establishment 2/i })
+    ).toHaveValue("est-4");
+    expect(secondContact).toHaveValue("My Intended Second Contact");
     expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(1);
 
     await user.click(screen.getByRole("button", { name: /save changes/i }));
@@ -342,9 +383,17 @@ describe("CustomerEdit", () => {
       expect.objectContaining({
         customer: expect.objectContaining({
           name: "My Intended Customer Name",
+          billing_address: expect.objectContaining({ city: "Munich" }),
         }),
         customer_establishments: [
-          expect.objectContaining({ establishment_id: "est-1" }),
+          expect.objectContaining({
+            establishment_id: "est-3",
+            contact_name: "Server Changed Contact",
+          }),
+          expect.objectContaining({
+            establishment_id: "est-4",
+            contact_name: "My Intended Second Contact",
+          }),
         ],
       })
     );

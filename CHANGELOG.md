@@ -44,8 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Customer edits now submit master data and the complete desired establishment
   assignment snapshot through the transactional API, removing compensating
-  frontend reconciliation and rollback requests. Stale edits reload the latest
-  customer and validator for review while retaining the user's unsaved intent.
+  frontend reconciliation and rollback requests. The committed response is
+  carried into the detail view, and stale edits reload the latest customer and
+  validator for review while reconciling the user's actual changes onto that
+  fresh baseline.
 - Removed superseded shared-hosting and host-edge deployment artifacts from the
   frontend repository. The current documentation and regression coverage now
   define only the immutable frontend artifact/container contract and direct
