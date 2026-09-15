@@ -53,7 +53,7 @@ export default function CustomerEdit() {
     ?.recoveryError;
   const recoveryErrorMessage =
     typeof recoveryError === "string" ? recoveryError : null;
-  const activeRouteId = useRef(id);
+  const activeRouteOwner = useRef<object | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [etag, setEtag] = useState<StrongEntityTag | null>(null);
   const [form, setForm] = useState<UpdateCustomerRequest>({});
@@ -84,9 +84,12 @@ export default function CustomerEdit() {
   );
 
   useLayoutEffect(() => {
-    activeRouteId.current = id;
+    const routeOwner = {};
+    activeRouteOwner.current = routeOwner;
     return () => {
-      if (activeRouteId.current === id) activeRouteId.current = undefined;
+      if (activeRouteOwner.current === routeOwner) {
+        activeRouteOwner.current = null;
+      }
     };
   }, [id]);
 
@@ -155,22 +158,23 @@ export default function CustomerEdit() {
   async function retryEstablishmentLookups() {
     const activeCustomer = customer?.id === id ? customer : null;
     if (!activeCustomer) return;
-    const customerId = activeCustomer.id;
+    const routeOwner = activeRouteOwner.current;
+    if (!routeOwner) return;
     setEstablishmentsLoading(true);
     setAssignmentLoadError(null);
     try {
       const options = await listEstablishmentLookups(
         activeCustomer.legal_entity_id
       );
-      if (activeRouteId.current !== customerId) return;
+      if (activeRouteOwner.current !== routeOwner) return;
       setEstablishments(options);
     } catch {
-      if (activeRouteId.current !== customerId) return;
+      if (activeRouteOwner.current !== routeOwner) return;
       setAssignmentLoadError(
         _(msg`Some establishment details could not be loaded.`)
       );
     } finally {
-      if (activeRouteId.current === customerId) {
+      if (activeRouteOwner.current === routeOwner) {
         setEstablishmentsLoading(false);
       }
     }
@@ -188,6 +192,8 @@ export default function CustomerEdit() {
     )
       return;
     const customerId = id;
+    const routeOwner = activeRouteOwner.current;
+    if (!routeOwner) return;
     const originalCustomer = customer;
     const originalBaseline = editBaseline;
     const intended = { form, assignments };
@@ -220,10 +226,10 @@ export default function CustomerEdit() {
           })),
         }
       );
-      if (activeRouteId.current !== customerId) return;
+      if (activeRouteOwner.current !== routeOwner) return;
       navigate(`/customers/${customerId}`, { state: { committedCustomer } });
     } catch (reason) {
-      if (activeRouteId.current !== customerId) return;
+      if (activeRouteOwner.current !== routeOwner) return;
       if (
         reason instanceof CustomerTransactionalEditError &&
         reason.status === 412 &&
@@ -237,7 +243,7 @@ export default function CustomerEdit() {
         try {
           currentSnapshot = await getCustomerEditSnapshot(customerId);
         } catch {
-          if (activeRouteId.current !== customerId) return;
+          if (activeRouteOwner.current !== routeOwner) return;
           setStaleIntent(null);
           setSubmitError(
             _(
@@ -246,7 +252,7 @@ export default function CustomerEdit() {
           );
           return;
         }
-        if (activeRouteId.current !== customerId) return;
+        if (activeRouteOwner.current !== routeOwner) return;
         const freshIntent = customerEditIntentFromCustomer(
           currentSnapshot.customer
         );
@@ -281,15 +287,15 @@ export default function CustomerEdit() {
             const options = await listEstablishmentLookups(
               currentSnapshot.customer.legal_entity_id
             );
-            if (activeRouteId.current !== customerId) return;
+            if (activeRouteOwner.current !== routeOwner) return;
             setEstablishments(options);
           } catch {
-            if (activeRouteId.current !== customerId) return;
+            if (activeRouteOwner.current !== routeOwner) return;
             setAssignmentLoadError(
               _(msg`Some establishment details could not be loaded.`)
             );
           } finally {
-            if (activeRouteId.current === customerId) {
+            if (activeRouteOwner.current === routeOwner) {
               setEstablishmentsLoading(false);
             }
           }
@@ -302,7 +308,7 @@ export default function CustomerEdit() {
         );
       }
     } finally {
-      if (activeRouteId.current === customerId) setSaving(false);
+      if (activeRouteOwner.current === routeOwner) setSaving(false);
     }
   }
 

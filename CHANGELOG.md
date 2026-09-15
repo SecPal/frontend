@@ -98,6 +98,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Bound customer edit save completions to the route instance that initiated
+  them, preventing late navigation, errors, and loading updates after leaving
+  and returning to the same customer route.
+
 - Migrated active frontend licensing metadata to plain AGPL-3.0-or-later and
   removed the obsolete additional-terms license file, while preserving official
   SecPal product branding and third-party licensing notices.
