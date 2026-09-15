@@ -642,8 +642,11 @@ describe("SiteEdit", () => {
       window.dispatchEvent(new PopStateEvent("popstate"));
     });
     expect(await screen.findByLabelText(/site name/i)).toHaveValue("Test Site");
-    await waitForDomainAssignmentReady();
-    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+    const returnedSave = await screen.findByRole("button", {
+      name: /saving/i,
+    });
+    expect(returnedSave).toBeDisabled();
+    fireEvent.click(returnedSave);
     expect(customersApi.updateSite).toHaveBeenCalledTimes(1);
 
     await act(async () => {
@@ -653,6 +656,7 @@ describe("SiteEdit", () => {
 
     expect(mockNavigate).not.toHaveBeenCalled();
     expect(screen.getByLabelText(/site name/i)).toHaveValue("Test Site");
+    expect(screen.getByRole("button", { name: /save changes/i })).toBeEnabled();
   });
 
   it("ignores a failed save after navigating to another site route", async () => {
@@ -679,12 +683,21 @@ describe("SiteEdit", () => {
       window.dispatchEvent(new PopStateEvent("popstate"));
     });
     expect(await screen.findByLabelText(/site name/i)).toHaveValue("Site B");
-    const save = await screen.findByRole("button", { name: /save changes/i });
-    await waitFor(() => expect(save).toBeEnabled());
-    fireEvent.click(save);
+    const siteBSave = await screen.findByRole("button", {
+      name: /save changes/i,
+    });
+    await waitFor(() => expect(siteBSave).toBeEnabled());
+    fireEvent.click(siteBSave);
     await waitFor(() =>
       expect(customersApi.updateSite).toHaveBeenCalledTimes(2)
     );
+
+    act(() => {
+      window.history.pushState({}, "", "/sites/site-123/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(await screen.findByLabelText(/site name/i)).toHaveValue("Test Site");
+    expect(screen.getByRole("button", { name: /saving/i })).toBeDisabled();
 
     await act(async () => {
       previousSave.reject(new Error("Previous site route failed"));
@@ -694,14 +707,23 @@ describe("SiteEdit", () => {
     expect(
       screen.queryByText("Previous site route failed")
     ).not.toBeInTheDocument();
-    expect(save).toBeDisabled();
+    expect(screen.getByRole("button", { name: /save changes/i })).toBeEnabled();
+
+    act(() => {
+      window.history.pushState({}, "", "/sites/site-B/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(await screen.findByLabelText(/site name/i)).toHaveValue("Site B");
+    expect(screen.getByRole("button", { name: /saving/i })).toBeDisabled();
 
     await act(async () => {
       currentSave.reject(new Error("Current site route failed"));
       await currentSave.promise.catch(() => undefined);
     });
-    expect(await screen.findByText("Current site route failed")).toBeVisible();
-    expect(save).toBeEnabled();
+    expect(
+      screen.queryByText("Current site route failed")
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /save changes/i })).toBeEnabled();
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 

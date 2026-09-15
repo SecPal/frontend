@@ -50,8 +50,10 @@ export default function SiteEdit() {
   const { _ } = useLingui();
   const activeRouteOwner = useRef<object | null>(null);
   const pendingSaveSiteIds = useRef(new Set<string>());
+  const [renderedPendingSaveSiteIds, setRenderedPendingSaveSiteIds] = useState(
+    new Set<string>()
+  );
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [domainStatus, setDomainStatus] =
@@ -91,7 +93,6 @@ export default function SiteEdit() {
       setSite(null);
       setFormData({});
       setLoading(true);
-      setSaving(false);
       setError(null);
       setFieldErrors({});
       try {
@@ -201,7 +202,7 @@ export default function SiteEdit() {
     if (!routeOwner) return;
 
     pendingSaveSiteIds.current.add(siteId);
-    setSaving(true);
+    setRenderedPendingSaveSiteIds(new Set(pendingSaveSiteIds.current));
     setError(null);
     setFieldErrors({});
 
@@ -221,11 +222,14 @@ export default function SiteEdit() {
       }
     } finally {
       pendingSaveSiteIds.current.delete(siteId);
-      if (activeRouteOwner.current === routeOwner) setSaving(false);
+      if (activeRouteOwner.current) {
+        setRenderedPendingSaveSiteIds(new Set(pendingSaveSiteIds.current));
+      }
     }
   }
 
   const isInitialLoading = loading && site === null;
+  const saving = id ? renderedPendingSaveSiteIds.has(id) : false;
 
   return (
     <div className="max-w-3xl">
