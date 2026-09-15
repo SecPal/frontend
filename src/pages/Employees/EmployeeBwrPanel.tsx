@@ -147,12 +147,17 @@ function getBwrErrorMessage(error: unknown, fallback: string): string {
 export interface EmployeeBwrPanelProps {
   employee: Employee;
   canManage: boolean;
-  onRefresh: (employeeId: string) => Promise<Employee | null>;
+  routeOwner: object;
+  onRefresh: (
+    employeeId: string,
+    routeOwner: object
+  ) => Promise<Employee | null>;
 }
 
 export function EmployeeBwrPanel({
   employee,
   canManage,
+  routeOwner,
   onRefresh,
 }: EmployeeBwrPanelProps) {
   const { i18n, _ } = useLingui();
@@ -210,7 +215,7 @@ export function EmployeeBwrPanel({
         return;
       }
       setLatestExportUrl(response.download_url);
-      const refreshedEmployee = await onRefresh(employeeId);
+      const refreshedEmployee = await onRefresh(employeeId, routeOwner);
       if (activeEmployeeId.current !== employeeId) return;
       if (refreshedEmployee) {
         const refreshedStatus =
@@ -248,7 +253,7 @@ export function EmployeeBwrPanel({
         notes: notes.trim() === "" ? null : notes.trim(),
       });
       if (activeEmployeeId.current !== employeeId) return;
-      const refreshedEmployee = await onRefresh(employeeId);
+      const refreshedEmployee = await onRefresh(employeeId, routeOwner);
       if (activeEmployeeId.current !== employeeId) return;
       if (refreshedEmployee) {
         const refreshedStatus =

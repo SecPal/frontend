@@ -69,6 +69,7 @@ function renderWithRouteChange() {
     <I18nProvider i18n={i18n}>
       <MemoryRouter initialEntries={["/employees/emp-1"]}>
         <Link to="/employees/emp-2">Next employee</Link>
+        <Link to="/employees/emp-1">First employee</Link>
         <Routes>
           <Route path="/employees/:id" element={<EmployeeDetail />} />
         </Routes>
@@ -288,6 +289,17 @@ describe("EmployeeDetail", () => {
     ).toBeInTheDocument();
   }
 
+  async function changeToFirstEmployee(expectedName: string) {
+    const firstEmployeeLink = document.querySelector<HTMLAnchorElement>(
+      'a[href="/employees/emp-1"]'
+    );
+    expect(firstEmployeeLink).not.toBeNull();
+    fireEvent.click(firstEmployeeLink!);
+    expect(
+      await screen.findByRole("heading", { name: expectedName })
+    ).toBeInTheDocument();
+  }
+
   it("ignores an activation completion after the employee route changes", async () => {
     const activation = deferred<Employee>();
     mockRouteEmployees({
@@ -460,6 +472,90 @@ describe("EmployeeDetail", () => {
       expect(
         screen.getByRole("heading", { name: "Jane Roe" })
       ).toBeInTheDocument();
+    }
+  );
+
+  it.each(["export", "status"] as const)(
+    "ignores a stale BWR %s follow-up refresh after returning to the employee route",
+    async (action) => {
+      const staleRefresh = deferred<Employee>();
+      const initialEmployee = {
+        ...mockEmployee,
+        bwr_status: action === "export" ? "not_registered" : "pending",
+      } satisfies Employee;
+      const currentEmployee = {
+        ...initialEmployee,
+        full_name: "Current Employee A",
+        bwr_notes: "Current route data",
+      } satisfies Employee;
+      const staleEmployee = {
+        ...initialEmployee,
+        full_name: "Stale Employee A",
+        bwr_notes: "Stale refresh data",
+      } satisfies Employee;
+      let employeeAFetchCount = 0;
+      vi.mocked(employeeApi.fetchEmployee).mockImplementation((employeeId) => {
+        if (employeeId === "emp-2") {
+          return Promise.resolve(nextEmployee);
+        }
+        employeeAFetchCount += 1;
+        if (employeeAFetchCount === 1) {
+          return Promise.resolve(initialEmployee);
+        }
+        if (employeeAFetchCount === 2) {
+          return staleRefresh.promise;
+        }
+        return Promise.resolve(currentEmployee);
+      });
+      vi.mocked(employeeApi.exportEmployeeBwr).mockResolvedValue({
+        employee_id: "emp-1",
+        status: "pending",
+        format: "csv",
+        download_url:
+          "https://api.secpal.dev/v1/employees/emp-1/bwr/export.csv",
+      });
+      vi.mocked(employeeApi.updateEmployeeBwrStatus).mockResolvedValue(
+        initialEmployee
+      );
+      renderWithRouteChange();
+
+      await screen.findByRole("heading", { name: "John Doe" });
+      fireEvent.click(
+        await screen.findByRole("button", { name: /bewacherregister/i })
+      );
+      fireEvent.click(
+        await screen.findByRole("button", {
+          name:
+            action === "export" ? /generate bwr export/i : /save bwr status/i,
+        })
+      );
+      await waitFor(() =>
+        expect(employeeApi.fetchEmployee).toHaveBeenCalledTimes(2)
+      );
+
+      await changeToNextEmployee();
+      await changeToFirstEmployee("Current Employee A");
+
+      await act(async () => staleRefresh.resolve(staleEmployee));
+
+      expect(
+        screen.getByRole("heading", { name: "Current Employee A" })
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "Stale Employee A" })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/bwr export generated|bwr status updated/i)
+      ).not.toBeInTheDocument();
+      fireEvent.click(
+        await screen.findByRole("button", { name: /bewacherregister/i })
+      );
+      expect(
+        screen.getByRole("button", {
+          name:
+            action === "export" ? /generate bwr export/i : /save bwr status/i,
+        })
+      ).toBeEnabled();
     }
   );
 

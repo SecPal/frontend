@@ -4,6 +4,7 @@
 import {
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type Dispatch,
@@ -685,6 +686,7 @@ export function EmployeeDetail() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const capabilities = useUserCapabilities();
+  const routeOwner = useMemo<object>(() => ({ id }), [id]);
   const activeRouteId = useRef(id);
   const activeRouteOwner = useRef<object | null>(null);
   const contactDialogFormRef = useRef<HTMLFormElement | null>(null);
@@ -730,31 +732,30 @@ export function EmployeeDetail() {
       "-"
     : "-";
 
-  function routeIsActive(employeeId: string, routeOwner?: object): boolean {
+  function routeIsActive(employeeId: string, owner: object): boolean {
     return (
-      activeRouteId.current === employeeId &&
-      (routeOwner === undefined || activeRouteOwner.current === routeOwner)
+      activeRouteId.current === employeeId && activeRouteOwner.current === owner
     );
   }
 
   async function refreshEmployee(
     employeeId: string,
-    routeOwner?: object
+    owner: object
   ): Promise<Employee | null> {
-    if (!routeIsActive(employeeId, routeOwner)) {
+    if (!routeIsActive(employeeId, owner)) {
       return null;
     }
 
     try {
       const data = await fetchEmployee(employeeId);
-      if (!routeIsActive(employeeId, routeOwner)) {
+      if (!routeIsActive(employeeId, owner)) {
         return null;
       }
       setEmployee(data);
       setError(null);
       return data;
     } catch (err) {
-      if (!routeIsActive(employeeId, routeOwner)) {
+      if (!routeIsActive(employeeId, owner)) {
         return null;
       }
       console.error("Failed to load employee:", err);
@@ -763,7 +764,6 @@ export function EmployeeDetail() {
   }
 
   useLayoutEffect(() => {
-    const routeOwner = {};
     activeRouteId.current = id;
     activeRouteOwner.current = routeOwner;
     return () => {
@@ -771,7 +771,7 @@ export function EmployeeDetail() {
         activeRouteOwner.current = null;
       }
     };
-  }, [id]);
+  }, [id, routeOwner]);
 
   useEffect(() => {
     if (!id) {
@@ -1285,6 +1285,7 @@ export function EmployeeDetail() {
               key={id}
               employee={employee}
               canManage={capabilities.actions.employees.update}
+              routeOwner={routeOwner}
               onRefresh={refreshEmployee}
             />
           )}
