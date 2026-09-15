@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -63,6 +63,7 @@ export function EmployeeEdit() {
   const employeeStatusItems = useEmployeeStatusSelectItems();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const activeRouteOwner = useRef<object | null>(null);
   const [loading, setLoading] = useState(false);
   // Display values for date inputs
   const [birthDateDisplay, setBirthDateDisplay] = useState("");
@@ -105,6 +106,17 @@ export function EmployeeEdit() {
     status: "pre_contract",
     contract_type: "full_time",
   });
+
+  useLayoutEffect(() => {
+    const routeOwner = {};
+    activeRouteOwner.current = routeOwner;
+    return () => {
+      if (activeRouteOwner.current === routeOwner) {
+        activeRouteOwner.current = null;
+      }
+    };
+  }, [id]);
+
   useEffect(() => {
     if (!id) {
       return;
@@ -113,6 +125,7 @@ export function EmployeeEdit() {
     let active = true;
     async function loadEmployee() {
       setFetchLoading(true);
+      setLoading(false);
       setLoadError(null);
       setSubmitError(null);
       setDomainErrors({});
@@ -279,6 +292,12 @@ export function EmployeeEdit() {
       return;
     }
 
+    const employeeId = id;
+    const routeOwner = activeRouteOwner.current;
+    if (!routeOwner) {
+      return;
+    }
+
     try {
       setLoading(true);
       setSubmitError(null);
@@ -306,9 +325,15 @@ export function EmployeeEdit() {
         );
       }
       delete updatePayload.status;
-      await updateEmployee(id, updatePayload);
-      navigate(`/employees/${id}`);
+      await updateEmployee(employeeId, updatePayload);
+      if (activeRouteOwner.current !== routeOwner) {
+        return;
+      }
+      navigate(`/employees/${employeeId}`);
     } catch (err) {
+      if (activeRouteOwner.current !== routeOwner) {
+        return;
+      }
       console.error("Failed to update employee:", err);
       let errorMessage = "Failed to update employee";
 
@@ -320,7 +345,9 @@ export function EmployeeEdit() {
 
       setSubmitError(errorMessage);
     } finally {
-      setLoading(false);
+      if (activeRouteOwner.current === routeOwner) {
+        setLoading(false);
+      }
     }
   }
 

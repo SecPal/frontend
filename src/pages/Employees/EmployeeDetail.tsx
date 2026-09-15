@@ -3,6 +3,8 @@
 
 import {
   useEffect,
+  useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type Dispatch,
@@ -684,6 +686,9 @@ export function EmployeeDetail() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const capabilities = useUserCapabilities();
+  const routeOwner = useMemo<object>(() => ({ id }), [id]);
+  const activeRouteId = useRef(id);
+  const activeRouteOwner = useRef<object | null>(null);
   const contactDialogFormRef = useRef<HTMLFormElement | null>(null);
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
@@ -727,21 +732,46 @@ export function EmployeeDetail() {
       "-"
     : "-";
 
-  async function refreshEmployee(): Promise<Employee | null> {
-    if (!id) {
+  function routeIsActive(employeeId: string, owner: object): boolean {
+    return (
+      activeRouteId.current === employeeId && activeRouteOwner.current === owner
+    );
+  }
+
+  async function refreshEmployee(
+    employeeId: string,
+    owner: object
+  ): Promise<Employee | null> {
+    if (!routeIsActive(employeeId, owner)) {
       return null;
     }
 
     try {
-      const data = await fetchEmployee(id);
+      const data = await fetchEmployee(employeeId);
+      if (!routeIsActive(employeeId, owner)) {
+        return null;
+      }
       setEmployee(data);
       setError(null);
       return data;
     } catch (err) {
+      if (!routeIsActive(employeeId, owner)) {
+        return null;
+      }
       console.error("Failed to load employee:", err);
       return null;
     }
   }
+
+  useLayoutEffect(() => {
+    activeRouteId.current = id;
+    activeRouteOwner.current = routeOwner;
+    return () => {
+      if (activeRouteOwner.current === routeOwner) {
+        activeRouteOwner.current = null;
+      }
+    };
+  }, [id, routeOwner]);
 
   useEffect(() => {
     if (!id) {
@@ -753,8 +783,10 @@ export function EmployeeDetail() {
       setLoading(true);
       setEmployee(null);
       setError(null);
+      setActionLoading(false);
       setEditingContactField(null);
       setContactSaveError(null);
+      setContactSaveLoading(false);
       setContactInvalidField(null);
       setContactEmergencyInvalidField(null);
       try {
@@ -801,11 +833,19 @@ export function EmployeeDetail() {
       return;
     }
 
+    const employeeId = id;
+    const routeOwner = activeRouteOwner.current;
+    if (!routeOwner) {
+      return;
+    }
+
     try {
       setActionLoading(true);
-      await activateEmployee(id);
-      await refreshEmployee();
+      await activateEmployee(employeeId);
+      if (!routeIsActive(employeeId, routeOwner)) return;
+      await refreshEmployee(employeeId, routeOwner);
     } catch (err) {
+      if (!routeIsActive(employeeId, routeOwner)) return;
       console.error("Failed to activate employee:", err);
       let errorMessage = i18n._(msg`Failed to activate employee`);
 
@@ -817,7 +857,7 @@ export function EmployeeDetail() {
 
       setError(errorMessage);
     } finally {
-      setActionLoading(false);
+      if (routeIsActive(employeeId, routeOwner)) setActionLoading(false);
     }
   }
 
@@ -826,11 +866,19 @@ export function EmployeeDetail() {
       return;
     }
 
+    const employeeId = id;
+    const routeOwner = activeRouteOwner.current;
+    if (!routeOwner) {
+      return;
+    }
+
     try {
       setActionLoading(true);
-      await terminateEmployee(id);
-      await refreshEmployee();
+      await terminateEmployee(employeeId);
+      if (!routeIsActive(employeeId, routeOwner)) return;
+      await refreshEmployee(employeeId, routeOwner);
     } catch (err) {
+      if (!routeIsActive(employeeId, routeOwner)) return;
       console.error("Failed to terminate employee:", err);
       let errorMessage = i18n._(msg`Failed to terminate employee`);
 
@@ -842,7 +890,7 @@ export function EmployeeDetail() {
 
       setError(errorMessage);
     } finally {
-      setActionLoading(false);
+      if (routeIsActive(employeeId, routeOwner)) setActionLoading(false);
     }
   }
 
@@ -851,11 +899,19 @@ export function EmployeeDetail() {
       return;
     }
 
+    const employeeId = id;
+    const routeOwner = activeRouteOwner.current;
+    if (!routeOwner) {
+      return;
+    }
+
     try {
       setActionLoading(true);
-      await confirmEmployeeOnboarding(id, undefined);
-      await refreshEmployee();
+      await confirmEmployeeOnboarding(employeeId, undefined);
+      if (!routeIsActive(employeeId, routeOwner)) return;
+      await refreshEmployee(employeeId, routeOwner);
     } catch (err) {
+      if (!routeIsActive(employeeId, routeOwner)) return;
       console.error("Failed to confirm onboarding:", err);
       let errorMessage = i18n._(msg`Failed to confirm onboarding`);
 
@@ -867,7 +923,7 @@ export function EmployeeDetail() {
 
       setError(errorMessage);
     } finally {
-      setActionLoading(false);
+      if (routeIsActive(employeeId, routeOwner)) setActionLoading(false);
     }
   }
 
@@ -915,6 +971,12 @@ export function EmployeeDetail() {
 
   async function handleSaveContactField() {
     if (!id || !employee || !editingContactField) {
+      return;
+    }
+
+    const employeeId = id;
+    const routeOwner = activeRouteOwner.current;
+    if (!routeOwner) {
       return;
     }
 
@@ -968,9 +1030,9 @@ export function EmployeeDetail() {
           editingContactField === "email"
             ? { email: trimmedValue }
             : { phone: trimmedValue };
-        await updateEmployee(id, payload);
+        await updateEmployee(employeeId, payload);
       } else if (editingContactField === "postal_address") {
-        await updateEmployee(id, {
+        await updateEmployee(employeeId, {
           addresses: buildAddressesPayloadForCurrentEdit(
             mergeAddressBaseList(employee.addresses, employee.current_address),
             contactAddressDraft,
@@ -1005,15 +1067,18 @@ export function EmployeeDetail() {
           contactEmergencyDrafts
         );
 
-        await updateEmployee(id, {
+        await updateEmployee(employeeId, {
           emergency_contacts:
             normalizedContacts.length > 0 ? normalizedContacts : null,
         });
       }
 
-      await refreshEmployee();
+      if (!routeIsActive(employeeId, routeOwner)) return;
+      await refreshEmployee(employeeId, routeOwner);
+      if (!routeIsActive(employeeId, routeOwner)) return;
       setEditingContactField(null);
     } catch (err) {
+      if (!routeIsActive(employeeId, routeOwner)) return;
       console.error("Failed to update contact field:", err);
       if (err instanceof Error) {
         setContactSaveError(err.message);
@@ -1023,7 +1088,7 @@ export function EmployeeDetail() {
         setContactSaveError(i18n._(msg`Failed to update contact field.`));
       }
     } finally {
-      setContactSaveLoading(false);
+      if (routeIsActive(employeeId, routeOwner)) setContactSaveLoading(false);
     }
   }
 
@@ -1217,8 +1282,10 @@ export function EmployeeDetail() {
           )}
           {activeTab === "bwr" && (
             <EmployeeBwrPanel
+              key={id}
               employee={employee}
               canManage={capabilities.actions.employees.update}
+              routeOwner={routeOwner}
               onRefresh={refreshEmployee}
             />
           )}

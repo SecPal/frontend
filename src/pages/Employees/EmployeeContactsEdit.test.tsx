@@ -2,8 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router";
+import {
+  act,
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+} from "@testing-library/react";
+import { Link, MemoryRouter, Route, Routes } from "react-router";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { messages as deMessages } from "../../locales/de/messages.mjs";
@@ -40,6 +46,33 @@ function renderWithProviders(employeeId: string) {
       </MemoryRouter>
     </I18nProvider>
   );
+}
+
+function renderWithRouteLinks() {
+  return render(
+    <I18nProvider i18n={i18n}>
+      <MemoryRouter initialEntries={["/employees/emp-1/edit/contacts"]}>
+        <Link to="/employees/emp-2/edit/contacts">Employee B</Link>
+        <Link to="/employees/emp-1/edit/contacts">Employee A</Link>
+        <Routes>
+          <Route
+            path="/employees/:id/edit/contacts"
+            element={<EmployeeContactsEdit />}
+          />
+        </Routes>
+      </MemoryRouter>
+    </I18nProvider>
+  );
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
 }
 
 async function waitForLoadedForm() {
@@ -348,6 +381,84 @@ describe("EmployeeContactsEdit", () => {
 
     expect(employeeApi.updateEmployee).not.toHaveBeenCalled();
     expect(mockNavigate).not.toHaveBeenCalledWith("/employees/emp-1#contacts");
+  });
+
+  it("ignores a successful save after leaving and returning to the employee route", async () => {
+    const firstSave = deferred<Employee>();
+    vi.mocked(employeeApi.updateEmployee).mockReturnValueOnce(
+      firstSave.promise
+    );
+    vi.mocked(employeeApi.fetchEmployee).mockImplementation(async (id) => ({
+      ...mockEmployee,
+      id,
+      employee_number: id === "emp-1" ? "E001" : "E002",
+      full_name: id === "emp-1" ? "Max Mustermann" : "Erika Musterfrau",
+      email: id === "emp-1" ? "max@mustermann.de" : "erika@example.com",
+    }));
+
+    renderWithRouteLinks();
+    await waitForLoadedForm();
+
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+    expect(
+      await screen.findByRole("button", { name: /saving/i })
+    ).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("link", { name: "Employee B" }));
+    expect(await screen.findByDisplayValue("erika@example.com")).toBeVisible();
+    fireEvent.click(screen.getByRole("link", { name: "Employee A" }));
+    expect(await screen.findByDisplayValue("max@mustermann.de")).toBeVisible();
+    expect(screen.getByRole("button", { name: /^save$/i })).toBeEnabled();
+
+    await act(async () => {
+      firstSave.resolve(mockEmployee);
+      await firstSave.promise;
+    });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it("ignores a failed save after returning and preserves the current save state", async () => {
+    const firstSave = deferred<Employee>();
+    const currentSave = deferred<Employee>();
+    vi.mocked(employeeApi.updateEmployee)
+      .mockReturnValueOnce(firstSave.promise)
+      .mockReturnValueOnce(currentSave.promise);
+    vi.mocked(employeeApi.fetchEmployee).mockImplementation(async (id) => ({
+      ...mockEmployee,
+      id,
+      employee_number: id === "emp-1" ? "E001" : "E002",
+      full_name: id === "emp-1" ? "Max Mustermann" : "Erika Musterfrau",
+      email: id === "emp-1" ? "max@mustermann.de" : "erika@example.com",
+    }));
+
+    renderWithRouteLinks();
+    await waitForLoadedForm();
+
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+    fireEvent.click(screen.getByRole("link", { name: "Employee B" }));
+    expect(await screen.findByDisplayValue("erika@example.com")).toBeVisible();
+    fireEvent.click(screen.getByRole("link", { name: "Employee A" }));
+    expect(await screen.findByDisplayValue("max@mustermann.de")).toBeVisible();
+
+    fireEvent.click(screen.getByRole("button", { name: /^save$/i }));
+    expect(employeeApi.updateEmployee).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole("button", { name: /saving/i })).toBeDisabled();
+
+    await act(async () => {
+      firstSave.reject(new Error("Stale update failed"));
+      await firstSave.promise.catch(() => undefined);
+    });
+
+    expect(screen.queryByText("Stale update failed")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /saving/i })).toBeDisabled();
+
+    await act(async () => {
+      currentSave.resolve(mockEmployee);
+      await currentSave.promise;
+    });
+    expect(mockNavigate).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalledWith("/employees/emp-1#contacts");
   });
 
   it("should save normalized payload and navigate to contacts tab", async () => {

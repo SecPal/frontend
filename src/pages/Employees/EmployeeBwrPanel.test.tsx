@@ -62,14 +62,19 @@ function renderPanel({
   canManage = true,
 }: {
   employee?: Employee;
-  onRefresh?: () => Promise<Employee | null>;
+  onRefresh?: (
+    employeeId: string,
+    routeOwner: object
+  ) => Promise<Employee | null>;
   canManage?: boolean;
 } = {}) {
+  const routeOwner = {};
   return render(
     <I18nProvider i18n={i18n}>
       <EmployeeBwrPanel
         employee={employee}
         canManage={canManage}
+        routeOwner={routeOwner}
         onRefresh={onRefresh}
       />
     </I18nProvider>
