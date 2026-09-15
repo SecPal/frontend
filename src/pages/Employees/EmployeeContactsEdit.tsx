@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
@@ -72,6 +72,17 @@ export function EmployeeContactsEdit() {
   const [emailInvalid, setEmailInvalid] = useState(false);
   const [emergencyFieldError, setEmergencyFieldError] =
     useState<EmergencyContactValidationError | null>(null);
+  const activeRouteOwner = useRef<object | null>(null);
+
+  useLayoutEffect(() => {
+    const routeOwner = {};
+    activeRouteOwner.current = routeOwner;
+    return () => {
+      if (activeRouteOwner.current === routeOwner) {
+        activeRouteOwner.current = null;
+      }
+    };
+  }, [id]);
 
   useEffect(() => {
     if (!id) {
@@ -79,8 +90,16 @@ export function EmployeeContactsEdit() {
     }
 
     let active = true;
-    void fetchEmployee(id)
-      .then((employee: Employee) => {
+    async function loadEmployee() {
+      setFetchLoading(true);
+      setEmployeeLoaded(false);
+      setLoading(false);
+      setError(null);
+      setEmailInvalid(false);
+      setEmergencyFieldError(null);
+
+      try {
+        const employee: Employee = await fetchEmployee(id!);
         if (!active) {
           return;
         }
@@ -103,8 +122,7 @@ export function EmployeeContactsEdit() {
           emergencyContactsToDrafts(employee.emergency_contacts)
         );
         setEmployeeLoaded(true);
-      })
-      .catch((err) => {
+      } catch (err) {
         if (!active) {
           return;
         }
@@ -117,12 +135,13 @@ export function EmployeeContactsEdit() {
 
         setEmployeeLoaded(false);
         setError(i18n._(msg`Failed to load employee`));
-      })
-      .finally(() => {
+      } finally {
         if (active) {
           setFetchLoading(false);
         }
-      });
+      }
+    }
+    void loadEmployee();
 
     return () => {
       active = false;
@@ -169,11 +188,16 @@ export function EmployeeContactsEdit() {
 
     const normalizedContacts =
       normalizeEmergencyContactDrafts(emergencyContacts);
+    const employeeId = id;
+    const routeOwner = activeRouteOwner.current;
+    if (!routeOwner) {
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
-      await updateEmployee(id, {
+      await updateEmployee(employeeId, {
         email: trimmedEmail,
         phone: phone.trim(),
         addresses: buildAddressesPayloadForCurrentEdit(
@@ -184,15 +208,23 @@ export function EmployeeContactsEdit() {
         emergency_contacts:
           normalizedContacts.length > 0 ? normalizedContacts : null,
       });
-      navigate(`/employees/${id}#contacts`);
+      if (activeRouteOwner.current !== routeOwner) {
+        return;
+      }
+      navigate(`/employees/${employeeId}#contacts`);
     } catch (err) {
+      if (activeRouteOwner.current !== routeOwner) {
+        return;
+      }
       if (err instanceof Error) {
         setError(err.message);
         return;
       }
       setError(i18n._(msg`Failed to update employee`));
     } finally {
-      setLoading(false);
+      if (activeRouteOwner.current === routeOwner) {
+        setLoading(false);
+      }
     }
   }
 
