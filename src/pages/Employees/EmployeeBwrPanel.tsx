@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, type FormEvent } from "react";
+import { useLayoutEffect, useRef, useState, type FormEvent } from "react";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
@@ -147,7 +147,7 @@ function getBwrErrorMessage(error: unknown, fallback: string): string {
 export interface EmployeeBwrPanelProps {
   employee: Employee;
   canManage: boolean;
-  onRefresh: () => Promise<Employee | null>;
+  onRefresh: (employeeId: string) => Promise<Employee | null>;
 }
 
 export function EmployeeBwrPanel({
@@ -173,6 +173,17 @@ export function EmployeeBwrPanel({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [exportLoading, setExportLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
+  const activeEmployeeId = useRef<string | null>(employee.id);
+
+  useLayoutEffect(() => {
+    const employeeId = employee.id;
+    activeEmployeeId.current = employeeId;
+    return () => {
+      if (activeEmployeeId.current === employeeId) {
+        activeEmployeeId.current = null;
+      }
+    };
+  }, [employee.id]);
 
   const managedStatusOptions = getManagedBwrStatuses(currentStatus);
 
@@ -183,11 +194,13 @@ export function EmployeeBwrPanel({
   }
 
   async function handleExport() {
+    const employeeId = employee.id;
     clearPanelFeedback();
 
     try {
       setExportLoading(true);
-      const response = await exportEmployeeBwr(employee.id, exportFormat);
+      const response = await exportEmployeeBwr(employeeId, exportFormat);
+      if (activeEmployeeId.current !== employeeId) return;
       if (!isSafeHttpUrl(response.download_url)) {
         setPanelError(
           _(
@@ -197,7 +210,8 @@ export function EmployeeBwrPanel({
         return;
       }
       setLatestExportUrl(response.download_url);
-      const refreshedEmployee = await onRefresh();
+      const refreshedEmployee = await onRefresh(employeeId);
+      if (activeEmployeeId.current !== employeeId) return;
       if (refreshedEmployee) {
         const refreshedStatus =
           refreshedEmployee.bwr_status ?? "not_registered";
@@ -209,6 +223,7 @@ export function EmployeeBwrPanel({
       }
       setSuccessMessage(_(msg`BWR export generated. Download the file below.`));
     } catch (error) {
+      if (activeEmployeeId.current !== employeeId) return;
       setPanelError(
         getBwrErrorMessage(error, _(msg`Failed to generate BWR export`))
       );
@@ -216,22 +231,25 @@ export function EmployeeBwrPanel({
         error instanceof ApiError ? normalizeBwrFieldErrors(error.errors) : {}
       );
     } finally {
-      setExportLoading(false);
+      if (activeEmployeeId.current === employeeId) setExportLoading(false);
     }
   }
 
   async function handleSaveStatus(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const employeeId = employee.id;
     clearPanelFeedback();
 
     try {
       setSaveLoading(true);
-      await updateEmployeeBwrStatus(employee.id, {
+      await updateEmployeeBwrStatus(employeeId, {
         status: selectedStatus,
         bwr_id: bwrId.trim() === "" ? null : bwrId.trim(),
         notes: notes.trim() === "" ? null : notes.trim(),
       });
-      const refreshedEmployee = await onRefresh();
+      if (activeEmployeeId.current !== employeeId) return;
+      const refreshedEmployee = await onRefresh(employeeId);
+      if (activeEmployeeId.current !== employeeId) return;
       if (refreshedEmployee) {
         const refreshedStatus =
           refreshedEmployee.bwr_status ?? "not_registered";
@@ -243,6 +261,7 @@ export function EmployeeBwrPanel({
       }
       setSuccessMessage(_(msg`BWR status updated.`));
     } catch (error) {
+      if (activeEmployeeId.current !== employeeId) return;
       setPanelError(
         getBwrErrorMessage(error, _(msg`Failed to update BWR status`))
       );
@@ -250,7 +269,7 @@ export function EmployeeBwrPanel({
         error instanceof ApiError ? normalizeBwrFieldErrors(error.errors) : {}
       );
     } finally {
-      setSaveLoading(false);
+      if (activeEmployeeId.current === employeeId) setSaveLoading(false);
     }
   }
 

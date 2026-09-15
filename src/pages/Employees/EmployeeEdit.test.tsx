@@ -521,6 +521,77 @@ describe("EmployeeEdit", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/employees/emp-1");
   });
 
+  it.each(["resolve", "reject"] as const)(
+    "ignores a submission that %s after the employee edit route changes",
+    async (outcome) => {
+      let resolveUpdate!: (employee: Employee) => void;
+      let rejectUpdate!: (error: Error) => void;
+      vi.mocked(employeeApi.updateEmployee).mockImplementation(
+        () =>
+          new Promise<Employee>((resolve, reject) => {
+            resolveUpdate = resolve;
+            rejectUpdate = reject;
+          })
+      );
+      vi.mocked(employeeApi.fetchEmployee).mockImplementation(async (id) =>
+        id === "emp-1"
+          ? mockEmployee
+          : {
+              ...mockEmployee,
+              id: "emp-2",
+              employee_number: "E002",
+              first_name: "Jane",
+              last_name: "Roe",
+              full_name: "Jane Roe",
+              email: "jane.roe@secpal.dev",
+            }
+      );
+
+      render(
+        <I18nProvider i18n={i18n}>
+          <MemoryRouter initialEntries={["/employees/emp-1/edit"]}>
+            <Link to="/employees/emp-2/edit">Next employee</Link>
+            <Routes>
+              <Route path="/employees/:id/edit" element={<EmployeeEdit />} />
+            </Routes>
+          </MemoryRouter>
+        </I18nProvider>
+      );
+
+      expect(await screen.findByLabelText(/first name/i)).toHaveValue("John");
+      await waitForDomainAssignmentReady();
+      fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+      await waitFor(() =>
+        expect(employeeApi.updateEmployee).toHaveBeenCalledWith(
+          "emp-1",
+          expect.any(Object)
+        )
+      );
+
+      fireEvent.click(screen.getByRole("link", { name: /next employee/i }));
+
+      expect(await screen.findByLabelText(/first name/i)).toHaveValue("Jane");
+      await waitForDomainAssignmentReady();
+      expect(
+        screen.getByRole("button", { name: /save changes/i })
+      ).toBeEnabled();
+
+      await act(async () => {
+        if (outcome === "resolve") {
+          resolveUpdate(mockEmployee);
+        } else {
+          rejectUpdate(new Error("Employee 1 update failed"));
+        }
+      });
+
+      expect(screen.getByLabelText(/first name/i)).toHaveValue("Jane");
+      expect(
+        screen.queryByText("Employee 1 update failed")
+      ).not.toBeInTheDocument();
+      expect(mockNavigate).not.toHaveBeenCalled();
+    }
+  );
+
   it("blocks submission after authorization invalidates the loaded assignment", async () => {
     vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
       { id: "legal-entity-2", name: "SecPal Operations GmbH" },

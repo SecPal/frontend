@@ -98,6 +98,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Bound employee edit and detail mutations, including follow-up refreshes, to
+  the route that initiated them so late completions cannot change a newer
+  employee route's navigation, feedback, dialogs, loading state, or data.
+
 - Bound site edit save completions to the route instance that initiated them,
   preventing late navigation, errors, and loading updates after leaving and
   returning to the same site route.

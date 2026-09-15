@@ -64,6 +64,29 @@ const renderWithProviders = (employeeId: string) => {
   );
 };
 
+function renderWithRouteChange() {
+  return render(
+    <I18nProvider i18n={i18n}>
+      <MemoryRouter initialEntries={["/employees/emp-1"]}>
+        <Link to="/employees/emp-2">Next employee</Link>
+        <Routes>
+          <Route path="/employees/:id" element={<EmployeeDetail />} />
+        </Routes>
+      </MemoryRouter>
+    </I18nProvider>
+  );
+}
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: Error) => void;
+  const promise = new Promise<T>((nextResolve, nextReject) => {
+    resolve = nextResolve;
+    reject = nextReject;
+  });
+  return { promise, resolve, reject };
+}
+
 async function selectOption(triggerName: RegExp, optionName: RegExp | string) {
   const trigger = screen.getByRole("combobox", { name: triggerName });
   fireEvent.click(trigger, { button: 0 });
@@ -237,6 +260,208 @@ describe("EmployeeDetail", () => {
     });
     expect(await screen.findByText("Employee 2 failed to load")).toBeVisible();
   });
+
+  const nextEmployee: Employee = {
+    ...mockEmployee,
+    id: "emp-2",
+    employee_number: "E002",
+    first_name: "Jane",
+    last_name: "Roe",
+    full_name: "Jane Roe",
+    email: "jane.roe@secpal.dev",
+  };
+
+  function mockRouteEmployees(firstEmployee: Employee) {
+    vi.mocked(employeeApi.fetchEmployee).mockImplementation(async (id) =>
+      id === "emp-1" ? firstEmployee : nextEmployee
+    );
+  }
+
+  async function changeToNextEmployee() {
+    const nextEmployeeLink = document.querySelector<HTMLAnchorElement>(
+      'a[href="/employees/emp-2"]'
+    );
+    expect(nextEmployeeLink).not.toBeNull();
+    fireEvent.click(nextEmployeeLink!);
+    expect(
+      await screen.findByRole("heading", { name: "Jane Roe" })
+    ).toBeInTheDocument();
+  }
+
+  it("ignores an activation completion after the employee route changes", async () => {
+    const activation = deferred<Employee>();
+    mockRouteEmployees({
+      ...mockEmployee,
+      status: "pre_contract",
+      onboarding_completed: true,
+      onboarding_workflow: { status: "ready_for_activation" },
+    });
+    vi.mocked(employeeApi.activateEmployee).mockReturnValue(activation.promise);
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderWithRouteChange();
+
+    fireEvent.click(await screen.findByRole("button", { name: /^activate$/i }));
+    await waitFor(() =>
+      expect(employeeApi.activateEmployee).toHaveBeenCalledWith("emp-1")
+    );
+    await changeToNextEmployee();
+    expect(screen.getByRole("button", { name: /terminate/i })).toBeEnabled();
+
+    await act(async () => activation.resolve(mockEmployee));
+
+    expect(employeeApi.fetchEmployee).toHaveBeenCalledTimes(2);
+    expect(
+      screen.getByRole("heading", { name: "Jane Roe" })
+    ).toBeInTheDocument();
+  });
+
+  it("ignores a termination error after the employee route changes", async () => {
+    const termination = deferred<Employee>();
+    mockRouteEmployees(mockEmployee);
+    vi.mocked(employeeApi.terminateEmployee).mockReturnValue(
+      termination.promise
+    );
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderWithRouteChange();
+
+    fireEvent.click(await screen.findByRole("button", { name: /terminate/i }));
+    await waitFor(() =>
+      expect(employeeApi.terminateEmployee).toHaveBeenCalledWith("emp-1")
+    );
+    await changeToNextEmployee();
+
+    await act(async () =>
+      termination.reject(new Error("Employee 1 termination failed"))
+    );
+
+    expect(
+      screen.queryByText("Employee 1 termination failed")
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Jane Roe" })
+    ).toBeInTheDocument();
+  });
+
+  it("ignores an onboarding completion after the employee route changes", async () => {
+    const confirmation = deferred<Employee>();
+    mockRouteEmployees({
+      ...mockEmployee,
+      status: "pre_contract",
+      onboarding_completed: true,
+      onboarding_workflow: { status: "submitted_for_review" },
+    });
+    vi.mocked(employeeApi.confirmEmployeeOnboarding).mockReturnValue(
+      confirmation.promise
+    );
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderWithRouteChange();
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /confirm onboarding/i })
+    );
+    await waitFor(() =>
+      expect(employeeApi.confirmEmployeeOnboarding).toHaveBeenCalledWith(
+        "emp-1",
+        undefined
+      )
+    );
+    await changeToNextEmployee();
+
+    await act(async () => confirmation.resolve(mockEmployee));
+
+    expect(employeeApi.fetchEmployee).toHaveBeenCalledTimes(2);
+    expect(
+      screen.getByRole("heading", { name: "Jane Roe" })
+    ).toBeInTheDocument();
+  });
+
+  it("keeps a new contact dialog independent from a stale contact error", async () => {
+    const update = deferred<Employee>();
+    mockRouteEmployees(mockEmployee);
+    vi.mocked(employeeApi.updateEmployee).mockReturnValue(update.promise);
+    renderWithRouteChange();
+
+    await screen.findByRole("heading", { name: "John Doe" });
+    fireEvent.click(await screen.findByRole("button", { name: /^contact$/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /edit email/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /^save$/i }));
+    await waitFor(() =>
+      expect(employeeApi.updateEmployee).toHaveBeenCalledWith("emp-1", {
+        email: "john.doe@secpal.dev",
+      })
+    );
+
+    await changeToNextEmployee();
+    fireEvent.click(await screen.findByRole("button", { name: /edit email/i }));
+    expect(screen.getByRole("button", { name: /^save$/i })).toBeEnabled();
+
+    await act(async () =>
+      update.reject(new Error("Employee 1 contact failed"))
+    );
+
+    expect(
+      screen.queryByText("Employee 1 contact failed")
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: /edit email/i })
+    ).toBeInTheDocument();
+  });
+
+  it.each(["export", "status"] as const)(
+    "does not refresh the old employee after a BWR %s completes on a new route",
+    async (action) => {
+      const mutation = deferred<Employee>();
+      mockRouteEmployees({
+        ...mockEmployee,
+        bwr_status: action === "export" ? "not_registered" : "pending",
+      });
+      if (action === "export") {
+        vi.mocked(employeeApi.exportEmployeeBwr).mockImplementation(
+          async () => {
+            await mutation.promise;
+            return {
+              employee_id: "emp-1",
+              status: "pending",
+              format: "csv",
+              download_url:
+                "https://api.secpal.dev/v1/employees/emp-1/bwr/export.csv",
+            };
+          }
+        );
+      } else {
+        vi.mocked(employeeApi.updateEmployeeBwrStatus).mockReturnValue(
+          mutation.promise
+        );
+      }
+      renderWithRouteChange();
+
+      await screen.findByRole("heading", { name: "John Doe" });
+      fireEvent.click(
+        await screen.findByRole("button", { name: /bewacherregister/i })
+      );
+      fireEvent.click(
+        await screen.findByRole("button", {
+          name:
+            action === "export" ? /generate bwr export/i : /save bwr status/i,
+        })
+      );
+      await waitFor(() =>
+        expect(
+          action === "export"
+            ? employeeApi.exportEmployeeBwr
+            : employeeApi.updateEmployeeBwrStatus
+        ).toHaveBeenCalled()
+      );
+      await changeToNextEmployee();
+
+      await act(async () => mutation.resolve(mockEmployee));
+
+      expect(employeeApi.fetchEmployee).toHaveBeenCalledTimes(2);
+      expect(
+        screen.getByRole("heading", { name: "Jane Roe" })
+      ).toBeInTheDocument();
+    }
+  );
 
   it("renders the migrated shadcn/Base UI detail surface with dark-mode classes", async () => {
     renderWithProviders("emp-1");
