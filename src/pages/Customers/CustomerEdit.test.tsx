@@ -61,6 +61,16 @@ function snapshot(value: Customer = customer, etag = '"customer-v1"') {
   return { customer: value, etag };
 }
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+  return { promise, reject, resolve };
+}
+
 function renderPage() {
   window.history.pushState({}, "", "/customers/customer-1/edit");
   return render(
@@ -280,6 +290,7 @@ describe("CustomerEdit", () => {
 
   it("reconciles actual edits onto a refreshed baseline before explicit stale retry", async () => {
     const user = userEvent.setup();
+    const refreshedSnapshot = deferred<ReturnType<typeof snapshot>>();
     const originalCustomer: Customer = {
       ...customer,
       customer_establishments: [
@@ -294,6 +305,7 @@ describe("CustomerEdit", () => {
     };
     const currentCustomer: Customer = {
       ...originalCustomer,
+      legal_entity_id: "legal-2",
       billing_address: {
         ...originalCustomer.billing_address,
         city: "Munich",
@@ -312,7 +324,19 @@ describe("CustomerEdit", () => {
     };
     vi.mocked(customersApi.getCustomerEditSnapshot)
       .mockResolvedValueOnce(snapshot(originalCustomer))
-      .mockResolvedValueOnce(snapshot(currentCustomer, '"customer-v2"'));
+      .mockImplementationOnce(() => refreshedSnapshot.promise);
+    vi.mocked(domainApi.listEstablishmentLookups)
+      .mockResolvedValueOnce([
+        { id: "est-1", name: "Berlin" },
+        { id: "est-2", name: "Hamburg" },
+        { id: "est-4", name: "Cologne" },
+      ])
+      .mockRejectedValueOnce(new Error("New entity lookups failed"))
+      .mockResolvedValueOnce([
+        { id: "est-2", name: "New Hamburg" },
+        { id: "est-3", name: "New Munich" },
+        { id: "est-4", name: "New Cologne" },
+      ]);
     vi.mocked(customersApi.transactionallyEditCustomer)
       .mockRejectedValueOnce(
         new customersApi.CustomerTransactionalEditError(
@@ -334,6 +358,10 @@ describe("CustomerEdit", () => {
     const secondContact = screen.getByRole("textbox", {
       name: /local contact name 2/i,
     });
+    const firstContact = screen.getByRole("textbox", {
+      name: /local contact name 1/i,
+    });
+    await user.type(firstContact, "  ");
     await user.clear(secondContact);
     await user.type(secondContact, "My Intended Second Contact");
     await user.click(screen.getByRole("button", { name: /save changes/i }));
@@ -341,11 +369,57 @@ describe("CustomerEdit", () => {
     expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledWith(
       "customer-1",
       '"customer-v1"',
-      expect.any(Object)
+      expect.objectContaining({
+        customer_establishments: expect.arrayContaining([
+          expect.objectContaining({ contact_name: "Local Contact" }),
+        ]),
+      })
     );
 
     await waitFor(() =>
       expect(customersApi.getCustomerEditSnapshot).toHaveBeenCalledTimes(2)
+    );
+    expect(name).toBeDisabled();
+    expect(firstContact).toBeDisabled();
+    expect(
+      screen.getByRole("combobox", { name: /^establishment 2/i })
+    ).toBeDisabled();
+    await user.type(name, "must not be accepted");
+    expect(name).toHaveValue("My Intended Customer Name");
+
+    await act(async () => {
+      refreshedSnapshot.resolve(snapshot(currentCustomer, '"customer-v2"'));
+      await refreshedSnapshot.promise;
+    });
+
+    const lookupAlert = (
+      await screen.findByText("Some establishment details could not be loaded.")
+    ).closest('[role="alert"]');
+    expect(lookupAlert).not.toBeNull();
+    expect(lookupAlert).toHaveTextContent(
+      "Some establishment details could not be loaded."
+    );
+    expect(
+      screen.getByRole("button", { name: /save changes/i })
+    ).toBeDisabled();
+    expect(domainApi.listEstablishmentLookups).toHaveBeenLastCalledWith(
+      "legal-2"
+    );
+    await user.click(screen.getByRole("button", { name: /retry/i }));
+    await waitFor(() =>
+      expect(
+        screen.queryByText("Some establishment details could not be loaded.")
+      ).not.toBeInTheDocument()
+    );
+
+    const restore = screen.getByRole("button", {
+      name: /restore my changes/i,
+    });
+    expect(
+      restore.closest('[data-slot="alert-description"]')
+    ).not.toBeInTheDocument();
+    expect(domainApi.listEstablishmentLookups).toHaveBeenLastCalledWith(
+      "legal-2"
     );
     expect(name).toHaveValue("ACME GmbH");
     expect(screen.getByLabelText(/city/i)).toHaveValue("Munich");
@@ -357,9 +431,11 @@ describe("CustomerEdit", () => {
     ).toHaveValue("est-3");
     expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(1);
 
-    await user.click(
-      screen.getByRole("button", { name: /restore my changes/i })
-    );
+    await user.click(restore);
+    const restoreButton = screen.queryByRole("button", {
+      name: /restore my changes/i,
+    });
+    expect(restoreButton).not.toBeInTheDocument();
     expect(name).toHaveValue("My Intended Customer Name");
     expect(screen.getByLabelText(/city/i)).toHaveValue("Munich");
     expect(
@@ -400,6 +476,37 @@ describe("CustomerEdit", () => {
     expectNoLegacyWrites();
   });
 
+  it("invalidates an earlier restore intent when a later stale refresh fails", async () => {
+    const user = userEvent.setup();
+    vi.mocked(customersApi.getCustomerEditSnapshot)
+      .mockResolvedValueOnce(snapshot())
+      .mockResolvedValueOnce(snapshot(customer, '"customer-v2"'))
+      .mockRejectedValueOnce(new Error("Refresh failed"));
+    vi.mocked(customersApi.transactionallyEditCustomer).mockRejectedValue(
+      new customersApi.CustomerTransactionalEditError(
+        "The customer changed while you were editing.",
+        412,
+        "CUSTOMER_EDIT_STALE"
+      )
+    );
+    renderPage();
+
+    const save = await screen.findByRole("button", { name: /save changes/i });
+    await user.click(save);
+    expect(
+      await screen.findByRole("button", { name: /restore my changes/i })
+    ).toBeVisible();
+
+    await user.click(save);
+    expect(
+      await screen.findByText(/latest customer data could not be loaded/i)
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: /restore my changes/i })
+    ).not.toBeInTheDocument();
+    expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(2);
+  });
+
   it("keeps partial lookup failures separate from later save errors", async () => {
     const user = userEvent.setup();
     vi.mocked(domainApi.listEstablishmentLookups)
@@ -421,8 +528,12 @@ describe("CustomerEdit", () => {
     expect(
       screen.getByRole("button", { name: /save changes/i })
     ).toBeDisabled();
+    const retry = screen.getByRole("button", { name: /retry/i });
+    expect(
+      partialLoadAlert.querySelector('[data-slot="alert-description"] button')
+    ).toBeNull();
 
-    await user.click(screen.getByRole("button", { name: /retry/i }));
+    await user.click(retry);
     await waitFor(() =>
       expect(
         screen.queryByText("Some establishment details could not be loaded.")
@@ -460,4 +571,95 @@ describe("CustomerEdit", () => {
       screen.queryByRole("textbox", { name: /local contact name 1/i })
     ).not.toBeInTheDocument();
   });
+
+  it.each(["success", "generic failure", "stale failure"] as const)(
+    "keeps a %s completion owned by its original customer route",
+    async (outcome) => {
+      const user = userEvent.setup();
+      const customerB: Customer = {
+        ...customer,
+        id: "customer-2",
+        customer_number: "KD-2",
+        name: "Customer B",
+        customer_establishments: customer.customer_establishments.map(
+          (assignment) => ({ ...assignment, customer_id: "customer-2" })
+        ),
+      };
+      const saveA = deferred<Customer>();
+      const saveB = deferred<Customer>();
+      vi.mocked(customersApi.getCustomerEditSnapshot).mockImplementation(
+        async (customerId) =>
+          customerId === "customer-1"
+            ? snapshot(customer, '"customer-a"')
+            : snapshot(customerB, '"customer-b"')
+      );
+      vi.mocked(customersApi.transactionallyEditCustomer)
+        .mockImplementationOnce(() => saveA.promise)
+        .mockImplementationOnce(() => saveB.promise);
+      renderPage();
+
+      await user.click(
+        await screen.findByRole("button", { name: /save changes/i })
+      );
+      await waitFor(() =>
+        expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(
+          1
+        )
+      );
+
+      act(() => {
+        window.history.pushState({}, "", "/customers/customer-2/edit");
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      });
+      expect(await screen.findByLabelText(/customer name/i)).toHaveValue(
+        "Customer B"
+      );
+      const saveCustomerB = screen.getByRole("button", {
+        name: /save changes/i,
+      });
+      await user.click(saveCustomerB);
+      await waitFor(() =>
+        expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(
+          2
+        )
+      );
+
+      await act(async () => {
+        if (outcome === "success") saveA.resolve(customer);
+        else if (outcome === "generic failure") {
+          saveA.reject(new Error("Customer A failed"));
+        } else {
+          saveA.reject(
+            new customersApi.CustomerTransactionalEditError(
+              "Customer A became stale",
+              412,
+              "CUSTOMER_EDIT_STALE"
+            )
+          );
+        }
+        await saveA.promise.catch(() => undefined);
+      });
+
+      expect(screen.getByLabelText(/customer name/i)).toHaveValue("Customer B");
+      expect(saveCustomerB).toBeDisabled();
+      expect(navigate).not.toHaveBeenCalled();
+      expect(screen.queryByText(/Customer A/)).not.toBeInTheDocument();
+      expect(customersApi.getCustomerEditSnapshot).toHaveBeenCalledTimes(2);
+
+      await act(async () => {
+        saveB.resolve(customerB);
+        await saveB.promise;
+      });
+      await waitFor(() =>
+        expect(navigate).toHaveBeenCalledWith("/customers/customer-2", {
+          state: { committedCustomer: customerB },
+        })
+      );
+      expect(
+        vi
+          .mocked(customersApi.transactionallyEditCustomer)
+          .mock.calls[1]?.slice(0, 2)
+      ).toEqual(["customer-2", '"customer-b"']);
+    }
+  );
 });

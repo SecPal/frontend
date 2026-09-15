@@ -37,10 +37,12 @@ import { useDomainAssignmentNames } from "../../hooks/useDomainAssignmentNames";
 import {
   customerEditIntentFromCustomer,
   emptyCustomerAssignment,
+  normalizeCustomerEditOptionalText,
   reconcileCustomerEditIntent,
 } from "./customerEditIntent";
 import type { CustomerEditIntent } from "./customerEditIntent";
-const optional = (value: string) => value.trim() || null;
+const optional = (value: string | null | undefined) =>
+  normalizeCustomerEditOptionalText(value) || null;
 
 export default function CustomerEdit() {
   const { id } = useParams<{ id: string }>();
@@ -49,6 +51,8 @@ export default function CustomerEdit() {
   const { _ } = useLingui();
   const recoveryError = (location.state as { recoveryError?: unknown } | null)
     ?.recoveryError;
+  const recoveryErrorMessage =
+    typeof recoveryError === "string" ? recoveryError : null;
   const activeRouteId = useRef(id);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [etag, setEtag] = useState<StrongEntityTag | null>(null);
@@ -81,6 +85,9 @@ export default function CustomerEdit() {
 
   useLayoutEffect(() => {
     activeRouteId.current = id;
+    return () => {
+      if (activeRouteId.current === id) activeRouteId.current = undefined;
+    };
   }, [id]);
 
   useEffect(() => {
@@ -95,6 +102,8 @@ export default function CustomerEdit() {
       setAssignmentLoadError(null);
       setStaleIntent(null);
       setEditBaseline(null);
+      setSaving(false);
+      setSubmitError(recoveryErrorMessage);
       if (!id) {
         setLoading(false);
         return;
@@ -141,7 +150,7 @@ export default function CustomerEdit() {
     return () => {
       cancelled = true;
     };
-  }, [_, id]);
+  }, [_, id, recoveryErrorMessage]);
 
   async function retryEstablishmentLookups() {
     const activeCustomer = customer?.id === id ? customer : null;
@@ -178,6 +187,10 @@ export default function CustomerEdit() {
       assignmentLoadError
     )
       return;
+    const customerId = id;
+    const originalCustomer = customer;
+    const originalBaseline = editBaseline;
+    const intended = { form, assignments };
     const selected = assignments.map((item) => item.establishment_id);
     if (
       selected.some((value) => !value) ||
@@ -189,57 +202,97 @@ export default function CustomerEdit() {
     setSaving(true);
     setSubmitError(null);
     try {
-      const committedCustomer = await transactionallyEditCustomer(id, etag, {
-        customer: {
-          ...form,
-          vat_id: optional(form.vat_id ?? ""),
-        },
-        customer_establishments: assignments.map((assignment) => ({
-          customer_id: id,
-          establishment_id: assignment.establishment_id,
-          contact_name: optional(assignment.contact_name),
-          email: optional(assignment.email),
-          phone: optional(assignment.phone),
-          comments: optional(assignment.comments),
-        })),
-      });
-      navigate(`/customers/${id}`, { state: { committedCustomer } });
+      const committedCustomer = await transactionallyEditCustomer(
+        customerId,
+        etag,
+        {
+          customer: {
+            ...form,
+            vat_id: optional(form.vat_id),
+          },
+          customer_establishments: assignments.map((assignment) => ({
+            customer_id: customerId,
+            establishment_id: assignment.establishment_id,
+            contact_name: optional(assignment.contact_name),
+            email: optional(assignment.email),
+            phone: optional(assignment.phone),
+            comments: optional(assignment.comments),
+          })),
+        }
+      );
+      if (activeRouteId.current !== customerId) return;
+      navigate(`/customers/${customerId}`, { state: { committedCustomer } });
     } catch (reason) {
+      if (activeRouteId.current !== customerId) return;
       if (
         reason instanceof CustomerTransactionalEditError &&
         reason.status === 412 &&
         reason.code === "CUSTOMER_EDIT_STALE"
       ) {
-        const intent = { form, assignments };
+        setStaleIntent(null);
         setEtag(null);
+        let currentSnapshot: Awaited<
+          ReturnType<typeof getCustomerEditSnapshot>
+        >;
         try {
-          const currentSnapshot = await getCustomerEditSnapshot(id);
-          if (activeRouteId.current !== id) return;
-          const freshIntent = customerEditIntentFromCustomer(
-            currentSnapshot.customer
-          );
-          setCustomer(currentSnapshot.customer);
-          setEtag(currentSnapshot.etag);
-          setForm(freshIntent.form);
-          setAssignments(freshIntent.assignments);
-          setStaleIntent(
-            editBaseline
-              ? reconcileCustomerEditIntent(editBaseline, intent, freshIntent)
-              : null
-          );
-          setEditBaseline(freshIntent);
-          setSubmitError(
-            _(
-              msg`This customer changed while you were editing. Your changes were not saved. The latest customer data is shown below; review it before saving again.`
-            )
-          );
+          currentSnapshot = await getCustomerEditSnapshot(customerId);
         } catch {
-          if (activeRouteId.current !== id) return;
+          if (activeRouteId.current !== customerId) return;
+          setStaleIntent(null);
           setSubmitError(
             _(
               msg`This customer changed while you were editing, and the latest customer data could not be loaded. Reload the page before trying again.`
             )
           );
+          return;
+        }
+        if (activeRouteId.current !== customerId) return;
+        const freshIntent = customerEditIntentFromCustomer(
+          currentSnapshot.customer
+        );
+        setCustomer(currentSnapshot.customer);
+        setEtag(currentSnapshot.etag);
+        setForm(freshIntent.form);
+        setAssignments(freshIntent.assignments);
+        setStaleIntent(
+          originalBaseline
+            ? reconcileCustomerEditIntent(
+                originalBaseline,
+                intended,
+                freshIntent
+              )
+            : null
+        );
+        setEditBaseline(freshIntent);
+        setSubmitError(
+          _(
+            msg`This customer changed while you were editing. Your changes were not saved. The latest customer data is shown below; review it before saving again.`
+          )
+        );
+
+        if (
+          currentSnapshot.customer.legal_entity_id !==
+          originalCustomer.legal_entity_id
+        ) {
+          setEstablishments([]);
+          setEstablishmentsLoading(true);
+          setAssignmentLoadError(null);
+          try {
+            const options = await listEstablishmentLookups(
+              currentSnapshot.customer.legal_entity_id
+            );
+            if (activeRouteId.current !== customerId) return;
+            setEstablishments(options);
+          } catch {
+            if (activeRouteId.current !== customerId) return;
+            setAssignmentLoadError(
+              _(msg`Some establishment details could not be loaded.`)
+            );
+          } finally {
+            if (activeRouteId.current === customerId) {
+              setEstablishmentsLoading(false);
+            }
+          }
         }
       } else {
         setSubmitError(
@@ -249,7 +302,7 @@ export default function CustomerEdit() {
         );
       }
     } finally {
-      setSaving(false);
+      if (activeRouteId.current === customerId) setSaving(false);
     }
   }
 
@@ -274,23 +327,24 @@ export default function CustomerEdit() {
           {submitError && (
             <Alert className="border-destructive/30 bg-destructive/10">
               <AlertDescription className="text-destructive">
-                <span className="block">{submitError}</span>
-                {staleIntent ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="mt-3"
-                    onClick={() => {
-                      setForm(staleIntent.form);
-                      setAssignments(staleIntent.assignments);
-                      setStaleIntent(null);
-                      setSubmitError(null);
-                    }}
-                  >
-                    <Trans>Restore My Changes</Trans>
-                  </Button>
-                ) : null}
+                {submitError}
               </AlertDescription>
+              {staleIntent ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="col-start-2 mt-2"
+                  disabled={saving}
+                  onClick={() => {
+                    setForm(staleIntent.form);
+                    setAssignments(staleIntent.assignments);
+                    setStaleIntent(null);
+                    setSubmitError(null);
+                  }}
+                >
+                  <Trans>Restore My Changes</Trans>
+                </Button>
+              ) : null}
             </Alert>
           )}
           <section aria-labelledby="master-data-heading">
@@ -310,6 +364,7 @@ export default function CustomerEdit() {
                 <Input
                   id="customer-name"
                   required
+                  disabled={saving}
                   value={form.name ?? ""}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -326,6 +381,7 @@ export default function CustomerEdit() {
                 <Input
                   id="customer-street"
                   required
+                  disabled={saving}
                   value={form.billing_address?.street ?? ""}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -347,6 +403,7 @@ export default function CustomerEdit() {
                   <Input
                     id="customer-postal-code"
                     required
+                    disabled={saving}
                     value={form.billing_address?.postal_code ?? ""}
                     onChange={(event) =>
                       setForm((current) => ({
@@ -367,6 +424,7 @@ export default function CustomerEdit() {
                   <Input
                     id="customer-city"
                     required
+                    disabled={saving}
                     value={form.billing_address?.city ?? ""}
                     onChange={(event) =>
                       setForm((current) => ({
@@ -387,6 +445,7 @@ export default function CustomerEdit() {
                 </FieldLabel>
                 <Input
                   id="customer-vat-id"
+                  disabled={saving}
                   value={form.vat_id ?? ""}
                   onChange={(event) =>
                     setForm((current) => ({
@@ -403,6 +462,7 @@ export default function CustomerEdit() {
                 <Input
                   id="customer-country"
                   required
+                  disabled={saving}
                   maxLength={2}
                   value={form.billing_address?.country ?? ""}
                   onChange={(event) =>
@@ -431,24 +491,24 @@ export default function CustomerEdit() {
             </p>
             {assignmentLoadError ? (
               <Alert role="alert" className="mb-4">
-                <AlertDescription>
-                  <p>{assignmentLoadError}</p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="mt-3"
-                    disabled={establishmentsLoading}
-                    onClick={() => void retryEstablishmentLookups()}
-                  >
-                    <Trans>Retry</Trans>
-                  </Button>
-                </AlertDescription>
+                <AlertDescription>{assignmentLoadError}</AlertDescription>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="col-start-2 mt-2"
+                  disabled={saving || establishmentsLoading}
+                  onClick={() => void retryEstablishmentLookups()}
+                >
+                  <Trans>Retry</Trans>
+                </Button>
               </Alert>
             ) : null}
             <CustomerEstablishmentFields
               assignments={assignments}
               establishments={establishments}
-              disabled={establishmentsLoading || Boolean(assignmentLoadError)}
+              disabled={
+                saving || establishmentsLoading || Boolean(assignmentLoadError)
+              }
               onChange={(key, value) =>
                 setAssignments((current) =>
                   current.map((item) => (item.key === key ? value : item))
@@ -470,6 +530,7 @@ export default function CustomerEdit() {
           <FormCheckboxField>
             <Checkbox
               id="customer-is-active"
+              disabled={saving}
               checked={form.is_active ?? false}
               onCheckedChange={(checked) =>
                 setForm((current) => ({

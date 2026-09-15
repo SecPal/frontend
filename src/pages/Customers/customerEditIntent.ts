@@ -16,6 +16,29 @@ const assignmentFields = [
   "phone",
   "comments",
 ] as const;
+const normalizedAssignmentFields = new Set<(typeof assignmentFields)[number]>([
+  "contact_name",
+  "email",
+  "phone",
+  "comments",
+]);
+
+export function normalizeCustomerEditOptionalText(
+  value: string | null | undefined
+): string {
+  return value?.trim() ?? "";
+}
+
+function chooseIntendedOptionalText(
+  original: string | null | undefined,
+  intended: string | null | undefined,
+  fresh: string | null | undefined
+): string | null | undefined {
+  return normalizeCustomerEditOptionalText(intended) !==
+    normalizeCustomerEditOptionalText(original)
+    ? intended
+    : fresh;
+}
 
 export function emptyCustomerAssignment(): CustomerEstablishmentFormValue {
   return {
@@ -60,7 +83,20 @@ function assignmentChanged(
   original: CustomerEstablishmentFormValue,
   intended: CustomerEstablishmentFormValue
 ): boolean {
-  return assignmentFields.some((field) => original[field] !== intended[field]);
+  return assignmentFields.some(
+    (field) =>
+      normalizedAssignmentValue(field, original[field]) !==
+      normalizedAssignmentValue(field, intended[field])
+  );
+}
+
+function normalizedAssignmentValue(
+  field: (typeof assignmentFields)[number],
+  value: string
+): string {
+  return normalizedAssignmentFields.has(field)
+    ? normalizeCustomerEditOptionalText(value)
+    : value;
 }
 
 function mergeAssignmentChanges(
@@ -70,7 +106,10 @@ function mergeAssignmentChanges(
 ): CustomerEstablishmentFormValue {
   const merged = { ...fresh };
   for (const field of assignmentFields) {
-    if (original[field] !== intended[field]) {
+    if (
+      normalizedAssignmentValue(field, original[field]) !==
+      normalizedAssignmentValue(field, intended[field])
+    ) {
       merged[field] = intended[field];
     }
   }
@@ -149,7 +188,7 @@ export function reconcileCustomerEditIntent(
         intended.form.name,
         fresh.form.name
       ),
-      vat_id: chooseIntendedChange(
+      vat_id: chooseIntendedOptionalText(
         original.form.vat_id,
         intended.form.vat_id,
         fresh.form.vat_id
