@@ -57,6 +57,16 @@ const customer: Customer = {
   updated_at: "2026-01-01T00:00:00Z",
 };
 
+const customerB: Customer = {
+  ...customer,
+  id: "customer-2",
+  customer_number: "KD-2",
+  name: "Customer B",
+  customer_establishments: customer.customer_establishments.map(
+    (assignment) => ({ ...assignment, customer_id: "customer-2" })
+  ),
+};
+
 function snapshot(value: Customer = customer, etag = '"customer-v1"') {
   return { customer: value, etag };
 }
@@ -572,94 +582,104 @@ describe("CustomerEdit", () => {
     ).not.toBeInTheDocument();
   });
 
-  it.each(["success", "generic failure", "stale failure"] as const)(
-    "keeps a %s completion owned by its original customer route",
-    async (outcome) => {
-      const user = userEvent.setup();
-      const customerB: Customer = {
-        ...customer,
-        id: "customer-2",
-        customer_number: "KD-2",
-        name: "Customer B",
-        customer_establishments: customer.customer_establishments.map(
-          (assignment) => ({ ...assignment, customer_id: "customer-2" })
-        ),
-      };
-      const saveA = deferred<Customer>();
-      const saveB = deferred<Customer>();
-      vi.mocked(customersApi.getCustomerEditSnapshot).mockImplementation(
-        async (customerId) =>
-          customerId === "customer-1"
-            ? snapshot(customer, '"customer-a"')
-            : snapshot(customerB, '"customer-b"')
-      );
-      vi.mocked(customersApi.transactionallyEditCustomer)
-        .mockImplementationOnce(() => saveA.promise)
-        .mockImplementationOnce(() => saveB.promise);
-      renderPage();
+  it("ignores a successful save after leaving and returning to its customer route", async () => {
+    const user = userEvent.setup();
+    const save = deferred<Customer>();
+    vi.mocked(customersApi.getCustomerEditSnapshot).mockImplementation(
+      async (customerId) =>
+        customerId === "customer-1"
+          ? snapshot(customer, '"customer-a"')
+          : snapshot(customerB, '"customer-b"')
+    );
+    vi.mocked(customersApi.transactionallyEditCustomer).mockImplementation(
+      () => save.promise
+    );
+    renderPage();
 
-      await user.click(
-        await screen.findByRole("button", { name: /save changes/i })
-      );
-      await waitFor(() =>
-        expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(
-          1
-        )
-      );
+    await user.click(
+      await screen.findByRole("button", { name: /save changes/i })
+    );
+    await waitFor(() =>
+      expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(1)
+    );
 
-      act(() => {
-        window.history.pushState({}, "", "/customers/customer-2/edit");
-        window.dispatchEvent(new PopStateEvent("popstate"));
-      });
-      expect(await screen.findByLabelText(/customer name/i)).toHaveValue(
-        "Customer B"
-      );
-      const saveCustomerB = screen.getByRole("button", {
-        name: /save changes/i,
-      });
-      await user.click(saveCustomerB);
-      await waitFor(() =>
-        expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(
-          2
-        )
-      );
+    act(() => {
+      window.history.pushState({}, "", "/customers/customer-2/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(await screen.findByLabelText(/customer name/i)).toHaveValue(
+      "Customer B"
+    );
+    act(() => {
+      window.history.pushState({}, "", "/customers/customer-1/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(await screen.findByLabelText(/customer name/i)).toHaveValue(
+      "ACME GmbH"
+    );
 
-      await act(async () => {
-        if (outcome === "success") saveA.resolve(customer);
-        else if (outcome === "generic failure") {
-          saveA.reject(new Error("Customer A failed"));
-        } else {
-          saveA.reject(
-            new customersApi.CustomerTransactionalEditError(
-              "Customer A became stale",
-              412,
-              "CUSTOMER_EDIT_STALE"
-            )
-          );
-        }
-        await saveA.promise.catch(() => undefined);
-      });
+    await act(async () => {
+      save.resolve(customer);
+      await save.promise;
+    });
 
-      expect(screen.getByLabelText(/customer name/i)).toHaveValue("Customer B");
-      expect(saveCustomerB).toBeDisabled();
-      expect(navigate).not.toHaveBeenCalled();
-      expect(screen.queryByText(/Customer A/)).not.toBeInTheDocument();
-      expect(customersApi.getCustomerEditSnapshot).toHaveBeenCalledTimes(2);
+    expect(navigate).not.toHaveBeenCalled();
+    expect(screen.getByLabelText(/customer name/i)).toHaveValue("ACME GmbH");
+  });
 
-      await act(async () => {
-        saveB.resolve(customerB);
-        await saveB.promise;
-      });
-      await waitFor(() =>
-        expect(navigate).toHaveBeenCalledWith("/customers/customer-2", {
-          state: { committedCustomer: customerB },
-        })
-      );
-      expect(
-        vi
-          .mocked(customersApi.transactionallyEditCustomer)
-          .mock.calls[1]?.slice(0, 2)
-      ).toEqual(["customer-2", '"customer-b"']);
-    }
-  );
+  it("ignores a failed save after leaving and returning to its customer route", async () => {
+    const user = userEvent.setup();
+    const previousSave = deferred<Customer>();
+    const currentSave = deferred<Customer>();
+    vi.mocked(customersApi.getCustomerEditSnapshot).mockImplementation(
+      async (customerId) =>
+        customerId === "customer-1"
+          ? snapshot(customer, '"customer-a"')
+          : snapshot(customerB, '"customer-b"')
+    );
+    vi.mocked(customersApi.transactionallyEditCustomer)
+      .mockImplementationOnce(() => previousSave.promise)
+      .mockImplementationOnce(() => currentSave.promise);
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: /save changes/i })
+    );
+    await waitFor(() =>
+      expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(1)
+    );
+
+    act(() => {
+      window.history.pushState({}, "", "/customers/customer-2/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(await screen.findByLabelText(/customer name/i)).toHaveValue(
+      "Customer B"
+    );
+    act(() => {
+      window.history.pushState({}, "", "/customers/customer-1/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    const save = await screen.findByRole("button", { name: /save changes/i });
+    await user.click(save);
+    await waitFor(() =>
+      expect(customersApi.transactionallyEditCustomer).toHaveBeenCalledTimes(2)
+    );
+
+    await act(async () => {
+      previousSave.reject(new Error("Previous route failed"));
+      await previousSave.promise.catch(() => undefined);
+    });
+
+    expect(screen.queryByText("Previous route failed")).not.toBeInTheDocument();
+    expect(save).toBeDisabled();
+
+    await act(async () => {
+      currentSave.reject(new Error("Current route failed"));
+      await currentSave.promise.catch(() => undefined);
+    });
+    expect(await screen.findByText("Current route failed")).toBeVisible();
+    expect(save).toBeEnabled();
+    expect(navigate).not.toHaveBeenCalled();
+  });
 });
