@@ -267,6 +267,10 @@ msgstr "Nein"
 msgid "SecPal is licensed under AGPL-3.0-or-later with additional SecPal attribution terms. If you use this service over a network, you may obtain the corresponding source code for the SecPal components made available through this service at no charge from the links below."
 msgstr "SecPal ist unter AGPL-3.0-or-later mit zusätzlichen SecPal-Attributionsbedingungen lizenziert. Wenn Sie diesen Dienst über ein Netzwerk nutzen, können Sie den entsprechenden Quellcode für die über diesen Dienst bereitgestellten SecPal-Komponenten kostenlos über die nachstehenden Links beziehen."
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "This customer changed while you were editing, and the latest customer data could not be loaded. Reload the page before trying again."
+msgstr "Dieser Kunde wurde während Ihrer Bearbeitung geändert, und die neuesten Kundendaten konnten nicht geladen werden. Laden Sie die Seite neu, bevor Sie es erneut versuchen."
+
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Verification method"
 msgstr "Methode zur Überprüfung"
@@ -534,6 +538,7 @@ msgstr "Name des lokalen Kontakts {number}"
 
 #: src/components/OrganizationalUnitTree.tsx
 #: src/components/RouteGuardState.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 #: src/pages/Login.tsx
 msgid "Retry"
 msgstr "Wiederholen"
@@ -1089,6 +1094,7 @@ msgid "Lowest rank number the user can view (1 = CEO, higher numbers = lower pos
 msgstr "Niedrigste Rangnummer, die der Benutzer sehen kann (1 = CEO, höhere Zahlen = niedrigere Positionen). Bereich: 1-255"
 
 #: src/pages/Customers/CustomerDetail.tsx
+#: src/pages/Customers/CustomerEdit.tsx
 msgid "Some establishment details could not be loaded."
 msgstr "Einige Details zu Betriebsstätten konnten nicht geladen werden."
 
@@ -1816,10 +1822,6 @@ msgstr "Alle Einheiten"
 msgid "Legal-entity master data"
 msgstr "Rechtsträger-Stammdaten"
 
-#: src/pages/Customers/CustomerEdit.tsx
-msgid "The establishment assignments could not be fully restored. Reload the page before making further changes."
-msgstr "Die Betriebsstättenzuordnungen konnten nicht vollständig wiederhergestellt werden. Laden Sie die Seite neu, bevor Sie weitere Änderungen vornehmen."
-
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Upload File"
 msgstr "Datei hochladen"
@@ -2396,10 +2398,6 @@ msgstr "Passwörter stimmen nicht überein"
 #: src/components/CustomerEstablishmentFields.tsx
 msgid "Remove establishment {number}"
 msgstr "Betriebsstätte {number} entfernen"
-
-#: src/pages/Customers/CustomerEdit.tsx
-msgid "Customer data could not be fully restored. Reload the page before making further changes."
-msgstr "Kundendaten konnten nicht vollständig wiederhergestellt werden. Laden Sie die Seite neu, bevor Sie weitere Änderungen vornehmen."
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "The end date must be on or after the start date."
@@ -3152,6 +3150,10 @@ msgstr "Bestätigen Sie mit Ihrer Authentifizierungs-App oder einem Wiederherste
 msgid "Austria"
 msgstr "Österreich"
 
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "Restore My Changes"
+msgstr "Meine Änderungen wiederherstellen"
+
 #: src/pages/Employees/EmployeeContactsEdit.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Please enter a valid emergency contact email."
@@ -3472,6 +3474,10 @@ msgstr "Test senden"
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Who can this user VIEW?"
 msgstr "Wen kann dieser Benutzer SEHEN?"
+
+#: src/pages/Customers/CustomerEdit.tsx
+msgid "This customer changed while you were editing. Your changes were not saved. The latest customer data is shown below; review it before saving again."
+msgstr "Dieser Kunde wurde während Ihrer Bearbeitung geändert. Ihre Änderungen wurden nicht gespeichert. Unten werden die neuesten Kundendaten angezeigt; prüfen Sie sie, bevor Sie erneut speichern."
 
 #: src/components/LoginRouteState.tsx
 #: src/components/RouteGuardState.tsx

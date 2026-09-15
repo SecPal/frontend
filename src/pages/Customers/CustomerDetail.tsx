@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { msg } from "@lingui/core/macro";
 import { Plural, Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
@@ -23,6 +23,7 @@ import {
 import type {
   Customer,
   CustomerEstablishment,
+  CustomerTransactionalEditResult,
   EstablishmentLookup,
 } from "@/types/api/customers";
 import {
@@ -53,6 +54,24 @@ function getCustomerSitesCount(customer: Customer): number | null {
   return typeof customer.sites_count === "number" ? customer.sites_count : null;
 }
 
+function getCommittedCustomerProjection(
+  state: unknown,
+  customerId: string | undefined
+): CustomerTransactionalEditResult | null {
+  if (!state || typeof state !== "object" || !customerId) return null;
+  const committedCustomer = (state as { committedCustomer?: unknown })
+    .committedCustomer;
+  if (
+    !committedCustomer ||
+    typeof committedCustomer !== "object" ||
+    (committedCustomer as Customer).id !== customerId ||
+    !Array.isArray((committedCustomer as Customer).customer_establishments)
+  ) {
+    return null;
+  }
+  return committedCustomer as CustomerTransactionalEditResult;
+}
+
 function CustomerDetailSkeleton({ loadingLabel }: { loadingLabel: string }) {
   return (
     <div className="space-y-8">
@@ -68,7 +87,11 @@ export default function CustomerDetail() {
   const capabilities = useUserCapabilities();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const activeRouteId = useRef(id);
+  const committedProjection = useRef<CustomerTransactionalEditResult | null>(
+    getCommittedCustomerProjection(location.state, id)
+  );
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [customerEstablishments, setCustomerEstablishments] = useState<
     CustomerEstablishment[] | null
@@ -91,7 +114,12 @@ export default function CustomerDetail() {
 
   useLayoutEffect(() => {
     activeRouteId.current = id;
-  }, [id]);
+    const nextProjection = getCommittedCustomerProjection(location.state, id);
+    if (nextProjection) committedProjection.current = nextProjection;
+    else if (committedProjection.current?.id !== id) {
+      committedProjection.current = null;
+    }
+  }, [id, location.state]);
 
   useEffect(() => {
     // Capture a per-`id` cancellation flag so that a slow fetch for the
@@ -122,6 +150,40 @@ export default function CustomerDetail() {
       setDeleting(false);
       if (!id) {
         setLoading(false);
+        return;
+      }
+      const projectedCustomer =
+        committedProjection.current?.id === id
+          ? committedProjection.current
+          : null;
+      committedProjection.current = null;
+      if (projectedCustomer) {
+        setCustomer(projectedCustomer);
+        setCustomerEstablishments(projectedCustomer.customer_establishments);
+        setLoading(false);
+        setAssignmentLoading(true);
+        navigate(
+          {
+            pathname: location.pathname,
+            search: location.search,
+            hash: location.hash,
+          },
+          { replace: true, state: null }
+        );
+        try {
+          const lookups = await listEstablishmentLookups(
+            projectedCustomer.legal_entity_id
+          );
+          if (!cancelled) setEstablishmentLookups(lookups);
+        } catch {
+          if (!cancelled) {
+            setAssignmentLoadError(
+              _(msg`Some establishment details could not be loaded.`)
+            );
+          }
+        } finally {
+          if (!cancelled) setAssignmentLoading(false);
+        }
         return;
       }
       try {
@@ -163,7 +225,7 @@ export default function CustomerDetail() {
     return () => {
       cancelled = true;
     };
-  }, [_, id]);
+  }, [_, id, location.hash, location.pathname, location.search, navigate]);
 
   async function handleDelete() {
     if (!customer) return;

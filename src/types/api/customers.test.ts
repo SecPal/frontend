@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 import type {
   CreateCustomerRequest,
   Customer,
+  CustomerTransactionalEditRequest,
+  CustomerTransactionalEditResult,
   UpdateCustomerRequest,
 } from "./customers";
 
@@ -47,5 +49,29 @@ describe("generated customer API types", () => {
     };
 
     expect(update.legal_entity_id).toBe("550e8400-e29b-41d4-a716-446655440002");
+  });
+
+  it("requires one customer patch and complete desired assignment snapshot", () => {
+    const request: CustomerTransactionalEditRequest = {
+      customer: { name: "Updated customer" },
+      customer_establishments: [
+        {
+          customer_id: "550e8400-e29b-41d4-a716-446655440000",
+          establishment_id: "780e8400-e29b-41d4-a716-446655440000",
+          contact_name: null,
+        },
+      ],
+    };
+    const committedAssignmentsAreRequired: Pick<
+      CustomerTransactionalEditResult,
+      "customer_establishments"
+    > extends Required<
+      Pick<CustomerTransactionalEditResult, "customer_establishments">
+    >
+      ? true
+      : false = true;
+
+    expect(request.customer_establishments).toHaveLength(1);
+    expect(committedAssignmentsAreRequired).toBe(true);
   });
 });

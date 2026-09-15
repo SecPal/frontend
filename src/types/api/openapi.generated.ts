@@ -225,5 +225,20 @@ export interface components {
       billing_address?: components["schemas"]["Address"];
       is_active?: boolean;
     };
+    CustomerTransactionalEditEstablishmentRequest: components["schemas"]["CustomerEstablishmentCreateRequest"];
+    CustomerTransactionalEditCustomerRequest: components["schemas"]["CustomerUpdateRequest"];
+    StrongEntityTag: string;
+    CustomerTransactionalEditRequest: {
+      customer: components["schemas"]["CustomerTransactionalEditCustomerRequest"];
+      customer_establishments: components["schemas"]["CustomerTransactionalEditEstablishmentRequest"][];
+    };
+    CustomerTransactionalEditRequiredRelationships: {
+      customer_establishments: components["schemas"]["CustomerEstablishment"][];
+    };
+    CustomerTransactionalEditResult: components["schemas"]["Customer"] &
+      components["schemas"]["CustomerTransactionalEditRequiredRelationships"];
+    CustomerTransactionalEditResponse: {
+      data: components["schemas"]["CustomerTransactionalEditResult"];
+    };
   };
 }

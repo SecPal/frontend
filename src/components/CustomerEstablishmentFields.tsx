@@ -80,6 +80,7 @@ export function CustomerEstablishmentFields({
                 <span>{localContactLabel}</span>
                 <Input
                   aria-label={localContactLabel}
+                  disabled={disabled}
                   value={assignment.contact_name}
                   onChange={(event) =>
                     update("contact_name", event.target.value)
@@ -91,6 +92,7 @@ export function CustomerEstablishmentFields({
                 <Input
                   aria-label={localEmailLabel}
                   type="email"
+                  disabled={disabled}
                   value={assignment.email}
                   onChange={(event) => update("email", event.target.value)}
                 />
@@ -100,6 +102,7 @@ export function CustomerEstablishmentFields({
                 <Input
                   aria-label={localPhoneLabel}
                   type="tel"
+                  disabled={disabled}
                   value={assignment.phone}
                   onChange={(event) => update("phone", event.target.value)}
                 />
@@ -108,6 +111,7 @@ export function CustomerEstablishmentFields({
                 <span>{localCommentsLabel}</span>
                 <Textarea
                   aria-label={localCommentsLabel}
+                  disabled={disabled}
                   value={assignment.comments}
                   onChange={(event) => update("comments", event.target.value)}
                 />
@@ -117,6 +121,7 @@ export function CustomerEstablishmentFields({
               <Button
                 type="button"
                 variant="outline"
+                disabled={disabled}
                 onClick={() => onRemove(assignment.key)}
               >
                 {_(msg`Remove establishment ${number}`)}

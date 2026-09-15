@@ -80,6 +80,9 @@ import type {
 import type {
   CreateCustomerRequest,
   Customer,
+  CustomerTransactionalEditRequest,
+  CustomerTransactionalEditResult,
+  StrongEntityTag,
   UpdateCustomerRequest,
 } from "@/types/api/customers";
 
@@ -141,6 +144,94 @@ export async function getCustomer(id: string): Promise<Customer> {
     throw new Error("Failed to parse customer response");
   }
   return data.data as Customer;
+}
+
+export interface CustomerEditSnapshot {
+  customer: Customer;
+  etag: StrongEntityTag;
+}
+
+export class CustomerTransactionalEditError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly code?: string,
+    public readonly errors?: Record<string, string[]>
+  ) {
+    super(message);
+    this.name = "CustomerTransactionalEditError";
+  }
+}
+
+/**
+ * Gets the complete customer representation and validator required for an
+ * atomic customer edit.
+ */
+export async function getCustomerEditSnapshot(
+  id: string
+): Promise<CustomerEditSnapshot> {
+  const response = await apiFetch(`${apiConfig.baseUrl}/v1/customers/${id}`);
+
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || "Failed to get customer");
+  }
+
+  const data = await response.json();
+  const etag = response.headers.get("ETag");
+  if (!data.data || !etag) {
+    throw new Error("Failed to load customer edit snapshot");
+  }
+
+  return {
+    customer: data.data as Customer,
+    etag,
+  };
+}
+
+/**
+ * Atomically updates customer master data and the complete desired
+ * customer-establishment assignment snapshot.
+ */
+export async function transactionallyEditCustomer(
+  id: string,
+  etag: StrongEntityTag,
+  request: CustomerTransactionalEditRequest
+): Promise<CustomerTransactionalEditResult> {
+  const response = await apiFetch(
+    `${apiConfig.baseUrl}/v1/customers/${id}/transactional-edit`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "If-Match": etag,
+      },
+      body: JSON.stringify(request),
+    }
+  );
+
+  if (!response.ok) {
+    const error: {
+      message?: string;
+      code?: unknown;
+      errors?: Record<string, string[]>;
+    } = await response.json().catch(() => ({ message: response.statusText }));
+    throw new CustomerTransactionalEditError(
+      formatValidationErrors(error),
+      response.status,
+      typeof error.code === "string" ? error.code : undefined,
+      error.errors
+    );
+  }
+
+  const data = await response.json();
+  if (!data.data) {
+    throw new Error("Failed to parse transactional customer edit response");
+  }
+
+  return data.data as CustomerTransactionalEditResult;
 }
 
 /**
