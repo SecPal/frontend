@@ -642,6 +642,9 @@ describe("SiteEdit", () => {
       window.dispatchEvent(new PopStateEvent("popstate"));
     });
     expect(await screen.findByLabelText(/site name/i)).toHaveValue("Test Site");
+    await waitForDomainAssignmentReady();
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+    expect(customersApi.updateSite).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       save.resolve(mockUpdatedSite);
@@ -652,7 +655,7 @@ describe("SiteEdit", () => {
     expect(screen.getByLabelText(/site name/i)).toHaveValue("Test Site");
   });
 
-  it("ignores a failed save after leaving and returning to its site route", async () => {
+  it("ignores a failed save after navigating to another site route", async () => {
     const previousSave =
       deferred<Awaited<ReturnType<typeof customersApi.updateSite>>>();
     const currentSave =
@@ -676,10 +679,6 @@ describe("SiteEdit", () => {
       window.dispatchEvent(new PopStateEvent("popstate"));
     });
     expect(await screen.findByLabelText(/site name/i)).toHaveValue("Site B");
-    act(() => {
-      window.history.pushState({}, "", "/sites/site-123/edit");
-      window.dispatchEvent(new PopStateEvent("popstate"));
-    });
     const save = await screen.findByRole("button", { name: /save changes/i });
     await waitFor(() => expect(save).toBeEnabled());
     fireEvent.click(save);

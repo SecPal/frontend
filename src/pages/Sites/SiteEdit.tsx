@@ -49,6 +49,7 @@ export default function SiteEdit() {
   const navigate = useNavigate();
   const { _ } = useLingui();
   const activeRouteOwner = useRef<object | null>(null);
+  const pendingSaveSiteIds = useRef(new Set<string>());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -195,9 +196,11 @@ export default function SiteEdit() {
     }
 
     const siteId = id;
+    if (pendingSaveSiteIds.current.has(siteId)) return;
     const routeOwner = activeRouteOwner.current;
     if (!routeOwner) return;
 
+    pendingSaveSiteIds.current.add(siteId);
     setSaving(true);
     setError(null);
     setFieldErrors({});
@@ -217,6 +220,7 @@ export default function SiteEdit() {
         setError(error.message || _(msg`Failed to update site`));
       }
     } finally {
+      pendingSaveSiteIds.current.delete(siteId);
       if (activeRouteOwner.current === routeOwner) setSaving(false);
     }
   }
