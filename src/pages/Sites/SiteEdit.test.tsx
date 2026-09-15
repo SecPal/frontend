@@ -32,6 +32,16 @@ vi.mock("react-router", async () => {
   };
 });
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+  return { promise, reject, resolve };
+}
+
 function renderWithRouter() {
   window.history.pushState({}, "", "/sites/site-123/edit");
   return render(
@@ -119,6 +129,13 @@ describe("SiteEdit", () => {
     ...mockSite,
     name: "Updated site name",
     updated_at: "2025-01-20T00:00:00Z",
+  };
+
+  const mockSiteB = {
+    ...mockSite,
+    id: "site-B",
+    site_number: "SITE-2025-002",
+    name: "Site B",
   };
 
   beforeEach(() => {
@@ -598,6 +615,116 @@ describe("SiteEdit", () => {
     await waitFor(() => {
       expect(screen.getByLabelText(/site name/i)).toHaveValue("Site B");
     });
+  });
+
+  it("ignores a successful save after leaving and returning to its site route", async () => {
+    const save =
+      deferred<Awaited<ReturnType<typeof customersApi.updateSite>>>();
+    vi.mocked(customersApi.getSite).mockImplementation(async (siteId) =>
+      siteId === "site-123" ? mockSite : mockSiteB
+    );
+    vi.mocked(customersApi.updateSite).mockImplementation(() => save.promise);
+    renderWithRouter();
+
+    await waitForDomainAssignmentReady();
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+    await waitFor(() =>
+      expect(customersApi.updateSite).toHaveBeenCalledTimes(1)
+    );
+
+    act(() => {
+      window.history.pushState({}, "", "/sites/site-B/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(await screen.findByLabelText(/site name/i)).toHaveValue("Site B");
+    act(() => {
+      window.history.pushState({}, "", "/sites/site-123/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(await screen.findByLabelText(/site name/i)).toHaveValue("Test Site");
+    const returnedSave = await screen.findByRole("button", {
+      name: /saving/i,
+    });
+    expect(returnedSave).toBeDisabled();
+    fireEvent.click(returnedSave);
+    expect(customersApi.updateSite).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      save.resolve(mockUpdatedSite);
+      await save.promise;
+    });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+    expect(screen.getByLabelText(/site name/i)).toHaveValue("Test Site");
+    expect(screen.getByRole("button", { name: /save changes/i })).toBeEnabled();
+  });
+
+  it("ignores a failed save after navigating to another site route", async () => {
+    const previousSave =
+      deferred<Awaited<ReturnType<typeof customersApi.updateSite>>>();
+    const currentSave =
+      deferred<Awaited<ReturnType<typeof customersApi.updateSite>>>();
+    vi.mocked(customersApi.getSite).mockImplementation(async (siteId) =>
+      siteId === "site-123" ? mockSite : mockSiteB
+    );
+    vi.mocked(customersApi.updateSite)
+      .mockImplementationOnce(() => previousSave.promise)
+      .mockImplementationOnce(() => currentSave.promise);
+    renderWithRouter();
+
+    await waitForDomainAssignmentReady();
+    fireEvent.click(screen.getByRole("button", { name: /save changes/i }));
+    await waitFor(() =>
+      expect(customersApi.updateSite).toHaveBeenCalledTimes(1)
+    );
+
+    act(() => {
+      window.history.pushState({}, "", "/sites/site-B/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(await screen.findByLabelText(/site name/i)).toHaveValue("Site B");
+    const siteBSave = await screen.findByRole("button", {
+      name: /save changes/i,
+    });
+    await waitFor(() => expect(siteBSave).toBeEnabled());
+    fireEvent.click(siteBSave);
+    await waitFor(() =>
+      expect(customersApi.updateSite).toHaveBeenCalledTimes(2)
+    );
+
+    act(() => {
+      window.history.pushState({}, "", "/sites/site-123/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(await screen.findByLabelText(/site name/i)).toHaveValue("Test Site");
+    expect(screen.getByRole("button", { name: /saving/i })).toBeDisabled();
+
+    await act(async () => {
+      previousSave.reject(new Error("Previous site route failed"));
+      await previousSave.promise.catch(() => undefined);
+    });
+
+    expect(
+      screen.queryByText("Previous site route failed")
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /save changes/i })).toBeEnabled();
+
+    act(() => {
+      window.history.pushState({}, "", "/sites/site-B/edit");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(await screen.findByLabelText(/site name/i)).toHaveValue("Site B");
+    expect(screen.getByRole("button", { name: /saving/i })).toBeDisabled();
+
+    await act(async () => {
+      currentSave.reject(new Error("Current site route failed"));
+      await currentSave.promise.catch(() => undefined);
+    });
+    expect(
+      screen.queryByText("Current site route failed")
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /save changes/i })).toBeEnabled();
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it("preserves batched nested updates when saving", async () => {
