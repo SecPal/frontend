@@ -144,19 +144,28 @@ describe("Node toolchain contract", () => {
   });
 
   it("accepts workflow ordering changes", () => {
-    const sources = fixtureSources();
-    const quality = sources.workflows[".github/workflows/quality.yml"];
-    const container =
-      sources.workflows[".github/workflows/frontend-container.yml"];
+    const directJob = `
+  direct:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@0000000000000000000000000000000000000000
+        with:
+          node-version: "^24.21.0"
+      - run: npm test
+`;
+    const reusableJob = `
+  reusable:
+    uses: SecPal/.github/.github/workflows/reusable-node-build.yml@0000000000000000000000000000000000000000
+    with:
+      node-version: "^24.21.0"
+`;
 
-    sources.workflows = {
-      ".github/workflows/frontend-container.yml": container ?? "",
-      ".github/workflows/quality.yml": quality ?? "",
-      ".github/workflows/publish-container.yml":
-        sources.workflows[".github/workflows/publish-container.yml"] ?? "",
-    };
+    for (const jobs of [directJob + reusableJob, reusableJob + directJob]) {
+      const sources = fixtureSources();
+      sources.workflows[".github/workflows/quality.yml"] = `jobs:${jobs}`;
 
-    expect(validateNodeToolchainContract(sources)).toEqual([]);
+      expect(validateNodeToolchainContract(sources)).toEqual([]);
+    }
   });
 
   it.each([
@@ -165,6 +174,18 @@ describe("Node toolchain contract", () => {
       mutate: (sources: NodeToolchainSources) =>
         replaceAllSources(sources, '          node-version: "^24.21.0"\n', ""),
       error: "actions/setup-node requires an explicit node-version",
+    },
+    {
+      name: "a Node command runs before setup-node",
+      mutate: (sources: NodeToolchainSources) => {
+        sources.workflows[".github/workflows/quality.yml"] =
+          sources.workflows[".github/workflows/quality.yml"]?.replace(
+            "    steps:\n",
+            "    steps:\n      - run: npm test\n"
+          ) ?? "";
+        return sources;
+      },
+      error: "Node command runs before an explicit node-version is selected",
     },
     {
       name: "a workflow selects Node 22",

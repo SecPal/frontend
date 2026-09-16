@@ -216,40 +216,37 @@ function getNodeSelectors(
       continue;
     }
 
-    const steps = value.steps.filter(isRecord);
-    const setupSteps = steps.filter(
-      (step) =>
+    let hasSelectedNodeVersion = false;
+
+    for (const step of value.steps.filter(isRecord)) {
+      const isSetupStep =
         typeof step.uses === "string" &&
-        /^actions\/setup-node@/u.test(step.uses)
-    );
-    const executesNode = steps.some(
-      (step) =>
+        /^actions\/setup-node@/u.test(step.uses);
+
+      if (isSetupStep) {
+        const selector = isRecord(step.with) ? step.with["node-version"] : null;
+
+        hasSelectedNodeVersion = typeof selector === "string";
+
+        if (!hasSelectedNodeVersion) {
+          errors.push(
+            `${workflowPath}:${jobName}: actions/setup-node requires an explicit node-version`
+          );
+        } else {
+          selectors.push(selector);
+        }
+
+        continue;
+      }
+
+      if (
         typeof step.run === "string" &&
-        /\b(?:node|npm|npx|corepack)(?:\s|$)/mu.test(step.run)
-    );
-
-    if (!executesNode && setupSteps.length === 0) {
-      continue;
-    }
-
-    if (setupSteps.length === 0) {
-      errors.push(
-        `${workflowPath}:${jobName}: Node commands require actions/setup-node with an explicit node-version`
-      );
-      continue;
-    }
-
-    for (const setupStep of setupSteps) {
-      const selector = isRecord(setupStep.with)
-        ? setupStep.with["node-version"]
-        : null;
-
-      if (typeof selector !== "string") {
+        /\b(?:node|npm|npx|corepack)(?:\s|$)/mu.test(step.run) &&
+        !hasSelectedNodeVersion
+      ) {
         errors.push(
-          `${workflowPath}:${jobName}: actions/setup-node requires an explicit node-version`
+          `${workflowPath}:${jobName}: Node command runs before an explicit node-version is selected`
         );
-      } else {
-        selectors.push(selector);
       }
     }
   }
