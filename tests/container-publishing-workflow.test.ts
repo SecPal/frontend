@@ -573,7 +573,7 @@ describe("frontend container publishing workflow", () => {
 
     expect(validate).toContain("ref: ${{ github.sha }}");
     expect(validate).toContain("persist-credentials: false");
-    expect(validate).toContain('node-version: "22.22.2"');
+    expect(validate).toContain('node-version: "24.21.0"');
     expect(validate).toContain("npm ci --foreground-scripts");
     expect(validate).toContain("tests/container-publishing-workflow.test.ts");
     expect(validate).toContain("tests/container-contract.test.ts");
