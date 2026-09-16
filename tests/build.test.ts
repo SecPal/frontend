@@ -1266,44 +1266,6 @@ jobs:
     );
   });
 
-  it("keeps the qualified Node 24 baseline within Markdown toolchain support", () => {
-    const packageJson = JSON.parse(readRepoFile("package.json")) as {
-      devDependencies: { "@types/node": string };
-      engines: { node: string };
-    };
-    const packageLock = JSON.parse(readRepoFile("package-lock.json")) as {
-      packages: Record<string, { engines?: { node?: string } } | undefined>;
-    };
-    const markdownToolchainNodeRange =
-      packageLock.packages["node_modules/ini"]?.engines?.node;
-
-    expect(markdownToolchainNodeRange).toBeDefined();
-    expect(markdownToolchainNodeRange).toContain("^24.15.0");
-    expect(packageJson.engines.node).toBe("^24.21.0");
-    expect(packageJson.devDependencies["@types/node"]).toMatch(/^\^24\./u);
-    expect(readRepoFile(".nvmrc").trim()).toBe("24");
-    expect(readRepoFile("README.md")).toContain(
-      `Node.js \`${packageJson.engines.node}\``
-    );
-    expect(readRepoFile("CONTRIBUTING.md")).toContain(
-      `Node.js** \`${packageJson.engines.node}\``
-    );
-
-    for (const [workflowPath, expectedQualifiedSelectors] of [
-      [".github/workflows/quality.yml", 6],
-      [".github/workflows/lighthouse.yml", 1],
-      [".github/workflows/ui-csp.yml", 1],
-    ] as const) {
-      const workflow = readRepoFile(workflowPath);
-
-      expect(workflow).toContain('node-version: "^24.21.0"');
-      expect(workflow.match(/node-version: "\^24\.21\.0"/gu)?.length).toBe(
-        expectedQualifiedSelectors
-      );
-      expect(workflow).not.toMatch(/node-version:\s*["']?(?:22|26)/u);
-    }
-  });
-
   it("keeps PWA shortcuts limited to live routes", () => {
     const viteConfig = readRepoFile("vite.config.ts");
 
