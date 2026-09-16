@@ -56,7 +56,9 @@ function fixtureSources(version = "24.21.0"): NodeToolchainSources {
     }),
     packageLock: JSON.stringify({
       packages: {
-        "node_modules/ini": { engines: { node: ">=22.0.0" } },
+        "node_modules/ini": {
+          engines: { node: ">=22.0.0 <25.0.0" },
+        },
       },
     }),
     nvmrc: major ?? "",
@@ -188,6 +190,31 @@ describe("Node toolchain contract", () => {
       error: "Node command runs before an explicit node-version is selected",
     },
     {
+      name: "a supported package manager runs without setup-node",
+      mutate: (sources: NodeToolchainSources) => {
+        sources.workflows[".github/workflows/package-manager.yml"] = `
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm test
+`;
+        return sources;
+      },
+      error: "Node command runs before an explicit node-version is selected",
+    },
+    {
+      name: "a reusable Node job has no selector",
+      mutate: (sources: NodeToolchainSources) => {
+        sources.workflows[".github/workflows/quality.yml"] += `
+  missing-selector:
+    uses: SecPal/.github/.github/workflows/reusable-node-build.yml@0000000000000000000000000000000000000000
+`;
+        return sources;
+      },
+      error: "Node reusable workflow requires an explicit node-version",
+    },
+    {
       name: "a workflow selects Node 22",
       mutate: (sources: NodeToolchainSources) => {
         sources.workflows[".github/workflows/quality.yml"] =
@@ -198,6 +225,18 @@ describe("Node toolchain contract", () => {
         return sources;
       },
       error: "node-version 22 is incompatible",
+    },
+    {
+      name: "a workflow selector omits the qualified minimum",
+      mutate: (sources: NodeToolchainSources) => {
+        sources.workflows[".github/workflows/quality.yml"] =
+          sources.workflows[".github/workflows/quality.yml"]?.replace(
+            'node-version: "^24.21.0"',
+            'node-version: "24"'
+          ) ?? "";
+        return sources;
+      },
+      error: "node-version 24 is incompatible",
     },
     {
       name: "a selector predates the engine baseline",

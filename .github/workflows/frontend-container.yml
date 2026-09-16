@@ -43,6 +43,7 @@ jobs:
       - name: Verify source container contracts
         run: >-
           npm exec -- vitest --configLoader=native run
+          tests/node-toolchain-contract.test.ts
           tests/container-runtime-lifecycle.test.ts
           tests/container-contract.test.ts
           src/config.test.ts src/lib/pwaRuntimeCaching.test.ts

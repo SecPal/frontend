@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { load } from "js-yaml";
+import { minVersion, satisfies, subset, validRange } from "semver";
 
 interface NodeToolchainSources {
   packageJson: string;
@@ -67,73 +68,31 @@ function compareVersions(left: Version, right: Version): number {
 function parseQualifiedNodeRange(
   source: unknown
 ): QualifiedNodeRange | undefined {
-  if (typeof source !== "string") {
+  if (typeof source !== "string" || !validRange(source)) {
     return undefined;
   }
 
-  const match = /^\^(?<version>\d+\.\d+\.\d+)$/u.exec(source);
-  const minimum = match?.groups?.version
-    ? parseVersion(match.groups.version)
-    : undefined;
+  const minimum = minVersion(source);
 
-  return minimum ? { source, minimum } : undefined;
-}
+  if (
+    !minimum ||
+    !subset(source, `>=${minimum.major}.0.0 <${minimum.major + 1}.0.0`)
+  ) {
+    return undefined;
+  }
 
-function versionSatisfiesQualifiedRange(
-  version: Version,
-  range: QualifiedNodeRange
-): boolean {
-  return (
-    version.major === range.minimum.major &&
-    compareVersions(version, range.minimum) >= 0
-  );
+  return { source, minimum };
 }
 
 function selectorSatisfiesQualifiedRange(
   selector: string,
   range: QualifiedNodeRange
 ): boolean {
-  const majorSelector = /^(?<major>\d+)(?:\.x)?$/u.exec(selector);
-
-  if (majorSelector?.groups) {
-    return Number(majorSelector.groups.major) === range.minimum.major;
-  }
-
-  const versionSelector = /^(?<caret>\^)?(?<version>\d+\.\d+\.\d+)$/u.exec(
-    selector
-  );
-  const version = versionSelector?.groups?.version
-    ? parseVersion(versionSelector.groups.version)
-    : undefined;
-
-  return version ? versionSatisfiesQualifiedRange(version, range) : false;
+  return Boolean(validRange(selector)) && subset(selector, range.source);
 }
 
 function rangeIncludesVersion(source: string, version: Version): boolean {
-  return source.split("||").some((candidate) => {
-    const range = candidate.trim();
-    const match = /^(?<operator>\^|>=)?(?<version>\d+\.\d+\.\d+)$/u.exec(range);
-    const minimum = match?.groups?.version
-      ? parseVersion(match.groups.version)
-      : undefined;
-
-    if (!minimum) {
-      return false;
-    }
-
-    if (match.groups?.operator === ">=") {
-      return compareVersions(version, minimum) >= 0;
-    }
-
-    if (match.groups?.operator === "^") {
-      return (
-        version.major === minimum.major &&
-        compareVersions(version, minimum) >= 0
-      );
-    }
-
-    return compareVersions(version, minimum) === 0;
-  });
+  return satisfies(versionToString(version), source);
 }
 
 function getDeclaredMajor(source: unknown): number | undefined {
@@ -141,9 +100,16 @@ function getDeclaredMajor(source: unknown): number | undefined {
     return undefined;
   }
 
-  const match = /^(?:\^|~)?(?<major>\d+)(?:\.\d+){0,2}$/u.exec(source);
+  const minimum = minVersion(source);
 
-  return match?.groups ? Number(match.groups.major) : undefined;
+  if (
+    !minimum ||
+    !subset(source, `>=${minimum.major}.0.0 <${minimum.major + 1}.0.0`)
+  ) {
+    return undefined;
+  }
+
+  return minimum.major;
 }
 
 function getDockerBuilder(dockerfile: string): DockerBuilder | undefined {
@@ -241,7 +207,7 @@ function getNodeSelectors(
 
       if (
         typeof step.run === "string" &&
-        /\b(?:node|npm|npx|corepack)(?:\s|$)/mu.test(step.run) &&
+        /\b(?:node|npm|npx|corepack|pnpm|yarn)(?:\s|$)/mu.test(step.run) &&
         !hasSelectedNodeVersion
       ) {
         errors.push(
@@ -275,7 +241,9 @@ export function validateNodeToolchainContract(
   const engine = parseQualifiedNodeRange(engineSource);
 
   if (!engine) {
-    return ["package.json: engines.node must be one qualified caret range"];
+    return [
+      "package.json: engines.node must be one qualified single-major range",
+    ];
   }
 
   const nodeTypesSource =
