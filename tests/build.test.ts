@@ -1289,14 +1289,17 @@ jobs:
       `Node.js** \`${packageJson.engines.node}\``
     );
 
-    for (const workflowPath of [
-      ".github/workflows/quality.yml",
-      ".github/workflows/lighthouse.yml",
-      ".github/workflows/ui-csp.yml",
-    ]) {
+    for (const [workflowPath, expectedQualifiedSelectors] of [
+      [".github/workflows/quality.yml", 6],
+      [".github/workflows/lighthouse.yml", 1],
+      [".github/workflows/ui-csp.yml", 1],
+    ] as const) {
       const workflow = readRepoFile(workflowPath);
 
       expect(workflow).toContain('node-version: "^24.21.0"');
+      expect(workflow.match(/node-version: "\^24\.21\.0"/gu)?.length).toBe(
+        expectedQualifiedSelectors
+      );
       expect(workflow).not.toMatch(/node-version:\s*["']?(?:22|26)/u);
     }
   });
