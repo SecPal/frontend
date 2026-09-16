@@ -1288,6 +1288,17 @@ jobs:
     expect(readRepoFile("CONTRIBUTING.md")).toContain(
       `Node.js** \`${packageJson.engines.node}\``
     );
+
+    for (const workflowPath of [
+      ".github/workflows/quality.yml",
+      ".github/workflows/lighthouse.yml",
+      ".github/workflows/ui-csp.yml",
+    ]) {
+      const workflow = readRepoFile(workflowPath);
+
+      expect(workflow).toContain('node-version: "^24.21.0"');
+      expect(workflow).not.toMatch(/node-version:\s*["']?(?:22|26)/u);
+    }
   });
 
   it("keeps PWA shortcuts limited to live routes", () => {
