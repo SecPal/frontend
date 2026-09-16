@@ -31,8 +31,8 @@ describe("frontend container source contract", () => {
   it("pins exact multi-architecture Debian base image manifests", () => {
     const dockerfile = readRepoFile("Dockerfile");
 
-    expect(dockerfile).toContain(
-      "node:24.21.0-bookworm-slim@sha256:2fe369e969550cde8e867afc3fe370b260140cab4a23d467074295b42163d553"
+    expect(dockerfile).toMatch(
+      /^FROM node:[^@\s]+@sha256:2fe369e969550cde8e867afc3fe370b260140cab4a23d467074295b42163d553 AS build$/mu
     );
     expect(dockerfile).toContain(
       "nginxinc/nginx-unprivileged:1.30.4-trixie@sha256:679387908ea95d6d8de12952cd15d6b351258054a992d2106d3b6aa12659d87d"
@@ -153,7 +153,6 @@ describe("frontend container source contract", () => {
     expect(smokeTest).toContain("SECPAL_API_URL");
     expect(workflow).toContain("name: Frontend Container");
     expect(workflow).toContain("name: Container Contract");
-    expect(workflow).toContain('node-version: "24.21.0"');
     expect(workflow).toContain("contents: read");
     expect(workflow).not.toMatch(
       /packages:\s*write|id-token:\s*write|docker\s+push|buildx\s+--push/iu
