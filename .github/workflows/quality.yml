@@ -59,14 +59,14 @@ jobs:
     # main
     uses: SecPal/.github/.github/workflows/reusable-node-lint.yml@daea9e2a5d033affbda1cb52d27afb491e703aa4
     with:
-      node-version: "22"
+      node-version: "24"
 
   typecheck:
     name: TypeScript Check
     # main
     uses: SecPal/.github/.github/workflows/reusable-node-build.yml@daea9e2a5d033affbda1cb52d27afb491e703aa4
     with:
-      node-version: "22"
+      node-version: "24"
       build-command: "npm run typecheck"
 
   vitest:
@@ -89,7 +89,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: "22"
+          node-version: "24"
           cache: "npm"
 
       - name: Install dependencies

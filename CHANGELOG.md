@@ -42,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Adopted Node.js 24 LTS across local development, CI, frontend builds, and
+  container construction, with Node.js 24.21.0 as the exact reproducible
+  baseline for release-oriented paths and Node 24-aligned TypeScript types.
 - Customer edits now submit master data and the complete desired establishment
   assignment snapshot through the transactional API, removing compensating
   frontend reconciliation and rollback requests. The committed response is

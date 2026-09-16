@@ -194,7 +194,7 @@ At minimum verify:
 
 ## Repository Conventions
 
-- Stack: Node 22, React, TypeScript strict mode, Vite, Vitest, and React Testing Library.
+- Stack: Node 24, React, TypeScript strict mode, Vite, Vitest, and React Testing Library.
 - All API types come from generated OpenAPI types in `@/types/api`; do not hand-write response types.
 - Keep presentation in components and reusable logic in hooks or API clients.
 - Prefer functional components, named exports, and existing design-system patterns before new abstractions.
