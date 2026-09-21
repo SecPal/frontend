@@ -132,7 +132,7 @@ jobs:
       - name: Upload coverage to Codecov
         if: ${{ github.event_name != 'pull_request' }}
         # v5
-        uses: codecov/codecov-action@0b35c9ecc4f0529d0eb674914510c22f85b196b4
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5
         with:
           token: ${{ secrets.CODECOV_TOKEN || '' }}
           files: ./coverage/lcov.info,./coverage/clover.xml
