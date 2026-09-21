@@ -136,7 +136,7 @@
     "@typescript-eslint/eslint-plugin": "^8.68.0",
     "@typescript-eslint/parser": "^8.70.0",
     "@vitejs/plugin-react": "^6.1.1",
-    "@vitest/coverage-v8": "^5.0.0",
+    "@vitest/coverage-v8": "^5.0.1",
     "@vitest/ui": "^5.0.0",
     "caniuse-lite": "^1.0.30001810",
     "chai": "^6.2.2",
