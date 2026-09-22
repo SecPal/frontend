@@ -792,8 +792,10 @@ jobs:
     );
   });
 
-  it("documents the app surface and shared UI source-of-truth contract", () => {
-    const readme = readRepoFile("README.md");
+  it("documents the app surface and shared UI contracts", () => {
+    const appSurfaceDoc = readRepoFile("docs/app-surfaces.md");
+    const uiArchitectureDoc = readRepoFile("docs/ui-architecture.md");
+    const components = readRepoFile("components.json");
     const envExample = readRepoFile(".env.example");
 
     for (const appSurface of [
@@ -803,32 +805,32 @@ jobs:
       "ios-mock",
       "ios-native",
     ]) {
-      expect(readme).toContain(appSurface);
+      expect(appSurfaceDoc).toContain(appSurface);
       expect(envExample).toContain(appSurface);
     }
 
-    expect(readme).toContain(
-      "`frontend` is the source of truth for SecPal product design, UI, and UX"
+    expect(appSurfaceDoc).toContain(
+      "one shared React and TypeScript implementation"
     );
-    expect(readme).toContain(
-      "Android and future iOS repositories provide native OS integrations"
-    );
-    expect(readme).toContain("vite-plugin-pwa");
-    expect(readme).toContain("Manifest");
-    expect(readme).toContain("Service Worker");
-    expect(readme).toContain("Workbox");
-    expect(readme).toContain("src/ui");
-    expect(readme).toContain("shadcn/Base UI");
-    expect(readme).toContain("base-vega");
-    expect(readme).toContain("lucide-react");
-    expect(readme).toContain("Do not introduce visual rebuilds");
-    expect(readme).toContain("npm run dev:android:mock");
-    expect(readme).toContain("npm run build:android:mock");
-    expect(readme).toContain("PLAYWRIGHT_APP_SURFACE=android-mock");
-    expect(readme).toContain("workspace previews keep the deployed bundle");
-    expect(readme).toContain("build-metadata.json");
-    expect(readme).toContain('"applicationSurface": "android-native"');
-    expect(readme).toContain("downstream packaging");
+    expect(appSurfaceDoc).toContain("Native repositories reuse");
+    expect(appSurfaceDoc).toContain("the compiled frontend");
+    expect(appSurfaceDoc).toContain("vite-plugin-pwa");
+    expect(appSurfaceDoc).toContain("Manifest");
+    expect(appSurfaceDoc).toContain("service worker");
+    expect(appSurfaceDoc).toContain("Workbox");
+    expect(uiArchitectureDoc).toContain("src/ui");
+    expect(uiArchitectureDoc).toContain("shadcn/ui");
+    expect(uiArchitectureDoc).toContain("Base UI");
+    expect(uiArchitectureDoc).toContain("Lucide");
+    expect(components).toContain('"style": "base-vega"');
+    expect(appSurfaceDoc).toContain("npm run dev:android:mock");
+    expect(appSurfaceDoc).toContain("npm run build:android:mock");
+    expect(appSurfaceDoc).toContain("PLAYWRIGHT_APP_SURFACE=android-mock");
+    expect(appSurfaceDoc).toContain("surface already compiled");
+    expect(appSurfaceDoc).toContain("build-metadata.json");
+    expect(appSurfaceDoc).toContain('"applicationSurface": "android-native"');
+    expect(appSurfaceDoc).toContain("Downstream");
+    expect(appSurfaceDoc).toContain("packaging uses this file");
 
     expect(envExample).toContain("VITE_APP_SURFACE=web");
     expect(envExample).toContain(
