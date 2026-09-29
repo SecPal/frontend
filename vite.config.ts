@@ -357,6 +357,8 @@ export default defineConfig(({ mode, command }) => {
     test: {
       globals: true,
       environment: "jsdom",
+      // Keep Node 26's unconfigured Web Storage getter from shadowing JSDOM.
+      execArgv: ["--no-webstorage"],
       setupFiles: "./tests/setup.ts",
       clearMocks: true,
       unstubGlobals: true,

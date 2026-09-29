@@ -46,7 +46,7 @@ function getRepositorySources(): NodeToolchainSources {
   };
 }
 
-function fixtureSources(version = "24.21.0"): NodeToolchainSources {
+function fixtureSources(version = "26.10.0"): NodeToolchainSources {
   const major = version.split(".")[0];
 
   return {
@@ -57,7 +57,7 @@ function fixtureSources(version = "24.21.0"): NodeToolchainSources {
     packageLock: JSON.stringify({
       packages: {
         "node_modules/ini": {
-          engines: { node: ">=22.0.0 <25.0.0" },
+          engines: { node: ">=22.22.2 || ^24.15.0 || >=26.0.0" },
         },
       },
     }),
@@ -133,15 +133,31 @@ describe("Node toolchain contract", () => {
   additional-check:
     uses: SecPal/.github/.github/workflows/reusable-node-build.yml@0000000000000000000000000000000000000000
     with:
-      node-version: "^24.21.0"
+      node-version: "^26.10.0"
 `;
 
     expect(validateNodeToolchainContract(sources)).toEqual([]);
   });
 
   it("accepts a consistently qualified patch change without validator literals", () => {
-    expect(validateNodeToolchainContract(fixtureSources("24.22.1"))).toEqual(
+    expect(validateNodeToolchainContract(fixtureSources("26.11.1"))).toEqual(
       []
+    );
+  });
+
+  it("rejects Node 26 types while the runtime still requires Node 24", () => {
+    const sources = fixtureSources("24.21.0");
+    sources.packageJson = sources.packageJson.replace(
+      '"@types/node":"^24.1.0"',
+      '"@types/node":"^26.1.0"'
+    );
+
+    expect(validateNodeToolchainContract(sources)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining(
+          "@types/node major must equal the Node runtime major 24"
+        ),
+      ])
     );
   });
 
@@ -152,14 +168,14 @@ describe("Node toolchain contract", () => {
     steps:
       - uses: actions/setup-node@0000000000000000000000000000000000000000
         with:
-          node-version: "^24.21.0"
+          node-version: "^26.10.0"
       - run: npm test
 `;
     const reusableJob = `
   reusable:
     uses: SecPal/.github/.github/workflows/reusable-node-build.yml@0000000000000000000000000000000000000000
     with:
-      node-version: "^24.21.0"
+      node-version: "^26.10.0"
 `;
 
     for (const jobs of [directJob + reusableJob, reusableJob + directJob]) {
@@ -174,7 +190,7 @@ describe("Node toolchain contract", () => {
     {
       name: "a Node job has no selector",
       mutate: (sources: NodeToolchainSources) =>
-        replaceAllSources(sources, '          node-version: "^24.21.0"\n', ""),
+        replaceAllSources(sources, '          node-version: "^26.10.0"\n', ""),
       error: "actions/setup-node requires an explicit node-version",
     },
     {
@@ -219,7 +235,7 @@ jobs:
       mutate: (sources: NodeToolchainSources) => {
         sources.workflows[".github/workflows/quality.yml"] =
           sources.workflows[".github/workflows/quality.yml"]?.replace(
-            'node-version: "^24.21.0"',
+            'node-version: "^26.10.0"',
             'node-version: "22"'
           ) ?? "";
         return sources;
@@ -231,30 +247,30 @@ jobs:
       mutate: (sources: NodeToolchainSources) => {
         sources.workflows[".github/workflows/quality.yml"] =
           sources.workflows[".github/workflows/quality.yml"]?.replace(
-            'node-version: "^24.21.0"',
-            'node-version: "24"'
+            'node-version: "^26.10.0"',
+            'node-version: "26"'
           ) ?? "";
         return sources;
       },
-      error: "node-version 24 is incompatible",
+      error: "node-version 26 is incompatible",
     },
     {
       name: "a selector predates the engine baseline",
       mutate: (sources: NodeToolchainSources) =>
         replaceAllSources(
           sources,
-          'node-version: "^24.21.0"',
-          'node-version: "^24.20.0"'
+          'node-version: "^26.10.0"',
+          'node-version: "^26.9.0"'
         ),
-      error: "node-version ^24.20.0 is incompatible",
+      error: "node-version ^26.9.0 is incompatible",
     },
     {
       name: "@types/node uses another runtime major",
       mutate: (sources: NodeToolchainSources) =>
         replaceAllSources(
           sources,
-          '"@types/node":"^24.1.0"',
-          '"@types/node":"^25.1.0"'
+          '"@types/node":"^26.1.0"',
+          '"@types/node":"^27.1.0"'
         ),
       error: "@types/node major must equal the Node runtime major",
     },
@@ -264,7 +280,7 @@ jobs:
         sources.workflows[".github/workflows/frontend-container.yml"] =
           sources.workflows[
             ".github/workflows/frontend-container.yml"
-          ]?.replace('node-version: "24.21.0"', 'node-version: "24.22.0"') ??
+          ]?.replace('node-version: "26.10.0"', 'node-version: "26.11.0"') ??
           "";
         return sources;
       },

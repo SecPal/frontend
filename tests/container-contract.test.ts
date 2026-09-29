@@ -32,7 +32,7 @@ describe("frontend container source contract", () => {
     const dockerfile = readRepoFile("Dockerfile");
 
     expect(dockerfile).toMatch(
-      /^FROM node:[^@\s]+@sha256:2fe369e969550cde8e867afc3fe370b260140cab4a23d467074295b42163d553 AS build$/mu
+      /^FROM node:26\.10\.0-bookworm-slim@sha256:662933cf47f013bc8e4beb31a6116448427a82057ba7c42c97e4c5ba766504c2 AS build$/mu
     );
     expect(dockerfile).toContain(
       "nginxinc/nginx-unprivileged:1.30.4-trixie@sha256:679387908ea95d6d8de12952cd15d6b351258054a992d2106d3b6aa12659d87d"
