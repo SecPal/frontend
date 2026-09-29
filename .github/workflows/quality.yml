@@ -44,35 +44,35 @@ jobs:
     # main
     uses: SecPal/.github/.github/workflows/reusable-prettier.yml@d59d2e1655544c651256564aeeafa313469e2d0a
     with:
-      node-version: "^24.21.0"
+      node-version: "^26.10.0"
 
   markdown-lint:
     name: Markdown Lint
     # main
     uses: SecPal/.github/.github/workflows/reusable-markdown-lint.yml@d59d2e1655544c651256564aeeafa313469e2d0a
     with:
-      node-version: "^24.21.0"
+      node-version: "^26.10.0"
 
   ai-instructions:
     name: AI Instructions
     # main
     uses: SecPal/.github/.github/workflows/reusable-ai-instructions.yml@d59d2e1655544c651256564aeeafa313469e2d0a
     with:
-      node-version: "^24.21.0"
+      node-version: "^26.10.0"
 
   eslint:
     name: ESLint
     # main
     uses: SecPal/.github/.github/workflows/reusable-node-lint.yml@d59d2e1655544c651256564aeeafa313469e2d0a
     with:
-      node-version: "^24.21.0"
+      node-version: "^26.10.0"
 
   typecheck:
     name: TypeScript Check
     # main
     uses: SecPal/.github/.github/workflows/reusable-node-build.yml@d59d2e1655544c651256564aeeafa313469e2d0a
     with:
-      node-version: "^24.21.0"
+      node-version: "^26.10.0"
       build-command: "npm run typecheck"
 
   vitest:
@@ -95,7 +95,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: "^24.21.0"
+          node-version: "^26.10.0"
           cache: "npm"
 
       - name: Install dependencies

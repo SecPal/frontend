@@ -285,7 +285,7 @@ existing frontend primitive can express the interaction.
 
 ## 📋 Prerequisites
 
-- Node.js `^24.21.0` (`.nvmrc` pins major `24`; CI uses Node 24)
+- Node.js `^26.10.0` (`.nvmrc` pins major `26`; CI uses Node 26)
 - npm >= 10.0.0
 - Git with GPG signing configured
 

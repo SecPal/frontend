@@ -14,7 +14,7 @@ We welcome contributions to SecPal! Please read our [Code of Conduct](CODE_OF_CO
 Ensure you have the following tools installed:
 
 - **Git** with GPG signing configured
-- **Node.js** `^24.21.0` (`.nvmrc` pins major `24`; CI uses Node 24) and npm/pnpm/yarn
+- **Node.js** `^26.10.0` (`.nvmrc` pins major `26`; CI uses Node 26) and npm/pnpm/yarn
 - **PHP** 8.4 and Composer (for backend projects)
 - **Pre-commit** hooks tool (optional but recommended)
 

@@ -42,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Adopted Node.js 26 for local development, CI, frontend builds, and container
+  construction, with Node.js 26.10.0 as the exact reproducible baseline for
+  container paths and Node 26-aligned TypeScript types.
 - Derived Node toolchain tests from the package engine, development major,
   digest-pinned builder, and structurally discovered workflow consumers so
   topology and consistently qualified version changes no longer require
