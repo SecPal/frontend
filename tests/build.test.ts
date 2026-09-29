@@ -742,7 +742,7 @@ jobs:
     );
     expectVersionAtLeast(
       packageLock.packages["node_modules/js-yaml"]?.version,
-      "5.2.2"
+      "5.4.1"
     );
   });
 
