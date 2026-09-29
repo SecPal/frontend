@@ -5,490 +5,125 @@ SPDX-License-Identifier: CC0-1.0
 
 # SecPal Frontend
 
+> SecPal – A guard's best friend
+
 [![Quality Gates](https://github.com/SecPal/frontend/actions/workflows/quality.yml/badge.svg)](https://github.com/SecPal/frontend/actions/workflows/quality.yml)
 [![CodeQL](https://github.com/SecPal/frontend/actions/workflows/codeql.yml/badge.svg)](https://github.com/SecPal/frontend/actions/workflows/codeql.yml)
-[![PR Size](https://github.com/SecPal/frontend/actions/workflows/pr-size.yml/badge.svg)](https://github.com/SecPal/frontend/actions/workflows/pr-size.yml)
-[![codecov](https://codecov.io/gh/SecPal/frontend/branch/main/graph/badge.svg)](https://codecov.io/gh/SecPal/frontend)
 [![License](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 
-React/TypeScript frontend for SecPal — operations software for German private security services.
+## About
 
-## Product Scope
+SecPal is open-source operations software for professional security operations,
+including private security services, in-house and plant protection, corporate
+security, and comparable operational security organisations. This repository
+contains the frontend for the main SecPal product.
 
-The current frontend ships the browser and PWA surfaces for SecPal's workforce operations flows:
+SecPal is under active development and remains pre-1.0.
 
-- authenticated browser sessions with httpOnly cookie auth, MFA, and passkeys
-- onboarding and activation flows for pre-contract users
-- customer, site, employee, and organizational-unit management
-- profile/settings and activity logs
-- installable PWA behavior with service-worker updates and guarded offline support
+## Repository responsibilities
 
-Legacy Secrets-era password-vault content has been removed from the current route surface and is no longer described in this README.
+This repository owns the shared React and TypeScript UI used by the browser/PWA
+and reused, where applicable, by native shells. It also owns browser-specific
+client behavior, frontend routing and presentation, service-worker integration,
+sensitive local-state boundaries, runtime API-origin handling, and the build
+artifacts consumed by downstream packaging.
 
-## App Surfaces and Source of Truth
+One codebase supports explicit browser- and native-facing surface contracts.
+The selected surface changes presentation and platform integration; it is not a
+security capability or authorization decision. See
+[App surfaces and build metadata](docs/app-surfaces.md) for the detailed
+contract.
 
-`frontend` is the source of truth for SecPal product design, UI, and UX.
-Android and future iOS repositories provide native OS integrations such as app
-packaging, platform permissions, secure OS APIs, and store delivery. They must
-reuse the React UI surface instead of rebuilding parallel native screens.
+This repository does not own server-side authentication or authorization, the
+public API contract, native OS packaging and secure storage, or deployment and
+public-edge infrastructure. Those responsibilities belong to the related
+repositories listed below.
 
-`VITE_APP_SURFACE` selects the frontend surface contract only. It must not be
-used for secrets, security gates, auth behavior, or capability authorization.
-Supported values are:
+## Security-sensitive client boundaries
 
-- `web` - browser and installable PWA surface
-- `android-mock` - Android-facing mock surface for non-production validation
-- `android-native` - Android WebView/native integration surface
-- `ios-mock` - iOS-facing mock surface for non-production validation
-- `ios-native` - iOS WebView/native integration surface
+The frontend participates in browser session and CSRF handling, login context,
+MFA and passkey flows, route and access presentation, encrypted client-side
+state, offline/local persistence, service-worker and PWA behavior, runtime
+deployment binding, Content Security Policy, and native/web surface separation.
 
-Use the explicit surface scripts instead of relying on a parent-shell
-`VITE_APP_SURFACE` value:
+Client-side route and control visibility improves the user experience but does
+not grant or enforce authorization. The API remains authoritative for
+server-side authentication, authorization, tenant isolation, and data access.
+
+Architecture references include the
+[route access policy](docs/ROUTE_ACCESS_POLICY.md),
+[static CSP contract](docs/security/csp.md), and
+[frontend delivery boundary](docs/deployment-spa-routing.md). Report suspected
+vulnerabilities through the private process in [SECURITY.md](SECURITY.md).
+
+## Technology
+
+The frontend uses React, TypeScript, Vite, Tailwind CSS, Base UI, Lingui,
+Vitest, Testing Library, and Playwright. The browser/PWA build uses a custom
+Workbox service worker through `vite-plugin-pwa`.
+
+## Quick start
+
+Local development requires Node.js `^24.21.0` (the repository pins major 24 in
+`.nvmrc`) and npm 10 or newer.
 
 ```bash
-# Browser/PWA development
+npm ci
 npm run dev:web
-npm run build:web
-
-# Android shared-UI review without the native shell
-npm run dev:android:mock
-npm run build:android:mock
-
-# Android WebView/native integration artifact
-npm run dev:android
-npm run build:android
 ```
 
-`android-mock` is for local development, local Playwright, and local preview
-build validation. It is intentionally non-deployable: production-style Vite
-build modes such as `web`, `android`, and `ios` reject mock surfaces before an
-artifact is emitted. Use `android-native` for the Android WebView artifact and
-`web` for browser/PWA deployments.
+The development server proxies API requests to `http://localhost:8000` by
+default. Configure `VITE_API_URL` when using another development API origin.
 
-Every Vite build emits `build-metadata.json` at the artifact root as the stable
-downstream packaging contract. Its deterministic schema contains only the
-resolved application surface, Vite build mode, and whether the mode produces a
-production artifact. For example, `npm run build:android` emits:
-
-```json
-{
-  "schemaVersion": 1,
-  "applicationSurface": "android-native",
-  "buildMode": "android",
-  "production": true
-}
-```
-
-The application selector and this file receive the same value after
-`VITE_APP_SURFACE` has been resolved and validated once. Android and iOS
-packaging must verify `applicationSurface` in this file instead of inferring a
-surface from optimized JavaScript. `buildMode` and `production` distinguish
-preview/mock artifacts from deployable browser and native artifacts. The file
-is immutable build metadata: it contains no secrets, API credentials, runtime
-configuration, timestamps, or host-specific values.
-
-Playwright defaults local HTTP/HTTPS development and CI preview runs to the
-Android route surface so Android-specific shared UI stays covered. Select a
-surface explicitly with `PLAYWRIGHT_APP_SURFACE`:
+Run the primary local checks with:
 
 ```bash
-# Local Android mock UI review with Playwright's self-started Vite server
-PLAYWRIGHT_APP_SURFACE=android-mock npm run test:e2e
-
-# Local browser/PWA route assumptions
-PLAYWRIGHT_APP_SURFACE=web npm run test:e2e
-
-# Android native route assumptions
-PLAYWRIGHT_APP_SURFACE=android-native npm run test:e2e
-```
-
-In Polyscope, workspace previews keep the deployed bundle surface they were
-built with and default Playwright route assumptions to `web`. Use
-`PLAYWRIGHT_APP_SURFACE=android-mock` only to run Android-specific tests or route
-selection against a preview that already exposes that UI surface. For local
-shared-UI review while still using a workspace backend, run
-`npm run dev:android:mock` in this workspace and point API configuration at the
-matching preview API if needed.
-
-The PWA delivery path continues to use `vite-plugin-pwa`, the web app
-Manifest, the Service Worker, and Workbox. Surface-specific native work must
-not replace that browser/PWA pipeline.
-
-## Runtime and Deployment
-
-Important operational entry points for the current app:
-
-- `app.secpal.dev` is the canonical live frontend host
-- `https://api.secpal.dev` is the canonical API origin for production builds
-- browser sessions use Laravel Sanctum SPA auth with CSRF bootstrapping
-- deployment owners consume the immutable frontend image and apply public-edge policy
-
-Current operational references:
-
-- [docs/deployment/frontend-container.md](docs/deployment/frontend-container.md) - frontend image, startup configuration, and hardened runtime contract
-- [docs/deployment-spa-routing.md](docs/deployment-spa-routing.md) - frontend artifact/container and deployment ownership boundary
-- [PWA_OFFLINE_PERSISTENCE_AUDIT.md](PWA_OFFLINE_PERSISTENCE_AUDIT.md) - active offline-storage audit and follow-up issue mapping
-- [CONTRIBUTING.md](CONTRIBUTING.md) - local workflow, preflight usage, and PR rules
-- [SECURITY.md](SECURITY.md) - vulnerability reporting and security process
-
-### Frontend Container
-
-Build the official local image with `docker build -t secpal-frontend:local .`
-and configure its API origin only when the container starts. The complete
-non-root, read-only example and cache/health contracts are documented in the
-[frontend container guide](docs/deployment/frontend-container.md).
-
-The published Web/PWA image identity is `ghcr.io/secpal/frontend`. Deployments
-and rollbacks must use only the canonical OCI index digest reference:
-
-```text
-ghcr.io/secpal/frontend@sha256:<oci-index-digest>
-```
-
-Publisher runs create one discovery tag with the format
-`build-<40-character-source-sha>-<run-id>-<run-attempt>`. That tag is not a
-deployment contract, rollback contract, or trust anchor and is not technically
-immutable against another authorized registry writer. The digest is the trust
-boundary.
-
-The multi-architecture image supports only `linux/amd64` and `linux/arm64`.
-Publishing generates and verifies a BuildKit SPDX SBOM, SLSA v1 provenance in
-`mode=max`, both runtime-platform contracts, both Chromium contracts, and a
-GitHub Artifact Attestation bound to the OCI index digest. The runtime remains
-a static, unprivileged `101:101` reference server without Node.js;
-`SECPAL_API_URL` is supplied only at startup. It does not publish Android or
-iOS artifacts and does not provide TLS or public-edge behavior.
-
-Frontend image publication is operationally verified. Publisher run
-`31247196734` built source commit
-`b755ca0d0ee5a85eca5ad5688d457241f070b1b4` and verified the canonical image
-`ghcr.io/secpal/frontend@sha256:cdccded2eade53d9300aafff3a2663a779d3d158cfa74f1e9c182e5786285077`.
-The linked public package passed an anonymous digest pull and independent final
-artifact-attestation verification. `SecPal/deployment#6` consumed the verified
-digest and closed `SecPal/deployment#3`, so Phase C is complete.
-
-### Customer-Owned Browser Web Push Rollout
-
-- Browser Web Push only works over HTTPS from the selected frontend deployment domain.
-- The service worker must be served and registered from the same origin and scope as the deployed app.
-- Supported browser rollout currently assumes a current Chrome, Edge, Firefox, or Safari release with Web Push and service-worker support.
-- Registrations are tied to the signed-in browser profile plus the selected deployment domain, so changing domains, service-worker scope, site data, or signing out can require re-enabling notifications.
-- The current frontend surface is intentionally limited to truthful backend-backed browser delivery state; category-by-category notification preferences are not part of the server contract yet.
-
-#### Live Browser Web Push Smoke
-
-Use the deployment-facing Playwright smoke to prove the real browser registration lifecycle against the selected HTTPS deployment:
-
-```bash
-export PLAYWRIGHT_BASE_URL="https://frontend-your-workspace.preview.secpal.dev"
-# Required when the API host cannot be derived from the selected frontend host.
-export PLAYWRIGHT_API_BASE_URL="https://api-your-workspace.preview.secpal.dev"
-# Required for live browser notification permission on deployment-facing HTTPS targets.
-export CHROME_PATH="/usr/bin/chromium"
-
-# Required for non-preview live targets such as app.secpal.dev.
-export TEST_USER_EMAIL="test@example.com"
-export TEST_USER_PASSWORD="password"
-
-npm run test:e2e:live:web-push
-```
-
-Required deployment and operator prerequisites:
-
-- `PLAYWRIGHT_BASE_URL` must point to the exact HTTPS frontend deployment you want to verify; the smoke refuses local HTTP targets.
-- `CHROME_PATH` must point to a stable system Chrome/Chromium binary; the bundled Playwright Chromium snapshot denies notification permission on live HTTPS targets.
-- The smoke runs in a headed persistent Chromium profile because deployment-facing Web Push subscription creation is rejected in Playwright's default ephemeral browser context. On headless Linux hosts, `npm run test:e2e:live:web-push` auto-starts `/usr/bin/Xvfb` when available.
-- The selected deployment must serve an active same-origin service worker for the app shell.
-- `GET /v1/bootstrap?client_platform=browser` must publish `notification_channels.web_push` with browser runtime metadata for that deployment.
-- The test user must be able to authenticate with browser-session login on the selected deployment.
-- For non-canonical hosts, set `PLAYWRIGHT_API_BASE_URL` explicitly so the smoke can reach the matching API deployment.
-- Run the smoke in desktop Chromium; the script already pins `--project=chromium` because notification permission and push diagnostics are collected there.
-
-What the smoke proves:
-
-- bootstrap metadata publication for `notification_channels.web_push`
-- granted browser notification permission under HTTPS with a same-origin service worker
-- authenticated `PUT /v1/me/notification-installations/{installationId}` registration
-- sign-out driven cleanup that hits the canonical `DELETE /v1/me/notification-installations/{installationId}` path and clears local browser push state
-
-The smoke fails with explicit diagnostics when bootstrap metadata is missing, the service worker/origin requirements are not met, or the registration/delete requests are rejected by the selected deployment.
-
-## 🌍 Internationalization (i18n)
-
-SecPal supports multiple languages using [Lingui](https://lingui.dev/) with checked-in `.po` catalogs.
-
-**Supported Languages:**
-
-- 🇬🇧 English (source)
-- 🇩🇪 German (Deutsch)
-
-**Translation Management:**
-
-```bash
-# Extract translatable strings from source code
-npm run lingui:extract
-
-# Compile translation catalogs for production
-npm run lingui:compile
-
-# Extract and compile the checked-in `.po` catalogs
-npm run sync
-
-# Extract, compile, and remove unused translations
-npm run sync:purge
-
-# Verify that the checked-in catalogs are fully in sync
-npm run i18n:check
-```
-
-**Workflow:**
-
-The checked-in Lingui `.po` catalogs are the source of truth. Update source strings with `npm run sync` or `npm run sync:purge`, then review and edit the resulting `.po` files directly or in a gettext editor such as POedit.
-Use `npm run i18n:check` before opening a PR when you touched translatable strings; the frontend test suite runs the same guard in CI so stale catalogs cannot merge silently.
-
-**Adding Translations:**
-
-```tsx
-import { Trans } from "@lingui/react/macro";
-
-// Simple text
-<Trans>Hello World</Trans>
-
-// With variables
-<Trans>Welcome, {userName}</Trans>
-```
-
-## 🎨 UI Components & Design System
-
-This project uses `src/ui` as the canonical shadcn/Base UI/Lucide layer for
-application UI components.
-
-**shadcn metadata:** `components.json` pins the Base UI `base-vega` style, TypeScript
-React output, Tailwind v4 CSS entry at `src/index.css`, the `zinc` base color,
-Lucide icons, and the canonical aliases (`@/ui`, `@/components`, `@/lib`,
-`@/hooks`, `@/lib/utils`).
-**Components:** Shared primitives, shell composition, route-specific prefixed
-helpers, and canonical `cn` live in `src/ui`. Production code must not import
-deprecated `src/components` UI wrappers, route-local UI barrels, or shared
-compatibility aliases; `tests/legacy-ui-guardrails.test.ts` keeps that
-inventory at zero.
-**Routing:** React Router v7 with client-side navigation
-**Typography:** Inter font family
-**Icons:** Lucide React
-**License:** AGPL-3.0-or-later
-**Architecture Notes:** [`src/ui/MIGRATION.md`](src/ui/MIGRATION.md)
-
-UI and UX work must build on the existing `src/ui`, shadcn/Base UI, Tailwind,
-and `lucide-react` building blocks. Do not introduce visual rebuilds of the same
-screens or controls in route-local components or native repositories when an
-existing frontend primitive can express the interaction.
-
-## 📋 Prerequisites
-
-- Node.js `^24.21.0` (`.nvmrc` pins major `24`; CI uses Node 24)
-- npm >= 10.0.0
-- Git with GPG signing configured
-
-## 🚀 Getting Started
-
-### Clone Repository
-
-```bash
-cd ~/code/SecPal
-git clone https://github.com/SecPal/frontend.git
-cd frontend
-```
-
-### Install Dependencies
-
-```bash
-npm install
-```
-
-### Setup Pre-Commit Hooks
-
-```bash
-./scripts/setup-pre-commit.sh
-```
-
-## 🛠️ Development
-
-### Start Development Server
-
-```bash
-npm run dev
-```
-
-### Build for Production
-
-```bash
-npm run build
-```
-
-### Run Tests
-
-```bash
-# Run all tests
 npm test
-
-# Run tests in watch mode
-npm run test:ui
-
-# Generate coverage report
-npm run test:coverage
-```
-
-### Code Quality
-
-```bash
-# Lint code
-npm run lint
-
-# Type checking
 npm run typecheck
-
-# Format code
-npm run format
-
-# Check formatting
-npm run format:check
+npm run lint
 ```
 
-### Pre-Push Validation
+See [CONTRIBUTING.md](CONTRIBUTING.md) for hooks, complete validation, and the
+pull-request workflow.
 
-**Before every push**, run the preflight script:
+## Documentation
 
-```bash
-# Fast mode (no tests, ~30s)
-./scripts/preflight.sh
+| Intent                                                  | Authority                                                                            |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Frontend architecture and UI components                 | [UI architecture](docs/ui-architecture.md)                                           |
+| Browser/native surface selection and packaging metadata | [App surfaces and build metadata](docs/app-surfaces.md)                              |
+| Route and access presentation                           | [Route access policy](docs/ROUTE_ACCESS_POLICY.md)                                   |
+| Frontend-owned CSP                                      | [Static CSP contract](docs/security/csp.md)                                          |
+| Browser Web Push validation                             | [Browser Web Push](docs/browser-web-push.md)                                         |
+| Frontend image and runtime API binding                  | [Frontend container](docs/deployment/frontend-container.md)                          |
+| Frontend/deployment ownership boundary                  | [Frontend delivery boundary](docs/deployment-spa-routing.md)                         |
+| Development, validation, and testing                    | [Contributing](CONTRIBUTING.md) and [TDD workflow](docs/development/TDD_WORKFLOW.md) |
+| Public API contract                                     | [SecPal/contracts](https://github.com/SecPal/contracts)                              |
+| Self-hosting and deployment                             | [SecPal/deployment](https://github.com/SecPal/deployment)                            |
 
-# With tests (~2-5 min)
-PREFLIGHT_RUN_TESTS=1 ./scripts/preflight.sh
-```
+## Related repositories
 
-⚡ **Performance:** Tests are skipped by default for faster workflow. Tests always run in CI.
+- [SecPal/api](https://github.com/SecPal/api) — server-side authentication,
+  authorization, persistence, and business behavior.
+- [SecPal/contracts](https://github.com/SecPal/contracts) — public OpenAPI
+  contract shared by clients and the API.
+- [SecPal/android](https://github.com/SecPal/android) — Android packaging,
+  native authentication transport, secure platform storage, and OS integration.
+- [SecPal/deployment](https://github.com/SecPal/deployment) — public integration,
+  self-hosting, runtime composition, and deployment contracts.
 
-This runs:
+## Contributing
 
-- ✅ Prettier formatting check
-- ✅ Markdownlint
-- ✅ REUSE compliance
-- ✅ ESLint
-- ✅ TypeScript type checking
-- ⏭️ Tests (skipped by default, run in CI)
-- ✅ Advisory PR-size reporting (600-line reviewability threshold)
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and the
+[Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
 
-## 📁 Project Structure
+## Security
 
-```text
-frontend/
-├── src/
-│   ├── components/     # React components
-│   ├── hooks/          # Custom hooks
-│   ├── pages/          # Page components
-│   ├── services/       # API services
-│   ├── types/          # TypeScript types
-│   ├── utils/          # Utility functions
-│   ├── App.tsx         # Root component
-│   └── main.tsx        # Entry point
-├── public/             # Static assets
-├── tests/              # Test files
-├── .github/            # GitHub workflows and templates
-├── scripts/            # Build and utility scripts
-└── package.json        # Dependencies and scripts
-```
+Do not report vulnerabilities in public issues. Follow the private reporting
+process in [SECURITY.md](SECURITY.md).
 
-## 🧪 Testing Guidelines
+## License
 
-- **Coverage target:** 80%+ for new code, 100% for critical paths
-- **TDD mandatory:** Write failing test first, implement, refactor
-- Use `@testing-library/react` for component testing
-- Mock API calls with MSW (Mock Service Worker)
-- Test user-visible behavior, not implementation
-
-## 🔒 Security
-
-- **Secret scanning:** Enabled with push protection
-- **Dependabot:** Daily security updates (04:00 CET)
-- **SAST:** CodeQL analysis on pull requests
-- **Never commit:** API keys, passwords, tokens, `.env` files
-
-See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
-
-## 📝 Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-**Quick Links:**
-
-- **TDD Workflow**: [docs/development/TDD_WORKFLOW.md](docs/development/TDD_WORKFLOW.md) - Learn how to practice Test-Driven Development with Git verification
-- **AI Instructions**: [AGENTS.md](AGENTS.md) - authoritative AI development guidelines
-- **Copilot Compatibility Mirror**: [.github/copilot-instructions.md](.github/copilot-instructions.md) - compatibility path for tools that auto-load GitHub Copilot instructions
-
-**Key Requirements:**
-
-- Test-Driven Development (TDD) is **mandatory** - tests must be written before implementation
-- PR size is reported against an advisory 600-line reviewability threshold
-- One PR = one topic (no mixing features/fixes/docs)
-- All commits must be GPG-signed
-
-### Branch Naming Convention
-
-- `feature/` - New features
-- `fix/` - Bug fixes
-- `docs/` - Documentation
-- `refactor/` - Code refactoring
-- `test/` - Test additions/fixes
-- `chore/` - Maintenance
-- `spike/` - Exploration (no TDD required, cannot merge to main)
-
-### Commit Messages
-
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```text
-feat: add user authentication
-fix: resolve memory leak in dashboard
-docs: update API integration guide
-test: add tests for login form
-```
-
-## 🤖 Automation
-
-This repository uses automated project board management. Issues and PRs are automatically added to the [SecPal Roadmap](https://github.com/orgs/SecPal/projects/1) with status based on labels and PR state.
-
-**Quick Start:**
-
-```bash
-# Create issue (auto-added to project board)
-gh issue create --label "enhancement" --title "..."
-
-# Draft PR workflow (recommended)
-gh pr create --draft --body "Closes #123"  # → 🚧 In Progress
-gh pr ready <PR>                            # → 👀 In Review
-gh pr merge <PR> --squash                   # → ✅ Done
-```
-
-See [Project Automation docs](https://github.com/SecPal/.github/blob/main/docs/workflows/PROJECT_AUTOMATION.md) for details.
-
-## 📜 License
-
-**AGPL-3.0-or-later** - See [LICENSE](LICENSE) for details.
-
-This project is REUSE 3.3 compliant. All files contain SPDX license headers.
-
-## 🔗 Related Repositories
-
-- [Contracts](https://github.com/SecPal/contracts) - OpenAPI 3.1 specifications
-- [.github](https://github.com/SecPal/.github) - Organization-wide settings and documentation
-- [api](https://github.com/SecPal/api) - Laravel backend
-
-## 📞 Support
-
-- **Issues:** [GitHub Issues](https://github.com/SecPal/frontend/issues)
-- **Security:** See [SECURITY.md](SECURITY.md)
-- **Code of Conduct:** [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
-
----
-
-**Maintained by:** SecPal Team
+Repository-owned frontend code is licensed under `AGPL-3.0-or-later` where
+indicated. File-level SPDX and [REUSE](REUSE.toml) metadata is authoritative;
+see [LICENSE](LICENSE) for the license text.
