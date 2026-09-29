@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Adapted DOM matcher setup and the Chai dependency check for Vitest 5.
 - Adopted Node.js 26 for local development, CI, frontend builds, and container
   construction, with Node.js 26.10.0 as the exact reproducible baseline for
   container paths and Node 26-aligned TypeScript types.

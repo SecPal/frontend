@@ -711,7 +711,7 @@ jobs:
     };
 
     const expectedChaiRange =
-      packageLock.packages["node_modules/@vitest/expect"]?.dependencies?.chai;
+      packageLock.packages["node_modules/vitest"]?.dependencies?.chai;
 
     expect(expectedChaiRange).toBeDefined();
     expect(packageJson.devDependencies?.chai).toBe(expectedChaiRange);
