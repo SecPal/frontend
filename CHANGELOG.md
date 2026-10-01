@@ -109,6 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Updated transitive `fast-uri` to a patched release and constrained future
+  installs to a secure 3.x version range.
 - Rebuilt the SecPal shield from a clean vector source while preserving its
   shape and blue sweep; regenerated light and dark logos, self-contained SVGs,
   square favicons, the Safari mask, correctly sized PWA and Apple icons, and a

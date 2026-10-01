@@ -184,6 +184,7 @@
     "ws@^8.0.0": "^8.21.0",
     "esbuild": "^0.28.1",
     "@sentry/node": "^10.54.0",
+    "fast-uri": "^3.1.8",
     "js-yaml": ">=5.4.1",
     "@lingui/core": "$@lingui/core"
   },
