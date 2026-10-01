@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState, useCallback, useContext, useEffect, useRef } from "react";
+import {
+  DEFAULT_NOTIFICATION_BADGE,
+  DEFAULT_NOTIFICATION_ICON,
+} from "../lib/notificationAssets";
 import { AuthContext } from "../contexts/auth-context";
 import {
   urlBase64ToUint8Array,
@@ -572,8 +576,8 @@ export function useNotifications(
         if (registration && registration.showNotification) {
           await registration.showNotification(options.title, {
             body: options.body,
-            icon: options.icon || "/pwa-192x192.png",
-            badge: options.badge || "/pwa-192x192.png",
+            icon: options.icon || DEFAULT_NOTIFICATION_ICON,
+            badge: options.badge || DEFAULT_NOTIFICATION_BADGE,
             tag: options.tag,
             requireInteraction: options.requireInteraction,
             data: options.data,
@@ -582,7 +586,7 @@ export function useNotifications(
           // Fallback to regular notification
           new Notification(options.title, {
             body: options.body,
-            icon: options.icon || "/pwa-192x192.png",
+            icon: options.icon || DEFAULT_NOTIFICATION_ICON,
             tag: options.tag,
             requireInteraction: options.requireInteraction,
             data: options.data,

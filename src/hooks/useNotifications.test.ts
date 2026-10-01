@@ -371,7 +371,7 @@ describe("useNotifications", () => {
         expect.objectContaining({
           body: "This is a test",
           icon: "/pwa-192x192.png",
-          badge: "/pwa-192x192.png",
+          badge: "/pwa-badge-96x96.png",
         })
       );
     });
