@@ -13,8 +13,13 @@ path = "public/**"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
 
 [[annotations]]
-path = ["public/logo-*.png", "public/logo-*.svg", "public/favicon-*.png", "public/favicon-*.ico", "public/pwa-*.png", "public/apple-touch-icon*.png", "public/mask-icon.svg"]
+path = ["public/logo-*.png", "public/logo-light.svg", "public/logo-dark.svg", "public/favicon-*.png", "public/favicon-*.ico", "public/pwa-192x192*.png", "public/pwa-512x512*.png", "public/apple-touch-icon*.png", "public/mask-icon.svg"]
 SPDX-FileCopyrightText = "2025-2026 SecPal Contributors"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
+
+[[annotations]]
+path = "public/pwa-badge-96x96.png"
+SPDX-FileCopyrightText = "2026 SecPal Contributors"
 SPDX-License-Identifier = "AGPL-3.0-or-later"
 
 [[annotations]]

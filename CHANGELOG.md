@@ -109,6 +109,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Rebuilt the SecPal shield from a clean vector source while preserving its
+  shape and blue sweep; regenerated light and dark logos, self-contained SVGs,
+  square favicons, the Safari mask, correctly sized PWA and Apple icons, and a
+  transparent notification badge.
 - Updated the development YAML parser to a version that limits CPU use when
   processing repeated empty merge sources.
 

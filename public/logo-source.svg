@@ -1,6 +1,6 @@
-<!-- SPDX-FileCopyrightText: 2025-2026 SecPal Contributors -->
+<!-- SPDX-FileCopyrightText: 2026 SecPal Contributors -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
-<svg xmlns="http://www.w3.org/2000/svg" width="816" height="757" viewBox="104 134 816 757" class="light" role="img" aria-labelledby="title description">
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" class="source" role="img" aria-labelledby="title description">
   <title id="title">SecPal</title>
   <desc id="description">Shield with a V-shaped crossbar and a blue sweep.</desc>
   <defs>
@@ -28,6 +28,8 @@
     </linearGradient>
   </defs>
   <use href="#shield" fill="#202124" mask="url(#openings)"/>
+  <use class="panel" href="#upper-opening" fill="#fff"/>
+  <use class="panel" href="#lower-opening" fill="#fff"/>
   <g clip-path="url(#lower-clip)">
     <path id="blue-sweep" d="M188 417 C292 467 406 519 512 553 C449 573 391 579 330 578 C376 679 471 754 589 783 C564 797 538 809 512 821 C326 733 211 583 188 417 Z" fill="url(#blue-base)"/>
     <path d="M188 417 C216 430 247 447 283 466 C296 509 312 551 330 578 C290 577 259 570 238 555 C213 506 197 459 188 417 Z" fill="url(#blue-top)"/>

@@ -34,7 +34,7 @@ const LIGHT_LOGO_RASTER = {
 const DARK_LOGO_RASTER = {
   src: "/logo-dark-128.png",
   width: 128,
-  height: 118,
+  height: 119,
 } as const;
 
 export function Logo({ className = "", size = "64" }: LogoProps) {

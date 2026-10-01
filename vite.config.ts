@@ -261,8 +261,9 @@ export default defineConfig(({ mode, command }) => {
         filename: "sw.ts",
         injectRegister: false,
         includeAssets: [
-          "favicon.ico",
-          "apple-touch-icon-v7.png",
+          "favicon-light.ico",
+          "favicon-dark.ico",
+          "apple-touch-icon.png",
           "mask-icon.svg",
         ],
         manifest: {
@@ -270,23 +271,35 @@ export default defineConfig(({ mode, command }) => {
           short_name: "SecPal",
           description:
             "Operations software for German private security services.",
-          theme_color: "#ffffff",
+          theme_color: "#52525b",
           background_color: "#52525b",
           display: "standalone",
           scope: "/",
           start_url: "/",
           icons: [
             {
+              src: "pwa-192x192.png",
+              sizes: "192x192",
+              type: "image/png",
+              purpose: "any",
+            },
+            {
+              src: "pwa-512x512.png",
+              sizes: "512x512",
+              type: "image/png",
+              purpose: "any",
+            },
+            {
               src: "pwa-192x192-maskable.png",
               sizes: "192x192",
               type: "image/png",
-              purpose: "any maskable",
+              purpose: "maskable",
             },
             {
               src: "pwa-512x512-maskable.png",
               sizes: "512x512",
               type: "image/png",
-              purpose: "any maskable",
+              purpose: "maskable",
             },
           ],
           shortcuts: [

@@ -4,6 +4,10 @@
 /// <reference lib="webworker" />
 
 import { clientsClaim } from "workbox-core";
+import {
+  DEFAULT_NOTIFICATION_BADGE,
+  DEFAULT_NOTIFICATION_ICON,
+} from "./lib/notificationAssets";
 import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
 import { registerRoute, NavigationRoute } from "workbox-routing";
 import { CacheFirst, NetworkFirst } from "workbox-strategies";
@@ -167,8 +171,8 @@ self.addEventListener("push", (event: PushEvent) => {
     actions?: Array<{ action: string; title: string }>;
   } = {
     body: payload.body,
-    icon: payload.icon || "/pwa-192x192.png",
-    badge: payload.badge || "/pwa-192x192.png",
+    icon: payload.icon || DEFAULT_NOTIFICATION_ICON,
+    badge: payload.badge || DEFAULT_NOTIFICATION_BADGE,
     tag: payload.tag || "default",
     requireInteraction: payload.requireInteraction || false,
     data: createNotificationData(payload),
