@@ -15,6 +15,10 @@ import { fileURLToPath } from "node:url";
 import { JSDOM } from "jsdom";
 import { load } from "js-yaml";
 import { describe, it, expect } from "vitest";
+import {
+  DEFAULT_NOTIFICATION_BADGE,
+  DEFAULT_NOTIFICATION_ICON,
+} from "../src/lib/notificationAssets";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..");
@@ -472,20 +476,10 @@ describe("Build Configuration and Source Verification", () => {
       ).toBe(document.defaultView!.Node.DOCUMENT_POSITION_FOLLOWING);
       expectStrictBuildAssets(distRoot);
 
-      const referencedNotificationIcons = [
-        "src/hooks/useNotifications.ts",
-        "src/sw.ts",
-      ].flatMap((sourcePath) =>
-        Array.from(
-          readRepoFile(sourcePath).matchAll(
-            /["'](\/pwa-[^"']+\.(?:png|svg))["']/gu
-          ),
-          (match) => match[1]
-        )
-      );
-
-      expect(referencedNotificationIcons.length).toBeGreaterThan(0);
-      for (const iconPath of new Set(referencedNotificationIcons)) {
+      for (const iconPath of [
+        DEFAULT_NOTIFICATION_ICON,
+        DEFAULT_NOTIFICATION_BADGE,
+      ]) {
         expect(existsSync(path.join(distRoot, iconPath.slice(1)))).toBe(true);
       }
     } finally {
