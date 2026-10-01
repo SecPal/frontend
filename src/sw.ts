@@ -168,7 +168,7 @@ self.addEventListener("push", (event: PushEvent) => {
   } = {
     body: payload.body,
     icon: payload.icon || "/pwa-192x192.png",
-    badge: payload.badge || "/pwa-192x192.png",
+    badge: payload.badge || "/pwa-badge-96x96.png",
     tag: payload.tag || "default",
     requireInteraction: payload.requireInteraction || false,
     data: createNotificationData(payload),
