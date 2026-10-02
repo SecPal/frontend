@@ -141,7 +141,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "@vitest/coverage-v8": "^5.0.2",
     "@vitest/ui": "^5.0.2",
-    "caniuse-lite": "^1.0.30001812",
+    "caniuse-lite": "^1.0.30001813",
     "chai": "^6.2.2",
     "cross-env": "^10.1.0",
     "eslint": "^10.11.0",
