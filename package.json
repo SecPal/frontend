@@ -142,7 +142,7 @@
     "@vitest/coverage-v8": "^5.0.3",
     "@vitest/ui": "^5.0.3",
     "caniuse-lite": "^1.0.30001814",
-    "chai": "^6.2.2",
+    "chai": "^6.3.0",
     "cross-env": "^10.1.0",
     "eslint": "^10.11.0",
     "eslint-plugin-react-hooks": "^7.1.1",
