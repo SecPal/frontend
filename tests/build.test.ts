@@ -614,7 +614,14 @@ describe("Build Configuration and Source Verification", () => {
 
     expect(references.length).toBeGreaterThan(0);
     for (const { reference } of references) {
-      expect(reference).toMatch(/@[0-9a-f]{40}$/u);
+      if (reference.startsWith("./")) {
+        // This repository-local workflow is bound to the exact caller commit.
+        expect(reference).toBe(
+          "./.github/workflows/reusable-repository-security.yml"
+        );
+      } else {
+        expect(reference).toMatch(/@[0-9a-f]{40}$/u);
+      }
     }
   });
 
@@ -666,6 +673,11 @@ jobs:
 
     expect(references.length).toBeGreaterThan(0);
     for (const { reference, reviewComment } of references) {
+      if (
+        reference === "./.github/workflows/reusable-repository-security.yml"
+      ) {
+        continue;
+      }
       expect(reviewComment, reference).toMatch(
         /^(?:main|v\d+(?:\.\d+)*)(?:\b|;)/u
       );

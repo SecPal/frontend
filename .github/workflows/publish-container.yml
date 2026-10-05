@@ -17,6 +17,12 @@ env:
   CANONICAL_IMAGE: ghcr.io/secpal/frontend
 
 jobs:
+  repository-security:
+    name: Repository Security
+    uses: ./.github/workflows/reusable-repository-security.yml
+    permissions:
+      contents: read
+
   validate:
     name: Validate Frontend Image
     runs-on: ubuntu-latest
@@ -48,6 +54,7 @@ jobs:
           tests/node-toolchain-contract.test.ts
           tests/container-runtime-lifecycle.test.ts
           tests/container-publishing-workflow.test.ts
+          tests/repository-security-workflow.test.ts
           tests/container-contract.test.ts
 
       - name: Lint Dockerfile
@@ -67,7 +74,7 @@ jobs:
 
   publish:
     name: Publish Frontend Image
-    needs: validate
+    needs: [validate, repository-security]
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:

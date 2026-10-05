@@ -50,5 +50,11 @@ USER 101:101
 EXPOSE 8080
 STOPSIGNAL SIGTERM
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD response="$(curl --disable --fail --silent --show-error --noproxy '*' \
+        --connect-timeout 2 --max-time 3 --write-out ':%{http_code}' \
+        http://127.0.0.1:8080/health/live)" \
+        && test "$response" = '{"status":"ok"}:200'
+
 ENTRYPOINT ["/usr/local/bin/secpal-entrypoint"]
 CMD ["nginx", "-g", "daemon off;"]

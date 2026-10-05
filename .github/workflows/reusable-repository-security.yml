@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: 2026 SecPal Contributors
+# SPDX-License-Identifier: CC0-1.0
+
+---
+name: Repository Source Security
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  repository-security:
+    name: Repository Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact frontend commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Scan repository source
+        id: scan
+        # main; accepted scanner and reviewed policy (SecPal/.github#711, #1138).
+        uses: SecPal/.github/.github/actions/trivy-repository-scan@a41b484ac5b7bbf1107775e55f4d1b6c44ac5e8f
+
+      - name: Require clean repository evidence
+        env:
+          GATE_STATE: ${{ steps.scan.outputs.gate-state }}
+        run: |
+          set -euo pipefail
+          if [ "${GATE_STATE:-}" != "CLEAN" ]; then
+            echo "Repository source security acceptance failed." >&2
+            exit 1
+          fi

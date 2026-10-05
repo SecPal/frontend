@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added the pinned organization Trivy repository scan to PR/main quality checks
+  and as a mandatory pre-publication gate for the exact frontend commit. Only
+  fresh `CLEAN` repository evidence is accepted; source dependency,
+  configuration, and redacted secret evidence remains separate from existing
+  OCI image, SBOM, provenance, runtime, and attestation verification.
+- Added a bounded frontend container healthcheck using the runtime image's
+  existing curl binary and established localhost `/health/live` response,
+  preserving the unprivileged, read-only runtime contract.
 - Added deterministic `build-metadata.json` artifacts that expose the resolved
   application surface and build classification for downstream native packaging
   verification without inspecting optimized JavaScript.
