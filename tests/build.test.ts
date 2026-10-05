@@ -14,6 +14,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { JSDOM } from "jsdom";
 import { load } from "js-yaml";
+import { satisfies, subset, validRange } from "semver";
 import { describe, it, expect } from "vitest";
 import {
   DEFAULT_NOTIFICATION_BADGE,
@@ -690,7 +691,7 @@ jobs:
     expect(packageLock.packages?.[""]?.license).toBe(packageJson.license);
   });
 
-  it("declares Chai for Vitest's assertion package", () => {
+  it("declares a compatible Chai dependency for Vitest's assertion package", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
       devDependencies?: Record<string, string>;
     };
@@ -698,21 +699,29 @@ jobs:
       packages: Record<
         string,
         {
+          version?: string;
           dependencies?: Record<string, string>;
           devDependencies?: Record<string, string>;
         }
       >;
     };
 
-    const expectedChaiRange =
-      packageLock.packages["node_modules/vitest"]?.dependencies?.chai;
+    const declaredChaiRange = packageJson.devDependencies?.chai ?? "";
+    const vitestChaiRange =
+      packageLock.packages["node_modules/vitest"]?.dependencies?.chai ?? "";
+    const lockedChaiVersion =
+      packageLock.packages["node_modules/chai"]?.version ?? "";
 
-    expect(expectedChaiRange).toBeDefined();
-    expect(packageJson.devDependencies?.chai).toBe(expectedChaiRange);
+    expect(declaredChaiRange).not.toBe("");
+    expect(vitestChaiRange).not.toBe("");
+    expect(validRange(declaredChaiRange)).not.toBeNull();
+    expect(validRange(vitestChaiRange)).not.toBeNull();
+    expect(subset(declaredChaiRange, vitestChaiRange)).toBe(true);
     expect(packageLock.packages[""]?.devDependencies?.chai).toBe(
-      expectedChaiRange
+      declaredChaiRange
     );
-    expect(packageLock.packages["node_modules/chai"]).toBeDefined();
+    expect(satisfies(lockedChaiVersion, declaredChaiRange)).toBe(true);
+    expect(satisfies(lockedChaiVersion, vitestChaiRange)).toBe(true);
   });
 
   it("keeps the July 2026 dependency remediations upgradeable", () => {
