@@ -1,11 +1,13 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { spawnSync } from "node:child_process";
+import { execFile, spawnSync } from "node:child_process";
+import { createServer } from "node:http";
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 
 const repoRoot = path.resolve(
@@ -18,6 +20,64 @@ function readRepoFile(relativePath: string): string {
 }
 
 describe("frontend container source contract", () => {
+  it.each([
+    [200, '{"status":"ok"}', true],
+    [200, '{"status":"unhealthy"}', false],
+    [302, '{"status":"ok"}', false],
+    [503, '{"status":"ok"}', false],
+  ])(
+    "uses bounded localhost liveness for HTTP %i and body %s",
+    async (status, body, healthy) => {
+      const dockerfile = readRepoFile("Dockerfile");
+      const instruction = dockerfile.match(
+        /^HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \\\n(?<probe>[^]*?)\n\n/mu
+      );
+      expect(instruction?.groups?.probe).toBeDefined();
+      const probe = instruction!
+        .groups!.probe!.replace(/\\\n\s*/gu, " ")
+        .trim()
+        .replace(/^CMD /u, "");
+      expect(probe).toContain(
+        "curl --disable --fail --silent --show-error --noproxy '*'"
+      );
+      expect(probe).toContain("--connect-timeout 2 --max-time 3");
+      expect(probe).toContain("http://127.0.0.1:8080/health/live");
+      const server = createServer((request, response) => {
+        expect(request.url).toBe("/health/live");
+        response.writeHead(status, { "Content-Type": "application/json" });
+        response.end(body);
+      });
+      await new Promise<void>((resolve) =>
+        server.listen(0, "127.0.0.1", resolve)
+      );
+      const address = server.address();
+      expect(address && typeof address !== "string").toBe(true);
+      const port = (address as { port: number }).port;
+      try {
+        const result = await promisify(execFile)(
+          "sh",
+          ["-c", probe.replace("127.0.0.1:8080", `127.0.0.1:${port}`)],
+          {
+            env: {
+              ...process.env,
+              http_proxy: "http://127.0.0.1:1",
+              ALL_PROXY: "http://127.0.0.1:1",
+            },
+            timeout: 5000,
+          }
+        ).then(
+          () => true,
+          () => false
+        );
+        expect(result).toBe(healthy);
+      } finally {
+        await new Promise<void>((resolve, reject) =>
+          server.close((error) => (error ? reject(error) : resolve()))
+        );
+      }
+    }
+  );
+
   it("keeps source-imported test helpers inside the container build context", () => {
     const dockerignore = readRepoFile(".dockerignore");
     const authContextTest = readRepoFile("src/contexts/AuthContext.test.tsx");

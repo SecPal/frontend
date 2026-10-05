@@ -151,6 +151,12 @@ docker exec "$CONTAINER_A" \
 assert_status "$PORT_A" "/health/live" "200"
 [ "$(curl --fail --silent "http://127.0.0.1:${PORT_A}/health/live")" = '{"status":"ok"}' ] ||
   fail "health response body drifted"
+[ "$(docker inspect --format '{{index .Config.Healthcheck.Test 0}}' "$CONTAINER_A")" = "CMD-SHELL" ] ||
+  fail "image has no shell healthcheck"
+HEALTHCHECK_COMMAND=$(docker inspect --format '{{index .Config.Healthcheck.Test 1}}' "$CONTAINER_A")
+[ -n "$HEALTHCHECK_COMMAND" ] || fail "image healthcheck command is empty"
+docker exec "$CONTAINER_A" /bin/sh -c "$HEALTHCHECK_COMMAND" ||
+  fail "configured healthcheck failed in the read-only runtime"
 
 INDEX_A="$TEMP_DIR/index-a.html"
 INDEX_B="$TEMP_DIR/index-b.html"

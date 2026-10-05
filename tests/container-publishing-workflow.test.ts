@@ -548,7 +548,9 @@ describe("frontend container publishing workflow", () => {
   });
 
   it("validates before publishing, verifies before attesting, and exports canonical metadata", () => {
-    expect(jobBlock(workflow, "publish")).toContain("needs: validate");
+    const publish = jobBlock(workflow, "publish");
+    expect(publish).toContain("needs: [validate, repository-security]");
+    expect(publish).not.toMatch(/^ {4}(?:if|continue-on-error):/mu);
     expect(jobBlock(workflow, "verify")).toContain("needs: publish");
     expect(jobBlock(workflow, "attest")).toContain("needs: [publish, verify]");
     expect(workflow).toContain("name: Validate Frontend Image");
@@ -585,7 +587,14 @@ describe("frontend container publishing workflow", () => {
 
   it("pins every action and supply-chain tool to an immutable identity", () => {
     for (const reference of actionReferences(workflow)) {
-      expect(reference).toMatch(/@[0-9a-f]{40}$/u);
+      if (reference.startsWith("./")) {
+        // Local reusable workflows execute from the same exact caller commit.
+        expect(reference).toBe(
+          "./.github/workflows/reusable-repository-security.yml"
+        );
+      } else {
+        expect(reference).toMatch(/@[0-9a-f]{40}$/u);
+      }
     }
 
     expect(workflow).toContain("version: v0.36.0");
