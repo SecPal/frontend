@@ -78,7 +78,71 @@ function staticCopySources(): string[] {
   return paths;
 }
 
+function buildToolImports(filename: string, content: string): string[] {
+  const file = ts.createSourceFile(
+    filename,
+    content,
+    ts.ScriptTarget.Latest,
+    true
+  );
+  const imports: string[] = [];
+  function visit(node: ts.Node): void {
+    let specifier: ts.Expression | undefined;
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+      specifier = node.moduleSpecifier;
+    } else if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword
+    ) {
+      specifier = node.arguments[0];
+      if (!specifier || !ts.isStringLiteralLike(specifier)) {
+        imports.push("<nonliteral dynamic import>");
+      }
+    }
+    if (
+      specifier &&
+      ts.isStringLiteralLike(specifier) &&
+      /^(?:braces|micromatch|chokidar|vite-plugin-static-copy|@lingui\/cli)(?:\/|$)/u.test(
+        specifier.text
+      )
+    ) {
+      imports.push(specifier.text);
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(file);
+  return imports;
+}
+
 describe("reviewed frontend braces reachability boundaries", () => {
+  it.each([
+    "braces",
+    "braces/lib/parse",
+    "micromatch",
+    "chokidar",
+    "vite-plugin-static-copy",
+    "@lingui/cli",
+  ])("detects runtime dynamic imports of %s", (specifier) => {
+    expect(
+      buildToolImports(
+        "runtime.ts",
+        `void import(${JSON.stringify(specifier)});`
+      )
+    ).toEqual([specifier]);
+    expect(
+      buildToolImports("runtime.ts", "void import(`" + specifier + "`);")
+    ).toEqual([specifier]);
+  });
+
+  it("rejects dynamic imports whose target cannot be statically verified", () => {
+    expect(buildToolImports("runtime.ts", "void import(packageName);")).toEqual(
+      ["<nonliteral dynamic import>"]
+    );
+    expect(
+      buildToolImports("runtime.ts", 'void import("./routeModules");')
+    ).toEqual([]);
+  });
+
   it("keeps braces out of the production dependency and browser import closures", () => {
     const lock = JSON.parse(source("package-lock.json")) as {
       packages: Record<string, { dev?: boolean }>;
@@ -116,26 +180,9 @@ describe("reviewed frontend braces reachability boundaries", () => {
         (name) => !name.endsWith(".test.ts") && !name.endsWith(".test.tsx")
       );
     for (const filename of files) {
-      const file = ts.createSourceFile(
-        filename,
-        source(filename),
-        ts.ScriptTarget.Latest,
-        true
+      expect(buildToolImports(filename, source(filename)), filename).toEqual(
+        []
       );
-      function visit(node: ts.Node): void {
-        if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
-          if (
-            node.moduleSpecifier &&
-            ts.isStringLiteral(node.moduleSpecifier)
-          ) {
-            expect(node.moduleSpecifier.text, filename).not.toMatch(
-              /^(?:braces|micromatch|chokidar|vite-plugin-static-copy|@lingui\/cli)(?:\/|$)/u
-            );
-          }
-        }
-        ts.forEachChild(node, visit);
-      }
-      visit(file);
     }
   });
 

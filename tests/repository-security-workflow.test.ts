@@ -69,6 +69,21 @@ describe("pre-publication repository source security", () => {
     expect(publish).not.toHaveProperty("continue-on-error");
   });
 
+  it("checks the reviewed exception reachability assumptions before publication", () => {
+    const validation = readWorkflow(".github/workflows/publish-container.yml")
+      .jobs.validate;
+    const contract = validation.steps.find(
+      (step) => step.name === "Run container publishing and source policy tests"
+    );
+    expect(contract?.run).toContain(
+      "tests/repository-security-reachability.test.ts"
+    );
+    expect(validation).not.toHaveProperty("if");
+    expect(validation).not.toHaveProperty("continue-on-error");
+    expect(contract).not.toHaveProperty("if");
+    expect(contract).not.toHaveProperty("continue-on-error");
+  });
+
   it("uses the immutable central Action on the exact clean target with read-only authority", () => {
     const workflow = readWorkflow(reusablePath);
     expect(workflow.on).toEqual({ workflow_call: null });

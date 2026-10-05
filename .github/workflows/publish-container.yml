@@ -55,6 +55,7 @@ jobs:
           tests/container-runtime-lifecycle.test.ts
           tests/container-publishing-workflow.test.ts
           tests/repository-security-workflow.test.ts
+          tests/repository-security-reachability.test.ts
           tests/container-contract.test.ts
 
       - name: Lint Dockerfile
