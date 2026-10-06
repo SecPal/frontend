@@ -144,7 +144,7 @@
     "caniuse-lite": "^1.0.30001814",
     "chai": "^6.3.0",
     "cross-env": "^10.1.0",
-    "eslint": "^10.11.0",
+    "eslint": "^10.12.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.7",
     "fake-indexeddb": "^6.2.5",
