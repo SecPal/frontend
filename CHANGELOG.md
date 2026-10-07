@@ -117,6 +117,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Updated vulnerable development dependencies `tinypool`, `source-map-js`,
+  `katex`, and `smol-toml` to patched versions, with scoped overrides for the
+  Markdown tooling dependencies whose upstream ranges exclude the fixes.
+
 - Check Chai dependency compatibility using SemVer ranges and the locked
   version so compatible updates do not fail the build and CSP checks.
 - Updated transitive `fast-uri` to a patched release and constrained future
