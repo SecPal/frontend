@@ -186,6 +186,12 @@
     "@sentry/node": "^10.54.0",
     "fast-uri": "^3.1.8",
     "js-yaml": ">=5.4.1",
+    "micromark-extension-math": {
+      "katex": "^0.18.2"
+    },
+    "markdownlint-cli": {
+      "smol-toml": "^1.9.0"
+    },
     "@lingui/core": "$@lingui/core"
   },
   "engines": {
