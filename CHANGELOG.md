@@ -117,6 +117,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Repository security workflow validation now requires the central Trivy Action
+  with a full immutable commit SHA instead of duplicating a specific revision,
+  allowing pinned dependency updates while preserving the security gate checks.
 - Updated vulnerable development dependencies `tinypool`, `source-map-js`,
   `katex`, and `smol-toml` to patched versions, with scoped overrides for the
   Markdown tooling dependencies whose upstream ranges exclude the fixes.
