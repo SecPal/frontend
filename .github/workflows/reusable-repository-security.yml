@@ -27,7 +27,7 @@ jobs:
       - name: Scan repository source
         id: scan
         # main; accepted scanner and reviewed policy (SecPal/.github#711, #1138).
-        uses: SecPal/.github/.github/actions/trivy-repository-scan@2833ffa56f160111ef685fcbda1406ba417d79c0
+        uses: SecPal/.github/.github/actions/trivy-repository-scan@f8cabffc336002e72bb7a25ef40331fc58b0e83d
 
       - name: Require clean repository evidence
         env:
