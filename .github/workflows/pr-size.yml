@@ -15,6 +15,6 @@ jobs:
   pr-size:
     name: Check PR Size
     # main; keep this immutable; Dependabot updates reusable-workflow references.
-    uses: SecPal/.github/.github/workflows/reusable-pr-size.yml@2833ffa56f160111ef685fcbda1406ba417d79c0
+    uses: SecPal/.github/.github/workflows/reusable-pr-size.yml@f8cabffc336002e72bb7a25ef40331fc58b0e83d
     with:
       max-lines: 600
