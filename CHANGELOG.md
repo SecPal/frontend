@@ -117,6 +117,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Lighthouse workflow regression coverage now checks the upload action and full
+  commit-SHA pin without duplicating its version, allowing Dependabot updates
+  while preserving artifact-link validation.
 - Repository security workflow validation now requires the central Trivy Action
   with a full immutable commit SHA instead of duplicating a specific revision,
   allowing pinned dependency updates while preserving the security gate checks.

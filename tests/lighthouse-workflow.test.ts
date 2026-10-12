@@ -50,9 +50,7 @@ describe("Lighthouse workflow report comment", () => {
   it("links pull-request readers directly to the uploaded report artifact", async () => {
     const uploadStep = getWorkflowStep("Upload Lighthouse report");
     expect(uploadStep.id).toBe("upload_lighthouse_artifact");
-    expect(uploadStep.uses).toBe(
-      "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
-    );
+    expect(uploadStep.uses).toMatch(/^actions\/upload-artifact@[a-f0-9]{40}$/u);
     expect(uploadStep.if).toBe("${{ always() }}");
     expect(uploadStep.with).toMatchObject({
       "if-no-files-found": "error",
