@@ -122,7 +122,7 @@
     "@lingui/cli": "^6.9.0",
     "@lingui/format-po": "^6.4.0",
     "@lingui/vite-plugin": "^6.9.0",
-    "@playwright/test": "^1.63.0",
+    "@playwright/test": "^1.64.0",
     "@resvg/resvg-js": "2.6.2",
     "@rolldown/plugin-babel": "^0.2.4",
     "@tailwindcss/vite": "^4.3.3",
