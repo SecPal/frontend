@@ -23,18 +23,11 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
 const { load } = createRequire(import.meta.url)("js-yaml");
-const pin = "a41b484ac5b7bbf1107775e55f4d1b6c44ac5e8f";
+const pin = "0c9430aa4743f7ba4281f7fb51098dc4899a128f";
 const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   ".."
 );
-const { values } = parseArgs({
-  options: {
-    governance: { type: "string" },
-    target: { type: "string" },
-    output: { type: "string" },
-  },
-});
 
 function command(executable, args, options = {}) {
   const result = spawnSync(executable, args, {
@@ -135,7 +128,7 @@ function scan(action, governance, workspace, temporaryRoot, label, secret) {
     path.join(evidenceRoot, "result.json"),
     path.join(
       governance,
-      "docs/schemas/secpal-trivy-repository-scan-v1.schema.json"
+      "docs/schemas/secpal-trivy-repository-scan-v2.schema.json"
     ),
   ]);
   if (result.gate_state === "UNKNOWN_STALE") {
@@ -143,23 +136,7 @@ function scan(action, governance, workspace, temporaryRoot, label, secret) {
       `Shared Action failed closed (${result.operation.failure_code}).`
     );
   }
-  assert.equal(result.database.status, "FRESH");
-  assert.deepEqual(result.operation, {
-    name: "TRIVY_REPOSITORY_SCAN",
-    status: "SUCCEEDED",
-  });
-  assert.equal(result.scanner.version, action.runs.steps[0].env.TRIVY_VERSION);
-  assert.equal(
-    result.scanner.immutable_id,
-    `sha256:${action.runs.steps[0].env.TRIVY_ARCHIVE_SHA256}`
-  );
-  for (const digest of [
-    result.scanner.configuration_sha256,
-    result.database.identity,
-    result.policy.sha256,
-  ]) {
-    assert.match(digest, /^sha256:[a-f0-9]{64}$/);
-  }
+  assertReplayEvidence(result, commit);
   const workflow = load(
     readFileSync(
       path.join(repoRoot, ".github/workflows/reusable-repository-security.yml"),
@@ -183,7 +160,77 @@ function scan(action, governance, workspace, temporaryRoot, label, secret) {
   return { evidence, summary, result };
 }
 
+// Consumer assertions bind the shared result; normalization remains upstream.
+export function assertReplayEvidence(result, commit) {
+  assert.equal(result.schema_version, "secpal-trivy-repository-scan-v2");
+  assert.deepEqual(result.subject, { repository: "SecPal/frontend", commit });
+  assert.equal(
+    result.policy.sha256,
+    "sha256:a8334e36ab688b8e148ed6115ecbf03b38fc692992e67cd57a357b9b1a9c5327"
+  );
+  assert.equal(
+    result.scanner.configuration_sha256,
+    "sha256:d9d411f1348ab50a17018cf04be144a39b0448af389f7c4406e5b7818fa3a6d9"
+  );
+  assert.equal(result.database.status, "FRESH");
+  assert.deepEqual(result.operation, {
+    name: "TRIVY_REPOSITORY_SCAN",
+    status: "SUCCEEDED",
+  });
+  assert.equal(result.scanner.version, "0.74.0");
+  assert.equal(
+    result.scanner.immutable_id,
+    "sha256:2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a"
+  );
+  for (const digest of [
+    result.scanner.configuration_sha256,
+    result.database.identity,
+    result.policy.sha256,
+  ]) {
+    assert.match(digest, /^sha256:[a-f0-9]{64}$/);
+  }
+}
+
+export function assertCandidateEvidence(result) {
+  assert.equal(
+    result.gate_state,
+    "CLEAN",
+    "Candidate repository evidence requires finding triage."
+  );
+  assert.deepEqual(
+    result.summary,
+    { total: 1, actionable: 0, review_required: 0, excepted: 1 },
+    "Expected retained reviewed frontend vulnerability inventory."
+  );
+  const [finding] = result.findings;
+  assert.ok(
+    result.findings.length === 1 &&
+      finding.class === "VULNERABILITY" &&
+      finding.rule_id === "CVE-2026-93687" &&
+      finding.package === "braces" &&
+      finding.installed_version === "3.0.3" &&
+      finding.path === "package-lock.json" &&
+      finding.exception?.id ===
+        "frontend-braces-cve-2026-93687-not-affected-1199" &&
+      finding.exception.disposition === "NOT_AFFECTED" &&
+      finding.exception.expires_at === "2026-10-27T00:00:00Z",
+    "Reviewed braces finding must remain in normalized evidence."
+  );
+  assert.ok(
+    Date.parse(result.completed_at) <
+      Date.parse(result.findings[0].exception.expires_at),
+    "Reviewed braces exception has expired."
+  );
+}
+
 function main() {
+  const { values } = parseArgs({
+    options: {
+      governance: { type: "string" },
+      target: { type: "string" },
+      output: { type: "string" },
+    },
+  });
   assert.ok(
     values.governance && values.output,
     "Provide --governance and --output."
@@ -202,6 +249,17 @@ function main() {
   assert.equal(
     authenticated.commit.tree.sha,
     git(governance, ["rev-parse", "HEAD^{tree}"])
+  );
+  const workflow = load(
+    readFileSync(
+      path.join(repoRoot, ".github/workflows/reusable-repository-security.yml"),
+      "utf8"
+    )
+  );
+  assert.equal(
+    workflow.jobs["repository-security"].steps[1].uses,
+    `SecPal/.github/.github/actions/trivy-repository-scan@${pin}`,
+    "Workflow and replay must use the accepted action revision."
   );
   const action = load(
     readFileSync(
@@ -338,42 +396,26 @@ function main() {
       console.log(
         `Candidate ${target.result.subject.commit}: ${target.result.gate_state}; normalized inventory retained.`
       );
-      assert.equal(
-        target.result.gate_state,
-        "CLEAN",
-        "Candidate repository evidence requires finding triage."
-      );
-      assert.deepEqual(
-        target.result.summary,
-        { total: 1, actionable: 0, review_required: 0, excepted: 1 },
-        "Expected retained reviewed frontend vulnerability inventory."
-      );
-      const [finding] = target.result.findings;
-      assert.ok(
-        target.result.findings.length === 1 &&
-          finding.class === "VULNERABILITY" &&
-          finding.rule_id === "CVE-2026-93687" &&
-          finding.package === "braces" &&
-          finding.installed_version === "3.0.3" &&
-          finding.path === "package-lock.json" &&
-          finding.exception?.disposition === "NOT_AFFECTED" &&
-          finding.exception.expires_at === "2026-10-19T00:00:00Z",
-        "Reviewed braces finding must remain in normalized evidence."
-      );
+      assertCandidateEvidence(target.result);
     }
   } finally {
     rmSync(temporaryRoot, { recursive: true, force: true });
   }
 }
 
-try {
-  main();
-} catch (error) {
-  // Never print stack traces, subprocess buffers, assertion operands or fixtures.
-  console.error(
-    error instanceof assert.AssertionError
-      ? error.message.split("\n")[0]
-      : "Repository security replay failed; inspect secret-safe normalized evidence when available."
-  );
-  process.exitCode = 1;
+if (
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
+  try {
+    main();
+  } catch (error) {
+    // Never print stack traces, subprocess buffers, assertion operands or fixtures.
+    console.error(
+      error instanceof assert.AssertionError
+        ? error.message.split("\n")[0]
+        : "Repository security replay failed; inspect secret-safe normalized evidence when available."
+    );
+    process.exitCode = 1;
+  }
 }
