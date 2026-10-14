@@ -105,9 +105,7 @@ describe("pre-publication repository source security", () => {
     expect(job.steps[1]).toEqual({
       name: "Scan repository source",
       id: "scan",
-      uses: expect.stringMatching(
-        /^SecPal\/\.github\/\.github\/actions\/trivy-repository-scan@[a-f0-9]{40}$/u
-      ),
+      uses: "SecPal/.github/.github/actions/trivy-repository-scan@0c9430aa4743f7ba4281f7fb51098dc4899a128f",
     });
   });
 
