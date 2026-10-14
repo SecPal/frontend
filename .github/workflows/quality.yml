@@ -24,7 +24,7 @@ jobs:
   reuse:
     name: Check REUSE Compliance
     # main
-    uses: SecPal/.github/.github/workflows/reusable-reuse.yml@eab46aa7a3d828e0f1b2e75a48a8ff8f135dec93
+    uses: SecPal/.github/.github/workflows/reusable-reuse.yml@0c9430aa4743f7ba4281f7fb51098dc4899a128f
 
   license-compatibility:
     name: Check License Compatibility
@@ -48,35 +48,35 @@ jobs:
   prettier:
     name: Formatting Check
     # main
-    uses: SecPal/.github/.github/workflows/reusable-prettier.yml@eab46aa7a3d828e0f1b2e75a48a8ff8f135dec93
+    uses: SecPal/.github/.github/workflows/reusable-prettier.yml@0c9430aa4743f7ba4281f7fb51098dc4899a128f
     with:
       node-version: "^26.10.0"
 
   markdown-lint:
     name: Markdown Lint
     # main
-    uses: SecPal/.github/.github/workflows/reusable-markdown-lint.yml@eab46aa7a3d828e0f1b2e75a48a8ff8f135dec93
+    uses: SecPal/.github/.github/workflows/reusable-markdown-lint.yml@0c9430aa4743f7ba4281f7fb51098dc4899a128f
     with:
       node-version: "^26.10.0"
 
   ai-instructions:
     name: AI Instructions
     # main
-    uses: SecPal/.github/.github/workflows/reusable-ai-instructions.yml@eab46aa7a3d828e0f1b2e75a48a8ff8f135dec93
+    uses: SecPal/.github/.github/workflows/reusable-ai-instructions.yml@0c9430aa4743f7ba4281f7fb51098dc4899a128f
     with:
       node-version: "^26.10.0"
 
   eslint:
     name: ESLint
     # main
-    uses: SecPal/.github/.github/workflows/reusable-node-lint.yml@eab46aa7a3d828e0f1b2e75a48a8ff8f135dec93
+    uses: SecPal/.github/.github/workflows/reusable-node-lint.yml@0c9430aa4743f7ba4281f7fb51098dc4899a128f
     with:
       node-version: "^26.10.0"
 
   typecheck:
     name: TypeScript Check
     # main
-    uses: SecPal/.github/.github/workflows/reusable-node-build.yml@eab46aa7a3d828e0f1b2e75a48a8ff8f135dec93
+    uses: SecPal/.github/.github/workflows/reusable-node-build.yml@0c9430aa4743f7ba4281f7fb51098dc4899a128f
     with:
       node-version: "^26.10.0"
       build-command: "npm run typecheck"
