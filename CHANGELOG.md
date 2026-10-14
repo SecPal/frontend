@@ -50,6 +50,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Moved contributor pull-request delivery and review to native GitHub reviews,
+  checks, and merge protections while preserving SSH commit verification.
+
 - Adopted central Trivy policy revision `0c9430aa4743f7ba4281f7fb51098dc4899a128f`
   in the repository security workflow and maintained v2 evidence replay. The
   reviewed `braces@3.0.3` finding remains visible with its bounded `NOT_AFFECTED`
