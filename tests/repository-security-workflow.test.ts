@@ -105,10 +105,27 @@ describe("pre-publication repository source security", () => {
     expect(job.steps[1]).toEqual({
       name: "Scan repository source",
       id: "scan",
-      uses: expect.stringMatching(
-        /^SecPal\/\.github\/\.github\/actions\/trivy-repository-scan@[a-f0-9]{40}$/u
-      ),
+      uses: "SecPal/.github/.github/actions/trivy-repository-scan@0c9430aa4743f7ba4281f7fb51098dc4899a128f",
     });
+  });
+
+  it("binds the maintained replay to the same accepted action and v2 evidence", () => {
+    const replay = readFileSync(
+      path.join(repoRoot, "scripts/replay-repository-security.mjs"),
+      "utf8"
+    );
+    const pin =
+      readWorkflow(reusablePath).jobs[
+        "repository-security"
+      ].steps[1].uses!.split("@")[1];
+    expect(replay).toContain(`const pin = "${pin}"`);
+    expect(replay).toContain("secpal-trivy-repository-scan-v2.schema.json");
+    expect(replay).toContain(
+      "frontend-braces-cve-2026-93687-not-affected-1199"
+    );
+    expect(replay).toContain("2026-10-27T00:00:00Z");
+    expect(replay).not.toContain("secpal-trivy-repository-scan-v1.schema.json");
+    expect(replay).not.toContain("2026-10-19T00:00:00Z");
   });
 
   it.each([

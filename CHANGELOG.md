@@ -50,6 +50,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Adopted central Trivy policy revision `0c9430aa4743f7ba4281f7fb51098dc4899a128f`
+  in the repository security workflow and maintained v2 evidence replay. The
+  reviewed `braces@3.0.3` finding remains visible with its bounded `NOT_AFFECTED`
+  disposition through October 27, 2026; braces has not been patched or removed.
+  Publication continues to require successful validation and CLEAN source security.
+
 - Adapted DOM matcher setup and the Chai dependency check for Vitest 5.
 - Adopted Node.js 26 for local development, CI, frontend builds, and container
   construction, with Node.js 26.10.0 as the exact reproducible baseline for
