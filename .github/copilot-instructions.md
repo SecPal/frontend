@@ -5,20 +5,14 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 # SecPal/frontend Copilot Instructions
 
-## Canonical Review And Signing
-
-Apply `AGENTS.md` and the organization-wide [review-acquisition rule](https://github.com/SecPal/.github/blob/main/docs/work-graph-contract.md#531-initial-automated-review)
-and [SSH signing authority](https://github.com/SecPal/.github/blob/main/docs/work-graph-contract.md#532-signing-authority).
-This compatibility mirror defines no separate lifecycle or signing authority.
-
 This file mirrors the authoritative root `AGENTS.md` for tooling
 that automatically loads `.github/copilot-instructions.md`.
-Edit `AGENTS.md` first. Keep the focused overlay files aligned
-for path-specific or stack-specific rules.
+Edit `AGENTS.md` first. Keep the focused overlay files aligned.
 
 ## Authoritative Sources
 
 - `AGENTS.md`
+
 - `.github/instructions/org-shared.instructions.md`
 - `.github/instructions/react-typescript.instructions.md`
 - `.github/instructions/github-workflows.instructions.md`
@@ -28,37 +22,23 @@ for path-specific or stack-specific rules.
 These instructions are self-contained for the `frontend` repository at runtime.
 Do not assume instructions from sibling repositories or comment-based inheritance are loaded.
 
-## Canonical Work-Graph Delegation
+## Pull Requests And Review
 
-`SecPal/.github/docs/work-graph-contract.md` is the single authoritative
-definition of generic SecPal work-graph and engineering-governance semantics.
-Apply it for node roles, decomposition, native edges, `READY`/`NEXT`, delivery,
-replanning, review-finding classification, and proportional evidence. This
-repository defines only frontend-specific technical and validation constraints.
-
-- GitHub-native issue data, parent/sub-issue relationships, dependencies,
-  sibling order, and open/closed state are authoritative. Body relationship/status
-  mirrors are not authoritative and must be retired when native truth
-  exists.
-- One leaf owns one delivery contract and one primary implementation pull
-  request. Decompose or replan when work contains multiple independently
-  reviewable contracts; pull-request count, diff size, and elapsed time do not
-  determine whether an epic is required.
-- Classify review findings before acting. An in-contract defect stays in the
-  current leaf. A missing prerequisite changes the native graph. A new
-  outside-contract node is created only when the responsibility is proven,
-  material, actionable, non-duplicate, and still relevant; cosmetic,
-  speculative, redundant, or immaterial observations do not automatically
-  become issues.
-- Review is finite: perform one bounded full review, remediate named in-contract
-  blockers, verify only the resulting delta, and stop when the contract and
-  evidence are satisfied. A later independent responsibility changes the graph
-  instead of expanding the current pull request.
-- Use the smallest non-redundant evidence set. Observable behavior changes need
-  failing-first contract or behavior evidence. Distinct integration seams need
-  integration evidence where appropriate. Behavior-preserving work may use
-  existing behavior tests, characterization, structural, source-shape, or
-  security evidence without manufacturing a new failing test.
+- Use GitHub pull requests, review threads, checks, and merge protections for
+  delivery. Keep each pull request focused on a coherent change.
+- Open a draft while preparing the change; mark it ready when self-review and
+  relevant validation are complete. Request review through GitHub. If more
+  review is needed after a revision, request it directly on the existing pull
+  request.
+- Assess feedback by the reported defect, its evidence, and its impact. Fix
+  relevant defects and use review threads to explain or resolve feedback.
+- Use `--body-file` for multiline GitHub pull-request descriptions.
+- Use native issue relationships when planning requires them. Issue planning
+  guidance is available in
+  [`SecPal/.github/docs/work-graph-contract.md`](https://github.com/SecPal/.github/blob/main/docs/work-graph-contract.md).
+- Run the smallest relevant existing stack checks. Behavior changes require
+  failing-first behavior evidence; behavior-preserving changes may use existing
+  tests, characterization, structural evidence, or security equivalence.
 
 ## Always-On Rules
 
@@ -74,11 +54,6 @@ repository defines only frontend-specific technical and validation constraints.
 - Never use bypasses such as `--no-verify` or force-push.
 - Update `CHANGELOG.md` in the same change set for real fixes, features, and breaking changes.
 - Keep GitHub-facing communication in English and reference files and lines instead of pasting large code blocks.
-- Classify warnings, audit findings, and deprecations under the canonical
-  materiality and replanning rules. Do not leave a required acceptance-criteria
-  gap or real prerequisite untracked.
-- Never reply to AI review comments with GitHub comment tools. Fix the code, push,
-  and resolve threads through the approved non-comment workflow.
 - Do not add AI self-references, generated-by text, promotional AI wording, or AI attribution to commits,
   pull requests, issues, changelogs, documentation, code comments, UI copy, or release notes unless the task
   explicitly requires documenting AI tooling behavior.
@@ -118,26 +93,9 @@ repository defines only frontend-specific technical and validation constraints.
 
 - DRY: eliminate duplicated logic and repeated UI or policy handling before it drifts.
 - KISS: prefer the simplest solution that satisfies the current requirement and remains easy to maintain.
-- YAGNI: implement only what the current issue or acceptance criteria require;
-  classify future ideas under the canonical materiality rule instead of building
-  them now.
+- YAGNI: implement only what the requested change needs.
 - SOLID: keep responsibilities narrow, interfaces small, and extension points explicit.
 - Fail fast: validate early, stop on the first failed check, and do not accumulate known breakage.
-
-## Issue And PR Discipline
-
-- Verify that the selected leaf is `READY` from native graph state before
-  implementation. Use native parent/sub-issue relationships for containment,
-  native dependencies only for real blockers, and native sibling order only for
-  preference.
-- A primary implementation pull request closes exactly one leaf and never an
-  epic. If the leaf contains multiple independent contracts, promote or replan
-  it before implementation continues.
-- The first PR state must be draft. Do not open a normal PR first.
-- Mark a draft PR ready when the maintained lifecycle authorizes external
-  review and the required local self-review and validation are complete.
-- When creating or editing PRs programmatically, write multi-line body content to a file and use
-  `--body-file` to prevent shell escaping issues.
 
 ## Required Validation
 
@@ -149,17 +107,18 @@ At minimum verify:
   observable changes, integration evidence for distinct seams, or stated
   structural/characterization evidence for behavior-preserving work
 - the smallest relevant validation for the touched area passed: tests, typecheck, and lint when applicable
-- findings were classified and any required prerequisite or material
-  outside-contract responsibility was reflected in the native graph
 - `CHANGELOG.md` was updated for real changes
-- new SecPal commits are SSH-signed and every PR commit is GitHub Verified
+- `SECPAL_SIGNING_FORMAT: SSH`. Preserve existing SSH keys and signing
+  configuration. Verify local commits with the configured SSH trust and every
+  PR commit through GitHub with `verification.verified == true`.
+  GitHub-generated signatures remain provider evidence.
 - REUSE compliance was checked when changed files require it
 - when a fix alters observable behavior, state lifecycle, error handling, or security constraints,
   the corresponding tests were identified and updated in the same commit
 - before pushing changes that alter observable behavior, state lifecycle, error handling, or security constraints,
   affected tests were run locally (`PREFLIGHT_RUN_TESTS=1 git push` or invoke the test runner directly)
-- one bounded full review and any delta-only verification were completed,
-  including DRY, KISS, YAGNI, SOLID, quality-first, and graph-scope checks
+- self-review and relevant checks covered DRY, KISS, YAGNI, SOLID,
+  quality-first, and change scope
 - no bypass was used
 
 ## AI Findings Triage
@@ -246,21 +205,19 @@ At minimum verify:
 
 ## Additional Rules: org-shared.instructions.md
 
-This file auto-applies to all files in this repo so strict SecPal governance stays always present at runtime.
+This file applies repository-specific guidance to all files in this repo.
 
 - `AGENTS.md` is the authoritative runtime baseline for this repo.
   `.github/copilot-instructions.md` is only a compatibility mirror.
-- Apply the canonical work-graph contract for decomposition, findings, finite
-  review, and proportional evidence. Keep one delivery contract per leaf and
-  one primary implementation pull request; never use pull-request count as the
-  epic threshold.
+- Use GitHub pull requests, review threads, checks, and merge protections.
 - Design discipline is always-on: DRY, KISS, YAGNI, SOLID, and fail fast.
 - GitHub communication stays in English and uses file and line references instead of large verbatim code quotes.
 - Do not add AI self-references, generated-by text, tool promotion, or AI
   attribution unless the task explicitly requires documenting AI tooling.
 - Keep changes repo-local, minimal, and consistent with React, strict TypeScript, and generated API type conventions.
-- Apply the SecPal domain policy and canonical finding-classification rules from
-  the repo baseline.
+- Apply the SecPal domain policy from the repository baseline.
+- Observable changes need failing-first behavior evidence; behavior-preserving
+  changes may use existing tests, characterization, or structural evidence.
 - Apply the baseline licensing and REUSE rules: plain `AGPL-3.0-or-later` for
   SecPal-owned material where declared. Preserve deliberately different
   licenses and third-party metadata, use `SecPal Contributors` where the
