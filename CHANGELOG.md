@@ -123,6 +123,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Wait for search-field focus before sending arrow keys in the onboarding
+  command popover test to avoid racing asynchronous popup focus.
 - Lighthouse workflow regression coverage now checks the upload action and full
   commit-SHA pin without duplicating its version, allowing Dependabot updates
   while preserving artifact-link validation.

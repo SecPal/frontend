@@ -578,6 +578,7 @@ describe("onboarding shadcn primitives", () => {
     await user.click(screen.getByRole("combobox", { name: "Country" }));
 
     const searchbox = await screen.findByPlaceholderText(/search/i);
+    await waitFor(() => expect(searchbox).toHaveFocus());
     await user.keyboard("{ArrowDown}");
     await user.keyboard("{ArrowDown}");
     await waitFor(() =>
