@@ -23,11 +23,23 @@ import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
 const { load } = createRequire(import.meta.url)("js-yaml");
-const pin = "0c9430aa4743f7ba4281f7fb51098dc4899a128f";
 const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   ".."
 );
+
+export function getReplayActionPin(workflow) {
+  const reference = workflow?.jobs?.["repository-security"]?.steps?.[1]?.uses;
+  assert.equal(typeof reference, "string", "Missing repository scan action.");
+  const match = reference.match(
+    /^SecPal\/\.github\/\.github\/actions\/trivy-repository-scan@([0-9a-f]{40})$/
+  );
+  assert.ok(
+    match && match[0] === reference,
+    "Repository scan action must use the organization action at a full commit SHA."
+  );
+  return match[1];
+}
 
 function command(executable, args, options = {}) {
   const result = spawnSync(executable, args, {
@@ -235,6 +247,13 @@ function main() {
     values.governance && values.output,
     "Provide --governance and --output."
   );
+  const workflow = load(
+    readFileSync(
+      path.join(repoRoot, ".github/workflows/reusable-repository-security.yml"),
+      "utf8"
+    )
+  );
+  const pin = getReplayActionPin(workflow);
   const governance = realpathSync(values.governance);
   assert.equal(git(governance, ["rev-parse", "HEAD"]), pin);
   assert.equal(
@@ -249,17 +268,6 @@ function main() {
   assert.equal(
     authenticated.commit.tree.sha,
     git(governance, ["rev-parse", "HEAD^{tree}"])
-  );
-  const workflow = load(
-    readFileSync(
-      path.join(repoRoot, ".github/workflows/reusable-repository-security.yml"),
-      "utf8"
-    )
-  );
-  assert.equal(
-    workflow.jobs["repository-security"].steps[1].uses,
-    `SecPal/.github/.github/actions/trivy-repository-scan@${pin}`,
-    "Workflow and replay must use the accepted action revision."
   );
   const action = load(
     readFileSync(

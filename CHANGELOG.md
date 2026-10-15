@@ -50,6 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Made the repository security workflow the single source of the shared
+  scanner Action revision for replay verification. Workflow tests require the
+  exact Action path and full commit pins without duplicating dependency versions.
+
 - Moved contributor pull-request delivery and review to native GitHub reviews,
   checks, and merge protections while preserving SSH commit verification.
 
