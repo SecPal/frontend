@@ -453,23 +453,12 @@ docs: update API integration guide
 test: add tests for login form
 ```
 
-## 🤖 Automation
+## Contribution Planning
 
-This repository uses automated project board management. Issues and PRs are automatically added to the [SecPal Roadmap](https://github.com/orgs/SecPal/projects/1) with status based on labels and PR state.
-
-**Quick Start:**
-
-```bash
-# Create issue (auto-added to project board)
-gh issue create --label "enhancement" --title "..."
-
-# Draft PR workflow (recommended)
-gh pr create --draft --body "Closes #123"  # → 🚧 In Progress
-gh pr ready <PR>                            # → 👀 In Review
-gh pr merge <PR> --squash                   # → ✅ Done
-```
-
-See [Project Automation docs](https://github.com/SecPal/.github/blob/main/docs/workflows/PROJECT_AUTOMATION.md) for details.
+Use GitHub Issues and native issue relationships for scope and dependencies.
+Pull requests, reviews, CI, and protected merges own source acceptance; no
+Project board status or reminder comment grants delivery authority. See the
+[WorkGraph contract](https://github.com/SecPal/.github/blob/main/docs/work-graph-contract.md).
 
 ## 📜 License
 
