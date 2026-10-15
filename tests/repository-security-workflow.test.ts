@@ -7,6 +7,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { getReplayActionPin } from "../scripts/replay-repository-security.mjs";
 
 interface Step {
   name: string;
@@ -99,13 +100,15 @@ describe("pre-publication repository source security", () => {
     expect(job.steps).toHaveLength(3);
     expect(job.steps[0]).toEqual({
       name: "Checkout exact frontend commit",
-      uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+      uses: expect.stringMatching(/^actions\/checkout@[0-9a-f]{40}$/),
       with: { ref: "${{ github.sha }}", "persist-credentials": false },
     });
     expect(job.steps[1]).toEqual({
       name: "Scan repository source",
       id: "scan",
-      uses: "SecPal/.github/.github/actions/trivy-repository-scan@0c9430aa4743f7ba4281f7fb51098dc4899a128f",
+      uses: expect.stringMatching(
+        /^SecPal\/\.github\/\.github\/actions\/trivy-repository-scan@[0-9a-f]{40}$/
+      ),
     });
   });
 
@@ -118,7 +121,7 @@ describe("pre-publication repository source security", () => {
       readWorkflow(reusablePath).jobs[
         "repository-security"
       ].steps[1].uses!.split("@")[1];
-    expect(replay).toContain(`const pin = "${pin}"`);
+    expect(getReplayActionPin(readWorkflow(reusablePath))).toBe(pin);
     expect(replay).toContain("secpal-trivy-repository-scan-v2.schema.json");
     expect(replay).toContain(
       "frontend-braces-cve-2026-93687-not-affected-1199"

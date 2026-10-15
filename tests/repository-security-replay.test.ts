@@ -5,9 +5,55 @@ import { describe, expect, it } from "vitest";
 import {
   assertCandidateEvidence,
   assertReplayEvidence,
+  getReplayActionPin,
 } from "../scripts/replay-repository-security.mjs";
 
 const commit = "076bb1b204fef897231a04eaa0c580511b98bb65";
+
+function workflowWithAction(reference: unknown) {
+  return {
+    jobs: {
+      "repository-security": {
+        steps: [{}, { uses: reference }],
+      },
+    },
+  };
+}
+
+describe("replay action revision", () => {
+  it("follows the workflow when its pinned action is updated", () => {
+    for (const pin of ["a".repeat(40), "b".repeat(40)]) {
+      const workflow = workflowWithAction(
+        `SecPal/.github/.github/actions/trivy-repository-scan@${pin}`
+      );
+      expect(getReplayActionPin(workflow)).toBe(pin);
+    }
+  });
+
+  it.each([
+    undefined,
+    null,
+    42,
+    "",
+    "SecPal/.github/.github/actions/trivy-repository-scan@main",
+    "SecPal/.github/.github/actions/trivy-repository-scan@v1",
+    `SecPal/.github/.github/actions/trivy-repository-scan@${"a".repeat(39)}`,
+    `SecPal/.github/.github/actions/trivy-repository-scan@${"a".repeat(41)}`,
+    `SecPal/.github/.github/actions/trivy-repository-scan@${"g".repeat(40)}`,
+    `Other/.github/.github/actions/trivy-repository-scan@${"a".repeat(40)}`,
+    `SecPal/.github/.github/actions/other-scan@${"a".repeat(40)}`,
+    `SecPal/.github/.github/actions/trivy-repository-scan@${"a".repeat(40)}\n`,
+  ])("rejects an unpinned or substituted action: %j", (reference) => {
+    expect(() => getReplayActionPin(workflowWithAction(reference))).toThrow();
+  });
+
+  it.each([undefined, {}, { jobs: {} }])(
+    "rejects a missing repository scan step: %j",
+    (workflow) => {
+      expect(() => getReplayActionPin(workflow)).toThrow();
+    }
+  );
+});
 
 // Only the consumer assertion surface; genuine schema/scanner coverage uses
 // the authenticated upstream action and its maintained conformance tests.
