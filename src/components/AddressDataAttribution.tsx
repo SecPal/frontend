@@ -21,10 +21,11 @@ export function AddressDataAttribution({
       id={id}
       role="note"
       aria-label={_(msg`Address data attribution`)}
-      className="col-span-full text-xs leading-5 text-muted-foreground"
+      className="text-xs leading-5 text-muted-foreground"
     >
       <Trans>Address data:</Trans>{" "}
       <a
+        tabIndex={-1}
         className="underline underline-offset-2 hover:text-foreground"
         href="https://github.com/openpotato/openplzapi.data"
         target="_blank"
@@ -34,6 +35,7 @@ export function AddressDataAttribution({
       </a>
       {" · "}
       <a
+        tabIndex={-1}
         className="underline underline-offset-2 hover:text-foreground"
         href="https://www.openstreetmap.org/copyright"
         target="_blank"
@@ -43,6 +45,7 @@ export function AddressDataAttribution({
       </a>
       {" · "}
       <a
+        tabIndex={-1}
         className="underline underline-offset-2 hover:text-foreground"
         href="https://opendatacommons.org/licenses/odbl/1-0/"
         target="_blank"

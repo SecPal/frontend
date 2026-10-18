@@ -127,8 +127,13 @@ describe("EmployeeAddressFields", () => {
       );
       expect(
         screen
-          .getByRole("combobox", { name: "Country" })
-          .compareDocumentPosition(notice) & Node.DOCUMENT_POSITION_FOLLOWING
+          .getByRole("combobox", { name: "Postal Code" })
+          .closest('[data-slot="field"]')
+      ).toContainElement(notice);
+      expect(
+        notice.compareDocumentPosition(
+          screen.getByRole("combobox", { name: "City" })
+        ) & Node.DOCUMENT_POSITION_FOLLOWING
       ).toBeTruthy();
       expect(input).toHaveAccessibleDescription(
         expect.stringContaining("OpenStreetMap")
@@ -206,7 +211,7 @@ describe("EmployeeAddressFields", () => {
     ).toHaveAttribute("href", "https://www.openstreetmap.org/copyright");
   });
 
-  it("keeps attribution links in keyboard order and preserves street selection", async () => {
+  it("skips inline attribution links while tabbing through address fields and preserves street selection", async () => {
     vi.useRealTimers();
     const user = (await import("@testing-library/user-event")).default.setup();
     vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
@@ -242,13 +247,14 @@ describe("EmployeeAddressFields", () => {
     await user.click(street);
     await screen.findByRole("option", { name: /Grabstraße/ });
     await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("combobox", { name: "Postal Code" }));
     await user.tab();
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    expect(
-      screen.getByRole("link", { name: "OpenPLZ / OpenPotato" })
-    ).toHaveFocus();
+    expect(screen.getByRole("combobox", { name: "City" })).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(screen.getByRole("combobox", { name: "Postal Code" })).toHaveFocus();
+    for (const link of within(screen.getByRole("note")).getAllByRole("link")) {
+      expect(link).toHaveAttribute("tabindex", "-1");
+    }
     expect(onChange).not.toHaveBeenCalled();
     await user.click(street);
     await screen.findByRole("option", { name: /Grabstraße/ });

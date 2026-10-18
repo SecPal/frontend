@@ -452,64 +452,69 @@ export function EmployeeAddressFields({
         <Label htmlFor={fieldId("postal_code")}>
           <Trans>Postal Code</Trans>
         </Label>
-        <AutocompleteListbox
-          open={showPostalSuggestions}
-          onOpenChange={(open) => {
-            if (!open) {
-              setFocusedField(null);
-            }
-          }}
-          onValueChange={(value) => {
-            const suggestion = localitySuggestions.find(
-              (candidate) => localitySuggestionValue(candidate) === value
-            );
-            if (suggestion) {
-              selectLocalitySuggestion(suggestion);
-              focusNextFieldAfterLocalitySelect();
-            }
-          }}
-          listboxId={localityListboxId}
-          anchor={
-            <Input
-              ref={postalCodeInputRef}
-              id={fieldId("postal_code")}
-              name={fieldName("postal_code")}
-              autoComplete="postal-code"
-              disabled={readOnly}
-              role="combobox"
-              aria-autocomplete="list"
-              aria-describedby={
-                autocompleteEnabled && attribution ? attributionId : undefined
+        <div className="space-y-1">
+          <AutocompleteListbox
+            open={showPostalSuggestions}
+            onOpenChange={(open) => {
+              if (!open) {
+                setFocusedField(null);
               }
-              aria-expanded={showPostalSuggestions}
-              aria-controls={localityListboxId}
-              value={draft.postalCode}
-              onFocus={() => handleAutocompleteFocus("postalCode")}
-              onBlur={handleAutocompleteInputBlur}
-              onChange={(event) => {
-                const nextValue = event.target.value;
-                onChange("postalCode", nextValue);
-                applyPostalSuggestion(nextValue);
-              }}
-            />
-          }
-        >
-          {showPostalSuggestions
-            ? localitySuggestions.map((suggestion) => (
-                <AutocompleteOption
-                  key={`${suggestion.postal_code}-${suggestion.locality}`}
-                  value={localitySuggestionValue(suggestion)}
-                >
-                  <span className="block font-medium">
-                    {suggestion.postal_code}
-                  </span>
-                  <span className="text-muted-foreground block">
-                    {suggestion.locality}
-                  </span>
-                </AutocompleteOption>
-              ))
-            : null}
-        </AutocompleteListbox>
+            }}
+            onValueChange={(value) => {
+              const suggestion = localitySuggestions.find(
+                (candidate) => localitySuggestionValue(candidate) === value
+              );
+              if (suggestion) {
+                selectLocalitySuggestion(suggestion);
+                focusNextFieldAfterLocalitySelect();
+              }
+            }}
+            listboxId={localityListboxId}
+            anchor={
+              <Input
+                ref={postalCodeInputRef}
+                id={fieldId("postal_code")}
+                name={fieldName("postal_code")}
+                autoComplete="postal-code"
+                disabled={readOnly}
+                role="combobox"
+                aria-autocomplete="list"
+                aria-describedby={
+                  autocompleteEnabled && attribution ? attributionId : undefined
+                }
+                aria-expanded={showPostalSuggestions}
+                aria-controls={localityListboxId}
+                value={draft.postalCode}
+                onFocus={() => handleAutocompleteFocus("postalCode")}
+                onBlur={handleAutocompleteInputBlur}
+                onChange={(event) => {
+                  const nextValue = event.target.value;
+                  onChange("postalCode", nextValue);
+                  applyPostalSuggestion(nextValue);
+                }}
+              />
+            }
+          >
+            {showPostalSuggestions
+              ? localitySuggestions.map((suggestion) => (
+                  <AutocompleteOption
+                    key={`${suggestion.postal_code}-${suggestion.locality}`}
+                    value={localitySuggestionValue(suggestion)}
+                  >
+                    <span className="block font-medium">
+                      {suggestion.postal_code}
+                    </span>
+                    <span className="text-muted-foreground block">
+                      {suggestion.locality}
+                    </span>
+                  </AutocompleteOption>
+                ))
+              : null}
+          </AutocompleteListbox>
+          {autocompleteEnabled && attribution ? (
+            <AddressDataAttribution id={attributionId} meta={attribution} />
+          ) : null}
+        </div>
         {showPostalFeedback && localityRequestState.loading ? (
           <Description>
             <Trans>Loading...</Trans>
@@ -740,9 +745,6 @@ export function EmployeeAddressFields({
           onValueChange={(countryCode) => onChange("country", countryCode)}
         />
       </Field>
-      {autocompleteEnabled && attribution ? (
-        <AddressDataAttribution id={attributionId} meta={attribution} />
-      ) : null}
     </>
   );
 }

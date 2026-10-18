@@ -58,8 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Simplified address form credits to one compact, localized OpenPLZ/OpenPotato,
-  OpenStreetMap and ODbL notice. Consolidated full address data legal notices
-  while preserving API metadata and the deployed source/alterations offer.
+  OpenStreetMap and ODbL notice directly beneath the postal code input, with reduced
+  spacing and consistent field spacing for current and previous onboarding
+  residences. Consolidated full address data legal notices while preserving API
+  metadata and the deployed source/alterations offer. Inline credit links no longer
+  interrupt Tab navigation between address fields; complete linked notices remain
+  available in the central source and license area.
 
 - Made the repository security workflow the single source of the shared
   scanner Action revision for replay verification. Workflow tests require the

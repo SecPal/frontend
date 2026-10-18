@@ -312,6 +312,9 @@ describe("OnboardingResidentialAddressHistoryFields", () => {
     ].entries()) {
       const notice = notices[index]!;
       expect(input).toHaveAttribute("aria-describedby", notice.id);
+      expect(
+        notice.closest('[data-slot="field"]')?.parentElement
+      ).toHaveAttribute("data-slot", "field-group");
       expect(notice).toHaveTextContent(
         /^Address data: OpenPLZ \/ OpenPotato · © OpenStreetMap contributors · ODbL-1\.0$/
       );
