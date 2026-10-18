@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Display OpenPLZ API Data / OpenPotato, OpenStreetMap and ODbL attribution
+  for German address suggestions and available empty results across employee
+  forms and onboarding. Preserve API credit metadata and link the existing
+  deployed API source offer from address data legal notices.
+
 ### Added
 
 - Added the pinned organization Trivy repository scan to PR/main quality checks

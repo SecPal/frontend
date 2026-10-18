@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
+import { AddressDataAttribution } from "@/components/AddressDataAttribution";
 import { Footer } from "@/components/Footer";
 import { OpenOssLicensesButton } from "@/components/OpenOssLicensesButton";
 import {
@@ -203,6 +204,10 @@ export function SourcePage() {
   const repositories: SourceOfferRepository[] =
     sourceOffer?.repositories ?? getFallbackSourceRepositories();
   const sourceOfferMode = sourceOffer?.mode;
+  const apiSourceUrl =
+    sourceOfferMode === "deployment"
+      ? repositories.find((repository) => repository.id === "api")?.sourceUrl
+      : null;
   const deploymentHasFallbackRepositoryLinks =
     sourceOfferMode === "deployment" &&
     repositories.some((repository) => repository.sourceUrl === null);
@@ -464,6 +469,30 @@ export function SourcePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <section
+                  id="address-data"
+                  aria-labelledby="address-data-heading"
+                  className="space-y-2 text-sm leading-6"
+                >
+                  <h3 id="address-data-heading" className="font-semibold">
+                    <Trans>Address reference data</Trans>
+                  </h3>
+                  <p>
+                    <Trans>
+                      German address suggestions use OpenPLZ API Data /
+                      OpenPotato and © OpenStreetMap contributors, licensed
+                      under ODbL-1.0.
+                    </Trans>
+                  </p>
+                  <AddressDataAttribution sourceUrl={apiSourceUrl} />
+                  <p>
+                    <Trans>
+                      The deployed API source includes the address data source
+                      and complete method of alterations in
+                      docs/ADDRESS_DATA.md.
+                    </Trans>
+                  </p>
+                </section>
                 <p className="text-muted-foreground text-sm leading-6">
                   <Trans>Copyright SecPal Contributors.</Trans>
                 </p>

@@ -31,8 +31,14 @@ const { mockUseUserCapabilities } = vi.hoisted(() => ({
 vi.mock("../../services/employeeApi");
 vi.mock("../../services/qualificationApi");
 vi.mock("../../services/addressApi", () => ({
-  fetchAddressStreetSuggestions: vi.fn().mockResolvedValue([]),
-  fetchAddressLocalitySuggestions: vi.fn().mockResolvedValue([]),
+  fetchAddressStreetSuggestions: vi.fn().mockResolvedValue({
+    data: [],
+    meta: { source: "OpenPLZ API Data", imported_at: "2026-10-18T00:00:00Z" },
+  }),
+  fetchAddressLocalitySuggestions: vi.fn().mockResolvedValue({
+    data: [],
+    meta: { source: "OpenPLZ API Data", imported_at: "2026-10-18T00:00:00Z" },
+  }),
 }));
 vi.mock("../../services/employeeDocumentApi");
 vi.mock("../../services/customerLegalEntitiesApi");

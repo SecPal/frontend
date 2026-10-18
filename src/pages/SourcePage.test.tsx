@@ -88,6 +88,54 @@ describe("SourcePage", () => {
     mockSourceOfferRequests();
   });
 
+  it.each([
+    [
+      "Managed",
+      "https://github.com/SecPal/api/releases/download/api-2026-10-18/source.tar.gz",
+    ],
+    [
+      "Self-Hosted",
+      "https://api.self-hosted.secpal.dev/releases/api-2026-10-18/source.tar.gz",
+    ],
+  ])(
+    "connects %s address data notices to the deployed API source offer",
+    async (_deployment, sourceUrl) => {
+      mockSourceOfferRequests({
+        releaseResponse: new Response(
+          JSON.stringify({
+            data: { version: "2026-10-18", source_url: sourceUrl },
+          })
+        ),
+      });
+      renderWithProviders();
+      const notice = await screen.findByRole("region", {
+        name: "Address reference data",
+      });
+      expect(
+        within(notice).getByText(/German address suggestions use/)
+      ).toBeVisible();
+      expect(
+        within(notice).getByRole("link", { name: "Source and alterations" })
+      ).toHaveAttribute("href", sourceUrl);
+    }
+  );
+
+  it("keeps address credits available without presenting a repository fallback as the deployed alterations offer", async () => {
+    renderWithProviders();
+    const notice = await screen.findByRole("region", {
+      name: "Address reference data",
+    });
+    await screen.findByText(
+      /If this deployment does not publish source releases here/
+    );
+    expect(
+      within(notice).getByRole("link", { name: "ODbL-1.0" })
+    ).toBeVisible();
+    expect(
+      within(notice).queryByRole("link", { name: "Source and alterations" })
+    ).not.toBeInTheDocument();
+  });
+
   it("opens native OSS notices from the source page when the capability is available", async () => {
     const user = userEvent.setup();
     nativeFacadeMock.isOssLicensesAvailable.mockReturnValue(true);

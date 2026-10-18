@@ -1102,6 +1102,10 @@ msgstr "Some establishment details could not be loaded."
 msgid "Copyright SecPal Contributors."
 msgstr "Copyright SecPal Contributors."
 
+#: src/components/AddressDataAttribution.tsx
+msgid "Address data:"
+msgstr "Address data:"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Too many onboarding attempts. Please try again later."
 msgstr "Too many onboarding attempts. Please try again later."
@@ -1518,6 +1522,14 @@ msgstr "Select residence title"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Activate"
 msgstr "Activate"
+
+#: src/pages/SourcePage.tsx
+msgid "Address reference data"
+msgstr "Address reference data"
+
+#: src/pages/SourcePage.tsx
+msgid "The deployed API source includes the address data source and complete method of alterations in docs/ADDRESS_DATA.md."
+msgstr "The deployed API source includes the address data source and complete method of alterations in docs/ADDRESS_DATA.md."
 
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "This customer requires a Legal Entity assignment."
@@ -2002,6 +2014,10 @@ msgstr "Unavailable"
 msgid "Authenticator app QR code"
 msgstr "Authenticator app QR code"
 
+#: src/components/AddressDataAttribution.tsx
+msgid "Address data attribution"
+msgstr "Address data attribution"
+
 #: src/components/OrganizationalUnitTree.tsx
 msgid "Get started by creating your first organizational unit."
 msgstr "Get started by creating your first organizational unit."
@@ -2137,6 +2153,10 @@ msgstr "Verify your email address"
 msgid "SecPal could not load the secure verification prompt. Retry to continue your sign-in, or return to the login form."
 msgstr "SecPal could not load the secure verification prompt. Retry to continue your sign-in, or return to the login form."
 
+#: src/pages/SourcePage.tsx
+msgid "German address suggestions use OpenPLZ API Data / OpenPotato and © OpenStreetMap contributors, licensed under ODbL-1.0."
+msgstr "German address suggestions use OpenPLZ API Data / OpenPotato and © OpenStreetMap contributors, licensed under ODbL-1.0."
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Please enter a valid date of birth"
 msgstr "Please enter a valid date of birth"
@@ -2238,6 +2258,10 @@ msgstr "Sign in with passkey"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "No onboarding steps are available right now."
 msgstr "No onboarding steps are available right now."
+
+#: src/components/AddressDataAttribution.tsx
+msgid "Source and alterations"
+msgstr "Source and alterations"
 
 #: src/pages/Login.tsx
 msgid "Passkey sign-in requires Android 14 or later. Update your device to sign in with a passkey."

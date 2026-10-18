@@ -6,6 +6,33 @@
 
 export interface components {
   schemas: {
+    AddressReferenceMeta: {
+      source: string;
+      license?: string | null;
+      attribution?: string | null;
+      imported_at: string;
+      version_hash?: string | null;
+    };
+    AddressStreetSuggestion: {
+      name: string;
+      postal_code: string;
+      locality: string;
+      borough: string | null;
+      suburb: string | null;
+      regional_key: string | null;
+    };
+    AddressLocalitySuggestion: {
+      postal_code: string;
+      locality: string;
+    };
+    AddressStreetSuggestionResponse: {
+      data: components["schemas"]["AddressStreetSuggestion"][];
+      meta: components["schemas"]["AddressReferenceMeta"];
+    };
+    AddressLocalitySuggestionResponse: {
+      data: components["schemas"]["AddressLocalitySuggestion"][];
+      meta: components["schemas"]["AddressReferenceMeta"];
+    };
     BootstrapClientPlatform: "android" | "browser";
     BootstrapVersion: "v1";
     NotificationChannel: "android_fcm" | "web_push";

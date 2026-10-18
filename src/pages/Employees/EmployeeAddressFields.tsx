@@ -28,6 +28,8 @@ import {
   type AddressLocalitySuggestion,
   type AddressStreetSuggestion,
 } from "../../services/addressApi";
+import { AddressDataAttribution } from "@/components/AddressDataAttribution";
+import type { AddressReferenceMeta } from "@/types/api";
 
 interface SuggestionRequestState {
   loading: boolean;
@@ -80,6 +82,11 @@ export function EmployeeAddressFields({
     useState<SuggestionRequestState>(idleSuggestionRequestState);
   const [localityRequestState, setLocalityRequestState] =
     useState<SuggestionRequestState>(idleSuggestionRequestState);
+
+  const [attribution, setAttribution] = useState<AddressReferenceMeta | null>(
+    null
+  );
+  const attributionId = `${fieldIdPrefix}-attribution`;
 
   const postalCodeInputRef = useRef<HTMLInputElement>(null);
   const cityInputRef = useRef<HTMLInputElement>(null);
@@ -187,7 +194,8 @@ export function EmployeeAddressFields({
             return;
           }
 
-          setStreetSuggestions(result);
+          setStreetSuggestions(result.data);
+          setAttribution(result.meta);
           setStreetRequestState({
             loading: false,
             error: null,
@@ -257,7 +265,8 @@ export function EmployeeAddressFields({
             return;
           }
 
-          setLocalitySuggestions(result);
+          setLocalitySuggestions(result.data);
+          setAttribution(result.meta);
           setLocalityRequestState({
             loading: false,
             error: null,
@@ -469,6 +478,9 @@ export function EmployeeAddressFields({
               disabled={readOnly}
               role="combobox"
               aria-autocomplete="list"
+              aria-describedby={
+                autocompleteEnabled && attribution ? attributionId : undefined
+              }
               aria-expanded={showPostalSuggestions}
               aria-controls={localityListboxId}
               value={draft.postalCode}
@@ -549,6 +561,9 @@ export function EmployeeAddressFields({
               disabled={readOnly}
               role="combobox"
               aria-autocomplete="list"
+              aria-describedby={
+                autocompleteEnabled && attribution ? attributionId : undefined
+              }
               aria-expanded={showCitySuggestions}
               aria-controls={localityListboxId}
               value={draft.city}
@@ -629,6 +644,9 @@ export function EmployeeAddressFields({
               disabled={readOnly}
               role="combobox"
               aria-autocomplete="list"
+              aria-describedby={
+                autocompleteEnabled && attribution ? attributionId : undefined
+              }
               aria-expanded={showStreetSuggestions}
               aria-controls={streetListboxId}
               value={draft.street}
@@ -722,6 +740,13 @@ export function EmployeeAddressFields({
           onValueChange={(countryCode) => onChange("country", countryCode)}
         />
       </Field>
+      {autocompleteEnabled && attribution ? (
+        <AddressDataAttribution
+          id={attributionId}
+          meta={attribution}
+          sourceUrl="/source#address-data"
+        />
+      ) : null}
     </>
   );
 }

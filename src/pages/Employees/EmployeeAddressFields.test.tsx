@@ -7,7 +7,7 @@ import { msg } from "@lingui/core/macro";
 import { messages as deMessages } from "../../locales/de/messages.mjs";
 import { messages as enMessages } from "../../locales/en/messages.mjs";
 import { act, useState } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { EmployeeAddressFields } from "./EmployeeAddressFields";
 import { ApiError } from "../../services/ApiError";
@@ -22,6 +22,11 @@ import {
   fetchAddressStreetSuggestions,
 } from "../../services/addressApi";
 
+const referenceMeta = {
+  source: "OpenPLZ API Data",
+  imported_at: "2026-10-18T00:00:00Z",
+};
+
 describe("EmployeeAddressFields", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -35,15 +40,197 @@ describe("EmployeeAddressFields", () => {
     vi.useRealTimers();
   });
 
+  it.each([
+    ["street", false],
+    ["street", true],
+    ["postal code", false],
+    ["postal code", true],
+    ["city", false],
+    ["city", true],
+  ] as const)(
+    "credits address data for %s (empty: %s)",
+    async (field, empty) => {
+      const meta = {
+        source: "OpenPLZ API Data",
+        attribution:
+          "OpenPLZ API Data / OpenPotato; © OpenStreetMap contributors. Deployment-specific credit.",
+        license: "ODbL-1.0",
+        imported_at: "2026-10-18T00:00:00Z",
+      };
+      vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+        data: empty
+          ? []
+          : [
+              {
+                name: "Grabstraße",
+                postal_code: "13156",
+                locality: "Berlin",
+                borough: null,
+                suburb: null,
+                regional_key: null,
+              },
+            ],
+        meta,
+      });
+      vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+        data: empty ? [] : [{ postal_code: "13156", locality: "Berlin" }],
+        meta,
+      });
+      const onChange = vi.fn();
+      render(
+        <I18nProvider i18n={i18n}>
+          <EmployeeAddressFields
+            draft={{
+              street: "Gr",
+              houseNumber: "",
+              postalCode: "131",
+              city: "Be",
+              supplement: "",
+              country: "DE",
+            }}
+            onChange={onChange}
+          />
+        </I18nProvider>
+      );
+      const input = screen.getByRole("combobox", {
+        name: new RegExp(`^${field}$`, "i"),
+      });
+      fireEvent.focus(input);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
+      if (empty)
+        expect(screen.getByText("No address suggestions found.")).toBeVisible();
+      else expect(screen.getByRole("option")).toBeVisible();
+      expect(screen.getByText(meta.attribution)).toBeInTheDocument();
+      expect(input).toHaveAccessibleDescription(
+        expect.stringContaining("OpenStreetMap")
+      );
+      fireEvent.keyDown(input, { key: "Escape" });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(150);
+      });
+      const notice = screen.getByRole("note", {
+        name: "Address data attribution",
+      });
+      expect(notice).toBeVisible();
+      expect(
+        screen.getAllByRole("note", { name: "Address data attribution" })
+      ).toHaveLength(1);
+      expect(notice).toHaveTextContent(
+        "Address data: OpenPLZ / OpenPotato · © OpenStreetMap contributors"
+      );
+      expect(
+        screen
+          .getByRole("combobox", { name: "Country" })
+          .compareDocumentPosition(notice) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
+      expect(input).toHaveAccessibleDescription(
+        expect.stringContaining("OpenStreetMap")
+      );
+      expect(
+        within(notice).getByRole("link", {
+          name: "OpenPLZ / OpenPotato",
+        })
+      ).toHaveAttribute(
+        "href",
+        "https://github.com/openpotato/openplzapi.data"
+      );
+      expect(
+        within(notice).getByRole("link", {
+          name: "© OpenStreetMap contributors",
+        })
+      ).toHaveAttribute("href", "https://www.openstreetmap.org/copyright");
+      const license = within(notice).getByRole("link", { name: "ODbL-1.0" });
+      expect(license).toHaveAttribute(
+        "href",
+        "https://opendatacommons.org/licenses/odbl/1-0/"
+      );
+      expect(
+        within(notice).getByRole("link", { name: "Source and alterations" })
+      ).toHaveAttribute("href", "/source#address-data");
+      fireEvent.blur(input);
+      act(() => license.focus());
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(150);
+      });
+      expect(license).toHaveFocus();
+      expect(notice).toBeVisible();
+      expect(onChange).not.toHaveBeenCalled();
+    }
+  );
+
+  it("keeps attribution links in keyboard order and preserves street selection", async () => {
+    vi.useRealTimers();
+    const user = (await import("@testing-library/user-event")).default.setup();
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [
+        {
+          name: "Grabstraße",
+          postal_code: "13156",
+          locality: "Berlin",
+          borough: null,
+          suburb: null,
+          regional_key: null,
+        },
+      ],
+      meta: referenceMeta,
+    });
+    const onChange = vi.fn();
+    render(
+      <I18nProvider i18n={i18n}>
+        <EmployeeAddressFields
+          draft={{
+            street: "Gr",
+            postalCode: "",
+            city: "",
+            houseNumber: "",
+            supplement: "",
+            country: "DE",
+          }}
+          onChange={onChange}
+        />
+      </I18nProvider>
+    );
+    const street = screen.getByRole("combobox", { name: "Street" });
+    await user.click(street);
+    await screen.findByRole("option", { name: /Grabstraße/ });
+    await user.keyboard("{Escape}");
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    expect(
+      screen.getByRole("link", { name: "OpenPLZ / OpenPotato" })
+    ).toHaveFocus();
+    expect(onChange).not.toHaveBeenCalled();
+    await user.click(street);
+    await screen.findByRole("option", { name: /Grabstraße/ });
+    await user.keyboard("{ArrowDown}{Enter}");
+    expect(onChange).toHaveBeenCalledWith("street", "Grabstraße");
+    expect(onChange).toHaveBeenCalledWith("postalCode", "13156");
+    expect(onChange).toHaveBeenCalledWith("city", "Berlin");
+    expect(screen.getByLabelText("House Number")).toHaveFocus();
+  });
+
   it("keeps autocomplete inputs synchronized with prefilled and suggestion-populated draft values", async () => {
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
-      {
-        name: "Grabstraße",
-        postal_code: "13156",
-        locality: "Berlin",
-      },
-    ]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [
+        {
+          borough: null,
+          suburb: null,
+          regional_key: null,
+          name: "Grabstraße",
+          postal_code: "13156",
+          locality: "Berlin",
+        },
+      ],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     function AddressHarness() {
       const [draft, setDraft] = useState({
@@ -89,14 +276,23 @@ describe("EmployeeAddressFields", () => {
 
   it("fills postal code and city from a selected street suggestion", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
-      {
-        name: "Grabstraße",
-        postal_code: "13156",
-        locality: "Berlin",
-      },
-    ]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [
+        {
+          borough: null,
+          suburb: null,
+          regional_key: null,
+          name: "Grabstraße",
+          postal_code: "13156",
+          locality: "Berlin",
+        },
+      ],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -139,13 +335,19 @@ describe("EmployeeAddressFields", () => {
 
   it("fills city from a selected postal code suggestion", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([
-      {
-        postal_code: "10115",
-        locality: "Berlin",
-      },
-    ]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [
+        {
+          postal_code: "10115",
+          locality: "Berlin",
+        },
+      ],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -184,14 +386,23 @@ describe("EmployeeAddressFields", () => {
 
   it("selects a street suggestion with ArrowDown and Enter", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
-      {
-        name: "Grabstraße",
-        postal_code: "13156",
-        locality: "Berlin",
-      },
-    ]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [
+        {
+          borough: null,
+          suburb: null,
+          regional_key: null,
+          name: "Grabstraße",
+          postal_code: "13156",
+          locality: "Berlin",
+        },
+      ],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -226,10 +437,14 @@ describe("EmployeeAddressFields", () => {
 
   it("keeps locality suggestions visible after switching focus from postal code to city with TAB", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([
-      { postal_code: "42103", locality: "Wuppertal" },
-    ]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [{ postal_code: "42103", locality: "Wuppertal" }],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -272,14 +487,23 @@ describe("EmployeeAddressFields", () => {
 
   it("keeps suggestion meta text on canonical muted tokens", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
-      {
-        name: "Grabstraße",
-        postal_code: "13156",
-        locality: "Berlin",
-      },
-    ]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [
+        {
+          borough: null,
+          suburb: null,
+          regional_key: null,
+          name: "Grabstraße",
+          postal_code: "13156",
+          locality: "Berlin",
+        },
+      ],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -312,7 +536,10 @@ describe("EmployeeAddressFields", () => {
     vi.mocked(fetchAddressStreetSuggestions).mockRejectedValue(
       new ApiError("Address reference data is not available yet.", 503)
     );
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -343,8 +570,14 @@ describe("EmployeeAddressFields", () => {
 
   it("shows a visible empty-state message when no street suggestions are found", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -375,10 +608,14 @@ describe("EmployeeAddressFields", () => {
 
   it("fills city and postal code from a city suggestion selection", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([
-      { postal_code: "50667", locality: "Köln" },
-    ]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [{ postal_code: "50667", locality: "Köln" }],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -411,10 +648,14 @@ describe("EmployeeAddressFields", () => {
 
   it("selects a locality suggestion with ArrowDown and Enter on city input", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([
-      { postal_code: "50667", locality: "Köln" },
-    ]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [{ postal_code: "50667", locality: "Köln" }],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -448,10 +689,14 @@ describe("EmployeeAddressFields", () => {
 
   it("requires explicit activation instead of selecting a locality on Tab", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([
-      { postal_code: "50667", locality: "Köln" },
-    ]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [{ postal_code: "50667", locality: "Köln" }],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -484,10 +729,23 @@ describe("EmployeeAddressFields", () => {
 
   it("dismisses street suggestions with Escape and closes the popup", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
-      { name: "Grabstraße", postal_code: "13156", locality: "Berlin" },
-    ]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [
+        {
+          borough: null,
+          suburb: null,
+          regional_key: null,
+          name: "Grabstraße",
+          postal_code: "13156",
+          locality: "Berlin",
+        },
+      ],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -521,10 +779,14 @@ describe("EmployeeAddressFields", () => {
 
   it("dismisses locality suggestions with Escape", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([
-      { postal_code: "10115", locality: "Berlin" },
-    ]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [{ postal_code: "10115", locality: "Berlin" }],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -558,11 +820,31 @@ describe("EmployeeAddressFields", () => {
 
   it("navigates street suggestions with ArrowUp", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
-      { name: "Astraße", postal_code: "10001", locality: "Berlin" },
-      { name: "Bstraße", postal_code: "10002", locality: "Berlin" },
-    ]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [
+        {
+          borough: null,
+          suburb: null,
+          regional_key: null,
+          name: "Astraße",
+          postal_code: "10001",
+          locality: "Berlin",
+        },
+        {
+          borough: null,
+          suburb: null,
+          regional_key: null,
+          name: "Bstraße",
+          postal_code: "10002",
+          locality: "Berlin",
+        },
+      ],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -597,10 +879,23 @@ describe("EmployeeAddressFields", () => {
 
   it("requires explicit activation instead of selecting a street on Tab", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
-      { name: "Grabstraße", postal_code: "13156", locality: "Berlin" },
-    ]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [
+        {
+          borough: null,
+          suburb: null,
+          regional_key: null,
+          name: "Grabstraße",
+          postal_code: "13156",
+          locality: "Berlin",
+        },
+      ],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -636,7 +931,10 @@ describe("EmployeeAddressFields", () => {
     vi.mocked(fetchAddressStreetSuggestions).mockReturnValue(
       new Promise(() => {})
     );
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -665,7 +963,10 @@ describe("EmployeeAddressFields", () => {
 
   it("shows a loading indicator while fetching locality suggestions", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
     vi.mocked(fetchAddressLocalitySuggestions).mockReturnValue(
       new Promise(() => {})
     );
@@ -697,7 +998,10 @@ describe("EmployeeAddressFields", () => {
 
   it("shows a visible API error for locality autocomplete failures", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
     vi.mocked(fetchAddressLocalitySuggestions).mockRejectedValue(
       new ApiError("Locality lookup unavailable.", 503)
     );
@@ -731,8 +1035,14 @@ describe("EmployeeAddressFields", () => {
 
   it("shows no suggestions and skips API call when country is not DE", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -762,10 +1072,23 @@ describe("EmployeeAddressFields", () => {
 
   it("does not fetch street suggestions before the field is focused", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
-      { name: "Grabstraße", postal_code: "13156", locality: "Berlin" },
-    ]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [
+        {
+          borough: null,
+          suburb: null,
+          regional_key: null,
+          name: "Grabstraße",
+          postal_code: "13156",
+          locality: "Berlin",
+        },
+      ],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -792,8 +1115,14 @@ describe("EmployeeAddressFields", () => {
 
   it("renders all fields as disabled in readOnly mode", () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     const { container } = render(
       <I18nProvider i18n={i18n}>
@@ -830,10 +1159,23 @@ describe("EmployeeAddressFields", () => {
 
   it("shows no suggestions and empty state after clearing street below 2 chars", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
-      { name: "Grabstraße", postal_code: "13156", locality: "Berlin" },
-    ]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [
+        {
+          borough: null,
+          suburb: null,
+          regional_key: null,
+          name: "Grabstraße",
+          postal_code: "13156",
+          locality: "Berlin",
+        },
+      ],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     const { rerender } = render(
       <I18nProvider i18n={i18n}>
@@ -886,8 +1228,14 @@ describe("EmployeeAddressFields", () => {
 
   it("triggers onChange when typing in house number and supplement fields", () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -918,10 +1266,14 @@ describe("EmployeeAddressFields", () => {
 
   it("auto-applies a postal code suggestion when typing the exact code", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([
-      { postal_code: "50667", locality: "Köln" },
-    ]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [{ postal_code: "50667", locality: "Köln" }],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -956,10 +1308,14 @@ describe("EmployeeAddressFields", () => {
 
   it("auto-applies a city suggestion when typing the exact city name", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([
-      { postal_code: "50667", locality: "Köln" },
-    ]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [{ postal_code: "50667", locality: "Köln" }],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -994,10 +1350,23 @@ describe("EmployeeAddressFields", () => {
 
   it("auto-applies a street suggestion when typing the exact street name", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
-      { name: "Grabstraße", postal_code: "13156", locality: "Berlin" },
-    ]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [
+        {
+          borough: null,
+          suburb: null,
+          regional_key: null,
+          name: "Grabstraße",
+          postal_code: "13156",
+          locality: "Berlin",
+        },
+      ],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -1031,10 +1400,23 @@ describe("EmployeeAddressFields", () => {
 
   it("hides suggestions when blurring to an external element", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
-      { name: "Grabstraße", postal_code: "13156", locality: "Berlin" },
-    ]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [
+        {
+          borough: null,
+          suburb: null,
+          regional_key: null,
+          name: "Grabstraße",
+          postal_code: "13156",
+          locality: "Berlin",
+        },
+      ],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -1072,8 +1454,14 @@ describe("EmployeeAddressFields", () => {
 
   it("shows no suggestions for non-2-character country code (selectedCountryOption null)", () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -1096,10 +1484,23 @@ describe("EmployeeAddressFields", () => {
 
   it("enters Enter without highlight on street does nothing to onChange", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
-      { name: "Grabstraße", postal_code: "13156", locality: "Berlin" },
-    ]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [
+        {
+          borough: null,
+          suburb: null,
+          regional_key: null,
+          name: "Grabstraße",
+          postal_code: "13156",
+          locality: "Berlin",
+        },
+      ],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -1134,7 +1535,10 @@ describe("EmployeeAddressFields", () => {
     vi.mocked(fetchAddressStreetSuggestions).mockRejectedValue(
       new Error("Network error")
     );
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -1163,8 +1567,14 @@ describe("EmployeeAddressFields", () => {
 
   it("triggers onChange with empty string when country combobox is cleared", () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -1191,8 +1601,14 @@ describe("EmployeeAddressFields", () => {
     vi.useRealTimers();
     const user = (await import("@testing-library/user-event")).default.setup();
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -1222,8 +1638,14 @@ describe("EmployeeAddressFields", () => {
     i18n.activate("de");
     const user = (await import("@testing-library/user-event")).default.setup();
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>
@@ -1249,8 +1671,14 @@ describe("EmployeeAddressFields", () => {
 
   it("shows empty state for no locality suggestions found", async () => {
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
 
     render(
       <I18nProvider i18n={i18n}>

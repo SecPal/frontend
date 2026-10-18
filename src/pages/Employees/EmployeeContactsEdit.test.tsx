@@ -20,8 +20,14 @@ import * as employeeApi from "../../services/employeeApi";
 
 vi.mock("../../services/employeeApi");
 vi.mock("../../services/addressApi", () => ({
-  fetchAddressStreetSuggestions: vi.fn().mockResolvedValue([]),
-  fetchAddressLocalitySuggestions: vi.fn().mockResolvedValue([]),
+  fetchAddressStreetSuggestions: vi.fn().mockResolvedValue({
+    data: [],
+    meta: { source: "OpenPLZ API Data", imported_at: "2026-10-18T00:00:00Z" },
+  }),
+  fetchAddressLocalitySuggestions: vi.fn().mockResolvedValue({
+    data: [],
+    meta: { source: "OpenPLZ API Data", imported_at: "2026-10-18T00:00:00Z" },
+  }),
 }));
 
 const mockNavigate = vi.fn();

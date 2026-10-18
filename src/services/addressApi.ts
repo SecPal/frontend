@@ -4,31 +4,21 @@
 import { apiConfig } from "../config";
 import { ApiError } from "./ApiError";
 import { apiFetch } from "./csrf";
-
-export interface AddressStreetSuggestion {
-  name: string;
-  postal_code: string;
-  locality: string;
-  borough?: string | null;
-  suburb?: string | null;
-  regional_key?: string | null;
-}
-
-export interface AddressLocalitySuggestion {
-  postal_code: string;
-  locality: string;
-}
-
-interface AddressApiResponse<T> {
-  data: T[];
-}
+import type {
+  AddressStreetSuggestionResponse,
+  AddressLocalitySuggestionResponse,
+} from "@/types/api";
+export type {
+  AddressStreetSuggestion,
+  AddressLocalitySuggestion,
+} from "@/types/api";
 
 export async function fetchAddressStreetSuggestions(params: {
   name?: string;
   postalCode?: string;
   locality?: string;
   limit?: number;
-}): Promise<AddressStreetSuggestion[]> {
+}): Promise<AddressStreetSuggestionResponse> {
   const searchParams = new URLSearchParams();
 
   if (params.name) {
@@ -64,16 +54,14 @@ export async function fetchAddressStreetSuggestions(params: {
     );
   }
 
-  const payload =
-    (await response.json()) as AddressApiResponse<AddressStreetSuggestion>;
-  return payload.data ?? [];
+  return (await response.json()) as AddressStreetSuggestionResponse;
 }
 
 export async function fetchAddressLocalitySuggestions(params: {
   postalCode?: string;
   locality?: string;
   limit?: number;
-}): Promise<AddressLocalitySuggestion[]> {
+}): Promise<AddressLocalitySuggestionResponse> {
   const searchParams = new URLSearchParams();
 
   if (params.postalCode) {
@@ -106,7 +94,5 @@ export async function fetchAddressLocalitySuggestions(params: {
     );
   }
 
-  const payload =
-    (await response.json()) as AddressApiResponse<AddressLocalitySuggestion>;
-  return payload.data ?? [];
+  return (await response.json()) as AddressLocalitySuggestionResponse;
 }

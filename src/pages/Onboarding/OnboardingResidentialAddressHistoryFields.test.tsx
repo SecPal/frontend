@@ -30,8 +30,14 @@ function localIsoDateWithDayOffset(dayOffset: number): string {
 }
 
 vi.mock("../../services/addressApi", () => ({
-  fetchAddressStreetSuggestions: vi.fn().mockResolvedValue([]),
-  fetchAddressLocalitySuggestions: vi.fn().mockResolvedValue([]),
+  fetchAddressStreetSuggestions: vi.fn().mockResolvedValue({
+    data: [],
+    meta: { source: "OpenPLZ API Data", imported_at: "2026-10-18T00:00:00Z" },
+  }),
+  fetchAddressLocalitySuggestions: vi.fn().mockResolvedValue({
+    data: [],
+    meta: { source: "OpenPLZ API Data", imported_at: "2026-10-18T00:00:00Z" },
+  }),
 }));
 
 import {
@@ -209,14 +215,23 @@ describe("OnboardingResidentialAddressHistoryFields", () => {
   it("keeps street autocomplete working inside the onboarding address history step", async () => {
     vi.useFakeTimers();
     const onChange = vi.fn();
-    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue([
-      {
-        name: "Grabstraße",
-        postal_code: "13156",
-        locality: "Berlin",
-      },
-    ]);
-    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue([]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [
+        {
+          borough: null,
+          suburb: null,
+          regional_key: null,
+          name: "Grabstraße",
+          postal_code: "13156",
+          locality: "Berlin",
+        },
+      ],
+      meta: { source: "OpenPLZ API Data", imported_at: "2026-10-18T00:00:00Z" },
+    });
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+      data: [],
+      meta: { source: "OpenPLZ API Data", imported_at: "2026-10-18T00:00:00Z" },
+    });
 
     render(
       <I18nProvider i18n={i18n}>
