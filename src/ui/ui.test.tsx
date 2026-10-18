@@ -667,15 +667,28 @@ describe("shared shadcn/Base UI basis", () => {
 
     const language = screen.getByRole("combobox", { name: "Language" });
     expect(language).toHaveTextContent("German");
+    expect(language).toHaveClass("bg-background", "text-foreground");
     await user.click(language);
     const englishOption = screen.getByRole("option", { name: "English" });
+    expect(englishOption.closest('[data-slot="select-content"]')).toHaveClass(
+      "bg-background",
+      "text-foreground"
+    );
     expect(englishOption).toHaveAttribute("data-slot", "select-item");
     await user.click(englishOption);
 
-    await user.click(screen.getByRole("checkbox", { name: "Accept terms" }));
+    const terms = screen.getByRole("checkbox", { name: "Accept terms" });
+    expect(terms).toHaveClass("bg-background", "text-primary");
+    await user.click(terms);
+    expect(terms).toBeChecked();
+    expect(terms).toHaveClass("bg-background", "text-primary");
     expect(handleCheckboxChange).toHaveBeenCalledWith(true);
 
-    await user.click(screen.getByRole("radio", { name: "Recovery code" }));
+    const recoveryCode = screen.getByRole("radio", { name: "Recovery code" });
+    expect(recoveryCode).toHaveClass("bg-background", "text-primary");
+    await user.click(recoveryCode);
+    expect(recoveryCode).toBeChecked();
+    expect(recoveryCode).toHaveClass("bg-background", "text-primary");
     expect(handleRadioChange).toHaveBeenCalledWith("recovery");
   });
 

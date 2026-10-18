@@ -428,6 +428,12 @@ describe("OnboardingWizard", () => {
       await screen.findByRole("heading", { name: /personal information form/i })
     ).toBeInTheDocument();
 
+    expect(
+      screen
+        .getByRole("heading", { name: /welcome to secpal onboarding/i })
+        .closest("section")
+    ).toHaveClass("py-6", "gap-6");
+
     const birthNameInput = await screen.findByLabelText(/birth name/i);
     expect(birthNameInput).toHaveValue("Lovelace");
     expect(screen.getByLabelText(/gender/i)).toHaveTextContent("female");
@@ -460,7 +466,8 @@ describe("OnboardingWizard", () => {
     alertSpy.mockRestore();
   });
 
-  it("renders the custom residential address history onboarding step", async () => {
+  it("validates address history in field order and preserves fresh server errors", async () => {
+    const user = userEvent.setup();
     onboardingApiMocks.fetchOnboardingSteps.mockResolvedValueOnce([
       {
         step_number: 2,
@@ -522,6 +529,64 @@ describe("OnboardingWizard", () => {
     expect(
       screen.queryByRole("heading", { name: /previous residences/i })
     ).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: /submit for review/i })
+    );
+
+    for (const label of [
+      /^postal code$/i,
+      /^city$/i,
+      /^street$/i,
+      /^house number$/i,
+      /living there since/i,
+    ]) {
+      expect(screen.getByLabelText(label)).toBeInvalid();
+    }
+    expect(
+      screen.getByText(/current residential address: postal code:/i)
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/^postal code$/i), {
+      target: { value: "10115" },
+    });
+    await waitFor(() => {
+      expect(screen.getByLabelText(/^postal code$/i)).toBeValid();
+      expect(screen.getByLabelText(/^city$/i)).toBeInvalid();
+      expect(screen.getByLabelText(/^street$/i)).toBeInvalid();
+      expect(
+        screen.getByText(/current residential address: city:/i)
+      ).toBeInTheDocument();
+    });
+    expect(
+      onboardingApiMocks.createOnboardingSubmission
+    ).not.toHaveBeenCalled();
+
+    onboardingApiMocks.createOnboardingSubmission.mockRejectedValueOnce(
+      new ApiError("The given data was invalid.", 422, {
+        "form_data.current_address.city": ["City rejected by server."],
+      })
+    );
+    await user.click(screen.getByRole("button", { name: /save draft/i }));
+    expect(
+      await screen.findByText("City rejected by server.")
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/^city$/i)).toBeInvalid();
+    expect(screen.getByLabelText(/^postal code$/i)).toBeValid();
+    expect(screen.getByLabelText(/^street$/i)).toBeValid();
+    fireEvent.change(screen.getByLabelText(/^street$/i), {
+      target: { value: "Test Street" },
+    });
+    expect(screen.getByText("City rejected by server.")).toBeInTheDocument();
+    expect(screen.getByLabelText(/^city$/i)).toBeInvalid();
+
+    fireEvent.change(screen.getByLabelText(/^city$/i), {
+      target: { value: "Berlin" },
+    });
+    expect(
+      screen.queryByText("City rejected by server.")
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^city$/i)).toBeValid();
   });
 
   it("opens the completion page when onboarding was already submitted", async () => {
@@ -3774,7 +3839,7 @@ describe("OnboardingWizard server-side validation feedback", () => {
       "bg-muted"
     );
     expect(requiredList).toHaveClass("text-muted-foreground");
-    expect(optionalBadge).toHaveClass("bg-background");
+    expect(optionalBadge).toHaveClass("bg-background", "text-foreground");
     expect(supportHeading.closest("section")).toHaveClass("border-border");
 
     await selectNationality(user, "de");
@@ -4633,9 +4698,11 @@ describe("OnboardingWizard initial loading and error states", () => {
 
     renderWithProviders();
 
-    expect(
-      screen.getByRole("heading", { name: /welcome to secpal onboarding/i })
-    ).toBeInTheDocument();
+    const heading = screen.getByRole("heading", {
+      name: /welcome to secpal onboarding/i,
+    });
+    expect(heading).toBeInTheDocument();
+    expect(heading.closest("section")).toHaveClass("py-6", "gap-6");
     const loadingRegion = screen.getByRole("status", {
       name: /loading onboarding/i,
     });

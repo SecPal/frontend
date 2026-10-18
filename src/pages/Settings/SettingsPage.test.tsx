@@ -1422,8 +1422,8 @@ describe("SettingsPage", () => {
     expect(verificationLegend).toHaveClass("text-foreground");
     expect(recoveryChoice).toHaveClass(
       "border-border",
-      "bg-card",
-      "text-card-foreground"
+      "bg-background",
+      "text-foreground"
     );
   });
 

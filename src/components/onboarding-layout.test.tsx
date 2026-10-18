@@ -10,7 +10,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router";
+import { MemoryRouter, useLocation } from "react-router";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import { messages as deMessages } from "../locales/de/messages.mjs";
@@ -18,6 +18,7 @@ import { messages as enMessages } from "../locales/en/messages.mjs";
 import { OnboardingLayout, LOGOUT_TIMEOUT_MS } from "./onboarding-layout";
 import * as authHook from "../hooks/useAuth";
 import * as authTransport from "../services/authTransport";
+import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 
 const mockNavigate = vi.fn();
 const authContext = {
@@ -34,6 +35,13 @@ const authContext = {
 
 vi.mock("../hooks/useAuth");
 vi.mock("../services/authTransport");
+vi.mock("../hooks/useServiceWorkerUpdate", () => ({
+  useServiceWorkerUpdate: vi.fn(() => ({
+    needRefresh: false,
+    offlineReady: false,
+    updateServiceWorker: vi.fn(),
+  })),
+}));
 vi.mock("react-router", async () => {
   const actual = await vi.importActual("react-router");
 
@@ -66,12 +74,20 @@ function renderLayout() {
   );
 }
 
-function renderWithProviders(component: React.ReactNode) {
+function renderWithProviders(
+  component: React.ReactNode,
+  initialEntries = ["/"]
+) {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={initialEntries}>
       <I18nProvider i18n={i18n}>{component}</I18nProvider>
     </MemoryRouter>
   );
+}
+
+function LocationProbe() {
+  const location = useLocation();
+  return <output>{JSON.stringify(location)}</output>;
 }
 
 describe("OnboardingLayout", () => {
@@ -99,6 +115,221 @@ describe("OnboardingLayout", () => {
     ).toBeInTheDocument();
   });
 
+  it("keeps the rounded update banner centered below the onboarding header", () => {
+    vi.mocked(useServiceWorkerUpdate).mockReturnValueOnce({
+      needRefresh: true,
+      offlineReady: false,
+      updateServiceWorker: vi.fn(),
+    });
+
+    renderLayout();
+
+    const banner = screen.getByRole("status");
+    expect(banner).toHaveClass("rounded-md", "mx-auto", "max-w-4xl");
+    expect(screen.getByRole("banner").compareDocumentPosition(banner)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+    expect(
+      screen.getByRole("button", { name: /update application now/i })
+    ).toBeInTheDocument();
+  });
+
+  it.each(["en", "de"])(
+    "renders the SecPal footer below onboarding content in %s",
+    (locale) => {
+      i18n.activate(locale);
+      renderLayout();
+
+      const link = screen.getByRole("link", {
+        name: "Powered by SecPal – A guard's best friend",
+      });
+
+      expect(link).toHaveAttribute("href", "https://secpal.app");
+      expect(link.closest("footer")).toBeInTheDocument();
+      expect(
+        screen
+          .getByText("Onboarding Wizard Content")
+          .compareDocumentPosition(link)
+      ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    }
+  );
+
+  it.each([
+    {
+      locale: "en",
+      legal: "Legal",
+      imprint: "Imprint",
+      privacy: "Privacy",
+      source: "Source Code",
+    },
+    {
+      locale: "de",
+      legal: "Rechtliches",
+      imprint: "Impressum",
+      privacy: "Datenschutz",
+      source: "Quellcode",
+    },
+  ])(
+    "provides the legal menu in $locale",
+    async ({ locale, legal, imprint, privacy, source }) => {
+      i18n.activate(locale);
+      const user = userEvent.setup();
+      renderLayout();
+
+      await user.click(screen.getByRole("button", { name: legal }));
+
+      expect(
+        await screen.findByRole("menuitem", { name: imprint })
+      ).toHaveAttribute("data-disabled", "");
+      expect(screen.getByRole("menuitem", { name: privacy })).toHaveAttribute(
+        "data-disabled",
+        ""
+      );
+      expect(screen.getByRole("menuitem", { name: source })).toHaveAttribute(
+        "href",
+        "/source"
+      );
+    }
+  );
+
+  it("preserves the onboarding return address when opening source code", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(
+      <>
+        <OnboardingLayout>
+          <div>Onboarding Wizard Content</div>
+        </OnboardingLayout>
+        <LocationProbe />
+      </>,
+      ["/onboarding?step=address#current"]
+    );
+
+    await user.click(screen.getByRole("button", { name: "Legal" }));
+    await user.click(
+      await screen.findByRole("menuitem", { name: "Source Code" })
+    );
+
+    expect(
+      JSON.parse(screen.getByRole("status").textContent ?? "{}")
+    ).toMatchObject({
+      pathname: "/source",
+      state: { sourceReturnTo: "/onboarding?step=address#current" },
+    });
+  });
+
+  it.each([false, true])(
+    "aligns the onboarding header with source-page controls (wide: %s)",
+    (wide) => {
+      vi.stubGlobal(
+        "matchMedia",
+        vi.fn(() => ({
+          matches: wide,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        }))
+      );
+
+      try {
+        const { container } = renderLayout();
+        const header = container.querySelector(
+          '[data-slot="public-page-header"]'
+        );
+        const controls = container.querySelector(
+          '[data-slot="public-page-header-controls"]'
+        );
+
+        expect(header).toHaveClass(
+          "grid",
+          "min-[86rem]:grid-cols-[minmax(0,1fr)_minmax(0,64rem)_minmax(0,1fr)]"
+        );
+        expect(header?.parentElement).toHaveClass(
+          "pt-[calc(1.5rem+var(--app-safe-area-inset-top))]"
+        );
+        expect(
+          Array.from(controls?.querySelectorAll("button") ?? []).map((button) =>
+            button.textContent?.trim()
+          )
+        ).toEqual(
+          wide
+            ? ["Legal", "Sign out", "English"]
+            : ["Legal", "English", "Sign out"]
+        );
+        expect(
+          screen.getAllByRole("button", { name: "Sign out" })
+        ).toHaveLength(1);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    }
+  );
+
+  it("updates header order on resize and removes its media-query listener", () => {
+    const mediaQuery = {
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => mediaQuery)
+    );
+
+    try {
+      const { container, unmount } = renderLayout();
+      const onChange = mediaQuery.addEventListener.mock.calls[0]?.[1] as (
+        event: MediaQueryListEvent
+      ) => void;
+      expect(onChange).toBeTypeOf("function");
+
+      act(() => onChange({ matches: true } as MediaQueryListEvent));
+
+      const controls = container.querySelector(
+        '[data-slot="public-page-header-controls"]'
+      );
+      expect(
+        Array.from(controls?.querySelectorAll("button") ?? []).map((button) =>
+          button.textContent?.trim()
+        )
+      ).toEqual(["Legal", "Sign out", "English"]);
+      unmount();
+      expect(mediaQuery.removeEventListener).toHaveBeenCalledWith(
+        "change",
+        onChange
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("switches the onboarding controls to German", async () => {
+    const previousPreference = localStorage.getItem("secpal-locale");
+    const previousLanguage = document.documentElement.lang;
+    const user = userEvent.setup();
+    renderLayout();
+
+    try {
+      await user.click(
+        screen.getByRole("combobox", { name: "Select language" })
+      );
+      await user.click(await screen.findByRole("option", { name: "Deutsch" }));
+
+      expect(
+        await screen.findByRole("button", { name: "Rechtliches" })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "Abmelden" })
+      ).toBeInTheDocument();
+      expect(localStorage.getItem("secpal-locale")).toBe("de");
+    } finally {
+      if (previousPreference === null) {
+        localStorage.removeItem("secpal-locale");
+      } else {
+        localStorage.setItem("secpal-locale", previousPreference);
+      }
+      document.documentElement.lang = previousLanguage;
+    }
+  });
+
   it("keeps the onboarding shell on canonical theme tokens", () => {
     const { container } = renderLayout();
 
@@ -107,7 +338,6 @@ describe("OnboardingLayout", () => {
 
     expect(shell).toHaveClass("bg-background");
     expect(shell).toHaveClass("text-foreground");
-    expect(header).toHaveClass("border-border");
 
     expect(shell?.className).not.toContain("bg-white");
     expect(shell?.className).not.toContain("lg:bg-zinc-50");

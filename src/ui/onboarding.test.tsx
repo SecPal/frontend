@@ -161,6 +161,8 @@ describe("onboarding shadcn primitives", () => {
 
     const yes = screen.getByRole("radio", { name: "Yes" });
     const no = screen.getByRole("radio", { name: "No" });
+    expect(yes).toHaveClass("bg-background", "text-primary");
+    expect(no).toHaveClass("bg-background", "text-primary");
 
     expect(
       screen.getByRole("radiogroup", {
@@ -395,8 +397,8 @@ describe("onboarding shadcn primitives", () => {
     );
     expect(selectContent).toHaveClass(
       "border-border",
-      "bg-popover",
-      "text-popover-foreground"
+      "bg-background",
+      "text-foreground"
     );
     expect(selectItem).toHaveClass(
       "data-highlighted:bg-accent",
@@ -456,6 +458,9 @@ describe("onboarding shadcn primitives", () => {
       "street-suggestions"
     );
     const listbox = screen.getByRole("listbox");
+    expect(
+      listbox.closest('[data-slot="onboarding-autocomplete-popover-content"]')
+    ).toHaveClass("bg-background", "text-foreground");
     expect(listbox).toHaveAttribute("id", "street-suggestions");
     expect(listbox).toHaveAttribute(
       "data-slot",
@@ -489,7 +494,13 @@ describe("onboarding shadcn primitives", () => {
       />
     );
 
-    await user.click(screen.getByRole("combobox", { name: "Nationality" }));
+    const trigger = screen.getByRole("combobox", { name: "Nationality" });
+    expect(trigger).toHaveClass(
+      "bg-background",
+      "text-foreground",
+      "dark:bg-background"
+    );
+    await user.click(trigger);
     await user.type(await screen.findByPlaceholderText(/search/i), "fra");
     await user.keyboard("{Enter}");
 
@@ -518,7 +529,7 @@ describe("onboarding shadcn primitives", () => {
     ).toBeInTheDocument();
     expect(
       document.querySelector('[data-slot="onboarding-command-popover-content"]')
-    ).toBeInTheDocument();
+    ).toHaveClass("bg-background", "text-foreground");
     expect(
       screen.getByRole("combobox", { name: "Search options" })
     ).toHaveAttribute("data-slot", "command-input");

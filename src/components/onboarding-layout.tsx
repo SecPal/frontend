@@ -5,6 +5,8 @@ import { useNavigate } from "react-router";
 import { Trans } from "@lingui/react/macro";
 import { Suspense, type ReactNode } from "react";
 import { Logo } from "./Logo";
+import { Footer } from "./Footer";
+import { PublicPageHeader } from "./PublicPageHeader";
 import { UpdatePrompt } from "./UpdatePrompt";
 import { useAuth } from "../hooks/useAuth";
 import { getAuthTransport } from "../services/authTransport";
@@ -50,17 +52,22 @@ export function OnboardingLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <main className="flex min-h-svh flex-col bg-background p-4 text-foreground lg:items-center lg:justify-center lg:p-8">
-      <UpdatePrompt />
-      <div className="flex w-full max-w-4xl flex-1 flex-col lg:flex-none">
-        <header className="flex items-center justify-between gap-4 border-b border-border pb-6">
+    <main className="flex min-h-[var(--app-shell-min-height)] flex-col bg-background text-foreground">
+      <PublicPageHeader>
+        <header className="flex items-center justify-between gap-4">
           <Logo size="32" />
           <Button variant="outline" onClick={() => void handleLogout()}>
             <Trans>Sign out</Trans>
           </Button>
         </header>
-        <div className="pt-8">
+      </PublicPageHeader>
+      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 pb-4 sm:px-6 lg:px-8 lg:pb-8">
+        <div className="flex-1">
+          <UpdatePrompt className="mx-auto mb-6 max-w-4xl rounded-md" />
           <Suspense fallback={<RouteContentFallback />}>{children}</Suspense>
+        </div>
+        <div className="pt-8">
+          <Footer />
         </div>
       </div>
     </main>

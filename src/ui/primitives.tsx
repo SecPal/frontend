@@ -137,7 +137,7 @@ export function SearchableAutocompleteListbox({
           <ComboboxPrimitive.Popup
             data-slot={`${slotPrefix}-autocomplete-popover-content`}
             className={cn(
-              "bg-popover text-popover-foreground z-50 w-(--anchor-width) overflow-hidden rounded-md border border-border shadow-lg outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+              "bg-background text-foreground z-50 w-(--anchor-width) overflow-hidden rounded-md border border-border shadow-lg outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
               className
             )}
           >
@@ -192,6 +192,8 @@ export interface SearchableCommandPopoverProps {
   emptyMessage: string;
   disabled?: boolean;
   errorMessage?: string;
+  invalid?: boolean;
+  describedBy?: string;
   slotPrefix: string;
 }
 
@@ -205,10 +207,16 @@ export function SearchableCommandPopover({
   emptyMessage,
   disabled = false,
   errorMessage,
+  invalid = false,
+  describedBy,
   slotPrefix,
 }: SearchableCommandPopoverProps) {
   const labelId = useId();
   const errorId = useId();
+  const descriptionIds =
+    [errorMessage ? errorId : undefined, describedBy]
+      .filter(Boolean)
+      .join(" ") || undefined;
   const [inputValue, setInputValue] = useState("");
   const selectedOption =
     options.find((option) => option.value === value) ?? null;
@@ -252,10 +260,10 @@ export function SearchableCommandPopover({
           render={
             <Button
               variant="outline"
-              className="w-full justify-between"
+              className="w-full justify-between bg-background text-foreground dark:bg-background"
               aria-labelledby={labelId}
-              aria-invalid={errorMessage ? true : undefined}
-              aria-describedby={errorMessage ? errorId : undefined}
+              aria-invalid={invalid || Boolean(errorMessage) || undefined}
+              aria-describedby={descriptionIds}
               disabled={disabled}
             />
           }
@@ -271,7 +279,7 @@ export function SearchableCommandPopover({
           >
             <ComboboxPrimitive.Popup
               data-slot={`${slotPrefix}-command-popover-content`}
-              className="bg-popover text-popover-foreground z-50 w-(--anchor-width) overflow-hidden rounded-md border border-border shadow-lg outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
+              className="bg-background text-foreground z-50 w-(--anchor-width) overflow-hidden rounded-md border border-border shadow-lg outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
             >
               <div className="flex h-9 items-center gap-2 border-b border-border px-3">
                 <Search
@@ -281,8 +289,8 @@ export function SearchableCommandPopover({
                 <ComboboxPrimitive.Input
                   data-slot="command-input"
                   aria-label={searchPlaceholder}
-                  aria-invalid={errorMessage ? true : undefined}
-                  aria-describedby={errorMessage ? errorId : undefined}
+                  aria-invalid={invalid || Boolean(errorMessage) || undefined}
+                  aria-describedby={descriptionIds}
                   placeholder={searchPlaceholder}
                   className="placeholder:text-muted-foreground flex h-9 w-full rounded-md bg-transparent py-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 />
@@ -380,7 +388,7 @@ export const RadioGroupItem = forwardRef<
       ref={ref}
       data-slot="radio-group-item"
       className={cn(
-        "border-input text-primary focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive aspect-square size-4 shrink-0 rounded-full border shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
+        "border-input bg-background text-primary focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive aspect-square size-4 shrink-0 rounded-full border shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       {...props}
@@ -988,6 +996,8 @@ export function EmployeeCommandPopover({
   emptyMessage,
   disabled = false,
   errorMessage,
+  invalid = false,
+  describedBy,
 }: EmployeeCommandPopoverProps) {
   return (
     <SearchableCommandPopover
@@ -1000,6 +1010,8 @@ export function EmployeeCommandPopover({
       emptyMessage={emptyMessage}
       disabled={disabled}
       errorMessage={errorMessage}
+      invalid={invalid}
+      describedBy={describedBy}
       slotPrefix="employee"
     />
   );
@@ -1015,6 +1027,8 @@ export interface EmployeeCommandPopoverProps {
   emptyMessage: string;
   disabled?: boolean;
   errorMessage?: string;
+  invalid?: boolean;
+  describedBy?: string;
 }
 
 export interface EmployeePageTitleProps extends ComponentPropsWithoutRef<"h1"> {

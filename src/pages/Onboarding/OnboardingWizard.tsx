@@ -53,6 +53,7 @@ import {
 import {
   getResidentialAddressHistoryValue,
   validateResidentialAddressHistoryValue,
+  type ResidentialAddressHistoryValue,
 } from "./onboardingResidentialAddressHistory";
 import {
   Alert,
@@ -142,6 +143,29 @@ function getEntryFeedbackFromRouteState(
 }
 
 type FieldErrors = Record<string, string>;
+type ResidentialValidation =
+  | { source: "client" }
+  | { source: "server"; value: ResidentialAddressHistoryValue };
+
+function residentialValidationFieldValue(
+  value: ResidentialAddressHistoryValue,
+  fieldKey: string
+): string | undefined {
+  if (fieldKey === "previous_addresses.coverage") {
+    return JSON.stringify(value);
+  }
+  return JSON.stringify(
+    fieldKey
+      .split(".")
+      .reduce<unknown>(
+        (entry, key) =>
+          entry !== null && typeof entry === "object"
+            ? (entry as Record<string, unknown>)[key]
+            : undefined,
+        value
+      )
+  );
+}
 type OnboardingDocumentType = "contract" | "id_document" | "banking_details";
 type OnboardingIdDocumentSubtype =
   | "identity_document"
@@ -1210,7 +1234,7 @@ function OnboardingWizardFrame({
 }) {
   return (
     <div className="mx-auto max-w-4xl">
-      <section className="rounded-md border border-border bg-card text-card-foreground shadow-sm">
+      <Card className="rounded-md">
         <CardHeader>
           <CardTitle>
             <Trans>Welcome to SecPal Onboarding</Trans>
@@ -1231,7 +1255,7 @@ function OnboardingWizardFrame({
           )}
         </CardHeader>
         <CardContent>{children}</CardContent>
-      </section>
+      </Card>
     </div>
   );
 }
@@ -1640,7 +1664,7 @@ function OnboardingStepsOverview({ steps }: { steps: OnboardingStep[] }) {
         {optionalSteps.length > 0 ? (
           <section aria-label={_(msg`Optional sections`)}>
             <div className="mb-2 flex items-center gap-2">
-              <Badge className="bg-background">
+              <Badge className="bg-background text-foreground">
                 <Trans>Optional sections</Trans>
               </Badge>
             </div>
@@ -1774,6 +1798,33 @@ export function OnboardingWizard() {
     [entryRouteState, _]
   );
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const [residentialValidation, setResidentialValidation] =
+    useState<ResidentialValidation | null>(null);
+  let residentialFieldErrors = fieldErrors;
+  if (
+    residentialValidation &&
+    Object.keys(fieldErrors).some(isResidentialAddressHistoryFieldKey)
+  ) {
+    const value = getResidentialAddressHistoryValue(formData);
+    const localErrors = validateResidentialAddressHistoryValue(value, _);
+    residentialFieldErrors =
+      residentialValidation.source === "client"
+        ? localErrors
+        : Object.fromEntries(
+            Object.entries(fieldErrors).flatMap(([key, message]) => {
+              if (
+                residentialValidationFieldValue(value, key) ===
+                residentialValidationFieldValue(
+                  residentialValidation.value,
+                  key
+                )
+              ) {
+                return [[key, message]];
+              }
+              return localErrors[key] ? [[key, localErrors[key]]] : [];
+            })
+          );
+  }
   const [apiValidationDetailMessages, setApiValidationDetailMessages] =
     useState<string[]>([]);
   const [nationalityOptions, setNationalityOptions] = useState<
@@ -2453,6 +2504,9 @@ export function OnboardingWizard() {
               msg`We couldn't submit the form yet. Please review the highlighted fields.`
             ),
           });
+          setResidentialValidation(
+            isResidentialHistoryStep ? { source: "client" } : null
+          );
           setFieldErrors(stepFieldErrors);
           setApiValidationDetailMessages([]);
           resetUploadState();
@@ -2541,6 +2595,7 @@ export function OnboardingWizard() {
       setError(null);
       setFeedback(null);
       setFieldErrors({});
+      setResidentialValidation(null);
       setApiValidationDetailMessages([]);
 
       const nextFormData = sanitizeEmployeeOnboardingFormData(
@@ -2629,6 +2684,14 @@ export function OnboardingWizard() {
             : formatServerValidationMessage(fieldKey, first, schema, _);
         }
         setError(null);
+        setResidentialValidation(
+          isResidentialAddressHistoryTemplate(template)
+            ? {
+                source: "server",
+                value: getResidentialAddressHistoryValue(formData),
+              }
+            : null
+        );
         setFieldErrors(nextFieldErrors);
         const supplementalRaw =
           err.errors.form_data?.[0] ??
@@ -2720,6 +2783,7 @@ export function OnboardingWizard() {
       }
 
       setError(null);
+      setResidentialValidation({ source: "client" });
       setFieldErrors(nextFieldErrors);
       setApiValidationDetailMessages([]);
       const errKeys = Object.keys(nextFieldErrors);
@@ -3114,14 +3178,6 @@ export function OnboardingWizard() {
           bewacher_id_unknown: nextResidential.bewacher_id_unknown,
         };
       });
-
-      setFieldErrors((currentFieldErrors) =>
-        Object.fromEntries(
-          Object.entries(currentFieldErrors).filter(
-            ([fieldKey]) => !isResidentialAddressHistoryFieldKey(fieldKey)
-          )
-        )
-      );
     },
     []
   );
@@ -3515,7 +3571,7 @@ export function OnboardingWizard() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <section className="rounded-md border border-border bg-card text-card-foreground shadow-sm">
+      <Card className="rounded-md">
         <CardHeader>
           <CardTitle>
             <Trans>Welcome to SecPal Onboarding</Trans>
@@ -3610,7 +3666,7 @@ export function OnboardingWizard() {
               {isResidentialAddressHistoryTemplate(template) ? (
                 <OnboardingResidentialAddressHistoryFields
                   value={getResidentialAddressHistoryValue(formData)}
-                  errors={fieldErrors}
+                  errors={residentialFieldErrors}
                   readOnly={!isCurrentStepEditable}
                   onChange={handleResidentialAddressHistoryChange}
                 />
@@ -4512,7 +4568,7 @@ export function OnboardingWizard() {
             </div>
           )}
         </CardContent>
-      </section>
+      </Card>
     </div>
   );
 }
