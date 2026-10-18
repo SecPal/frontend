@@ -9,13 +9,11 @@ import type { AddressReferenceMeta } from "@/types/api";
 interface AddressDataAttributionProps {
   id?: string;
   meta?: AddressReferenceMeta;
-  sourceUrl?: string | null;
 }
 
 export function AddressDataAttribution({
   id,
   meta,
-  sourceUrl,
 }: AddressDataAttributionProps) {
   const { _ } = useLingui();
   return (
@@ -23,11 +21,12 @@ export function AddressDataAttribution({
       id={id}
       role="note"
       aria-label={_(msg`Address data attribution`)}
-      className="col-span-full text-sm leading-6 text-muted-foreground"
+      className="text-xs leading-5 text-muted-foreground"
     >
       <Trans>Address data:</Trans>{" "}
       <a
-        className="underline underline-offset-4"
+        tabIndex={-1}
+        className="underline underline-offset-2 hover:text-foreground"
         href="https://github.com/openpotato/openplzapi.data"
         target="_blank"
         rel="noopener noreferrer"
@@ -36,41 +35,24 @@ export function AddressDataAttribution({
       </a>
       {" · "}
       <a
-        className="underline underline-offset-4"
+        tabIndex={-1}
+        className="underline underline-offset-2 hover:text-foreground"
         href="https://www.openstreetmap.org/copyright"
         target="_blank"
         rel="noopener noreferrer"
       >
-        © OpenStreetMap contributors
+        <Trans>© OpenStreetMap contributors</Trans>
       </a>
       {" · "}
       <a
-        className="underline underline-offset-4"
+        tabIndex={-1}
+        className="underline underline-offset-2 hover:text-foreground"
         href="https://opendatacommons.org/licenses/odbl/1-0/"
         target="_blank"
         rel="noopener noreferrer"
       >
         {meta?.license ?? "ODbL-1.0"}
       </a>
-      {sourceUrl ? (
-        <>
-          {" · "}
-          <a
-            className="underline underline-offset-4"
-            href={sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Trans>Source and alterations</Trans>
-          </a>
-        </>
-      ) : null}
-      {meta ? (
-        <>
-          {" "}
-          · <span>{meta.attribution ?? meta.source}</span>
-        </>
-      ) : null}
     </p>
   );
 }

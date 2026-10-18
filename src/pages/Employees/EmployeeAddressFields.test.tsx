@@ -108,7 +108,6 @@ describe("EmployeeAddressFields", () => {
       if (empty)
         expect(screen.getByText("No address suggestions found.")).toBeVisible();
       else expect(screen.getByRole("option")).toBeVisible();
-      expect(screen.getByText(meta.attribution)).toBeVisible();
       expect(input).toHaveAccessibleDescription(
         expect.stringContaining("OpenStreetMap")
       );
@@ -124,12 +123,17 @@ describe("EmployeeAddressFields", () => {
         screen.getAllByRole("note", { name: "Address data attribution" })
       ).toHaveLength(1);
       expect(notice).toHaveTextContent(
-        "Address data: OpenPLZ / OpenPotato · © OpenStreetMap contributors"
+        /^Address data: OpenPLZ \/ OpenPotato · © OpenStreetMap contributors · ODbL-1\.0$/
       );
       expect(
         screen
-          .getByRole("combobox", { name: "Country" })
-          .compareDocumentPosition(notice) & Node.DOCUMENT_POSITION_FOLLOWING
+          .getByRole("combobox", { name: "Postal Code" })
+          .closest('[data-slot="field"]')
+      ).toContainElement(notice);
+      expect(
+        notice.compareDocumentPosition(
+          screen.getByRole("combobox", { name: "City" })
+        ) & Node.DOCUMENT_POSITION_FOLLOWING
       ).toBeTruthy();
       expect(input).toHaveAccessibleDescription(
         expect.stringContaining("OpenStreetMap")
@@ -152,9 +156,12 @@ describe("EmployeeAddressFields", () => {
         "href",
         "https://opendatacommons.org/licenses/odbl/1-0/"
       );
-      expect(
-        within(notice).getByRole("link", { name: "Source and alterations" })
-      ).toHaveAttribute("href", "/source#address-data");
+      expect(within(notice).getAllByRole("link")).toHaveLength(3);
+      expect(notice).toHaveClass(
+        "text-xs",
+        "leading-5",
+        "text-muted-foreground"
+      );
       fireEvent.blur(input);
       act(() => license.focus());
       await act(async () => {
@@ -166,7 +173,45 @@ describe("EmployeeAddressFields", () => {
     }
   );
 
-  it("keeps attribution links in keyboard order and preserves street selection", async () => {
+  it("localizes the compact address credit in German", async () => {
+    i18n.activate("de");
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    render(
+      <I18nProvider i18n={i18n}>
+        <EmployeeAddressFields
+          draft={{
+            street: "Gr",
+            houseNumber: "",
+            postalCode: "",
+            city: "",
+            supplement: "",
+            country: "DE",
+          }}
+          onChange={vi.fn()}
+        />
+      </I18nProvider>
+    );
+    fireEvent.focus(screen.getByRole("combobox", { name: "Straße" }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
+    const notice = screen.getByRole("note", {
+      name: "Quellenangabe der Adressdaten",
+    });
+    expect(notice).toHaveTextContent(
+      /^Adressdaten: OpenPLZ \/ OpenPotato · © OpenStreetMap-Mitwirkende · ODbL-1\.0$/
+    );
+    expect(
+      within(notice).getByRole("link", {
+        name: "© OpenStreetMap-Mitwirkende",
+      })
+    ).toHaveAttribute("href", "https://www.openstreetmap.org/copyright");
+  });
+
+  it("skips inline attribution links while tabbing through address fields and preserves street selection", async () => {
     vi.useRealTimers();
     const user = (await import("@testing-library/user-event")).default.setup();
     vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
@@ -202,13 +247,14 @@ describe("EmployeeAddressFields", () => {
     await user.click(street);
     await screen.findByRole("option", { name: /Grabstraße/ });
     await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("combobox", { name: "Postal Code" }));
     await user.tab();
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    expect(
-      screen.getByRole("link", { name: "OpenPLZ / OpenPotato" })
-    ).toHaveFocus();
+    expect(screen.getByRole("combobox", { name: "City" })).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(screen.getByRole("combobox", { name: "Postal Code" })).toHaveFocus();
+    for (const link of within(screen.getByRole("note")).getAllByRole("link")) {
+      expect(link).toHaveAttribute("tabindex", "-1");
+    }
     expect(onChange).not.toHaveBeenCalled();
     await user.click(street);
     await screen.findByRole("option", { name: /Grabstraße/ });

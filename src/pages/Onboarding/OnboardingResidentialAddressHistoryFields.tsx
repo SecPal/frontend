@@ -182,13 +182,15 @@ export function OnboardingResidentialAddressHistoryFields({
           <h3 className="mb-4 text-base font-semibold text-foreground">
             <Trans>Current Residential Address</Trans>
           </h3>
-          <EmployeeAddressFields
-            draft={addressEntryToDraft(value.current_address)}
-            onChange={updateCurrentAddress}
-            readOnly={readOnly}
-            fieldIdPrefix="current_address"
-            fieldNamePrefix="current_address"
-          />
+          <FieldGroup>
+            <EmployeeAddressFields
+              draft={addressEntryToDraft(value.current_address)}
+              onChange={updateCurrentAddress}
+              readOnly={readOnly}
+              fieldIdPrefix="current_address"
+              fieldNamePrefix="current_address"
+            />
+          </FieldGroup>
           <Field className="mt-6">
             <FieldLabel htmlFor="current_address_resided_from">
               <Trans>Living There Since</Trans> *
@@ -387,15 +389,17 @@ export function OnboardingResidentialAddressHistoryFields({
                       </h4>
                     </div>
 
-                    <EmployeeAddressFields
-                      draft={addressEntryToDraft(entry)}
-                      onChange={(field, nextFieldValue) =>
-                        updatePreviousAddress(index, field, nextFieldValue)
-                      }
-                      readOnly={readOnly}
-                      fieldIdPrefix={fieldIdPrefix}
-                      fieldNamePrefix={fieldIdPrefix}
-                    />
+                    <FieldGroup>
+                      <EmployeeAddressFields
+                        draft={addressEntryToDraft(entry)}
+                        onChange={(field, nextFieldValue) =>
+                          updatePreviousAddress(index, field, nextFieldValue)
+                        }
+                        readOnly={readOnly}
+                        fieldIdPrefix={fieldIdPrefix}
+                        fieldNamePrefix={fieldIdPrefix}
+                      />
+                    </FieldGroup>
 
                     <div className="mt-6 grid gap-6 sm:grid-cols-2">
                       <Field>

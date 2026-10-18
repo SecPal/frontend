@@ -3,7 +3,7 @@
 
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -233,15 +233,19 @@ describe("OnboardingResidentialAddressHistoryFields", () => {
       meta: { source: "OpenPLZ API Data", imported_at: "2026-10-18T00:00:00Z" },
     });
 
+    const value = getResidentialAddressHistoryValue({
+      has_current_bewacher_id: "no",
+      current_address: {
+        street: "Gr",
+        country: "DE",
+        resided_from: localIsoDateWithDayOffset(-100),
+      },
+      previous_addresses: [{ street: "Gr", country: "DE" }],
+    });
     render(
       <I18nProvider i18n={i18n}>
         <OnboardingResidentialAddressHistoryFields
-          value={getResidentialAddressHistoryValue({
-            current_address: {
-              street: "Gr",
-              country: "DE",
-            },
-          })}
+          value={value}
           errors={{}}
           readOnly={false}
           onChange={onChange}
@@ -249,8 +253,11 @@ describe("OnboardingResidentialAddressHistoryFields", () => {
       </I18nProvider>
     );
 
-    const streetInput = screen.getByLabelText(/^street$/i);
-    fireEvent.focus(streetInput);
+    const [streetInput, previousStreetInput] =
+      screen.getAllByLabelText<HTMLInputElement>(/^street$/i);
+    expect(streetInput).toBeDefined();
+    expect(previousStreetInput).toBeDefined();
+    fireEvent.focus(streetInput!);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(250);
@@ -263,15 +270,10 @@ describe("OnboardingResidentialAddressHistoryFields", () => {
       limit: 8,
     });
 
-    fireEvent.keyDown(streetInput, { key: "ArrowDown" });
-    fireEvent.keyDown(streetInput, { key: "Enter" });
+    fireEvent.keyDown(streetInput!, { key: "ArrowDown" });
+    fireEvent.keyDown(streetInput!, { key: "Enter" });
 
-    const base = getResidentialAddressHistoryValue({
-      current_address: {
-        street: "Gr",
-        country: "DE",
-      },
-    });
+    const base = value;
     const appliedChanges = onChange.mock.calls.map(([change]) =>
       typeof change === "function" ? change(base) : change
     );
@@ -291,6 +293,38 @@ describe("OnboardingResidentialAddressHistoryFields", () => {
         (nextValue) => nextValue.current_address.city === "Berlin"
       )
     ).toBe(true);
+
+    fireEvent.focus(previousStreetInput!);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
+    fireEvent.keyDown(previousStreetInput!, { key: "Escape" });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(150);
+    });
+    const notices = screen.getAllByRole("note", {
+      name: "Address data attribution",
+    });
+    expect(notices).toHaveLength(2);
+    for (const [index, input] of [
+      streetInput!,
+      previousStreetInput!,
+    ].entries()) {
+      const notice = notices[index]!;
+      expect(input).toHaveAttribute("aria-describedby", notice.id);
+      expect(
+        notice.closest('[data-slot="field"]')?.parentElement
+      ).toHaveAttribute("data-slot", "field-group");
+      expect(notice).toHaveTextContent(
+        /^Address data: OpenPLZ \/ OpenPotato · © OpenStreetMap contributors · ODbL-1\.0$/
+      );
+      expect(notice).toHaveClass(
+        "text-xs",
+        "leading-5",
+        "text-muted-foreground"
+      );
+      expect(within(notice).getAllByRole("link")).toHaveLength(3);
+    }
 
     vi.useRealTimers();
   });

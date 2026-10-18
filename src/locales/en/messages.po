@@ -711,6 +711,10 @@ msgstr "Please try again in about 1 minute."
 msgid "No passkeys enrolled yet."
 msgstr "No passkeys enrolled yet."
 
+#: src/pages/SourcePage.tsx
+msgid "German address suggestions use <0>OpenPLZ API Data / OpenPotato</0> and <1>© OpenStreetMap contributors</1>, licensed under <2>ODbL-1.0</2>."
+msgstr "German address suggestions use <0>OpenPLZ API Data / OpenPotato</0> and <1>© OpenStreetMap contributors</1>, licensed under <2>ODbL-1.0</2>."
+
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomersPage.tsx
@@ -2157,10 +2161,6 @@ msgstr "Verify your email address"
 msgid "SecPal could not load the secure verification prompt. Retry to continue your sign-in, or return to the login form."
 msgstr "SecPal could not load the secure verification prompt. Retry to continue your sign-in, or return to the login form."
 
-#: src/pages/SourcePage.tsx
-msgid "German address suggestions use OpenPLZ API Data / OpenPotato and © OpenStreetMap contributors, licensed under ODbL-1.0."
-msgstr "German address suggestions use OpenPLZ API Data / OpenPotato and © OpenStreetMap contributors, licensed under ODbL-1.0."
-
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Please enter a valid date of birth"
 msgstr "Please enter a valid date of birth"
@@ -2263,7 +2263,7 @@ msgstr "Sign in with passkey"
 msgid "No onboarding steps are available right now."
 msgstr "No onboarding steps are available right now."
 
-#: src/components/AddressDataAttribution.tsx
+#: src/pages/SourcePage.tsx
 msgid "Source and alterations"
 msgstr "Source and alterations"
 
@@ -3277,6 +3277,10 @@ msgstr "No establishments assigned."
 #: src/components/RuntimeDiscoveryFlow.tsx
 msgid "API origin"
 msgstr "API origin"
+
+#: src/components/AddressDataAttribution.tsx
+msgid "© OpenStreetMap contributors"
+msgstr "© OpenStreetMap contributors"
 
 #: src/components/RuntimeDiscoveryFlow.tsx
 msgid "Ask your supervisor for the SecPal instance URL before continuing."
