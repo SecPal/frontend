@@ -10,6 +10,11 @@ import { Button } from "@/ui/button";
 import { useServiceWorkerUpdate } from "../hooks/useServiceWorkerUpdate";
 import { isCapacitorNativeRuntime } from "../lib/nativeRuntime";
 import { APP_SHELL_MAX_WIDTH_CLASS } from "./app-shell-width";
+import { cn } from "@/lib/utils";
+
+interface UpdatePromptProps {
+  className?: string;
+}
 
 /**
  * UpdatePrompt Component
@@ -35,7 +40,7 @@ import { APP_SHELL_MAX_WIDTH_CLASS } from "./app-shell-width";
  * }
  * ```
  */
-function BrowserUpdatePrompt() {
+function BrowserUpdatePrompt({ className }: UpdatePromptProps) {
   const { _ } = useLingui();
   const { needRefresh, updateServiceWorker } = useServiceWorkerUpdate();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -53,7 +58,10 @@ function BrowserUpdatePrompt() {
 
   return (
     <div
-      className="bg-primary text-primary-foreground px-4 py-2 shadow-md"
+      className={cn(
+        "bg-primary text-primary-foreground px-4 py-2 shadow-md",
+        className
+      )}
       role="status"
       aria-live="polite"
       aria-atomic="true"
@@ -90,10 +98,10 @@ function BrowserUpdatePrompt() {
   );
 }
 
-export function UpdatePrompt() {
+export function UpdatePrompt({ className }: UpdatePromptProps) {
   if (isCapacitorNativeRuntime()) {
     return null;
   }
 
-  return <BrowserUpdatePrompt />;
+  return <BrowserUpdatePrompt className={className} />;
 }

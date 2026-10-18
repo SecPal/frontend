@@ -804,6 +804,8 @@ describe("OnboardingResidentialAddressHistoryFields — user interactions", () =
     const checkbox = screen.getByRole("checkbox", {
       name: /do not know my bewacher id/i,
     });
+    expect(checkbox).toHaveClass("bg-background", "text-primary");
+    expect(checkbox).not.toBeChecked();
     await user.click(checkbox);
 
     rerender(
@@ -818,6 +820,8 @@ describe("OnboardingResidentialAddressHistoryFields — user interactions", () =
     );
 
     expect(stored.bewacher_id_unknown).toBe(true);
+    expect(checkbox).toBeChecked();
+    expect(checkbox).toHaveClass("bg-background", "text-primary");
   });
 
   it("aria-disables the Bewacher radio buttons when read-only", () => {
@@ -850,6 +854,31 @@ describe("OnboardingResidentialAddressHistoryFields — user interactions", () =
     );
 
     expect(screen.getByText("Please answer this question")).toBeInTheDocument();
+    for (const radio of screen.getAllByRole("radio")) {
+      expect(radio).toBeInvalid();
+    }
+  });
+
+  it("marks the unknown Bewacher ID checkbox when the server rejects it", () => {
+    render(
+      <I18nProvider i18n={i18n}>
+        <OnboardingResidentialAddressHistoryFields
+          value={buildValue({ has_current_bewacher_id: "yes" })}
+          errors={{
+            bewacher_id_unknown: "Please confirm your Bewacher ID choice",
+          }}
+          readOnly={false}
+          onChange={() => {}}
+        />
+      </I18nProvider>
+    );
+    const checkbox = screen.getByRole("checkbox", {
+      name: /do not know my bewacher id/i,
+    });
+    expect(checkbox).toBeInvalid();
+    expect(checkbox).toHaveAccessibleDescription(
+      "Please confirm your Bewacher ID choice"
+    );
   });
 
   it("displays field error for bewacher_id input", () => {
@@ -867,7 +896,7 @@ describe("OnboardingResidentialAddressHistoryFields — user interactions", () =
     expect(screen.getByText("Enter your Bewacher ID")).toBeInTheDocument();
   });
 
-  it("renders current address errors and wires aria-describedby on the move-in date", () => {
+  it("marks only the invalid address fields and shows the first error", () => {
     render(
       <I18nProvider i18n={i18n}>
         <OnboardingResidentialAddressHistoryFields
@@ -884,15 +913,68 @@ describe("OnboardingResidentialAddressHistoryFields — user interactions", () =
 
     expect(screen.getByText("Street is required")).toBeInTheDocument();
     expect(
-      screen.getByText("Country must be a two-letter code")
-    ).toBeInTheDocument();
+      screen.queryByText("Country must be a two-letter code")
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^street$/i)).toBeInvalid();
+    expect(screen.getByLabelText(/^street$/i)).toHaveAccessibleDescription(
+      "Street is required"
+    );
+    expect(screen.getByRole("combobox", { name: /^country$/i })).toBeInvalid();
 
     const movedIn = screen.getByLabelText(/living there since/i);
-    expect(movedIn).toBeInvalid();
-    expect(movedIn).toHaveAttribute(
-      "aria-describedby",
-      "current_address_errors"
-    );
+    expect(movedIn).toBeValid();
+  });
+
+  it("shows one error in displayed field order while marking every invalid field", () => {
+    const errors: Record<string, string> = {
+      "current_address.resided_from": "Move-in date is required",
+      "current_address.house_number": "House number is required",
+      "current_address.street": "Street is required",
+      "current_address.city": "City is required",
+      "current_address.postal_code": "Postal code is required",
+      "current_address.country": "Country is invalid",
+    };
+    const { container, rerender } = render(<></>);
+
+    const fields = [
+      ["postal_code", /^postal code$/i],
+      ["city", /^city$/i],
+      ["street", /^street$/i],
+      ["house_number", /^house number$/i],
+      ["country", /^country$/i],
+      ["resided_from", /living there since/i],
+    ] as const;
+
+    for (const [field, label] of fields) {
+      rerender(
+        <I18nProvider i18n={i18n}>
+          <OnboardingResidentialAddressHistoryFields
+            value={buildValue()}
+            errors={errors}
+            readOnly={false}
+            onChange={() => {}}
+          />
+        </I18nProvider>
+      );
+
+      const messages = container.querySelectorAll('[data-slot="field-error"]');
+      expect(messages).toHaveLength(1);
+      expect(messages[0]).toHaveTextContent(
+        errors[`current_address.${field}`]!
+      );
+      expect(screen.getByLabelText(label)).toHaveAccessibleDescription(
+        expect.stringContaining(errors[`current_address.${field}`]!)
+      );
+      for (const [key, label] of fields) {
+        const input = screen.getByLabelText(label);
+        if (errors[`current_address.${key}`]) {
+          expect(input).toBeInvalid();
+        } else {
+          expect(input).toBeValid();
+        }
+      }
+      delete errors[`current_address.${field}`];
+    }
   });
 
   it("clears bewacher_id and unknown flag when switching from yes to no", async () => {
@@ -968,11 +1050,11 @@ describe("OnboardingResidentialAddressHistoryFields — user interactions", () =
     expect(coverageError).toBeInTheDocument();
     expect(coverageError.closest("[id]")).toHaveAttribute(
       "id",
-      "previous_addresses_coverage_error"
+      "residential_address_history_error"
     );
   });
 
-  it("renders previous address resided_until and field errors with stable ids", () => {
+  it("marks invalid previous address fields and dates while showing one error", () => {
     const recent = localIsoDateWithDayOffset(-100);
     render(
       <I18nProvider i18n={i18n}>
@@ -1006,6 +1088,7 @@ describe("OnboardingResidentialAddressHistoryFields — user interactions", () =
             "previous_addresses.0.resided_until":
               "End date must be on or after the start date",
             "previous_addresses.0.street": "Street is required",
+            "previous_addresses.0.resided_from": "Start date is required",
           }}
           readOnly={false}
           onChange={() => {}}
@@ -1015,13 +1098,12 @@ describe("OnboardingResidentialAddressHistoryFields — user interactions", () =
 
     const residedUntil = screen.getByLabelText(/resided until/i);
     expect(residedUntil).toBeInvalid();
-    expect(residedUntil).toHaveAttribute(
-      "aria-describedby",
-      "previous_address_0_resided_until_error"
-    );
     expect(
-      screen.getByText(/end date must be on or after the start date/i)
-    ).toBeInTheDocument();
+      screen.queryByText(/end date must be on or after the start date/i)
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText(/^street$/i)[1]).toBeInvalid();
+    expect(screen.getByLabelText(/^resided from/i)).toBeInvalid();
+    expect(screen.getByLabelText(/living there since/i)).toBeValid();
     expect(screen.getByText(/street is required/i)).toBeInTheDocument();
   });
 

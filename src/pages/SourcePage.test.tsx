@@ -195,9 +195,7 @@ describe("SourcePage", () => {
     });
 
     const main = container.querySelector("main");
-    const banner = container.querySelector(
-      "[data-testid='source-page-header']"
-    );
+    const banner = container.querySelector("[data-slot='public-page-header']");
     const cards = container.querySelectorAll('[data-slot="card"]');
     const repoArticle = screen.getByText("SecPal/frontend").closest("article");
     const issueLink = screen.getByRole("link", {
@@ -302,10 +300,10 @@ describe("SourcePage", () => {
       const { container, unmount } = renderWithProviders();
       const main = container.querySelector("main");
       const header = container.querySelector(
-        "[data-testid='source-page-header']"
+        "[data-slot='public-page-header']"
       );
       const mobileControls = container.querySelector(
-        "[data-testid='source-header-controls']"
+        "[data-slot='public-page-header-controls']"
       );
 
       expect(main).not.toHaveClass("relative");
@@ -329,7 +327,7 @@ describe("SourcePage", () => {
 
       const { container: desktopContainer } = renderWithProviders();
       const desktopControls = desktopContainer.querySelector(
-        "[data-testid='source-header-controls']"
+        "[data-slot='public-page-header-controls']"
       );
 
       expect(screen.getAllByRole("heading", { name: "AGPL v3+" })).toHaveLength(
@@ -372,7 +370,7 @@ describe("SourcePage", () => {
     ]);
 
     const mobileControls = container.querySelector(
-      "[data-testid='source-header-controls']"
+      "[data-slot='public-page-header-controls']"
     );
     const backLink = within(mobileControls as HTMLElement).getByRole("link", {
       name: /^back$/i,

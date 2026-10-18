@@ -1278,7 +1278,7 @@ export function SettingsPage() {
                       <FieldLabel
                         key={method}
                         htmlFor={`sensitive-mfa-method-${method}`}
-                        className="bg-card text-card-foreground flex cursor-default items-start gap-3 rounded-2xl border border-border px-4 py-3 text-sm font-normal"
+                        className="bg-background text-foreground flex cursor-default items-start gap-3 rounded-2xl border border-border px-4 py-3 text-sm font-normal"
                       >
                         <RadioGroupItem
                           id={`sensitive-mfa-method-${method}`}

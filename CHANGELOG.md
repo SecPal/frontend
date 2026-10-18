@@ -14,6 +14,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restore vertical padding inside the onboarding wizard frame so headings and
+  controls stay clear of its borders in loaded, loading, and error states.
+- Pair the optional onboarding sections badge background with its matching
+  foreground color so its label stays readable in dark mode.
+- Match select menus, autocomplete suggestions, and searchable selection fields
+  to text input backgrounds, including the dark theme.
+- Match radio controls and the settings verification-method choices to text
+  input backgrounds while preserving the selected indicator and focus states.
+- Keep onboarding update notifications centered with rounded corners below
+  the header, without shifting the header or stretching across the viewport.
+- Restore the shared SecPal branding footer below onboarding content.
+- Align onboarding with the source page using their shared responsive header,
+  with legal links on the left and language selection on the right, without
+  the extra top offset or vertical centering. Preserve the return address when
+  opening the source code page.
+- Match checkbox backgrounds to text inputs in both checked and unchecked
+  states, with a contrasting checkmark, including the unknown Bewacher ID choice.
+- Mark each invalid residential address field, show only the first validation
+  message in displayed field order, and keep remaining errors visible while
+  correcting the onboarding address history. Associate the message with its
+  field for screen readers, mark invalid Bewacher ID choices, and retain
+  server validation messages until the corresponding field changes.
+
 - Display OpenPLZ API Data / OpenPotato, OpenStreetMap and ODbL attribution
   for German address suggestions and available empty results across employee
   forms and onboarding. Preserve API credit metadata and link the existing

@@ -64,42 +64,80 @@ function draftToAddressEntry(
   }
 }
 
-function getEntryErrors(
+const addressFieldKeys = {
+  postalCode: "postal_code",
+  city: "city",
+  street: "street",
+  houseNumber: "house_number",
+  supplement: "supplement",
+  country: "country",
+} as const;
+
+function getEntryErrorKeys(
   errors: ResidentialAddressHistoryErrors,
-  keyPrefix: string,
-  options?: { omitSuffixes?: string[] }
+  keyPrefix: string
 ): string[] {
-  const omit = options?.omitSuffixes ?? [];
-  return Object.entries(errors)
-    .filter(([key]) => {
-      if (!key.startsWith(`${keyPrefix}.`)) {
-        return false;
-      }
-      return !omit.some((suffix) => key.endsWith(suffix));
-    })
-    .map(([, message]) => message);
+  const fieldOrder: string[] = [
+    ...Object.values(addressFieldKeys),
+    "resided_from",
+    "resided_until",
+  ];
+  return Object.keys(errors)
+    .filter((key) => key.startsWith(`${keyPrefix}.`))
+    .sort((left, right) => {
+      const rank = (key: string) => {
+        const index = fieldOrder.indexOf(key.slice(keyPrefix.length + 1));
+        return index < 0 ? fieldOrder.length : index;
+      };
+      return rank(left) - rank(right);
+    });
+}
+
+function getInvalidAddressFields(
+  errors: ResidentialAddressHistoryErrors,
+  keyPrefix: string
+): Partial<Record<keyof PostalAddressDraft, boolean>> {
+  return Object.fromEntries(
+    Object.entries(addressFieldKeys).map(([field, suffix]) => [
+      field,
+      Boolean(errors[`${keyPrefix}.${suffix}`]),
+    ])
+  );
+}
+
+function getAddressFieldDescriptions(
+  firstErrorKey: string | undefined,
+  keyPrefix: string,
+  errorId: string
+): Partial<Record<keyof PostalAddressDraft, string>> {
+  return Object.fromEntries(
+    Object.entries(addressFieldKeys)
+      .filter(([, suffix]) => firstErrorKey === `${keyPrefix}.${suffix}`)
+      .map(([field]) => [field, errorId])
+  );
 }
 
 export type ResidentialAddressHistoryChange =
   | ResidentialAddressHistoryValue
   | ((prev: ResidentialAddressHistoryValue) => ResidentialAddressHistoryValue);
 
+interface OnboardingResidentialAddressHistoryFieldsProps {
+  value: ResidentialAddressHistoryValue;
+  errors: ResidentialAddressHistoryErrors;
+  readOnly: boolean;
+  onChange: (value: ResidentialAddressHistoryChange) => void;
+}
+
 export function OnboardingResidentialAddressHistoryFields({
   value,
   errors,
   readOnly,
   onChange,
-}: {
-  value: ResidentialAddressHistoryValue;
-  errors: ResidentialAddressHistoryErrors;
-  readOnly: boolean;
-  onChange: (value: ResidentialAddressHistoryChange) => void;
-}) {
+}: OnboardingResidentialAddressHistoryFieldsProps) {
   const { _ } = useLingui();
   const fiveYearCoverage = currentAddressCoversFiveYearWindow(
     value.current_address.resided_from
   );
-  const previousCoverageError = errors["previous_addresses.coverage"];
   const showPreviousResidencesSection =
     fiveYearCoverage === false &&
     shouldShowPreviousResidencesForBewacher(value);
@@ -173,10 +211,25 @@ export function OnboardingResidentialAddressHistoryFields({
     }));
   }
 
-  const currentAddressErrors = getEntryErrors(errors, "current_address");
+  const firstErrorKey = [
+    ...getEntryErrorKeys(errors, "current_address"),
+    "has_current_bewacher_id",
+    "bewacher_id",
+    "bewacher_id_unknown",
+    ...value.previous_addresses.flatMap((_, index) =>
+      getEntryErrorKeys(errors, `previous_addresses.${index}`)
+    ),
+    "previous_addresses.coverage",
+  ].find((key) => Boolean(errors[key]));
+  const errorSummaryId = "residential_address_history_error";
 
   return (
     <FormSection>
+      {firstErrorKey ? (
+        <FieldError id={errorSummaryId} aria-live="polite" aria-atomic="true">
+          {errors[firstErrorKey]}
+        </FieldError>
+      ) : null}
       <FieldGroup>
         <section className="rounded-md border border-border bg-muted p-4">
           <h3 className="mb-4 text-base font-semibold text-foreground">
@@ -189,6 +242,12 @@ export function OnboardingResidentialAddressHistoryFields({
               readOnly={readOnly}
               fieldIdPrefix="current_address"
               fieldNamePrefix="current_address"
+              invalidFields={getInvalidAddressFields(errors, "current_address")}
+              fieldDescriptions={getAddressFieldDescriptions(
+                firstErrorKey,
+                "current_address",
+                errorSummaryId
+              )}
             />
           </FieldGroup>
           <Field className="mt-6">
@@ -200,10 +259,12 @@ export function OnboardingResidentialAddressHistoryFields({
               name="current_address_resided_from"
               type="date"
               disabled={readOnly}
-              aria-invalid={currentAddressErrors.length > 0 || undefined}
+              aria-invalid={
+                Boolean(errors["current_address.resided_from"]) || undefined
+              }
               aria-describedby={
-                currentAddressErrors.length > 0
-                  ? "current_address_errors"
+                firstErrorKey === "current_address.resided_from"
+                  ? errorSummaryId
                   : undefined
               }
               value={value.current_address.resided_from}
@@ -218,13 +279,6 @@ export function OnboardingResidentialAddressHistoryFields({
               }
             />
           </Field>
-          {currentAddressErrors.length > 0 ? (
-            <div id="current_address_errors" className="mt-3 space-y-1">
-              {currentAddressErrors.map((message) => (
-                <FieldError key={message}>{message}</FieldError>
-              ))}
-            </div>
-          ) : null}
         </section>
 
         <section className="rounded-md border border-border bg-muted p-4">
@@ -245,8 +299,8 @@ export function OnboardingResidentialAddressHistoryFields({
               aria-label={_(msg`Do you currently have a Bewacher ID?`)}
               aria-invalid={hasBewacherIdQuestionError ? true : undefined}
               aria-describedby={
-                hasBewacherIdQuestionError
-                  ? "has_current_bewacher_id_error"
+                firstErrorKey === "has_current_bewacher_id"
+                  ? errorSummaryId
                   : undefined
               }
               className="mt-1 space-y-3"
@@ -277,6 +331,9 @@ export function OnboardingResidentialAddressHistoryFields({
                     value={choice}
                     disabled={readOnly}
                     aria-disabled={readOnly}
+                    aria-invalid={
+                      Boolean(hasBewacherIdQuestionError) || undefined
+                    }
                   />
                   {choice === "yes" ? (
                     <span>
@@ -290,11 +347,6 @@ export function OnboardingResidentialAddressHistoryFields({
                 </FieldLabel>
               ))}
             </RadioGroup>
-            {hasBewacherIdQuestionError ? (
-              <FieldError id="has_current_bewacher_id_error" className="mt-2">
-                {hasBewacherIdQuestionError}
-              </FieldError>
-            ) : null}
           </Field>
 
           {value.has_current_bewacher_id === "yes" &&
@@ -311,7 +363,7 @@ export function OnboardingResidentialAddressHistoryFields({
                 disabled={readOnly}
                 aria-invalid={bewacherIdFieldError ? true : undefined}
                 aria-describedby={
-                  bewacherIdFieldError ? "bewacher_id_error" : undefined
+                  firstErrorKey === "bewacher_id" ? errorSummaryId : undefined
                 }
                 value={value.bewacher_id}
                 onChange={(event) =>
@@ -322,11 +374,6 @@ export function OnboardingResidentialAddressHistoryFields({
                   }))
                 }
               />
-              {bewacherIdFieldError ? (
-                <FieldError id="bewacher_id_error" className="mt-2">
-                  {bewacherIdFieldError}
-                </FieldError>
-              ) : null}
             </Field>
           ) : null}
 
@@ -336,6 +383,12 @@ export function OnboardingResidentialAddressHistoryFields({
               <Checkbox
                 checked={value.bewacher_id_unknown}
                 disabled={readOnly}
+                aria-invalid={Boolean(errors.bewacher_id_unknown) || undefined}
+                aria-describedby={
+                  firstErrorKey === "bewacher_id_unknown"
+                    ? errorSummaryId
+                    : undefined
+                }
                 onChange={(event) =>
                   onChange((prev) => ({
                     ...prev,
@@ -359,21 +412,9 @@ export function OnboardingResidentialAddressHistoryFields({
               </h3>
             </div>
 
-            {previousCoverageError ? (
-              <FieldError
-                id="previous_addresses_coverage_error"
-                className="mb-4"
-              >
-                {previousCoverageError}
-              </FieldError>
-            ) : null}
-
             <div className="space-y-6">
               {value.previous_addresses.map((entry, index) => {
                 const entryKeyPrefix = `previous_addresses.${index}`;
-                const entryErrors = getEntryErrors(errors, entryKeyPrefix, {
-                  omitSuffixes: [".resided_until"],
-                });
                 const residedUntilError =
                   errors[`${entryKeyPrefix}.resided_until`];
                 const fieldIdPrefix = `previous_address_${index}`;
@@ -398,6 +439,15 @@ export function OnboardingResidentialAddressHistoryFields({
                         readOnly={readOnly}
                         fieldIdPrefix={fieldIdPrefix}
                         fieldNamePrefix={fieldIdPrefix}
+                        invalidFields={getInvalidAddressFields(
+                          errors,
+                          entryKeyPrefix
+                        )}
+                        fieldDescriptions={getAddressFieldDescriptions(
+                          firstErrorKey,
+                          entryKeyPrefix,
+                          errorSummaryId
+                        )}
                       />
                     </FieldGroup>
 
@@ -411,6 +461,15 @@ export function OnboardingResidentialAddressHistoryFields({
                           name={`${fieldIdPrefix}_resided_from`}
                           type="date"
                           disabled={readOnly}
+                          aria-invalid={
+                            Boolean(errors[`${entryKeyPrefix}.resided_from`]) ||
+                            undefined
+                          }
+                          aria-describedby={
+                            firstErrorKey === `${entryKeyPrefix}.resided_from`
+                              ? errorSummaryId
+                              : undefined
+                          }
                           value={entry.resided_from}
                           onChange={(event) =>
                             updatePreviousAddressDate(
@@ -432,30 +491,14 @@ export function OnboardingResidentialAddressHistoryFields({
                           disabled
                           aria-invalid={residedUntilError ? true : undefined}
                           aria-describedby={
-                            residedUntilError
-                              ? `${fieldIdPrefix}_resided_until_error`
+                            firstErrorKey === `${entryKeyPrefix}.resided_until`
+                              ? errorSummaryId
                               : undefined
                           }
                           value={entry.resided_until}
                         />
-                        {residedUntilError ? (
-                          <FieldError
-                            id={`${fieldIdPrefix}_resided_until_error`}
-                            className="mt-2"
-                          >
-                            {residedUntilError}
-                          </FieldError>
-                        ) : null}
                       </Field>
                     </div>
-
-                    {entryErrors.length > 0 ? (
-                      <div className="mt-3 space-y-1">
-                        {entryErrors.map((message) => (
-                          <FieldError key={message}>{message}</FieldError>
-                        ))}
-                      </div>
-                    ) : null}
                   </section>
                 );
               })}

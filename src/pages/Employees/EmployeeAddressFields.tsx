@@ -55,19 +55,25 @@ function streetSuggestionValue(suggestion: AddressStreetSuggestion) {
   ]);
 }
 
+interface EmployeeAddressFieldsProps {
+  draft: PostalAddressDraft;
+  onChange: (field: keyof PostalAddressDraft, value: string) => void;
+  readOnly?: boolean;
+  fieldIdPrefix?: string;
+  fieldNamePrefix?: string;
+  invalidFields?: Partial<Record<keyof PostalAddressDraft, boolean>>;
+  fieldDescriptions?: Partial<Record<keyof PostalAddressDraft, string>>;
+}
+
 export function EmployeeAddressFields({
   draft,
   onChange,
   readOnly = false,
   fieldIdPrefix = "address",
   fieldNamePrefix = fieldIdPrefix,
-}: {
-  draft: PostalAddressDraft;
-  onChange: (field: keyof PostalAddressDraft, value: string) => void;
-  readOnly?: boolean;
-  fieldIdPrefix?: string;
-  fieldNamePrefix?: string;
-}) {
+  invalidFields = {},
+  fieldDescriptions = {},
+}: EmployeeAddressFieldsProps) {
   const { i18n } = useLingui();
   const [focusedField, setFocusedField] = useState<
     "street" | "postalCode" | "city" | null
@@ -446,6 +452,22 @@ export function EmployeeAddressFields({
     });
   }
 
+  function describedBy(
+    field: keyof PostalAddressDraft,
+    includeAttribution = false
+  ) {
+    return (
+      [
+        fieldDescriptions[field],
+        includeAttribution && autocompleteEnabled && attribution
+          ? attributionId
+          : undefined,
+      ]
+        .filter(Boolean)
+        .join(" ") || undefined
+    );
+  }
+
   return (
     <>
       <Field>
@@ -475,13 +497,12 @@ export function EmployeeAddressFields({
                 ref={postalCodeInputRef}
                 id={fieldId("postal_code")}
                 name={fieldName("postal_code")}
+                aria-invalid={invalidFields.postalCode || undefined}
                 autoComplete="postal-code"
                 disabled={readOnly}
                 role="combobox"
                 aria-autocomplete="list"
-                aria-describedby={
-                  autocompleteEnabled && attribution ? attributionId : undefined
-                }
+                aria-describedby={describedBy("postalCode", true)}
                 aria-expanded={showPostalSuggestions}
                 aria-controls={localityListboxId}
                 value={draft.postalCode}
@@ -562,13 +583,12 @@ export function EmployeeAddressFields({
               ref={cityInputRef}
               id={fieldId("city")}
               name={fieldName("city")}
+              aria-invalid={invalidFields.city || undefined}
               autoComplete="address-level2"
               disabled={readOnly}
               role="combobox"
               aria-autocomplete="list"
-              aria-describedby={
-                autocompleteEnabled && attribution ? attributionId : undefined
-              }
+              aria-describedby={describedBy("city", true)}
               aria-expanded={showCitySuggestions}
               aria-controls={localityListboxId}
               value={draft.city}
@@ -645,13 +665,12 @@ export function EmployeeAddressFields({
               ref={streetInputRef}
               id={fieldId("street")}
               name={fieldName("street")}
+              aria-invalid={invalidFields.street || undefined}
               autoComplete="street-address"
               disabled={readOnly}
               role="combobox"
               aria-autocomplete="list"
-              aria-describedby={
-                autocompleteEnabled && attribution ? attributionId : undefined
-              }
+              aria-describedby={describedBy("street", true)}
               aria-expanded={showStreetSuggestions}
               aria-controls={streetListboxId}
               value={draft.street}
@@ -708,6 +727,8 @@ export function EmployeeAddressFields({
           ref={houseNumberInputRef}
           id={fieldId("house_number")}
           name={fieldName("house_number")}
+          aria-invalid={invalidFields.houseNumber || undefined}
+          aria-describedby={describedBy("houseNumber")}
           disabled={readOnly}
           value={draft.houseNumber}
           onChange={(event) => onChange("houseNumber", event.target.value)}
@@ -721,6 +742,8 @@ export function EmployeeAddressFields({
         <Input
           id={fieldId("supplement")}
           name={fieldName("supplement")}
+          aria-invalid={invalidFields.supplement || undefined}
+          aria-describedby={describedBy("supplement")}
           disabled={readOnly}
           value={draft.supplement}
           onChange={(event) => onChange("supplement", event.target.value)}
@@ -742,6 +765,8 @@ export function EmployeeAddressFields({
           searchPlaceholder={i18n._(msg`Search or select country`)}
           emptyMessage={i18n._(msg`No results found`)}
           disabled={readOnly}
+          invalid={invalidFields.country}
+          describedBy={describedBy("country")}
           onValueChange={(countryCode) => onChange("country", countryCode)}
         />
       </Field>
