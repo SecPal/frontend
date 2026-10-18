@@ -2022,6 +2022,10 @@ msgstr "Address data attribution"
 msgid "Get started by creating your first organizational unit."
 msgstr "Get started by creating your first organizational unit."
 
+#: src/pages/SourcePage.tsx
+msgid "The exact deployed API source and alterations offer is currently unavailable."
+msgstr "The exact deployed API source and alterations offer is currently unavailable."
+
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "Loading establishment details"
 msgstr "Loading establishment details"

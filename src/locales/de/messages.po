@@ -2022,6 +2022,10 @@ msgstr "Quellenangabe der Adressdaten"
 msgid "Get started by creating your first organizational unit."
 msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
 
+#: src/pages/SourcePage.tsx
+msgid "The exact deployed API source and alterations offer is currently unavailable."
+msgstr "Das Angebot für den exakten Quellcode und die Änderungen der bereitgestellten API ist derzeit nicht verfügbar."
+
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "Loading establishment details"
 msgstr "Betriebsstättendetails werden geladen"

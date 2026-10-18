@@ -134,6 +134,11 @@ describe("SourcePage", () => {
     expect(
       within(notice).queryByRole("link", { name: "Source and alterations" })
     ).not.toBeInTheDocument();
+    expect(
+      within(notice).getByText(
+        "The exact deployed API source and alterations offer is currently unavailable."
+      )
+    ).toBeVisible();
   });
 
   it("opens native OSS notices from the source page when the capability is available", async () => {

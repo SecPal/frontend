@@ -7,7 +7,13 @@ import { msg } from "@lingui/core/macro";
 import { messages as deMessages } from "../../locales/de/messages.mjs";
 import { messages as enMessages } from "../../locales/en/messages.mjs";
 import { act, useState } from "react";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  within,
+  waitFor,
+} from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { EmployeeAddressFields } from "./EmployeeAddressFields";
 import { ApiError } from "../../services/ApiError";
@@ -102,7 +108,7 @@ describe("EmployeeAddressFields", () => {
       if (empty)
         expect(screen.getByText("No address suggestions found.")).toBeVisible();
       else expect(screen.getByRole("option")).toBeVisible();
-      expect(screen.getByText(meta.attribution)).toBeInTheDocument();
+      expect(screen.getByText(meta.attribution)).toBeVisible();
       expect(input).toHaveAccessibleDescription(
         expect.stringContaining("OpenStreetMap")
       );
@@ -210,7 +216,9 @@ describe("EmployeeAddressFields", () => {
     expect(onChange).toHaveBeenCalledWith("street", "Grabstraße");
     expect(onChange).toHaveBeenCalledWith("postalCode", "13156");
     expect(onChange).toHaveBeenCalledWith("city", "Berlin");
-    expect(screen.getByLabelText("House Number")).toHaveFocus();
+    await waitFor(() =>
+      expect(screen.getByLabelText("House Number")).toHaveFocus()
+    );
   });
 
   it("keeps autocomplete inputs synchronized with prefilled and suggestion-populated draft values", async () => {

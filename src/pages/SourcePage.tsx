@@ -486,11 +486,18 @@ export function SourcePage() {
                   </p>
                   <AddressDataAttribution sourceUrl={apiSourceUrl} />
                   <p>
-                    <Trans>
-                      The deployed API source includes the address data source
-                      and complete method of alterations in
-                      docs/ADDRESS_DATA.md.
-                    </Trans>
+                    {apiSourceUrl ? (
+                      <Trans>
+                        The deployed API source includes the address data source
+                        and complete method of alterations in
+                        docs/ADDRESS_DATA.md.
+                      </Trans>
+                    ) : (
+                      <Trans>
+                        The exact deployed API source and alterations offer is
+                        currently unavailable.
+                      </Trans>
+                    )}
                   </p>
                 </section>
                 <p className="text-muted-foreground text-sm leading-6">

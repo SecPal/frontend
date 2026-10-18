@@ -66,7 +66,10 @@ export function AddressDataAttribution({
         </>
       ) : null}
       {meta ? (
-        <span className="sr-only">{meta.attribution ?? meta.source}</span>
+        <>
+          {" "}
+          · <span>{meta.attribution ?? meta.source}</span>
+        </>
       ) : null}
     </p>
   );
