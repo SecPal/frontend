@@ -7,6 +7,8 @@ import {
   fetchAddressStreetSuggestions,
 } from "./addressApi";
 
+import { apiConfig } from "../config";
+
 const mockFetch = vi.fn();
 
 describe("addressApi", () => {
@@ -18,6 +20,38 @@ describe("addressApi", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
+
+  it.each([
+    ["streets", fetchAddressStreetSuggestions],
+    ["localities", fetchAddressLocalitySuggestions],
+  ] as const)(
+    "preserves available empty results and attribution metadata for %s",
+    async (endpoint, fetchSuggestions) => {
+      const payload = {
+        data: [],
+        meta: {
+          source: "OpenPLZ API Data",
+          license: "ODbL-1.0",
+          attribution: "OpenPotato; © OpenStreetMap contributors",
+          imported_at: "2026-10-18T00:00:00Z",
+          version_hash: "a".repeat(64),
+        },
+      };
+      mockFetch.mockResolvedValueOnce(new Response(JSON.stringify(payload)));
+      expect(await fetchSuggestions({})).toEqual(payload);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const url = new URL(
+        mockFetch.mock.calls[0]![0],
+        "https://app.secpal.dev"
+      );
+      const apiOrigin = new URL(
+        apiConfig.baseUrl || "/",
+        "https://app.secpal.dev"
+      ).origin;
+      expect(url.origin).toBe(apiOrigin);
+      expect(url.pathname).toBe(`/v1/addresses/de/${endpoint}`);
+    }
+  );
 
   it("fetches street suggestions with the expected query parameters", async () => {
     mockFetch.mockResolvedValueOnce({
@@ -50,7 +84,7 @@ describe("addressApi", () => {
         method: "GET",
       })
     );
-    expect(result).toEqual([
+    expect(result.data).toEqual([
       {
         name: "Grabstraße",
         postal_code: "13156",
@@ -142,6 +176,6 @@ describe("addressApi", () => {
         method: "GET",
       })
     );
-    expect(result).toEqual([{ postal_code: "10115", locality: "Berlin" }]);
+    expect(result.data).toEqual([{ postal_code: "10115", locality: "Berlin" }]);
   });
 });

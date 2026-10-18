@@ -1102,6 +1102,10 @@ msgstr "Einige Details zu Betriebsstätten konnten nicht geladen werden."
 msgid "Copyright SecPal Contributors."
 msgstr "Copyright SecPal Contributors."
 
+#: src/components/AddressDataAttribution.tsx
+msgid "Address data:"
+msgstr "Adressdaten:"
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Too many onboarding attempts. Please try again later."
 msgstr "Zu viele Onboarding-Versuche. Bitte versuchen Sie es später noch einmal."
@@ -1518,6 +1522,14 @@ msgstr "Aufenthaltstitel auswählen"
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Activate"
 msgstr "Aktivieren"
+
+#: src/pages/SourcePage.tsx
+msgid "Address reference data"
+msgstr "Adressreferenzdaten"
+
+#: src/pages/SourcePage.tsx
+msgid "The deployed API source includes the address data source and complete method of alterations in docs/ADDRESS_DATA.md."
+msgstr "Der Quellcode der bereitgestellten API enthält die Adressdatenquelle und die vollständige Änderungsmethode in docs/ADDRESS_DATA.md."
 
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "This customer requires a Legal Entity assignment."
@@ -2002,9 +2014,17 @@ msgstr "Nicht verfügbar"
 msgid "Authenticator app QR code"
 msgstr "QR-Code der Authenticator-App"
 
+#: src/components/AddressDataAttribution.tsx
+msgid "Address data attribution"
+msgstr "Quellenangabe der Adressdaten"
+
 #: src/components/OrganizationalUnitTree.tsx
 msgid "Get started by creating your first organizational unit."
 msgstr "Beginnen Sie mit der Erstellung Ihrer ersten Organisationseinheit."
+
+#: src/pages/SourcePage.tsx
+msgid "The exact deployed API source and alterations offer is currently unavailable."
+msgstr "Das Angebot für den exakten Quellcode und die Änderungen der bereitgestellten API ist derzeit nicht verfügbar."
 
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "Loading establishment details"
@@ -2137,6 +2157,10 @@ msgstr "Überprüfen Sie Ihre E-Mail-Adresse"
 msgid "SecPal could not load the secure verification prompt. Retry to continue your sign-in, or return to the login form."
 msgstr "SecPal konnte die sichere Verifizierungsabfrage nicht laden. Versuchen Sie es erneut, um mit der Anmeldung fortzufahren, oder kehren Sie zum Anmeldeformular zurück."
 
+#: src/pages/SourcePage.tsx
+msgid "German address suggestions use OpenPLZ API Data / OpenPotato and © OpenStreetMap contributors, licensed under ODbL-1.0."
+msgstr "Deutsche Adressvorschläge verwenden OpenPLZ API Data / OpenPotato und © OpenStreetMap-Mitwirkende, lizenziert unter ODbL-1.0."
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Please enter a valid date of birth"
 msgstr "Bitte geben Sie ein gültiges Geburtsdatum ein"
@@ -2238,6 +2262,10 @@ msgstr "Mit Passkey anmelden"
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "No onboarding steps are available right now."
 msgstr "Derzeit sind keine Onboarding-Schritte verfügbar."
+
+#: src/components/AddressDataAttribution.tsx
+msgid "Source and alterations"
+msgstr "Quelle und Änderungen"
 
 #: src/pages/Login.tsx
 msgid "Passkey sign-in requires Android 14 or later. Update your device to sign in with a passkey."
