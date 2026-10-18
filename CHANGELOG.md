@@ -57,6 +57,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Simplified address form credits to one compact, localized OpenPLZ/OpenPotato,
+  OpenStreetMap and ODbL notice. Consolidated full address data legal notices
+  while preserving API metadata and the deployed source/alterations offer.
+
 - Made the repository security workflow the single source of the shared
   scanner Action revision for replay verification. Workflow tests require the
   exact Action path and full commit pins without duplicating dependency versions.

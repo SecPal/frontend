@@ -711,6 +711,10 @@ msgstr "Bitte versuchen Sie es in etwa 1 Minute erneut."
 msgid "No passkeys enrolled yet."
 msgstr "Es sind noch keine Passkeys eingerichtet."
 
+#: src/pages/SourcePage.tsx
+msgid "German address suggestions use <0>OpenPLZ API Data / OpenPotato</0> and <1>© OpenStreetMap contributors</1>, licensed under <2>ODbL-1.0</2>."
+msgstr "Deutsche Adressvorschläge verwenden <0>OpenPLZ API Data / OpenPotato</0> und <1>© OpenStreetMap-Mitwirkende</1>, lizenziert unter <2>ODbL-1.0</2>."
+
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Customers/CustomerDetail.tsx
 #: src/pages/Customers/CustomersPage.tsx
@@ -2157,10 +2161,6 @@ msgstr "Überprüfen Sie Ihre E-Mail-Adresse"
 msgid "SecPal could not load the secure verification prompt. Retry to continue your sign-in, or return to the login form."
 msgstr "SecPal konnte die sichere Verifizierungsabfrage nicht laden. Versuchen Sie es erneut, um mit der Anmeldung fortzufahren, oder kehren Sie zum Anmeldeformular zurück."
 
-#: src/pages/SourcePage.tsx
-msgid "German address suggestions use OpenPLZ API Data / OpenPotato and © OpenStreetMap contributors, licensed under ODbL-1.0."
-msgstr "Deutsche Adressvorschläge verwenden OpenPLZ API Data / OpenPotato und © OpenStreetMap-Mitwirkende, lizenziert unter ODbL-1.0."
-
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "Please enter a valid date of birth"
 msgstr "Bitte geben Sie ein gültiges Geburtsdatum ein"
@@ -2263,7 +2263,7 @@ msgstr "Mit Passkey anmelden"
 msgid "No onboarding steps are available right now."
 msgstr "Derzeit sind keine Onboarding-Schritte verfügbar."
 
-#: src/components/AddressDataAttribution.tsx
+#: src/pages/SourcePage.tsx
 msgid "Source and alterations"
 msgstr "Quelle und Änderungen"
 
@@ -3277,6 +3277,10 @@ msgstr "Keine Betriebsstätten zugeordnet."
 #: src/components/RuntimeDiscoveryFlow.tsx
 msgid "API origin"
 msgstr "API-Ursprung"
+
+#: src/components/AddressDataAttribution.tsx
+msgid "© OpenStreetMap contributors"
+msgstr "© OpenStreetMap-Mitwirkende"
 
 #: src/components/RuntimeDiscoveryFlow.tsx
 msgid "Ask your supervisor for the SecPal instance URL before continuing."

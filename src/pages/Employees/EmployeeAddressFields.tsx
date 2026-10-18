@@ -741,11 +741,7 @@ export function EmployeeAddressFields({
         />
       </Field>
       {autocompleteEnabled && attribution ? (
-        <AddressDataAttribution
-          id={attributionId}
-          meta={attribution}
-          sourceUrl="/source#address-data"
-        />
+        <AddressDataAttribution id={attributionId} meta={attribution} />
       ) : null}
     </>
   );

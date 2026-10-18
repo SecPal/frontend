@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { useAuth } from "@/hooks/useAuth";
-import { AddressDataAttribution } from "@/components/AddressDataAttribution";
 import { Footer } from "@/components/Footer";
 import { OpenOssLicensesButton } from "@/components/OpenOssLicensesButton";
 import {
@@ -479,19 +478,54 @@ export function SourcePage() {
                   </h3>
                   <p>
                     <Trans>
-                      German address suggestions use OpenPLZ API Data /
-                      OpenPotato and © OpenStreetMap contributors, licensed
-                      under ODbL-1.0.
+                      German address suggestions use{" "}
+                      <a
+                        className="underline underline-offset-4"
+                        href="https://github.com/openpotato/openplzapi.data"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        OpenPLZ API Data / OpenPotato
+                      </a>{" "}
+                      and{" "}
+                      <a
+                        className="underline underline-offset-4"
+                        href="https://www.openstreetmap.org/copyright"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        © OpenStreetMap contributors
+                      </a>
+                      , licensed under{" "}
+                      <a
+                        className="underline underline-offset-4"
+                        href="https://opendatacommons.org/licenses/odbl/1-0/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        ODbL-1.0
+                      </a>
+                      .
                     </Trans>
                   </p>
-                  <AddressDataAttribution sourceUrl={apiSourceUrl} />
                   <p>
                     {apiSourceUrl ? (
-                      <Trans>
-                        The deployed API source includes the address data source
-                        and complete method of alterations in
-                        docs/ADDRESS_DATA.md.
-                      </Trans>
+                      <>
+                        <a
+                          className="underline underline-offset-4"
+                          href={apiSourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Trans>Source and alterations</Trans>
+                        </a>
+                        {". "}
+                        <Trans>
+                          The deployed API source includes the address data
+                          source and complete method of alterations in
+                          docs/ADDRESS_DATA.md.
+                        </Trans>
+                      </>
                     ) : (
                       <Trans>
                         The exact deployed API source and alterations offer is

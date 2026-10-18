@@ -114,6 +114,31 @@ describe("SourcePage", () => {
       expect(
         within(notice).getByText(/German address suggestions use/)
       ).toBeVisible();
+      const source = within(notice).getByRole("link", {
+        name: "OpenPLZ API Data / OpenPotato",
+      });
+      expect(source).toHaveAttribute(
+        "href",
+        "https://github.com/openpotato/openplzapi.data"
+      );
+      expect(
+        within(notice).getByRole("link", {
+          name: "© OpenStreetMap contributors",
+        })
+      ).toHaveAttribute("href", "https://www.openstreetmap.org/copyright");
+      expect(
+        within(notice).getByRole("link", { name: "ODbL-1.0" })
+      ).toHaveAttribute(
+        "href",
+        "https://opendatacommons.org/licenses/odbl/1-0/"
+      );
+      expect(source.closest("p")).toHaveTextContent(
+        /^German address suggestions use OpenPLZ API Data \/ OpenPotato and © OpenStreetMap contributors, licensed under ODbL-1\.0\.$/
+      );
+      expect(notice.textContent?.match(/OpenStreetMap/g)).toHaveLength(1);
+      expect(notice).toHaveTextContent(
+        "The deployed API source includes the address data source and complete method of alterations in docs/ADDRESS_DATA.md."
+      );
       expect(
         within(notice).getByRole("link", { name: "Source and alterations" })
       ).toHaveAttribute("href", sourceUrl);
@@ -226,6 +251,18 @@ describe("SourcePage", () => {
 
     try {
       renderWithProviders();
+
+      const addressNotice = await screen.findByRole("region", {
+        name: "Adressreferenzdaten",
+      });
+      expect(
+        within(addressNotice).getByRole("link", {
+          name: "© OpenStreetMap-Mitwirkende",
+        })
+      ).toHaveAttribute("href", "https://www.openstreetmap.org/copyright");
+      expect(addressNotice).toHaveTextContent(
+        "Deutsche Adressvorschläge verwenden OpenPLZ API Data / OpenPotato und © OpenStreetMap-Mitwirkende, lizenziert unter ODbL-1.0."
+      );
 
       expect(
         (

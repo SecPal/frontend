@@ -108,7 +108,6 @@ describe("EmployeeAddressFields", () => {
       if (empty)
         expect(screen.getByText("No address suggestions found.")).toBeVisible();
       else expect(screen.getByRole("option")).toBeVisible();
-      expect(screen.getByText(meta.attribution)).toBeVisible();
       expect(input).toHaveAccessibleDescription(
         expect.stringContaining("OpenStreetMap")
       );
@@ -124,7 +123,7 @@ describe("EmployeeAddressFields", () => {
         screen.getAllByRole("note", { name: "Address data attribution" })
       ).toHaveLength(1);
       expect(notice).toHaveTextContent(
-        "Address data: OpenPLZ / OpenPotato · © OpenStreetMap contributors"
+        /^Address data: OpenPLZ \/ OpenPotato · © OpenStreetMap contributors · ODbL-1\.0$/
       );
       expect(
         screen
@@ -152,9 +151,12 @@ describe("EmployeeAddressFields", () => {
         "href",
         "https://opendatacommons.org/licenses/odbl/1-0/"
       );
-      expect(
-        within(notice).getByRole("link", { name: "Source and alterations" })
-      ).toHaveAttribute("href", "/source#address-data");
+      expect(within(notice).getAllByRole("link")).toHaveLength(3);
+      expect(notice).toHaveClass(
+        "text-xs",
+        "leading-5",
+        "text-muted-foreground"
+      );
       fireEvent.blur(input);
       act(() => license.focus());
       await act(async () => {
@@ -165,6 +167,44 @@ describe("EmployeeAddressFields", () => {
       expect(onChange).not.toHaveBeenCalled();
     }
   );
+
+  it("localizes the compact address credit in German", async () => {
+    i18n.activate("de");
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
+      data: [],
+      meta: referenceMeta,
+    });
+    render(
+      <I18nProvider i18n={i18n}>
+        <EmployeeAddressFields
+          draft={{
+            street: "Gr",
+            houseNumber: "",
+            postalCode: "",
+            city: "",
+            supplement: "",
+            country: "DE",
+          }}
+          onChange={vi.fn()}
+        />
+      </I18nProvider>
+    );
+    fireEvent.focus(screen.getByRole("combobox", { name: "Straße" }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
+    const notice = screen.getByRole("note", {
+      name: "Quellenangabe der Adressdaten",
+    });
+    expect(notice).toHaveTextContent(
+      /^Adressdaten: OpenPLZ \/ OpenPotato · © OpenStreetMap-Mitwirkende · ODbL-1\.0$/
+    );
+    expect(
+      within(notice).getByRole("link", {
+        name: "© OpenStreetMap-Mitwirkende",
+      })
+    ).toHaveAttribute("href", "https://www.openstreetmap.org/copyright");
+  });
 
   it("keeps attribution links in keyboard order and preserves street selection", async () => {
     vi.useRealTimers();
