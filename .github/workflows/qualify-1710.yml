@@ -1,0 +1,211 @@
+# SPDX-FileCopyrightText: 2026 SecPal Contributors
+# SPDX-License-Identifier: CC0-1.0
+# Disposable issue-branch qualification. Never merge this workflow into main.
+---
+name: Issue 1710 ARM64 qualification only
+"on":
+  push:
+    branches: [vivid-wasp]
+    paths:
+      - .github/workflows/qualify-1710.yml
+      - qualification/issue-1710.py
+permissions:
+  contents: read
+concurrency:
+  group: qualification-1710-${{ github.repository }}
+  cancel-in-progress: false
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+jobs:
+  base:
+    name: Native ARM64 repaired base
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 25
+    steps:
+      - name: Checkout qualification harness only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: harness
+          persist-credentials: false
+      - name: Checkout immutable accepted application source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 12a29c5ebffa08ad25a5ab067e67600f239c86a8
+          path: source
+          persist-credentials: false
+      - name: Checkout immutable accepted security contract
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: SecPal/.github
+          ref: 6a6758681f4ebc46b4a33d442846d33d6b79785c
+          path: shared
+          persist-credentials: false
+      - name: Install native disposable runner tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends buildah podman skopeo uidmap slirp4netns crun
+          source/scripts/container-tools.sh build "$RUNNER_TEMP/secpal-publisher-tools"
+      - name: Set up accepted Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.0.0
+        with:
+          node-version: 26.10.0
+      - name: Build only the bounded repaired base natively
+        run: python3 harness/qualification/issue-1710.py base
+      - name: Retain bounded non-secret base evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: qualification-1710-base-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/qualification-output
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+  base-security:
+    name: Unchanged policy on exact ARM64 base
+    needs: base
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout qualification harness only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: harness
+          persist-credentials: false
+      - name: Checkout immutable accepted application source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 12a29c5ebffa08ad25a5ab067e67600f239c86a8
+          path: source
+          persist-credentials: false
+      - name: Checkout immutable accepted security contract
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: SecPal/.github
+          ref: 6a6758681f4ebc46b4a33d442846d33d6b79785c
+          path: shared
+          persist-credentials: false
+      - name: Download exact same-run base evidence
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: qualification-1710-base-${{ github.run_id }}-${{ github.run_attempt }}
+          path: input
+      - name: Install locked accepted scanner and schema tools
+        run: |
+          source/scripts/container-tools.sh publish "$RUNNER_TEMP/secpal-publisher-tools"
+          python3 -m venv "$RUNNER_TEMP/secpal-policy"
+          "$RUNNER_TEMP/secpal-policy/bin/pip" install -r shared/requirements/vulnerability-policy.txt
+          printf '%s\n' "$RUNNER_TEMP/secpal-policy/bin" >> "$GITHUB_PATH"
+      - name: Scan actual immutable base with both pinned engines
+        run: python3 harness/qualification/issue-1710.py scan
+      - name: Retain bounded non-secret base-security evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: qualification-1710-base-security-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/qualification-evaluation
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+  frontend:
+    name: Native ARM64 frontend runtime and browser
+    needs: base-security
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 50
+    steps:
+      - name: Checkout qualification harness only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: harness
+          persist-credentials: false
+      - name: Checkout immutable accepted application source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 12a29c5ebffa08ad25a5ab067e67600f239c86a8
+          path: source
+          persist-credentials: false
+      - name: Checkout immutable accepted security contract
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: SecPal/.github
+          ref: 6a6758681f4ebc46b4a33d442846d33d6b79785c
+          path: shared
+          persist-credentials: false
+      - name: Download exact same-run base evidence
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: qualification-1710-base-${{ github.run_id }}-${{ github.run_attempt }}
+          path: input
+      - name: Install native disposable runner tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends buildah podman skopeo uidmap slirp4netns crun
+          source/scripts/container-tools.sh build "$RUNNER_TEMP/secpal-publisher-tools"
+      - name: Set up accepted Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.0.0
+        with:
+          node-version: 26.10.0
+      - name: Build accepted source and run unchanged native runtime and browser contracts
+        run: python3 harness/qualification/issue-1710.py frontend
+      - name: Retain bounded non-secret frontend evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: qualification-1710-frontend-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/qualification-output
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+  frontend-security:
+    name: Unchanged policy on exact ARM64 frontend
+    needs: frontend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout qualification harness only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: harness
+          persist-credentials: false
+      - name: Checkout immutable accepted application source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: 12a29c5ebffa08ad25a5ab067e67600f239c86a8
+          path: source
+          persist-credentials: false
+      - name: Checkout immutable accepted security contract
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: SecPal/.github
+          ref: 6a6758681f4ebc46b4a33d442846d33d6b79785c
+          path: shared
+          persist-credentials: false
+      - name: Download exact same-run frontend evidence
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: qualification-1710-frontend-${{ github.run_id }}-${{ github.run_attempt }}
+          path: input
+      - name: Install locked accepted scanner and schema tools
+        run: |
+          source/scripts/container-tools.sh publish "$RUNNER_TEMP/secpal-publisher-tools"
+          python3 -m venv "$RUNNER_TEMP/secpal-policy"
+          "$RUNNER_TEMP/secpal-policy/bin/pip" install -r shared/requirements/vulnerability-policy.txt
+          printf '%s\n' "$RUNNER_TEMP/secpal-policy/bin" >> "$GITHUB_PATH"
+      - name: Scan actual immutable frontend with both pinned engines
+        run: python3 harness/qualification/issue-1710.py scan
+      - name: Retain bounded non-secret frontend-security evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: qualification-1710-frontend-security-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/qualification-evaluation
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
