@@ -34,7 +34,7 @@ function getRepositorySources(): NodeToolchainSources {
     packageJson: readRepoFile("package.json"),
     packageLock: readRepoFile("package-lock.json"),
     nvmrc: readRepoFile(".nvmrc"),
-    dockerfile: readRepoFile("Dockerfile"),
+    dockerfile: readRepoFile("Containerfile"),
     workflows: Object.fromEntries(
       workflowPaths.map((workflowPath) => [
         workflowPath,

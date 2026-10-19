@@ -264,20 +264,29 @@ export function validateNodeToolchainContract(
     );
   }
 
-  const builder = getDockerBuilder(sources.dockerfile);
+  const buildDescription = sources.dockerfile.replace(
+    /^FROM \$\{NODE_IMAGE\} AS build$/mu,
+    () => {
+      const pin = sources.dockerfile.match(/^ARG NODE_IMAGE=(\S+)$/mu)?.[1];
+      return `FROM ${pin?.replace("docker.io/library/", "")} AS build`;
+    }
+  );
+  const builder = getDockerBuilder(buildDescription);
 
   if (!builder) {
-    errors.push("Dockerfile: expected exactly one qualified Node build stage");
+    errors.push(
+      "Containerfile: expected exactly one qualified Node build stage"
+    );
   } else {
     const builderVersion = versionToString(builder.version);
 
     if (builder.digest?.length !== 64) {
-      errors.push("Dockerfile: Node builder must have a sha256 digest pin");
+      errors.push("Containerfile: Node builder must have a sha256 digest pin");
     }
 
     if (compareVersions(builder.version, engine.minimum) !== 0) {
       errors.push(
-        `Dockerfile: Node builder ${builderVersion} must equal the qualified engine baseline ${versionToString(engine.minimum)}`
+        `Containerfile: Node builder ${builderVersion} must equal the qualified engine baseline ${versionToString(engine.minimum)}`
       );
     }
   }

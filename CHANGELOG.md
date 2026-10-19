@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Replace the active frontend publisher with native AMD64/ARM64 Buildah OCI
+  builds from Containerfile, retaining exact source/base identity, hardened
+  runtime and Chromium behavior. Require authoritative Syft SPDX, independent
+  Grype/Trivy acceptance, five OCI attestations and attested build evidence
+  before creating the unique discovery tag.
+- Configure the unchanged bounded liveness probe explicitly in OCI consumers;
+  OCI images do not retain Docker HEALTHCHECK metadata.
+
 ### Fixed
 
 - Restore vertical padding inside the onboarding wizard frame so headings and

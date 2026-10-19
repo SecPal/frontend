@@ -133,7 +133,7 @@ Current operational references:
 
 ### Frontend Container
 
-Build the official local image with `docker build -t secpal-frontend:local .`
+Build the official local image with `buildah build --format oci -f Containerfile -t secpal-frontend:local .`
 and configure its API origin only when the container starts. The complete
 non-root, read-only example and cache/health contracts are documented in the
 [frontend container guide](docs/deployment/frontend-container.md).
@@ -152,14 +152,14 @@ immutable against another authorized registry writer. The digest is the trust
 boundary.
 
 The multi-architecture image supports only `linux/amd64` and `linux/arm64`.
-Publishing generates and verifies a BuildKit SPDX SBOM, SLSA v1 provenance in
-`mode=max`, both runtime-platform contracts, both Chromium contracts, and a
-GitHub Artifact Attestation bound to the OCI index digest. The runtime remains
+Native Buildah publishing verifies Syft SPDX, builder-independent evidence,
+both runtime and Chromium contracts, central Grype/Trivy acceptance, and
+GitHub attestations for the immutable index, platforms and evidence subjects. The runtime remains
 a static, unprivileged `101:101` reference server without Node.js;
 `SECPAL_API_URL` is supplied only at startup. It does not publish Android or
 iOS artifacts and does not provide TLS or public-edge behavior.
 
-Frontend image publication is operationally verified. Publisher run
+Historical publication evidence from the previous publisher: run
 `31247196734` built source commit
 `b755ca0d0ee5a85eca5ad5688d457241f070b1b4` and verified the canonical image
 `ghcr.io/secpal/frontend@sha256:cdccded2eade53d9300aafff3a2663a779d3d158cfa74f1e9c182e5786285077`.

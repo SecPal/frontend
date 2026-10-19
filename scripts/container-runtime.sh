@@ -7,14 +7,14 @@ print_container_diagnostics() {
 
   printf 'Container diagnostics for %s:\n' "$container" >&2
 
-  docker inspect \
+  podman inspect \
     --format \
     'status={{.State.Status}} running={{.State.Running}} exit={{.State.ExitCode}} error={{json .State.Error}} ports={{json .NetworkSettings.Ports}}' \
     "$container" >&2 ||
-    printf 'docker inspect failed for %s\n' "$container" >&2
+    printf 'podman inspect failed for %s\n' "$container" >&2
 
-  docker logs "$container" >&2 ||
-    printf 'docker logs failed for %s\n' "$container" >&2
+  podman logs "$container" >&2 ||
+    printf 'podman logs failed for %s\n' "$container" >&2
 }
 
 fail_with_container_diagnostics() {
@@ -31,7 +31,7 @@ container_allows_startup_wait() {
   local wait_context=$2
   local state
 
-  if ! state=$(docker inspect --format '{{.State.Status}}' "$container" 2>/dev/null); then
+  if ! state=$(podman inspect --format '{{.State.Status}}' "$container" 2>/dev/null); then
     fail_with_container_diagnostics \
       "$container" \
       "could not inspect container state"
@@ -73,7 +73,7 @@ wait_for_container_port() {
   fi
 
   for ((attempt = 1; attempt <= attempts; attempt++)); do
-    mapping=$(docker port "$container" "${container_port}/tcp" 2>/dev/null || true)
+    mapping=$(podman port "$container" "${container_port}/tcp" 2>/dev/null || true)
 
     if [[ "$mapping" =~ ^127\.0\.0\.1:([0-9]+)$ ]]; then
       printf '%s\n' "${BASH_REMATCH[1]}"

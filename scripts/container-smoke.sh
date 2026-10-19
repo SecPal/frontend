@@ -32,7 +32,7 @@ TEMP_DIR=$(mktemp -d)
 
 cleanup() {
   for container in "${CONTAINERS[@]}"; do
-    docker rm --force "$container" >/dev/null 2>&1 || true
+    podman rm --force "$container" >/dev/null 2>&1 || true
   done
   rm -rf "$TEMP_DIR"
 }
@@ -52,7 +52,7 @@ fail() {
 }
 
 if [ "${SECPAL_CONTAINER_SKIP_BUILD:-0}" != "1" ]; then
-  docker build "${PLATFORM_ARGS[@]}" \
+  buildah build --format oci --file "$ROOT_DIR/Containerfile" "${PLATFORM_ARGS[@]}" \
     --pull \
     --build-arg SECPAL_IMAGE_REVISION="${GITHUB_SHA:-local-test}" \
     --build-arg SECPAL_IMAGE_VERSION="${SECPAL_IMAGE_VERSION:-0.0.1-local}" \
@@ -60,17 +60,28 @@ if [ "${SECPAL_CONTAINER_SKIP_BUILD:-0}" != "1" ]; then
     "$ROOT_DIR"
 fi
 
-IMAGE_ID=$(docker image inspect --format '{{.Id}}' "$IMAGE_TAG")
+IMAGE_ID=$(podman image inspect --format '{{.Id}}' "$IMAGE_TAG")
 [ -n "$IMAGE_ID" ] || fail "built image has no image ID"
+if [ -n "${SECPAL_CONTAINER_PLATFORM:-}" ]; then
+  expected_arch=${SECPAL_CONTAINER_PLATFORM#linux/}
+  case "$expected_arch:$(uname -m)" in
+    amd64:x86_64 | arm64:aarch64) ;;
+    *) fail "runtime is not native for the selected image" ;;
+  esac
+  [ "$(podman image inspect --format '{{.Architecture}}' "$IMAGE_TAG")" = "$expected_arch" ] ||
+    fail "image architecture differs from the native runtime"
+fi
 
 start_container() {
   local name=$1
   local api_origin=$2
   local container_id
 
-  if ! container_id=$(docker create "${PLATFORM_ARGS[@]}" \
+  if ! container_id=$(podman create "${PLATFORM_ARGS[@]}" \
     --name "$name" \
     --read-only \
+    --health-cmd /usr/local/bin/secpal-health-live \
+    --health-interval 30s --health-timeout 5s --health-start-period 10s --health-retries 3 \
     --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m \
     --cap-drop=ALL \
     --security-opt=no-new-privileges:true \
@@ -83,7 +94,7 @@ start_container() {
   fi
 
   CONTAINERS+=("$container_id")
-  if ! docker start "$container_id" >/dev/null; then
+  if ! podman start "$container_id" >/dev/null; then
     fail_with_container_diagnostics "$container_id" "could not start container"
     return 1
   fi
@@ -136,26 +147,26 @@ PORT_B=$(container_port "$CONTAINER_B")
 wait_for_live "$CONTAINER_A" "$PORT_A"
 wait_for_live "$CONTAINER_B" "$PORT_B"
 
-[ "$(docker inspect --format '{{.Config.User}}' "$CONTAINER_A")" = "101:101" ] ||
+[ "$(podman inspect --format '{{.Config.User}}' "$CONTAINER_A")" = "101:101" ] ||
   fail "image user is not 101:101"
-[ "$(docker exec "$CONTAINER_A" id -u)" != "0" ] ||
+[ "$(podman exec "$CONTAINER_A" id -u)" != "0" ] ||
   fail "running process is root"
-docker exec "$CONTAINER_A" test ! -w /usr/share/nginx/html/index.html ||
+podman exec "$CONTAINER_A" test ! -w /usr/share/nginx/html/index.html ||
   fail "static Web artifact is writable by the runtime user"
-[ "$(docker exec "$CONTAINER_A" stat -c '%a' /etc/nginx/snippets)" = "555" ] ||
+[ "$(podman exec "$CONTAINER_A" stat -c '%a' /etc/nginx/snippets)" = "555" ] ||
   fail "Nginx snippets directory mode is not 0555"
-docker exec "$CONTAINER_A" \
+podman exec "$CONTAINER_A" \
   test -r /etc/nginx/snippets/secpal-security-headers.conf ||
   fail "Nginx security headers are not readable by the runtime user"
 
 assert_status "$PORT_A" "/health/live" "200"
 [ "$(curl --fail --silent "http://127.0.0.1:${PORT_A}/health/live")" = '{"status":"ok"}' ] ||
   fail "health response body drifted"
-[ "$(docker inspect --format '{{index .Config.Healthcheck.Test 0}}' "$CONTAINER_A")" = "CMD-SHELL" ] ||
-  fail "image has no shell healthcheck"
-HEALTHCHECK_COMMAND=$(docker inspect --format '{{index .Config.Healthcheck.Test 1}}' "$CONTAINER_A")
-[ -n "$HEALTHCHECK_COMMAND" ] || fail "image healthcheck command is empty"
-docker exec "$CONTAINER_A" /bin/sh -c "$HEALTHCHECK_COMMAND" ||
+[ "$(podman inspect --format '{{index .Config.Healthcheck.Test 0}}' "$CONTAINER_A")" = "CMD-SHELL" ] ||
+  fail "container has no shell healthcheck"
+[ "$(podman inspect --format '{{index .Config.Healthcheck.Test 1}}' "$CONTAINER_A")" = "/usr/local/bin/secpal-health-live" ] ||
+  fail "configured healthcheck command drifted"
+podman healthcheck run "$CONTAINER_A" ||
   fail "configured healthcheck failed in the read-only runtime"
 
 INDEX_A="$TEMP_DIR/index-a.html"
@@ -197,7 +208,7 @@ cmp "$TEMP_DIR/script-${PORT_A}.js" "$TEMP_DIR/script-${PORT_B}.js" >/dev/null |
 cmp "$TEMP_DIR/style-${PORT_A}.css" "$TEMP_DIR/style-${PORT_B}.css" >/dev/null ||
   fail "same image emitted different CSS assets"
 
-docker restart "$CONTAINER_A" >/dev/null
+podman restart "$CONTAINER_A" >/dev/null
 PORT_A=$(container_port "$CONTAINER_A")
 wait_for_live "$CONTAINER_A" "$PORT_A"
 curl --fail --silent "http://127.0.0.1:${PORT_A}/runtime-config.js" \
@@ -241,9 +252,10 @@ assert_header "$PORT_A" "/THIRD-PARTY-NOTICES.md" '^Content-Type: text/markdown'
 assert_header "$PORT_A" "/" '^X-Content-Type-Options: nosniff$'
 assert_header "$PORT_A" "/runtime-config.js" '^X-Frame-Options: DENY$'
 
-docker run "${PLATFORM_ARGS[@]}" --rm --entrypoint /bin/sh "$IMAGE_TAG" -c '
-  ! command -v node >/dev/null 2>&1
-  ! command -v npm >/dev/null 2>&1
+podman run "${PLATFORM_ARGS[@]}" --rm --entrypoint /bin/sh "$IMAGE_TAG" -c '
+  if command -v node >/dev/null 2>&1 || command -v npm >/dev/null 2>&1; then
+    exit 1
+  fi
   for path in /src /tests /node_modules /.git /package-lock.json /vite.config.ts /coverage /playwright-report; do
     [ ! -e "$path" ] || exit 1
   done
@@ -264,7 +276,7 @@ valid_origins=(
   "https://xn--bcher-kva.example"
 )
 for origin in "${valid_origins[@]}"; do
-  docker run "${PLATFORM_ARGS[@]}" --rm \
+  podman run "${PLATFORM_ARGS[@]}" --rm \
     --env "SECPAL_API_URL=$origin" "$IMAGE_TAG" true >/dev/null 2>&1 ||
     fail "valid origin was rejected"
 done
@@ -305,7 +317,7 @@ invalid_origins=(
   "https://api.example.com:"
 )
 
-if docker run "${PLATFORM_ARGS[@]}" --rm \
+if podman run "${PLATFORM_ARGS[@]}" --rm \
   "$IMAGE_TAG" true >"$TEMP_DIR/invalid.log" 2>&1; then
   fail "container started without SECPAL_API_URL"
 fi
@@ -313,7 +325,7 @@ grep -Fq 'SECPAL_API_URL must be an exact ASCII HTTPS origin' "$TEMP_DIR/invalid
   fail "missing-value error did not describe the origin contract"
 
 for origin in "${invalid_origins[@]}"; do
-  if docker run "${PLATFORM_ARGS[@]}" --rm \
+  if podman run "${PLATFORM_ARGS[@]}" --rm \
     --env "SECPAL_API_URL=$origin" "$IMAGE_TAG" true \
     >"$TEMP_DIR/invalid.log" 2>&1; then
     fail "container accepted an invalid origin"
@@ -324,10 +336,10 @@ for origin in "${invalid_origins[@]}"; do
     fail "invalid origin was reflected in logs"
 done
 
-docker stop --time 10 "$CONTAINER_B" >/dev/null
-[ "$(docker inspect --format '{{.State.Running}}' "$CONTAINER_B")" = "false" ] ||
+podman stop --time 10 "$CONTAINER_B" >/dev/null
+[ "$(podman inspect --format '{{.State.Running}}' "$CONTAINER_B")" = "false" ] ||
   fail "container did not stop after SIGTERM"
-docker logs "$CONTAINER_B" 2>&1 | grep -Eqi 'permission denied|read-only file system|\[emerg\]' &&
+podman logs "$CONTAINER_B" 2>&1 | grep -Eqi 'permission denied|read-only file system|\[emerg\]' &&
   fail "container logged an unexpected runtime error"
 
 echo "Frontend container contract passed for ${IMAGE_ID}"

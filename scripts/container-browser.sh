@@ -30,7 +30,7 @@ esac
 
 cleanup_container() {
   if [ -n "$CONTAINER_ID" ]; then
-    docker rm --force "$CONTAINER_ID" >/dev/null 2>&1 || true
+    podman rm --force "$CONTAINER_ID" >/dev/null 2>&1 || true
   fi
 }
 
@@ -46,17 +46,19 @@ trap 'handle_signal 130' INT
 trap 'handle_signal 143' TERM
 
 if [ "${SECPAL_CONTAINER_SKIP_BUILD:-0}" != "1" ]; then
-  docker build "${PLATFORM_ARGS[@]}" --tag "$IMAGE_TAG" "$ROOT_DIR"
-elif ! docker image inspect "$IMAGE_TAG" >/dev/null 2>&1; then
+  buildah build --format oci --file "$ROOT_DIR/Containerfile" "${PLATFORM_ARGS[@]}" --tag "$IMAGE_TAG" "$ROOT_DIR"
+elif ! podman image inspect "$IMAGE_TAG" >/dev/null 2>&1; then
   echo "ERROR: frontend container image is missing while builds are disabled" >&2
   exit 1
 fi
 
-if ! CONTAINER_ID=$(docker create "${PLATFORM_ARGS[@]}" \
+if ! CONTAINER_ID=$(podman create "${PLATFORM_ARGS[@]}" \
   --name "$CONTAINER_NAME" \
   --label "$CONTAINER_LABEL" \
   --label "secpal.dev/test-run=$RUN_ID" \
   --read-only \
+  --health-cmd /usr/local/bin/secpal-health-live \
+  --health-interval 30s --health-timeout 5s --health-start-period 10s --health-retries 3 \
   --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m \
   --cap-drop=ALL \
   --security-opt=no-new-privileges:true \
@@ -68,7 +70,7 @@ if ! CONTAINER_ID=$(docker create "${PLATFORM_ARGS[@]}" \
   exit 1
 fi
 
-if ! docker start "$CONTAINER_ID" >/dev/null; then
+if ! podman start "$CONTAINER_ID" >/dev/null; then
   fail_with_container_diagnostics \
     "$CONTAINER_ID" \
     "could not start frontend browser container"

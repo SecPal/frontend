@@ -1,7 +1,9 @@
 # SPDX-FileCopyrightText: 2026 SecPal Contributors
 # SPDX-License-Identifier: CC0-1.0
 
-FROM node:26.10.0-bookworm-slim@sha256:662933cf47f013bc8e4beb31a6116448427a82057ba7c42c97e4c5ba766504c2 AS build
+ARG NODE_IMAGE=docker.io/library/node:26.10.0-bookworm-slim@sha256:662933cf47f013bc8e4beb31a6116448427a82057ba7c42c97e4c5ba766504c2
+ARG NGINX_IMAGE=docker.io/nginxinc/nginx-unprivileged:1.30.4-trixie@sha256:679387908ea95d6d8de12952cd15d6b351258054a992d2106d3b6aa12659d87d
+FROM ${NODE_IMAGE} AS build
 
 WORKDIR /app
 
@@ -12,7 +14,7 @@ COPY . .
 ARG SOURCE_DATE_EPOCH
 RUN npm run build:web
 
-FROM nginxinc/nginx-unprivileged:1.30.4-trixie@sha256:679387908ea95d6d8de12952cd15d6b351258054a992d2106d3b6aa12659d87d AS runtime
+FROM ${NGINX_IMAGE} AS runtime
 
 ARG SECPAL_IMAGE_REVISION=unknown
 ARG SECPAL_IMAGE_VERSION=0.0.1
@@ -34,6 +36,7 @@ COPY --from=build /app/LICENSES/ /usr/share/licenses/secpal-frontend/LICENSES/
 COPY --chmod=0444 docker/nginx.conf /etc/nginx/nginx.conf
 COPY --chmod=0444 docker/default.conf /etc/nginx/conf.d/default.conf
 COPY --chmod=0444 docker/security-headers.conf /etc/nginx/snippets/secpal-security-headers.conf
+COPY --chmod=0555 docker/health-live.sh /usr/local/bin/secpal-health-live
 COPY --chmod=0555 docker/secpal-entrypoint.sh /usr/local/bin/secpal-entrypoint
 RUN find /usr/share/nginx/html /usr/share/licenses/secpal-frontend \
       -type d -exec chmod 0555 {} + \
@@ -49,12 +52,6 @@ USER 101:101
 
 EXPOSE 8080
 STOPSIGNAL SIGTERM
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD response="$(curl --disable --fail --silent --show-error --noproxy '*' \
-        --connect-timeout 2 --max-time 3 --write-out ':%{http_code}' \
-        http://127.0.0.1:8080/health/live)" \
-        && test "$response" = '{"status":"ok"}:200'
 
 ENTRYPOINT ["/usr/local/bin/secpal-entrypoint"]
 CMD ["nginx", "-g", "daemon off;"]
