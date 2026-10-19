@@ -64,7 +64,7 @@ describe("pre-publication repository source security", () => {
       });
     }
     const publish = readWorkflow(".github/workflows/publish-container.yml").jobs
-      .publish;
+      .build;
     expect(publish.needs).toEqual(["validate", "repository-security"]);
     expect(publish).not.toHaveProperty("if");
     expect(publish).not.toHaveProperty("continue-on-error");
@@ -87,7 +87,9 @@ describe("pre-publication repository source security", () => {
 
   it("uses the immutable central Action on the exact clean target with read-only authority", () => {
     const workflow = readWorkflow(reusablePath);
-    expect(workflow.on).toEqual({ workflow_call: null });
+    expect(workflow.on).toHaveProperty(
+      "workflow_call.outputs.evidence-artifact"
+    );
     expect(workflow.permissions).toEqual({ contents: "read" });
     expect(Object.keys(workflow.jobs)).toEqual(["repository-security"]);
     const job = workflow.jobs["repository-security"];

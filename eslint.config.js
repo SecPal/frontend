@@ -12,6 +12,7 @@ export default tseslint.config(
     ignores: [
       "dist",
       "coverage",
+      ".context/pinned-attestation-action/**",
       ".polyscope-preview-stage",
       "src/locales/**/*.js",
       "src/locales/**/*.mjs",

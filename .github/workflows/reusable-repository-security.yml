@@ -6,6 +6,10 @@ name: Repository Source Security
 
 on:
   workflow_call:
+    outputs:
+      evidence-artifact:
+        description: Same-run exact source security artifact.
+        value: ${{ jobs.repository-security.outputs.evidence-artifact }}
 
 permissions:
   contents: read
@@ -17,6 +21,8 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
+    outputs:
+      evidence-artifact: ${{ steps.scan.outputs.evidence-artifact }}
     steps:
       - name: Checkout exact frontend commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

@@ -18,7 +18,7 @@ its API origin only when the container starts.
 Build the local image from the repository root:
 
 ```bash
-docker build -t secpal-frontend:local .
+buildah build --format oci -f Containerfile -t secpal-frontend:local .
 ```
 
 The build stage uses the repository's complete `npm run build:web` pipeline,
@@ -58,17 +58,25 @@ uses the commit timestamp for `org.opencontainers.image.created` and combines
 the package version with the full source commit as
 `<package-version>+git.<full-source-sha>`.
 
-For both platforms the workflow verifies all OCI labels, a non-empty BuildKit
-SPDX SBOM, and SLSA v1 provenance in `mode=max` bound to the exact source commit
-and repository build context. It hashes the exact OCI index response bytes,
-compares the result and the registry `Docker-Content-Digest` header with the
-Buildx digest, and extracts each platform's runtime manifest digest from that
-verified index. The complete container and Chromium contracts use those exact
-child manifest references. Platform child manifest digests are runtime
-verification evidence only, not trust, deployment, update, or rollback
-identities. The publisher creates and verifies the GitHub Artifact Attestation
-for the canonical OCI index digest, binding the repository, publisher workflow,
-`refs/heads/main`, source commit, signer commit, and GitHub-hosted runner.
+Native Buildah 1.33.7 jobs on AMD64 and ARM64 build exact committed source
+without foreign-architecture emulation. Pinned Syft 1.54.1 produces each
+authoritative SPDX inventory. The controller independently hashes OCI manifests,
+configs and index bytes, checks source/base/platform labels and verifies each
+SPDX association. It publishes candidates by digest before any discovery tag.
+
+Five GitHub OCI attestations bind the index, both platform manifests and both
+SPDX artifacts to the repository, source commit, workflow and hosted signer.
+Both native platforms run the complete runtime and Chromium contracts.
+Grype 0.118.0 consumes only the verified Syft SPDX through the accepted shared
+input-provenance contract; Trivy 0.74.0 independently scans each immutable
+platform artifact. Fresh central policy acceptance must be CLEAN for both.
+
+Only after those gates does the publisher attest a builder-independent evidence
+document, retain and attest its immutable OCI artifact, independently verify all
+subjects and create the unique run-scoped discovery tag. Failed runs may leave
+immutable candidates; they are not accepted releases. No registry deletion or
+moving promotion tag is used. Source acceptance alone does not establish a
+successful protected-main publisher run.
 
 This image contains only the browser Web/PWA artifact. It does not publish
 Android or iOS artifacts. Its Nginx runtime remains an unprivileged `101:101`
@@ -76,7 +84,8 @@ static reference server without Node.js; deployments supply `SECPAL_API_URL`
 only when the container starts. TLS termination and public-edge controls remain
 deployment responsibilities.
 
-Frontend image publication is operationally verified. Post-merge publisher run
+Historical publication evidence from the previous publisher remains scoped to
+its original source. Post-merge publisher run
 `31247196734` (attempt `1`) built source commit
 `b755ca0d0ee5a85eca5ad5688d457241f070b1b4` and verified this canonical
 artifact:
@@ -107,7 +116,9 @@ characters, quotes, backslashes, shell syntax, port `0`, and ports above
 Punycode.
 
 ```bash
-docker run --rm \
+podman run --rm \
+  --health-cmd /usr/local/bin/secpal-health-live \
+  --health-interval 30s --health-timeout 5s --health-start-period 10s --health-retries 3 \
   --read-only \
   --tmpfs /tmp:rw,noexec,nosuid,nodev,size=16m \
   --cap-drop=ALL \
@@ -117,6 +128,11 @@ docker run --rm \
   secpal-frontend:local
 ```
 
+The Containerfile retains its declarative HEALTHCHECK recommendation. Buildah
+does not serialize that Docker metadata into OCI image configuration. The
+image contains the same bounded health probe at
+`/usr/local/bin/secpal-health-live`; operators configure it explicitly as above.
+The tests inspect that configuration and execute `podman healthcheck run`.
 The image runs as fixed user and group `101:101`, listens over HTTP on port
 `8080`, and writes only beneath `/tmp`. The `/tmp` mount does not need execute
 permission. A missing, loopback, or otherwise invalid API origin fails startup
@@ -189,13 +205,13 @@ behavior are owned by
 
 ## Base Image Updates
 
-The Dockerfile pins both a complete version tag and its multi-architecture
+The Containerfile pins both a complete version tag and its multi-architecture
 manifest digest. To update a pin:
 
 1. select an exact supported Debian Node patch release and an exact Debian
    `nginxinc/nginx-unprivileged` release;
 2. inspect the registry manifest with
-   `docker buildx imagetools inspect <image>:<tag>`;
+   `skopeo inspect --raw docker://<image>:<tag>`;
 3. confirm that amd64 and arm64 are present and record the top-level index
    digest, not an architecture-specific child manifest;
 4. update the tag and digest together;

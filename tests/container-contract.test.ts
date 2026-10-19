@@ -20,6 +20,34 @@ function readRepoFile(relativePath: string): string {
 }
 
 describe("frontend container source contract", () => {
+  it("retains the declarative health recommendation and configures the same probe for OCI", () => {
+    expect(readRepoFile("Containerfile")).toMatch(
+      /HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \\\n {4}CMD \/usr\/local\/bin\/secpal-health-live/u
+    );
+    expect(readRepoFile("scripts/container-smoke.sh")).toContain(
+      "--health-cmd /usr/local/bin/secpal-health-live"
+    );
+  });
+
+  it.each(["node", "npm", "absent"])(
+    "enforces runtime build-tool absence for %s",
+    (present) => {
+      const smoke = readRepoFile("scripts/container-smoke.sh");
+      const start = smoke.indexOf("--entrypoint /bin/sh");
+      const block = smoke.slice(smoke.indexOf("-c '\n", start) + 5);
+      const probe = block.slice(0, block.indexOf("  for path in"));
+      const result = spawnSync(
+        "sh",
+        [
+          "-c",
+          'command() { [ "$2" = "$PRESENT" ]; };\n' + probe + "\nexit 0\n",
+        ],
+        { encoding: "utf8", env: { ...process.env, PRESENT: present } }
+      );
+      expect(result.status).toBe(present === "absent" ? 0 : 1);
+    }
+  );
+
   it.each([
     [200, '{"status":"ok"}', true],
     [200, '{"status":"unhealthy"}', false],
@@ -28,15 +56,7 @@ describe("frontend container source contract", () => {
   ])(
     "uses bounded localhost liveness for HTTP %i and body %s",
     async (status, body, healthy) => {
-      const dockerfile = readRepoFile("Dockerfile");
-      const instruction = dockerfile.match(
-        /^HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \\\n(?<probe>[^]*?)\n\n/mu
-      );
-      expect(instruction?.groups?.probe).toBeDefined();
-      const probe = instruction!
-        .groups!.probe!.replace(/\\\n\s*/gu, " ")
-        .trim()
-        .replace(/^CMD /u, "");
+      const probe = readRepoFile("docker/health-live.sh");
       expect(probe).toContain(
         "curl --disable --fail --silent --show-error --noproxy '*'"
       );
@@ -79,7 +99,7 @@ describe("frontend container source contract", () => {
   );
 
   it("keeps source-imported test helpers inside the container build context", () => {
-    const dockerignore = readRepoFile(".dockerignore");
+    const dockerignore = readRepoFile(".containerignore");
     const authContextTest = readRepoFile("src/contexts/AuthContext.test.tsx");
     const useAuthTest = readRepoFile("src/hooks/useAuth.test.ts");
 
@@ -89,10 +109,10 @@ describe("frontend container source contract", () => {
   });
 
   it("pins exact multi-architecture Debian base image manifests", () => {
-    const dockerfile = readRepoFile("Dockerfile");
+    const dockerfile = readRepoFile("Containerfile");
 
     expect(dockerfile).toMatch(
-      /^FROM node:26\.10\.0-bookworm-slim@sha256:662933cf47f013bc8e4beb31a6116448427a82057ba7c42c97e4c5ba766504c2 AS build$/mu
+      /^ARG NODE_IMAGE=docker\.io\/library\/node:26\.10\.0-bookworm-slim@sha256:662933cf47f013bc8e4beb31a6116448427a82057ba7c42c97e4c5ba766504c2$/mu
     );
     expect(dockerfile).toContain(
       "nginxinc/nginx-unprivileged:1.30.4-trixie@sha256:679387908ea95d6d8de12952cd15d6b351258054a992d2106d3b6aa12659d87d"
@@ -178,14 +198,14 @@ describe("frontend container source contract", () => {
     expect(browserRunner).toContain(
       "secpal.dev/test-role=frontend-container-browser"
     );
-    expect(browserRunner).toContain("docker rm --force");
+    expect(browserRunner).toContain("podman rm --force");
     expect(browserRunner).toContain("--publish 127.0.0.1::8080");
     expect(browserRunner).toContain("SECPAL_CONTAINER_BASE_URL");
-    expect(browserRunner).not.toContain("docker ps --all");
+    expect(browserRunner).not.toContain("podman ps --all");
     expect(browserRunner).not.toContain("127.0.0.1:4176");
     expect(browserRunner).toContain("container-test-image-tag.mjs");
     expect(browserRunner).toMatch(
-      /SECPAL_CONTAINER_SKIP_BUILD[^]*docker build[^]*elif ! docker image inspect/u
+      /SECPAL_CONTAINER_SKIP_BUILD[^]*buildah build[^]*elif ! podman image inspect/u
     );
     expect(smokeTest).toContain("container-test-image-tag.mjs");
     expect(smokeTest).toContain('"https://localhost"');
@@ -207,7 +227,7 @@ describe("frontend container source contract", () => {
       "Nginx security headers are not readable by the runtime user"
     );
     expect(smokeTest).toMatch(
-      /docker restart "\$CONTAINER_A"[^]*PORT_A=\$\(container_port "\$CONTAINER_A"\)[^]*wait_for_live "\$CONTAINER_A" "\$PORT_A"/u
+      /podman restart "\$CONTAINER_A"[^]*PORT_A=\$\(container_port "\$CONTAINER_A"\)[^]*wait_for_live "\$CONTAINER_A" "\$PORT_A"/u
     );
     expect(smokeTest).toContain("source maps");
     expect(smokeTest).toContain("SECPAL_API_URL");

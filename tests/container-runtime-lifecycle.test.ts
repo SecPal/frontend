@@ -55,11 +55,11 @@ function createFakeRuntime(): FakeRuntime {
   mkdirSync(temporaryDirectory);
 
   executable(
-    path.join(binDirectory, "docker"),
+    path.join(binDirectory, "podman"),
     `#!/usr/bin/env bash
 set -u
 
-printf '%s\n' "$*" >>"$FAKE_DOCKER_STATE_DIR/calls"
+printf '%s\n' "$*" >>"$FAKE_PODMAN_STATE_DIR/calls"
 
 command_name=\${1:-}
 shift || true
@@ -72,8 +72,8 @@ case "$command_name" in
     fi
     ;;
   create)
-    if [ "$FAKE_DOCKER_SCENARIO" = "name-conflict" ]; then
-      printf 'docker: Error response from daemon: Conflict. The container name is already in use.\n' >&2
+    if [ "$FAKE_PODMAN_SCENARIO" = "name-conflict" ]; then
+      printf 'podman: Error response from daemon: Conflict. The container name is already in use.\n' >&2
       exit 125
     fi
     while [ "$#" -gt 0 ]; do
@@ -89,8 +89,8 @@ case "$command_name" in
     exit 0
     ;;
   start)
-    if [ "$FAKE_DOCKER_SCENARIO" = "start-fails" ]; then
-      printf 'docker: controlled start failure\n' >&2
+    if [ "$FAKE_PODMAN_SCENARIO" = "start-fails" ]; then
+      printf 'podman: controlled start failure\n' >&2
       exit 125
     fi
     exit 0
@@ -99,7 +99,7 @@ case "$command_name" in
     exit 0
     ;;
   port)
-    count_file="$FAKE_DOCKER_STATE_DIR/port-count"
+    count_file="$FAKE_PODMAN_STATE_DIR/port-count"
     count=0
     if [ -f "$count_file" ]; then
       count=$(<"$count_file")
@@ -107,7 +107,7 @@ case "$command_name" in
     count=$((count + 1))
     printf '%s\n' "$count" >"$count_file"
 
-    if [ "$FAKE_DOCKER_SCENARIO" = "delayed" ] && [ "$count" -ge 3 ]; then
+    if [ "$FAKE_PODMAN_SCENARIO" = "delayed" ] && [ "$count" -ge 3 ]; then
       printf '127.0.0.1:49152\n'
       exit 0
     fi
@@ -115,24 +115,24 @@ case "$command_name" in
     ;;
   inspect)
     format=\${2:-}
-    if [ "$FAKE_DOCKER_SCENARIO" = "inspect-fails" ]; then
+    if [ "$FAKE_PODMAN_SCENARIO" = "inspect-fails" ]; then
       exit 125
     fi
 
     case "$format" in
       '{{.State.Status}}')
-        if [ "$FAKE_DOCKER_SCENARIO" = "exited" ]; then
+        if [ "$FAKE_PODMAN_SCENARIO" = "exited" ]; then
           printf 'exited\n'
         else
           printf 'running\n'
         fi
         ;;
       status=*)
-        if [ "$FAKE_DOCKER_SCENARIO" = "name-conflict" ]; then
+        if [ "$FAKE_PODMAN_SCENARIO" = "name-conflict" ]; then
           printf 'status=running running=true exit=0 error="" ports={"foreign":true}\n'
-        elif [ "$FAKE_DOCKER_SCENARIO" = "start-fails" ]; then
+        elif [ "$FAKE_PODMAN_SCENARIO" = "start-fails" ]; then
           printf 'status=created running=false exit=0 error="controlled start failure" ports={}\n'
-        elif [ "$FAKE_DOCKER_SCENARIO" = "exited" ]; then
+        elif [ "$FAKE_PODMAN_SCENARIO" = "exited" ]; then
           printf 'status=exited running=false exit=1 error="failed to create task" ports=null\n'
         else
           printf 'status=running running=true exit=0 error="" ports=null\n'
@@ -150,17 +150,17 @@ case "$command_name" in
     esac
     ;;
   logs)
-    if [ "$FAKE_DOCKER_SCENARIO" = "logs-fail" ]; then
+    if [ "$FAKE_PODMAN_SCENARIO" = "logs-fail" ]; then
       exit 125
     fi
-    if [ "$FAKE_DOCKER_SCENARIO" = "name-conflict" ]; then
+    if [ "$FAKE_PODMAN_SCENARIO" = "name-conflict" ]; then
       printf 'foreign-container-log-must-not-be-read\n'
       exit 0
     fi
     printf 'nginx: [emerg] controlled startup error\n'
     ;;
   rm)
-    printf '%s\n' "\${*: -1}" >>"$FAKE_DOCKER_STATE_DIR/removed"
+    printf '%s\n' "\${*: -1}" >>"$FAKE_PODMAN_STATE_DIR/removed"
     ;;
 esac
 `
@@ -171,9 +171,9 @@ esac
     `#!/usr/bin/env bash
 set -u
 
-printf 'curl %s\n' "$*" >>"$FAKE_DOCKER_STATE_DIR/calls"
+printf 'curl %s\n' "$*" >>"$FAKE_PODMAN_STATE_DIR/calls"
 
-if [ "$FAKE_DOCKER_SCENARIO" = "hanging-health" ]; then
+if [ "$FAKE_PODMAN_SCENARIO" = "hanging-health" ]; then
   request_is_bounded=0
   while [ "$#" -gt 0 ]; do
     if [ "$1" = "--max-time" ]; then
@@ -218,8 +218,8 @@ function runCommand(
     env: {
       ...process.env,
       ...extraEnvironment,
-      FAKE_DOCKER_SCENARIO: scenario,
-      FAKE_DOCKER_STATE_DIR: runtime.stateDirectory,
+      FAKE_PODMAN_SCENARIO: scenario,
+      FAKE_PODMAN_STATE_DIR: runtime.stateDirectory,
       PATH: `${runtime.binDirectory}:${process.env.PATH ?? ""}`,
       TMPDIR: runtime.temporaryDirectory,
     },
@@ -239,7 +239,7 @@ function runHelper(scenario: string, attempts = 3): RuntimeResult {
 set -euo pipefail
 RUNTIME_TEMP_DIR=$(mktemp -d)
 cleanup() {
-  docker rm --force owned-container >/dev/null 2>&1 || true
+  podman rm --force owned-container >/dev/null 2>&1 || true
   rm -rf "$RUNTIME_TEMP_DIR"
 }
 trap cleanup EXIT HUP INT TERM
@@ -258,7 +258,7 @@ function runHealthHelper(scenario: string, attempts = 2): RuntimeResult {
 set -euo pipefail
 RUNTIME_TEMP_DIR=$(mktemp -d)
 cleanup() {
-  docker rm --force owned-container >/dev/null 2>&1 || true
+  podman rm --force owned-container >/dev/null 2>&1 || true
   rm -rf "$RUNTIME_TEMP_DIR"
 }
 trap cleanup EXIT HUP INT TERM
@@ -380,7 +380,7 @@ describe("container runtime lifecycle", () => {
     }
   );
 
-  it("fails closed when Docker cannot inspect container state", () => {
+  it("fails closed when Podman cannot inspect container state", () => {
     const execution = runHelper("inspect-fails");
 
     expect(execution.result.status).toBe(1);
@@ -388,7 +388,7 @@ describe("container runtime lifecycle", () => {
       "ERROR: could not inspect container state"
     );
     expect(execution.result.stderr).toContain(
-      "docker inspect failed for owned-container"
+      "podman inspect failed for owned-container"
     );
     expectOwnedContainerCleanup(execution);
   });
@@ -420,10 +420,10 @@ describe("container runtime lifecycle", () => {
     expect(execution.result.status).toBe(1);
     expect(execution.result.stderr).toContain(originalError);
     expect(execution.result.stderr).toContain(
-      "docker logs failed for owned-container"
+      "podman logs failed for owned-container"
     );
     expect(execution.result.stderr.indexOf(originalError)).toBeLessThan(
-      execution.result.stderr.indexOf("docker logs failed for owned-container")
+      execution.result.stderr.indexOf("podman logs failed for owned-container")
     );
     expectOwnedContainerCleanup(execution);
   });
