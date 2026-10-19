@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: CC0-1.0
 
 ARG NODE_IMAGE=docker.io/library/node:26.10.0-bookworm-slim@sha256:662933cf47f013bc8e4beb31a6116448427a82057ba7c42c97e4c5ba766504c2
-ARG NGINX_IMAGE=docker.io/nginxinc/nginx-unprivileged:1.30.4-trixie@sha256:679387908ea95d6d8de12952cd15d6b351258054a992d2106d3b6aa12659d87d
+ARG NGINX_IMAGE=docker.io/nginxinc/nginx-unprivileged:1.30.6-alpine3.24-slim@sha256:5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6
 FROM ${NODE_IMAGE} AS build
 
 WORKDIR /app
@@ -28,7 +28,14 @@ LABEL org.opencontainers.image.title="SecPal Frontend" \
 
 USER root
 
-RUN rm -rf /usr/share/nginx/html
+# The qualified 30-package inventory includes curl's dependencies; reject drift.
+RUN printf '%s\n' 'https://dl-cdn.alpinelinux.org/alpine/v3.24/main' > /etc/apk/repositories \
+    && apk add --no-cache zlib=1.3.2-r1 curl=8.22.0-r0 \
+    && awk -F: '$1 == "P" { p = $2 } $1 == "V" { print p "=" $2 }' /lib/apk/db/installed > /tmp/secpal-apk-inventory \
+    && LC_ALL=C sort -o /tmp/secpal-apk-inventory /tmp/secpal-apk-inventory \
+    && test "$(sha256sum /tmp/secpal-apk-inventory)" = '4b642855523dca331b91a71bc2054654cfbdd005d681b2400f3403fd2eaeb208  /tmp/secpal-apk-inventory' \
+    && rm /tmp/secpal-apk-inventory \
+    && rm -rf /usr/share/nginx/html
 
 COPY --from=build /app/dist/ /usr/share/nginx/html/
 COPY --from=build /app/LICENSE /usr/share/licenses/secpal-frontend/LICENSE

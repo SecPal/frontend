@@ -26,6 +26,39 @@ including TypeScript, Vite's PWA `injectManifest` build, dependency SBOM, third-
 party notices, and license artifacts. It does not introduce a second
 container-specific application build.
 
+## Qualified Runtime Packages
+
+The Node 26 Bookworm build stage is unchanged. The runtime starts from
+`docker.io/nginxinc/nginx-unprivileged:1.30.6-alpine3.24-slim@sha256:5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6`.
+That official upstream input alone contains vulnerable zlib; the SecPal image
+adds a signature-verified Alpine v3.24 main package layer with exactly
+`zlib=1.3.2-r1` and `curl=8.22.0-r0`. It is a patched derivative, not
+byte-identical to the vendor image. Base attribution retains the original
+upstream index and platform identities.
+
+The [native qualification report](https://github.com/SecPal/frontend/issues/1710#issuecomment-6276204246)
+records the complete 30-package inventory on both architectures. Curl adds nine
+packages: curl, libcurl, brotli-libs, c-ares, libunistring, libidn2,
+nghttp2-libs, libpsl and zstd-libs. Zlib is the only updated original package;
+Nginx and all other inherited versions remain unchanged. This measured package
+cost preserves the existing bounded curl healthcheck, including status, body,
+deadline and proxy isolation, without introducing another HTTP parser.
+
+The Containerfile is the authoritative package admission point. Its inventory
+checksum covers sorted, newline-terminated `name=version` records derived from
+the installed APK database's `P:` and `V:` fields. The build fails if either
+direct pin is unavailable, signature verification fails, or the complete
+installed inventory changes. No edge/testing repository, extra key, untrusted
+installation or unrestricted upgrade is permitted.
+
+Alpine v3.24 stable package and upstream Nginx security updates require a focused
+review: authenticate exact available signed packages, assess the complete
+transitive inventory, update pins and its checksum together, and repeat native
+runtime/browser and unchanged full-image artifact-policy admission on both
+architectures. Package availability or fresh findings may block publication.
+The historical qualification's CLEAN result is not a release verdict for a new
+image; both final production subjects must independently pass the publisher.
+
 ## Published Image Identity
 
 The only official image is:
@@ -208,8 +241,8 @@ behavior are owned by
 The Containerfile pins both a complete version tag and its multi-architecture
 manifest digest. To update a pin:
 
-1. select an exact supported Debian Node patch release and an exact Debian
-   `nginxinc/nginx-unprivileged` release;
+1. select an exact supported Debian Node patch release and a separately
+   qualified official `nginxinc/nginx-unprivileged` runtime release;
 2. inspect the registry manifest with
    `skopeo inspect --raw docker://<image>:<tag>`;
 3. confirm that amd64 and arm64 are present and record the top-level index
