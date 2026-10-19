@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Wait for search input focus before keyboard navigation in the onboarding
+  disabled-option test to avoid intermittent CI failures.
 - Restore vertical padding inside the onboarding wizard frame so headings and
   controls stay clear of its borders in loaded, loading, and error states.
 - Pair the optional onboarding sections badge background with its matching
