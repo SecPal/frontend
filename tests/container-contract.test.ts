@@ -20,6 +20,15 @@ function readRepoFile(relativePath: string): string {
 }
 
 describe("frontend container source contract", () => {
+  it("retains the declarative health recommendation and configures the same probe for OCI", () => {
+    expect(readRepoFile("Containerfile")).toMatch(
+      /HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \\\n {4}CMD \/usr\/local\/bin\/secpal-health-live/u
+    );
+    expect(readRepoFile("scripts/container-smoke.sh")).toContain(
+      "--health-cmd /usr/local/bin/secpal-health-live"
+    );
+  });
+
   it.each(["node", "npm", "absent"])(
     "enforces runtime build-tool absence for %s",
     (present) => {

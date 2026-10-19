@@ -72,6 +72,3 @@ python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" verify-syft \
   --platform-digest "$manifest" --platform "linux/$arch" --spdx "$output/syft.spdx.json" \
   --association "$output/association.json" --output "$output/syft-association.json"
 SECPAL_CONTAINER_SKIP_BUILD=1 SECPAL_CONTAINER_IMAGE="$image" SECPAL_CONTAINER_PLATFORM="linux/$arch" scripts/container-smoke.sh
-SECPAL_CONTAINER_SKIP_BUILD=1 SECPAL_CONTAINER_IMAGE="$image" SECPAL_CONTAINER_PLATFORM="linux/$arch" scripts/container-browser.sh
-python3 scripts/container-publisher.py source --root "$repo_root" --commit "$GITHUB_SHA" --output "$output/source-after.json"
-cmp "$output/source.json" "$output/source-after.json"

@@ -128,7 +128,8 @@ podman run --rm \
   secpal-frontend:local
 ```
 
-OCI image configuration does not carry Docker HEALTHCHECK metadata. The
+The Containerfile retains its declarative HEALTHCHECK recommendation. Buildah
+does not serialize that Docker metadata into OCI image configuration. The
 image contains the same bounded health probe at
 `/usr/local/bin/secpal-health-live`; operators configure it explicitly as above.
 The tests inspect that configuration and execute `podman healthcheck run`.

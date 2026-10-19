@@ -53,5 +53,9 @@ USER 101:101
 EXPOSE 8080
 STOPSIGNAL SIGTERM
 
+# Declarative recommendation; OCI consumers explicitly configure this same probe.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD /usr/local/bin/secpal-health-live
+
 ENTRYPOINT ["/usr/local/bin/secpal-entrypoint"]
 CMD ["nginx", "-g", "daemon off;"]

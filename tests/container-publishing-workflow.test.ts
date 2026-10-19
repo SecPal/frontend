@@ -94,6 +94,27 @@ function requireAcceptance(w: Workflow) {
 }
 
 describe("frontend native OCI publisher", () => {
+  it("takes a pristine source snapshot before installing browser dependencies", () => {
+    const steps = native().jobs["build-and-test"].steps!;
+    const build = steps.findIndex(
+      (s) => s.name === "Build exact source and execute native runtime smoke"
+    );
+    const dependencies = steps.findIndex(
+      (s) => s.name === "Install dependencies"
+    );
+    const browser = steps.findIndex(
+      (s) => s.name === "Exercise exact native image in Chromium"
+    );
+    const retain = steps.findIndex(
+      (s) => s.name === "Retain exact native OCI and SBOM evidence"
+    );
+    expect(build).toBeGreaterThan(-1);
+    expect(dependencies).toBeGreaterThan(build);
+    expect(browser).toBeGreaterThan(dependencies);
+    expect(retain).toBeGreaterThan(browser);
+    expect(steps[browser].run).toContain("SECPAL_CONTAINER_IMAGE");
+  });
+
   it("attempts each platform security evaluation independently without weakening acceptance", () => {
     expect(workflow().jobs.scan.strategy?.matrix.include).toEqual([
       { arch: "amd64" },
@@ -124,7 +145,7 @@ describe("frontend native OCI publisher", () => {
     expect(build).toContain('--timestamp "$epoch"');
     expect(build).toContain('--build-arg "SOURCE_DATE_EPOCH=$epoch"');
     expect(build).toContain("prepare-snapshot");
-    expect(build).toContain(
+    expect(readRepoFile(".github/workflows/frontend-container.yml")).toContain(
       'cmp "$output/source.json" "$output/source-after.json"'
     );
   });
@@ -160,7 +181,10 @@ describe("frontend native OCI publisher", () => {
       "scripts/container-browser.sh",
     ]) {
       expect(run).toContain(command);
-      expect(readRepoFile("scripts/build-container.sh")).toContain(command);
+      expect(
+        readRepoFile("scripts/build-container.sh") +
+          readRepoFile(".github/workflows/frontend-container.yml")
+      ).toContain(command);
     }
     expect(run).toContain('SECPAL_CONTAINER_IMAGE="$repository@$manifest"');
     expect(run).toContain('case "$arch:$(uname -m):${RUNNER_ARCH:-}"');
