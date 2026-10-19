@@ -139,6 +139,7 @@ def native(stage):
         run("buildah", "pull", NODE)
         run("buildah", "build", "--format", "oci", "--timestamp", "1792431288",
             "--arch", "arm64", "--pull=never", "--http-proxy=false",
+            "--build-arg", "NODE_IMAGE=" + NODE,
             "--build-arg", "NGINX_IMAGE=" + config[7:],
             "--build-arg", "SOURCE_DATE_EPOCH=1792431288",
             "--build-arg", "SECPAL_IMAGE_REVISION=" + SOURCE,
@@ -237,4 +238,3 @@ if __name__ == "__main__":
         scan()
     else:
         raise SystemExit("Unsupported qualification stage")
-
