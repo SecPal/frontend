@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { createHash } from "node:crypto";
 import { execFile, spawnSync } from "node:child_process";
 import { createServer } from "node:http";
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
@@ -108,14 +109,14 @@ describe("frontend container source contract", () => {
     expect(useAuthTest).toContain('from "../testUtils/serializedWebLocks"');
   });
 
-  it("pins exact multi-architecture Debian base image manifests", () => {
+  it("pins the unchanged Node build and qualified multi-architecture Alpine runtime", () => {
     const dockerfile = readRepoFile("Containerfile");
 
     expect(dockerfile).toMatch(
       /^ARG NODE_IMAGE=docker\.io\/library\/node:26\.10\.0-bookworm-slim@sha256:662933cf47f013bc8e4beb31a6116448427a82057ba7c42c97e4c5ba766504c2$/mu
     );
     expect(dockerfile).toContain(
-      "nginxinc/nginx-unprivileged:1.30.4-trixie@sha256:679387908ea95d6d8de12952cd15d6b351258054a992d2106d3b6aa12659d87d"
+      "nginxinc/nginx-unprivileged:1.30.6-alpine3.24-slim@sha256:5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6"
     );
     expect(dockerfile).toContain(
       "COPY package.json package-lock.json .npmrc ./"
@@ -132,7 +133,35 @@ describe("frontend container source contract", () => {
     expect(dockerfile).not.toContain(
       "--chown=101:101 /app/dist/ /usr/share/nginx/html/"
     );
-    expect(dockerfile).not.toMatch(/alpine|:latest/iu);
+    expect(dockerfile).not.toMatch(/:latest/iu);
+  });
+
+  it("installs only exact signed stable APK inputs and checks the qualified inventory", () => {
+    const containerfile = readRepoFile("Containerfile");
+    const runtime = containerfile.split("FROM ${NGINX_IMAGE} AS runtime")[1];
+    expect(runtime).toContain("> /etc/apk/repositories");
+    expect(runtime).toContain(
+      "https://dl-cdn.alpinelinux.org/alpine/v3.24/main"
+    );
+    expect(runtime).toContain(
+      "apk add --no-cache zlib=1.3.2-r1 curl=8.22.0-r0"
+    );
+    expect(runtime).toContain("/lib/apk/db/installed");
+    expect(runtime).toContain("LC_ALL=C sort -o /tmp/secpal-apk-inventory");
+    expect(runtime).toContain("sha256sum /tmp/secpal-apk-inventory");
+    expect(runtime).toMatch(/= '[a-f0-9]{64} {2}\/tmp\/secpal-apk-inventory'/u);
+    expect(runtime.indexOf("USER root")).toBeLessThan(runtime.indexOf("apk "));
+    expect(runtime.indexOf("apk ")).toBeLessThan(
+      runtime.indexOf("USER 101:101")
+    );
+    expect(runtime).not.toMatch(
+      /--allow-untrusted|--no-check-certificate|--keys-dir|apk\s+upgrade|\/(?:edge|testing)\//u
+    );
+    expect(
+      createHash("sha256")
+        .update(readRepoFile("docker/health-live.sh"))
+        .digest("hex")
+    ).toBe("562136ce7964e4205972e3248dffe3be8b5f84b1b70b8046e8ae2aee43cafdcb");
   });
 
   it("keeps Nginx a read-only static server without CSP or edge behavior", () => {

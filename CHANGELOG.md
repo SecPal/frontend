@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Adopt the qualified official Nginx Alpine-Slim runtime with exact signed
+  Alpine zlib/curl repairs and a complete runtime-package inventory check.
+  Preserve the Node build stage, existing curl healthcheck, hardened native
+  runtime/browser contracts and unchanged artifact-security acceptance.
+
 - Replace the active frontend publisher with native AMD64/ARM64 Buildah OCI
   builds from Containerfile, retaining exact source/base identity, hardened
   runtime and Chromium behavior. Require authoritative Syft SPDX, independent
