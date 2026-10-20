@@ -131,7 +131,7 @@ describe("frontend container source contract", () => {
     expect(dockerfile).toContain("EXPOSE 8080");
   });
 
-  it("installs only exact signed stable APK inputs and checks the qualified inventory", () => {
+  it("installs exact signed stable APK inputs without freezing inherited package versions", () => {
     const containerfile = readRepoFile("Containerfile");
     const runtime = containerfile.split(/FROM \S+ AS runtime/u)[1];
     const alpineRelease = /-alpine(?<release>\d+\.\d+)-slim@/u.exec(
@@ -145,10 +145,7 @@ describe("frontend container source contract", () => {
     expect(runtime).toMatch(
       /apk add --no-cache zlib=\d+(?:\.\d+)*-r\d+ curl=\d+(?:\.\d+)*-r\d+(?:\s|$)/u
     );
-    expect(runtime).toContain("/lib/apk/db/installed");
-    expect(runtime).toContain("LC_ALL=C sort -o /tmp/secpal-apk-inventory");
-    expect(runtime).toContain("sha256sum /tmp/secpal-apk-inventory");
-    expect(runtime).toMatch(/= '[a-f0-9]{64} {2}\/tmp\/secpal-apk-inventory'/u);
+    expect(runtime).not.toContain("secpal-apk-inventory");
     expect(runtime.indexOf("USER root")).toBeLessThan(runtime.indexOf("apk "));
     expect(runtime.indexOf("apk ")).toBeLessThan(
       runtime.indexOf("USER 101:101")
