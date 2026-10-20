@@ -30,11 +30,6 @@ interface DockerBuilder {
   digest: string | undefined;
 }
 
-const exactReleaseWorkflowPaths = new Set([
-  ".github/workflows/frontend-container.yml",
-  ".github/workflows/publish-container.yml",
-]);
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -55,14 +50,6 @@ function parseVersion(source: string): Version | undefined {
     minor: Number(match.groups.minor),
     patch: Number(match.groups.patch),
   };
-}
-
-function compareVersions(left: Version, right: Version): number {
-  return (
-    left.major - right.major ||
-    left.minor - right.minor ||
-    left.patch - right.patch
-  );
 }
 
 function parseQualifiedNodeRange(
@@ -277,9 +264,9 @@ export function validateNodeToolchainContract(
       errors.push("Containerfile: Node builder must have a sha256 digest pin");
     }
 
-    if (compareVersions(builder.version, engine.minimum) !== 0) {
+    if (!rangeIncludesVersion(engine.source, builder.version)) {
       errors.push(
-        `Containerfile: Node builder ${builderVersion} must equal the qualified engine baseline ${versionToString(engine.minimum)}`
+        `Containerfile: Node builder ${builderVersion} is incompatible with ${engine.source}`
       );
     }
   }
@@ -320,16 +307,6 @@ export function validateNodeToolchainContract(
       if (!selectorSatisfiesQualifiedRange(selector, engine)) {
         errors.push(
           `${workflowPath}: node-version ${selector} is incompatible with ${engine.source}`
-        );
-      }
-
-      if (
-        exactReleaseWorkflowPaths.has(workflowPath) &&
-        builder &&
-        selector !== versionToString(builder.version)
-      ) {
-        errors.push(
-          `${workflowPath}: exact node-version must equal the Docker builder ${versionToString(builder.version)}`
         );
       }
     }

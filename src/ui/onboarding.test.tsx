@@ -635,51 +635,12 @@ describe("onboarding shadcn primitives", () => {
     expect(germany).toHaveAttribute("aria-selected", "true");
     expect(france).not.toHaveAttribute("aria-selected", "true");
 
+    await waitFor(() => expect(searchbox).toHaveFocus());
     await user.keyboard("{ArrowDown}");
 
     expect(searchbox).toHaveFocus();
     expect(germany).toHaveAttribute("aria-selected", "true");
     await waitFor(() => expect(france).toHaveAttribute("data-highlighted", ""));
-  });
-
-  it("closes the popover when Escape is pressed and clears stale query/active index for the next open", async () => {
-    const user = userEvent.setup();
-
-    render(
-      <TestCommandPopover
-        label="Country"
-        onValueChange={vi.fn()}
-        options={[
-          { value: "de", label: "Germany" },
-          { value: "fr", label: "France" },
-          { value: "es", label: "Spain" },
-        ]}
-      />
-    );
-
-    await user.click(screen.getByRole("combobox", { name: "Country" }));
-    expect(await screen.findByPlaceholderText(/search/i)).toBeInTheDocument();
-
-    // Move the active index away from the first option and apply a query so
-    // there is observable stale state to be cleared on Escape.
-    await user.type(await screen.findByPlaceholderText(/search/i), "fra");
-    expect(await screen.findByPlaceholderText(/search/i)).toHaveValue("fra");
-
-    await user.keyboard("{Escape}");
-
-    expect(screen.getByRole("combobox", { name: "Country" })).toHaveAttribute(
-      "aria-expanded",
-      "false"
-    );
-
-    // Re-open: query and keyboard highlight must be reset.
-    await user.click(screen.getByRole("combobox", { name: "Country" }));
-    expect(await screen.findByPlaceholderText(/search/i)).toHaveValue("");
-    const options = screen.getAllByRole("option");
-    expect(options).toHaveLength(3);
-    expect(
-      options.every((option) => !option.hasAttribute("data-highlighted"))
-    ).toBe(true);
   });
 
   it("clears stale query and highlight when Escape closes the popover", async () => {
@@ -700,19 +661,35 @@ describe("onboarding shadcn primitives", () => {
     const trigger = screen.getByRole("combobox", { name: "Country" });
 
     await user.click(trigger);
-    await user.type(await screen.findByPlaceholderText(/search/i), "fra");
-    expect(await screen.findByPlaceholderText(/search/i)).toHaveValue("fra");
+    const searchbox = await screen.findByPlaceholderText(/search/i);
+    await waitFor(() => expect(searchbox).toHaveFocus());
+    await user.type(searchbox, "fra");
+    await waitFor(() => {
+      expect(screen.getAllByRole("option")).toHaveLength(1);
+      expect(screen.getByRole("option", { name: "France" })).toHaveAttribute(
+        "data-highlighted",
+        ""
+      );
+    });
+    expect(searchbox).toHaveValue("fra");
 
     await user.keyboard("{Escape}");
-    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    await waitFor(() => {
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
+      expect(trigger).toHaveFocus();
+    });
 
     await user.click(trigger);
-    expect(await screen.findByPlaceholderText(/search/i)).toHaveValue("");
-    const options = screen.getAllByRole("option");
-    expect(options).toHaveLength(3);
-    expect(
-      options.every((option) => !option.hasAttribute("data-highlighted"))
-    ).toBe(true);
+    const reopenedSearchbox = await screen.findByPlaceholderText(/search/i);
+    await waitFor(() => {
+      expect(reopenedSearchbox).toHaveFocus();
+      expect(reopenedSearchbox).toHaveValue("");
+      const options = screen.getAllByRole("option");
+      expect(options).toHaveLength(3);
+      expect(
+        options.every((option) => !option.hasAttribute("data-highlighted"))
+      ).toBe(true);
+    });
   });
 
   it("renders the empty message when no options match the query", async () => {
@@ -1009,6 +986,8 @@ describe("onboarding shadcn primitives", () => {
     );
 
     await user.click(screen.getByRole("combobox", { name: "Country" }));
+    const searchbox = await screen.findByPlaceholderText(/search/i);
+    await waitFor(() => expect(searchbox).toHaveFocus());
     await user.keyboard("{ArrowDown}");
 
     expect(handleValueChange).not.toHaveBeenCalled();
