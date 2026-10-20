@@ -207,12 +207,17 @@ def admit_source_security(value, commit, observed_at):
 
 
 def evidence_time(value):
-    if type(value) is not str or not value.endswith('Z'):
+    # Compare aware UTC instants plus the nanosecond remainder without truncation.
+    match = re.fullmatch(
+        r'[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.(?P<fraction>[0-9]{1,9}))?(?:Z|\+00:00)',
+        value) if type(value) is str else None
+    if match is None:
         raise ValueError('publisher-evidence-time')
     try:
-        return datetime.fromisoformat(value.replace('Z','+00:00'))
+        instant = datetime.fromisoformat(value.replace('Z','+00:00'))
     except ValueError:
         raise ValueError('publisher-evidence-time') from None
+    return instant, int((match['fraction'] or '').ljust(9,'0')[6:])
 
 
 def build_evidence(records, index_digest, sboms, scans, smokes, source_security, run_id, attempt, generated_at, *, expected_source):
