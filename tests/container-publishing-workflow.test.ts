@@ -218,6 +218,23 @@ describe("frontend native OCI publisher", () => {
     expect(scanner).toContain("policy['gate_state']!='CLEAN'");
   });
 
+  it("uses the qualified attestation implementation for every published subject", () => {
+    const checkouts = Object.values(native().jobs)
+      .flatMap((job) => job.steps ?? [])
+      .filter((step) => step.with?.repository === "actions/attest");
+    expect(checkouts).toHaveLength(1);
+    const ref = String(checkouts[0].with?.ref);
+    expect(ref).toMatch(/^[0-9a-f]{40}$/u);
+
+    const attestations = Object.values(workflow().jobs)
+      .flatMap((job) => job.steps ?? [])
+      .filter((step) => step.uses?.startsWith("actions/attest@"));
+    expect(attestations.length).toBeGreaterThan(0);
+    for (const step of attestations) {
+      expect(step.uses).toBe(`actions/attest@${ref}`);
+    }
+  });
+
   it("publishes five exact attestations and keeps document attestation credential-free", () => {
     const w = workflow();
     const steps = w.jobs.attest.steps!;

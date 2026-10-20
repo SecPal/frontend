@@ -47,6 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   compatible CI helper runtimes to each builder update. Derive toolchain fixtures,
   Alpine repository expectations and shared-policy references from their active
   configuration, and remove assertions about retired container implementations.
+- Require every publisher attestation action to match the implementation checked
+  out for offline qualification, deriving its commit from the active workflow.
 - Wait for search focus and settled option lists in onboarding keyboard and
   Escape/reopen tests; consolidate duplicate Escape reset coverage.
 - Wait for select options and dropdown items before interaction assertions or
