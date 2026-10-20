@@ -40,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Allow shared workflow pin updates in manifest coverage and released-artifact
+  security tests while requiring the exact workflow paths and full commit SHAs.
 - Wait for select options and dropdown items before interaction assertions or
   pointer dismissal in shared UI tests. Simulate complete outside clicks and
   assert settled focus and closed menu state after dropdown interactions.

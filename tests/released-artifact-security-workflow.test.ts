@@ -32,8 +32,8 @@ describe("released frontend security adoption", () => {
     expect(w.jobs.release.if).toBe(
       "github.repository == 'SecPal/frontend' && github.ref == 'refs/heads/main'"
     );
-    expect(w.jobs.reevaluate.uses).toBe(
-      "SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@80732e29ad253f63fa8c46637f6686c344ce82ad"
+    expect(w.jobs.reevaluate.uses).toMatch(
+      /^SecPal\/\.github\/\.github\/workflows\/reusable-vulnerability-reevaluation\.yml@[0-9a-f]{40}$/u
     );
     expect(w.jobs.reevaluate.with?.triage).toBe(true);
     for (const job of Object.values(w.jobs)) {
