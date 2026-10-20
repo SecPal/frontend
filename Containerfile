@@ -1,9 +1,7 @@
 # SPDX-FileCopyrightText: 2026 SecPal Contributors
 # SPDX-License-Identifier: CC0-1.0
 
-ARG NODE_IMAGE=docker.io/library/node:26.10.0-bookworm-slim@sha256:662933cf47f013bc8e4beb31a6116448427a82057ba7c42c97e4c5ba766504c2
-ARG NGINX_IMAGE=docker.io/nginxinc/nginx-unprivileged:1.30.6-alpine3.24-slim@sha256:5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6
-FROM ${NODE_IMAGE} AS build
+FROM docker.io/library/node:26.10.0-bookworm-slim@sha256:662933cf47f013bc8e4beb31a6116448427a82057ba7c42c97e4c5ba766504c2 AS build
 
 WORKDIR /app
 
@@ -14,7 +12,7 @@ COPY . .
 ARG SOURCE_DATE_EPOCH
 RUN npm run build:web
 
-FROM ${NGINX_IMAGE} AS runtime
+FROM docker.io/nginxinc/nginx-unprivileged:1.30.6-alpine3.24-slim@sha256:5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6 AS runtime
 
 ARG SECPAL_IMAGE_REVISION=unknown
 ARG SECPAL_IMAGE_VERSION=0.0.1

@@ -113,7 +113,7 @@ describe("frontend container source contract", () => {
     const dockerfile = readRepoFile("Containerfile");
 
     expect(dockerfile).toMatch(
-      /^ARG NODE_IMAGE=docker\.io\/library\/node:26\.10\.0-bookworm-slim@sha256:662933cf47f013bc8e4beb31a6116448427a82057ba7c42c97e4c5ba766504c2$/mu
+      /^FROM docker\.io\/library\/node:26\.10\.0-bookworm-slim@sha256:662933cf47f013bc8e4beb31a6116448427a82057ba7c42c97e4c5ba766504c2 AS build$/mu
     );
     expect(dockerfile).toContain(
       "nginxinc/nginx-unprivileged:1.30.6-alpine3.24-slim@sha256:5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6"
@@ -138,7 +138,7 @@ describe("frontend container source contract", () => {
 
   it("installs only exact signed stable APK inputs and checks the qualified inventory", () => {
     const containerfile = readRepoFile("Containerfile");
-    const runtime = containerfile.split("FROM ${NGINX_IMAGE} AS runtime")[1];
+    const runtime = containerfile.split(/FROM \S+ AS runtime/u)[1];
     expect(runtime).toContain("> /etc/apk/repositories");
     expect(runtime).toContain(
       "https://dl-cdn.alpinelinux.org/alpine/v3.24/main"

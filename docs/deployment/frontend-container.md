@@ -254,6 +254,32 @@ Pull-request CI continues to build and validate the image locally without
 registry credentials or write effects. Registry publication occurs only in the
 push-triggered publisher after merge to `main`.
 
+## Dependency update proposals
+
+Dependabot configuration registers Containerfile through its `docker` ecosystem
+and remote hook revisions through `pre-commit`, daily at 04:00 Europe/Berlin.
+These are manual-review proposals. Explicit labels distinguish them from the
+existing automatic patch updates. The auto-merge workflow independently reads
+changed paths from GitHub and admits only npm manifests and Actions workflows;
+a generic dependency label or patch title cannot admit a Containerfile or hook
+update. Both sides of renames are checked.
+
+The two literal, fully qualified `FROM` instructions in Containerfile are the
+single authority for base-image tags and immutable digests. Dependabot Core can
+extract and update those references directly, without image ARG indirection or
+a duplicate Dockerfile. The publisher resolves each index independently for
+the native architecture, pulls the canonical reference, verifies its local
+platform digest, and builds with `--pull=never`. Base labels and evidence retain
+the reviewed index reference and the independently resolved platform digest.
+
+Every base-image version or digest change requires full native runtime/browser
+and artifact-security qualification. The qualified SecPal Alpine derivative also
+pins signed zlib/curl packages and checks the complete transitive package inventory;
+a proposed vendor-base update does not qualify that layer or supersede its pins.
+Keep immutable base digests and the accepted Buildah/Podman runtime contract.
+The shared manifest/cadence guard establishes structural configuration coverage,
+not proof that a future Dependabot updater run or update PR has already occurred.
+
 ## Recurring released-artifact security
 
 The separate `Released Frontend Artifact Security` workflow observes the latest

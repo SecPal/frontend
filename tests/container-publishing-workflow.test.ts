@@ -143,6 +143,12 @@ describe("frontend native OCI publisher", () => {
     const build = readRepoFile("scripts/build-container.sh");
     expect(build).toContain("buildah build --format oci");
     expect(build).toContain('--timestamp "$epoch"');
+    expect(build).toContain('buildah pull --arch "$arch" "$reference"');
+    expect(build).toContain('buildah inspect --type image "$reference"');
+    expect(build).toContain("jq -er .FromImageDigest");
+    expect(build).toContain('= "$expected"');
+    expect(build).toContain("--pull=never");
+    expect(build).not.toMatch(/NODE_IMAGE|NGINX_IMAGE/u);
     expect(build).toContain('--build-arg "SOURCE_DATE_EPOCH=$epoch"');
     expect(build).toContain("prepare-snapshot");
     expect(readRepoFile(".github/workflows/frontend-container.yml")).toContain(

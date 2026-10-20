@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Register Containerfile and remote pre-commit ecosystems for daily Dependabot
+  checks at 04:00 Europe/Berlin, with manual review and the pinned shared manifest
+  guard. Make the existing immutable Containerfile FROM references directly
+  updateable, retain verified native base resolution, and exclude runtime/hook
+  changes from auto-merge independently of labels. npm/Actions patch updates
+  remain unchanged.
+
 - Prepare daily and manual read-only vulnerability re-evaluation of verified
   released frontend OCI subjects through the pinned organization workflow.
   Preserve signed historical evidence, raw findings and independent action authority.

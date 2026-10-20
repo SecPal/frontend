@@ -10,6 +10,7 @@ import os
 import shlex
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 import subprocess
 import tempfile
 import sys
@@ -53,6 +54,39 @@ def platform(arch):
     descriptor=dict(mediaType='application/vnd.oci.image.manifest.v1+json',digest=digest(manifest),size=len(manifest))
     subject=publisher.admit_platform(manifest,config,descriptor,arch,SOURCE,base)
     return base,config,manifest,descriptor,subject
+
+
+class BaseSourceTests(unittest.TestCase):
+    def test_literal_from_pins_bind_both_platforms_to_the_reviewed_index(self):
+        root = Path(__file__).resolve().parents[1]
+        text = (root/'Containerfile').read_text()
+        self.assertNotIn('ARG NODE_IMAGE=', text)
+        self.assertNotIn('ARG NGINX_IMAGE=', text)
+        for arch in ('amd64', 'arm64'):
+            manifest = encoded(dict(schemaVersion=2, config=dict(digest='sha256:'+'a'*64)))
+            index = encoded(dict(manifests=[dict(digest=digest(manifest),
+                           platform=dict(os='linux',architecture=arch))]))
+            refs = [('docker.io/library/node', 'build'),
+                    ('docker.io/nginxinc/nginx-unprivileged', 'runtime')]
+            fixture = '\n'.join('FROM '+repo+':1@'+digest(index)+' AS '+stage for repo,stage in refs)
+            with tempfile.TemporaryDirectory() as tmp:
+                (Path(tmp)/'Containerfile').write_text(fixture)
+                with patch.object(publisher, 'run', side_effect=[index,manifest,index,manifest]):
+                    result = publisher.bases(tmp, arch)
+                self.assertEqual([b['stage'] for b in result], ['build','runtime'])
+                self.assertTrue(all(b['platform']=='linux/'+arch and b['digest']==digest(manifest) for b in result))
+                for bad in (fixture.replace('FROM ', 'FROM $', 1),
+                            fixture+'\nFROM other:latest AS extra',
+                            fixture.replace('AS build','AS runtime'),
+                            fixture.replace(digest(index), 'sha256:bad')):
+                    (Path(tmp)/'Containerfile').write_text(bad)
+                    with patch.object(publisher, 'run', side_effect=[index,manifest,index,manifest]), self.assertRaises(ValueError):
+                        publisher.bases(tmp, arch)
+
+    def test_changed_remote_index_or_platform_is_rejected(self):
+        root = Path(__file__).resolve().parents[1]
+        with patch.object(publisher, 'run', return_value=b'{}'), self.assertRaisesRegex(ValueError,'publisher-base-index-digest'):
+            publisher.bases(root, 'amd64')
 
 
 class AttestationEvidenceFilenameTests(unittest.TestCase):
