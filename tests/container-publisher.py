@@ -141,7 +141,7 @@ class EvidenceTimeTests(unittest.TestCase):
             expected=(sboms[scan['platform']]['spdx_sha256'] if scan['scanner']=='grype'
                       else subjects[scan['platform']]['manifest_digest'])
             self.assertEqual(scan['subject_digest'],expected)
-            self.assertEqual(publisher.evidence_time(scan['completed_at']).utcoffset().total_seconds(),0)
+            self.assertEqual(publisher.evidence_time(scan['completed_at'])[0].utcoffset().total_seconds(),0)
 
     def test_equivalent_explicit_utc_instants_keep_completion_ordering(self):
         for value in ('2026-10-19T21:40:29.598833Z',
@@ -160,7 +160,7 @@ class EvidenceTimeTests(unittest.TestCase):
                  '2026-10-19T21:40:29+01:00','2026-10-19T21:40:29-00:00',
                  '2026-02-30T21:40:29Z','2026-10-19T25:40:29Z',
                  '2026-10-19T21:40:29.Z','2026-10-19T21:40:29,5Z',
-                 '2026-10-19T21:40:29.1234567Z','2026-10-19T21:40:29UTC',
+                 '2026-10-19T21:40:29.1234567890Z','2026-10-19T21:40:29UTC',
                  '2026-10-19T21:40:29+00:00Z','2026-10-19T21:40:29ZZ',
                  '2026-10-19T21:40:29Z trailing','2026-10-19T21:40:29Z\n',
                  '2026-10-19 21:40:29Z','20261019T214029Z',
@@ -186,9 +186,32 @@ class EvidenceTimeTests(unittest.TestCase):
                 for suffix in ('Z','+00:00'):
                     with self.subTest(collection=collection,index=index,suffix=suffix):
                         args=self.grype_evidence()
-                        args[collection][index]['completed_at']='2026-10-19T21:40:51.000001'+suffix
-                        with self.assertRaisesRegex(ValueError,'^'+error+'$'):
-                            publisher.build_evidence(*args,expected_source=SOURCE)
+                        for fraction in ('.000001','.000000001'):
+                            args[collection][index]['completed_at']='2026-10-19T21:40:51'+fraction+suffix
+                            with self.assertRaisesRegex(ValueError,'^'+error+'$'):
+                                publisher.build_evidence(*args,expected_source=SOURCE)
+
+    def test_actual_source_database_nanoseconds_remain_admissible_and_exact(self):
+        args=self.grype_evidence()
+        args[8]='2026-10-20T07:30:00Z'
+        args[5]['database'].update(updated_at='2026-10-20T00:59:02.286523053Z',
+                                  next_update='2026-10-21T01:16:59.036595078Z')
+        publisher.build_evidence(*args,expected_source=SOURCE)
+        for suffix in ('Z','+00:00'):
+            args[8]='2026-10-20T07:30:00.123456789'+suffix
+            for scan in args[3]:
+                scan['completed_at']=args[8]
+            args[5]['database'].update(updated_at=args[8],
+                                      next_update='2026-10-20T07:30:00.123456790'+suffix)
+            publisher.build_evidence(*args,expected_source=SOURCE)
+            # Neither endpoint may move through loss of sub-microsecond precision.
+            for observed in ('2026-10-20T07:30:00.123456788'+suffix,
+                             '2026-10-20T07:30:00.123456790'+suffix):
+                args[8]=observed
+                with self.assertRaisesRegex(ValueError,'^publisher-source-security-deadline$'):
+                    publisher.build_evidence(*args,expected_source=SOURCE)
+        self.assertEqual(publisher.evidence_time('2026-10-20T07:30:00.1Z'),
+                         publisher.evidence_time('2026-10-20T07:30:00.100000000+00:00'))
 
     def test_source_database_interval_remains_half_open(self):
         for suffix in ('Z','+00:00'):
