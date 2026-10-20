@@ -207,7 +207,10 @@ def admit_source_security(value, commit, observed_at):
 
 
 def evidence_time(value):
-    if type(value) is not str or not value.endswith('Z'):
+    # Admit only the explicit UTC forms produced by the maintained collaborators.
+    # Bound fractions to datetime precision rather than silently truncating time.
+    if type(value) is not str or not re.fullmatch(
+            r'[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,6})?(?:Z|\+00:00)',value):
         raise ValueError('publisher-evidence-time')
     try:
         return datetime.fromisoformat(value.replace('Z','+00:00'))

@@ -29,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Admit explicit UTC `+00:00` scanner timestamps alongside `Z` when assembling
+  publisher evidence, preserving raw records and strict completion/freshness checks.
+
 - Wait for search input focus before keyboard navigation in the onboarding
   disabled-option test to avoid intermittent CI failures.
 - Restore vertical padding inside the onboarding wizard frame so headings and

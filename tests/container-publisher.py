@@ -111,6 +111,99 @@ def evidence():
     return [records,'sha256:'+'4'*64,sboms,scans,smokes,security,'42','2',NOW]
 
 
+class EvidenceTimeTests(unittest.TestCase):
+    @staticmethod
+    def grype_evidence():
+        args=evidence()
+        args[8]='2026-10-19T21:40:51Z'
+        args[5]['database'].update(updated_at='2026-10-19T00:00:00Z',
+                                   next_update='2026-10-20T00:00:00Z')
+        completed={
+            'linux/amd64':('2026-10-19T21:40:29.598833+00:00','2026-10-19T21:40:31Z'),
+            'linux/arm64':('2026-10-19T21:39:59.004353+00:00','2026-10-19T21:39:59Z'),
+        }
+        for scan in args[3]:
+            scan['completed_at']=completed[scan['platform']][scan['scanner']=='trivy']
+        for smoke in args[4]:
+            smoke['completed_at']='2026-10-19T21:39:28Z'
+        return args
+
+    def test_actual_grype_utc_forms_assemble_without_rewriting_evidence(self):
+        args=self.grype_evidence()
+        original=copy.deepcopy(args)
+        result=publisher.build_evidence(*args,expected_source=SOURCE)
+        self.assertEqual(args,original)
+        self.assertEqual(result['scans'],original[3])
+        self.assertEqual(result['generated_at'],original[8])
+        sboms={s['platform']:s for s in original[2]}
+        subjects={r['subject']['platform']:r['subject'] for r in original[0]}
+        for scan in result['scans']:
+            expected=(sboms[scan['platform']]['spdx_sha256'] if scan['scanner']=='grype'
+                      else subjects[scan['platform']]['manifest_digest'])
+            self.assertEqual(scan['subject_digest'],expected)
+            self.assertEqual(publisher.evidence_time(scan['completed_at']).utcoffset().total_seconds(),0)
+
+    def test_equivalent_explicit_utc_instants_keep_completion_ordering(self):
+        for value in ('2026-10-19T21:40:29.598833Z',
+                      '2026-10-19T21:39:59.004353Z','2026-10-19T21:40:51Z'):
+            self.assertEqual(publisher.evidence_time(value),
+                             publisher.evidence_time(value[:-1]+'+00:00'))
+        args=self.grype_evidence()
+        args[8]='2026-10-19T21:40:51.000000+00:00'
+        for record in args[3]+args[4]:
+            record['completed_at']='2026-10-19T21:40:51Z'
+        result=publisher.build_evidence(*args,expected_source=SOURCE)
+        self.assertEqual(result['generated_at'],args[8])
+
+    def test_invalid_timestamp_representations_fail_full_assembly(self):
+        invalid=(None,1,True,[],{},'','2026-10-19T21:40:29',
+                 '2026-10-19T21:40:29+01:00','2026-10-19T21:40:29-00:00',
+                 '2026-02-30T21:40:29Z','2026-10-19T25:40:29Z',
+                 '2026-10-19T21:40:29.Z','2026-10-19T21:40:29,5Z',
+                 '2026-10-19T21:40:29.1234567Z','2026-10-19T21:40:29UTC',
+                 '2026-10-19T21:40:29+00:00Z','2026-10-19T21:40:29ZZ',
+                 '2026-10-19T21:40:29Z trailing','2026-10-19T21:40:29Z\n',
+                 '2026-10-19 21:40:29Z','20261019T214029Z',
+                 '2026-10-19T21:40Z','2026-10-19T21:40:29+0000')
+        # Each independently consumed time boundary retains the same closed error.
+        for value in invalid:
+            for boundary in ('scan','smoke','generated'):
+                with self.subTest(value=value,boundary=boundary):
+                    args=self.grype_evidence()
+                    # Use Z controls so the rejected predicate is the selected input.
+                    for scan in args[3]:
+                        scan['completed_at']=scan['completed_at'].replace('+00:00','Z')
+                    if boundary=='generated':
+                        args[8]=value
+                    else:
+                        args[3 if boundary=='scan' else 4][0]['completed_at']=value
+                    with self.assertRaisesRegex(ValueError,'^publisher-evidence-time$'):
+                        publisher.build_evidence(*args,expected_source=SOURCE)
+
+    def test_future_scan_and_smoke_remain_rejected_on_both_architectures(self):
+        for collection,error in ((3,'publisher-scan-acceptance'),(4,'publisher-smoke-time')):
+            for index in range(len(self.grype_evidence()[collection])):
+                for suffix in ('Z','+00:00'):
+                    with self.subTest(collection=collection,index=index,suffix=suffix):
+                        args=self.grype_evidence()
+                        args[collection][index]['completed_at']='2026-10-19T21:40:51.000001'+suffix
+                        with self.assertRaisesRegex(ValueError,'^'+error+'$'):
+                            publisher.build_evidence(*args,expected_source=SOURCE)
+
+    def test_source_database_interval_remains_half_open(self):
+        for suffix in ('Z','+00:00'):
+            args=self.grype_evidence()
+            args[5]['database'].update(updated_at='2026-10-19T21:40:51'+suffix,
+                                      next_update='2026-10-19T21:40:52'+suffix)
+            publisher.build_evidence(*args,expected_source=SOURCE)
+            for observed in ('2026-10-19T21:40:50.999999'+suffix,
+                             '2026-10-19T21:40:52'+suffix,
+                             '2026-10-19T21:40:52.000001'+suffix):
+                args[8]=observed
+                with self.assertRaisesRegex(ValueError,'^publisher-source-security-deadline$'):
+                    publisher.build_evidence(*args,expected_source=SOURCE)
+
+
 class Publisher(unittest.TestCase):
     def test_native_architecture_is_not_a_requested_platform_string(self):
         self.assertEqual(publisher.native_architecture('amd64','x86_64','X64'),'amd64')
