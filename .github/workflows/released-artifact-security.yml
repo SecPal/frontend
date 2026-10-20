@@ -1,0 +1,153 @@
+# SPDX-FileCopyrightText: 2026 SecPal Contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+---
+name: Released Frontend Artifact Security
+
+on:
+  schedule:
+    # One shared call per run: the shared evidence names are run-scoped.
+    - cron: "17 3 * * *" # AMD64 daily, UTC
+    - cron: "37 3 * * *" # ARM64 daily, UTC
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Exact native artifact platform to re-evaluate.
+        required: true
+        default: linux/amd64
+        type: choice
+        options: [linux/amd64, linux/arm64]
+      evidence-artifact:
+        description: Optional exact released build-evidence OCI reference; empty selects the latest accepted publisher.
+        required: false
+        default: ""
+        type: string
+
+permissions: {}
+
+jobs:
+  release:
+    name: Independently admit the released OCI subjects
+    if: github.repository == 'SecPal/frontend' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      attestations: read
+      contents: read
+      packages: read
+    outputs:
+      index-digest: ${{ steps.release.outputs.index-digest }}
+      platform: ${{ steps.release.outputs.platform }}
+      platform-digest: ${{ steps.release.outputs.platform-digest }}
+      syft-spdx-artifact: ${{ steps.release.outputs.syft-spdx-artifact }}
+      publisher-workflow-sha: ${{ steps.release.outputs.publisher-workflow-sha }}
+    steps:
+      - name: Checkout exact monitoring source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Checkout accepted immutable verification primitives
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: SecPal/.github
+          ref: 80732e29ad253f63fa8c46637f6686c344ce82ad # accepted protected main
+          path: .context/released-artifact-governance
+          persist-credentials: false
+      - name: Install pinned read-only registry and attestation tools
+        run: scripts/container-tools.sh registry "$RUNNER_TEMP/secpal-monitor-tools"
+      - name: Install accepted verification dependencies
+        run: |
+          python3 -m venv "$RUNNER_TEMP/secpal-monitor-policy"
+          "$RUNNER_TEMP/secpal-monitor-policy/bin/pip" install --requirement \
+            .context/released-artifact-governance/requirements/vulnerability-policy.txt
+          printf '%s\n' "$RUNNER_TEMP/secpal-monitor-policy/bin" >> "$GITHUB_PATH"
+      - name: Verify publication before selecting scanner inputs
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          SCHEDULE: ${{ github.event.schedule }}
+          PLATFORM: ${{ inputs.platform }}
+          REFERENCE: ${{ inputs.evidence-artifact }}
+        run: |
+          python3 scripts/released-artifact-security.py \
+            --tools "$RUNNER_TEMP/secpal-monitor-tools" \
+            --shared-root .context/released-artifact-governance \
+            --output .context/release-admission \
+            --event "$EVENT" --schedule "$SCHEDULE" --platform "$PLATFORM" --reference "$REFERENCE"
+      - name: Retain a non-authoritative immutable-release lookup hint
+        if: steps.release.outputs.cacheable == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: frontend-monitored-release
+          path: .context/release-admission/release-reference.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain bounded release-admission evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: frontend-release-admission-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .context/release-admission
+          if-no-files-found: error
+          retention-days: 14
+
+  reevaluate:
+    name: Re-evaluate the exact released platform
+    needs: release
+    # The accepted callee gives writes only to its independently validated
+    # technical-issue triage job; scanners retain explicit read-only scopes.
+    permissions:
+      attestations: read
+      contents: read
+      issues: write
+      packages: read
+    # Timeouts, scanner pins, fresh databases and policy belong to this workflow.
+    uses: SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@80732e29ad253f63fa8c46637f6686c344ce82ad
+    with:
+      artifact-repository: ghcr.io/secpal/frontend
+      index-digest: ${{ needs.release.outputs.index-digest }}
+      platform-digest: ${{ needs.release.outputs.platform-digest }}
+      platform: ${{ needs.release.outputs.platform }}
+      syft-spdx-artifact: ${{ needs.release.outputs.syft-spdx-artifact }}
+      publisher-repository: SecPal/frontend
+      publisher-workflow: SecPal/frontend/.github/workflows/publish-container.yml
+      # Derived from verified publisher evidence, never from a caller-supplied SHA.
+      publisher-workflow-sha: ${{ needs.release.outputs.publisher-workflow-sha }}
+      triage: true
+
+  result:
+    name: Report the current monitoring verdict
+    needs: [release, reevaluate]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require genuine current CLEAN monitoring evidence
+        env:
+          RELEASE: ${{ needs.release.result }}
+          SCAN: ${{ needs.reevaluate.result }}
+          STATE: ${{ needs.reevaluate.outputs.gate-state }}
+          EVIDENCE: ${{ needs.reevaluate.outputs.evidence-artifact }}
+        run: |
+          set -euo pipefail
+          if [ "$RELEASE" != success ]; then
+            echo 'UNKNOWN_STALE: release admission failed; scanners NOT EXECUTED.' >&2
+            exit 1
+          fi
+          case "$STATE" in
+            CLEAN)
+              test "$SCAN" = success
+              printf 'CLEAN: retained shared evidence %s\n' "$EVIDENCE" >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            ACTIONABLE|REVIEW_REQUIRED|UNKNOWN_STALE)
+              printf '%s: inspect retained shared evidence. Historical publication is unchanged.\n' "$STATE" >&2
+              exit 1
+              ;;
+            *)
+              echo 'UNKNOWN_STALE: missing or malformed shared outcome.' >&2
+              exit 1
+              ;;
+          esac
