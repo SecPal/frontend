@@ -93,3 +93,26 @@ updates:
           - "SecPal/.github/.github/workflows/*"
         update-types:
           - "major"
+
+  # Containerfile OCI bases: proposals require full runtime/security qualification.
+  # Custom labels replace default labels; omit dependencies to prevent auto-merge.
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "04:00"
+      timezone: "Europe/Berlin"
+    labels:
+      - "config-infrastructure"
+      - "dependabot"
+
+  # Remote pre-commit hook revisions; repo: local hooks remain locally owned.
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "04:00"
+      timezone: "Europe/Berlin"
+    labels:
+      - "developer-experience"
+      - "dependabot"
