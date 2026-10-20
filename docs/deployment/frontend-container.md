@@ -253,3 +253,48 @@ manifest digest. To update a pin:
 Pull-request CI continues to build and validate the image locally without
 registry credentials or write effects. Registry publication occurs only in the
 push-triggered publisher after merge to `main`.
+
+## Recurring released-artifact security
+
+The separate `Released Frontend Artifact Security` workflow observes the latest
+successful protected-main publisher. Daily UTC schedules evaluate AMD64 at 03:17
+and ARM64 at 03:37. Each platform has its own workflow run because the accepted
+shared workflow uses run-scoped artifact names. Manual dispatch selects one
+platform; run it once per platform for a complete two-platform incident assessment.
+
+Release admission verifies the signed immutable build-evidence OCI artifact and
+document, fixed publisher repository/workflow, exact successful main run/attempt,
+main ancestry, both platform/config identities, both authoritative Syft
+associations, and the final discovery read-back. Candidate attestations alone do
+not establish release acceptance. Publisher fields cannot be supplied by dispatch.
+
+The initial accepted release is bootstrapped by its immutable build-evidence
+reference. Later successful publications are discovered through the publisher's
+normal retained evidence. A tiny `frontend-monitored-release` artifact retains
+only a lookup hint, refreshed by ordinary daily runs. Only artifacts from the
+protected-main monitoring workflow are considered; pull-request hints are rejected.
+After publisher-artifact expiry it can locate the same immutable evidence; its signatures and latest-run
+binding are always checked again. The hint cannot authorize a release or silently
+select an older publisher. Missing/expired lookup evidence fails closed. This
+uses existing bounded Actions evidence, without a release database, registry
+crawl or policy edit for each publication.
+
+An optional manual `evidence-artifact` reference can select another genuinely
+accepted release after the same verification. Historical incidents do not replace
+the current monitored release. Verifying the current or a later accepted run can
+refresh its lookup hint, including recovery after ordinary artifact expiry.
+A failed later rerun cannot erase a previously accepted attempt.
+The shared workflow consumes the verified Syft SPDX with pinned Grype and scans
+the immutable platform independently with Trivy using fresh databases and
+unchanged central policy. The caller preserves raw/normalized evidence for
+14 days and fails its current CLEAN verdict on ACTIONABLE, REVIEW_REQUIRED,
+UNKNOWN_STALE or missing evidence. Historical publication signatures are not
+rewritten. Historical evidence retains the three BusyBox-family observations;
+fresh admitted intelligence determines the current disposition independently.
+
+Observation jobs use repository/package/attestation reads, plus Actions reads
+for release lookup. Only the accepted shared workflow's isolated,
+independently validated technical-issue triage job receives `issues: write`.
+This records findings without production action authority. Rebuild, registry
+publication, OIDC signing, deployment, exceptions and remediation remain with
+their separately authorized owners.

@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Prepare daily and manual read-only vulnerability re-evaluation of verified
+  released frontend OCI subjects through the pinned organization workflow.
+  Preserve signed historical evidence, raw findings and independent action authority.
+
 - Adopt the qualified official Nginx Alpine-Slim runtime with exact signed
   Alpine zlib/curl repairs and a complete runtime-package inventory check.
   Preserve the Node build stage, existing curl healthcheck, hardened native
