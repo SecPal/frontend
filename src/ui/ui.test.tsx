@@ -669,7 +669,9 @@ describe("shared shadcn/Base UI basis", () => {
     expect(language).toHaveTextContent("German");
     expect(language).toHaveClass("bg-background", "text-foreground");
     await user.click(language);
-    const englishOption = screen.getByRole("option", { name: "English" });
+    const englishOption = await screen.findByRole("option", {
+      name: "English",
+    });
     expect(englishOption.closest('[data-slot="select-content"]')).toHaveClass(
       "bg-background",
       "text-foreground"
@@ -710,6 +712,7 @@ describe("shared shadcn/Base UI basis", () => {
     const trigger = screen.getByRole("combobox", { name: "Language" });
 
     await user.click(trigger);
+    await screen.findByRole("option", { name: "English" });
     fireEvent.pointerDown(document.body);
     fireEvent.mouseDown(document.body);
     fireEvent.click(document.body);
@@ -742,12 +745,14 @@ describe("shared shadcn/Base UI basis", () => {
     const nextButton = screen.getByRole("button", { name: "Next action" });
 
     await user.click(trigger);
+    await screen.findByRole("option", { name: "English" });
     fireEvent.pointerDown(document.body);
     nextButton.focus();
     fireEvent.mouseDown(nextButton);
     fireEvent.click(nextButton);
 
     await waitFor(() => {
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
       expect(document.activeElement).toBe(nextButton);
     });
   });

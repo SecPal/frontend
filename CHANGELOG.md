@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Wait for select options and dropdown items before interaction assertions or
+  pointer dismissal in shared UI tests. Simulate complete outside clicks and
+  assert settled focus and closed menu state after dropdown interactions.
 - Admit explicit UTC `+00:00` scanner timestamps alongside `Z` when assembling
   publisher evidence, preserving raw records and strict completion/freshness checks.
 
