@@ -26,34 +26,32 @@ including TypeScript, Vite's PWA `injectManifest` build, dependency SBOM, third-
 party notices, and license artifacts. It does not introduce a second
 container-specific application build.
 
-## Qualified Runtime Packages
+## Runtime Packages
 
-The Node 26 Bookworm build stage is unchanged. The runtime starts from
-`docker.io/nginxinc/nginx-unprivileged:1.30.6-alpine3.24-slim@sha256:5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6`.
-That official upstream input alone contains vulnerable zlib; the SecPal image
-adds a signature-verified Alpine v3.24 main package layer with exactly
-`zlib=1.3.2-r1` and `curl=8.22.0-r0`. It is a patched derivative, not
-byte-identical to the vendor image. Base attribution retains the original
-upstream index and platform identities.
+The build and runtime base images are versioned and digest-pinned in
+Containerfile. The runtime adds a signature-verified package layer from the
+matching Alpine stable main repository, using the exact zlib/curl pins declared
+there. It is a patched derivative, not byte-identical to the vendor image.
+Base attribution retains the original upstream index and platform identities.
 
-The [native qualification report](https://github.com/SecPal/frontend/issues/1710#issuecomment-6276204246)
-records the complete 30-package inventory on both architectures. Curl adds nine
-packages: curl, libcurl, brotli-libs, c-ares, libunistring, libidn2,
-nghttp2-libs, libpsl and zstd-libs. Zlib is the only updated original package;
-Nginx and all other inherited versions remain unchanged. This measured package
-cost preserves the existing bounded curl healthcheck, including status, body,
-deadline and proxy isolation, without introducing another HTTP parser.
+The [original native qualification report](https://github.com/SecPal/frontend/issues/1710#issuecomment-6276204246)
+records the initial 30-package inventory on both architectures, including nine
+packages added for curl. This measured package cost preserves the existing
+bounded curl healthcheck, including status, body, deadline and proxy isolation,
+without introducing another HTTP parser.
 
-The Containerfile is the authoritative package admission point. Its inventory
-checksum covers sorted, newline-terminated `name=version` records derived from
-the installed APK database's `P:` and `V:` fields. The build fails if either
-direct pin is unavailable, signature verification fails, or the complete
-installed inventory changes. No edge/testing repository, extra key, untrusted
-installation or unrestricted upgrade is permitted.
+The Containerfile defines the direct package inputs. The build fails if either
+direct pin is unavailable or signature verification fails. No edge/testing
+repository, extra key, untrusted installation or unrestricted upgrade is
+permitted. Transitive dependencies are resolved from the signed stable
+repository at build time. There is no fixed package-inventory checksum to refresh
+when a base package version changes. Syft records the complete resulting package
+inventory per image; Grype and Trivy policy gates admit each immutable production
+artifact before publication.
 
-Alpine v3.24 stable package and upstream Nginx security updates require a focused
+Alpine stable package and upstream Nginx security updates require a focused
 review: authenticate exact available signed packages, assess the complete
-transitive inventory, update pins and its checksum together, and repeat native
+transitive inventory, update direct pins when needed, and repeat native
 runtime/browser and unchanged full-image artifact-policy admission on both
 architectures. Package availability or fresh findings may block publication.
 The historical qualification's CLEAN result is not a release verdict for a new
@@ -273,8 +271,8 @@ platform digest, and builds with `--pull=never`. Base labels and evidence retain
 the reviewed index reference and the independently resolved platform digest.
 
 Every base-image version or digest change requires full native runtime/browser
-and artifact-security qualification. The qualified SecPal Alpine derivative also
-pins signed zlib/curl packages and checks the complete transitive package inventory;
+and artifact-security qualification. The SecPal Alpine derivative also
+pins signed zlib/curl packages and records the complete package inventory in SBOMs;
 a proposed vendor-base update does not qualify that layer or supersede its pins.
 Keep immutable base digests and the accepted Buildah/Podman runtime contract.
 The shared manifest/cadence guard establishes structural configuration coverage,

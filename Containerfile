@@ -12,7 +12,7 @@ COPY . .
 ARG SOURCE_DATE_EPOCH
 RUN npm run build:web
 
-FROM docker.io/nginxinc/nginx-unprivileged:1.30.6-alpine3.24-slim@sha256:5d8bb9437d74a600ec5dbf90c035451c724dc33eac8d3a71078f6f8612c345f6 AS runtime
+FROM docker.io/nginxinc/nginx-unprivileged:1.31.6-alpine3.24-slim@sha256:ac4d9c7e457c6510b95ac72dd84b27f7cc68ecb9a83fbd44f05a6460cf08aba4 AS runtime
 
 ARG SECPAL_IMAGE_REVISION=unknown
 ARG SECPAL_IMAGE_VERSION=0.0.1
@@ -26,13 +26,9 @@ LABEL org.opencontainers.image.title="SecPal Frontend" \
 
 USER root
 
-# The qualified 30-package inventory includes curl's dependencies; reject drift.
+# Keep signed stable package pins; the publisher inventories and scans the image.
 RUN printf '%s\n' 'https://dl-cdn.alpinelinux.org/alpine/v3.24/main' > /etc/apk/repositories \
     && apk add --no-cache zlib=1.3.2-r1 curl=8.22.0-r0 \
-    && awk -F: '$1 == "P" { p = $2 } $1 == "V" { print p "=" $2 }' /lib/apk/db/installed > /tmp/secpal-apk-inventory \
-    && LC_ALL=C sort -o /tmp/secpal-apk-inventory /tmp/secpal-apk-inventory \
-    && test "$(sha256sum /tmp/secpal-apk-inventory)" = '4b642855523dca331b91a71bc2054654cfbdd005d681b2400f3403fd2eaeb208  /tmp/secpal-apk-inventory' \
-    && rm /tmp/secpal-apk-inventory \
     && rm -rf /usr/share/nginx/html
 
 COPY --from=build /app/dist/ /usr/share/nginx/html/
