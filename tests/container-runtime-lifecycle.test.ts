@@ -497,20 +497,6 @@ describe("container runtime lifecycle", () => {
     expect(expectedOrigin).toBe(runtimeOrigin);
   });
 
-  it("removes the fragile nested port template from both active scripts", () => {
-    for (const script of [
-      "scripts/container-smoke.sh",
-      "scripts/container-browser.sh",
-    ]) {
-      const contents = readFileSync(path.join(repoRoot, script), "utf8");
-
-      expect(contents).toContain("container-runtime.sh");
-      expect(contents).not.toContain(
-        '{{(index (index .NetworkSettings.Ports "8080/tcp") 0).HostPort}}'
-      );
-    }
-  });
-
   it("runs lifecycle regressions in pull-request and publisher validation", () => {
     for (const workflow of [
       ".github/workflows/frontend-container.yml",

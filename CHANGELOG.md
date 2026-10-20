@@ -42,6 +42,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Allow shared workflow pin updates in manifest coverage and released-artifact
   security tests while requiring the exact workflow paths and full commit SHAs.
+- Validate container image versions against the supported Node range and require
+  immutable digest pins without duplicating release versions in tests or coupling
+  compatible CI helper runtimes to each builder update. Derive toolchain fixtures,
+  Alpine repository expectations and shared-policy references from their active
+  configuration, and remove assertions about retired container implementations.
+- Wait for search focus and settled option lists in onboarding keyboard and
+  Escape/reopen tests; consolidate duplicate Escape reset coverage.
 - Wait for select options and dropdown items before interaction assertions or
   pointer dismissal in shared UI tests. Simulate complete outside clicks and
   assert settled focus and closed menu state after dropdown interactions.

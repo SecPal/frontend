@@ -6,6 +6,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { inc, minVersion } from "semver";
 import {
   type NodeToolchainSources,
   validateNodeToolchainContract,
@@ -19,6 +20,15 @@ const repoRoot = path.resolve(
 function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(repoRoot, relativePath), "utf8");
 }
+
+const baseline = minVersion(
+  JSON.parse(readRepoFile("package.json")).engines.node
+)!;
+const patchUpdate = inc(baseline, "patch")!;
+const minorUpdate = inc(baseline, "minor")!;
+const nextMajor = inc(baseline, "major")!;
+const previousMajor = String(baseline.major - 1);
+const olderVersion = `${previousMajor}.0.0`;
 
 function getRepositorySources(): NodeToolchainSources {
   const workflowPaths = execFileSync(
@@ -46,18 +56,18 @@ function getRepositorySources(): NodeToolchainSources {
   };
 }
 
-function fixtureSources(version = "26.10.0"): NodeToolchainSources {
+function fixtureSources(version = baseline.version): NodeToolchainSources {
   const major = version.split(".")[0];
 
   return {
     packageJson: JSON.stringify({
       engines: { node: `^${version}` },
-      devDependencies: { "@types/node": `^${major}.1.0` },
+      devDependencies: { "@types/node": `^${version}` },
     }),
     packageLock: JSON.stringify({
       packages: {
         "node_modules/ini": {
-          engines: { node: ">=22.22.2 || ^24.15.0 || >=26.0.0" },
+          engines: { node: `^${version}` },
         },
       },
     }),
@@ -133,33 +143,56 @@ describe("Node toolchain contract", () => {
   additional-check:
     uses: SecPal/.github/.github/workflows/reusable-node-build.yml@0000000000000000000000000000000000000000
     with:
-      node-version: "^26.10.0"
+      node-version: "^${baseline.version}"
 `;
 
     expect(validateNodeToolchainContract(sources)).toEqual([]);
   });
 
   it("accepts a consistently qualified patch change without validator literals", () => {
-    expect(validateNodeToolchainContract(fixtureSources("26.11.1"))).toEqual(
+    expect(validateNodeToolchainContract(fixtureSources(patchUpdate))).toEqual(
       []
     );
   });
 
-  it("rejects Node 26 types while the runtime still requires Node 24", () => {
-    const sources = fixtureSources("24.21.0");
-    sources.packageJson = sources.packageJson.replace(
-      '"@types/node":"^24.1.0"',
-      '"@types/node":"^26.1.0"'
-    );
+  it.each([patchUpdate, minorUpdate])(
+    "accepts a digest-pinned builder update to %s within the supported range",
+    (version) => {
+      const sources = fixtureSources();
+      sources.dockerfile = fixtureSources(version).dockerfile.replace(
+        "a".repeat(64),
+        "b".repeat(64)
+      );
 
-    expect(validateNodeToolchainContract(sources)).toEqual(
-      expect.arrayContaining([
-        expect.stringContaining(
-          "@types/node major must equal the Node runtime major 24"
-        ),
-      ])
-    );
+      expect(validateNodeToolchainContract(sources)).toEqual([]);
+    }
+  );
+
+  it("accepts compatible exact workflow versions independently of the builder", () => {
+    const sources = fixtureSources();
+    sources.workflows[".github/workflows/frontend-container.yml"] =
+      fixtureSources(minorUpdate).workflows[
+        ".github/workflows/frontend-container.yml"
+      ]!;
+
+    expect(validateNodeToolchainContract(sources)).toEqual([]);
   });
+
+  it.each([olderVersion, nextMajor])(
+    "rejects a builder version %s outside the supported range",
+    (version) => {
+      const sources = fixtureSources();
+      sources.dockerfile = fixtureSources(version).dockerfile;
+
+      expect(validateNodeToolchainContract(sources)).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining(
+            "Node builder " + version + " is incompatible"
+          ),
+        ])
+      );
+    }
+  );
 
   it("accepts workflow ordering changes", () => {
     const directJob = `
@@ -168,14 +201,14 @@ describe("Node toolchain contract", () => {
     steps:
       - uses: actions/setup-node@0000000000000000000000000000000000000000
         with:
-          node-version: "^26.10.0"
+          node-version: "^${baseline.version}"
       - run: npm test
 `;
     const reusableJob = `
   reusable:
     uses: SecPal/.github/.github/workflows/reusable-node-build.yml@0000000000000000000000000000000000000000
     with:
-      node-version: "^26.10.0"
+      node-version: "^${baseline.version}"
 `;
 
     for (const jobs of [directJob + reusableJob, reusableJob + directJob]) {
@@ -186,11 +219,33 @@ describe("Node toolchain contract", () => {
     }
   });
 
+  it("requires workflow selectors to respect the qualified minimum", () => {
+    const sources = fixtureSources(patchUpdate);
+    sources.workflows[".github/workflows/quality.yml"] = sources.workflows[
+      ".github/workflows/quality.yml"
+    ]!.replace(
+      `node-version: "^${patchUpdate}"`,
+      `node-version: "${baseline.major}"`
+    );
+
+    expect(validateNodeToolchainContract(sources)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining(
+          `node-version ${baseline.major} is incompatible`
+        ),
+      ])
+    );
+  });
+
   it.each([
     {
       name: "a Node job has no selector",
       mutate: (sources: NodeToolchainSources) =>
-        replaceAllSources(sources, '          node-version: "^26.10.0"\n', ""),
+        replaceAllSources(
+          sources,
+          `          node-version: "^${baseline.version}"\n`,
+          ""
+        ),
       error: "actions/setup-node requires an explicit node-version",
     },
     {
@@ -231,60 +286,50 @@ jobs:
       error: "Node reusable workflow requires an explicit node-version",
     },
     {
-      name: "a workflow selects Node 22",
+      name: "a workflow selects an unsupported Node major",
       mutate: (sources: NodeToolchainSources) => {
         sources.workflows[".github/workflows/quality.yml"] =
           sources.workflows[".github/workflows/quality.yml"]?.replace(
-            'node-version: "^26.10.0"',
-            'node-version: "22"'
+            `node-version: "^${baseline.version}"`,
+            `node-version: "${previousMajor}"`
           ) ?? "";
         return sources;
       },
-      error: "node-version 22 is incompatible",
-    },
-    {
-      name: "a workflow selector omits the qualified minimum",
-      mutate: (sources: NodeToolchainSources) => {
-        sources.workflows[".github/workflows/quality.yml"] =
-          sources.workflows[".github/workflows/quality.yml"]?.replace(
-            'node-version: "^26.10.0"',
-            'node-version: "26"'
-          ) ?? "";
-        return sources;
-      },
-      error: "node-version 26 is incompatible",
+      error: `node-version ${previousMajor} is incompatible`,
     },
     {
       name: "a selector predates the engine baseline",
       mutate: (sources: NodeToolchainSources) =>
         replaceAllSources(
           sources,
-          'node-version: "^26.10.0"',
-          'node-version: "^26.9.0"'
+          `node-version: "^${baseline.version}"`,
+          `node-version: "^${olderVersion}"`
         ),
-      error: "node-version ^26.9.0 is incompatible",
+      error: `node-version ^${olderVersion} is incompatible`,
     },
     {
       name: "@types/node uses another runtime major",
       mutate: (sources: NodeToolchainSources) =>
         replaceAllSources(
           sources,
-          '"@types/node":"^26.1.0"',
-          '"@types/node":"^27.1.0"'
+          `"@types/node":"^${baseline.version}"`,
+          `"@types/node":"^${nextMajor}"`
         ),
       error: "@types/node major must equal the Node runtime major",
     },
     {
-      name: "an exact container selector disagrees with the builder",
+      name: "an exact container selector predates the engine baseline",
       mutate: (sources: NodeToolchainSources) => {
         sources.workflows[".github/workflows/frontend-container.yml"] =
           sources.workflows[
             ".github/workflows/frontend-container.yml"
-          ]?.replace('node-version: "26.10.0"', 'node-version: "26.11.0"') ??
-          "";
+          ]?.replace(
+            `node-version: "${baseline.version}"`,
+            `node-version: "${olderVersion}"`
+          ) ?? "";
         return sources;
       },
-      error: "exact node-version must equal the Docker builder",
+      error: `node-version ${olderVersion} is incompatible`,
     },
     {
       name: "the Docker builder loses its digest",

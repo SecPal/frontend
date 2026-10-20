@@ -1,13 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { execFileSync } from "node:child_process";
-import {
-  existsSync,
-  mkdtempSync,
-  readFileSync,
-  writeFileSync,
-  rmSync,
-} from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -124,22 +118,7 @@ describe("frontend native OCI publisher", () => {
       "fail-fast: false"
     );
   });
-  it("uses only the Containerfile/Buildah path and retains pinned base inputs", () => {
-    expect(existsSync(path.join(repoRoot, "Dockerfile"))).toBe(false);
-    expect(existsSync(path.join(repoRoot, ".dockerignore"))).toBe(false);
-    for (const name of [
-      ".github/workflows/publish-container.yml",
-      ".github/workflows/frontend-container.yml",
-      "scripts/build-container.sh",
-      "scripts/publish-container.sh",
-      "scripts/container-smoke.sh",
-      "scripts/container-browser.sh",
-      "scripts/scan-container-artifact.sh",
-    ]) {
-      expect(readRepoFile(name)).not.toMatch(
-        /docker (?:run|build|pull|login)|uses:\s*docker\/|buildx|buildkit|setup-qemu/iu
-      );
-    }
+  it("builds with Buildah and binds pinned base inputs to the source snapshot", () => {
     const build = readRepoFile("scripts/build-container.sh");
     expect(build).toContain("buildah build --format oci");
     expect(build).toContain('--timestamp "$epoch"');
@@ -148,7 +127,6 @@ describe("frontend native OCI publisher", () => {
     expect(build).toContain("jq -er .FromImageDigest");
     expect(build).toContain('= "$expected"');
     expect(build).toContain("--pull=never");
-    expect(build).not.toMatch(/NODE_IMAGE|NGINX_IMAGE/u);
     expect(build).toContain('--build-arg "SOURCE_DATE_EPOCH=$epoch"');
     expect(build).toContain("prepare-snapshot");
     expect(readRepoFile(".github/workflows/frontend-container.yml")).toContain(
@@ -206,6 +184,7 @@ describe("frontend native OCI publisher", () => {
   });
 
   it("pins actions and reuses only accepted shared policy", () => {
+    const policyRefs = new Set<string>();
     for (const file of [
       ".github/workflows/frontend-container.yml",
       ".github/workflows/publish-container.yml",
@@ -216,12 +195,21 @@ describe("frontend native OCI publisher", () => {
           true
         );
       }
-      expect(body).toContain("ref: 6a6758681f4ebc46b4a33d442846d33d6b79785c");
+      const { jobs } = load(body) as Workflow;
+      const policySteps = Object.values(jobs)
+        .flatMap((job) => job.steps ?? [])
+        .filter((step) => step.with?.repository === "SecPal/.github");
+      expect(policySteps.length).toBeGreaterThan(0);
+      for (const step of policySteps) {
+        const ref = String(step.with?.ref);
+        expect(ref).toMatch(/^[0-9a-f]{40}$/u);
+        policyRefs.add(ref);
+      }
     }
+    expect(policyRefs.size).toBe(1);
+    const [policyRef] = policyRefs;
     const scanner = readRepoFile("scripts/scan-container-artifact.sh");
-    expect(scanner).toContain(
-      "--trusted-commit 6a6758681f4ebc46b4a33d442846d33d6b79785c"
-    );
+    expect(scanner).toContain(`--trusted-commit ${policyRef}`);
     expect(scanner).toContain("scan-grype");
     expect(scanner).toContain('--spdx "$output/sbom/syft.spdx.json"');
     expect(scanner).toContain(
@@ -245,9 +233,6 @@ describe("frontend native OCI publisher", () => {
       "${{ needs.prepare.outputs.arm64_sbom_digest }}",
     ]);
     for (const s of attestations) {
-      expect(s.uses).toBe(
-        "actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6"
-      );
       expect(s.with?.["subject-name"]).toBe("ghcr.io/secpal/frontend");
       expect(s.with?.["push-to-registry"]).toBe(true);
     }
@@ -393,7 +378,7 @@ describe("deterministic frontend build inventory", () => {
     };
     const secondPackageLock = structuredClone(firstPackageLock);
 
-    secondPackageLock.packages[""].version = "0.0.0-namespace-collision-test";
+    secondPackageLock.packages[""].version += "-namespace-collision-test";
 
     try {
       for (const [project, packageLock] of [
