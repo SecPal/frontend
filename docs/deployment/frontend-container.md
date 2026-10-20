@@ -258,15 +258,19 @@ push-triggered publisher after merge to `main`.
 
 Dependabot configuration registers Containerfile through its `docker` ecosystem
 and remote hook revisions through `pre-commit`, daily at 04:00 Europe/Berlin.
-These are manual-review proposals; their explicit labels omit `dependencies`
-so the existing patch auto-merge rule cannot enable their automatic merge.
+These are manual-review proposals. Explicit labels distinguish them from the
+existing automatic patch updates. The auto-merge workflow independently reads
+changed paths from GitHub and admits only npm manifests and Actions workflows;
+a generic dependency label or patch title cannot admit a Containerfile or hook
+update. Both sides of renames are checked.
 
-Structural coverage does not establish image extraction: the current Containerfile
-defines both image references through `ARG` defaults and uses `FROM ${…}`.
-[GitHub documents that Dependabot does not update ARG-specified images](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/manage-your-dependency-security/configure-private-registries#limitations-and-workarounds).
-Complete base-image updater coverage remains blocked until that input contract
-is made compatible through a separately qualified source correction or upstream
-support. Do not introduce a duplicate Dockerfile or a second image-pin authority.
+The two literal, fully qualified `FROM` instructions in Containerfile are the
+single authority for base-image tags and immutable digests. Dependabot Core can
+extract and update those references directly, without image ARG indirection or
+a duplicate Dockerfile. The publisher resolves each index independently for
+the native architecture, pulls the canonical reference, verifies its local
+platform digest, and builds with `--pull=never`. Base labels and evidence retain
+the reviewed index reference and the independently resolved platform digest.
 
 Every base-image version or digest change requires full native runtime/browser
 and artifact-security qualification. The qualified SecPal Alpine derivative also

@@ -23,7 +23,11 @@ function updates(): Update[] {
   ).updates;
 }
 
-function patchEligibility(labels: string[], title: string): string {
+function patchEligibility(
+  labels: string[],
+  title: string,
+  files = ["package.json", "package-lock.json"]
+): string {
   const workflow = load(
     readFileSync(".github/workflows/dependabot-auto-merge.yml", "utf8")
   ) as {
@@ -42,6 +46,7 @@ function patchEligibility(labels: string[], title: string): string {
         PATH: process.env.PATH,
         PR_LABELS: JSON.stringify(labels),
         PR_TITLE: title,
+        PR_FILES: JSON.stringify(files),
         GITHUB_OUTPUT: output,
       },
     });
@@ -62,7 +67,9 @@ describe("frontend manifest coverage adoption", () => {
       ["docker", "/"],
       ["pre-commit", "/"],
     ]);
-    expect(readFileSync("Containerfile", "utf8")).toContain("ARG NGINX_IMAGE=");
+    expect(readFileSync("Containerfile", "utf8")).toMatch(
+      /^FROM docker\.io\/nginxinc\/nginx-unprivileged:\S+@sha256:[a-f0-9]{64} AS runtime$/mu
+    );
     expect(readFileSync(".pre-commit-config.yaml", "utf8")).toContain(
       "repo: https://github.com/"
     );
@@ -85,13 +92,16 @@ describe("frontend manifest coverage adoption", () => {
         (candidate) => candidate["package-ecosystem"] === ecosystem
       );
       expect(entry).toBeDefined();
-      // The owning workflow searches the whole labels JSON for this substring.
+      // Explicit labels also keep these proposals visibly separate.
       expect(JSON.stringify(entry!.labels)).not.toContain("dependencies");
       expect(entry!.labels).toContain("dependabot");
       expect(
         patchEligibility(
-          [...entry!.labels, "patch"],
-          "chore(deps): bump example from 1.30.6 to 1.30.7"
+          [...entry!.labels, "dependencies", "patch"],
+          "chore(deps): bump example from 1.30.6 to 1.30.7",
+          ecosystem === "docker"
+            ? ["Containerfile"]
+            : [".pre-commit-config.yaml"]
         )
       ).toContain("eligible=false\n");
     }
@@ -106,7 +116,10 @@ describe("frontend manifest coverage adoption", () => {
       expect(
         patchEligibility(
           entry.labels,
-          "chore(deps): bump example from 1.2.3 to 1.2.4"
+          "chore(deps): bump example from 1.2.3 to 1.2.4",
+          ecosystem === "npm"
+            ? ["package.json", "package-lock.json"]
+            : [".github/workflows/codeql.yml"]
         )
       ).toContain("eligible=true\n");
       for (const next of ["1.3.0", "2.0.0"]) {
@@ -119,6 +132,43 @@ describe("frontend manifest coverage adoption", () => {
       }
     }
   );
+
+  it.each([
+    [],
+    ["Containerfile", "package.json"],
+    ["docker/health-live.sh"],
+    [".pre-commit-config.yaml"],
+    [".github/workflows/../dependabot.yml"],
+  ])(
+    "rejects empty, mixed or unsupported changed-file sets despite generic labels: %j",
+    (...files) => {
+      expect(
+        patchEligibility(
+          ["dependencies", "patch"],
+          "bump example from 1.2.3 to 1.2.4",
+          files
+        )
+      ).toContain("eligible=false\n");
+    }
+  );
+
+  it("retrieves current paths from GitHub including rename origins before eligibility", () => {
+    const workflow = load(
+      readFileSync(".github/workflows/dependabot-auto-merge.yml", "utf8")
+    ) as {
+      jobs: {
+        "auto-merge": {
+          steps: { id?: string; run?: string; env?: Record<string, string> }[];
+        };
+      };
+    };
+    const steps = workflow.jobs["auto-merge"].steps;
+    expect(steps[0].id).toBe("files");
+    expect(steps[0].run).toContain("set -euo pipefail");
+    expect(steps[0].run).toContain("gh api --paginate");
+    expect(steps[0].run).toContain(".previous_filename // empty");
+    expect(steps[1].env?.PR_FILES).toBe("${{ steps.files.outputs.paths }}");
+  });
 
   it("reuses the exact central coverage and cadence guard without policy overrides", () => {
     const quality = load(

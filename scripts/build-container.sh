@@ -34,10 +34,13 @@ snapshot="$snapshot_parent/source"
 python3 -I "$governance/scripts/secpal-trivy-repository-scan.py" prepare-snapshot \
   --workspace "$repo_root" --commit "$GITHUB_SHA" --destination "$snapshot"
 python3 scripts/container-publisher.py bases --root "$snapshot" --arch "$arch" --output "$output/bases.json"
-node_base=$(jq -er '.[] | select(.stage=="build") | (.reference | split("@")[0] | split(":")[0])+"@"+.digest' "$output/bases.json")
-nginx_base=$(jq -er '.[] | select(.stage=="runtime") | (.reference | split("@")[0] | split(":")[0])+"@"+.digest' "$output/bases.json")
-buildah pull --arch "$arch" "$node_base"
-buildah pull --arch "$arch" "$nginx_base"
+# Pull the canonical FROM references only after independently resolving their
+# platform manifests; --pull=never then consumes these verified local images.
+base_inputs=$(jq -er '.[] | [.reference,.digest] | @tsv' "$output/bases.json")
+while IFS=$'\t' read -r reference expected; do
+  buildah pull --arch "$arch" "$reference"
+  test "$(buildah inspect --type image "$reference" | jq -er .FromImageDigest)" = "$expected"
+done <<< "$base_inputs"
 epoch=$(jq -er .epoch "$output/source.json")
 created=$(date -u -d "@$epoch" +%Y-%m-%dT%H:%M:%SZ)
 reviewed_base=$(jq -er '.[]|select(.stage=="runtime")|.reference' "$output/bases.json")
@@ -45,7 +48,6 @@ base_digest=$(jq -er '.[]|select(.stage=="runtime")|.digest' "$output/bases.json
 image="localhost/secpal-frontend:build-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-$arch"
 env -u SOURCE_DATE_EPOCH buildah build --format oci --timestamp "$epoch" --pull=never --layers --arch "$arch" \
   --http-proxy=false --iidfile "$output/image-id" \
-  --build-arg "NODE_IMAGE=$node_base" --build-arg "NGINX_IMAGE=$nginx_base" \
   --build-arg "SOURCE_DATE_EPOCH=$epoch" \
   --build-arg "SECPAL_IMAGE_REVISION=$GITHUB_SHA" \
   --build-arg "SECPAL_IMAGE_VERSION=$(jq -er .version "$output/source.json")" \

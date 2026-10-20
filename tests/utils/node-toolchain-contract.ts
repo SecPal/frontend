@@ -115,7 +115,7 @@ function getDeclaredMajor(source: unknown): number | undefined {
 function getDockerBuilder(dockerfile: string): DockerBuilder | undefined {
   const matches = [
     ...dockerfile.matchAll(
-      /^FROM\s+node:(?<version>\d+\.\d+\.\d+)-[^@\s]+(?:@sha256:(?<digest>[0-9a-f]+))?\s+AS\s+build\s*$/gimu
+      /^FROM\s+(?:docker\.io\/library\/)?node:(?<version>\d+\.\d+\.\d+)-[^@\s]+(?:@sha256:(?<digest>[0-9a-f]+))?\s+AS\s+build\s*$/gimu
     ),
   ];
 
@@ -264,14 +264,7 @@ export function validateNodeToolchainContract(
     );
   }
 
-  const buildDescription = sources.dockerfile.replace(
-    /^FROM \$\{NODE_IMAGE\} AS build$/mu,
-    () => {
-      const pin = sources.dockerfile.match(/^ARG NODE_IMAGE=(\S+)$/mu)?.[1];
-      return `FROM ${pin?.replace("docker.io/library/", "")} AS build`;
-    }
-  );
-  const builder = getDockerBuilder(buildDescription);
+  const builder = getDockerBuilder(sources.dockerfile);
 
   if (!builder) {
     errors.push(

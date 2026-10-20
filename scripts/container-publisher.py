@@ -97,9 +97,12 @@ def bases(root, arch):
         raise ValueError('publisher-base-platform')
     text = (Path(root)/'Containerfile').read_text()
     result = []
-    for argument, stage, repository in (('NODE_IMAGE','build','docker.io/library/node'),
-                                       ('NGINX_IMAGE','runtime','docker.io/nginxinc/nginx-unprivileged')):
-        match = re.search(r'^ARG '+argument+r'=(\S+)$',text,re.M)
+    stages = [line for line in text.splitlines() if re.match(r'(?i)^[ \t]*FROM[ \t]', line)]
+    if len(stages) != 2:
+        raise ValueError('publisher-reviewed-base')
+    for line, (stage, repository) in zip(stages, (('build','docker.io/library/node'),
+                                                 ('runtime','docker.io/nginxinc/nginx-unprivileged'))):
+        match = re.fullmatch(r'FROM (\S+) AS '+stage, line)
         if not match or not re.fullmatch(re.escape(repository)+r':[A-Za-z0-9._-]+@sha256:[0-9a-f]{64}',match[1]):
             raise ValueError('publisher-reviewed-base')
         reference = match[1]
