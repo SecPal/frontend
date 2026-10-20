@@ -26,13 +26,9 @@ LABEL org.opencontainers.image.title="SecPal Frontend" \
 
 USER root
 
-# The qualified 30-package inventory includes curl's dependencies; reject drift.
+# Keep signed stable package pins; the publisher inventories and scans the image.
 RUN printf '%s\n' 'https://dl-cdn.alpinelinux.org/alpine/v3.24/main' > /etc/apk/repositories \
     && apk add --no-cache zlib=1.3.2-r1 curl=8.22.0-r0 \
-    && awk -F: '$1 == "P" { p = $2 } $1 == "V" { print p "=" $2 }' /lib/apk/db/installed > /tmp/secpal-apk-inventory \
-    && LC_ALL=C sort -o /tmp/secpal-apk-inventory /tmp/secpal-apk-inventory \
-    && test "$(sha256sum /tmp/secpal-apk-inventory)" = '4b642855523dca331b91a71bc2054654cfbdd005d681b2400f3403fd2eaeb208  /tmp/secpal-apk-inventory' \
-    && rm /tmp/secpal-apk-inventory \
     && rm -rf /usr/share/nginx/html
 
 COPY --from=build /app/dist/ /usr/share/nginx/html/

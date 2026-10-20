@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Preserve signed historical evidence, raw findings and independent action authority.
 
 - Adopt the qualified official Nginx Alpine-Slim runtime with exact signed
-  Alpine zlib/curl repairs and a complete runtime-package inventory check.
+  Alpine zlib/curl repairs.
   Preserve the Node build stage, existing curl healthcheck, hardened native
   runtime/browser contracts and unchanged artifact-security acceptance.
 
@@ -40,6 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Allow pinned container base updates without manually refreshing a fixed
+  runtime-package inventory checksum. Preserve exact signed zlib/curl inputs,
+  per-image SBOMs, native runtime tests and full-image security policy gates.
 - Allow shared workflow pin updates in manifest coverage and released-artifact
   security tests while requiring the exact workflow paths and full commit SHAs.
 - Validate container image versions against the supported Node range and require
