@@ -20,7 +20,7 @@ jobs:
     permissions:
       contents: read
     # main; the callee owns separate coverage/cadence checks and timeouts.
-    uses: SecPal/.github/.github/workflows/reusable-dependabot-manifest-coverage.yml@80732e29ad253f63fa8c46637f6686c344ce82ad
+    uses: SecPal/.github/.github/workflows/reusable-dependabot-manifest-coverage.yml@a6c3ca8978f9d81e9f49a5fe14cbc3d17528f2bf
 
   repository-security:
     name: Repository Security
@@ -31,7 +31,7 @@ jobs:
   reuse:
     name: Check REUSE Compliance
     # main
-    uses: SecPal/.github/.github/workflows/reusable-reuse.yml@6a6758681f4ebc46b4a33d442846d33d6b79785c
+    uses: SecPal/.github/.github/workflows/reusable-reuse.yml@a6c3ca8978f9d81e9f49a5fe14cbc3d17528f2bf
 
   license-compatibility:
     name: Check License Compatibility
@@ -55,34 +55,34 @@ jobs:
   prettier:
     name: Formatting Check
     # main
-    uses: SecPal/.github/.github/workflows/reusable-prettier.yml@6a6758681f4ebc46b4a33d442846d33d6b79785c
+    uses: SecPal/.github/.github/workflows/reusable-prettier.yml@a6c3ca8978f9d81e9f49a5fe14cbc3d17528f2bf
     with:
       node-version: "^26.10.0"
 
   markdown-lint:
     name: Markdown Lint
     # main
-    uses: SecPal/.github/.github/workflows/reusable-markdown-lint.yml@6a6758681f4ebc46b4a33d442846d33d6b79785c
+    uses: SecPal/.github/.github/workflows/reusable-markdown-lint.yml@a6c3ca8978f9d81e9f49a5fe14cbc3d17528f2bf
     with:
       node-version: "^26.10.0"
 
   ai-instructions:
     name: AI Instructions
-    uses: SecPal/.github/.github/workflows/reusable-ai-instructions.yml@6a6758681f4ebc46b4a33d442846d33d6b79785c # main
+    uses: SecPal/.github/.github/workflows/reusable-ai-instructions.yml@a6c3ca8978f9d81e9f49a5fe14cbc3d17528f2bf # main
     with:
       node-version: "^26.10.0"
 
   eslint:
     name: ESLint
     # main
-    uses: SecPal/.github/.github/workflows/reusable-node-lint.yml@6a6758681f4ebc46b4a33d442846d33d6b79785c
+    uses: SecPal/.github/.github/workflows/reusable-node-lint.yml@a6c3ca8978f9d81e9f49a5fe14cbc3d17528f2bf
     with:
       node-version: "^26.10.0"
 
   typecheck:
     name: TypeScript Check
     # main
-    uses: SecPal/.github/.github/workflows/reusable-node-build.yml@6a6758681f4ebc46b4a33d442846d33d6b79785c
+    uses: SecPal/.github/.github/workflows/reusable-node-build.yml@a6c3ca8978f9d81e9f49a5fe14cbc3d17528f2bf
     with:
       node-version: "^26.10.0"
       build-command: "npm run typecheck"

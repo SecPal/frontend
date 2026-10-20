@@ -182,7 +182,9 @@ describe("frontend manifest coverage adoption", () => {
     expect(quality.jobs["dependabot-manifests"]).toEqual({
       name: "Dependabot Manifest Guard",
       permissions: { contents: "read" },
-      uses: "SecPal/.github/.github/workflows/reusable-dependabot-manifest-coverage.yml@80732e29ad253f63fa8c46637f6686c344ce82ad",
+      uses: expect.stringMatching(
+        /^SecPal\/\.github\/\.github\/workflows\/reusable-dependabot-manifest-coverage\.yml@[0-9a-f]{40}$/u
+      ),
     });
   });
 });
