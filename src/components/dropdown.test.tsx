@@ -37,7 +37,7 @@ function renderInteractiveDropdown(children: React.ReactNode) {
 }
 
 describe("DropdownMenuItem", () => {
-  it("blurs the trigger after pointer selection without changing keyboard focus behavior", async () => {
+  it("returns focus to the trigger after pointer selection", async () => {
     const user = userEvent.setup();
     const onClick = vi.fn();
 
@@ -51,7 +51,8 @@ describe("DropdownMenuItem", () => {
 
     expect(onClick).toHaveBeenCalledTimes(1);
     await waitFor(() => {
-      expect(document.activeElement).not.toBe(trigger);
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
+      expect(trigger).toHaveFocus();
     });
   });
 
@@ -89,11 +90,11 @@ describe("DropdownMenuItem", () => {
 
     const trigger = screen.getByRole("button", { name: "Open" });
     await user.click(trigger);
-    fireEvent.pointerDown(document.body);
-    fireEvent.mouseDown(document.body);
-    fireEvent.click(document.body);
+    await screen.findByRole("menuitem", { name: "Lock app" });
+    await user.click(document.body);
 
     await waitFor(() => {
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
       expect(document.activeElement).not.toBe(trigger);
     });
   });
@@ -117,12 +118,11 @@ describe("DropdownMenuItem", () => {
     const nextButton = screen.getByRole("button", { name: "Next action" });
 
     await user.click(trigger);
-    fireEvent.pointerDown(nextButton);
-    nextButton.focus();
-    fireEvent.mouseDown(nextButton);
-    fireEvent.click(nextButton);
+    await screen.findByRole("menuitem", { name: "Lock app" });
+    await user.click(nextButton);
 
     await waitFor(() => {
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
       expect(document.activeElement).toBe(nextButton);
     });
   });
