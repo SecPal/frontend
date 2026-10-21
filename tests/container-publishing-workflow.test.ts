@@ -217,7 +217,10 @@ describe("frontend native OCI publisher", () => {
           "SecPal/.github/.github/actions/trivy-repository-scan@"
         )
     );
-    expect(scanAction?.uses?.split("@")[1]).toBe(policyRef);
+    // Source admission and artifact evaluation have separately reviewed pins.
+    expect(scanAction?.uses?.split("@")[1]).toBe(
+      "55bcdb6f00eb7d552da206f83fcdc87cf2c43375"
+    );
     const scanner = readRepoFile("scripts/scan-container-artifact.sh");
     expect(scanner).toContain(`--trusted-commit ${policyRef}`);
     expect(scanner).toContain("scan-grype");

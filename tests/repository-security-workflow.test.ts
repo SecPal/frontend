@@ -128,7 +128,7 @@ describe("pre-publication repository source security", () => {
     expect(replay).toContain(
       "frontend-braces-cve-2026-93687-not-affected-1199"
     );
-    expect(replay).toContain("2026-10-27T00:00:00Z");
+    expect(replay).toContain("2026-11-04T00:00:00Z");
     expect(replay).not.toContain("secpal-trivy-repository-scan-v1.schema.json");
     expect(replay).not.toContain("2026-10-19T00:00:00Z");
   });

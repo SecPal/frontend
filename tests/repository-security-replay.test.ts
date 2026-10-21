@@ -63,14 +63,14 @@ function evidence() {
     subject: { repository: "SecPal/frontend", commit },
     policy: {
       sha256:
-        "sha256:9715fd045862177e69780020fae9617903f30470ff8df8e8eec48800602ed28f",
+        "sha256:93e562f043c8faf304b8f244ce9d9141f1e51ccec48e5be86c9559dad70efe79",
     },
     scanner: {
       version: "0.74.0",
       immutable_id:
         "sha256:2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a",
       configuration_sha256:
-        "sha256:132c5ba066dfb3b6c75e0ca4d09fd704d081d5a56594bdd9a76d422dc6eebc13",
+        "sha256:3ab6f8a9feba5749e18d4a5049a94acc39ea2f3da3afb065371275a13218bf54",
     },
     database: { status: "FRESH", identity: `sha256:${"a".repeat(64)}` },
     operation: { name: "TRIVY_REPOSITORY_SCAN", status: "SUCCEEDED" },
@@ -87,7 +87,7 @@ function evidence() {
         exception: {
           id: "frontend-braces-cve-2026-93687-not-affected-1199",
           disposition: "NOT_AFFECTED",
-          expires_at: "2026-10-27T00:00:00Z",
+          expires_at: "2026-11-04T00:00:00Z",
         },
       },
     ],
@@ -160,7 +160,7 @@ describe("maintained replay consumer assertions", () => {
       "old expiry",
       (r) => (r.findings[0].exception.expires_at = "2026-10-19T00:00:00Z"),
     ],
-    ["expired exception", (r) => (r.completed_at = "2026-10-27T00:00:00Z")],
+    ["expired exception", (r) => (r.completed_at = "2026-11-04T00:00:00Z")],
     ["malformed completion", (r) => (r.completed_at = "unknown")],
   ] satisfies [string, (result: ReturnType<typeof evidence>) => unknown][])(
     "rejects %s",

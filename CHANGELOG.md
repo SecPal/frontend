@@ -40,6 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Adopt the independently requalified central Trivy policy and exact scanner
+  identity before the October 27 expiry, retaining the reviewed braces finding
+  and fail-closed source/security evidence through November 4, 2026.
+
 - Update the transitive Markdown lint parser to markdown-it 14.3.3, fixing
   CVE-2026-111758 and CVE-2026-111766 without adding an override.
 - Align source-security replay and container publication with the pinned shared
