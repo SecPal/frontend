@@ -208,6 +208,16 @@ describe("frontend native OCI publisher", () => {
     }
     expect(policyRefs.size).toBe(1);
     const [policyRef] = policyRefs;
+    const sourceSecurity = load(
+      readRepoFile(".github/workflows/reusable-repository-security.yml")
+    ) as Workflow;
+    const scanAction = sourceSecurity.jobs["repository-security"].steps!.find(
+      (step) =>
+        step.uses?.startsWith(
+          "SecPal/.github/.github/actions/trivy-repository-scan@"
+        )
+    );
+    expect(scanAction?.uses?.split("@")[1]).toBe(policyRef);
     const scanner = readRepoFile("scripts/scan-container-artifact.sh");
     expect(scanner).toContain(`--trusted-commit ${policyRef}`);
     expect(scanner).toContain("scan-grype");

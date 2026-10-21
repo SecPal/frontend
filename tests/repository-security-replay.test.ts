@@ -59,18 +59,18 @@ describe("replay action revision", () => {
 // the authenticated upstream action and its maintained conformance tests.
 function evidence() {
   return {
-    schema_version: "secpal-trivy-repository-scan-v2",
+    schema_version: "secpal-trivy-repository-scan-v4",
     subject: { repository: "SecPal/frontend", commit },
     policy: {
       sha256:
-        "sha256:a8334e36ab688b8e148ed6115ecbf03b38fc692992e67cd57a357b9b1a9c5327",
+        "sha256:9715fd045862177e69780020fae9617903f30470ff8df8e8eec48800602ed28f",
     },
     scanner: {
       version: "0.74.0",
       immutable_id:
         "sha256:2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a",
       configuration_sha256:
-        "sha256:d9d411f1348ab50a17018cf04be144a39b0448af389f7c4406e5b7818fa3a6d9",
+        "sha256:132c5ba066dfb3b6c75e0ca4d09fd704d081d5a56594bdd9a76d422dc6eebc13",
     },
     database: { status: "FRESH", identity: `sha256:${"a".repeat(64)}` },
     operation: { name: "TRIVY_REPOSITORY_SCAN", status: "SUCCEEDED" },
@@ -105,6 +105,18 @@ describe("maintained replay consumer assertions", () => {
     [
       "old schema",
       (r) => (r.schema_version = "secpal-trivy-repository-scan-v1"),
+    ],
+    [
+      "v2 schema",
+      (r) => (r.schema_version = "secpal-trivy-repository-scan-v2"),
+    ],
+    [
+      "v3 schema",
+      (r) => (r.schema_version = "secpal-trivy-repository-scan-v3"),
+    ],
+    [
+      "unknown schema",
+      (r) => (r.schema_version = "secpal-trivy-repository-scan-v5"),
     ],
     ["wrong source", (r) => (r.subject.commit = "1".repeat(40))],
     ["wrong policy", (r) => (r.policy.sha256 = `sha256:${"0".repeat(64)}`)],

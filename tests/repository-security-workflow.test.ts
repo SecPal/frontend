@@ -114,7 +114,7 @@ describe("pre-publication repository source security", () => {
     });
   });
 
-  it("binds the maintained replay to the same accepted action and v2 evidence", () => {
+  it("binds the maintained replay to the same accepted action and v4 evidence", () => {
     const replay = readFileSync(
       path.join(repoRoot, "scripts/replay-repository-security.mjs"),
       "utf8"
@@ -124,7 +124,7 @@ describe("pre-publication repository source security", () => {
         "repository-security"
       ].steps[1].uses!.split("@")[1];
     expect(getReplayActionPin(readWorkflow(reusablePath))).toBe(pin);
-    expect(replay).toContain("secpal-trivy-repository-scan-v2.schema.json");
+    expect(replay).toContain("secpal-trivy-repository-scan-v4.schema.json");
     expect(replay).toContain(
       "frontend-braces-cve-2026-93687-not-affected-1199"
     );
