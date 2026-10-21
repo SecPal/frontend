@@ -178,11 +178,11 @@ export function assertReplayEvidence(result, commit) {
   assert.deepEqual(result.subject, { repository: "SecPal/frontend", commit });
   assert.equal(
     result.policy.sha256,
-    "sha256:9715fd045862177e69780020fae9617903f30470ff8df8e8eec48800602ed28f"
+    "sha256:93e562f043c8faf304b8f244ce9d9141f1e51ccec48e5be86c9559dad70efe79"
   );
   assert.equal(
     result.scanner.configuration_sha256,
-    "sha256:132c5ba066dfb3b6c75e0ca4d09fd704d081d5a56594bdd9a76d422dc6eebc13"
+    "sha256:3ab6f8a9feba5749e18d4a5049a94acc39ea2f3da3afb065371275a13218bf54"
   );
   assert.equal(result.database.status, "FRESH");
   assert.deepEqual(result.operation, {
@@ -225,7 +225,7 @@ export function assertCandidateEvidence(result) {
       finding.exception?.id ===
         "frontend-braces-cve-2026-93687-not-affected-1199" &&
       finding.exception.disposition === "NOT_AFFECTED" &&
-      finding.exception.expires_at === "2026-10-27T00:00:00Z",
+      finding.exception.expires_at === "2026-11-04T00:00:00Z",
     "Reviewed braces finding must remain in normalized evidence."
   );
   assert.ok(
