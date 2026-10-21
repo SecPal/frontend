@@ -195,7 +195,7 @@ def assemble_index(records, sizes):
 
 def admit_source_security(value, commit, observed_at):
     # #1711 owns exact invocation and CLEAN admission; no scanner reinterpretation.
-    if (value.get('schema_version')!='secpal-trivy-repository-scan-v2'
+    if (value.get('schema_version')!='secpal-trivy-repository-scan-v4'
             or value.get('subject')!={'repository':'SecPal/frontend','commit':commit}
             or value.get('gate_state')!='CLEAN'
             or value.get('operation')!={'name':'TRIVY_REPOSITORY_SCAN','status':'SUCCEEDED'}

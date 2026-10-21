@@ -41,7 +41,7 @@ verify_attestation() {
 case "$stage" in
   prepare)
     security_file=.context/repository-security/result.json
-    python3 - "$governance/docs/schemas/secpal-trivy-repository-scan-v2.schema.json" "$security_file" <<'PY'
+    python3 - "$governance/docs/schemas/secpal-trivy-repository-scan-v4.schema.json" "$security_file" <<'PY'
 import json,sys
 from jsonschema import Draft202012Validator, ValidationError
 try:

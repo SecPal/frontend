@@ -140,7 +140,7 @@ function scan(action, governance, workspace, temporaryRoot, label, secret) {
     path.join(evidenceRoot, "result.json"),
     path.join(
       governance,
-      "docs/schemas/secpal-trivy-repository-scan-v2.schema.json"
+      "docs/schemas/secpal-trivy-repository-scan-v4.schema.json"
     ),
   ]);
   if (result.gate_state === "UNKNOWN_STALE") {
@@ -174,15 +174,15 @@ function scan(action, governance, workspace, temporaryRoot, label, secret) {
 
 // Consumer assertions bind the shared result; normalization remains upstream.
 export function assertReplayEvidence(result, commit) {
-  assert.equal(result.schema_version, "secpal-trivy-repository-scan-v2");
+  assert.equal(result.schema_version, "secpal-trivy-repository-scan-v4");
   assert.deepEqual(result.subject, { repository: "SecPal/frontend", commit });
   assert.equal(
     result.policy.sha256,
-    "sha256:a8334e36ab688b8e148ed6115ecbf03b38fc692992e67cd57a357b9b1a9c5327"
+    "sha256:9715fd045862177e69780020fae9617903f30470ff8df8e8eec48800602ed28f"
   );
   assert.equal(
     result.scanner.configuration_sha256,
-    "sha256:d9d411f1348ab50a17018cf04be144a39b0448af389f7c4406e5b7818fa3a6d9"
+    "sha256:132c5ba066dfb3b6c75e0ca4d09fd704d081d5a56594bdd9a76d422dc6eebc13"
   );
   assert.equal(result.database.status, "FRESH");
   assert.deepEqual(result.operation, {

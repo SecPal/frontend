@@ -40,6 +40,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Update the transitive Markdown lint parser to markdown-it 14.3.3, fixing
+  CVE-2026-111758 and CVE-2026-111766 without adding an override.
+- Align source-security replay and container publication with the pinned shared
+  scanner's v4 evidence schema and reviewed policy identities. Use the same
+  shared revision for schema validation while retaining strict CLEAN, source
+  identity and database freshness gates.
+
 - Allow pinned container base updates without manually refreshing a fixed
   runtime-package inventory checksum. Preserve exact signed zlib/curl inputs,
   per-image SBOMs, native runtime tests and full-image security policy gates.
