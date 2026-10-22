@@ -40,6 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Allow repository scanner updates by checking for a full commit SHA in publisher
+  workflow tests without duplicating the scanner version.
+
 - Adopt the independently requalified central Trivy policy and exact scanner
   identity before the October 27 expiry, retaining the reviewed braces finding
   and fail-closed source/security evidence through November 4, 2026.
