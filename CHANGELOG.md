@@ -40,6 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Flush the employee edit route transition before checking form readiness in
+  stale-submission tests to avoid intermittent CI failures.
+
 - Allow repository scanner updates by checking for a full commit SHA in publisher
   workflow tests without duplicating the scanner version.
 
