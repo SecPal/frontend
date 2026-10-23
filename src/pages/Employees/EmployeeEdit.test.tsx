@@ -568,7 +568,9 @@ describe("EmployeeEdit", () => {
         )
       );
 
-      fireEvent.click(screen.getByRole("link", { name: /next employee/i }));
+      await act(async () => {
+        fireEvent.click(screen.getByRole("link", { name: /next employee/i }));
+      });
 
       expect(await screen.findByLabelText(/first name/i)).toHaveValue("Jane");
       await waitForDomainAssignmentReady();
