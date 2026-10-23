@@ -104,7 +104,7 @@ jobs:
       issues: write
       packages: read
     # main; Timeouts, scanner pins, fresh databases and policy belong to this workflow.
-    uses: SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@86c921a638669c7c9e9995bee276cf672e126bef
+    uses: SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@57a1b7ce698a2ef7e253a05e6cf008b9fdab646c
     with:
       artifact-repository: ghcr.io/secpal/frontend
       index-digest: ${{ needs.release.outputs.index-digest }}
