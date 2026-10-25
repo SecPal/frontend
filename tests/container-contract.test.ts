@@ -155,6 +155,15 @@ describe("frontend container source contract", () => {
     );
   });
 
+  it("keeps curl above the CVE-2026-92392 security floor", () => {
+    const runtime =
+      readRepoFile("Containerfile").split(/FROM \S+ AS runtime/u)[1] ?? "";
+    const version = /curl=(\d+)\.(\d+)\.\d+-r\d+/u.exec(runtime);
+    const major = Number(version?.[1]);
+    const minor = Number(version?.[2]);
+    expect(major > 8 || (major === 8 && minor >= 23)).toBe(true);
+  });
+
   it("keeps Nginx a read-only static server without CSP or edge behavior", () => {
     const securityHeaders = readRepoFile("docker/security-headers.conf");
     const nginxConfig = `${readRepoFile("docker/nginx.conf")}\n${readRepoFile(

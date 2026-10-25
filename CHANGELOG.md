@@ -40,6 +40,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Patch the existing validation/build-tool dependency chain for Zod, fast-uri
+  and serialize-javascript security findings. Update Puppeteer within its
+  supported range to retire the vulnerable transitive Zod 3 copy; retain
+  the existing override structure and full source-security gate.
+
+- Update the exact signed Alpine 3.24 curl/libcurl runtime input to 8.23.0-r0,
+  fixing CVE-2026-92392 while retaining the existing bounded localhost healthcheck.
+
 - Flush the employee edit route transition before checking form readiness in
   stale-submission tests to avoid intermittent CI failures.
 
