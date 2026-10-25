@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Ignore release lookup hints produced before the latest successful publisher,
+- Ignore release lookup hints uploaded before the latest successful publisher,
   so stale cached evidence cannot block exact current admission. Preserve full
   publication verification and accepted-attempt protection after failed reruns.
 
