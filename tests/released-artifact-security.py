@@ -125,37 +125,97 @@ class ReleasedArtifactTests(unittest.TestCase):
         self.assertFalse(monitor.verified_invocation([], digest, workflow))
 
     def test_hint_is_not_authority_and_failed_reruns_do_not_erase_accepted_attempts(self):
-        reader = monitor.ReleaseReader(".", None, ".", ".")
-        old = {"id": 41, "run_attempt": 1, "head_sha": fixtures.SHA}
-        current = {"id": 42, "run_attempt": 1, "head_sha": fixtures.SHA}
-        reader.latest_publisher = lambda: old
-        reader.artifacts = lambda name: [{"id": 1, "workflow_run": {"id": 100}}]
-        reader.archive_member = lambda *unused: json.dumps({"artifact": monitor.BASELINE}).encode()
-        reader.api = lambda endpoint: (
-            {"head_repository": {"full_name": monitor.REPOSITORY}, "head_branch": "main",
-             "event": "schedule", "path": ".github/workflows/released-artifact-security.yml", "head_sha": fixtures.SHA}
-            if endpoint.startswith("actions/") else
-            {"status": "identical", "merge_base_commit": {"sha": fixtures.SHA}})
-        calls = []
-        def verified_release(reference, platform, latest=None):
-            calls.append(reference)
-            reader.admitted_run = current if reference == monitor.BASELINE else old
-            return {"fixture": reference}
-        reader.release = verified_release
-        selected, result, cacheable = reader.select("linux/amd64", "")
-        self.assertEqual(selected, monitor.BASELINE)
-        self.assertTrue(cacheable)
-        self.assertEqual(len(calls), 1)
-        # A deliberately selected historical incident must not replace current state.
-        older_reference = monitor.BASELINE.replace("aa83f4", "bb83f4")
-        _, _, cacheable = reader.select("linux/amd64", older_reference)
-        self.assertFalse(cacheable)
+        for origin_id, created_at in ((40, "2026-10-25T13:00:00Z"),
+                                      (100, "2026-10-25T13:00:00Z"),
+                                      (40, "2026-10-25T12:00:00Z")):
+            with self.subTest(origin_id=origin_id, created_at=created_at):
+                reader = monitor.ReleaseReader(".", None, ".", ".")
+                old = {"id": 41, "run_attempt": 1, "head_sha": fixtures.SHA,
+                       "created_at": "2026-10-25T12:00:00Z"}
+                current = {"id": 42, "run_attempt": 1, "head_sha": fixtures.SHA}
+                reader.latest_publisher = lambda: old
+                reader.artifacts = lambda name: [{"id": 1, "created_at": created_at,
+                                                 "workflow_run": {"id": origin_id}}]
+                reader.archive_member = lambda *unused: json.dumps({"artifact": monitor.BASELINE}).encode()
+                reader.api = lambda endpoint: (
+                    {"head_repository": {"full_name": monitor.REPOSITORY}, "head_branch": "main",
+                     "event": "schedule", "path": ".github/workflows/released-artifact-security.yml", "head_sha": fixtures.SHA}
+                    if endpoint.startswith("actions/") else
+                    {"status": "identical", "merge_base_commit": {"sha": fixtures.SHA}})
+                calls = []
+                def verified_release(reference, platform, latest=None):
+                    calls.append(reference)
+                    reader.admitted_run = current if reference == monitor.BASELINE else old
+                    return {"fixture": reference}
+                reader.release = verified_release
+                older_reference = monitor.BASELINE.replace("aa83f4", "bb83f4")
+                reader.scheduled_reference = lambda candidate: older_reference
+                selected, result, cacheable = reader.select("linux/amd64", "")
+                self.assertEqual(selected, monitor.BASELINE)
+                self.assertTrue(cacheable)
+                self.assertEqual(len(calls), 1)
+                # A deliberately selected historical incident must not replace current state.
+                _, _, cacheable = reader.select("linux/amd64", older_reference)
+                self.assertFalse(cacheable)
+
+    def test_hint_created_before_latest_publisher_cannot_preempt_exact_admission(self):
+        for requested in ("", monitor.BASELINE):
+            for reject in (False, True):
+                with self.subTest(requested=requested, reject=reject):
+                    reader = monitor.ReleaseReader(".", None, ".", ".")
+                    latest = {"id": 42, "run_attempt": 1, "head_sha": fixtures.SHA,
+                              "created_at": "2026-10-25T12:00:00Z"}
+                    reader.latest_publisher = lambda: latest
+                    reader.artifacts = lambda name: [{"id": 1, "created_at": "2026-10-25T11:00:00Z",
+                                                         "workflow_run": {"id": 40}}]
+                    reader.api = lambda endpoint: self.fail("stale hint must not be consulted")
+                    reader.archive_member = lambda *unused: self.fail("stale hint must not be read")
+                    reader.scheduled_reference = lambda candidate: monitor.BASELINE
+                    calls = []
+                    def verified_release(reference, platform, candidate=None):
+                        calls.append((reference, platform, candidate))
+                        self.assertEqual(reference, monitor.BASELINE)
+                        self.assertEqual(candidate, None if requested else latest)
+                        if reject:
+                            raise ValueError("mandatory-release-rejected")
+                        reader.admitted_run = latest
+                        return {"platform": platform}
+                    reader.release = verified_release
+                    if reject:
+                        with self.assertRaisesRegex(ValueError, "^mandatory-release-rejected$"):
+                            reader.select("linux/amd64", requested)
+                    else:
+                        selected, result, cacheable = reader.select("linux/amd64", requested)
+                        self.assertEqual(selected, monitor.BASELINE)
+                        self.assertEqual(result, {"platform": "linux/amd64"})
+                        self.assertTrue(cacheable)
+                    self.assertEqual(len(calls), 1)
+
+    def test_unavailable_or_malformed_provider_creation_time_fails_closed(self):
+        for field in ("artifact", "publisher"):
+            for value in (None, "", "invalid", "2026-10-25T12:00:00"):
+                with self.subTest(field=field, value=value):
+                    reader = monitor.ReleaseReader(".", None, ".", ".")
+                    latest = {"id": 42, "created_at": "2026-10-25T12:00:00Z"}
+                    artifact = {"id": 1, "created_at": "2026-10-25T13:00:00Z"}
+                    target = artifact if field == "artifact" else latest
+                    if value is None:
+                        target.pop("created_at")
+                    else:
+                        target["created_at"] = value
+                    reader.latest_publisher = lambda: latest
+                    reader.artifacts = lambda name: [artifact]
+                    reader.api = lambda *unused: self.fail("invalid provider time must not reach hint")
+                    with self.assertRaises((KeyError, ValueError, TypeError)):
+                        reader.select("linux/amd64", "")
 
     def test_pull_request_hint_cannot_choose_the_scheduled_release(self):
         reader = monitor.ReleaseReader(".", None, ".", ".")
-        latest = {"id": 42, "run_attempt": 1, "head_sha": fixtures.SHA}
+        latest = {"id": 42, "run_attempt": 1, "head_sha": fixtures.SHA,
+                              "created_at": "2026-10-25T12:00:00Z"}
         reader.latest_publisher = lambda: latest
-        reader.artifacts = lambda name: [{"id": 1, "workflow_run": {"id": 100}}]
+        reader.artifacts = lambda name: [{"id": 1, "created_at": "2026-10-25T13:00:00Z",
+                                         "workflow_run": {"id": 100}}]
         reader.api = lambda endpoint: {
             "head_repository": {"full_name": monitor.REPOSITORY}, "head_branch": "untrusted",
             "event": "pull_request", "path": ".github/workflows/released-artifact-security.yml"}

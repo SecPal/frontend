@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Read-only released-subject selection; scanners and policy stay in SecPal/.github."""
 import argparse
+from datetime import datetime
 import importlib.util
 import io
 import json
@@ -151,6 +152,10 @@ class ReleaseReader:
         latest = self.latest_publisher()
         hints = []
         for artifact in self.artifacts(HINT):
+            # Artifact creation bounds observation even when an older monitor is rerun.
+            if (datetime.strptime(artifact["created_at"], "%Y-%m-%dT%H:%M:%SZ")
+                    < datetime.strptime(latest["created_at"], "%Y-%m-%dT%H:%M:%SZ")):
+                continue
             origin = self.api(f"actions/runs/{int(artifact['workflow_run']['id'])}")
             if (origin["head_repository"]["full_name"] == REPOSITORY
                     and origin["head_branch"] == "main"
