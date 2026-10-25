@@ -151,6 +151,37 @@ class ReleasedArtifactTests(unittest.TestCase):
         _, _, cacheable = reader.select("linux/amd64", older_reference)
         self.assertFalse(cacheable)
 
+    def test_hint_created_before_latest_publisher_cannot_preempt_exact_admission(self):
+        for requested in ("", monitor.BASELINE):
+            for reject in (False, True):
+                with self.subTest(requested=requested, reject=reject):
+                    reader = monitor.ReleaseReader(".", None, ".", ".")
+                    latest = {"id": 42, "run_attempt": 1, "head_sha": fixtures.SHA}
+                    reader.latest_publisher = lambda: latest
+                    reader.artifacts = lambda name: [{"id": 1, "workflow_run": {"id": 40}}]
+                    reader.api = lambda endpoint: self.fail("stale hint must not be consulted")
+                    reader.archive_member = lambda *unused: self.fail("stale hint must not be read")
+                    reader.scheduled_reference = lambda candidate: monitor.BASELINE
+                    calls = []
+                    def verified_release(reference, platform, candidate=None):
+                        calls.append((reference, platform, candidate))
+                        self.assertEqual(reference, monitor.BASELINE)
+                        self.assertEqual(candidate, None if requested else latest)
+                        if reject:
+                            raise ValueError("mandatory-release-rejected")
+                        reader.admitted_run = latest
+                        return {"platform": platform}
+                    reader.release = verified_release
+                    if reject:
+                        with self.assertRaisesRegex(ValueError, "^mandatory-release-rejected$"):
+                            reader.select("linux/amd64", requested)
+                    else:
+                        selected, result, cacheable = reader.select("linux/amd64", requested)
+                        self.assertEqual(selected, monitor.BASELINE)
+                        self.assertEqual(result, {"platform": "linux/amd64"})
+                        self.assertTrue(cacheable)
+                    self.assertEqual(len(calls), 1)
+
     def test_pull_request_hint_cannot_choose_the_scheduled_release(self):
         reader = monitor.ReleaseReader(".", None, ".", ".")
         latest = {"id": 42, "run_attempt": 1, "head_sha": fixtures.SHA}

@@ -151,6 +151,9 @@ class ReleaseReader:
         latest = self.latest_publisher()
         hints = []
         for artifact in self.artifacts(HINT):
+            # A lookup hint cannot contain a publication created after its own run.
+            if int(artifact["workflow_run"]["id"]) < int(latest["id"]):
+                continue
             origin = self.api(f"actions/runs/{int(artifact['workflow_run']['id'])}")
             if (origin["head_repository"]["full_name"] == REPOSITORY
                     and origin["head_branch"] == "main"
