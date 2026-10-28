@@ -40,6 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Wait for completed bootstrap user revalidation before testing vault locking,
+  so the test cannot race the cached offline restore (refs #2013).
+
 - Ignore release lookup hints uploaded before the latest successful publisher,
   so stale cached evidence cannot block exact current admission. Preserve full
   publication verification and accepted-attempt protection after failed reruns.

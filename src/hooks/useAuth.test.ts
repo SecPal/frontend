@@ -3111,6 +3111,7 @@ describe("useAuth", () => {
 
     await waitFor(() => {
       expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.user).toEqual(revalidatedUser);
     });
 
     vi.mocked(syncOfflineSessionAccess).mockClear();
