@@ -42,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Accept the maintained PSF-2.0 dependency license without weakening rejection
   of unknown licenses (refs #2012).
+- Adopt the reviewed repository-security policy and derive replay identities
+  from its authenticated, pinned owner instead of copied release hashes or a
+  historical finding count. Keep exact identity and disposition checks.
 
 - Ignore release lookup hints uploaded before the latest successful publisher,
   so stale cached evidence cannot block exact current admission. Preserve full
