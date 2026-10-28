@@ -9,6 +9,7 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -178,6 +179,13 @@ describe("shadcn source provenance", () => {
         path.join(repoRoot, "package-lock.json"),
         path.join(projectRoot, "package-lock.json")
       );
+      const fixtureLockPath = path.join(projectRoot, "package-lock.json");
+      const fixtureLock = JSON.parse(readFileSync(fixtureLockPath, "utf8"));
+      fixtureLock.packages["node_modules/psf-licensed-fixture"] = {
+        version: "1.0.0",
+        license: "PSF-2.0",
+      };
+      writeFileSync(fixtureLockPath, JSON.stringify(fixtureLock));
       mkdirSync(path.join(projectRoot, "scripts"));
       copyFileSync(
         path.join(repoRoot, "scripts", "generate-dependency-sbom.mjs"),
@@ -197,6 +205,10 @@ describe("shadcn source provenance", () => {
       };
 
       expect(sbom).toMatchObject({ spdxVersion: "SPDX-2.3" });
+      expect(
+        sbom.packages.find(({ name }) => name === "psf-licensed-fixture")
+          ?.licenseDeclared
+      ).toBe("PSF-2.0");
       expect(
         sbom.packages.find(({ name }) => name === "css-mediaquery")
           ?.licenseDeclared
