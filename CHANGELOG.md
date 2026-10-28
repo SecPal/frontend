@@ -40,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Wait for completed bootstrap user revalidation before testing vault locking,
+  so the test cannot race the cached offline restore (refs #2013).
 - Adopt the reviewed repository-security policy and derive replay identities
   from its authenticated, pinned owner instead of copied release hashes or a
   historical finding count. Keep exact identity and disposition checks.
