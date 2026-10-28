@@ -125,12 +125,19 @@ describe("pre-publication repository source security", () => {
       ].steps[1].uses!.split("@")[1];
     expect(getReplayActionPin(readWorkflow(reusablePath))).toBe(pin);
     expect(replay).toContain("secpal-trivy-repository-scan-v4.schema.json");
-    expect(replay).toContain(
-      "frontend-braces-cve-2026-93687-not-affected-1199"
+    const authenticated = replay.indexOf(
+      "authenticated.commit.verification.verified, true"
     );
-    expect(replay).toContain("2026-11-04T00:00:00Z");
+    const identityRead = replay.indexOf(
+      "const identity = observeGovernanceIdentity(governance)"
+    );
+    expect(authenticated).toBeGreaterThan(-1);
+    expect(identityRead).toBeGreaterThan(authenticated);
+    expect(replay).toContain(
+      "assertCandidateEvidence(target.result, identity.exceptions)"
+    );
+    expect(replay).toContain("Date.parse(reviewed.expires_at)");
     expect(replay).not.toContain("secpal-trivy-repository-scan-v1.schema.json");
-    expect(replay).not.toContain("2026-10-19T00:00:00Z");
   });
 
   it.each([
