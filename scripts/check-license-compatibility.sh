@@ -29,6 +29,7 @@ compatible_licenses=(
   "OFL-1.1"
   "ODbL-1.0"
   "Python-2.0"
+  "PSF-2.0"
 )
 
 incompatible_found=0

@@ -22,6 +22,7 @@ const supportedSpdxLicenseExpressions = new Set([
   "MIT-0",
   "MPL-2.0",
   "OFL-1.1",
+  "PSF-2.0",
   "Python-2.0",
 ]);
 
