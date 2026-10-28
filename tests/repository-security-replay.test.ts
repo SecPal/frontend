@@ -57,20 +57,37 @@ describe("replay action revision", () => {
 
 // Only the consumer assertion surface; genuine schema/scanner coverage uses
 // the authenticated upstream action and its maintained conformance tests.
+function reviewedIdentity() {
+  return {
+    policy_sha256: "sha256:" + "b".repeat(64),
+    configuration_sha256: "sha256:" + "c".repeat(64),
+    scanner_version: "reviewed-release",
+    scanner_identity: "sha256:" + "d".repeat(64),
+    exceptions: [
+      {
+        repository: "SecPal/frontend",
+        class: "VULNERABILITY",
+        rule_id: "CVE-2026-93687",
+        path: "package-lock.json",
+        id: "frontend-braces-cve-2026-93687-not-affected-1199",
+        disposition: "NOT_AFFECTED",
+        expires_at: "2026-11-04T00:00:00Z",
+      },
+    ],
+  };
+}
+
 function evidence() {
   return {
     schema_version: "secpal-trivy-repository-scan-v4",
     subject: { repository: "SecPal/frontend", commit },
     policy: {
-      sha256:
-        "sha256:93e562f043c8faf304b8f244ce9d9141f1e51ccec48e5be86c9559dad70efe79",
+      sha256: reviewedIdentity().policy_sha256,
     },
     scanner: {
-      version: "0.74.0",
-      immutable_id:
-        "sha256:2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a",
-      configuration_sha256:
-        "sha256:3ab6f8a9feba5749e18d4a5049a94acc39ea2f3da3afb065371275a13218bf54",
+      version: reviewedIdentity().scanner_version,
+      immutable_id: reviewedIdentity().scanner_identity,
+      configuration_sha256: reviewedIdentity().configuration_sha256,
     },
     database: { status: "FRESH", identity: `sha256:${"a".repeat(64)}` },
     operation: { name: "TRIVY_REPOSITORY_SCAN", status: "SUCCEEDED" },
@@ -95,10 +112,42 @@ function evidence() {
 }
 
 describe("maintained replay consumer assertions", () => {
+  it("follows authenticated owner identities instead of a copied release or digest", () => {
+    const identity = reviewedIdentity();
+    identity.policy_sha256 = "sha256:" + "e".repeat(64);
+    identity.configuration_sha256 = "sha256:" + "f".repeat(64);
+    identity.scanner_version = "another-reviewed-release";
+    identity.scanner_identity = "sha256:" + "1".repeat(64);
+    const result = evidence();
+    result.policy.sha256 = identity.policy_sha256;
+    result.scanner.configuration_sha256 = identity.configuration_sha256;
+    result.scanner.version = identity.scanner_version;
+    result.scanner.immutable_id = identity.scanner_identity;
+    expect(() => assertReplayEvidence(result, commit, identity)).not.toThrow();
+  });
+
+  it("accepts a clean current inventory when the historical finding is absent", () => {
+    const result = evidence();
+    result.findings = [];
+    result.summary = {
+      total: 0,
+      actionable: 0,
+      review_required: 0,
+      excepted: 0,
+    };
+    expect(() =>
+      assertCandidateEvidence(result, reviewedIdentity().exceptions)
+    ).not.toThrow();
+  });
+
   it("accepts the exact reviewed identities and retained braces inventory", () => {
     const result = evidence();
-    expect(() => assertReplayEvidence(result, commit)).not.toThrow();
-    expect(() => assertCandidateEvidence(result)).not.toThrow();
+    expect(() =>
+      assertReplayEvidence(result, commit, reviewedIdentity())
+    ).not.toThrow();
+    expect(() =>
+      assertCandidateEvidence(result, reviewedIdentity().exceptions)
+    ).not.toThrow();
   });
 
   it.each([
@@ -138,7 +187,9 @@ describe("maintained replay consumer assertions", () => {
     (_name, mutate) => {
       const result = evidence();
       mutate(result);
-      expect(() => assertReplayEvidence(result, commit)).toThrow();
+      expect(() =>
+        assertReplayEvidence(result, commit, reviewedIdentity())
+      ).toThrow();
     }
   );
 
@@ -167,7 +218,9 @@ describe("maintained replay consumer assertions", () => {
     (_name, mutate) => {
       const result = evidence();
       mutate(result);
-      expect(() => assertCandidateEvidence(result)).toThrow();
+      expect(() =>
+        assertCandidateEvidence(result, reviewedIdentity().exceptions)
+      ).toThrow();
     }
   );
 });

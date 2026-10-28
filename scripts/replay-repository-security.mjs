@@ -53,11 +53,31 @@ function command(executable, args, options = {}) {
   return result.stdout.trim();
 }
 
+function observeGovernanceIdentity(governance) {
+  const source = [
+    "import importlib.util,json,pathlib,sys",
+    "root=pathlib.Path(sys.argv[1])",
+    "spec=importlib.util.spec_from_file_location('reviewed_scanner',root/'scripts/secpal-trivy-repository-scan.py')",
+    "owner=importlib.util.module_from_spec(spec);spec.loader.exec_module(owner)",
+    "policy=json.loads((root/'policies/trivy-repository-scan-v1.json').read_text())",
+    "print(json.dumps({'policy_sha256':owner._sha256(policy),'configuration_sha256':owner.configuration_identity(),'scanner_version':owner.TRIVY_VERSION,'scanner_identity':owner.TRIVY_ARCHIVE_ID,'exceptions':policy['exceptions']}))",
+  ].join("\n");
+  return JSON.parse(command("python3", ["-I", "-c", source, governance]));
+}
+
 function git(workspace, args) {
   return command("git", ["--no-replace-objects", "-C", workspace, ...args]);
 }
 
-function scan(action, governance, workspace, temporaryRoot, label, secret) {
+function scan(
+  action,
+  governance,
+  workspace,
+  temporaryRoot,
+  label,
+  identity,
+  secret
+) {
   const commit = git(workspace, ["rev-parse", "HEAD"]);
   const runner = path.join(temporaryRoot, label);
   mkdirSync(runner, { mode: 0o700 });
@@ -148,7 +168,7 @@ function scan(action, governance, workspace, temporaryRoot, label, secret) {
       `Shared Action failed closed (${result.operation.failure_code}).`
     );
   }
-  assertReplayEvidence(result, commit);
+  assertReplayEvidence(result, commit, identity);
   const workflow = load(
     readFileSync(
       path.join(repoRoot, ".github/workflows/reusable-repository-security.yml"),
@@ -173,29 +193,24 @@ function scan(action, governance, workspace, temporaryRoot, label, secret) {
 }
 
 // Consumer assertions bind the shared result; normalization remains upstream.
-export function assertReplayEvidence(result, commit) {
+export function assertReplayEvidence(result, commit, identity) {
   assert.equal(result.schema_version, "secpal-trivy-repository-scan-v4");
   assert.deepEqual(result.subject, { repository: "SecPal/frontend", commit });
-  assert.equal(
-    result.policy.sha256,
-    "sha256:93e562f043c8faf304b8f244ce9d9141f1e51ccec48e5be86c9559dad70efe79"
-  );
+  assert.equal(result.policy.sha256, identity.policy_sha256);
   assert.equal(
     result.scanner.configuration_sha256,
-    "sha256:3ab6f8a9feba5749e18d4a5049a94acc39ea2f3da3afb065371275a13218bf54"
+    identity.configuration_sha256
   );
   assert.equal(result.database.status, "FRESH");
   assert.deepEqual(result.operation, {
     name: "TRIVY_REPOSITORY_SCAN",
     status: "SUCCEEDED",
   });
-  assert.equal(result.scanner.version, "0.74.0");
-  assert.equal(
-    result.scanner.immutable_id,
-    "sha256:2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a"
-  );
+  assert.equal(result.scanner.version, identity.scanner_version);
+  assert.equal(result.scanner.immutable_id, identity.scanner_identity);
   for (const digest of [
     result.scanner.configuration_sha256,
+    result.scanner.immutable_id,
     result.database.identity,
     result.policy.sha256,
   ]) {
@@ -203,36 +218,47 @@ export function assertReplayEvidence(result, commit) {
   }
 }
 
-export function assertCandidateEvidence(result) {
+export function assertCandidateEvidence(result, exceptions) {
   assert.equal(
     result.gate_state,
     "CLEAN",
     "Candidate repository evidence requires finding triage."
   );
+  assert.ok(
+    Number.isFinite(Date.parse(result.completed_at)),
+    "Malformed completion time."
+  );
   assert.deepEqual(
     result.summary,
-    { total: 1, actionable: 0, review_required: 0, excepted: 1 },
-    "Expected retained reviewed frontend vulnerability inventory."
+    {
+      total: result.findings.length,
+      actionable: 0,
+      review_required: 0,
+      excepted: result.findings.length,
+    },
+    "Current normalized inventory must remain complete."
   );
-  const [finding] = result.findings;
-  assert.ok(
-    result.findings.length === 1 &&
-      finding.class === "VULNERABILITY" &&
-      finding.rule_id === "CVE-2026-93687" &&
-      finding.package === "braces" &&
-      finding.installed_version === "3.0.3" &&
-      finding.path === "package-lock.json" &&
-      finding.exception?.id ===
-        "frontend-braces-cve-2026-93687-not-affected-1199" &&
-      finding.exception.disposition === "NOT_AFFECTED" &&
-      finding.exception.expires_at === "2026-11-04T00:00:00Z",
-    "Reviewed braces finding must remain in normalized evidence."
-  );
-  assert.ok(
-    Date.parse(result.completed_at) <
-      Date.parse(result.findings[0].exception.expires_at),
-    "Reviewed braces exception has expired."
-  );
+  for (const finding of result.findings) {
+    assert.equal(finding.class, "VULNERABILITY");
+    const reviewed = exceptions.find(
+      (entry) =>
+        entry.repository === "SecPal/frontend" &&
+        entry.class === finding.class &&
+        entry.rule_id === finding.rule_id &&
+        entry.path === finding.path &&
+        entry.id === finding.exception?.id
+    );
+    assert.ok(reviewed, "Finding lacks its exact reviewed policy disposition.");
+    assert.deepEqual(finding.exception, {
+      id: reviewed.id,
+      disposition: reviewed.disposition,
+      expires_at: reviewed.expires_at,
+    });
+    assert.ok(
+      Date.parse(result.completed_at) < Date.parse(reviewed.expires_at),
+      "Reviewed exception has expired."
+    );
+  }
 }
 
 function main() {
@@ -269,6 +295,7 @@ function main() {
     authenticated.commit.tree.sha,
     git(governance, ["rev-parse", "HEAD^{tree}"])
   );
+  const identity = observeGovernanceIdentity(governance);
   const action = load(
     readFileSync(
       path.join(governance, ".github/actions/trivy-repository-scan/action.yml"),
@@ -337,6 +364,7 @@ function main() {
       fixture,
       temporaryRoot,
       "fixture-scan",
+      identity,
       secret
     );
     assert.equal(replay.result.gate_state, "ACTIONABLE");
@@ -389,7 +417,8 @@ function main() {
         governance,
         realpathSync(values.target),
         temporaryRoot,
-        "candidate-scan"
+        "candidate-scan",
+        identity
       );
       writeFileSync(
         path.join(values.output, "candidate-result.json"),
@@ -404,7 +433,7 @@ function main() {
       console.log(
         `Candidate ${target.result.subject.commit}: ${target.result.gate_state}; normalized inventory retained.`
       );
-      assertCandidateEvidence(target.result);
+      assertCandidateEvidence(target.result, identity.exceptions);
     }
   } finally {
     rmSync(temporaryRoot, { recursive: true, force: true });
