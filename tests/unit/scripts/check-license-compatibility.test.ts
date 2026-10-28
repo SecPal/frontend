@@ -261,6 +261,9 @@ describe("check-license-compatibility", () => {
               "node_modules/rfc4648": {
                 license: "Python-2.0",
               },
+              "node_modules/argparse": {
+                license: "PSF-2.0",
+              },
             },
           },
           null,
