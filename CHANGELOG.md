@@ -2065,8 +2065,8 @@ SecPal` notice, and keep the tagline plus `https://secpal.app` as preferred
 
 ### Security
 
-- Patch development-tooling denial-of-service vulnerabilities with scoped
-  minimatch 11.0.3 and re2js 2.8.7 overrides (refs #2019).
+- Patch development-tooling denial-of-service vulnerabilities with parent-scoped
+  minimatch 11.0.3, re2js 2.8.7 and glob 14.0.2 overrides (refs #2019).
 
 - Blocked unsafe server-provided customer and site contact email/phone values from becoming `mailto:` or `tel:` links unless they match the expected address/dial-string shape, preventing mail client query/header injection and dialer parameter abuse.
 - Blocked unsafe server-provided BWR export download URLs in the employee panel by allowing only HTTPS URLs, plus HTTP loopback URLs only for local development or loopback app origins, before rendering a download link.

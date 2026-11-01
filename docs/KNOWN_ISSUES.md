@@ -27,8 +27,6 @@ These are **transitive dependencies** from packages that currently have no compa
 - `vite-plugin-pwa@1.2.0` → `workbox-build@7.4.0` → `@rollup/plugin-replace@2.x` / `magic-string@0.25.9` → `sourcemap-codec@1.4.8`
 - `vite-plugin-pwa@1.2.0` → `workbox-build@7.4.0` → `source-map@0.8.0-beta.0`
 
-The previously observed `vite-plugin-pwa@1.2.0` → `workbox-build@7.4.0` → `glob@11.1.0` warning was resolved on 2026-03-27 because the existing `glob` version override in `package.json` causes npm to resolve all glob requests (including `^11.0.1` from workbox-build) to the non-deprecated `glob@13.0.6`.
-
 The previously observed `@lhci/cli` → `chrome-launcher` → `rimraf` / `glob@7.2.3` / `inflight@1.0.6` chain was removed from regular installs on 2026-03-21 by switching local Lighthouse CLI usage to on-demand `npx` execution.
 
 The previously tracked `npm audit` findings for `brace-expansion` and `serialize-javascript` were eliminated on 2026-03-27 by raising the frontend override floors to patched releases.
