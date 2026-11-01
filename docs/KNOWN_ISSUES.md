@@ -9,7 +9,7 @@ This document tracks known issues that are outside our direct control and requir
 
 ## npm Deprecation Warnings
 
-### Status: Audit Clean, Remaining Deprecations Await Upstream Fixes
+### Status: Remaining Deprecations Await Upstream Fixes
 
 When running `npm ci` or fresh `npm install`, you may still see deprecation warnings for the following packages:
 
@@ -27,15 +27,15 @@ These are **transitive dependencies** from packages that currently have no compa
 - `vite-plugin-pwa@1.2.0` → `workbox-build@7.4.0` → `@rollup/plugin-replace@2.x` / `magic-string@0.25.9` → `sourcemap-codec@1.4.8`
 - `vite-plugin-pwa@1.2.0` → `workbox-build@7.4.0` → `source-map@0.8.0-beta.0`
 
-The previously observed `vite-plugin-pwa@1.2.0` → `workbox-build@7.4.0` → `glob@11.1.0` warning was resolved on 2026-03-27 because the existing `"glob": "^13.0.6"` override in `package.json` causes npm to resolve all glob requests (including `^11.0.1` from workbox-build) to the non-deprecated `glob@13.0.6`.
+The previously observed `vite-plugin-pwa@1.2.0` → `workbox-build@7.4.0` → `glob@11.1.0` warning was resolved on 2026-03-27 because the existing `glob` version override in `package.json` causes npm to resolve all glob requests (including `^11.0.1` from workbox-build) to the non-deprecated `glob@13.0.6`.
 
 The previously observed `@lhci/cli` → `chrome-launcher` → `rimraf` / `glob@7.2.3` / `inflight@1.0.6` chain was removed from regular installs on 2026-03-21 by switching local Lighthouse CLI usage to on-demand `npx` execution.
 
-The previously tracked `npm audit` findings for `brace-expansion` and `serialize-javascript` were eliminated on 2026-03-27 by raising the frontend override floors to patched releases. `npm audit` now reports 0 vulnerabilities in this repository.
+The previously tracked `npm audit` findings for `brace-expansion` and `serialize-javascript` were eliminated on 2026-03-27 by raising the frontend override floors to patched releases.
 
 ### Impact Assessment
 
-- **Security**: ✅ `npm audit` is clean; no known runtime CVEs remain in the current dependency graph
+- **Security**: Check fresh `npm audit` and repository scan results separately from deprecation warnings.
 - **Deprecated Build Tooling**: ⚠️ Limited to build-time and local tooling paths, not shipped runtime code
 - **Functionality**: ✅ All features work correctly
 - **Build Process**: ✅ No impact on build or runtime
@@ -50,7 +50,7 @@ The previously tracked `npm audit` findings for `brace-expansion` and `serialize
 ### What We're Doing
 
 - ✅ Removed the direct `@lhci/cli` install path from normal dependency installation
-- ✅ Raised `brace-expansion` and `serialize-javascript` override floors so `npm audit` now returns 0 vulnerabilities
+- ✅ Raised `brace-expansion` and `serialize-javascript` override floors to patched releases
 - ✅ Monitoring upstream repositories for updates
 - ✅ Testing new versions as they're released
 - ✅ Documented in this file for team awareness
@@ -80,6 +80,6 @@ We will update dependencies as soon as stable upstream releases make that possib
 
 ---
 
-**Last Updated**: 2026-03-27
+**Last Updated**: 2026-11-01
 **Reviewed By**: SecPal Team
 **Status**: Accepted Risk (Deprecations Only)
