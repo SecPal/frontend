@@ -177,9 +177,11 @@
     "picomatch@^4": "4.0.4",
     "brace-expansion": ">=5.0.12",
     "@isaacs/brace-expansion": ">=5.0.1",
-    "minimatch": ">=10.2.4",
     "yauzl": "3.2.1",
-    "glob": "^13.0.6",
+    "glob": {
+      ".": "^13.0.6",
+      "minimatch": "11.0.3"
+    },
     "ws@^7.0.0": "^7.5.11",
     "ws@^8.0.0": "^8.21.0",
     "esbuild": "^0.28.1",
@@ -190,9 +192,25 @@
       "katex": "^0.18.2"
     },
     "markdownlint-cli": {
-      "smol-toml": "^1.9.0"
+      "smol-toml": "^1.9.0",
+      "minimatch": "11.0.3",
+      "markdownlint": {
+        "re2js": "2.8.7"
+      }
     },
-    "@lingui/core": "$@lingui/core"
+    "@lingui/core": "$@lingui/core",
+    "@eslint/config-array": {
+      "minimatch": "11.0.3"
+    },
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.3"
+    },
+    "eslint": {
+      "minimatch": "11.0.3"
+    },
+    "filelist": {
+      "minimatch": "11.0.3"
+    }
   },
   "engines": {
     "node": "^26.10.0",
