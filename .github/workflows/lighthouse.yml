@@ -19,8 +19,6 @@ jobs:
     name: Performance Audit
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    # Skip for spike branches (exploration only)
-    if: ${{ !startsWith(github.head_ref, 'spike/') && !startsWith(github.ref, 'refs/heads/spike/') }}
 
     steps:
       - name: Checkout repository
@@ -127,7 +125,11 @@ jobs:
 
       - name: Comment PR with Lighthouse scores
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
-        if: github.event_name == 'pull_request' && steps.format_lighthouse_score.outputs.comment
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.user.login != 'dependabot[bot]' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          steps.format_lighthouse_score.outputs.comment
         with:
           script: |
             const comment = `${{ steps.format_lighthouse_score.outputs.comment }}`;
