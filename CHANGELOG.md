@@ -12,7 +12,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Run PR tests and performance assertions independently of branch naming, while
+  keeping optional Lighthouse comments out of read-only Dependabot/fork runs.
+
+- Preserve the ISO country list while preventing minifiers from encoding it as
+  token-shaped data that triggers repository secret scanning.
+- Qualify the correction with the accepted zero-exception repository scanner
+  revision without restoring expired policy dispositions.
+
 ### Changed
+
+- Enable verified homogeneous Dependabot patch and minor updates after protecting the central Source Safety check; major, SHA and unknown updates remain manual.
+
+- Delegate Dependabot classification to the accepted immutable central workflow, preserving patch-only enrollment until protected source-safety activation.
 
 - Register Containerfile and remote pre-commit ecosystems for daily Dependabot
   checks at 04:00 Europe/Berlin, with manual review and the pinned shared manifest
