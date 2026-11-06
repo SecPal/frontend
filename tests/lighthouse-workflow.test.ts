@@ -120,3 +120,26 @@ describe("Lighthouse workflow report comment", () => {
     expect(comment).not.toContain("#artifacts");
   });
 });
+
+describe("required frontend quality checks", () => {
+  it("runs tests and performance assertions regardless of PR branch naming", () => {
+    for (const [filename, job] of [
+      ["quality.yml", "vitest"],
+      ["lighthouse.yml", "lighthouse"],
+    ]) {
+      const document = load(
+        readFileSync(path.join(repoRoot, ".github/workflows", filename), "utf8")
+      ) as { jobs: Record<string, { if?: string }> };
+      expect(document.jobs[job].if).toBeUndefined();
+    }
+  });
+  it("keeps read-only Dependabot/fork tokens out of the optional comment step", () => {
+    const step = getWorkflowStep("Comment PR with Lighthouse scores");
+    expect(step.if).toContain(
+      "github.event.pull_request.user.login != 'dependabot[bot]'"
+    );
+    expect(step.if).toContain(
+      "github.event.pull_request.head.repo.full_name == github.repository"
+    );
+  });
+});

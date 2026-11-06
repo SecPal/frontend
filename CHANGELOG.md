@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Run PR tests and performance assertions independently of branch naming, while
+  keeping optional Lighthouse comments out of read-only Dependabot/fork runs.
+
 - Preserve the ISO country list while preventing minifiers from encoding it as
   token-shaped data that triggers repository secret scanning.
 - Qualify the correction with the accepted zero-exception repository scanner
