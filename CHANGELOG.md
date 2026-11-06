@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Refresh the signed Alpine 3.24 zlib pin to the available security-fixed 1.4 package so both native frontend builds can resolve their runtime inputs.
+
 - Run PR tests and performance assertions independently of branch naming, while
   keeping optional Lighthouse comments out of read-only Dependabot/fork runs.
 
