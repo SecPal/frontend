@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Enable verified homogeneous Dependabot patch and minor updates after protecting the central Source Safety check; major, SHA and unknown updates remain manual.
+
 - Delegate Dependabot classification to the accepted immutable central workflow, preserving patch-only enrollment until protected source-safety activation.
 
 - Register Containerfile and remote pre-commit ecosystems for daily Dependabot
