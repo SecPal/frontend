@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Delegate Dependabot classification to the accepted immutable central workflow, preserving patch-only enrollment until protected source-safety activation.
+
 - Register Containerfile and remote pre-commit ecosystems for daily Dependabot
   checks at 04:00 Europe/Berlin, with manual review and the pinned shared manifest
   guard. Make the existing immutable Containerfile FROM references directly
