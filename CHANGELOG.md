@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Preserve the ISO country list while preventing minifiers from encoding it as
   token-shaped data that triggers repository secret scanning.
+- Qualify the correction with the accepted zero-exception repository scanner
+  revision without restoring expired policy dispositions.
 
 ### Changed
 
