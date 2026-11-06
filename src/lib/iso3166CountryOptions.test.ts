@@ -1,6 +1,9 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { createHash } from "node:crypto";
+import { resolve } from "node:path";
+import { build } from "vite";
 import { describe, expect, it, vi } from "vitest";
 import { getCountrySelectOptions } from "./iso3166CountryOptions";
 
@@ -87,5 +90,41 @@ describe("getCountrySelectOptions", () => {
     } finally {
       vi.stubGlobal("Intl", originalIntl);
     }
+  });
+});
+
+describe("compiled country reference data", () => {
+  it("preserves all codes without emitting a SendGrid-shaped token", async () => {
+    // Trivy 0.74.0 pkg/fanal/secret/builtin-rules.go: sendgrid-api-token.
+    // Exercise the real minifier: it previously compressed the array with dots.
+    const result = await build({
+      configFile: false,
+      logLevel: "silent",
+      build: {
+        write: false,
+        minify: true,
+        rollupOptions: {
+          preserveEntrySignatures: "strict",
+          input: resolve("src/lib/iso3166CountryOptions.ts"),
+          output: { format: "es" },
+        },
+      },
+    });
+    if (Array.isArray(result) || !("output" in result)) {
+      throw new Error("Expected one completed in-memory build");
+    }
+    const code = result.output
+      .filter((chunk) => chunk.type === "chunk")
+      .map((chunk) => chunk.code)
+      .join("\n");
+    expect(code).toContain("getCountrySelectOptions");
+    expect(code).not.toMatch(/SG\.[a-zA-Z0-9_.-]{66}/);
+    const codes = getCountrySelectOptions("en")
+      .map((option) => option.code)
+      .sort();
+    expect(codes).toHaveLength(198);
+    expect(
+      createHash("sha256").update(JSON.stringify(codes)).digest("hex")
+    ).toBe("99d64f845886937c868beb9fe0486554036145862b10668146b841e177380978");
   });
 });
