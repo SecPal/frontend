@@ -1,10 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { spawnSync } from "node:child_process";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { readFileSync } from "node:fs";
 import { load } from "js-yaml";
 import { describe, expect, it } from "vitest";
 
@@ -23,38 +20,31 @@ function updates(): Update[] {
   ).updates;
 }
 
-function patchEligibility(
-  labels: string[],
-  title: string,
-  files = ["package.json", "package-lock.json"]
-): string {
-  const workflow = load(
+// Classification, signed metadata and complete rename-aware file inventories
+// are qualified once by the immutable central workflow's boundary regressions.
+// The consumer must not keep a parallel title parser or execute PR source.
+function caller() {
+  return load(
     readFileSync(".github/workflows/dependabot-auto-merge.yml", "utf8")
   ) as {
-    jobs: { "auto-merge": { steps: { id?: string; run?: string }[] } };
+    on: {
+      pull_request?: unknown;
+      pull_request_target?: { types: string[]; branches?: string[] };
+    };
+    permissions: Record<string, string>;
+    concurrency: Record<string, unknown>;
+    "cache-mode": string;
+    jobs: Record<
+      string,
+      {
+        uses?: string;
+        steps?: unknown;
+        secrets?: unknown;
+        if?: string;
+        with: Record<string, string>;
+      }
+    >;
   };
-  const script = workflow.jobs["auto-merge"].steps.find(
-    (step) => step.id === "eligibility"
-  )?.run;
-  expect(script).toBeDefined();
-  const directory = mkdtempSync(join(tmpdir(), "frontend-dependabot-"));
-  const output = join(directory, "output");
-  try {
-    const result = spawnSync("bash", ["-c", script!], {
-      encoding: "utf8",
-      env: {
-        PATH: process.env.PATH,
-        PR_LABELS: JSON.stringify(labels),
-        PR_TITLE: title,
-        PR_FILES: JSON.stringify(files),
-        GITHUB_OUTPUT: output,
-      },
-    });
-    expect(result.status, result.stderr).toBe(0);
-    return readFileSync(output, "utf8");
-  } finally {
-    rmSync(directory, { recursive: true, force: true });
-  }
 }
 
 describe("frontend manifest coverage adoption", () => {
@@ -95,79 +85,43 @@ describe("frontend manifest coverage adoption", () => {
       // Explicit labels also keep these proposals visibly separate.
       expect(JSON.stringify(entry!.labels)).not.toContain("dependencies");
       expect(entry!.labels).toContain("dependabot");
-      expect(
-        patchEligibility(
-          [...entry!.labels, "dependencies", "patch"],
-          "chore(deps): bump example from 1.30.6 to 1.30.7",
-          ecosystem === "docker"
-            ? ["Containerfile"]
-            : [".pre-commit-config.yaml"]
-        )
-      ).toContain("eligible=false\n");
+      expect(caller().jobs["auto-merge"].with["allowed-ecosystems"]).toBe(
+        "github_actions,npm_and_yarn"
+      );
     }
   );
 
-  it.each(["npm", "github-actions"])(
-    "preserves %s patch eligibility and rejects minor/major changes",
-    (ecosystem) => {
-      const entry = updates().find(
-        (candidate) => candidate["package-ecosystem"] === ecosystem
-      )!;
-      expect(
-        patchEligibility(
-          entry.labels,
-          "chore(deps): bump example from 1.2.3 to 1.2.4",
-          ecosystem === "npm"
-            ? ["package.json", "package-lock.json"]
-            : [".github/workflows/codeql.yml"]
-        )
-      ).toContain("eligible=true\n");
-      for (const next of ["1.3.0", "2.0.0"]) {
-        expect(
-          patchEligibility(
-            entry.labels,
-            `chore(deps): bump example from 1.2.3 to ${next}`
-          )
-        ).toContain("eligible=false\n");
-      }
-    }
-  );
-
-  it.each([
-    [],
-    ["Containerfile", "package.json"],
-    ["docker/health-live.sh"],
-    [".pre-commit-config.yaml"],
-    [".github/workflows/../dependabot.yml"],
-  ])(
-    "rejects empty, mixed or unsupported changed-file sets despite generic labels: %j",
-    (...files) => {
-      expect(
-        patchEligibility(
-          ["dependencies", "patch"],
-          "bump example from 1.2.3 to 1.2.4",
-          files
-        )
-      ).toContain("eligible=false\n");
-    }
-  );
-
-  it("retrieves current paths from GitHub including rename origins before eligibility", () => {
-    const workflow = load(
-      readFileSync(".github/workflows/dependabot-auto-merge.yml", "utf8")
-    ) as {
-      jobs: {
-        "auto-merge": {
-          steps: { id?: string; run?: string; env?: Record<string, string> }[];
-        };
-      };
-    };
-    const steps = workflow.jobs["auto-merge"].steps;
-    expect(steps[0].id).toBe("files");
-    expect(steps[0].run).toContain("set -euo pipefail");
-    expect(steps[0].run).toContain("gh api --paginate");
-    expect(steps[0].run).toContain(".previous_filename // empty");
-    expect(steps[1].env?.PR_FILES).toBe("${{ steps.files.outputs.paths }}");
+  it("delegates authenticated classification to the exact accepted source", () => {
+    const workflow = caller();
+    const job = workflow.jobs["auto-merge"];
+    expect(job).toEqual({
+      uses: "SecPal/.github/.github/workflows/reusable-dependabot-auto-merge.yml@328a361243060278af9765156e02ce77ee9aab29",
+      with: {
+        phase: "1",
+        "merge-method": "squash",
+        "allowed-ecosystems": "github_actions,npm_and_yarn",
+      },
+    });
+    expect(workflow.on.pull_request).toBeUndefined();
+    expect(workflow.on.pull_request_target?.branches).toBeUndefined();
+    expect(workflow.on.pull_request_target?.types).toEqual([
+      "opened",
+      "synchronize",
+      "reopened",
+      "ready_for_review",
+      "labeled",
+      "unlabeled",
+      "edited",
+      "converted_to_draft",
+    ]);
+    expect(workflow.permissions).toEqual({
+      contents: "write",
+      "pull-requests": "write",
+      checks: "read",
+      statuses: "read",
+    });
+    expect(workflow["cache-mode"]).toBe("none");
+    expect(workflow.concurrency["cancel-in-progress"]).toBe(true);
   });
 
   it("reuses the exact central coverage and cadence guard without policy overrides", () => {
