@@ -76,7 +76,7 @@ describe("frontend manifest coverage adoption", () => {
   });
 
   it.each(["docker", "pre-commit"])(
-    "keeps %s proposals out of the existing patch auto-merge path",
+    "keeps %s proposals out of the automatic merge path",
     (ecosystem) => {
       const entry = updates().find(
         (candidate) => candidate["package-ecosystem"] === ecosystem
@@ -97,7 +97,7 @@ describe("frontend manifest coverage adoption", () => {
     expect(job).toEqual({
       uses: "SecPal/.github/.github/workflows/reusable-dependabot-auto-merge.yml@328a361243060278af9765156e02ce77ee9aab29",
       with: {
-        phase: "1",
+        phase: "2",
         "merge-method": "squash",
         "allowed-ecosystems": "github_actions,npm_and_yarn",
       },

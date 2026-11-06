@@ -42,5 +42,5 @@ jobs:
     uses: SecPal/.github/.github/workflows/reusable-dependabot-auto-merge.yml@328a361243060278af9765156e02ce77ee9aab29 # main
     with:
       allowed-ecosystems: "github_actions,npm_and_yarn"
-      phase: "1" # Activate MINOR only after Source Safety is required
+      phase: "2" # Source Safety is required before this revision is accepted
       merge-method: "squash" # Use squash merge for cleaner history
