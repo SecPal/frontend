@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Preserve unresolved released-image CVE issues when scanner findings disappear;
+  adopt the reviewed central triage fix without changing release security policy.
+
 - Restore released-image monitoring with the centrally fixed Python runtime,
   retaining exact digests, scanner evidence and unchanged security policy.
 
