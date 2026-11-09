@@ -16,7 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Patch the frontend runtime's musl libc to Alpine's signed 1.2.6-r3 fix for
   CVE-2026-107891 and remove unused musl inspection utilities and scanelf.
-  Reject vulnerable or tool-bearing images in the existing native runtime smoke.
 
 - Refresh the signed Alpine 3.24 zlib pin to the available security-fixed 1.4 package so both native frontend builds can resolve their runtime inputs.
 

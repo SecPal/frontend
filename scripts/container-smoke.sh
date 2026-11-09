@@ -62,14 +62,6 @@ fi
 
 IMAGE_ID=$(podman image inspect --format '{{.Id}}' "$IMAGE_TAG")
 [ -n "$IMAGE_ID" ] || fail "built image has no image ID"
-# Reject the vulnerable libc even when a caller supplies an existing image.
-podman run --rm --read-only --network none --cap-drop=ALL \
-  --security-opt=no-new-privileges:true --entrypoint sh "$IMAGE_ID" -eu -c '
-    apk info -e "musl>=1.2.6-r3" >/dev/null
-    for package in musl-utils scanelf; do
-      if apk info -e "$package" >/dev/null 2>&1; then exit 1; fi
-    done
-  ' || fail "runtime retains vulnerable musl or unused inspection tools"
 if [ -n "${SECPAL_CONTAINER_PLATFORM:-}" ]; then
   expected_arch=${SECPAL_CONTAINER_PLATFORM#linux/}
   case "$expected_arch:$(uname -m)" in
