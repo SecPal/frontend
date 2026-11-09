@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restore released-image monitoring with the centrally fixed Python runtime,
+  retaining exact digests, scanner evidence and unchanged security policy.
+
 - Patch the frontend runtime's musl libc to Alpine's signed 1.2.6-r3 fix for
   CVE-2026-107891 and remove unused musl inspection utilities and scanelf.
 
