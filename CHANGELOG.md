@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Resolve YAML aliases when checking workflow review comments so shared pins
+  retain their own annotations without shifting later references.
+- Wait for confirmed browser-session bootstrap before testing CSRF rotation
+  across vault locking, avoiding a race with cached-user restoration.
+
 - Keep shared-workflow updates independent of copied test hashes and derive the
   released-artifact governance checkout from the scanner workflow's single
   immutable reference, preserving revision consistency across dependency updates.
