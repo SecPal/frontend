@@ -21,6 +21,7 @@ describe("released frontend security adoption", () => {
           if?: string;
           with?: Record<string, unknown>;
           permissions?: Record<string, string>;
+          steps?: { with?: Record<string, string> }[];
         }
       >;
     };
@@ -35,6 +36,11 @@ describe("released frontend security adoption", () => {
     expect(w.jobs.reevaluate.uses).toMatch(
       /^SecPal\/\.github\/\.github\/workflows\/reusable-vulnerability-reevaluation\.yml@[0-9a-f]{40}$/u
     );
+    expect(
+      w.jobs.release.steps?.find(
+        (step) => step.with?.repository === "SecPal/.github"
+      )?.with?.ref
+    ).toBe(w.jobs.reevaluate.uses?.split("@")[1]);
     expect(w.jobs.reevaluate.with?.triage).toBe(true);
     for (const job of Object.values(w.jobs)) {
       expect(job.permissions).not.toHaveProperty("id-token");
