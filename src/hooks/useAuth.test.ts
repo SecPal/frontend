@@ -3391,6 +3391,8 @@ describe("useAuth", () => {
 
     await waitFor(() => {
       expect(result.current.isAuthenticated).toBe(true);
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.user).toEqual(revalidatedUser);
     });
 
     act(() => {
