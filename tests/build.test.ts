@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { JSDOM } from "jsdom";
-import { load } from "js-yaml";
+import { EVENT_ID, getScalarValue, load, parseEvents } from "js-yaml";
 import { satisfies, subset, validRange } from "semver";
 import { describe, it, expect } from "vitest";
 import {
@@ -71,16 +71,37 @@ function getWorkflowSources(): WorkflowSource[] {
 }
 
 function getReviewComments(
-  lines: string[],
+  workflow: string,
   references: string[]
 ): Array<string | undefined> {
+  const lines = workflow.split("\n");
+  const anchors = new Map<string, string>();
+  const aliasReferences = new Map<number, string | undefined>();
+
+  // Let the YAML parser decode anchors and aliases; comments belong to each
+  // uses occurrence, including an alias whose scalar lives elsewhere.
+  for (const event of parseEvents(workflow, {})) {
+    if (event.type === EVENT_ID.SCALAR && event.anchorStart >= 0) {
+      anchors.set(
+        workflow.slice(event.anchorStart, event.anchorEnd),
+        getScalarValue(workflow, event)
+      );
+    } else if (event.type === EVENT_ID.ALIAS) {
+      const line = workflow.slice(0, event.anchorStart).split("\n").length - 1;
+      aliasReferences.set(
+        line,
+        anchors.get(workflow.slice(event.anchorStart, event.anchorEnd))
+      );
+    }
+  }
+
   const remainingReferences = [...references];
 
   return lines.flatMap((line, index) => {
     const referenceIndex = remainingReferences.findIndex(
       (reference) =>
         /^\s*(?:-\s*)?uses:\s*|[,{]\s*uses:\s*/u.test(line) &&
-        line.includes(reference)
+        (line.includes(reference) || aliasReferences.get(index) === reference)
     );
 
     if (referenceIndex === -1) {
@@ -100,7 +121,6 @@ function getReviewComments(
 function getWorkflowUsesReferencesFromSource(
   workflow: string
 ): WorkflowUsesReference[] {
-  const lines = workflow.split("\n");
   const document = load(workflow);
 
   if (!isRecord(document) || !isRecord(document.jobs)) {
@@ -123,7 +143,7 @@ function getWorkflowUsesReferencesFromSource(
     return [...reusableWorkflowReference, ...stepReferences];
   });
 
-  const reviewComments = getReviewComments(lines, references);
+  const reviewComments = getReviewComments(workflow, references);
 
   return references.map((reference, index) => ({
     reference,
@@ -666,6 +686,31 @@ jobs:
         reference: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
         reviewComment: undefined,
       },
+    ]);
+  });
+
+  it("associates review comments with resolved scalar aliases without shifting later comments", () => {
+    const workflow = `
+env:
+  SHARED_WORKFLOW: &shared example/workflows/scan.yml@main
+jobs:
+  scan:
+    # main
+    uses: *shared
+  unchecked:
+    uses: *shared
+  test:
+    steps:
+      - uses: actions/checkout@main # v7
+`;
+
+    expect(getWorkflowUsesReferencesFromSource(workflow)).toEqual([
+      { reference: "example/workflows/scan.yml@main", reviewComment: "main" },
+      {
+        reference: "example/workflows/scan.yml@main",
+        reviewComment: undefined,
+      },
+      { reference: "actions/checkout@main", reviewComment: "v7" },
     ]);
   });
 
