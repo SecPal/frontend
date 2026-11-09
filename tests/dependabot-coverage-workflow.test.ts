@@ -95,7 +95,7 @@ describe("frontend manifest coverage adoption", () => {
     const workflow = caller();
     const job = workflow.jobs["auto-merge"];
     expect(job).toEqual({
-      uses: "SecPal/.github/.github/workflows/reusable-dependabot-auto-merge.yml@328a361243060278af9765156e02ce77ee9aab29",
+      uses: "SecPal/.github/.github/workflows/reusable-dependabot-auto-merge.yml@31555f23d459031248006f77785d872bc3947127",
       with: {
         phase: "2",
         "merge-method": "squash",
@@ -120,7 +120,7 @@ describe("frontend manifest coverage adoption", () => {
       checks: "read",
       statuses: "read",
     });
-    expect(workflow["cache-mode"]).toBe("none");
+    expect(workflow["cache-mode"]).toBeUndefined();
     expect(workflow.concurrency["cancel-in-progress"]).toBe(true);
   });
 
