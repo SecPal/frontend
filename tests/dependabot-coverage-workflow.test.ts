@@ -120,7 +120,7 @@ describe("frontend manifest coverage adoption", () => {
       checks: "read",
       statuses: "read",
     });
-    expect(workflow["cache-mode"]).toBeUndefined();
+    expect(workflow["cache-mode"]).toBe("none");
     expect(workflow.concurrency["cancel-in-progress"]).toBe(true);
   });
 
