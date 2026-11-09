@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restore protected Dependabot PATCH/MINOR auto-merge with the accepted central
+  source verifier; retain manual MAJOR and unclassified updates.
+
 - Preserve unresolved released-image CVE issues when scanner findings disappear;
   adopt the reviewed central triage fix without changing release security policy.
 
