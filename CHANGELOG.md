@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep shared-workflow updates independent of copied test hashes and derive the
+  released-artifact governance checkout from the scanner workflow's single
+  immutable reference, preserving revision consistency across dependency updates.
+
 - Restore protected Dependabot PATCH/MINOR auto-merge with the accepted central
   source verifier; retain manual MAJOR and unclassified updates.
 

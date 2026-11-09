@@ -47,11 +47,27 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
+      # Dependabot updates this single workflow reference; the alias below and
+      # the governance checkout always consume the same immutable revision.
+      - name: Select the shared governance revision
+        id: governance
+        shell: bash
+        env:
+          # yamllint disable-line rule:line-length
+          GOVERNANCE_WORKFLOW: &released-security-workflow SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@9043e32220a06263975fdd54e318f21afe331969
+        run: |
+          set -euo pipefail
+          revision="${GOVERNANCE_WORKFLOW##*@}"
+          if [[ ! "$revision" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Invalid immutable governance revision"
+            exit 1
+          fi
+          printf 'revision=%s\n' "$revision" >> "$GITHUB_OUTPUT"
       - name: Checkout accepted immutable verification primitives
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: SecPal/.github
-          ref: 59a196f7759606c792fd88a37b29be5c9307a766 # accepted protected main
+          ref: ${{ steps.governance.outputs.revision }}
           path: .context/released-artifact-governance
           persist-credentials: false
       - name: Install pinned read-only registry and attestation tools
@@ -104,7 +120,7 @@ jobs:
       issues: write
       packages: read
     # main; Timeouts, scanner pins, fresh databases and policy belong to this workflow.
-    uses: SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@9043e32220a06263975fdd54e318f21afe331969
+    uses: *released-security-workflow
     with:
       artifact-repository: ghcr.io/secpal/frontend
       index-digest: ${{ needs.release.outputs.index-digest }}

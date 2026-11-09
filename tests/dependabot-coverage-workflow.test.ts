@@ -91,11 +91,13 @@ describe("frontend manifest coverage adoption", () => {
     }
   );
 
-  it("delegates authenticated classification to the exact accepted source", () => {
+  it("delegates authenticated classification to the immutable central workflow", () => {
     const workflow = caller();
     const job = workflow.jobs["auto-merge"];
     expect(job).toEqual({
-      uses: "SecPal/.github/.github/workflows/reusable-dependabot-auto-merge.yml@31555f23d459031248006f77785d872bc3947127",
+      uses: expect.stringMatching(
+        /^SecPal\/\.github\/\.github\/workflows\/reusable-dependabot-auto-merge\.yml@[0-9a-f]{40}$/u
+      ),
       with: {
         phase: "2",
         "merge-method": "squash",
