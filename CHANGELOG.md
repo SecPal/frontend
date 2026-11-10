@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Restore publisher and replay acceptance of the adopted v5 source-security
+  evidence. Use the accepted central Grype release and archive identity without
+  duplicating its version, retaining exact source, freshness and CLEAN checks.
+
 - Resolve YAML aliases when checking workflow review comments so shared pins
   retain their own annotations without shifting later references.
 - Wait for confirmed browser-session bootstrap before testing CSRF rotation
