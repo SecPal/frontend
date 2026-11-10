@@ -281,10 +281,14 @@ not proof that a future Dependabot updater run or update PR has already occurred
 ## Recurring released-artifact security
 
 The separate `Released Frontend Artifact Security` workflow observes the latest
-successful protected-main publisher. Daily UTC schedules evaluate AMD64 at 03:17
-and ARM64 at 03:37. Each platform has its own workflow run because the accepted
-shared workflow uses run-scoped artifact names. Manual dispatch selects one
-platform; run it once per platform for a complete two-platform incident assessment.
+successful protected-main publisher at 03:17 UTC (AMD64) and 03:37 UTC (ARM64).
+It independently evaluates the operator-confirmed demo at 04:17/04:37 UTC and
+the reviewed deployment source contract at 06:17/06:37 UTC. These fixed consumers
+are selected by their signed immutable publisher evidence, not by the latest tag
+or publication. A newer release does not assert demo activation. Each subject
+has its own run because shared evidence names are run-scoped. Manual dispatch
+selects `consumer` (`latest`, `demo` or `deployment`) and `platform`; evaluate
+both platforms for a complete assessment of that release.
 
 Release admission verifies the signed immutable build-evidence OCI artifact and
 document, fixed publisher repository/workflow, exact successful main run/attempt,
@@ -304,7 +308,12 @@ uses existing bounded Actions evidence, without a release database, registry
 crawl or policy edit for each publication.
 
 An optional manual `evidence-artifact` reference can select another genuinely
-accepted release after the same verification. Historical incidents do not replace
+accepted release after the same verification when `consumer` is `latest`.
+Fixed consumers reject reference overrides and cannot refresh the latest hint.
+The exact signed demo publication retains its original v4 source-evidence
+representation; all other releases and new publishers require v5. Its historical
+source checks do not replace fresh artifact scans or extend any policy/VEX window.
+Historical incidents do not replace
 the current monitored release. Verifying the current or a later accepted run can
 refresh its lookup hint, including recovery after ordinary artifact expiry.
 A failed later rerun cannot erase a previously accepted attempt.
