@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Correlate proven scanner APK metadata aliases through the accepted shared
+  issue triage while retaining every PURL, lookup key and strongest disposition.
+
 - Re-evaluate the confirmed demo frontend and approved deployment release on both
   architectures daily, independently of newer accepted publications. Authenticate
   the retained demo publication's original source-evidence schema without changing
