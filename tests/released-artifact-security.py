@@ -67,6 +67,34 @@ class ReleasedArtifactTests(unittest.TestCase):
             with self.subTest(values=values), self.assertRaises(ValueError):
                 monitor.selected_platform(*values)
 
+    def test_known_consumers_do_not_follow_a_new_publication_or_override(self):
+        for consumer in ("demo", "deployment"):
+            reference = monitor.CONSUMERS[consumer]
+            self.assertEqual(monitor.selected_reference("workflow_dispatch", "", consumer, ""),
+                             (consumer, reference))
+            with self.assertRaises(ValueError):
+                monitor.selected_reference("workflow_dispatch", "", consumer, monitor.BASELINE)
+        selected = []
+        for schedule, (consumer, platform) in monitor.SCHEDULES.items():
+            self.assertEqual(monitor.selected_platform("schedule", schedule, ""), platform)
+            self.assertEqual(monitor.selected_reference("schedule", schedule, "", ""),
+                             (consumer, monitor.CONSUMERS.get(consumer, "")))
+            selected.append((consumer, platform))
+        self.assertEqual(len(set(selected)), 6)
+        with self.assertRaises(ValueError):
+            monitor.selected_reference("schedule", "17 4 * * *", "latest", "")
+
+    def test_only_the_exact_authenticated_demo_evidence_can_use_historical_source_schema(self):
+        document, security, run = release()
+        security["schema_version"] = "secpal-trivy-repository-scan-v4"
+        document["extensions"][fixtures.publisher.SOURCE]["source_security_sha256"] = fixtures.publisher.digest(fixtures.publisher.canonical(security))
+        with self.assertRaises(ValueError):
+            monitor.admit_document(document, security, run)
+        monitor.admit_document(document, security, run, monitor.CONSUMERS["demo"])
+        for reference in (monitor.BASELINE, monitor.CONSUMERS["deployment"]):
+            with self.subTest(reference=reference), self.assertRaises(ValueError):
+                monitor.admit_document(document, security, run, reference)
+
     def test_complete_historically_clean_evidence_reuses_publisher_admission(self):
         document, security, run = release()
         original = copy.deepcopy((document, security, run))

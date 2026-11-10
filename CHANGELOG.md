@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Re-evaluate the confirmed demo frontend and approved deployment release on both
+  architectures daily, independently of newer accepted publications. Authenticate
+  the retained demo publication's original source-evidence schema without changing
+  current publisher admission, scanner policy or issue identities.
+
 - Restore publisher and replay acceptance of the adopted v5 source-security
   evidence. Use the accepted central Grype release and archive identity without
   duplicating its version, retaining exact source, freshness and CLEAN checks.

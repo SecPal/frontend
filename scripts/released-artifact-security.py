@@ -22,6 +22,21 @@ REPOSITORY = "SecPal/frontend"
 WORKFLOW = ".github/workflows/publish-container.yml"
 BASELINE = "ghcr.io/secpal/frontend@sha256:aa83f4bc3d18a4bfae25bfc7b0ccfdb538f547eabd4cbca3d21115f83ea5555e"
 HINT = "frontend-monitored-release"
+# Exact signed publisher evidence for independently supported consumers.
+# Demo observed by the operator on 2026-11-10; deployment is a source contract,
+# not an assertion that the newest image has been activated on that host.
+CONSUMERS = {
+    "demo": "ghcr.io/secpal/frontend@sha256:2852385add73f5f075ac8aea319970722f1a6454b0aa273fcb78e66cd0466410",
+    "deployment": "ghcr.io/secpal/frontend@sha256:27cc637c5fc799d237ea640da0fdf27aa86021025ad648aeed3399b911bb1e34",
+}
+SCHEDULES = {
+    "17 3 * * *": ("latest", "linux/amd64"),
+    "37 3 * * *": ("latest", "linux/arm64"),
+    "17 4 * * *": ("demo", "linux/amd64"),
+    "37 4 * * *": ("demo", "linux/arm64"),
+    "17 6 * * *": ("deployment", "linux/amd64"),
+    "37 6 * * *": ("deployment", "linux/arm64"),
+}
 
 
 def module(name, file):
@@ -45,15 +60,29 @@ def reference_digest(reference):
 
 def selected_platform(event, schedule, requested):
     if event == "schedule":
-        platforms = {"17 3 * * *": "linux/amd64", "37 3 * * *": "linux/arm64"}
-        if schedule in platforms and not requested:
-            return platforms[schedule]
+        if schedule in SCHEDULES and not requested:
+            return SCHEDULES[schedule][1]
     elif event == "workflow_dispatch" and requested in publisher.PLATFORMS and not schedule:
         return requested
     raise ValueError("release-platform-selection")
 
 
-def admit_document(document, security, run):
+def selected_reference(event, schedule, consumer, reference):
+    if event == "schedule":
+        if schedule not in SCHEDULES or consumer or reference:
+            raise ValueError("release-consumer-selection")
+        consumer = SCHEDULES[schedule][0]
+    elif event != "workflow_dispatch" or schedule:
+        raise ValueError("release-consumer-selection")
+    consumer = consumer or "latest"
+    if consumer == "latest":
+        return consumer, reference
+    if consumer not in CONSUMERS or reference:
+        raise ValueError("release-consumer-selection")
+    return consumer, CONSUMERS[consumer]
+
+
+def admit_document(document, security, run, reference=None):
     source, workflow = document["source"], document["workflow"]
     if (source["repository"] != publisher.SOURCE
             or not re.fullmatch(r"[0-9a-f]{40}", source["commit"])
@@ -76,7 +105,12 @@ def admit_document(document, security, run):
     rebuilt = publisher.build_evidence(
         records, document["subject"]["index_digest"], document["sboms"], document["scans"],
         document["smoke_tests"], security, workflow["run_id"], workflow["run_attempt"],
-        document["generated_at"], expected_source=source)
+        document["generated_at"], expected_source=source,
+        # This exact, already signed October publication used the v4 producer.
+        # New publishers and every other release still require the v5 contract.
+        source_security_schema=("secpal-trivy-repository-scan-v4"
+                                if reference == CONSUMERS["demo"]
+                                else "secpal-trivy-repository-scan-v5"))
     if document != rebuilt:
         raise ValueError("release-build-evidence")
     return records
@@ -247,7 +281,7 @@ class ReleaseReader:
                          publisher.digest(files["build-evidence.json"]), workflow, "document-attestation",
                          self.output / "evidence-build-evidence.bundle.json")
         run = self.api(f"actions/runs/{workflow['run_id']}/attempts/{workflow['run_attempt']}")
-        records = admit_document(document, security, run)
+        records = admit_document(document, security, run, reference)
         ancestry = self.api(f"compare/{workflow['commit']}...main")
         if ancestry["status"] not in ("ahead", "identical") or ancestry["merge_base_commit"]["sha"] != workflow["commit"]:
             raise ValueError("release-main-ancestry")
@@ -297,6 +331,7 @@ def main():
     parser.add_argument("--schedule", default="")
     parser.add_argument("--platform", default="")
     parser.add_argument("--reference", default="")
+    parser.add_argument("--consumer", default="")
     args = parser.parse_args()
     output = Path(args.output)
     if output.exists() or output.is_symlink():
@@ -307,13 +342,17 @@ def main():
                 or os.environ.get("GITHUB_REF", "refs/heads/main") != "refs/heads/main"):
             raise ValueError("release-caller-context")
         platform = selected_platform(args.event, args.schedule, args.platform)
+        consumer, requested = selected_reference(args.event, args.schedule, args.consumer, args.reference)
         shared = module("shared_reevaluation", Path(args.shared_root) / "scripts/secpal-vulnerability-reevaluation.py")
         with tempfile.TemporaryDirectory(prefix="frontend-security-read-") as directory:
             config = Path(directory) / "empty-registry.json"
             config.write_text('{"auths":{}}\n')
             config.chmod(0o600)
             reader = ReleaseReader(args.tools, shared, output, str(config))
-            reference, result, cacheable = reader.select(platform, args.reference)
+            if consumer == "latest":
+                reference, result, cacheable = reader.select(platform, requested)
+            else:
+                reference, result, cacheable = requested, reader.release(requested, platform), False
         publisher.write(output / "release-reference.json", {"artifact": reference})
         publisher.write(output / "selection.json", result)
         if os.environ.get("GITHUB_OUTPUT"):
