@@ -59,6 +59,7 @@ describe("replay action revision", () => {
 // the authenticated upstream action and its maintained conformance tests.
 function reviewedIdentity() {
   return {
+    schema_version: "secpal-trivy-repository-scan-v5",
     policy_sha256: "sha256:" + "b".repeat(64),
     configuration_sha256: "sha256:" + "c".repeat(64),
     scanner_version: "reviewed-release",
@@ -79,7 +80,7 @@ function reviewedIdentity() {
 
 function evidence() {
   return {
-    schema_version: "secpal-trivy-repository-scan-v4",
+    schema_version: "secpal-trivy-repository-scan-v5",
     subject: { repository: "SecPal/frontend", commit },
     policy: {
       sha256: reviewedIdentity().policy_sha256,
@@ -164,8 +165,8 @@ describe("maintained replay consumer assertions", () => {
       (r) => (r.schema_version = "secpal-trivy-repository-scan-v3"),
     ],
     [
-      "unknown schema",
-      (r) => (r.schema_version = "secpal-trivy-repository-scan-v5"),
+      "v4 schema",
+      (r) => (r.schema_version = "secpal-trivy-repository-scan-v4"),
     ],
     ["wrong source", (r) => (r.subject.commit = "1".repeat(40))],
     ["wrong policy", (r) => (r.policy.sha256 = `sha256:${"0".repeat(64)}`)],

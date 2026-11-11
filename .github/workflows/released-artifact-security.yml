@@ -8,8 +8,18 @@ on:
     # One shared call per run: the shared evidence names are run-scoped.
     - cron: "17 3 * * *" # AMD64 daily, UTC
     - cron: "37 3 * * *" # ARM64 daily, UTC
+    - cron: "17 4 * * *" # Confirmed demo AMD64 daily, UTC
+    - cron: "37 4 * * *" # Confirmed demo ARM64 daily, UTC
+    - cron: "17 6 * * *" # Approved deployment contract AMD64 daily, UTC
+    - cron: "37 6 * * *" # Approved deployment contract ARM64 daily, UTC
   workflow_dispatch:
     inputs:
+      consumer:
+        description: Latest accepted publication or an independently pinned consumer.
+        required: true
+        default: latest
+        type: choice
+        options: [latest, demo, deployment]
       platform:
         description: Exact native artifact platform to re-evaluate.
         required: true
@@ -54,7 +64,7 @@ jobs:
         shell: bash
         env:
           # yamllint disable-line rule:line-length
-          GOVERNANCE_WORKFLOW: &released-security-workflow SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@9715769ab8af814b9a441c5eadf7e029e6b70657
+          GOVERNANCE_WORKFLOW: &released-security-workflow SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@ff33d35854c2e8a8e24a9e484585aeec1de15930
         run: |
           set -euo pipefail
           revision="${GOVERNANCE_WORKFLOW##*@}"
@@ -86,12 +96,14 @@ jobs:
           SCHEDULE: ${{ github.event.schedule }}
           PLATFORM: ${{ inputs.platform }}
           REFERENCE: ${{ inputs.evidence-artifact }}
+          CONSUMER: ${{ inputs.consumer }}
         run: |
           python3 scripts/released-artifact-security.py \
             --tools "$RUNNER_TEMP/secpal-monitor-tools" \
             --shared-root .context/released-artifact-governance \
             --output .context/release-admission \
-            --event "$EVENT" --schedule "$SCHEDULE" --platform "$PLATFORM" --reference "$REFERENCE"
+            --event "$EVENT" --schedule "$SCHEDULE" --platform "$PLATFORM" \
+            --consumer "$CONSUMER" --reference "$REFERENCE"
       - name: Retain a non-authoritative immutable-release lookup hint
         if: steps.release.outputs.cacheable == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

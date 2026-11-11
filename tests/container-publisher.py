@@ -135,7 +135,7 @@ def evidence():
         smokes.append(dict(platform='linux/'+arch,digest=subject['manifest_digest'],runner_architecture=arch,
                            test='scripts/container-smoke.sh+scripts/container-browser.sh',result='SUCCEEDED',completed_at=NOW,
                            workflow_run_id='42',workflow_run_attempt='2'))
-    security=dict(schema_version='secpal-trivy-repository-scan-v4',subject=dict(repository='SecPal/frontend',commit=SHA),
+    security=dict(schema_version='secpal-trivy-repository-scan-v5',subject=dict(repository='SecPal/frontend',commit=SHA),
                   gate_state='CLEAN',operation=dict(name='TRIVY_REPOSITORY_SCAN',status='SUCCEEDED'),
                   database=dict(status='FRESH',updated_at='2026-10-18T00:00:00Z',next_update='2026-10-19T00:00:00Z'))
     return [records,'sha256:'+'4'*64,sboms,scans,smokes,security,'42','2',NOW]
@@ -293,7 +293,7 @@ class Publisher(unittest.TestCase):
             with self.assertRaises(ValueError):
                 publisher.admit_source_security(dict(args[5],gate_state=state),SHA,NOW)
         with self.assertRaises(ValueError):publisher.admit_source_security(args[5],'0'*40,NOW)
-        for version in ('v1', 'v2', 'v3', 'v5'):
+        for version in ('v1', 'v2', 'v3', 'v4'):
             with self.subTest(version=version), self.assertRaises(ValueError):
                 publisher.admit_source_security(dict(args[5],schema_version='secpal-trivy-repository-scan-'+version),SHA,NOW)
 
@@ -331,7 +331,7 @@ class Publisher(unittest.TestCase):
         with self.assertRaises(ValueError):
             publisher.build_evidence(*args,expected_source=dict(SOURCE,commit='0'*40))
 
-    def test_canonical_source_schema_accepts_v4_and_rejects_malformed_clean_without_echoing_payload(self):
+    def test_canonical_source_schema_accepts_v5_and_rejects_malformed_clean_without_echoing_payload(self):
         root=Path(__file__).resolve().parents[1]
         script=(root/'scripts/publish-container.sh').read_text()
         start=script.index('import json,sys\nfrom jsonschema')
@@ -352,7 +352,7 @@ class Publisher(unittest.TestCase):
             valid=subprocess.run([sys.executable,'-c',block,str(schema),str(candidate)],
                                  capture_output=True,text=True,check=False)
             self.assertEqual(valid.returncode,0,valid.stderr)
-            for version in ('v1', 'v2', 'v3', 'v5'):
+            for version in ('v1', 'v2', 'v3', 'v4'):
                 candidate.write_text(json.dumps(dict(security,schema_version='secpal-trivy-repository-scan-'+version)))
                 rejected=subprocess.run([sys.executable,'-c',block,str(schema),str(candidate)],
                                         capture_output=True,text=True,check=False)

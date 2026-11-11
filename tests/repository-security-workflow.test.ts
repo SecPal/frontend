@@ -124,7 +124,7 @@ describe("pre-publication repository source security", () => {
         "repository-security"
       ].steps[1].uses!.split("@")[1];
     expect(getReplayActionPin(readWorkflow(reusablePath))).toBe(pin);
-    expect(replay).toContain("secpal-trivy-repository-scan-v4.schema.json");
+    expect(replay).toContain("owner.SCHEMA_VERSION");
     const authenticated = replay.indexOf(
       "authenticated.commit.verification.verified, true"
     );

@@ -60,7 +60,7 @@ function observeGovernanceIdentity(governance) {
     "spec=importlib.util.spec_from_file_location('reviewed_scanner',root/'scripts/secpal-trivy-repository-scan.py')",
     "owner=importlib.util.module_from_spec(spec);spec.loader.exec_module(owner)",
     "policy=json.loads((root/'policies/trivy-repository-scan-v1.json').read_text())",
-    "print(json.dumps({'policy_sha256':owner._sha256(policy),'configuration_sha256':owner.configuration_identity(),'scanner_version':owner.TRIVY_VERSION,'scanner_identity':owner.TRIVY_ARCHIVE_ID,'exceptions':policy['exceptions']}))",
+    "print(json.dumps({'schema_version':owner.SCHEMA_VERSION,'policy_sha256':owner._sha256(policy),'configuration_sha256':owner.configuration_identity(),'scanner_version':owner.TRIVY_VERSION,'scanner_identity':owner.TRIVY_ARCHIVE_ID,'exceptions':policy['exceptions']}))",
   ].join("\n");
   return JSON.parse(command("python3", ["-I", "-c", source, governance]));
 }
@@ -160,7 +160,7 @@ function scan(
     path.join(evidenceRoot, "result.json"),
     path.join(
       governance,
-      "docs/schemas/secpal-trivy-repository-scan-v4.schema.json"
+      `docs/schemas/${identity.schema_version}.schema.json`
     ),
   ]);
   if (result.gate_state === "UNKNOWN_STALE") {
@@ -194,7 +194,7 @@ function scan(
 
 // Consumer assertions bind the shared result; normalization remains upstream.
 export function assertReplayEvidence(result, commit, identity) {
-  assert.equal(result.schema_version, "secpal-trivy-repository-scan-v4");
+  assert.equal(result.schema_version, identity.schema_version);
   assert.deepEqual(result.subject, { repository: "SecPal/frontend", commit });
   assert.equal(result.policy.sha256, identity.policy_sha256);
   assert.equal(

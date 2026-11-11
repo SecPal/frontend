@@ -14,6 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Correlate proven scanner APK metadata aliases through the accepted shared
+  issue triage while retaining every PURL, lookup key and strongest disposition.
+
+- Re-evaluate the confirmed demo frontend and approved deployment release on both
+  architectures daily, independently of newer accepted publications. Authenticate
+  the retained demo publication's original source-evidence schema without changing
+  current publisher admission, scanner policy or issue identities.
+
+- Restore publisher and replay acceptance of the adopted v5 source-security
+  evidence. Use the accepted central Grype release and archive identity without
+  duplicating its version, retaining exact source, freshness and CLEAN checks.
+
 - Resolve YAML aliases when checking workflow review comments so shared pins
   retain their own annotations without shifting later references.
 - Wait for confirmed browser-session bootstrap before testing CSRF rotation

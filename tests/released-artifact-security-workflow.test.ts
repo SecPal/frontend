@@ -89,8 +89,13 @@ describe("released frontend security adoption", () => {
     expect(w.on.schedule.map((event) => event.cron)).toEqual([
       "17 3 * * *",
       "37 3 * * *",
+      "17 4 * * *",
+      "37 4 * * *",
+      "17 6 * * *",
+      "37 6 * * *",
     ]);
     expect(Object.keys(w.on.workflow_dispatch.inputs)).toEqual([
+      "consumer",
       "platform",
       "evidence-artifact",
     ]);

@@ -193,9 +193,10 @@ def assemble_index(records, sizes):
         for r,size in zip(records,sizes,strict=True)])
 
 
-def admit_source_security(value, commit, observed_at):
+def admit_source_security(value, commit, observed_at, *, schema_version='secpal-trivy-repository-scan-v5'):
     # #1711 owns exact invocation and CLEAN admission; no scanner reinterpretation.
-    if (value.get('schema_version')!='secpal-trivy-repository-scan-v4'
+    if (schema_version not in {'secpal-trivy-repository-scan-v4','secpal-trivy-repository-scan-v5'}
+            or value.get('schema_version')!=schema_version
             or value.get('subject')!={'repository':'SecPal/frontend','commit':commit}
             or value.get('gate_state')!='CLEAN'
             or value.get('operation')!={'name':'TRIVY_REPOSITORY_SCAN','status':'SUCCEEDED'}
@@ -223,7 +224,7 @@ def evidence_time(value):
     return instant, int((match['fraction'] or '').ljust(9,'0')[6:])
 
 
-def build_evidence(records, index_digest, sboms, scans, smokes, source_security, run_id, attempt, generated_at, *, expected_source):
+def build_evidence(records, index_digest, sboms, scans, smokes, source_security, run_id, attempt, generated_at, *, expected_source, source_security_schema='secpal-trivy-repository-scan-v5'):
     if (len(records)!=2 or [r['subject']['platform'] for r in records]!=list(PLATFORMS)
             or records[0]['source']!=records[1]['source']
             or records[0]['builder']!=records[1]['builder']
@@ -235,7 +236,7 @@ def build_evidence(records, index_digest, sboms, scans, smokes, source_security,
             or records[0]['builder']['name']!='buildah'
             or records[0]['builder']['version']!='1.33.7'):
         raise ValueError('publisher-build-identity')
-    admit_source_security(source_security,source_record['commit'],generated_at)
+    admit_source_security(source_security,source_record['commit'],generated_at,schema_version=source_security_schema)
     if not re.fullmatch('sha256:[0-9a-f]{64}',index_digest):
         raise ValueError('publisher-index-digest')
     for collection, count in ((sboms,2),(scans,4),(smokes,2)):

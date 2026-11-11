@@ -39,7 +39,7 @@ if [ -d "$governance/reviewed-vex" ]; then
   while IFS= read -r -d '' manifest; do
     python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" verify-vex \
       --checkout "$governance" --manifest "$manifest" --trusted-repository SecPal/.github \
-      --trusted-commit 35b064b1df08f4fd02fb982117dadac3e4edc36d
+      --trusted-commit 22ce172e7b1decfdd4267e382432b93765798d95
     vex_arguments+=(--reviewed-vex-manifest "$manifest")
   done < "$cache/vex-list"
 fi

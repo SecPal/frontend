@@ -34,7 +34,14 @@ case "$mode" in
     github_cli
     download oras https://github.com/oras-project/oras/releases/download/v1.3.4/oras_1.3.4_linux_amd64.tar.gz f27adb935022d94df8dc77719c322dda592c78a0d57a6f7dcdd8d900b248c454
     if [ "$mode" = publish ]; then
-      download grype https://github.com/anchore/grype/releases/download/v0.118.0/grype_0.118.0_linux_amd64.tar.gz 1d444c5e7360471815f7158f71935fcecc68a3c417d85c7344f770854300bba2
+      governance="$(git rev-parse --show-toplevel)/.context/publisher-governance"
+      read -r grype_version grype_sha < <(python3 -I - "$governance/scripts/secpal-vulnerability-reevaluation.py" <<'PYOWNER'
+import runpy, sys
+owner = runpy.run_path(sys.argv[1])
+print(owner["GRYPE_VERSION"], owner["GRYPE_ARCHIVE_DIGEST"].removeprefix("sha256:"))
+PYOWNER
+      )
+      download grype "https://github.com/anchore/grype/releases/download/v${grype_version}/grype_${grype_version}_linux_amd64.tar.gz" "$grype_sha"
       download trivy https://github.com/aquasecurity/trivy/releases/download/v0.74.0/trivy_0.74.0_Linux-64bit.tar.gz 2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a
     fi
     ;;
