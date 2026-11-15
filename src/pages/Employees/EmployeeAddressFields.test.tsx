@@ -8,6 +8,7 @@ import { messages as deMessages } from "../../locales/de/messages.mjs";
 import { messages as enMessages } from "../../locales/en/messages.mjs";
 import { act, useState } from "react";
 import {
+  cleanup,
   fireEvent,
   render,
   screen,
@@ -42,7 +43,13 @@ describe("EmployeeAddressFields", () => {
     vi.useFakeTimers();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    cleanup();
+    // Flush jsdom focus-fixup rendering work before restoring real timers;
+    // dropping its interval also stalls later requestAnimationFrame callbacks.
+    if (vi.isFakeTimers()) {
+      await vi.runOnlyPendingTimersAsync();
+    }
     vi.useRealTimers();
   });
 

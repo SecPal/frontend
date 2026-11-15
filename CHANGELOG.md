@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Drain pending jsdom rendering timers after address-field test cleanup before
+  restoring real timers, keeping keyboard selection and country search isolated
+  across tests with jsdom 31.
+
 - Correlate proven scanner APK metadata aliases through the accepted shared
   issue triage while retaining every PURL, lookup key and strongest disposition.
 
