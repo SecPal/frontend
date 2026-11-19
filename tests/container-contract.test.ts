@@ -145,6 +145,12 @@ describe("frontend container source contract", () => {
     expect(runtime).toMatch(
       /apk add --no-cache zlib=\d+(?:\.\d+)*-r\d+ curl=\d+(?:\.\d+)*-r\d+(?:\s|$)/u
     );
+    const apkPackages = /apk add --no-cache (?<packages>[^&\n]+)/u.exec(
+      runtime.replaceAll("\\\n", " ")
+    )?.groups?.packages;
+    expect(apkPackages?.trim().split(/\s+/u)).toEqual(
+      expect.arrayContaining(["libcrypto3=3.5.9-r1", "libssl3=3.5.9-r1"])
+    );
     expect(runtime).not.toContain("secpal-apk-inventory");
     expect(runtime.indexOf("USER root")).toBeLessThan(runtime.indexOf("apk "));
     expect(runtime.indexOf("apk ")).toBeLessThan(
