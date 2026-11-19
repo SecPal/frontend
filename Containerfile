@@ -29,6 +29,7 @@ USER root
 # Keep signed stable package pins; the publisher inventories and scans the image.
 RUN printf '%s\n' 'https://dl-cdn.alpinelinux.org/alpine/v3.24/main' > /etc/apk/repositories \
     && apk add --no-cache zlib=1.4-r0 curl=8.23.0-r0 musl=1.2.6-r3 \
+      libcrypto3=3.5.9-r1 libssl3=3.5.9-r1 \
     && apk del --no-network musl-utils scanelf \
     && rm -rf /usr/share/nginx/html
 
