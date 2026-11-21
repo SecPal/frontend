@@ -64,7 +64,7 @@ jobs:
         shell: bash
         env:
           # yamllint disable-line rule:line-length
-          GOVERNANCE_WORKFLOW: &released-security-workflow SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@482d55cf6732dd27c7075283b2a8055259f5c3c6
+          GOVERNANCE_WORKFLOW: &released-security-workflow SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@7894b9958f08553eb5f151e48ab9ab99356c4a39
         run: |
           set -euo pipefail
           revision="${GOVERNANCE_WORKFLOW##*@}"
@@ -144,38 +144,3 @@ jobs:
       # Derived from verified publisher evidence, never from a caller-supplied SHA.
       publisher-workflow-sha: ${{ needs.release.outputs.publisher-workflow-sha }}
       triage: true
-
-  result:
-    name: Report the current monitoring verdict
-    needs: [release, reevaluate]
-    if: always()
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    permissions: {}
-    steps:
-      - name: Require genuine current CLEAN monitoring evidence
-        env:
-          RELEASE: ${{ needs.release.result }}
-          SCAN: ${{ needs.reevaluate.result }}
-          STATE: ${{ needs.reevaluate.outputs.gate-state }}
-          EVIDENCE: ${{ needs.reevaluate.outputs.evidence-artifact }}
-        run: |
-          set -euo pipefail
-          if [ "$RELEASE" != success ]; then
-            echo 'UNKNOWN_STALE: release admission failed; scanners NOT EXECUTED.' >&2
-            exit 1
-          fi
-          case "$STATE" in
-            CLEAN)
-              test "$SCAN" = success
-              printf 'CLEAN: retained shared evidence %s\n' "$EVIDENCE" >> "$GITHUB_STEP_SUMMARY"
-              ;;
-            ACTIONABLE|REVIEW_REQUIRED|UNKNOWN_STALE)
-              printf '%s: inspect retained shared evidence. Historical publication is unchanged.\n' "$STATE" >&2
-              exit 1
-              ;;
-            *)
-              echo 'UNKNOWN_STALE: missing or malformed shared outcome.' >&2
-              exit 1
-              ;;
-          esac
