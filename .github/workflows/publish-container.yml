@@ -7,6 +7,11 @@ name: Publish Container
   push:
     branches:
       - main
+    paths-ignore:
+      - &released-monitor .github/workflows/released-artifact-security.yml
+      - &source-monitor .github/workflows/daily-repository-security.yml
+      - &released-test tests/released-artifact-security-workflow.test.ts
+      - &source-test tests/daily-repository-security-workflow.test.ts
 permissions: {}
 concurrency:
   group: publish-container-${{ github.repository }}-${{ github.sha }}
@@ -16,6 +21,62 @@ env:
   GHCR_REPOSITORY_PATH: secpal/frontend
   CANONICAL_IMAGE: ghcr.io/secpal/frontend
 jobs:
+  admit:
+    name: Require a release-relevant main push
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout the exact publisher source and its predecessor
+        # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Admit the complete protected-main push diff
+        shell: bash
+        env:
+          BEFORE: ${{ github.event.before }}
+          RELEASED_MONITOR: *released-monitor
+          SOURCE_MONITOR: *source-monitor
+          RELEASED_TEST: *released-test
+          SOURCE_TEST: *source-test
+          # Only the installation on this predecessor can qualify for the boundary exception.
+          BOOTSTRAP_BASE: c7d721a72aa156dc304b92004b705228d43cdbc8
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REPOSITORY" != SecPal/frontend || "$GITHUB_REF" != refs/heads/main ||
+                "$GITHUB_REF_PROTECTED" != true || ! "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ||
+                ! "$BEFORE" =~ ^[0-9a-f]{40}$ || "$(git rev-parse HEAD)" != "$GITHUB_SHA" ]] ||
+                ! git merge-base --is-ancestor "$BEFORE" "$GITHUB_SHA"; then
+            echo '::error::Cannot authenticate the protected-main push and its predecessor.'
+            exit 1
+          fi
+          # Use complete Git trees even when GitHub runs despite its path filter.
+          git diff --name-only --no-renames -z "$BEFORE" "$GITHUB_SHA" -- > "$RUNNER_TEMP/publication-paths"
+          mapfile -d '' -t paths < "$RUNNER_TEMP/publication-paths"
+          if (( ${#paths[@]} == 0 )); then
+            echo '::error::No changed paths available for publication admission.'
+            exit 1
+          fi
+          if [[ "$BEFORE" == "$BOOTSTRAP_BASE" && "$(git rev-parse HEAD^)" == "$BEFORE" &&
+                ${#paths[@]} == 3 && "${paths[0]}" == .github/workflows/publish-container.yml &&
+                "${paths[1]}" == CHANGELOG.md && "${paths[2]}" == tests/container-publishing-workflow.test.ts ]]; then
+            echo '::notice::Publication boundary installation. No release was requested.'
+            exit 1
+          fi
+          for file in "${paths[@]}"; do
+            case "$file" in
+              "$RELEASED_MONITOR"|"$SOURCE_MONITOR"|"$RELEASED_TEST"|"$SOURCE_TEST") ;;
+              *) exit 0 ;;
+            esac
+          done
+          # Discovery uses successful runs. A declined publication must never appear there.
+          echo '::notice::Source-only push. No release was requested.'
+          exit 1
+
   repository-security:
     name: Repository Security
     permissions:
@@ -23,6 +84,7 @@ jobs:
     uses: ./.github/workflows/reusable-repository-security.yml
   validate:
     name: Validate Frontend Image
+    needs: admit
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:

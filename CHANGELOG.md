@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep source-only security monitoring updates separate from Frontend OCI
+  publication while preserving protected-main release qualification and discovery.
+
 - Qualify signed pre-commit PATCH and MINOR updates through the shared
   Dependabot source verifier and existing protected checks.
 
