@@ -41,9 +41,7 @@ describe("released frontend security adoption", () => {
     expect(w.on).not.toHaveProperty("pull_request");
     expect(w.permissions).toEqual({});
     expect(Object.keys(w.jobs)).toEqual(["release", "reevaluate"]);
-    expect(w.jobs.release.if).toBe(
-      "github.repository == 'SecPal/frontend' && github.ref == 'refs/heads/main'"
-    );
+    expect(w.jobs.release.if).toBeUndefined();
     expect(w.jobs.reevaluate.uses).toMatch(
       /^SecPal\/\.github\/\.github\/workflows\/reusable-vulnerability-reevaluation\.yml@[0-9a-f]{40}$/u
     );
@@ -72,6 +70,37 @@ describe("released frontend security adoption", () => {
       /build-container|publish-container\.sh|scan-container-artifact\.sh/u
     );
   });
+
+  it.each([
+    ["SecPal/frontend", "refs/heads/main", "true", "a".repeat(40), true],
+    ["Other/frontend", "refs/heads/main", "true", "a".repeat(40), false],
+    ["SecPal/frontend", "refs/heads/topic", "true", "a".repeat(40), false],
+    ["SecPal/frontend", "refs/tags/main", "true", "a".repeat(40), false],
+    ["SecPal/frontend", "refs/heads/main", "false", "a".repeat(40), false],
+    ["SecPal/frontend", "refs/heads/main", "true", "main", false],
+  ])(
+    "fails closed before release admission for %s %s (protected %s, SHA %s)",
+    (repository, ref, protectedRef, sha, accepted) => {
+      const workflow = load(readFileSync(file, "utf8")) as {
+        jobs: { release: { if?: string; steps: WorkflowStep[] } };
+      };
+      expect(workflow.jobs.release.if).toBeUndefined();
+      const step = workflow.jobs.release.steps[0];
+      expect(step.id).toBe("admit-source");
+      expect(step.shell).toBe("bash");
+      const result = spawnSync("bash", ["-eo", "pipefail", "-c", step.run!], {
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          GITHUB_REPOSITORY: repository,
+          GITHUB_REF: ref,
+          GITHUB_REF_PROTECTED: protectedRef,
+          GITHUB_SHA: sha,
+        },
+      });
+      expect(result.status).toBe(accepted ? 0 : 1);
+    }
+  );
 
   it("keeps manual subject selection separate from publisher authority and daily hints", () => {
     const raw = readFileSync(file, "utf8");

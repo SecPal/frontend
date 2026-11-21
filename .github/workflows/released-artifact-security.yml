@@ -37,7 +37,6 @@ permissions: {}
 jobs:
   release:
     name: Independently admit the released OCI subjects
-    if: github.repository == 'SecPal/frontend' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -52,6 +51,15 @@ jobs:
       syft-spdx-artifact: ${{ steps.release.outputs.syft-spdx-artifact }}
       publisher-workflow-sha: ${{ steps.release.outputs.publisher-workflow-sha }}
     steps:
+      - name: Require exact protected Frontend main
+        id: admit-source
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REPOSITORY" != SecPal/frontend || "$GITHUB_REF" != refs/heads/main ||
+                "$GITHUB_REF_PROTECTED" != true || ! "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo '::error::Released-artifact monitoring requires an exact protected Frontend main event SHA.'
+            exit 1
+          fi
       - name: Checkout exact monitoring source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
