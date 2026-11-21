@@ -1,7 +1,13 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from "node:fs";
+import { execFileSync, spawnSync } from "node:child_process";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  writeFileSync,
+  rmSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -23,6 +29,7 @@ type Job = {
     uses?: string;
     with?: Record<string, unknown>;
     if?: string;
+    env?: Record<string, string>;
   }[];
 };
 type Workflow = {
@@ -34,10 +41,73 @@ const workflow = () =>
   load(readRepoFile(".github/workflows/publish-container.yml")) as Workflow;
 const native = () =>
   load(readRepoFile(".github/workflows/frontend-container.yml")) as Workflow;
+const sourceOnlyPaths = [
+  ".github/workflows/released-artifact-security.yml",
+  ".github/workflows/daily-repository-security.yml",
+  "tests/released-artifact-security-workflow.test.ts",
+  "tests/daily-repository-security-workflow.test.ts",
+];
+const boundaryPaths = [
+  ".github/workflows/publish-container.yml",
+  "CHANGELOG.md",
+  "tests/container-publishing-workflow.test.ts",
+];
+
+function publicationAdmission(
+  paths: readonly string[],
+  options: { bootstrap?: boolean; before?: string } = {}
+) {
+  const checkout = mkdtempSync(path.join(tmpdir(), "frontend-publication-"));
+  const git = (...args: string[]) =>
+    execFileSync("git", ["-C", checkout, ...args], { encoding: "utf8" }).trim();
+  try {
+    git("init", "--quiet");
+    git("config", "user.name", "Workflow Fixture");
+    git("config", "user.email", "fixture@secpal.dev");
+    git("-c", "commit.gpgsign=false", "commit", "--allow-empty", "-qm", "base");
+    const base = git("rev-parse", "HEAD");
+    for (const name of paths) {
+      const file = path.join(checkout, name);
+      mkdirSync(path.dirname(file), { recursive: true });
+      writeFileSync(file, "changed\n");
+      git("add", "--", name);
+    }
+    git("-c", "commit.gpgsign=false", "commit", "--allow-empty", "-qm", "push");
+    const step = workflow().jobs.admit.steps!.find((s) => s.run)!;
+    const result = spawnSync("bash", ["-eo", "pipefail", "-c", step.run!], {
+      cwd: checkout,
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        ...step.env,
+        BOOTSTRAP_BASE: options.bootstrap ? base : "3".repeat(40),
+        BEFORE: options.before ?? base,
+        GITHUB_REPOSITORY: "SecPal/frontend",
+        GITHUB_REF: "refs/heads/main",
+        GITHUB_REF_PROTECTED: "true",
+        GITHUB_SHA: git("rev-parse", "HEAD"),
+        RUNNER_TEMP: checkout,
+      },
+    });
+    return { status: result.status, output: result.stdout + result.stderr };
+  } finally {
+    rmSync(checkout, { force: true, recursive: true });
+  }
+}
 
 function requireAcceptance(w: Workflow) {
-  expect(w.on).toEqual({ push: { branches: ["main"] } });
+  expect(w.on).toEqual({
+    push: { branches: ["main"], "paths-ignore": sourceOnlyPaths },
+  });
   expect(w.permissions).toEqual({});
+  expect(w.jobs.admit.permissions).toEqual({ contents: "read" });
+  expect(w.jobs.admit.if).toBeUndefined();
+  expect(w.jobs.admit.steps?.[0].with).toEqual({
+    ref: "${{ github.sha }}",
+    "fetch-depth": 0,
+    "persist-credentials": false,
+  });
+  expect(w.jobs.validate.needs).toBe("admit");
   expect(w.jobs.build.needs).toEqual(["validate", "repository-security"]);
   expect(w.jobs.prepare.needs).toEqual(["build", "repository-security"]);
   expect(w.jobs.verify.needs).toEqual(["prepare", "attest"]);
@@ -88,6 +158,68 @@ function requireAcceptance(w: Workflow) {
 }
 
 describe("frontend native OCI publisher", () => {
+  it.each([
+    ...sourceOnlyPaths.map((file) => [file, [file]] as const),
+    ["both workflow and test paths", sourceOnlyPaths] as const,
+  ])(
+    "declines a source-only push for %s if GitHub starts the workflow",
+    (_, files) => {
+      expect(publicationAdmission(files)).toMatchObject({
+        status: 1,
+        output: expect.stringContaining("Source-only push"),
+      });
+    }
+  );
+
+  it.each([
+    "src/App.tsx",
+    "package-lock.json",
+    "Containerfile",
+    "scripts/publish-container.sh",
+    ".github/workflows/frontend-container.yml",
+    "tests/repository-security-workflow.test.ts",
+    ".github/workflows/publish-container.yml",
+    "unknown-path",
+  ])("retains publication qualification for %s", (file) => {
+    expect(publicationAdmission([file])).toMatchObject({ status: 0 });
+    expect(publicationAdmission([sourceOnlyPaths[0], file])).toMatchObject({
+      status: 0,
+    });
+  });
+
+  it("declines only the reviewed boundary landing for its exact protected-main predecessor", () => {
+    expect(
+      publicationAdmission(boundaryPaths, { bootstrap: true })
+    ).toMatchObject({
+      status: 1,
+      output: expect.stringContaining("Publication boundary installation"),
+    });
+    expect(publicationAdmission(boundaryPaths)).toMatchObject({ status: 0 });
+    expect(
+      publicationAdmission([...boundaryPaths, "package-lock.json"], {
+        bootstrap: true,
+      })
+    ).toMatchObject({ status: 0 });
+  });
+
+  it.each(["", "main", "0".repeat(40), "1".repeat(40)])(
+    "fails closed for unavailable push predecessor %j",
+    (before) => {
+      expect(
+        publicationAdmission(["package-lock.json"], { before })
+      ).toMatchObject({
+        status: 1,
+        output: expect.stringContaining("Cannot authenticate"),
+      });
+    }
+  );
+
+  it("fails closed when the authenticated push has no changed paths", () => {
+    expect(publicationAdmission([])).toMatchObject({
+      status: 1,
+      output: expect.stringContaining("No changed paths"),
+    });
+  });
   it("takes a pristine source snapshot before installing browser dependencies", () => {
     const steps = native().jobs["build-and-test"].steps!;
     const build = steps.findIndex(
