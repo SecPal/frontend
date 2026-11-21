@@ -116,3 +116,4 @@ updates:
     labels:
       - "developer-experience"
       - "dependabot"
+      - "dependencies"

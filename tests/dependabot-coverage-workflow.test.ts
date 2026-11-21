@@ -75,21 +75,19 @@ describe("frontend manifest coverage adoption", () => {
     }
   });
 
-  it.each(["docker", "pre-commit"])(
-    "keeps %s proposals out of the automatic merge path",
-    (ecosystem) => {
-      const entry = updates().find(
-        (candidate) => candidate["package-ecosystem"] === ecosystem
-      );
-      expect(entry).toBeDefined();
-      // Explicit labels also keep these proposals visibly separate.
-      expect(JSON.stringify(entry!.labels)).not.toContain("dependencies");
-      expect(entry!.labels).toContain("dependabot");
-      expect(caller().jobs["auto-merge"].with["allowed-ecosystems"]).toBe(
-        "github_actions,npm_and_yarn"
-      );
-    }
-  );
+  it("labels verified pre-commit proposals and keeps Docker out of auto-merge", () => {
+    const docker = updates().find(
+      (entry) => entry["package-ecosystem"] === "docker"
+    );
+    const hooks = updates().find(
+      (entry) => entry["package-ecosystem"] === "pre-commit"
+    );
+    expect(docker?.labels).toContain("dependabot");
+    expect(docker?.labels).not.toContain("dependencies");
+    expect(hooks?.labels).toEqual(
+      expect.arrayContaining(["dependabot", "dependencies"])
+    );
+  });
 
   it("delegates authenticated classification to the immutable central workflow", () => {
     const workflow = caller();
@@ -101,7 +99,8 @@ describe("frontend manifest coverage adoption", () => {
       with: {
         phase: "2",
         "merge-method": "squash",
-        "allowed-ecosystems": "github_actions,npm_and_yarn",
+        "allowed-ecosystems": "github_actions,npm_and_yarn,pre_commit",
+        "pre-commit-path": ".pre-commit-config.yaml",
       },
     });
     expect(workflow.on.pull_request).toBeUndefined();

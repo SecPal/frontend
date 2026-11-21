@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Qualify signed pre-commit PATCH and MINOR updates through the shared
+  Dependabot source verifier and existing protected checks.
+
 - Install Alpine's patched OpenSSL 3.5.9-r1 runtime libraries to address
   CVE-2026-88822, CVE-2026-88823, CVE-2026-95691, CVE-2026-95692, and
   CVE-2026-107496.
