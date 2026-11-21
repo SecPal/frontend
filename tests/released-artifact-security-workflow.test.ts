@@ -28,6 +28,7 @@ describe("released frontend security adoption", () => {
         {
           uses?: string;
           if?: string;
+          needs?: string;
           with?: Record<string, unknown>;
           permissions?: Record<string, string>;
           steps?: WorkflowStep[];
@@ -39,9 +40,8 @@ describe("released frontend security adoption", () => {
     expect(w.on).not.toHaveProperty("push");
     expect(w.on).not.toHaveProperty("pull_request");
     expect(w.permissions).toEqual({});
-    expect(w.jobs.release.if).toBe(
-      "github.repository == 'SecPal/frontend' && github.ref == 'refs/heads/main'"
-    );
+    expect(Object.keys(w.jobs)).toEqual(["release", "reevaluate"]);
+    expect(w.jobs.release.if).toBeUndefined();
     expect(w.jobs.reevaluate.uses).toMatch(
       /^SecPal\/\.github\/\.github\/workflows\/reusable-vulnerability-reevaluation\.yml@[0-9a-f]{40}$/u
     );
@@ -56,6 +56,9 @@ describe("released frontend security adoption", () => {
     expect(selection?.env?.GOVERNANCE_WORKFLOW).toBe(w.jobs.reevaluate.uses);
     expect(selection?.shell).toBe("bash");
     expect(w.jobs.reevaluate.with?.triage).toBe(true);
+    expect(w.jobs.reevaluate.needs).toBe("release");
+    expect(w.jobs.reevaluate.if).toBeUndefined();
+    expect(w.jobs.reevaluate).not.toHaveProperty("continue-on-error");
     for (const job of Object.values(w.jobs)) {
       expect(job.permissions).not.toHaveProperty("id-token");
       expect(job.permissions?.packages).not.toBe("write");
@@ -63,11 +66,41 @@ describe("released frontend security adoption", () => {
     }
     expect(w.jobs.reevaluate.permissions?.issues).toBe("write");
     expect(w.jobs.release.permissions?.issues).toBeUndefined();
-    expect(w.jobs.result.permissions?.issues).toBeUndefined();
     expect(readFileSync(file, "utf8")).not.toMatch(
       /build-container|publish-container\.sh|scan-container-artifact\.sh/u
     );
   });
+
+  it.each([
+    ["SecPal/frontend", "refs/heads/main", "true", "a".repeat(40), true],
+    ["Other/frontend", "refs/heads/main", "true", "a".repeat(40), false],
+    ["SecPal/frontend", "refs/heads/topic", "true", "a".repeat(40), false],
+    ["SecPal/frontend", "refs/tags/main", "true", "a".repeat(40), false],
+    ["SecPal/frontend", "refs/heads/main", "false", "a".repeat(40), false],
+    ["SecPal/frontend", "refs/heads/main", "true", "main", false],
+  ])(
+    "fails closed before release admission for %s %s (protected %s, SHA %s)",
+    (repository, ref, protectedRef, sha, accepted) => {
+      const workflow = load(readFileSync(file, "utf8")) as {
+        jobs: { release: { if?: string; steps: WorkflowStep[] } };
+      };
+      expect(workflow.jobs.release.if).toBeUndefined();
+      const step = workflow.jobs.release.steps[0];
+      expect(step.id).toBe("admit-source");
+      expect(step.shell).toBe("bash");
+      const result = spawnSync("bash", ["-eo", "pipefail", "-c", step.run!], {
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          GITHUB_REPOSITORY: repository,
+          GITHUB_REF: ref,
+          GITHUB_REF_PROTECTED: protectedRef,
+          GITHUB_SHA: sha,
+        },
+      });
+      expect(result.status).toBe(accepted ? 0 : 1);
+    }
+  );
 
   it("keeps manual subject selection separate from publisher authority and daily hints", () => {
     const raw = readFileSync(file, "utf8");
@@ -174,45 +207,6 @@ describe("released frontend security adoption", () => {
       }
     }
   );
-
-  it("executes the actual result boundary for clean, findings, failed and missing evidence", () => {
-    const w = load(readFileSync(file, "utf8")) as {
-      jobs: { result: { steps: { run: string }[] } };
-    };
-    const temporary = mkdtempSync(
-      path.join(tmpdir(), "frontend-monitor-outcome-")
-    );
-    try {
-      for (const [state, release, scan, success] of [
-        ["CLEAN", "success", "success", true],
-        ["ACTIONABLE", "success", "success", false],
-        ["REVIEW_REQUIRED", "success", "success", false],
-        ["UNKNOWN_STALE", "success", "failure", false],
-        ["", "success", "failure", false],
-        ["UNTRUSTED_SYNTHETIC_VALUE", "success", "success", false],
-        ["CLEAN", "failure", "skipped", false],
-        ["CLEAN", "success", "failure", false],
-      ] as const) {
-        const result = spawnSync("bash", ["-c", w.jobs.result.steps[0].run], {
-          encoding: "utf8",
-          env: {
-            ...process.env,
-            STATE: state,
-            RELEASE: release,
-            SCAN: scan,
-            EVIDENCE: "synthetic-artifact",
-            GITHUB_STEP_SUMMARY: path.join(temporary, "summary"),
-          },
-        });
-        expect(result.status === 0).toBe(success);
-        expect(result.stdout + result.stderr).not.toContain(
-          "UNTRUSTED_SYNTHETIC_VALUE"
-        );
-      }
-    } finally {
-      rmSync(temporary, { recursive: true, force: true });
-    }
-  });
 
   it("executes the release-admission regressions without images or scanner substitutes", () => {
     execFileSync("python3", ["tests/released-artifact-security.py"], {
