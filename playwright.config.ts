@@ -54,7 +54,7 @@ function resolveCiPreviewServerCommand(appSurface: string): string {
 /**
  * Playwright E2E Test Configuration
  *
- * Three modes of operation:
+ * Four modes of operation:
  *
  * 1. Local Development (default):
  *    - Uses a dedicated Android-surface Vite dev server
@@ -64,11 +64,10 @@ function resolveCiPreviewServerCommand(appSurface: string): string {
  *    - Full authentication and API integration
  *    - Command: `npx playwright test`
  *
- * 2. Polyscope Workspace Preview (recommended for "live" suites):
+ * 2. Workspace preview detected through legacy Polyscope metadata:
  *    - Auto-detected from the Polyscope clone path
  *      (`~/.polyscope/clones/<id>/<workspace>`) or `POLYSCOPE_WORKSPACE=…`
- *    - Resolves to `https://frontend-<workspace>.preview.secpal.dev` (frontend)
- *      and `https://api-<workspace>.preview.secpal.dev` (API)
+ *    - Uses `https://<workspace>.preview.secpal.dev` for both app and API
  *    - The API workspace's `DatabaseSeeder` deterministically provisions the
  *      seeded test users and organizational units that the live-only suites
  *      depend on (see issue #1199); pure live targets such as
@@ -76,7 +75,10 @@ function resolveCiPreviewServerCommand(appSurface: string): string {
  *      surface any more.
  *    - Command: `npx playwright test` (inside the workspace clone)
  *
- * 3. CI Smoke Tests:
+ * 3. Named private preview: set PLAYWRIGHT_BASE_URL to the workspace HTTPS origin.
+ *    API requests use that same origin.
+ *
+ * 4. CI Smoke Tests:
  *    - Uses Vite preview server (static build)
  *    - Forces the Android-native app surface by default for parity with local
  *      E2E coverage
@@ -90,7 +92,7 @@ function resolveCiPreviewServerCommand(appSurface: string): string {
  * Base URL Configuration
  *
  * Priority:
- * 1. Current Polyscope workspace preview: https://frontend-<workspace>.preview.secpal.dev
+ * 1. Detected workspace preview: https://<workspace>.preview.secpal.dev
  * 2. Explicit PLAYWRIGHT_BASE_URL when no Polyscope workspace is active
  * 3. CI mode: http://localhost:4173 (preview server)
  * 4. Default: http://localhost:5173 (generic dev server with proxy)

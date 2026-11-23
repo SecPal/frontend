@@ -109,7 +109,9 @@ test.describe("Android mock instance switching", () => {
     await page.setViewportSize({ width: 320, height: 673 });
     await page.goto("/login");
 
-    const switchButton = page.getByRole("button", { name: /switch instance/i });
+    const switchButton = page
+      .getByTestId("runtime-instance")
+      .getByRole("button", { name: /switch instance/i });
     await switchButton.click();
     await page.getByRole("button", { name: /cancel/i }).click();
     await expect(switchButton).toBeFocused();
@@ -138,13 +140,12 @@ test.describe("Android mock instance switching", () => {
     await expect.poll(routes.getLogoutCalls).toBe(1);
   });
 
-  test("retargets health and login requests to the selected instance", async ({
+  test("retargets health, CSRF and login to the selected instance without sharing the previous session cookie", async ({
     context,
     page,
   }) => {
     await installInitialRoutes(context);
     const selectedHealthRequests: string[] = [];
-    const selectedLoginRequests: string[] = [];
 
     await context.route(`${SELECTED_ORIGIN}/v1/bootstrap**`, async (route) => {
       await route.fulfill({
@@ -173,10 +174,6 @@ test.describe("Android mock instance switching", () => {
       }
     );
     await context.route(`${SELECTED_ORIGIN}/v1/auth/login`, async (route) => {
-      if (route.request().method() === "POST") {
-        selectedLoginRequests.push(route.request().url());
-      }
-
       await route.fulfill({
         status: route.request().method() === "OPTIONS" ? 204 : 401,
         contentType: "application/json",
@@ -202,16 +199,49 @@ test.describe("Android mock instance switching", () => {
 
     await context.addCookies([
       {
+        name: "workspace-test-session",
+        value: "previous-instance-session",
+        url: page.url(),
+        httpOnly: true,
+      },
+      {
         name: "XSRF-TOKEN",
         value: "test-xsrf-token",
         url: page.url(),
       },
     ]);
+    expect(await context.cookies(page.url())).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "workspace-test-session" }),
+      ])
+    );
+    expect(await context.cookies(SELECTED_ORIGIN)).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "workspace-test-session" }),
+      ])
+    );
+
+    const authRequests: string[] = [];
+    page.on("request", (request) => {
+      const url = new URL(request.url());
+      if (
+        (request.method() === "GET" &&
+          url.pathname === "/sanctum/csrf-cookie") ||
+        (request.method() === "POST" && url.pathname === "/v1/auth/login")
+      ) {
+        authRequests.push(request.url());
+      }
+    });
 
     await page.getByLabel(/email/i).fill("person@secpal.dev");
     await page.getByLabel(/password/i).fill("not-a-real-password");
     await page.getByRole("button", { name: /log in/i }).click();
 
-    await expect.poll(() => selectedLoginRequests.length).toBe(1);
+    await expect
+      .poll(() => authRequests)
+      .toEqual([
+        `${SELECTED_ORIGIN}/sanctum/csrf-cookie`,
+        `${SELECTED_ORIGIN}/v1/auth/login`,
+      ]);
   });
 });

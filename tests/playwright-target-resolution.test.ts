@@ -19,7 +19,7 @@ describe("playwright target resolution", () => {
     vi.resetModules();
   });
 
-  it("prefers the current Polyscope workspace preview domains over explicit non-preview targets", async () => {
+  it("prefers the current Polyscope workspace preview origin over explicit non-preview targets", async () => {
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
     vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "https://api.secpal.dev");
     vi.stubEnv("POLYSCOPE_WORKSPACE", "grumpy-lynx");
@@ -29,10 +29,10 @@ describe("playwright target resolution", () => {
       await import("./e2e/target-urls.ts");
 
     expect(resolvePlaywrightBaseUrl()).toBe(
-      "https://frontend-grumpy-lynx.preview.secpal.dev"
+      "https://grumpy-lynx.preview.secpal.dev"
     );
     expect(resolvePlaywrightApiBaseUrl()).toBe(
-      "https://api-grumpy-lynx.preview.secpal.dev"
+      "https://grumpy-lynx.preview.secpal.dev"
     );
   });
 
@@ -53,10 +53,10 @@ describe("playwright target resolution", () => {
 
     expect(detectPolyscopeWorkspaceName()).toBe("my-feature-branch");
     expect(resolvePlaywrightBaseUrl()).toBe(
-      "https://frontend-my-feature-branch.preview.secpal.dev"
+      "https://my-feature-branch.preview.secpal.dev"
     );
     expect(resolvePlaywrightApiBaseUrl()).toBe(
-      "https://api-my-feature-branch.preview.secpal.dev"
+      "https://my-feature-branch.preview.secpal.dev"
     );
   });
 
@@ -73,10 +73,10 @@ describe("playwright target resolution", () => {
     } = await import("./e2e/target-urls.ts");
 
     expect(resolvePlaywrightBaseUrl()).toBe(
-      "https://frontend-grumpy-lynx.preview.secpal.dev"
+      "https://grumpy-lynx.preview.secpal.dev"
     );
     expect(resolvePlaywrightApiBaseUrl()).toBe(
-      "https://api-grumpy-lynx.preview.secpal.dev"
+      "https://grumpy-lynx.preview.secpal.dev"
     );
     expect(isWorkspacePreviewTarget()).toBe(true);
   });
@@ -94,7 +94,7 @@ describe("playwright target resolution", () => {
       await import("./e2e/target-urls.ts");
 
     expect(resolvePlaywrightApiBaseUrl()).toBe(
-      "https://api-grumpy-lynx.preview.secpal.dev"
+      "https://frontend-grumpy-lynx.preview.secpal.dev"
     );
   });
 
@@ -111,15 +111,30 @@ describe("playwright target resolution", () => {
     } = await import("./e2e/target-urls.ts");
 
     expect(resolvePlaywrightBaseUrl()).toBe(
-      "https://frontend-grumpy-lynx.preview.secpal.dev"
+      "https://grumpy-lynx.preview.secpal.dev"
     );
     expect(resolvePlaywrightApiBaseUrl()).toBe(
-      "https://api-grumpy-lynx.preview.secpal.dev"
+      "https://grumpy-lynx.preview.secpal.dev"
     );
     expect(
       isWorkspacePreviewTarget("https://grumpy-lynx.preview.secpal.dev")
     ).toBe(true);
   });
+
+  it.each(["grumpy-lynx", "api-grumpy-lynx"])(
+    "uses the canonical origin when only the %s preview API override is set",
+    async (hostname) => {
+      const { resolvePlaywrightApiBaseUrl } =
+        await import("./e2e/target-urls.ts");
+
+      expect(
+        resolvePlaywrightApiBaseUrl(
+          { PLAYWRIGHT_API_BASE_URL: `https://${hostname}.preview.secpal.dev` },
+          "/home/runner/work/frontend"
+        )
+      ).toBe("https://grumpy-lynx.preview.secpal.dev");
+    }
+  );
 
   it("keeps localhost development defaults outside Polyscope workspaces", async () => {
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
@@ -143,9 +158,7 @@ describe("playwright target resolution", () => {
 
     const config = (await import("../playwright.config.ts")).default;
 
-    expect(config.use?.baseURL).toBe(
-      "https://frontend-grumpy-lynx.preview.secpal.dev"
-    );
+    expect(config.use?.baseURL).toBe("https://grumpy-lynx.preview.secpal.dev");
     expect(config.webServer).toBeUndefined();
   });
 
@@ -216,7 +229,7 @@ describe("playwright target resolution", () => {
       await import("./e2e/target-urls.ts");
 
     expect(resolvePlaywrightApiBaseUrl()).toBe(
-      "https://api-grumpy-lynx.preview.secpal.dev"
+      "https://frontend-grumpy-lynx.preview.secpal.dev"
     );
   });
 

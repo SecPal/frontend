@@ -46,7 +46,7 @@ describe("performance audit mode", () => {
     const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
 
     expect(getPerformanceAuditMode()).toEqual({
-      baseUrl: "https://frontend-my-feature.preview.secpal.dev",
+      baseUrl: "https://my-feature.preview.secpal.dev",
       skipReason: undefined,
     });
   });
@@ -78,7 +78,7 @@ describe("performance audit mode", () => {
     const { getPerformanceAuditMode } = await import("./e2e/performance-mode");
 
     expect(getPerformanceAuditMode()).toEqual({
-      baseUrl: "https://frontend-grumpy-lynx.preview.secpal.dev",
+      baseUrl: "https://grumpy-lynx.preview.secpal.dev",
       skipReason:
         "Live Lighthouse audits require PLAYWRIGHT_LIVE_LIGHTHOUSE=1 until issue #957 is resolved.",
     });

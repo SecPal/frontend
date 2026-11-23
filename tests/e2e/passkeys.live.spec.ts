@@ -11,7 +11,7 @@ import { redactCurrentPassword } from "./passkey-payload-redaction";
 
 // In the Polyscope workspace preview path (the only path that runs the live
 // passkey proof below), `resolvePlaywrightApiBaseUrl()` always returns the
-// workspace's `api-<workspace>.preview.secpal.dev` origin, so the empty
+// workspace's `<workspace>.preview.secpal.dev` origin, so the empty
 // fallback is never reached at runtime; it only exists to keep the type as
 // `string` instead of `string | undefined`.
 const API_BASE_URL = resolvePlaywrightApiBaseUrl() ?? "";
@@ -261,7 +261,7 @@ async function clearBrowserAuthState(page: Page, context: BrowserContext) {
 test.describe("Live passkey proof", () => {
   test.skip(
     !isWorkspacePreviewTarget() || !LIVE_PASSKEY_ENABLED,
-    "Set PLAYWRIGHT_LIVE_PASSKEY=1 to run the live passkey proof against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev / api-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface; the WebAuthn RP id is derived from the page origin, so the proof binds passkeys to the workspace preview's own RP id."
+    "Set PLAYWRIGHT_LIVE_PASSKEY=1 to run the live passkey proof against the current Polyscope workspace preview (<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface; the WebAuthn RP id is derived from the page origin, so the proof binds passkeys to the workspace preview's own RP id."
   );
 
   test.describe.configure({ mode: "serial" });

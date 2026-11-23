@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep browser and Playwright API and CSRF requests on the private workspace
+  HTTPS origin. Android mock login follows the instance explicitly selected
+  through runtime discovery.
+
 - Keep source-only security monitoring updates separate from Frontend OCI
   publication while preserving protected-main release qualification and discovery.
 
