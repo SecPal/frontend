@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -336,11 +336,11 @@ describe("NavLegal", () => {
     const trigger = screen.getByRole("button", { name: /legal/i });
 
     await user.click(trigger);
-    fireEvent.pointerDown(document.body);
-    fireEvent.mouseDown(document.body);
-    fireEvent.click(document.body);
+    await screen.findByRole("menuitem", { name: /source code/i });
+    await user.click(document.body);
 
     await waitFor(() => {
+      expect(trigger).toHaveAttribute("aria-expanded", "false");
       expect(document.activeElement).not.toBe(trigger);
     });
   });
