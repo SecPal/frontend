@@ -44,17 +44,22 @@ describe("offlineLiveHelpers", () => {
     ]);
   });
 
-  it("canonicalizes a generic workspace preview host to split frontend/api preview domains", () => {
-    vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://grumpy-lynx.preview.secpal.dev");
-    vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
-    vi.stubEnv("POLYSCOPE_WORKSPACE", "");
-    mockNonPolyscopeCwd();
+  it.each(["", "https://api-grumpy-lynx.preview.secpal.dev"])(
+    "scopes workspace preview cookies to the single origin with API override %j",
+    (configuredApiBaseUrl) => {
+      vi.stubEnv(
+        "PLAYWRIGHT_BASE_URL",
+        "https://grumpy-lynx.preview.secpal.dev"
+      );
+      vi.stubEnv("PLAYWRIGHT_API_BASE_URL", configuredApiBaseUrl);
+      vi.stubEnv("POLYSCOPE_WORKSPACE", "");
+      mockNonPolyscopeCwd();
 
-    expect(getMockCookieDomains()).toEqual([
-      "frontend-grumpy-lynx.preview.secpal.dev",
-      "api-grumpy-lynx.preview.secpal.dev",
-    ]);
-  });
+      expect(getMockCookieDomains()).toEqual([
+        "grumpy-lynx.preview.secpal.dev",
+      ]);
+    }
+  );
 
   it("prefers the current Polyscope workspace preview domains over other remote targets", () => {
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
