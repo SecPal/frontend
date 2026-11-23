@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("config", () => {
   afterEach(() => {
+    vi.unstubAllGlobals();
     delete window.__SECPAL_RUNTIME_CONFIG__;
     vi.unstubAllEnvs();
     vi.resetModules();
@@ -227,6 +228,41 @@ describe("config", () => {
     clearRuntimeApiBaseUrlOverride();
 
     expect(getApiBaseUrl()).toBe("https://configured.secpal.dev");
+  });
+
+  it("routes preview login and CSRF to the explicitly discovered instance until it is cleared", async () => {
+    const preview = "https://personalplanung.preview.secpal.dev";
+    const selected = "https://other.secpal.dev";
+    vi.stubEnv("MODE", "web");
+    vi.stubEnv("PROD", true);
+    vi.stubEnv("VITE_API_URL", "https://api.secpal.dev");
+    vi.stubGlobal("window", {
+      location: new URL(preview),
+      __SECPAL_RUNTIME_CONFIG__: {
+        apiBaseUrl: "https://wachbuch.preview.secpal.dev",
+      },
+    });
+
+    const {
+      buildApiUrl,
+      clearRuntimeApiBaseUrlOverride,
+      setRuntimeApiBaseUrlOverride,
+    } = await import("./config");
+    const authPaths = ["/sanctum/csrf-cookie", "/v1/auth/login"];
+
+    expect(authPaths.map((path) => buildApiUrl(path))).toEqual(
+      authPaths.map((path) => preview + path)
+    );
+
+    setRuntimeApiBaseUrlOverride(`${selected}/v1`);
+    expect(authPaths.map((path) => buildApiUrl(path))).toEqual(
+      authPaths.map((path) => selected + path)
+    );
+
+    clearRuntimeApiBaseUrlOverride();
+    expect(authPaths.map((path) => buildApiUrl(path))).toEqual(
+      authPaths.map((path) => preview + path)
+    );
   });
 
   it("rejects insecure runtime API overrides", async () => {

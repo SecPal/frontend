@@ -28,7 +28,7 @@ describe("web push live mode", () => {
       baseUrl: "http://localhost:5173",
       apiBaseUrl: undefined,
       skipReason:
-        "Live browser Web Push smoke only runs against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface.",
+        "Live browser Web Push smoke only runs against the current Polyscope workspace preview (<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface.",
     });
   });
 
@@ -51,7 +51,7 @@ describe("web push live mode", () => {
       baseUrl: "https://app.secpal.dev",
       apiBaseUrl: "https://api.secpal.dev",
       skipReason:
-        "Live browser Web Push smoke only runs against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface.",
+        "Live browser Web Push smoke only runs against the current Polyscope workspace preview (<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface.",
     });
   });
 
@@ -65,8 +65,8 @@ describe("web push live mode", () => {
     const { getLiveWebPushMode } = await import("./e2e/web-push-live-mode");
 
     expect(getLiveWebPushMode()).toEqual({
-      baseUrl: "https://frontend-grumpy-lynx.preview.secpal.dev",
-      apiBaseUrl: "https://api-grumpy-lynx.preview.secpal.dev",
+      baseUrl: "https://grumpy-lynx.preview.secpal.dev",
+      apiBaseUrl: "https://grumpy-lynx.preview.secpal.dev",
       skipReason:
         "Live browser Web Push smoke requires PLAYWRIGHT_LIVE_WEB_PUSH=1 to avoid accidental registration changes on the workspace preview.",
     });
@@ -83,8 +83,8 @@ describe("web push live mode", () => {
     const { getLiveWebPushMode } = await import("./e2e/web-push-live-mode");
 
     expect(getLiveWebPushMode()).toEqual({
-      baseUrl: "https://frontend-grumpy-lynx.preview.secpal.dev",
-      apiBaseUrl: "https://api-grumpy-lynx.preview.secpal.dev",
+      baseUrl: "https://grumpy-lynx.preview.secpal.dev",
+      apiBaseUrl: "https://grumpy-lynx.preview.secpal.dev",
       skipReason: undefined,
     });
   });
@@ -100,10 +100,10 @@ describe("web push live mode", () => {
     const { getLiveWebPushMode } = await import("./e2e/web-push-live-mode");
 
     expect(getLiveWebPushMode()).toEqual({
-      baseUrl: "https://frontend-grumpy-lynx.preview.secpal.dev",
-      apiBaseUrl: "https://api-grumpy-lynx.preview.secpal.dev",
+      baseUrl: "https://grumpy-lynx.preview.secpal.dev",
+      apiBaseUrl: "https://grumpy-lynx.preview.secpal.dev",
       skipReason:
-        "Live browser Web Push smoke against https://frontend-grumpy-lynx.preview.secpal.dev requires CHROME_PATH to point to a stable Chrome/Chromium binary because the bundled Playwright Chromium snapshot denies notification permission on HTTPS targets.",
+        "Live browser Web Push smoke against https://grumpy-lynx.preview.secpal.dev requires CHROME_PATH to point to a stable Chrome/Chromium binary because the bundled Playwright Chromium snapshot denies notification permission on HTTPS targets.",
     });
   });
 
@@ -121,8 +121,8 @@ describe("web push live mode", () => {
     const { getLiveWebPushMode } = await import("./e2e/web-push-live-mode");
 
     expect(getLiveWebPushMode()).toEqual({
-      baseUrl: "https://frontend-grumpy-lynx.preview.secpal.dev",
-      apiBaseUrl: "https://api-grumpy-lynx.preview.secpal.dev",
+      baseUrl: "https://grumpy-lynx.preview.secpal.dev",
+      apiBaseUrl: "https://grumpy-lynx.preview.secpal.dev",
       skipReason:
         "Live browser Web Push smoke requires CHROME_PATH to point to a stable Chrome/Chromium binary instead of the bundled Playwright Chromium snapshot.",
     });

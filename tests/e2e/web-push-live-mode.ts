@@ -60,7 +60,7 @@ export function getLiveWebPushMode(): LiveWebPushMode {
       baseUrl,
       apiBaseUrl,
       skipReason:
-        "Live browser Web Push smoke only runs against the current Polyscope workspace preview (frontend-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface.",
+        "Live browser Web Push smoke only runs against the current Polyscope workspace preview (<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface.",
     };
   }
 
@@ -77,7 +77,7 @@ export function getLiveWebPushMode(): LiveWebPushMode {
     return {
       baseUrl,
       apiBaseUrl,
-      skipReason: `Live browser Web Push smoke could not resolve the API origin for ${baseUrl}. The Polyscope workspace preview should expose api-<workspace>.preview.secpal.dev automatically; set PLAYWRIGHT_API_BASE_URL only if you intentionally override it.`,
+      skipReason: `Live browser Web Push smoke could not resolve the API origin for ${baseUrl}. The workspace preview serves the API at the browser origin.`,
     };
   }
 

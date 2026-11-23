@@ -311,11 +311,8 @@ export const apiConfig = {
    * Vite's proxy (see vite.config.ts) forwards /v1/* and /sanctum/* to the native Laravel server.
    */
   get baseUrl(): string {
-    return (
-      getPreviewOrigin(getRuntimeHostname()) ??
-      runtimeApiBaseUrlOverride ??
-      resolveApiBaseUrl()
-    );
+    // Android mock discovery explicitly selects the instance shown at login.
+    return runtimeApiBaseUrlOverride ?? resolveApiBaseUrl();
   },
 
   /**

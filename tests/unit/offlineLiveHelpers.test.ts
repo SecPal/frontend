@@ -33,18 +33,19 @@ describe("offlineLiveHelpers", () => {
     expect(getMockCookieDomains()).toEqual(["app.secpal.dev"]);
   });
 
-  it("derives split workspace preview domains from POLYSCOPE_WORKSPACE", () => {
+  it("scopes preview cookies to the workspace detected from POLYSCOPE_WORKSPACE", () => {
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
     vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "");
     vi.stubEnv("POLYSCOPE_WORKSPACE", "grumpy-lynx");
 
-    expect(getMockCookieDomains()).toEqual([
-      "frontend-grumpy-lynx.preview.secpal.dev",
-      "api-grumpy-lynx.preview.secpal.dev",
-    ]);
+    expect(getMockCookieDomains()).toEqual(["grumpy-lynx.preview.secpal.dev"]);
   });
 
-  it.each(["", "https://api-grumpy-lynx.preview.secpal.dev"])(
+  it.each([
+    "",
+    "https://api-grumpy-lynx.preview.secpal.dev",
+    "https://another-workspace.preview.secpal.dev",
+  ])(
     "scopes workspace preview cookies to the single origin with API override %j",
     (configuredApiBaseUrl) => {
       vi.stubEnv(
@@ -61,15 +62,12 @@ describe("offlineLiveHelpers", () => {
     }
   );
 
-  it("prefers the current Polyscope workspace preview domains over other remote targets", () => {
+  it("prefers the current Polyscope workspace preview cookie host over other remote targets", () => {
     vi.stubEnv("PLAYWRIGHT_BASE_URL", "https://app.secpal.dev");
     vi.stubEnv("PLAYWRIGHT_API_BASE_URL", "https://api.secpal.dev");
     vi.stubEnv("POLYSCOPE_WORKSPACE", "grumpy-lynx");
 
-    expect(getMockCookieDomains()).toEqual([
-      "frontend-grumpy-lynx.preview.secpal.dev",
-      "api-grumpy-lynx.preview.secpal.dev",
-    ]);
+    expect(getMockCookieDomains()).toEqual(["grumpy-lynx.preview.secpal.dev"]);
   });
 
   it("returns both app and API domains for split-host remote targets", () => {
