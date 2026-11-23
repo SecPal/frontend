@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep edits to the legal-menu interaction test outside the container build and
+  registry publication while retaining its required source checks.
+
 - Qualify both native Frontend OCI images and authenticate their exact build
   evidence before granting registry access.
 
