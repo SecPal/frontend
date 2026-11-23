@@ -1451,6 +1451,72 @@ async function ensureVaultOrganizationalUnitIndexes(
   markVaultOrgUnitIndexEnsured();
 }
 
+async function reuseRewrappedBrowserVault(
+  session: VaultSession,
+  storedState: AuthVaultStateEnvelope,
+  signal?: AbortSignal,
+  lifecycleLockHeld = false
+): Promise<VaultSession | null> {
+  if (
+    storedState.subjectHash !== session.subjectHash ||
+    storedState.version !== AUTH_VAULT_VERSION ||
+    storedState.wrapper.kind !== "browser-session"
+  ) {
+    return null;
+  }
+
+  const { rootKeyBytes, keyMaterialUsed } = await decryptVaultRootKeyBytes(
+    storedState,
+    signal
+  );
+  if (!rootKeyBytes) {
+    return null;
+  }
+
+  try {
+    throwIfVaultOperationAborted(signal);
+    if (
+      !rootKeyBytes.every((byte, index) => byte === session.rootKeyBytes[index])
+    ) {
+      return null;
+    }
+  } finally {
+    rootKeyBytes.fill(0);
+  }
+
+  const expectedStoredState = JSON.stringify(storedState);
+  const adoptRewrap = async (): Promise<VaultSession | null> => {
+    throwIfVaultOperationAborted(signal);
+    const activeSession = getActiveOfflineVaultSession<VaultSession>();
+    if (
+      activeSession?.rootKeyBytes !== session.rootKeyBytes ||
+      isOfflineVaultLocked() ||
+      localStorage.getItem(AUTH_VAULT_STORAGE_KEY) !== expectedStoredState
+    ) {
+      return null;
+    }
+
+    const envelopeCacheKey = getStoredVaultEnvelopeCacheKey(storedState);
+    if (activeSession.envelopeCacheKey === envelopeCacheKey) {
+      return activeSession;
+    }
+
+    const reconciledSession: VaultSession = {
+      ...activeSession,
+      envelopeCacheKey,
+      wrapperCacheKey:
+        getStoredVaultWrapperCacheKey(storedState, keyMaterialUsed) ??
+        activeSession.wrapperCacheKey,
+    };
+    setActiveOfflineVaultSession(reconciledSession);
+    return reconciledSession;
+  };
+
+  return lifecycleLockHeld
+    ? adoptRewrap()
+    : runWithOfflineVaultLifecycleLock(adoptRewrap, signal);
+}
+
 async function ensureOfflineVaultSession(
   signal?: AbortSignal,
   lifecycleLockHeld = false,
@@ -1481,6 +1547,26 @@ async function ensureOfflineVaultSession(
         storedEnvelopeCacheKey !== null &&
         activeVaultSession.envelopeCacheKey !== storedEnvelopeCacheKey
       ) {
+        const rewrappedSession = await reuseRewrappedBrowserVault(
+          activeVaultSession,
+          storedState,
+          signal,
+          lifecycleLockHeld
+        );
+        throwIfVaultOperationAborted(signal);
+        if (rewrappedSession) {
+          return getActiveOfflineVaultSession() === rewrappedSession &&
+            (allowLockedVault || !isOfflineVaultLocked())
+            ? rewrappedSession
+            : null;
+        }
+        if (
+          getActiveOfflineVaultSession() !== activeVaultSession ||
+          localStorage.getItem(AUTH_VAULT_STORAGE_KEY) !==
+            JSON.stringify(storedState)
+        ) {
+          return null;
+        }
         clearOfflineVaultSession();
       } else if (
         storedWrapperCacheKey === null ||
@@ -1696,9 +1782,23 @@ async function maybeRewriteStoredVaultState(
     return rewrittenSession;
   };
 
-  return lifecycleLockHeld
+  const rewrittenSession = await (lifecycleLockHeld
     ? commitRewrite()
-    : runWithOfflineVaultLifecycleLock(commitRewrite, signal);
+    : runWithOfflineVaultLifecycleLock(commitRewrite, signal));
+  if (rewrittenSession || !rewrappingActiveSession) {
+    return rewrittenSession;
+  }
+
+  const latestState = getStoredVaultState();
+  if (!latestState || JSON.stringify(latestState) === expectedStoredState) {
+    return null;
+  }
+  return reuseRewrappedBrowserVault(
+    session,
+    latestState,
+    signal,
+    lifecycleLockHeld
+  );
 }
 
 async function ensureVaultSessionForUser(

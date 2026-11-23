@@ -521,6 +521,37 @@ describe("offlineVault", () => {
     await expect(listVaultOrganizationalUnits()).resolves.toEqual(units);
   });
 
+  it("reuses the same vault when another tab persists a CSRF rewrap first", async () => {
+    await initializeOfflineVault(persistedUser);
+    const oldEnvelope = localStorage.getItem(AUTH_VAULT_STORAGE_KEY)!;
+
+    setCsrfTokenCookie("rotated-csrf-token");
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
+    );
+    const newEnvelope = localStorage.getItem(AUTH_VAULT_STORAGE_KEY)!;
+    expect(newEnvelope).not.toBe(oldEnvelope);
+
+    clearOfflineVaultSession();
+    localStorage.setItem(AUTH_VAULT_STORAGE_KEY, oldEnvelope);
+    setCsrfTokenCookie("test-csrf-token");
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
+    );
+    setCsrfTokenCookie("rotated-csrf-token");
+
+    const requestLock = navigator.locks.request.bind(navigator.locks);
+    vi.spyOn(navigator.locks, "request").mockImplementationOnce((...args) => {
+      localStorage.setItem(AUTH_VAULT_STORAGE_KEY, newEnvelope);
+      return requestLock(...args);
+    });
+
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
+    );
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(newEnvelope);
+  });
+
   it("does not let a stale wrapper rewrite replace a newer user's vault", async () => {
     await initializeOfflineVault(persistedUser);
     clearOfflineVaultSession();
