@@ -97,17 +97,6 @@ export function resolvePlaywrightBaseUrl(
   const configuredBaseUrl = readTrimmedEnvValue(env.PLAYWRIGHT_BASE_URL);
 
   if (configuredBaseUrl) {
-    const configuredPreviewHostname =
-      getPreviewHostnameFromBaseUrl(configuredBaseUrl);
-
-    if (
-      configuredPreviewHostname &&
-      (configuredPreviewHostname.repo === null ||
-        configuredPreviewHostname.repo === "frontend")
-    ) {
-      return buildWorkspacePreviewBaseUrl(configuredPreviewHostname.workspace);
-    }
-
     return configuredBaseUrl;
   }
 
@@ -124,12 +113,18 @@ export function resolvePlaywrightApiBaseUrl(
     return buildWorkspacePreviewApiBaseUrl(workspace);
   }
 
-  const configuredApiBaseUrl = readTrimmedEnvValue(env.PLAYWRIGHT_API_BASE_URL);
+  const configuredBaseUrl = readTrimmedEnvValue(env.PLAYWRIGHT_BASE_URL);
+  if (
+    configuredBaseUrl &&
+    getWorkspacePreviewNameFromBaseUrl(configuredBaseUrl) !== undefined
+  ) {
+    return getUrlOrigin(configuredBaseUrl) ?? undefined;
+  }
 
+  const configuredApiBaseUrl = readTrimmedEnvValue(env.PLAYWRIGHT_API_BASE_URL);
   if (configuredApiBaseUrl) {
     const configuredApiPreviewHostname =
       getPreviewHostnameFromBaseUrl(configuredApiBaseUrl);
-
     if (
       configuredApiPreviewHostname &&
       (configuredApiPreviewHostname.repo === null ||
@@ -139,38 +134,7 @@ export function resolvePlaywrightApiBaseUrl(
         configuredApiPreviewHostname.workspace
       );
     }
-
-    const configuredBaseUrl = readTrimmedEnvValue(env.PLAYWRIGHT_BASE_URL);
-    const configuredBasePreviewHostname = configuredBaseUrl
-      ? getPreviewHostnameFromBaseUrl(configuredBaseUrl)
-      : undefined;
-
-    if (
-      configuredBasePreviewHostname &&
-      (configuredBasePreviewHostname.repo === null ||
-        configuredBasePreviewHostname.repo === "frontend")
-    ) {
-      return buildWorkspacePreviewApiBaseUrl(
-        configuredBasePreviewHostname.workspace
-      );
-    }
-
     return configuredApiBaseUrl;
-  }
-
-  const configuredBaseUrl = readTrimmedEnvValue(env.PLAYWRIGHT_BASE_URL);
-  const configuredBasePreviewHostname = configuredBaseUrl
-    ? getPreviewHostnameFromBaseUrl(configuredBaseUrl)
-    : undefined;
-
-  if (
-    configuredBasePreviewHostname &&
-    (configuredBasePreviewHostname.repo === null ||
-      configuredBasePreviewHostname.repo === "frontend")
-  ) {
-    return buildWorkspacePreviewApiBaseUrl(
-      configuredBasePreviewHostname.workspace
-    );
   }
 
   return undefined;

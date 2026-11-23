@@ -94,7 +94,7 @@ describe("playwright target resolution", () => {
       await import("./e2e/target-urls.ts");
 
     expect(resolvePlaywrightApiBaseUrl()).toBe(
-      "https://api-grumpy-lynx.preview.secpal.dev"
+      "https://frontend-grumpy-lynx.preview.secpal.dev"
     );
   });
 
@@ -111,10 +111,10 @@ describe("playwright target resolution", () => {
     } = await import("./e2e/target-urls.ts");
 
     expect(resolvePlaywrightBaseUrl()).toBe(
-      "https://frontend-grumpy-lynx.preview.secpal.dev"
+      "https://grumpy-lynx.preview.secpal.dev"
     );
     expect(resolvePlaywrightApiBaseUrl()).toBe(
-      "https://api-grumpy-lynx.preview.secpal.dev"
+      "https://grumpy-lynx.preview.secpal.dev"
     );
     expect(
       isWorkspacePreviewTarget("https://grumpy-lynx.preview.secpal.dev")
@@ -216,7 +216,7 @@ describe("playwright target resolution", () => {
       await import("./e2e/target-urls.ts");
 
     expect(resolvePlaywrightApiBaseUrl()).toBe(
-      "https://api-grumpy-lynx.preview.secpal.dev"
+      "https://frontend-grumpy-lynx.preview.secpal.dev"
     );
   });
 

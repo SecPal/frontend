@@ -76,7 +76,10 @@ function resolveCiPreviewServerCommand(appSurface: string): string {
  *      surface any more.
  *    - Command: `npx playwright test` (inside the workspace clone)
  *
- * 3. CI Smoke Tests:
+ * 3. Named private preview: set PLAYWRIGHT_BASE_URL to the workspace HTTPS origin.
+ *    API requests use that same origin.
+ *
+ * 4. CI Smoke Tests:
  *    - Uses Vite preview server (static build)
  *    - Forces the Android-native app surface by default for parity with local
  *      E2E coverage
