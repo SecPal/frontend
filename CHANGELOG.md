@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Qualify both native Frontend OCI images and authenticate their exact build
+  evidence before granting registry access.
+
 - Keep the offline vault available when concurrent operations in one or more
   tabs rewrap the same browser session after a CSRF cookie rotation.
 
