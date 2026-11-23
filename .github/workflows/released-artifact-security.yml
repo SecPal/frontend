@@ -72,7 +72,7 @@ jobs:
         shell: bash
         env:
           # yamllint disable-line rule:line-length
-          GOVERNANCE_WORKFLOW: &released-security-workflow SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@7894b9958f08553eb5f151e48ab9ab99356c4a39
+          GOVERNANCE_WORKFLOW: &released-security-workflow SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@618d818048480b4386cdf82a8cbbc5195351faf1
         run: |
           set -euo pipefail
           revision="${GOVERNANCE_WORKFLOW##*@}"
@@ -94,7 +94,7 @@ jobs:
         run: |
           python3 -m venv "$RUNNER_TEMP/secpal-monitor-policy"
           "$RUNNER_TEMP/secpal-monitor-policy/bin/pip" install --requirement \
-            .context/released-artifact-governance/requirements/vulnerability-policy.txt
+            .context/released-artifact-governance/requirements/requirements.txt
           printf '%s\n' "$RUNNER_TEMP/secpal-monitor-policy/bin" >> "$GITHUB_PATH"
       - name: Verify publication before selecting scanner inputs
         id: release

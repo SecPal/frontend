@@ -55,6 +55,13 @@ describe("released frontend security adoption", () => {
     );
     expect(selection?.env?.GOVERNANCE_WORKFLOW).toBe(w.jobs.reevaluate.uses);
     expect(selection?.shell).toBe("bash");
+    const policyInstall = w.jobs.release.steps?.find((step) =>
+      step.run?.includes("/bin/pip")
+    );
+    expect(policyInstall?.run).toContain(
+      ".context/released-artifact-governance/requirements/requirements.txt"
+    );
+
     expect(w.jobs.reevaluate.with?.triage).toBe(true);
     expect(w.jobs.reevaluate.needs).toBe("release");
     expect(w.jobs.reevaluate.if).toBeUndefined();
