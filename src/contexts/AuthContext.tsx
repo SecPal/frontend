@@ -508,7 +508,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsVaultLocked(false);
     setIsPrivacyShielded(false);
     setIsLoading(false);
-    syncOfflineAuthState(false, { redirectOpenClients: true });
+    syncOfflineAuthState(false, {
+      redirectOpenClients: !authStorage.shouldSkipBarrierVaultTableCleanup(),
+    });
     removeUserForActiveBarrier();
   }, [
     invalidateBootstrapRevalidation,
@@ -545,10 +547,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsVaultLocked(false);
         setIsPrivacyShielded(false);
         setIsLoading(false);
-        syncOfflineAuthState(false, {
-          redirectOpenClients: shouldRedirectOpenClients,
-        });
-
         if (shouldUpgradeSensitiveState) {
           try {
             beginSensitiveLogoutBarrierCleanup();
@@ -580,9 +578,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsVaultLocked(false);
       setIsPrivacyShielded(false);
       setIsLoading(false);
-      syncOfflineAuthState(false, {
-        redirectOpenClients: shouldRedirectOpenClientsRef.current,
-      });
+      // Deny offline access now. A worker-driven navigation can unload the
+      // document that owns the cleanup before it clears persisted data.
+      syncOfflineAuthState(false, { redirectOpenClients: false });
 
       if (clearSensitiveState) {
         // Drop prefetch warm-up state on every full session teardown
@@ -719,6 +717,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .finally(() => {
             if (clearSessionCycleRef.current !== clearSessionCycle) {
               return;
+            }
+
+            if (
+              shouldRedirectOpenClientsRef.current &&
+              !authStorage.shouldSkipBarrierVaultTableCleanup()
+            ) {
+              syncOfflineAuthState(false, { redirectOpenClients: true });
             }
 
             shouldSkipBarrierVaultTableCleanupRef.current = false;

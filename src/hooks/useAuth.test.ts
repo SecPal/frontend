@@ -549,25 +549,28 @@ describe("useAuth", () => {
 
       expect(result.current.isLoading).toBe(true);
 
+      let logoutPromise!: Promise<void>;
       act(() => {
-        void result.current.logout();
+        logoutPromise = Promise.resolve(result.current.logout());
       });
 
       expect(result.current.bootstrapRecoveryReason).toBeNull();
       expect(result.current.isLoading).toBe(false);
-      const offlineSyncCallCountAfterLogout = vi.mocked(
-        syncOfflineSessionAccess
-      ).mock.calls.length;
+      expect(syncOfflineSessionAccess).toHaveBeenCalledExactlyOnceWith(false, {
+        redirectOpenClients: false,
+      });
 
       await act(async () => {
         await vi.advanceTimersByTimeAsync(BOOTSTRAP_REVALIDATION_TIMEOUT_MS);
+        await logoutPromise;
       });
 
       expect(result.current.bootstrapRecoveryReason).toBeNull();
       expect(result.current.isLoading).toBe(false);
-      expect(syncOfflineSessionAccess).toHaveBeenCalledTimes(
-        offlineSyncCallCountAfterLogout
-      );
+      expect(syncOfflineSessionAccess).toHaveBeenCalledTimes(2);
+      expect(syncOfflineSessionAccess).toHaveBeenNthCalledWith(2, false, {
+        redirectOpenClients: true,
+      });
     } finally {
       hasStoredUserSpy.mockRestore();
       getUserSpy.mockRestore();
@@ -2779,10 +2782,7 @@ describe("useAuth", () => {
         "Failed to create a sensitive logout barrier before cleanup:",
         barrierError
       );
-      expect(syncOfflineSessionAccess).toHaveBeenCalledTimes(2);
-      expect(syncOfflineSessionAccess).toHaveBeenNthCalledWith(2, false, {
-        redirectOpenClients: true,
-      });
+      expect(syncOfflineSessionAccess).toHaveBeenCalledTimes(1);
 
       await act(async () => {
         storageClear.resolve();
@@ -2790,6 +2790,9 @@ describe("useAuth", () => {
       });
       await waitForSensitiveClientCleanup();
       expect(syncOfflineSessionAccess).toHaveBeenCalledTimes(2);
+      expect(syncOfflineSessionAccess).toHaveBeenNthCalledWith(2, false, {
+        redirectOpenClients: true,
+      });
     } finally {
       consoleWarnSpy.mockRestore();
       beginBarrierSpy.mockRestore();
