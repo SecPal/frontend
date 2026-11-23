@@ -164,18 +164,14 @@ jobs:
           subject-path: .context/publisher/pre-registry.json
           push-to-registry: false
           create-storage-record: false
-      - name: Verify the local qualification attestation
+      - name: Retain the signed qualification binding
         id: binding
         env:
-          GH_TOKEN: ${{ github.token }}
           BUNDLE: ${{ steps.qualification-attestation.outputs.bundle-path }}
         run: |
           set -euo pipefail
           test -s "$BUNDLE"
-          gh attestation verify .context/publisher/pre-registry.json --bundle "$BUNDLE" \
-            --repo SecPal/frontend --signer-workflow SecPal/frontend/.github/workflows/publish-container.yml \
-            --signer-digest "$GITHUB_SHA" --source-ref refs/heads/main --source-digest "$GITHUB_SHA" \
-            --deny-self-hosted-runners
+          cp -- "$BUNDLE" .context/publisher/pre-registry.bundle.json
           binding=$(sha256sum .context/publisher/pre-registry.json | cut -d ' ' -f 1)
           echo "binding=sha256:$binding" >> "$GITHUB_OUTPUT"
       - name: Retain unpublished qualification evidence

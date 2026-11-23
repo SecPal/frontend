@@ -145,12 +145,23 @@ function requireAcceptance(w: Workflow) {
     ".context/publisher/pre-registry.json"
   );
   const binding = gate.steps!.find(
-    (step) => step.name === "Verify the local qualification attestation"
+    (step) => step.name === "Retain the signed qualification binding"
   );
   expect(binding?.if).toBeUndefined();
   expect(binding?.run).toContain('test -s "$BUNDLE"');
   expect(binding?.run).toContain(
-    "gh attestation verify .context/publisher/pre-registry.json"
+    'cp -- "$BUNDLE" .context/publisher/pre-registry.bundle.json'
+  );
+  const writer = readRepoFile("scripts/publish-container.sh");
+  expect(writer).toContain('cmp -- "$prepared/pre-registry.json" "$receipt"');
+  expect(writer).toContain(
+    '"$tools/gh" attestation verify "$receipt" --bundle "$bundle"'
+  );
+  expect(writer).toContain(
+    '--signer-digest "$GITHUB_SHA" --source-ref refs/heads/main --source-digest "$GITHUB_SHA"'
+  );
+  expect(writer.indexOf('attestation verify "$receipt"')).toBeLessThan(
+    writer.indexOf('"$native/image@$manifest" "$repository@$manifest"')
   );
   expect(
     w.jobs.prepare.steps!.find(

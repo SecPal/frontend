@@ -79,6 +79,14 @@ PY
     --prepared "$prepared/prepared.json" --scan-root .context/pre-registry/scan \
     --output "$prepared/pre-registry.json" --recheck
   require_registry_binding
+  receipt=.context/pre-registry/publisher/pre-registry.json
+  bundle=.context/pre-registry/publisher/pre-registry.bundle.json
+  test -s "$bundle"
+  cmp -- "$prepared/pre-registry.json" "$receipt"
+  "$tools/gh" attestation verify "$receipt" --bundle "$bundle" \
+    --repo SecPal/frontend --signer-workflow SecPal/frontend/.github/workflows/publish-container.yml \
+    --signer-digest "$GITHUB_SHA" --source-ref refs/heads/main --source-digest "$GITHUB_SHA" \
+    --deny-self-hosted-runners
 fi
 case "$stage" in
   prepare)
