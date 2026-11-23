@@ -6,6 +6,11 @@ set -euo pipefail
 test "${GITHUB_REPOSITORY:?}" = SecPal/frontend
 test "${GITHUB_EVENT_NAME:?}" = push
 test "${GITHUB_REF:?}" = refs/heads/main
+test "${GITHUB_REF_PROTECTED:?}" = true
+arch=${1:?exact architecture}
+case "$arch" in amd64|arm64) ;; *) exit 1 ;; esac
+mode=${2:---published}
+case "$mode" in --published|--unpublished) ;; *) exit 1 ;; esac
 repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root"
 prepared="$repo_root/.context/publisher"
@@ -14,15 +19,19 @@ tools="${RUNNER_TEMP:?}/secpal-publisher-tools"
 registry=ghcr.io/secpal/frontend
 auth_root=$(mktemp -d "$RUNNER_TEMP/secpal-frontend-scan-auth.XXXXXX")
 export DOCKER_CONFIG="$auth_root"
+cache=$(mktemp -d "$RUNNER_TEMP/secpal-frontend-scan-cache.XXXXXX")
 cleanup() {
   rm -f -- "$DOCKER_CONFIG/config.json"
   rmdir "$auth_root"
+  # Database payloads never become evidence artifacts.
+  rm -rf -- "$cache"
 }
 trap cleanup EXIT
-printf '%s' "${GH_TOKEN:?}" | "$tools/oras" login ghcr.io --registry-config "$auth_root/config.json" \
-  --username "${GITHUB_ACTOR:?}" --password-stdin
-chmod 0600 "$auth_root/config.json"
-cache=$(mktemp -d "$RUNNER_TEMP/secpal-frontend-scan-cache.XXXXXX")
+if [[ "$mode" == --published ]]; then
+  printf '%s' "${GH_TOKEN:?}" | "$tools/oras" login ghcr.io --registry-config "$auth_root/config.json" \
+    --username "${GITHUB_ACTOR:?}" --password-stdin
+  chmod 0600 "$auth_root/config.json"
+fi
 printf '{}\n' > "$cache/config.yaml"
 export GRYPE_DB_CACHE_DIR="$cache/grype"
 export GRYPE_DB_AUTO_UPDATE=false
@@ -43,11 +52,21 @@ if [ -d "$governance/reviewed-vex" ]; then
     vex_arguments+=(--reviewed-vex-manifest "$manifest")
   done < "$cache/vex-list"
 fi
-arch=${1:?exact architecture}
-case "$arch" in amd64|arm64) ;; *) exit 1 ;; esac
-  output="$repo_root/.context/scan/$arch"
-  mkdir -p "$output/raw" "$output/sbom"
-  manifest=$(jq -er --arg arch "linux/$arch" '.records[]|select(.subject.platform==$arch)|.subject.manifest_digest' "$prepared/prepared.json")
+output="$repo_root/.context/scan/$arch"
+mkdir -p "$output/raw" "$output/sbom"
+manifest=$(jq -er --arg arch "linux/$arch" '.records[]|select(.subject.platform==$arch)|.subject.manifest_digest' "$prepared/prepared.json")
+if [[ "$mode" == --unpublished ]]; then
+  native="$repo_root/.context/native/frontend-native-$arch-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+  cp "$native/syft.spdx.json" "$output/sbom/syft.spdx.json"
+  cp "$native/association.json" "$output/sbom/association.json"
+  # Use the same exact local OCI transport already qualified in SecPal/api.
+  # Trivy reads the private copied layout by canonical subject, without registry access.
+  mkdir -p "$cache/ghcr.io/secpal"
+  cp -a "$native/image" "$cache/$registry"
+  test "$(jq -er '.manifests | select(length == 1) | .[0].digest' "$cache/$registry/index.json")" = "$manifest"
+  test "$(sha256sum "$cache/$registry/blobs/sha256/${manifest#sha256:}" | cut -d ' ' -f 1)" = "${manifest#sha256:}"
+  trivy_input=(--input "$registry@$manifest")
+else
   sbom=$(jq -er --arg arch "linux/$arch" '.[]|select(.platform==$arch)|.artifact' "$prepared/sboms.json")
   for subject in "$registry@$manifest" "$sbom" "$registry@$(jq -er .index_digest "$prepared/prepared.json")"; do
     attestation_file="$(python3 scripts/container-publisher.py attestation-filename --digest "${subject##*@}")"
@@ -59,50 +78,55 @@ case "$arch" in amd64|arm64) ;; *) exit 1 ;; esac
       --input "$output/raw/${attestation_file}" --digest "${subject##*@}"
   done
   "$tools/oras" pull --registry-config "$auth_root/config.json" --output "$output/sbom" "$sbom"
-  jq -n --arg digest "$manifest" --arg platform "linux/$arch" \
+  trivy_input=("$registry@$manifest")
+fi
+jq -n --arg digest "$manifest" --arg platform "linux/$arch" \
     '{oci_digest:$digest,platform:$platform}' > "$output/subject.json"
-  python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" verify-syft \
-    --platform-digest "$manifest" --platform "linux/$arch" --spdx "$output/sbom/syft.spdx.json" \
-    --association "$output/sbom/association.json" --output "$output/syft.json"
-  python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" database \
-    --scanner trivy --database-status "$cache/trivy/db/metadata.json" --database-root "$cache/trivy/db" --output "$output/trivy-core-database.json"
-  python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" database \
-    --scanner trivy-java --database-status "$cache/trivy/java-db/metadata.json" --database-root "$cache/trivy/java-db" --output "$output/trivy-java-database.json"
-  python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" combine-databases \
-    --database "$output/trivy-core-database.json" --database "$output/trivy-java-database.json" --output "$output/trivy-database.json"
-  python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" scan-grype \
-    --archive "$tools/grype.tar.gz" --spdx "$output/sbom/syft.spdx.json" \
-    --association "$output/sbom/association.json" --subject "$output/subject.json" \
-    --database-root "$cache/grype" --native "$output/raw/grype.json" \
-    --metadata "$output/grype-metadata.json" --provenance "$output/grype-input.json"
+python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" verify-syft \
+  --platform-digest "$manifest" --platform "linux/$arch" --spdx "$output/sbom/syft.spdx.json" \
+  --association "$output/sbom/association.json" --output "$output/syft.json"
+python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" database \
+  --scanner trivy --database-status "$cache/trivy/db/metadata.json" --database-root "$cache/trivy/db" --output "$output/trivy-core-database.json"
+python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" database \
+  --scanner trivy-java --database-status "$cache/trivy/java-db/metadata.json" --database-root "$cache/trivy/java-db" --output "$output/trivy-java-database.json"
+python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" combine-databases \
+  --database "$output/trivy-core-database.json" --database "$output/trivy-java-database.json" --output "$output/trivy-database.json"
+python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" scan-grype \
+  --archive "$tools/grype.tar.gz" --spdx "$output/sbom/syft.spdx.json" \
+  --association "$output/sbom/association.json" --subject "$output/subject.json" \
+  --database-root "$cache/grype" --native "$output/raw/grype.json" \
+  --metadata "$output/grype-metadata.json" --provenance "$output/grype-input.json"
+(
+  if [[ "$mode" == --unpublished ]]; then cd "$cache"; fi
   env -i HOME="$cache" DOCKER_CONFIG="$auth_root" "$tools/trivy" --config "$cache/config.yaml" image \
     --scanners vuln --format json --show-suppressed --skip-db-update --skip-java-db-update \
     --skip-check-update --skip-version-check --cache-dir "$cache/trivy" --platform "linux/$arch" \
     --ignorefile "$governance/policies/trivy-repository-scan-ignore-v1.yaml" \
-    --output "$output/raw/trivy.json" "$registry@$manifest"
-  python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" metadata --scanner trivy \
-    --database "$output/trivy-database.json" --subject "$output/subject.json" --version 0.74.0 \
-    --immutable-id sha256:2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a \
-    --completed-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --output "$output/trivy-metadata.json"
-  python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" adapt --scanner grype \
-    --native "$output/raw/grype.json" --metadata "$output/grype-metadata.json" \
-    --provenance "$output/grype-input.json" --spdx "$output/sbom/syft.spdx.json" \
-    --association "$output/sbom/association.json" --output "$output/grype-adapted.json"
-  python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" adapt --scanner trivy \
-    --native "$output/raw/trivy.json" --metadata "$output/trivy-metadata.json" \
-    --output "$output/trivy-adapted.json"
-  python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" assemble \
-    --subject "$output/subject.json" --syft "$output/syft.json" \
-    --grype "$output/grype-adapted.json" --trivy "$output/trivy-adapted.json" \
-    --evaluated-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --output "$output/evaluation.json"
-  python3 "$governance/scripts/secpal-vulnerability-policy.py" "$output/evaluation.json" \
-    --policy "$governance/policies/vulnerability-triage-v1.json" "${vex_arguments[@]}" > "$output/policy-result.json"
-  python3 - "$output" "$arch" <<'PY'
+    --output "$output/raw/trivy.json" "${trivy_input[@]}"
+)
+python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" metadata --scanner trivy \
+  --database "$output/trivy-database.json" --subject "$output/subject.json" --version 0.74.0 \
+  --immutable-id sha256:2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a \
+  --completed-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --output "$output/trivy-metadata.json"
+python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" adapt --scanner grype \
+  --native "$output/raw/grype.json" --metadata "$output/grype-metadata.json" \
+  --provenance "$output/grype-input.json" --spdx "$output/sbom/syft.spdx.json" \
+  --association "$output/sbom/association.json" --output "$output/grype-adapted.json"
+python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" adapt --scanner trivy \
+  --native "$output/raw/trivy.json" --metadata "$output/trivy-metadata.json" \
+  --output "$output/trivy-adapted.json"
+python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" assemble \
+  --subject "$output/subject.json" --syft "$output/syft.json" \
+  --grype "$output/grype-adapted.json" --trivy "$output/trivy-adapted.json" \
+  --evaluated-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --output "$output/evaluation.json"
+python3 "$governance/scripts/secpal-vulnerability-policy.py" "$output/evaluation.json" \
+  --policy "$governance/policies/vulnerability-triage-v1.json" "${vex_arguments[@]}" > "$output/policy-result.json"
+python3 - "$output" "$arch" <<'PY'
 import hashlib,json,sys
 from pathlib import Path
 root=Path(sys.argv[1]);arch=sys.argv[2]
 policy=json.loads((root/'policy-result.json').read_bytes())
-if policy['gate_state']!='CLEAN':
+if policy['gate_state']!='CLEAN' or policy['evidence_health']['state']!='HEALTHY':
     raise SystemExit('Artifact vulnerability policy did not admit CLEAN')
 subject=json.loads((root/'subject.json').read_bytes())
 association=json.loads((root/'sbom/association.json').read_bytes())
@@ -115,5 +139,3 @@ for scanner in ('grype','trivy'):
                         evidence_sha256='sha256:'+hashlib.sha256((root/'raw'/(scanner+'.json')).read_bytes()).hexdigest()))
 (root/'scan-records.json').write_text(json.dumps(records,sort_keys=True,separators=(',',':'))+'\n')
 PY
-# No DB payload or registry credential is an evidence artifact.
-rm -rf -- "$cache"

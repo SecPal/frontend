@@ -7,6 +7,7 @@ stage=${1:?publisher stage}
 test "${GITHUB_REPOSITORY:?}" = SecPal/frontend
 test "${GITHUB_EVENT_NAME:?}" = push
 test "${GITHUB_REF:?}" = refs/heads/main
+test "${GITHUB_REF_PROTECTED:?}" = true
 repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root"
 repository=ghcr.io/secpal/frontend
@@ -21,14 +22,26 @@ cleanup() {
   rmdir "$auth_root"
 }
 trap cleanup EXIT
-if [ "$stage" = verify ]; then
-  printf '%s' "${GH_TOKEN:?}" | podman login ghcr.io --authfile "$REGISTRY_AUTH_FILE" \
-    --username "${GITHUB_ACTOR:?}" --password-stdin
-elif [ "$stage" != evidence ]; then
+login_registry() {
   printf '%s' "${GH_TOKEN:?}" | "$tools/oras" login ghcr.io --registry-config "$REGISTRY_AUTH_FILE" \
     --username "${GITHUB_ACTOR:?}" --password-stdin
-fi
-if [ -f "$REGISTRY_AUTH_FILE" ]; then chmod 0600 "$REGISTRY_AUTH_FILE"; fi
+  chmod 0600 "$REGISTRY_AUTH_FILE"
+}
+require_registry_binding() {
+  local binding
+  binding="sha256:$(sha256sum "$prepared/pre-registry.json" | cut -d ' ' -f 1)"
+  if [[ ! "${PRE_REGISTRY_BINDING:-}" =~ ^sha256:[0-9a-f]{64}$ || "$binding" != "$PRE_REGISTRY_BINDING" ]]; then
+    echo 'Exact unpublished qualification does not match the inputs. Registry access rejected.' >&2
+    exit 1
+  fi
+}
+case "$stage" in
+  verify)
+    printf '%s' "${GH_TOKEN:?}" | podman login ghcr.io --authfile "$REGISTRY_AUTH_FILE" \
+      --username "${GITHUB_ACTOR:?}" --password-stdin
+    chmod 0600 "$REGISTRY_AUTH_FILE" ;;
+  retain-evidence|accept) require_registry_binding; login_registry ;;
+esac
 verify_attestation() {
   local digest=$1 output=$2
   gh attestation verify "oci://$repository@$digest" --bundle-from-oci \
@@ -38,10 +51,9 @@ verify_attestation() {
   python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" verify-attestation \
     --input "$output" --digest "$digest"
 }
-case "$stage" in
-  prepare)
-    security_file=.context/repository-security/result.json
-    python3 - "$governance/docs/schemas/secpal-trivy-repository-scan-v5.schema.json" "$security_file" <<'PY'
+if [[ "$stage" == qualify || "$stage" == prepare ]]; then
+  security_file=.context/repository-security/result.json
+  python3 - "$governance/docs/schemas/secpal-trivy-repository-scan-v5.schema.json" "$security_file" <<'PY'
 import json,sys
 from jsonschema import Draft202012Validator, ValidationError
 try:
@@ -51,16 +63,39 @@ try:
 except (ValidationError, json.JSONDecodeError, OSError):
     raise SystemExit("FAIL: malformed source-security evidence") from None
 PY
-    python3 scripts/container-publisher.py prepare --root "$repo_root" --native .context/native \
+  python3 scripts/container-publisher.py prepare --root "$repo_root" --native .context/native \
       --security "$security_file" --output "$prepared"
+  if [[ "$stage" == qualify ]]; then
+    accepted=true
+    for arch in amd64 arm64; do
+      if ! scripts/scan-container-artifact.sh "$arch" --unpublished; then accepted=false; fi
+    done
+    if [[ "$accepted" != true ]]; then exit 1; fi
+    python3 scripts/container-publisher.py qualification --root "$repo_root" \
+      --prepared "$prepared/prepared.json" --scan-root .context/scan --output "$prepared/pre-registry.json"
+    exit 0
+  fi
+  python3 scripts/container-publisher.py qualification --root "$repo_root" \
+    --prepared "$prepared/prepared.json" --scan-root .context/pre-registry/scan \
+    --output "$prepared/pre-registry.json" --recheck
+  require_registry_binding
+  receipt=.context/pre-registry/publisher/pre-registry.json
+  bundle=.context/pre-registry/publisher/pre-registry.bundle.json
+  test -s "$bundle"
+  cmp -- "$prepared/pre-registry.json" "$receipt"
+  "$tools/gh" attestation verify "$receipt" --bundle "$bundle" \
+    --repo SecPal/frontend --signer-workflow SecPal/frontend/.github/workflows/publish-container.yml \
+    --signer-digest "$GITHUB_SHA" --source-ref refs/heads/main --source-digest "$GITHUB_SHA" \
+    --deny-self-hosted-runners
+fi
+case "$stage" in
+  prepare)
     index_digest=$(jq -er .index_digest "$prepared/prepared.json")
     sboms='[]'
     subjects=$(jq -c '[.index_digest]+[.records[].subject.manifest_digest]' "$prepared/prepared.json")
     for arch in amd64 arm64; do
       native="$repo_root/.context/native/frontend-native-$arch-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
       manifest=$(jq -er .subject.manifest_digest "$native/record.json")
-      "$tools/oras" cp --to-registry-config "$REGISTRY_AUTH_FILE" --from-oci-layout \
-        "$native/image:frontend" "$repository@$manifest"
       layout="$RUNNER_TEMP/sbom-$arch"
       (
         cd "$native"
@@ -69,8 +104,6 @@ PY
           syft.spdx.json:application/spdx+json association.json:application/json
       )
       sbom_digest="sha256:$(sha256sum "$prepared/sbom-manifest-$arch.json" | cut -d ' ' -f1)"
-      "$tools/oras" cp --to-registry-config "$REGISTRY_AUTH_FILE" --from-oci-layout \
-        "$layout:sbom" "$repository@$sbom_digest"
       spdx_digest=$(jq -er .spdx_digest "$native/association.json")
       sboms=$(jq -c --arg platform "linux/$arch" --arg digest "$manifest" --arg artifact "$repository@$sbom_digest" \
         --arg spdx "$spdx_digest" '.+[{platform:$platform,subject_digest:$digest,artifact:$artifact,spdx_sha256:$spdx,syft_version:"1.54.1"}]' <<< "$sboms")
@@ -78,6 +111,16 @@ PY
       printf '%s_digest=%s\n%s_sbom=%s\n%s_sbom_digest=%s\n' "$arch" "$manifest" "$arch" "$repository@$sbom_digest" "$arch" "$sbom_digest" >> "$GITHUB_OUTPUT"
     done
     printf '%s\n' "$sboms" > "$prepared/sboms.json"
+    login_registry
+    for arch in amd64 arm64; do
+      native="$repo_root/.context/native/frontend-native-$arch-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+      manifest=$(jq -er --arg arch "linux/$arch" '.records[]|select(.subject.platform==$arch)|.subject.manifest_digest' "$prepared/prepared.json")
+      sbom=$(jq -er --arg arch "linux/$arch" '.[]|select(.platform==$arch)|.artifact' "$prepared/sboms.json")
+      "$tools/oras" cp --to-registry-config "$REGISTRY_AUTH_FILE" --from-oci-layout \
+        "$native/image@$manifest" "$repository@$manifest"
+      "$tools/oras" cp --to-registry-config "$REGISTRY_AUTH_FILE" --from-oci-layout \
+        "$RUNNER_TEMP/sbom-$arch:sbom" "$sbom"
+    done
     "$tools/oras" manifest push --registry-config "$REGISTRY_AUTH_FILE" \
       "$repository@$index_digest" "$prepared/index.json"
     "$tools/oras" manifest fetch --registry-config "$REGISTRY_AUTH_FILE" "$repository@$index_digest" > "$prepared/remote-index.json"

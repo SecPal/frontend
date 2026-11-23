@@ -197,10 +197,16 @@ test.describe("Offline Logout Privacy", () => {
       page.getByRole("heading", { name: /my profile/i })
     ).toBeVisible();
     await expect(
-      page.getByText(offlineLiveMockUser.name).first()
+      page
+        .getByRole("main")
+        .getByText(offlineLiveMockUser.name, { exact: true })
+        .first()
     ).toBeVisible();
     await expect(
-      page.getByText(offlineLiveMockUser.email).first()
+      page
+        .getByRole("main")
+        .getByText(offlineLiveMockUser.email, { exact: true })
+        .first()
     ).toBeVisible();
 
     await context.setOffline(true);
@@ -211,10 +217,16 @@ test.describe("Offline Logout Privacy", () => {
       page.getByRole("heading", { name: /my profile/i })
     ).toBeVisible();
     await expect(
-      page.getByText(offlineLiveMockUser.name).first()
+      page
+        .getByRole("main")
+        .getByText(offlineLiveMockUser.name, { exact: true })
+        .first()
     ).toBeVisible();
     await expect(
-      page.getByText(offlineLiveMockUser.email).first()
+      page
+        .getByRole("main")
+        .getByText(offlineLiveMockUser.email, { exact: true })
+        .first()
     ).toBeVisible();
 
     await page.evaluate(() => {

@@ -14,9 +14,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep edits to the legal-menu interaction test outside the container build and
+  registry publication while retaining its required source checks.
+
+- Qualify both native Frontend OCI images and authenticate their exact build
+  evidence before granting registry access.
+
+- Keep the offline vault available when concurrent operations in one or more
+  tabs rewrap the same browser session after a CSRF cookie rotation.
+
 - Keep browser and Playwright API and CSRF requests on the private workspace
   HTTPS origin. Android mock login follows the instance explicitly selected
   through runtime discovery.
+
+- Clear persisted client data before asking the service worker to navigate
+  protected tabs to sign-in during browser logout.
 
 - Keep source-only security monitoring updates separate from Frontend OCI
   publication while preserving protected-main release qualification and discovery.

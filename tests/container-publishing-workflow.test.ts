@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { execFileSync, spawnSync } from "node:child_process";
 import {
+  chmodSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -47,15 +48,18 @@ const sourceOnlyPaths = [
   "tests/released-artifact-security-workflow.test.ts",
   "tests/daily-repository-security-workflow.test.ts",
 ];
-const boundaryPaths = [
-  ".github/workflows/publish-container.yml",
-  "CHANGELOG.md",
-  "tests/container-publishing-workflow.test.ts",
-];
+const admissionPolicy = "scripts/frontend-publisher-admission.sh";
+const legalMenuTest = "src/components/nav-legal.test.tsx";
 
 function publicationAdmission(
   paths: readonly string[],
-  options: { bootstrap?: boolean; before?: string } = {}
+  options: {
+    bootstrap?: boolean;
+    before?: string;
+    existingTest?: boolean;
+    executableTest?: boolean;
+    previousIgnore?: string;
+  } = {}
 ) {
   const checkout = mkdtempSync(path.join(tmpdir(), "frontend-publication-"));
   const git = (...args: string[]) =>
@@ -64,12 +68,34 @@ function publicationAdmission(
     git("init", "--quiet");
     git("config", "user.name", "Workflow Fixture");
     git("config", "user.email", "fixture@secpal.dev");
+    if (!options.bootstrap) {
+      mkdirSync(path.join(checkout, "scripts"));
+      writeFileSync(
+        path.join(checkout, admissionPolicy),
+        readRepoFile(admissionPolicy)
+      );
+      git("add", "--", admissionPolicy);
+    }
+    if (options.existingTest) {
+      mkdirSync(path.join(checkout, "src", "components"), { recursive: true });
+      writeFileSync(path.join(checkout, legalMenuTest), "original\n");
+      git("add", "--", legalMenuTest);
+    }
+    if (options.previousIgnore !== undefined) {
+      writeFileSync(
+        path.join(checkout, ".containerignore"),
+        options.previousIgnore
+      );
+      git("add", "--", ".containerignore");
+    }
     git("-c", "commit.gpgsign=false", "commit", "--allow-empty", "-qm", "base");
     const base = git("rev-parse", "HEAD");
     for (const name of paths) {
       const file = path.join(checkout, name);
       mkdirSync(path.dirname(file), { recursive: true });
-      writeFileSync(file, "changed\n");
+      writeFileSync(file, name === admissionPolicy ? "exit 0\n" : "changed\n");
+      if (name === legalMenuTest && options.executableTest)
+        chmodSync(file, 0o755);
       git("add", "--", name);
     }
     git("-c", "commit.gpgsign=false", "commit", "--allow-empty", "-qm", "push");
@@ -80,7 +106,6 @@ function publicationAdmission(
       env: {
         ...process.env,
         ...step.env,
-        BOOTSTRAP_BASE: options.bootstrap ? base : "3".repeat(40),
         BEFORE: options.before ?? base,
         GITHUB_REPOSITORY: "SecPal/frontend",
         GITHUB_REF: "refs/heads/main",
@@ -109,7 +134,66 @@ function requireAcceptance(w: Workflow) {
   });
   expect(w.jobs.validate.needs).toBe("admit");
   expect(w.jobs.build.needs).toEqual(["validate", "repository-security"]);
-  expect(w.jobs.prepare.needs).toEqual(["build", "repository-security"]);
+  expect(w.jobs["pre-registry"].needs).toEqual([
+    "build",
+    "repository-security",
+  ]);
+  expect(w.jobs["pre-registry"].permissions?.packages).toBeUndefined();
+  expect(w.jobs.prepare.needs).toEqual([
+    "build",
+    "repository-security",
+    "pre-registry",
+  ]);
+  const gate = w.jobs["pre-registry"];
+  expect(gate.permissions).toEqual({
+    contents: "read",
+    attestations: "write",
+    "id-token": "write",
+  });
+  const scan = gate.steps!.findIndex(
+    (step) => step.run === "scripts/publish-container.sh qualify"
+  );
+  expect(scan).toBeGreaterThan(-1);
+  expect(gate.steps![scan].if).toBeUndefined();
+  expect(gate.steps![scan].env).toBeUndefined();
+  const sign = gate.steps!.findIndex((step) =>
+    step.uses?.startsWith("actions/attest@")
+  );
+  expect(sign).toBeGreaterThan(scan);
+  expect(gate.steps![sign].if).toBeUndefined();
+  expect(gate.steps![sign].with?.["push-to-registry"]).toBe(false);
+  expect(gate.steps![sign].with?.["create-storage-record"]).toBe(false);
+  expect(gate.steps![sign].with?.["subject-path"]).toBe(
+    ".context/publisher/pre-registry.json"
+  );
+  const binding = gate.steps!.find(
+    (step) => step.name === "Retain the signed qualification binding"
+  );
+  expect(binding?.if).toBeUndefined();
+  expect(binding?.run).toContain('test -s "$BUNDLE"');
+  expect(binding?.run).toContain(
+    'cp -- "$BUNDLE" .context/publisher/pre-registry.bundle.json'
+  );
+  const writer = readRepoFile("scripts/publish-container.sh");
+  expect(writer).toContain('cmp -- "$prepared/pre-registry.json" "$receipt"');
+  expect(writer).toContain(
+    '"$tools/gh" attestation verify "$receipt" --bundle "$bundle"'
+  );
+  expect(writer).toContain(
+    '--signer-digest "$GITHUB_SHA" --source-ref refs/heads/main --source-digest "$GITHUB_SHA"'
+  );
+  expect(writer.indexOf('attestation verify "$receipt"')).toBeLessThan(
+    writer.indexOf('"$native/image@$manifest" "$repository@$manifest"')
+  );
+  expect(
+    w.jobs.prepare.steps!.find(
+      (step) => step.run === "scripts/publish-container.sh prepare"
+    )?.env?.PRE_REGISTRY_BINDING
+  ).toBe("${{ needs.pre-registry.outputs.binding }}");
+  const writerJobs = Object.entries(w.jobs)
+    .filter(([, job]) => job.permissions?.packages === "write")
+    .map(([name]) => name);
+  expect(writerJobs).toEqual(["prepare", "attest", "accept"]);
   expect(w.jobs.verify.needs).toEqual(["prepare", "attest"]);
   expect(w.jobs.scan.needs).toEqual(["prepare", "attest"]);
   expect(w.jobs.accept.needs).toEqual([
@@ -118,9 +202,11 @@ function requireAcceptance(w: Workflow) {
     "verify",
     "scan",
     "repository-security",
+    "pre-registry",
   ]);
   for (const key of [
     "build",
+    "pre-registry",
     "prepare",
     "attest",
     "verify",
@@ -175,10 +261,7 @@ describe("frontend native OCI publisher", () => {
     "src/App.tsx",
     "package-lock.json",
     "Containerfile",
-    "scripts/publish-container.sh",
-    ".github/workflows/frontend-container.yml",
     "tests/repository-security-workflow.test.ts",
-    ".github/workflows/publish-container.yml",
     "unknown-path",
   ])("retains publication qualification for %s", (file) => {
     expect(publicationAdmission([file])).toMatchObject({ status: 0 });
@@ -187,20 +270,80 @@ describe("frontend native OCI publisher", () => {
     });
   });
 
-  it("declines only the reviewed boundary landing for its exact protected-main predecessor", () => {
+  it("declines release only for the exact already-excluded legal-menu test edit", () => {
+    const exclusion = readRepoFile(".containerignore");
+    expect(exclusion.trimEnd().split("\n").at(-1)).toBe(legalMenuTest);
     expect(
-      publicationAdmission(boundaryPaths, { bootstrap: true })
+      publicationAdmission([legalMenuTest], {
+        existingTest: true,
+        previousIgnore: exclusion,
+      })
     ).toMatchObject({
       status: 1,
-      output: expect.stringContaining("Publication boundary installation"),
+      output: expect.stringContaining("Source-only legal-menu test change"),
     });
-    expect(publicationAdmission(boundaryPaths)).toMatchObject({ status: 0 });
-    expect(
-      publicationAdmission([...boundaryPaths, "package-lock.json"], {
-        bootstrap: true,
-      })
-    ).toMatchObject({ status: 0 });
   });
+
+  it.each([
+    "src/App.tsx",
+    "package-lock.json",
+    ".containerignore",
+    sourceOnlyPaths[0],
+  ])(
+    "uses full release qualification when the legal-menu test also changes with %s",
+    (other) => {
+      expect(
+        publicationAdmission([legalMenuTest, other], {
+          existingTest: true,
+          previousIgnore: legalMenuTest + "\n",
+        })
+      ).toMatchObject({ status: 0 });
+    }
+  );
+
+  it("requires an existing regular test and the exact effective protected-base exclusion", () => {
+    for (const options of [
+      { existingTest: true },
+      { existingTest: true, previousIgnore: "src/components/*.test.tsx\n" },
+      { existingTest: true, previousIgnore: legalMenuTest + "\n!src/**\n" },
+      { existingTest: false, previousIgnore: legalMenuTest + "\n" },
+      {
+        existingTest: true,
+        executableTest: true,
+        previousIgnore: legalMenuTest + "\n",
+      },
+    ]) {
+      expect(publicationAdmission([legalMenuTest], options)).toMatchObject({
+        status: 0,
+      });
+    }
+  });
+
+  it("blocks first installation when the protected predecessor lacks admission authority", () => {
+    expect(
+      publicationAdmission([admissionPolicy], { bootstrap: true })
+    ).toMatchObject({
+      status: 1,
+      output: expect.stringContaining("Protected predecessor lacks"),
+    });
+  });
+
+  it.each([
+    admissionPolicy,
+    ".github/workflows/publish-container.yml",
+    ".github/workflows/frontend-container.yml",
+    ".github/workflows/reusable-repository-security.yml",
+    "scripts/publish-container.sh",
+    "scripts/scan-container-artifact.sh",
+  ])(
+    "rejects candidate-controlled authority changes in %s before release",
+    (file) => {
+      expect(publicationAdmission([file, "package-lock.json"])).toMatchObject({
+        status: 1,
+        output: expect.stringContaining("Publisher authority changed"),
+      });
+    }
+  );
 
   it.each(["", "main", "0".repeat(40), "1".repeat(40)])(
     "fails closed for unavailable push predecessor %j",
@@ -268,7 +411,7 @@ describe("frontend native OCI publisher", () => {
 
   it("gates publication and discovery on all independent accepted evidence", () =>
     requireAcceptance(workflow()));
-  it.each(["build", "prepare", "verify", "scan", "accept"])(
+  it.each(["build", "pre-registry", "prepare", "verify", "scan", "accept"])(
     "rejects missing admission dependencies for %s",
     (job) => {
       const w = workflow();

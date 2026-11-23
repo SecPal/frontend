@@ -16,6 +16,8 @@ from pathlib import Path
 import platform
 import re
 import subprocess
+import sys
+import tempfile
 
 REPOSITORY = 'ghcr.io/secpal/frontend'
 SOURCE = 'https://github.com/SecPal/frontend'
@@ -27,6 +29,13 @@ INDEX = 'application/vnd.oci.image.index.v1+json'
 
 def digest(raw):
     return 'sha256:' + hashlib.sha256(raw).hexdigest()
+
+
+def digest_file(path):
+    if path.is_symlink() or not path.is_file():
+        raise ValueError('publisher-blob-file')
+    with path.open('rb') as stream:
+        return 'sha256:' + hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
 def attestation_filename(subject_digest):
@@ -171,16 +180,24 @@ def read_layout(layout, arch, source_record, base_records):
     if index.get('schemaVersion')!=2 or len(index.get('manifests',[]))!=1:
         raise ValueError('publisher-local-platform-count')
     descriptor = index['manifests'][0]
+    if any(path.is_symlink() for path in (layout, layout/'blobs', layout/'blobs'/'sha256')):
+        raise ValueError('publisher-oci-layout')
     def blob(value):
         if not re.fullmatch('sha256:[0-9a-f]{64}',value):
             raise ValueError('publisher-blob-digest')
         path = layout/'blobs'/'sha256'/value.split(':')[1]
         if path.is_symlink() or not path.is_file():
             raise ValueError('publisher-blob-file')
-        return path.read_bytes()
-    manifest_raw = blob(descriptor['digest'])
+        return path
+    manifest_raw = blob(descriptor['digest']).read_bytes()
     manifest = json.loads(manifest_raw)
-    config_raw = blob(manifest['config']['digest'])
+    config_raw = blob(manifest['config']['digest']).read_bytes()
+    if not manifest['layers']:
+        raise ValueError('publisher-missing-layers')
+    for layer in manifest['layers']:
+        path = blob(layer['digest'])
+        if path.stat().st_size != layer['size'] or digest_file(path) != layer['digest']:
+            raise ValueError('publisher-layer-binding')
     return admit_platform(manifest_raw,config_raw,descriptor,arch,source_record,base_records),manifest_raw,config_raw
 
 
@@ -288,7 +305,7 @@ def prepare(root, native, output, security_path):
     security = admit_source_security(read(security_path),expected['commit'],timestamp(datetime.now(timezone.utc).timestamp()))
     (output/'source-security.json').write_bytes(canonical(security))
     write(output/'source.json',expected)
-    records=[];sizes=[]
+    records=[];sizes=[];inventories=[]
     for arch in ('amd64','arm64'):
         directory = native / ('frontend-native-'+arch+'-'+os.environ['GITHUB_RUN_ID']+'-'+os.environ['GITHUB_RUN_ATTEMPT'])
         record = read(directory/'record.json')
@@ -299,13 +316,81 @@ def prepare(root, native, output, security_path):
                 or record['workflow_run_id']!=os.environ['GITHUB_RUN_ID']
                 or record['workflow_run_attempt']!=os.environ['GITHUB_RUN_ATTEMPT']):
             raise ValueError('publisher-native-output-binding')
+        spdx = digest_file(directory/'syft.spdx.json')
+        association = directory/'association.json'
+        if read(association) != dict(schema_version='1.0.0', format='SPDX', spdx_digest=spdx,
+                                     subject=dict(oci_digest=observed['manifest_digest'], platform='linux/'+arch)):
+            raise ValueError('publisher-native-inventory-binding')
+        inventories.append(dict(platform='linux/'+arch, spdx_sha256=spdx, association_sha256=digest_file(association)))
         records.append(record);sizes.append(len(manifest))
         write(output/('record-'+arch+'.json'),record)
         (output/('platform-'+arch+'.json')).write_bytes(manifest)
         (output/('config-'+arch+'.json')).write_bytes(config)
     index = canonical(assemble_index([r['subject'] for r in records],sizes))
     (output/'index.json').write_bytes(index)
-    write(output/'prepared.json',dict(index_digest=digest(index),records=records))
+    write(output/'prepared.json',dict(index_digest=digest(index),records=records,inventories=inventories))
+
+
+def qualification(root, prepared, scan_root, *, recheck=False):
+    """Seal the observed OCI and exact normalized policy inputs from both scanners."""
+    root, prepared, scan_root = map(Path, (root, prepared, scan_root))
+    inputs = read(prepared)
+    if [r['subject']['platform'] for r in inputs['records']] != list(PLATFORMS):
+        raise ValueError('publisher-qualification-platforms')
+    if [s['platform'] for s in inputs['inventories']] != list(PLATFORMS):
+        raise ValueError('publisher-qualification-inventories')
+    results = []
+    for record, inventory in zip(inputs['records'], inputs['inventories'], strict=True):
+        platform_name = record['subject']['platform']
+        folder = scan_root/platform_name.split('/')[1]
+        subject = dict(oci_digest=record['subject']['manifest_digest'], platform=platform_name)
+        evaluation = read(folder/'evaluation.json')
+        result = read(folder/'policy-result.json')
+        if (result['gate_state'] != 'CLEAN' or result['evidence_health']['state'] != 'HEALTHY'
+                or result['subject'] != subject or evaluation['subject'] != subject
+                or evaluation['syft']['spdx_digest'] != inventory['spdx_sha256']
+                or result['syft'] != evaluation['syft']):
+            raise ValueError('publisher-pre-registry-policy')
+        results.append(dict(subject=subject, evaluation_sha256=digest_file(folder/'evaluation.json'),
+                            policy_sha256=digest_file(folder/'policy-result.json')))
+    binding = dict(candidate_sha256=digest_file(prepared), results=results)
+    if recheck:
+        # Trusted, signed job output authenticates the complete receipt before
+        # the writer consumes any archived policy input.
+        expected = os.environ['PRE_REGISTRY_BINDING']
+        if digest(canonical(binding) + b'\n') != expected:
+            raise ValueError('publisher-pre-registry-receipt-binding')
+        recheck_qualification(root, scan_root)
+    return binding
+
+
+def recheck_qualification(root, scan_root):
+    """Reapply the same pinned policy at registry admission time."""
+    governance = root/'.context/publisher-governance'
+    adapter = governance/'scripts/secpal-vulnerability-reevaluation.py'
+    policy = governance/'scripts/secpal-vulnerability-policy.py'
+    vex = []
+    if (governance/'reviewed-vex').is_dir():
+        manifests = run([sys.executable, str(adapter), 'list-vex',
+                         '--directory', str(governance/'reviewed-vex')])
+        for name in manifests.decode().split('\0'):
+            if name:
+                run([sys.executable, str(adapter), 'verify-vex', '--checkout', str(governance),
+                     '--manifest', name, '--trusted-repository', 'SecPal/.github',
+                     '--trusted-commit', '22ce172e7b1decfdd4267e382432b93765798d95'])
+                vex.extend(['--reviewed-vex-manifest', name])
+    observed_at = timestamp(datetime.now(timezone.utc).timestamp())
+    with tempfile.TemporaryDirectory() as temporary:
+        for arch in ('amd64', 'arm64'):
+            evaluation = read(scan_root/arch/'evaluation.json')
+            evaluation['evaluated_at'] = observed_at
+            path = Path(temporary)/'evaluation.json'
+            write(path, evaluation)
+            result = json.loads(run([sys.executable, str(policy), str(path),
+                                     '--policy', str(governance/'policies/vulnerability-triage-v1.json'), *vex]))
+            if result['gate_state'] != 'CLEAN' or result['evidence_health']['state'] != 'HEALTHY':
+                raise ValueError('publisher-pre-registry-policy-expired')
+
 
 
 def complete(prepared, scan_root, smoke_root, root, output):
@@ -339,6 +424,9 @@ def main():
     for key in ('record','spdx','output'):a.add_argument('--'+key,required=True)
     p=sub.add_parser('prepare')
     for key in ('root','native','output','security'):p.add_argument('--'+key,required=True)
+    q=sub.add_parser('qualification')
+    for key in ('root','prepared','scan-root','output'):q.add_argument('--'+key,required=True)
+    q.add_argument('--recheck',action='store_true')
     e=sub.add_parser('complete')
     for key in ('prepared','scan-root','smoke-root','root','output'):e.add_argument('--'+key,required=True)
     args=parser.parse_args()
@@ -356,6 +444,8 @@ def main():
                               workflow_run_attempt=os.environ['GITHUB_RUN_ATTEMPT']))
     elif args.command=='prepare':
         prepare(args.root,args.native,args.output,args.security)
+    elif args.command=='qualification':
+        write(args.output,qualification(args.root,args.prepared,args.scan_root,recheck=args.recheck))
     elif args.command=='complete':
         complete(args.prepared,args.scan_root,args.smoke_root,args.root,args.output)
     else:
