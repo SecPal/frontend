@@ -397,6 +397,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const redirectAfterLogoutCleanup = useCallback(() => {
+    if (
+      authStorage.hasLogoutBarrier() &&
+      !authStorage.shouldSkipBarrierVaultTableCleanup()
+    ) {
+      syncOfflineAuthState(false, { redirectOpenClients: true });
+    }
+  }, [syncOfflineAuthState]);
+
   const resetAnalyticsState = useCallback(async () => {
     try {
       const { analytics } = await loadAnalyticsModule();
@@ -493,7 +502,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     shouldSkipBarrierVaultTableCleanupRef.current =
       shouldSkipBarrierVaultTableCleanup;
 
-    void authStorage.removeUser({
+    return authStorage.removeUser({
       clearOfflineVaultTables: !shouldSkipBarrierVaultTableCleanup,
       allowBarrierSkipUpgrade: true,
     });
@@ -508,12 +517,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsVaultLocked(false);
     setIsPrivacyShielded(false);
     setIsLoading(false);
-    syncOfflineAuthState(false, {
-      redirectOpenClients: !authStorage.shouldSkipBarrierVaultTableCleanup(),
-    });
-    removeUserForActiveBarrier();
+    syncOfflineAuthState(false, { redirectOpenClients: false });
+    const hasCleanupOwner = authStorage.shouldSkipBarrierVaultTableCleanup();
+    void removeUserForActiveBarrier()
+      .then(() => {
+        if (!hasCleanupOwner) {
+          redirectAfterLogoutCleanup();
+        }
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to reconcile the logout barrier:", error);
+      });
   }, [
     invalidateBootstrapRevalidation,
+    redirectAfterLogoutCleanup,
     removeUserForActiveBarrier,
     syncBarrierStateFromStorage,
     syncOfflineAuthState,
@@ -670,9 +687,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return sensitiveLogoutCleanupPromise;
         }
 
-        sensitiveLogoutCleanupPromise =
-          runDestructiveSensitiveLogoutCleanup().finally(async () => {
+        sensitiveLogoutCleanupPromise = runDestructiveSensitiveLogoutCleanup()
+          .finally(async () => {
             await clearTrailingSensitiveClientState();
+          })
+          .finally(() => {
+            if (
+              clearSessionCycleRef.current === clearSessionCycle &&
+              shouldRedirectOpenClientsRef.current
+            ) {
+              redirectAfterLogoutCleanup();
+            }
           });
 
         return sensitiveLogoutCleanupPromise;
@@ -719,16 +744,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               return;
             }
 
-            if (
-              shouldRedirectOpenClientsRef.current &&
-              !authStorage.shouldSkipBarrierVaultTableCleanup()
-            ) {
-              syncOfflineAuthState(false, { redirectOpenClients: true });
-            }
-
             shouldSkipBarrierVaultTableCleanupRef.current = false;
             shouldClearSensitiveStateRef.current = false;
-            shouldRedirectOpenClientsRef.current = false;
             isClearingSessionRef.current = false;
             clearAuthenticatedStateDestructivePromiseRef.current =
               Promise.resolve();
@@ -740,6 +757,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       beginSensitiveLogoutBarrierCleanup,
       endSensitiveLogoutBarrierCleanup,
       invalidateBootstrapRevalidation,
+      redirectAfterLogoutCleanup,
       resetAnalyticsState,
       syncOfflineAuthState,
     ]
