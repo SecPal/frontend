@@ -14,6 +14,7 @@ import {
   listVaultOrganizationalUnits,
   readPersistedAuthUserFromVault,
   clearOfflineVaultTables,
+  saveVaultOrganizationalUnit,
   storeVaultAnalyticsEvent,
 } from "./offlineVault";
 
@@ -493,6 +494,31 @@ describe("offlineVault", () => {
 
     expect(rotatedVaultState).not.toBeNull();
     expect(rotatedVaultState).not.toBe(initialVaultState);
+  });
+
+  it("keeps parallel organizational unit writes working after browser-session CSRF rotation", async () => {
+    await initializeOfflineVault(persistedUser);
+    setCsrfTokenCookie("rotated-csrf-token");
+
+    const now = new Date();
+    const units = ["unit-1", "unit-2"].map(
+      (id): OrganizationalUnitCacheEntry => ({
+        id,
+        name: id,
+        type: "branch",
+        created_at: now.toISOString(),
+        updated_at: now.toISOString(),
+        cachedAt: now,
+        lastSynced: now,
+      })
+    );
+    await Promise.all(units.map(saveVaultOrganizationalUnit));
+
+    clearOfflineVaultSession();
+    await expect(readPersistedAuthUserFromVault()).resolves.toEqual(
+      persistedUser
+    );
+    await expect(listVaultOrganizationalUnits()).resolves.toEqual(units);
   });
 
   it("does not let a stale wrapper rewrite replace a newer user's vault", async () => {
