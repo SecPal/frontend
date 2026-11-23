@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { execFileSync, spawnSync } from "node:child_process";
 import {
+  chmodSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -48,10 +49,17 @@ const sourceOnlyPaths = [
   "tests/daily-repository-security-workflow.test.ts",
 ];
 const admissionPolicy = "scripts/frontend-publisher-admission.sh";
+const legalMenuTest = "src/components/nav-legal.test.tsx";
 
 function publicationAdmission(
   paths: readonly string[],
-  options: { bootstrap?: boolean; before?: string } = {}
+  options: {
+    bootstrap?: boolean;
+    before?: string;
+    existingTest?: boolean;
+    executableTest?: boolean;
+    previousIgnore?: string;
+  } = {}
 ) {
   const checkout = mkdtempSync(path.join(tmpdir(), "frontend-publication-"));
   const git = (...args: string[]) =>
@@ -68,12 +76,26 @@ function publicationAdmission(
       );
       git("add", "--", admissionPolicy);
     }
+    if (options.existingTest) {
+      mkdirSync(path.join(checkout, "src", "components"), { recursive: true });
+      writeFileSync(path.join(checkout, legalMenuTest), "original\n");
+      git("add", "--", legalMenuTest);
+    }
+    if (options.previousIgnore !== undefined) {
+      writeFileSync(
+        path.join(checkout, ".containerignore"),
+        options.previousIgnore
+      );
+      git("add", "--", ".containerignore");
+    }
     git("-c", "commit.gpgsign=false", "commit", "--allow-empty", "-qm", "base");
     const base = git("rev-parse", "HEAD");
     for (const name of paths) {
       const file = path.join(checkout, name);
       mkdirSync(path.dirname(file), { recursive: true });
       writeFileSync(file, name === admissionPolicy ? "exit 0\n" : "changed\n");
+      if (name === legalMenuTest && options.executableTest)
+        chmodSync(file, 0o755);
       git("add", "--", name);
     }
     git("-c", "commit.gpgsign=false", "commit", "--allow-empty", "-qm", "push");
@@ -246,6 +268,55 @@ describe("frontend native OCI publisher", () => {
     expect(publicationAdmission([sourceOnlyPaths[0], file])).toMatchObject({
       status: 0,
     });
+  });
+
+  it("declines release only for the exact already-excluded legal-menu test edit", () => {
+    const exclusion = readRepoFile(".containerignore");
+    expect(exclusion.trimEnd().split("\n").at(-1)).toBe(legalMenuTest);
+    expect(
+      publicationAdmission([legalMenuTest], {
+        existingTest: true,
+        previousIgnore: exclusion,
+      })
+    ).toMatchObject({
+      status: 1,
+      output: expect.stringContaining("Source-only legal-menu test change"),
+    });
+  });
+
+  it.each([
+    "src/App.tsx",
+    "package-lock.json",
+    ".containerignore",
+    sourceOnlyPaths[0],
+  ])(
+    "uses full release qualification when the legal-menu test also changes with %s",
+    (other) => {
+      expect(
+        publicationAdmission([legalMenuTest, other], {
+          existingTest: true,
+          previousIgnore: legalMenuTest + "\n",
+        })
+      ).toMatchObject({ status: 0 });
+    }
+  );
+
+  it("requires an existing regular test and the exact effective protected-base exclusion", () => {
+    for (const options of [
+      { existingTest: true },
+      { existingTest: true, previousIgnore: "src/components/*.test.tsx\n" },
+      { existingTest: true, previousIgnore: legalMenuTest + "\n!src/**\n" },
+      { existingTest: false, previousIgnore: legalMenuTest + "\n" },
+      {
+        existingTest: true,
+        executableTest: true,
+        previousIgnore: legalMenuTest + "\n",
+      },
+    ]) {
+      expect(publicationAdmission([legalMenuTest], options)).toMatchObject({
+        status: 0,
+      });
+    }
   });
 
   it("blocks first installation when the protected predecessor lacks admission authority", () => {

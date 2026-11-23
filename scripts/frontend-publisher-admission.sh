@@ -26,6 +26,16 @@ for file in "${paths[@]}"; do
   esac
 done
 
+legal_test=src/components/nav-legal.test.tsx
+if (( ${#paths[@]} == 1 )) && [[ "${paths[0]}" == "$legal_test" ]] &&
+   [[ "$(git ls-tree "$before" -- .containerignore | cut -d ' ' -f 1)" == 100644 ]] &&
+   [[ "$(git show "$before:.containerignore" | tail -n 1)" == "$legal_test" ]] &&
+   [[ "$(git ls-tree "$before" -- "$legal_test" | cut -d ' ' -f 1)" == 100644 ]] &&
+   [[ "$(git ls-tree "$head" -- "$legal_test" | cut -d ' ' -f 1)" == 100644 ]]; then
+  echo '::notice::Source-only legal-menu test change. No release was requested.'
+  exit 1
+fi
+
 for file in "${paths[@]}"; do
   case "$file" in
     .github/workflows/released-artifact-security.yml|.github/workflows/daily-repository-security.yml|\

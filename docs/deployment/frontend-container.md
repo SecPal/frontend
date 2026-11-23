@@ -92,6 +92,12 @@ uses the commit timestamp for `org.opencontainers.image.created` and combines
 the package version with the full source commit as
 `<package-version>+git.<full-source-sha>`.
 
+The protected policy admits an edit to the existing
+`src/components/nav-legal.test.tsx` as source-only when it is the sole changed
+path and the preceding protected `.containerignore` ends with its exact
+exclusion. Required source checks still run on the complete source tree. Mixed
+changes retain release qualification.
+
 Native Buildah 1.33.7 jobs on AMD64 and ARM64 build exact committed source
 without foreign-architecture emulation. Pinned Syft 1.54.1 produces each
 authoritative SPDX inventory. The controller independently hashes OCI manifests,

@@ -26,3 +26,4 @@ reuse.spdx
 test-results.json
 tests
 playwright*.config.*
+src/components/nav-legal.test.tsx
