@@ -72,7 +72,7 @@ jobs:
         shell: bash
         env:
           # yamllint disable-line rule:line-length
-          GOVERNANCE_WORKFLOW: &released-security-workflow SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@618d818048480b4386cdf82a8cbbc5195351faf1
+          GOVERNANCE_WORKFLOW: &released-security-workflow SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@73e2972e8856c8c197152ec3b45a63e49ccb09fe
         run: |
           set -euo pipefail
           revision="${GOVERNANCE_WORKFLOW##*@}"
