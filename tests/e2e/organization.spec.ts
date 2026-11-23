@@ -227,6 +227,11 @@ test.describe("Organization Management", () => {
     }) => {
       let organizationRequestCount = 0;
       let rotationMockApplied = false;
+      const secondUnit = {
+        ...offlineLiveMockOrganizationUnit,
+        id: "second-root",
+        name: "Operations",
+      };
 
       await page
         .context()
@@ -244,13 +249,16 @@ test.describe("Organization Management", () => {
                   }
                 : {},
             body: JSON.stringify({
-              data: [offlineLiveMockOrganizationUnit],
+              data: [offlineLiveMockOrganizationUnit, secondUnit],
               meta: {
                 current_page: 1,
                 last_page: 1,
                 per_page: 100,
-                total: 1,
-                root_unit_ids: [offlineLiveMockOrganizationUnit.id],
+                total: 2,
+                root_unit_ids: [
+                  offlineLiveMockOrganizationUnit.id,
+                  secondUnit.id,
+                ],
               },
             }),
           });
@@ -265,6 +273,9 @@ test.describe("Organization Management", () => {
       await expect(
         page.getByText(offlineLiveMockOrganizationUnit.name).first()
       ).toBeVisible();
+      await expect(
+        page.getByText(secondUnit.name, { exact: true }).first()
+      ).toBeVisible();
       await expectAuthenticatedShellVisible(page);
       await expect(
         page.getByText("Offline vault is not available.")
@@ -278,6 +289,9 @@ test.describe("Organization Management", () => {
       ).toBeVisible();
       await expect(
         page.getByText(offlineLiveMockOrganizationUnit.name).first()
+      ).toBeVisible();
+      await expect(
+        page.getByText(secondUnit.name, { exact: true }).first()
       ).toBeVisible();
       await expectAuthenticatedShellVisible(page);
       await expect(
