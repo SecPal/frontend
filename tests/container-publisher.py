@@ -141,6 +141,96 @@ def evidence():
     return [records,'sha256:'+'4'*64,sboms,scans,smokes,security,'42','2',NOW]
 
 
+class UnpublishedQualificationTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.prepared = self.root/'prepared.json'
+        self.scan = self.root/'scan'
+        records, _, sboms, *_ = evidence()
+        self.inputs = dict(records=records, inventories=[
+            dict(platform=record['platform'], spdx_sha256=record['spdx_sha256'])
+            for record in sboms
+        ])
+        publisher.write(self.prepared, self.inputs)
+        for platform_record in sboms:
+            arch = platform_record['platform'].split('/')[1]
+            folder = self.scan/arch
+            folder.mkdir(parents=True)
+            subject = dict(platform=platform_record['platform'], oci_digest=platform_record['subject_digest'])
+            evaluation = dict(subject=subject, syft=dict(subject=subject, spdx_digest=platform_record['spdx_sha256']))
+            publisher.write(folder/'evaluation.json', evaluation)
+            publisher.write(folder/'policy-result.json', dict(evaluation, gate_state='CLEAN',
+                                                             evidence_health=dict(state='HEALTHY')))
+
+    def qualify(self, **options):
+        return publisher.qualification(self.root, self.prepared, self.scan, **options)
+
+    def test_both_clean_subjects_and_their_policy_inputs_are_bound(self):
+        receipt = self.qualify()
+        self.assertEqual([item['subject']['platform'] for item in receipt['results']], list(publisher.PLATFORMS))
+        signed = digest(publisher.canonical(receipt) + b'\n')
+        with patch.dict(os.environ, PRE_REGISTRY_BINDING=signed), patch.object(publisher, 'recheck_qualification') as check:
+            self.assertEqual(self.qualify(recheck=True), receipt)
+            check.assert_called_once_with(self.root, self.scan)
+            for file in (self.prepared, self.scan/'arm64'/'evaluation.json', self.scan/'amd64'/'policy-result.json'):
+                original = file.read_bytes()
+                file.write_bytes(original + b' ')
+                with self.assertRaisesRegex(ValueError, 'publisher-pre-registry-receipt-binding'):
+                    self.qualify(recheck=True)
+                file.write_bytes(original)
+            check.assert_called_once()
+
+    def test_missing_platform_or_nonclean_policy_cannot_grant_registry_access(self):
+        path = self.scan/'arm64'/'policy-result.json'
+        clean = publisher.read(path)
+        for verdict, health in (('ACTIONABLE', 'HEALTHY'), ('REVIEW_REQUIRED', 'HEALTHY'),
+                                ('UNKNOWN_STALE', 'UNHEALTHY'), ('CLEAN', 'UNHEALTHY')):
+            publisher.write(path, dict(clean, gate_state=verdict, evidence_health=dict(state=health)))
+            with self.subTest(verdict=verdict, health=health), self.assertRaisesRegex(ValueError, 'publisher-pre-registry-policy'):
+                self.qualify()
+        publisher.write(path, dict(clean, subject=dict(clean['subject'], oci_digest='sha256:'+'a'*64)))
+        with self.assertRaisesRegex(ValueError, 'publisher-pre-registry-policy'):
+            self.qualify()
+        path.unlink()
+        with self.assertRaisesRegex(ValueError, 'publisher-evidence-file'):
+            self.qualify()
+        publisher.write(self.prepared, dict(self.inputs, records=self.inputs['records'][:1]))
+        with self.assertRaisesRegex(ValueError, 'publisher-qualification-platforms'):
+            self.qualify()
+
+    def test_replay_rejects_policy_that_is_no_longer_clean(self):
+        receipt = self.qualify()
+        originally_clean = publisher.read(self.scan/'amd64'/'policy-result.json')
+        for verdict in ('ACTIONABLE', 'REVIEW_REQUIRED', 'UNKNOWN_STALE'):
+            no_longer_accepted = dict(originally_clean, gate_state=verdict)
+            with patch.dict(os.environ, PRE_REGISTRY_BINDING=digest(publisher.canonical(receipt) + b'\n')):
+                with patch.object(publisher, 'run', return_value=encoded(no_longer_accepted)):
+                    with self.subTest(verdict=verdict), self.assertRaisesRegex(ValueError, 'publisher-pre-registry-policy-expired'):
+                        self.qualify(recheck=True)
+
+    def test_corrupted_oci_layer_is_detected_before_copy(self):
+        arch = 'amd64'
+        base, config, raw_manifest, _, _ = platform(arch)
+        layer = b'complete original layer contents'
+        manifest = json.loads(raw_manifest)
+        manifest['layers'] = [dict(mediaType='application/vnd.oci.image.layer.v1.tar+gzip',
+                                  digest=digest(layer), size=len(layer))]
+        raw_manifest = encoded(manifest)
+        descriptor = dict(mediaType=manifest['mediaType'], digest=digest(raw_manifest), size=len(raw_manifest))
+        blobs = self.root/'blobs'/'sha256'
+        blobs.mkdir(parents=True)
+        publisher.write(self.root/'oci-layout', dict(imageLayoutVersion='1.0.0'))
+        publisher.write(self.root/'index.json', dict(schemaVersion=2, manifests=[descriptor]))
+        for entry in (config, raw_manifest, layer):
+            (blobs/digest(entry).split(':')[1]).write_bytes(entry)
+        publisher.read_layout(self.root, arch, SOURCE, base)
+        (blobs/digest(layer).split(':')[1]).write_bytes(b'x' * len(layer))
+        with self.assertRaisesRegex(ValueError, 'publisher-layer-binding'):
+            publisher.read_layout(self.root, arch, SOURCE, base)
+
+
 class EvidenceTimeTests(unittest.TestCase):
     @staticmethod
     def grype_evidence():
@@ -383,8 +473,9 @@ class Publisher(unittest.TestCase):
             for index,arguments in enumerate(commands):
                 destination=work/('copy-'+str(index))
                 actual=[str(auth) if value=='$REGISTRY_AUTH_FILE' else value for value in arguments]
+                reference = str(source) + ('@'+original if index == 0 else ':probe')
                 result=subprocess.run([str(oras),'cp',*actual,'--to-oci-layout',
-                                       str(source)+':probe',str(destination)+':probe'],
+                                       reference,str(destination)+':probe'],
                                       cwd=work,capture_output=True,text=True,check=False)
                 self.assertEqual(result.returncode,0,result.stderr)
                 observed=json.loads((destination/'index.json').read_text())['manifests'][0]['digest']

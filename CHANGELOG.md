@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Qualify both native Frontend OCI images and authenticate their exact build
+  evidence before granting registry access.
+
 - Keep browser and Playwright API and CSRF requests on the private workspace
   HTTPS origin. Android mock login follows the instance explicitly selected
   through runtime discovery.

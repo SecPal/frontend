@@ -8,10 +8,10 @@ name: Publish Container
     branches:
       - main
     paths-ignore:
-      - &released-monitor .github/workflows/released-artifact-security.yml
-      - &source-monitor .github/workflows/daily-repository-security.yml
-      - &released-test tests/released-artifact-security-workflow.test.ts
-      - &source-test tests/daily-repository-security-workflow.test.ts
+      - .github/workflows/released-artifact-security.yml
+      - .github/workflows/daily-repository-security.yml
+      - tests/released-artifact-security-workflow.test.ts
+      - tests/daily-repository-security-workflow.test.ts
 permissions: {}
 concurrency:
   group: publish-container-${{ github.repository }}-${{ github.sha }}
@@ -39,12 +39,6 @@ jobs:
         shell: bash
         env:
           BEFORE: ${{ github.event.before }}
-          RELEASED_MONITOR: *released-monitor
-          SOURCE_MONITOR: *source-monitor
-          RELEASED_TEST: *released-test
-          SOURCE_TEST: *source-test
-          # Only the installation on this predecessor can qualify for the boundary exception.
-          BOOTSTRAP_BASE: c7d721a72aa156dc304b92004b705228d43cdbc8
         run: |
           set -euo pipefail
           if [[ "$GITHUB_REPOSITORY" != SecPal/frontend || "$GITHUB_REF" != refs/heads/main ||
@@ -54,28 +48,13 @@ jobs:
             echo '::error::Cannot authenticate the protected-main push and its predecessor.'
             exit 1
           fi
-          # Use complete Git trees even when GitHub runs despite its path filter.
-          git diff --name-only --no-renames -z "$BEFORE" "$GITHUB_SHA" -- > "$RUNNER_TEMP/publication-paths"
-          mapfile -d '' -t paths < "$RUNNER_TEMP/publication-paths"
-          if (( ${#paths[@]} == 0 )); then
-            echo '::error::No changed paths available for publication admission.'
+          mode=$(git ls-tree "$BEFORE" -- scripts/frontend-publisher-admission.sh | cut -d ' ' -f 1)
+          if [[ "$mode" != 100644 ]]; then
+            echo '::notice::Protected predecessor lacks the verified publisher gate. No release was requested.'
             exit 1
           fi
-          if [[ "$BEFORE" == "$BOOTSTRAP_BASE" && "$(git rev-parse HEAD^)" == "$BEFORE" &&
-                ${#paths[@]} == 3 && "${paths[0]}" == .github/workflows/publish-container.yml &&
-                "${paths[1]}" == CHANGELOG.md && "${paths[2]}" == tests/container-publishing-workflow.test.ts ]]; then
-            echo '::notice::Publication boundary installation. No release was requested.'
-            exit 1
-          fi
-          for file in "${paths[@]}"; do
-            case "$file" in
-              "$RELEASED_MONITOR"|"$SOURCE_MONITOR"|"$RELEASED_TEST"|"$SOURCE_TEST") ;;
-              *) exit 0 ;;
-            esac
-          done
-          # Discovery uses successful runs. A declined publication must never appear there.
-          echo '::notice::Source-only push. No release was requested.'
-          exit 1
+          git show "$BEFORE:scripts/frontend-publisher-admission.sh" > "$RUNNER_TEMP/publisher-admission.sh"
+          bash "$RUNNER_TEMP/publisher-admission.sh" "$BEFORE" "$GITHUB_SHA"
 
   repository-security:
     name: Repository Security
@@ -118,11 +97,106 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/frontend-container.yml
+  pre-registry:
+    name: Qualify both exact unpublished OCI subjects
+    needs:
+      - build
+      - repository-security
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      attestations: write
+      id-token: write
+    outputs:
+      binding: ${{ steps.binding.outputs.binding }}
+    steps:
+      - name: Checkout exact publisher source
+        # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Checkout accepted supply-chain implementation
+        # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: SecPal/.github
+          ref: 22ce172e7b1decfdd4267e382432b93765798d95
+          path: .context/publisher-governance
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Install native registry observer
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends skopeo
+      - name: Install pinned publisher tools
+        run: scripts/container-tools.sh publish "$RUNNER_TEMP/secpal-publisher-tools"
+      - name: Read same-run native artifacts
+        # v8.0.2
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          pattern: frontend-native-*-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .context/native
+      - name: Require exact source evidence identity
+        env:
+          SOURCE_EVIDENCE_ARTIFACT: ${{ needs.repository-security.outputs.evidence-artifact }}
+        run: test -n "$SOURCE_EVIDENCE_ARTIFACT"
+      - name: Read exact source security evidence
+        # v8.0.2
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          path: .context/repository-security
+          name: ${{ needs.repository-security.outputs.evidence-artifact }}
+      - name: Install locked central policy dependencies
+        run: |
+          python3 -m venv "$RUNNER_TEMP/secpal-policy"
+          "$RUNNER_TEMP/secpal-policy/bin/pip" install \
+            --requirement .context/publisher-governance/requirements/vulnerability-policy.txt
+          printf '%s\n' "$RUNNER_TEMP/secpal-policy/bin" >> "$GITHUB_PATH"
+      - name: Apply unchanged artifact-security policy before registry access
+        run: scripts/publish-container.sh qualify
+      - name: Sign the local qualification binding
+        id: qualification-attestation
+        # v4.2.1
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6
+        with:
+          subject-path: .context/publisher/pre-registry.json
+          push-to-registry: false
+          create-storage-record: false
+      - name: Verify the local qualification attestation
+        id: binding
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUNDLE: ${{ steps.qualification-attestation.outputs.bundle-path }}
+        run: |
+          set -euo pipefail
+          test -s "$BUNDLE"
+          gh attestation verify .context/publisher/pre-registry.json --bundle "$BUNDLE" \
+            --repo SecPal/frontend --signer-workflow SecPal/frontend/.github/workflows/publish-container.yml \
+            --signer-digest "$GITHUB_SHA" --source-ref refs/heads/main --source-digest "$GITHUB_SHA" \
+            --deny-self-hosted-runners
+          binding=$(sha256sum .context/publisher/pre-registry.json | cut -d ' ' -f 1)
+          echo "binding=sha256:$binding" >> "$GITHUB_OUTPUT"
+      - name: Retain unpublished qualification evidence
+        if: always()
+        # v7.0.2
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: frontend-pre-registry-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .context/publisher
+            .context/scan
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
+
   prepare:
     name: Prepare exact digest subjects
     needs:
       - build
       - repository-security
+      - pre-registry
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -153,9 +227,9 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - name: Install native registry observer
-        run: "sudo apt-get update
-
-          sudo apt-get install --yes --no-install-recommends skopeo"
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends skopeo
       - name: Install pinned publisher tools
         run: scripts/container-tools.sh registry "$RUNNER_TEMP/secpal-publisher-tools"
       - name: Read same-run native artifacts
@@ -175,15 +249,22 @@ jobs:
           path: .context/repository-security
           name: ${{ needs.repository-security.outputs.evidence-artifact }}
       - name: Install locked central policy dependencies
-        run: 'python3 -m venv "$RUNNER_TEMP/secpal-policy"
-
-          "$RUNNER_TEMP/secpal-policy/bin/pip" install --requirement .context/publisher-governance/requirements/vulnerability-policy.txt
-
-          printf ''%s\n'' "$RUNNER_TEMP/secpal-policy/bin" >> "$GITHUB_PATH"'
+        run: |
+          python3 -m venv "$RUNNER_TEMP/secpal-policy"
+          "$RUNNER_TEMP/secpal-policy/bin/pip" install \
+            --requirement .context/publisher-governance/requirements/vulnerability-policy.txt
+          printf '%s\n' "$RUNNER_TEMP/secpal-policy/bin" >> "$GITHUB_PATH"
+      - name: Read exact unpublished qualification evidence
+        # v8.0.2
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          name: frontend-pre-registry-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .context/pre-registry
       - name: Publish and independently read exact subjects
         id: prepare
         env:
           GH_TOKEN: ${{ github.token }}
+          PRE_REGISTRY_BINDING: ${{ needs.pre-registry.outputs.binding }}
         run: scripts/publish-container.sh prepare
       - name: Retain bounded publisher evidence
         if: always()
@@ -391,11 +472,11 @@ jobs:
       - name: Install pinned publisher tools
         run: scripts/container-tools.sh publish "$RUNNER_TEMP/secpal-publisher-tools"
       - name: Install locked central policy dependencies
-        run: 'python3 -m venv "$RUNNER_TEMP/secpal-policy"
-
-          "$RUNNER_TEMP/secpal-policy/bin/pip" install --requirement .context/publisher-governance/requirements/vulnerability-policy.txt
-
-          printf ''%s\n'' "$RUNNER_TEMP/secpal-policy/bin" >> "$GITHUB_PATH"'
+        run: |
+          python3 -m venv "$RUNNER_TEMP/secpal-policy"
+          "$RUNNER_TEMP/secpal-policy/bin/pip" install \
+            --requirement .context/publisher-governance/requirements/vulnerability-policy.txt
+          printf '%s\n' "$RUNNER_TEMP/secpal-policy/bin" >> "$GITHUB_PATH"
       - name: Observe exact artifacts and apply accepted central policy
         env:
           GH_TOKEN: ${{ github.token }}
@@ -418,6 +499,7 @@ jobs:
       - verify
       - scan
       - repository-security
+      - pre-registry
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -491,6 +573,7 @@ jobs:
         id: retain
         env:
           GH_TOKEN: ${{ github.token }}
+          PRE_REGISTRY_BINDING: ${{ needs.pre-registry.outputs.binding }}
         run: scripts/publish-container.sh retain-evidence
       - name: Authenticate exact package for evidence attestation
         env:
@@ -519,6 +602,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           EVIDENCE_DIGEST: ${{ steps.retain.outputs.evidence_digest }}
+          PRE_REGISTRY_BINDING: ${{ needs.pre-registry.outputs.binding }}
         run: scripts/publish-container.sh accept "$EVIDENCE_DIGEST"
       - name: Retain bounded publisher evidence
         if: always()

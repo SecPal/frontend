@@ -83,8 +83,11 @@ deployment contract, rollback contract, or trust anchor. It is also not
 technically immutable against another registry writer with sufficient
 permissions. Consumers must record and use the verified OCI index digest.
 
-The publisher runs only after a push to `main`, always rebuilds the selected
-source commit, and publishes exactly `linux/amd64` and `linux/arm64`. The build
+The publisher admits a release-relevant push to protected `main` using the
+complete diff and the preceding protected tree's admission policy. The first
+installation and publisher-authority changes stop before release construction
+and leave the previous accepted release selected. The publisher rebuilds the
+selected source commit for exactly `linux/amd64` and `linux/arm64`. The build
 uses the commit timestamp for `org.opencontainers.image.created` and combines
 the package version with the full source commit as
 `<package-version>+git.<full-source-sha>`.
@@ -92,20 +95,28 @@ the package version with the full source commit as
 Native Buildah 1.33.7 jobs on AMD64 and ARM64 build exact committed source
 without foreign-architecture emulation. Pinned Syft 1.54.1 produces each
 authoritative SPDX inventory. The controller independently hashes OCI manifests,
-configs and index bytes, checks source/base/platform labels and verifies each
-SPDX association. It publishes candidates by digest before any discovery tag.
+configs, layers and index bytes, checks source/base/platform labels and verifies
+each SPDX association. Grype and Trivy scan both unpublished subjects using
+the accepted central policy. Both results must be CLEAN with healthy evidence.
+The hosted workflow signs the receipt without writing to GHCR. Before the first
+registry write, the writer independently reconstructs the exact subjects, checks
+the signed qualification binding and re-evaluates the policy at write time.
+It then publishes the qualified candidates by digest.
 
 Five GitHub OCI attestations bind the index, both platform manifests and both
 SPDX artifacts to the repository, source commit, workflow and hosted signer.
 Both native platforms run the complete runtime and Chromium contracts.
 Grype 0.118.0 consumes only the verified Syft SPDX through the accepted shared
 input-provenance contract; Trivy 0.74.0 independently scans each immutable
-platform artifact. Fresh central policy acceptance must be CLEAN for both.
+platform artifact again after registry read-back. Fresh central policy acceptance
+must be CLEAN for both.
 
 Only after those gates does the publisher attest a builder-independent evidence
 document, retain and attest its immutable OCI artifact, independently verify all
-subjects and create the unique run-scoped discovery tag. Failed runs may leave
-immutable candidates; they are not accepted releases. No registry deletion or
+subjects and create the unique run-scoped discovery tag. Failures before write
+admission leave the registry untouched. Failures during final verification may
+leave pre-qualified immutable candidates and preserve the previous accepted
+release. No registry deletion or
 moving promotion tag is used. Source acceptance alone does not establish a
 successful protected-main publisher run.
 
