@@ -98,6 +98,13 @@ path and the preceding protected `.containerignore` ends with its exact
 exclusion. Required source checks still run on the complete source tree. Mixed
 changes retain release qualification.
 
+After authority changes enter protected main, dispatch Publish Container on
+main to qualify that exact tree. The qualification checks the signed current
+tip, its merged pull request and the successful protected-main quality run for
+the same commit. It requires a predecessor with an installed admission policy
+and produces only unpublished candidate evidence. The first push that changes
+authority still stops at the predecessor gate.
+
 Native Buildah 1.33.7 jobs on AMD64 and ARM64 build exact committed source
 without foreign-architecture emulation. Pinned Syft 1.54.1 produces each
 authoritative SPDX inventory. The controller independently hashes OCI manifests,

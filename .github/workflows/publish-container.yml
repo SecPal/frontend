@@ -29,7 +29,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
+      actions: read
       contents: read
+      pull-requests: read
     steps:
       - name: Checkout the exact publisher source and its predecessor
         # v7.0.1
@@ -38,7 +40,7 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Authenticate event and admit release-relevant pushes
+      - name: Admit successive releases or independently adopted source
         shell: bash
         env:
           BEFORE: ${{ github.event.before }}
@@ -52,11 +54,7 @@ jobs:
             exit 1
           fi
           case "$GITHUB_EVENT_NAME" in
-            workflow_dispatch)
-              gh api "repos/SecPal/frontend/commits/$GITHUB_SHA" |
-                jq -e --arg sha "$GITHUB_SHA" '.sha == $sha and .commit.verification.verified == true' >/dev/null
-              BEFORE=$(git rev-parse --verify "$GITHUB_SHA^")
-              ;;
+            workflow_dispatch) BEFORE=$(git rev-parse --verify "$GITHUB_SHA^") ;;
             push) ;;
             *) exit 1 ;;
           esac
@@ -69,6 +67,28 @@ jobs:
           if [[ "$mode" != 100644 ]]; then
             echo '::notice::Protected predecessor lacks the verified publisher gate. No release was requested.'
             exit 1
+          fi
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            # Only the candidate graph is reachable after independent source adoption.
+            git diff --quiet --no-ext-diff "$BEFORE" "$GITHUB_SHA" -- \
+              .github/workflows/quality.yml .github/workflows/reusable-repository-security.yml
+            gh api repos/SecPal/frontend/branches/main |
+              jq -e --arg sha "$GITHUB_SHA" '
+                .protected == true and .commit.sha == $sha and .commit.commit.verification.verified == true
+              ' >/dev/null
+            gh api "repos/SecPal/frontend/commits/$GITHUB_SHA/pulls?per_page=100" |
+              jq -e --arg sha "$GITHUB_SHA" '
+                map(select(.state == "closed" and (.merged_at | type) == "string" and .merge_commit_sha == $sha
+                  and .base.ref == "main" and .base.repo.full_name == "SecPal/frontend")) | length == 1
+              ' >/dev/null
+            quality_path=repos/SecPal/frontend/actions/workflows/quality.yml/runs
+            gh api "$quality_path?head_sha=$GITHUB_SHA&branch=main&event=push&per_page=30" |
+              jq -e --arg sha "$GITHUB_SHA" '
+                .workflow_runs | any(.head_sha == $sha and .head_branch == "main" and .event == "push"
+                  and .path == ".github/workflows/quality.yml" and .head_repository.full_name == "SecPal/frontend"
+                  and .status == "completed" and .conclusion == "success")
+              ' >/dev/null
+            exit 0
           fi
           git show "$BEFORE:scripts/frontend-publisher-admission.sh" > "$RUNNER_TEMP/publisher-admission.sh"
           bash "$RUNNER_TEMP/publisher-admission.sh" "$BEFORE" "$GITHUB_SHA"

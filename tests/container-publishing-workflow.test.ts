@@ -65,6 +65,8 @@ function publicationAdmission(
     ref?: string;
     protectedRef?: boolean;
     verified?: boolean;
+    merge?: "missing" | "different" | "source-branch";
+    quality?: "missing" | "different" | "failure";
   } = {}
 ) {
   const checkout = mkdtempSync(path.join(tmpdir(), "frontend-publication-"));
@@ -106,14 +108,56 @@ function publicationAdmission(
     }
     git("-c", "commit.gpgsign=false", "commit", "--allow-empty", "-qm", "push");
     if (options.event === "workflow_dispatch") {
-      const response = JSON.stringify({
-        sha: git("rev-parse", "HEAD"),
-        commit: { verification: { verified: options.verified ?? true } },
-      });
+      const sha = git("rev-parse", "HEAD");
+      const repository = { full_name: "SecPal/frontend" };
+      const branch = {
+        protected: options.protectedRef ?? true,
+        commit: {
+          sha,
+          commit: { verification: { verified: options.verified ?? true } },
+        },
+      };
+      const merges =
+        options.merge === "missing"
+          ? []
+          : [
+              {
+                state: "closed",
+                merged_at: "2026-11-24T14:00:00Z",
+                merge_commit_sha: options.merge === "different" ? base : sha,
+                base: {
+                  ref: options.merge === "source-branch" ? "other" : "main",
+                  repo: repository,
+                },
+              },
+            ];
+      const quality = {
+        workflow_runs:
+          options.quality === "missing"
+            ? []
+            : [
+                {
+                  head_sha: options.quality === "different" ? base : sha,
+                  head_branch: "main",
+                  head_repository: repository,
+                  path: ".github/workflows/quality.yml",
+                  event: "push",
+                  status: "completed",
+                  conclusion:
+                    options.quality === "failure" ? "failure" : "success",
+                },
+              ],
+      };
       writeFileSync(
         path.join(checkout, "gh"),
         `#!/bin/bash
-printf '%s\n' '${response}'
+case "$2" in
+  */branches/main) printf '%s\n' '${JSON.stringify(branch)}' ;;
+  */commits/*/pulls?*) printf '%s\n' '${JSON.stringify(merges)}' ;;
+  */workflows/quality.yml/runs[?]*) printf '%s\n' '${JSON.stringify(quality)}' ;;
+  */commits/*) printf '%s\n' '${JSON.stringify({ sha, commit: branch.commit.commit })}' ;;
+  *) exit 2 ;;
+esac
 `,
         { mode: 0o700 }
       );
@@ -147,7 +191,11 @@ function requireAcceptance(w: Workflow) {
     workflow_dispatch: null,
   });
   expect(w.permissions).toEqual({});
-  expect(w.jobs.admit.permissions).toEqual({ contents: "read" });
+  expect(w.jobs.admit.permissions).toEqual({
+    actions: "read",
+    contents: "read",
+    "pull-requests": "read",
+  });
   expect(w.jobs.admit.if).toBeUndefined();
   expect(w.jobs.admit.steps?.[0].with).toEqual({
     ref: "${{ github.sha }}",
@@ -386,11 +434,30 @@ describe("frontend native OCI publisher", () => {
       publicationAdmission(["package-lock.json"], { event, before: "" }).status
     ).toBe(0);
     expect(
-      publicationAdmission([admissionPolicy], { event, before: "" })
-    ).toMatchObject({
-      status: 1,
-      output: expect.stringContaining("Publisher authority changed"),
-    });
+      publicationAdmission([admissionPolicy], { event, before: "" }).status
+    ).toBe(0);
+    for (const options of [
+      { bootstrap: true },
+      { merge: "missing" as const },
+      { merge: "different" as const },
+      { merge: "source-branch" as const },
+      { quality: "missing" as const },
+      { quality: "different" as const },
+      { quality: "failure" as const },
+    ]) {
+      expect(
+        publicationAdmission([admissionPolicy], { event, ...options }).status
+      ).toBe(1);
+    }
+    expect(
+      publicationAdmission([".github/workflows/quality.yml"], { event }).status
+    ).toBe(1);
+    expect(
+      publicationAdmission(
+        [".github/workflows/reusable-repository-security.yml"],
+        { event }
+      ).status
+    ).toBe(1);
     expect(publicationAdmission([], { event, verified: false }).status).toBe(1);
     expect(
       publicationAdmission([], { event, protectedRef: false }).status
