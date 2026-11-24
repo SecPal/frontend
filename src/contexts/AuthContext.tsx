@@ -138,21 +138,20 @@ function isPublicUnauthenticatedRoute(pathname: string): boolean {
   return normalized === "/onboarding/complete" || normalized === "/source";
 }
 
-function isPendingVaultPublication(value: string | null): boolean {
+function readVaultPublication(
+  value: string | null
+): Record<string, unknown> | null {
   if (value === null) {
-    return false;
+    return null;
   }
 
   try {
     const envelope: unknown = JSON.parse(value);
-    return (
-      typeof envelope === "object" &&
-      envelope !== null &&
-      "initialization" in envelope &&
-      envelope.initialization === "pending"
-    );
+    return typeof envelope === "object" && envelope !== null
+      ? (envelope as Record<string, unknown>)
+      : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -1565,13 +1564,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ) {
         return;
       }
-      if (
-        event.key === AUTH_VAULT_STORAGE_KEY &&
-        isPendingVaultPublication(event.newValue)
-      ) {
-        // The writer still owns the lifecycle lock. Adopt the committed
-        // envelope once the encrypted profile is available.
-        return;
+      if (event.key === AUTH_VAULT_STORAGE_KEY) {
+        const publication = readVaultPublication(event.newValue);
+        if (publication?.initialization === "pending") {
+          // The writer still owns the lifecycle lock. Wait for the committed
+          // profile, and stop displaying any previous account immediately.
+          const previous = readVaultPublication(event.oldValue);
+          if (
+            typeof publication.subjectHash !== "string" ||
+            previous?.subjectHash !== publication.subjectHash
+          ) {
+            invalidateBootstrapRevalidation();
+            authStorage.abortPendingPersistence();
+            clearActiveOfflineVaultSession();
+            resetPrefetchCache();
+            setBootstrapRecoveryReason(null);
+            setUser(null);
+            setIsVaultLocked(false);
+            setIsLoading(true);
+          }
+          return;
+        }
       }
 
       if (

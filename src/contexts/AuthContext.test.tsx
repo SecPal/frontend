@@ -568,10 +568,11 @@ describe("AuthContext", () => {
       });
       const getUser = vi.spyOn(authStorage, "getUser");
       vi.mocked(isOnline).mockReturnValue(true);
-      const dispatchVault = (newValue: string | null) =>
+      const dispatchVault = (newValue: string | null, oldValue = committed) =>
         window.dispatchEvent(
           new StorageEvent("storage", {
             key: AUTH_VAULT_STORAGE_KEY,
+            oldValue,
             newValue,
             storageArea: localStorage,
           })
@@ -602,6 +603,47 @@ describe("AuthContext", () => {
       } finally {
         getUser.mockRestore();
       }
+    });
+
+    it("hides the previous account while a different account publishes its vault", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        permissions: ["employees.read"],
+      });
+      render(
+        <AuthProvider>
+          <PermissionTestComponent permission="employees.read" />
+        </AuthProvider>
+      );
+      await waitFor(() =>
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("true")
+      );
+      const previous = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+      if (!previous) throw new Error("Expected an authenticated vault");
+      const pending = JSON.stringify({
+        ...JSON.parse(previous),
+        subjectHash: "different-account",
+        initialization: "pending",
+      });
+
+      await act(async () => {
+        localStorage.setItem(AUTH_VAULT_STORAGE_KEY, pending);
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: AUTH_VAULT_STORAGE_KEY,
+            oldValue: previous,
+            newValue: pending,
+            storageArea: localStorage,
+          })
+        );
+      });
+
+      expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+      expect(screen.getByTestId("isLoading")).toHaveTextContent("true");
+      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(pending);
+      expect(getCurrentUser).not.toHaveBeenCalled();
     });
 
     it("keeps a new shared vault while an earlier tab still remembers a logout", async () => {
