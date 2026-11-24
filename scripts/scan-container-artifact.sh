@@ -121,13 +121,14 @@ python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" assemble \
   --evaluated-at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --output "$output/evaluation.json"
 python3 "$governance/scripts/secpal-vulnerability-policy.py" "$output/evaluation.json" \
   --policy "$governance/policies/vulnerability-triage-v1.json" "${vex_arguments[@]}" > "$output/policy-result.json"
-python3 - "$output" "$arch" <<'PY'
+python3 - "$output" "$arch" "$mode" <<'PY'
 import hashlib,json,sys
 from pathlib import Path
 root=Path(sys.argv[1]);arch=sys.argv[2]
 policy=json.loads((root/'policy-result.json').read_bytes())
-if policy['gate_state']!='CLEAN' or policy['evidence_health']['state']!='HEALTHY':
-    raise SystemExit('Artifact vulnerability policy did not admit CLEAN')
+allowed = ('CLEAN', 'ACTIONABLE', 'REVIEW_REQUIRED') if sys.argv[3] == '--unpublished' else ('CLEAN',)
+if policy['gate_state'] not in allowed or policy['evidence_health']['state'] != 'HEALTHY':
+    raise SystemExit('Artifact vulnerability policy rejected the evidence for this stage')
 subject=json.loads((root/'subject.json').read_bytes())
 association=json.loads((root/'sbom/association.json').read_bytes())
 records=[]

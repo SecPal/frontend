@@ -339,6 +339,7 @@ def qualification(root, prepared, scan_root, *, recheck=False):
         raise ValueError('publisher-qualification-platforms')
     if [s['platform'] for s in inputs['inventories']] != list(PLATFORMS):
         raise ValueError('publisher-qualification-inventories')
+    allowed = ('CLEAN',) if recheck else ('CLEAN', 'ACTIONABLE', 'REVIEW_REQUIRED')
     results = []
     for record, inventory in zip(inputs['records'], inputs['inventories'], strict=True):
         platform_name = record['subject']['platform']
@@ -346,7 +347,7 @@ def qualification(root, prepared, scan_root, *, recheck=False):
         subject = dict(oci_digest=record['subject']['manifest_digest'], platform=platform_name)
         evaluation = read(folder/'evaluation.json')
         result = read(folder/'policy-result.json')
-        if (result['gate_state'] != 'CLEAN' or result['evidence_health']['state'] != 'HEALTHY'
+        if (result['gate_state'] not in allowed or result['evidence_health']['state'] != 'HEALTHY'
                 or result['subject'] != subject or evaluation['subject'] != subject
                 or evaluation['syft']['spdx_digest'] != inventory['spdx_sha256']
                 or result['syft'] != evaluation['syft']):

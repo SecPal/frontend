@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Retain the signed Frontend OCI qualification when current security evidence
+  records findings. Registry publication still requires a clean evaluation.
+
 - Keep edits to the legal-menu interaction test outside the container build and
   registry publication while retaining its required source checks.
 

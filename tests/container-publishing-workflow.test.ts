@@ -500,7 +500,11 @@ describe("frontend native OCI publisher", () => {
     expect(scanner).toContain(
       '"$tools/trivy" --config "$cache/config.yaml" image'
     );
-    expect(scanner).toContain("policy['gate_state']!='CLEAN'");
+    expect(scanner).toContain('python3 - "$output" "$arch" "$mode"');
+    expect(scanner).toContain(
+      "if sys.argv[3] == '--unpublished' else ('CLEAN',)"
+    );
+    expect(scanner).toContain("policy['gate_state'] not in allowed");
   });
 
   it("uses the qualified attestation implementation for every published subject", () => {

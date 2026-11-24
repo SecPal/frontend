@@ -154,7 +154,7 @@ jobs:
           "$RUNNER_TEMP/secpal-policy/bin/pip" install \
             --requirement .context/publisher-governance/requirements/vulnerability-policy.txt
           printf '%s\n' "$RUNNER_TEMP/secpal-policy/bin" >> "$GITHUB_PATH"
-      - name: Apply unchanged artifact-security policy before registry access
+      - name: Evaluate exact unpublished artifacts under the unchanged security policy
         run: scripts/publish-container.sh qualify
       - name: Sign the local qualification binding
         id: qualification-attestation

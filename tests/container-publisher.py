@@ -182,11 +182,25 @@ class UnpublishedQualificationTests(unittest.TestCase):
                 file.write_bytes(original)
             check.assert_called_once()
 
+    def test_healthy_findings_can_be_signed_without_granting_registry_access(self):
+        path = self.scan/'arm64'/'policy-result.json'
+        clean = publisher.read(path)
+        for verdict in ('ACTIONABLE', 'REVIEW_REQUIRED'):
+            with self.subTest(verdict=verdict):
+                publisher.write(path, dict(clean, gate_state=verdict))
+                receipt = self.qualify()
+                self.assertEqual(receipt['results'][1]['policy_sha256'], publisher.digest_file(path))
+                signed = digest(publisher.canonical(receipt) + b'\n')
+                with patch.dict(os.environ, PRE_REGISTRY_BINDING=signed), patch.object(publisher, 'run') as run:
+                    with self.assertRaisesRegex(ValueError, 'publisher-pre-registry-policy'):
+                        self.qualify(recheck=True)
+                    run.assert_not_called()
+
     def test_missing_platform_or_nonclean_policy_cannot_grant_registry_access(self):
         path = self.scan/'arm64'/'policy-result.json'
         clean = publisher.read(path)
-        for verdict, health in (('ACTIONABLE', 'HEALTHY'), ('REVIEW_REQUIRED', 'HEALTHY'),
-                                ('UNKNOWN_STALE', 'UNHEALTHY'), ('CLEAN', 'UNHEALTHY')):
+        for verdict, health in (('UNKNOWN_STALE', 'UNHEALTHY'), ('CLEAN', 'UNHEALTHY'),
+                                ('UNKNOWN', 'HEALTHY')):
             publisher.write(path, dict(clean, gate_state=verdict, evidence_health=dict(state=health)))
             with self.subTest(verdict=verdict, health=health), self.assertRaisesRegex(ValueError, 'publisher-pre-registry-policy'):
                 self.qualify()
