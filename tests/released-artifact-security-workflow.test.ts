@@ -62,17 +62,16 @@ describe("released frontend security adoption", () => {
       ".context/released-artifact-governance/requirements/requirements.txt"
     );
 
-    expect(w.jobs.reevaluate.with?.triage).toBe(true);
+    expect(w.jobs.reevaluate.with).not.toHaveProperty("triage");
     expect(w.jobs.reevaluate.needs).toBe("release");
     expect(w.jobs.reevaluate.if).toBeUndefined();
     expect(w.jobs.reevaluate).not.toHaveProperty("continue-on-error");
     for (const job of Object.values(w.jobs)) {
       expect(job.permissions).not.toHaveProperty("id-token");
+      expect(job.permissions).not.toHaveProperty("issues");
       expect(job.permissions?.packages).not.toBe("write");
       expect(job.permissions?.contents).not.toBe("write");
     }
-    expect(w.jobs.reevaluate.permissions?.issues).toBe("write");
-    expect(w.jobs.release.permissions?.issues).toBeUndefined();
     expect(readFileSync(file, "utf8")).not.toMatch(
       /build-container|publish-container\.sh|scan-container-artifact\.sh/u
     );

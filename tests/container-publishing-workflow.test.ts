@@ -47,6 +47,8 @@ const sourceOnlyPaths = [
   ".github/workflows/daily-repository-security.yml",
   "tests/released-artifact-security-workflow.test.ts",
   "tests/daily-repository-security-workflow.test.ts",
+  "docs/deployment/frontend-container.md",
+  "CHANGELOG.md",
 ];
 const admissionPolicy = "scripts/frontend-publisher-admission.sh";
 const legalMenuTest = "src/components/nav-legal.test.tsx";
@@ -267,7 +269,7 @@ function requireAcceptance(w: Workflow) {
 describe("frontend native OCI publisher", () => {
   it.each([
     ...sourceOnlyPaths.map((file) => [file, [file]] as const),
-    ["both workflow and test paths", sourceOnlyPaths] as const,
+    ["all source-only paths", sourceOnlyPaths] as const,
   ])(
     "declines a source-only push for %s if GitHub starts the workflow",
     (_, files) => {
@@ -286,7 +288,7 @@ describe("frontend native OCI publisher", () => {
     "unknown-path",
   ])("retains publication qualification for %s", (file) => {
     expect(publicationAdmission([file])).toMatchObject({ status: 0 });
-    expect(publicationAdmission([sourceOnlyPaths[0], file])).toMatchObject({
+    expect(publicationAdmission([...sourceOnlyPaths, file])).toMatchObject({
       status: 0,
     });
   });
