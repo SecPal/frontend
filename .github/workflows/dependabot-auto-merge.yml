@@ -39,7 +39,7 @@ permissions:
 jobs:
   auto-merge:
     # yamllint disable-line rule:line-length
-    uses: SecPal/.github/.github/workflows/reusable-dependabot-auto-merge.yml@73e2972e8856c8c197152ec3b45a63e49ccb09fe # main
+    uses: SecPal/.github/.github/workflows/reusable-dependabot-auto-merge.yml@2d02204e03a7d93132fcbcba45cdff1161017e11 # main
     with:
       allowed-ecosystems: "github_actions,npm_and_yarn,pre_commit"
       pre-commit-path: ".pre-commit-config.yaml"
