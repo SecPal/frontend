@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Generate a signed unpublished Frontend OCI qualification on demand for an
-  exact verified protected-main commit.
+  verified protected-main commit that passes the existing publisher admission.
 
 - Retain the signed Frontend OCI qualification when current security evidence
   records findings. Registry publication still requires a clean evaluation.

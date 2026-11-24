@@ -49,14 +49,18 @@ jobs:
             echo '::error::Cannot authenticate the exact protected-main source.'
             exit 1
           fi
-          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
-            gh api "repos/SecPal/frontend/commits/$GITHUB_SHA" |
-              jq -e --arg sha "$GITHUB_SHA" '.sha == $sha and .commit.verification.verified == true' >/dev/null
-            exit 0
-          fi
-          if [[ "$GITHUB_EVENT_NAME" != push || ! "$BEFORE" =~ ^[0-9a-f]{40}$ ]] ||
+          case "$GITHUB_EVENT_NAME" in
+            workflow_dispatch)
+              gh api "repos/SecPal/frontend/commits/$GITHUB_SHA" |
+                jq -e --arg sha "$GITHUB_SHA" '.sha == $sha and .commit.verification.verified == true' >/dev/null
+              BEFORE=$(git rev-parse --verify "$GITHUB_SHA^")
+              ;;
+            push) ;;
+            *) exit 1 ;;
+          esac
+          if [[ ! "$BEFORE" =~ ^[0-9a-f]{40}$ ]] ||
                 ! git merge-base --is-ancestor "$BEFORE" "$GITHUB_SHA"; then
-            echo '::error::Cannot authenticate the protected-main push and its predecessor.'
+            echo '::error::Cannot authenticate the protected-main publisher predecessor.'
             exit 1
           fi
           mode=$(git ls-tree "$BEFORE" -- scripts/frontend-publisher-admission.sh | cut -d ' ' -f 1)

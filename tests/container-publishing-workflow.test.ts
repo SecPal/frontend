@@ -380,7 +380,15 @@ describe("frontend native OCI publisher", () => {
 
   it("qualifies only a signed protected-main dispatch and gives it no registry stage", () => {
     const event = "workflow_dispatch";
-    expect(publicationAdmission([], { event, before: "" }).status).toBe(0);
+    expect(
+      publicationAdmission(["package-lock.json"], { event, before: "" }).status
+    ).toBe(0);
+    expect(
+      publicationAdmission([admissionPolicy], { event, before: "" })
+    ).toMatchObject({
+      status: 1,
+      output: expect.stringContaining("Publisher authority changed"),
+    });
     expect(publicationAdmission([], { event, verified: false }).status).toBe(1);
     expect(
       publicationAdmission([], { event, protectedRef: false }).status
