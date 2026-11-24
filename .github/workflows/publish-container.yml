@@ -4,6 +4,7 @@
 ---
 name: Publish Container
 "on":
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -24,7 +25,7 @@ env:
   CANONICAL_IMAGE: ghcr.io/secpal/frontend
 jobs:
   admit:
-    name: Require a release-relevant main push
+    name: Authenticate protected-main publication or qualification
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -37,17 +38,31 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
-      - name: Admit the complete protected-main push diff
+      - name: Authenticate event and admit release-relevant pushes
         shell: bash
         env:
           BEFORE: ${{ github.event.before }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if [[ "$GITHUB_REPOSITORY" != SecPal/frontend || "$GITHUB_REF" != refs/heads/main ||
                 "$GITHUB_REF_PROTECTED" != true || ! "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ||
-                ! "$BEFORE" =~ ^[0-9a-f]{40}$ || "$(git rev-parse HEAD)" != "$GITHUB_SHA" ]] ||
+                "$(git rev-parse HEAD)" != "$GITHUB_SHA" ]]; then
+            echo '::error::Cannot authenticate the exact protected-main source.'
+            exit 1
+          fi
+          case "$GITHUB_EVENT_NAME" in
+            workflow_dispatch)
+              gh api "repos/SecPal/frontend/commits/$GITHUB_SHA" |
+                jq -e --arg sha "$GITHUB_SHA" '.sha == $sha and .commit.verification.verified == true' >/dev/null
+              BEFORE=$(git rev-parse --verify "$GITHUB_SHA^")
+              ;;
+            push) ;;
+            *) exit 1 ;;
+          esac
+          if [[ ! "$BEFORE" =~ ^[0-9a-f]{40}$ ]] ||
                 ! git merge-base --is-ancestor "$BEFORE" "$GITHUB_SHA"; then
-            echo '::error::Cannot authenticate the protected-main push and its predecessor.'
+            echo '::error::Cannot authenticate the protected-main publisher predecessor.'
             exit 1
           fi
           mode=$(git ls-tree "$BEFORE" -- scripts/frontend-publisher-admission.sh | cut -d ' ' -f 1)
@@ -190,6 +205,7 @@ jobs:
           retention-days: 14
 
   prepare:
+    if: github.event_name == 'push'
     name: Prepare exact digest subjects
     needs:
       - build

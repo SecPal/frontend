@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keep released-artifact vulnerability monitoring read-only. The Actions verdict
   and retained scanner evidence surface findings for existing remediation owners.
 
+- Generate a signed unpublished Frontend OCI qualification on demand for a
+  verified protected-main commit that passes the existing publisher admission.
+
 - Retain the signed Frontend OCI qualification when current security evidence
   records findings. Registry publication still requires a clean evaluation.
 
