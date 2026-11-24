@@ -336,15 +336,13 @@ refresh its lookup hint, including recovery after ordinary artifact expiry.
 A failed later rerun cannot erase a previously accepted attempt.
 The shared workflow consumes the verified Syft SPDX with pinned Grype and scans
 the immutable platform independently with Trivy using fresh databases and
-unchanged central policy. The caller preserves raw/normalized evidence for
-14 days and fails its current CLEAN verdict on ACTIONABLE, REVIEW_REQUIRED,
-UNKNOWN_STALE or missing evidence. Historical publication signatures are not
-rewritten. Historical evidence retains the three BusyBox-family observations;
-fresh admitted intelligence determines the current disposition independently.
+central policy. It retains raw and normalized evidence for 14 days and reports
+the verdict in the Actions job summary. Only CLEAN succeeds. ACTIONABLE,
+REVIEW_REQUIRED, UNKNOWN_STALE and missing evidence fail monitoring.
+Historical evidence retains the three BusyBox-family observations. Fresh
+admitted intelligence determines the current disposition independently.
 
-Observation jobs use repository/package/attestation reads, plus Actions reads
-for release lookup. Only the accepted shared workflow's isolated,
-independently validated technical-issue triage job receives `issues: write`.
-This records findings without production action authority. Rebuild, registry
-publication, OIDC signing, deployment, exceptions and remediation remain with
-their separately authorized owners.
+Monitoring uses repository, package and attestation reads, plus Actions reads
+for release lookup. Existing issues track concrete remediation. Rebuild,
+registry publication, OIDC signing, deployment and reviewed exceptions remain
+with their authorized owners.
