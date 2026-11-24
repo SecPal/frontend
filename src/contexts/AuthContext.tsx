@@ -35,6 +35,7 @@ import { clearActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 import { resetPrefetchCache } from "../hooks/usePrefetch";
 import {
+  AUTH_LOGOUT_BARRIER_KEY,
   AUTH_USER_REVALIDATION_REQUIRED_KEY,
   AUTH_VAULT_STORAGE_KEY,
   AUTH_VAULT_LOCK_KEY,
@@ -494,7 +495,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   }, []);
 
-  const removeUserForActiveBarrier = useCallback(() => {
+  const removeUserForActiveBarrier = useCallback((logoutBarrier: string) => {
     const shouldSkipBarrierVaultTableCleanup =
       shouldSkipBarrierVaultTableCleanupRef.current ||
       authStorage.shouldSkipBarrierVaultTableCleanup();
@@ -505,10 +506,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return authStorage.removeUser({
       clearOfflineVaultTables: !shouldSkipBarrierVaultTableCleanup,
       allowBarrierSkipUpgrade: true,
+      logoutBarrier,
     });
   }, []);
 
   const reconcileActiveBarrierState = useCallback(() => {
+    const logoutBarrier = localStorage.getItem(AUTH_LOGOUT_BARRIER_KEY);
     syncBarrierStateFromStorage();
     invalidateBootstrapRevalidation();
     authStorage.abortPendingPersistence();
@@ -517,11 +520,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsVaultLocked(false);
     setIsPrivacyShielded(false);
     setIsLoading(false);
+    if (logoutBarrier === null) {
+      // An old tab may still remember its logout after another tab signs in.
+      // Its local latch can hide its own UI but cannot clear the shared vault.
+      clearActiveOfflineVaultSession();
+      return;
+    }
     syncOfflineAuthState(false, { redirectOpenClients: false });
     const hasCleanupOwner = authStorage.shouldSkipBarrierVaultTableCleanup();
-    void removeUserForActiveBarrier()
+    void removeUserForActiveBarrier(logoutBarrier)
       .then(() => {
-        if (!hasCleanupOwner) {
+        if (
+          !hasCleanupOwner &&
+          localStorage.getItem(AUTH_LOGOUT_BARRIER_KEY) === logoutBarrier
+        ) {
           redirectAfterLogoutCleanup();
         }
       })
@@ -1528,9 +1540,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event.storageArea !== localStorage) {
         return;
       }
+      if (
+        event.key === AUTH_LOGOUT_BARRIER_KEY &&
+        event.newValue !== localStorage.getItem(AUTH_LOGOUT_BARRIER_KEY)
+      ) {
+        return;
+      }
 
       if (
-        event.key === "auth_logout_barrier" ||
+        event.key === AUTH_LOGOUT_BARRIER_KEY ||
         event.key === AUTH_USER_REVALIDATION_REQUIRED_KEY ||
         event.key === AUTH_VAULT_LOCK_KEY ||
         event.key === "auth_user" ||
@@ -1539,7 +1557,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         invalidateBootstrapRevalidation();
       }
 
-      if (event.key === "auth_logout_barrier") {
+      if (event.key === AUTH_LOGOUT_BARRIER_KEY) {
         if (event.newValue !== null) {
           clearAuthenticatedState(true);
           return;

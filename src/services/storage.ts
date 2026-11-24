@@ -3,6 +3,7 @@
 
 import type { User } from "../contexts/auth-context";
 import {
+  AUTH_LOGOUT_BARRIER_KEY,
   AUTH_USER_REVALIDATION_REQUIRED_KEY,
   AUTH_VAULT_STORAGE_KEY,
   AUTH_VAULT_LOCK_KEY,
@@ -320,6 +321,7 @@ export class AuthUserPersistenceError extends Error {
 interface AuthStorageClearOptions {
   clearOfflineVaultTables?: boolean;
   allowBarrierSkipUpgrade?: boolean;
+  logoutBarrier?: string;
 }
 
 interface StoredUserMarkerSnapshot {
@@ -345,7 +347,6 @@ class LocalStorageAuthStorage implements AuthStorage {
   private readonly USER_KEY = "auth_user";
   private readonly VAULT_KEY = AUTH_VAULT_STORAGE_KEY;
   private readonly VAULT_LOCK_KEY = AUTH_VAULT_LOCK_KEY;
-  private readonly LOGOUT_BARRIER_KEY = "auth_logout_barrier";
   private readonly SKIP_VAULT_TABLE_CLEANUP_BARRIER_KEY =
     "auth_logout_skip_vault_table_cleanup";
   private readonly SENSITIVE_LOGOUT_BARRIER_CLEANUP_OWNER_KEY_PREFIX =
@@ -373,12 +374,12 @@ class LocalStorageAuthStorage implements AuthStorage {
   }
 
   private clearLogoutBarrier(): void {
-    localStorage.removeItem(this.LOGOUT_BARRIER_KEY);
+    localStorage.removeItem(AUTH_LOGOUT_BARRIER_KEY);
   }
 
   private setLogoutBarrier(): void {
     this.activePersistenceController?.abort();
-    localStorage.setItem(this.LOGOUT_BARRIER_KEY, createSecureRandomToken());
+    localStorage.setItem(AUTH_LOGOUT_BARRIER_KEY, createSecureRandomToken());
   }
 
   setSkipBarrierVaultTableCleanup(shouldSkip: boolean): void {
@@ -561,7 +562,10 @@ class LocalStorageAuthStorage implements AuthStorage {
     this.activePersistenceController?.abort();
   }
 
-  private async clearVaultTables(signal: AbortSignal): Promise<void> {
+  private async clearVaultTables(
+    signal: AbortSignal,
+    logoutBarrier?: string
+  ): Promise<void> {
     await runWithOfflineVaultLifecycleLock(async (lifecycleSignal) => {
       const effectiveSignal = lifecycleSignal ?? signal;
       const { clearOfflineVaultTables } = await awaitAbortable(
@@ -569,12 +573,18 @@ class LocalStorageAuthStorage implements AuthStorage {
         effectiveSignal
       );
       throwIfAborted(effectiveSignal);
+      if (
+        logoutBarrier !== undefined &&
+        localStorage.getItem(AUTH_LOGOUT_BARRIER_KEY) !== logoutBarrier
+      ) {
+        return;
+      }
       await clearOfflineVaultTables({ signal: effectiveSignal });
     }, signal);
   }
 
   hasLogoutBarrier(): boolean {
-    return localStorage.getItem(this.LOGOUT_BARRIER_KEY) !== null;
+    return localStorage.getItem(AUTH_LOGOUT_BARRIER_KEY) !== null;
   }
 
   hasVaultLock(): boolean {
@@ -811,7 +821,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       return { status: "superseded" };
     }
 
-    const logoutBarrierAtStart = localStorage.getItem(this.LOGOUT_BARRIER_KEY);
+    const logoutBarrierAtStart = localStorage.getItem(AUTH_LOGOUT_BARRIER_KEY);
     await this.abortPendingVaultCleanup();
 
     if (options.shouldCommit && !options.shouldCommit()) {
@@ -823,7 +833,7 @@ class LocalStorageAuthStorage implements AuthStorage {
     this.activePersistenceController = controller;
     const hasNewerLogoutBarrier = () => {
       const currentLogoutBarrier = localStorage.getItem(
-        this.LOGOUT_BARRIER_KEY
+        AUTH_LOGOUT_BARRIER_KEY
       );
 
       return (
@@ -958,6 +968,12 @@ class LocalStorageAuthStorage implements AuthStorage {
     signal: AbortSignal
   ): Promise<void> {
     throwIfAborted(signal);
+    if (
+      options.logoutBarrier !== undefined &&
+      localStorage.getItem(AUTH_LOGOUT_BARRIER_KEY) !== options.logoutBarrier
+    ) {
+      return;
+    }
     const shouldClearOfflineVaultTables =
       options.clearOfflineVaultTables ?? true;
     const shouldForceVaultTableCleanup =
@@ -970,7 +986,7 @@ class LocalStorageAuthStorage implements AuthStorage {
       shouldClearOfflineVaultTables &&
       !hasLogoutBarrier &&
       !shouldHonorBarrierSkipUpgrade
-        ? this.clearVaultTables(signal).then(
+        ? this.clearVaultTables(signal, options.logoutBarrier).then(
             () => ({ status: "completed" as const }),
             (error: unknown) => ({ status: "failed" as const, error })
           )
@@ -1001,9 +1017,11 @@ class LocalStorageAuthStorage implements AuthStorage {
     try {
       const cleanupResult = cleanupPromise
         ? await cleanupPromise
-        : await this.clearVaultTables(signal).then(() => ({
-            status: "completed" as const,
-          }));
+        : await this.clearVaultTables(signal, options.logoutBarrier).then(
+            () => ({
+              status: "completed" as const,
+            })
+          );
 
       if (cleanupResult.status === "failed") {
         throw cleanupResult.error;

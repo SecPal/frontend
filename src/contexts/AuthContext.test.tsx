@@ -544,6 +544,89 @@ describe("AuthContext", () => {
   });
 
   describe("cross-tab storage event error path", () => {
+    it("keeps a new shared vault while an earlier tab still remembers a logout", async () => {
+      localStorage.setItem("auth_logout_barrier", "earlier-logout");
+      const removeUser = vi.spyOn(authStorage, "removeUser");
+      const getUser = vi.spyOn(authStorage, "getUser");
+
+      try {
+        render(
+          <AuthProvider>
+            <PermissionTestComponent permission="employees.read" />
+          </AuthProvider>
+        );
+        await waitFor(() => expect(removeUser).toHaveBeenCalled());
+        await removeUser.mock.results[0]?.value;
+
+        // A different tab signs in before this tab receives a barrier removal
+        // notification. Publish the new vault and dispatch its first event.
+        await seedStoredUser({
+          id: 1,
+          name: "Test User",
+          email: "test@secpal.dev",
+          permissions: ["employees.read"],
+        });
+        const vault = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+        expect(vault).not.toBeNull();
+        expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+        removeUser.mockClear();
+        getUser.mockClear();
+        vi.mocked(syncOfflineSessionAccess).mockClear();
+
+        await act(async () => {
+          window.dispatchEvent(
+            new StorageEvent("storage", {
+              key: AUTH_VAULT_STORAGE_KEY,
+              newValue: vault,
+              storageArea: localStorage,
+            })
+          );
+          await getUser.mock.results[0]?.value;
+        });
+
+        expect(getUser).toHaveBeenCalled();
+        expect(removeUser).not.toHaveBeenCalled();
+        expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(vault);
+        expect(syncOfflineSessionAccess).not.toHaveBeenCalledWith(false, {
+          redirectOpenClients: false,
+        });
+      } finally {
+        removeUser.mockRestore();
+        getUser.mockRestore();
+      }
+    });
+
+    it("ignores a queued logout event after the shared barrier was removed", async () => {
+      await seedStoredUser({
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        permissions: ["employees.read"],
+      });
+      render(
+        <AuthProvider>
+          <PermissionTestComponent permission="employees.read" />
+        </AuthProvider>
+      );
+      await waitFor(() =>
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("true")
+      );
+      const vault = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+
+      await act(async () => {
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: "auth_logout_barrier",
+            newValue: "old-logout",
+            storageArea: localStorage,
+          })
+        );
+      });
+
+      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(vault);
+      expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
+    });
+
     it("clears auth state when getUser throws during cross-tab storage event", async () => {
       const VaultStatusComponent = () => {
         const auth = useAuth();
