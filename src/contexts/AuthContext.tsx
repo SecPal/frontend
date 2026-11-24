@@ -654,6 +654,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearAuthStoragePromise = authStorage.clear({
           clearOfflineVaultTables:
             !shouldSkipBarrierVaultTableCleanupRef.current,
+          ...(sensitiveLogoutBarrierCleanupOwnerTokenRef.current !== null && {
+            sensitiveLogoutCleanupOwnerToken:
+              sensitiveLogoutBarrierCleanupOwnerTokenRef.current,
+          }),
         });
       } catch (error: unknown) {
         clearAuthStoragePromise = Promise.reject(error);
@@ -697,8 +701,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               );
             }
 
+            if (
+              lifecycleSignal === null ||
+              localStorage.getItem(AUTH_LOGOUT_BARRIER_KEY) !==
+                activeSensitiveLogoutCleanupOwnerToken
+            ) {
+              return;
+            }
+
             await clearDestructiveSensitiveClientState({
-              signal: lifecycleSignal ?? undefined,
+              signal: lifecycleSignal,
             });
             destructiveSensitiveCleanupFailedRef.current = false;
           } finally {

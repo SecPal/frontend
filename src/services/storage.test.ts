@@ -960,44 +960,82 @@ describe("authStorage", () => {
     expect(await db.vaultOrganizationalUnitCache.count()).toBe(0);
   });
 
-  it("does not clear a new vault after queued logout cleanup loses its barrier", async () => {
-    const nextUser = {
-      id: "next-user",
-      name: "Next User",
-      email: "next-user@secpal.dev",
-      emailVerified: true,
-    };
-    await authStorage.setUser(nextUser);
-    const nextVault = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
-    if (!nextVault) throw new Error("Expected a complete vault.");
+  it.each(["removeUser", "unlockVault", "clear"] as const)(
+    "does not clear a new vault when queued %s loses its logout barrier",
+    async (operation) => {
+      const nextUser = {
+        id: "next-user",
+        name: "Next User",
+        email: "next-user@secpal.dev",
+        emailVerified: true,
+      };
+      await authStorage.setUser(nextUser);
+      const nextVault = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+      if (!nextVault) throw new Error("Expected a complete vault.");
 
-    localStorage.setItem("auth_logout_barrier", "earlier-logout");
-    const acquired = createDeferredPromise<void>();
-    const release = createDeferredPromise<void>();
-    const locks = vi.spyOn(navigator.locks, "request");
-    const newerLogin = runWithOfflineVaultLifecycleLock(async () => {
-      acquired.resolve();
-      await release.promise;
-      localStorage.setItem(AUTH_VAULT_STORAGE_KEY, nextVault);
-      localStorage.removeItem("auth_logout_barrier");
-    });
-    await acquired.promise;
-    const delayedCleanup = authStorage.removeUser({
-      clearOfflineVaultTables: true,
-      allowBarrierSkipUpgrade: true,
-      logoutBarrier: "earlier-logout",
-    });
+      localStorage.setItem("auth_logout_barrier", "earlier-logout");
+      const acquired = createDeferredPromise<void>();
+      const release = createDeferredPromise<void>();
+      const locks = vi.spyOn(navigator.locks, "request");
+      const newerLogin = runWithOfflineVaultLifecycleLock(async () => {
+        acquired.resolve();
+        await release.promise;
+        localStorage.setItem(AUTH_VAULT_STORAGE_KEY, nextVault);
+        localStorage.removeItem("auth_logout_barrier");
+      });
+      await acquired.promise;
+      const delayedCleanup =
+        operation === "removeUser"
+          ? authStorage.removeUser({
+              clearOfflineVaultTables: true,
+              allowBarrierSkipUpgrade: true,
+              logoutBarrier: "earlier-logout",
+            })
+          : operation === "unlockVault"
+            ? authStorage.unlockVault()
+            : authStorage.clear();
 
-    try {
-      await vi.waitFor(() => expect(locks).toHaveBeenCalledTimes(2));
-    } finally {
-      release.resolve();
-      await Promise.allSettled([delayedCleanup, newerLogin]);
-      locks.mockRestore();
+      try {
+        await vi.waitFor(() => expect(locks).toHaveBeenCalledTimes(2));
+        expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(nextVault);
+        expect(await db.vaultProfile.count()).toBe(1);
+      } finally {
+        release.resolve();
+        await Promise.allSettled([delayedCleanup, newerLogin]);
+        locks.mockRestore();
+      }
+
+      await expect(authStorage.getUser()).resolves.toEqual(nextUser);
     }
+  );
 
-    await expect(delayedCleanup).resolves.toBeUndefined();
-    await expect(authStorage.getUser()).resolves.toEqual(nextUser);
+  it("publishes the finished vault and retires the logout barrier under one lock", async () => {
+    const logoutBarrierKey = "auth_logout_barrier";
+    localStorage.setItem(logoutBarrierKey, "previous-logout");
+    const request = navigator.locks.request.bind(navigator.locks);
+    let barrierWhenLoginReleased: string | null | undefined;
+    const lock = vi
+      .spyOn(navigator.locks, "request")
+      .mockImplementationOnce((name, options, callback) =>
+        request(name, options, async (heldLock) => {
+          const result = await callback(heldLock);
+          barrierWhenLoginReleased = localStorage.getItem(logoutBarrierKey);
+          return result;
+        })
+      );
+    try {
+      await expect(
+        authStorage.setUser({
+          id: "next-user",
+          name: "Next User",
+          email: "next-user@secpal.dev",
+          emailVerified: true,
+        })
+      ).resolves.toEqual({ status: "persisted" });
+      expect(barrierWhenLoginReleased).toBeNull();
+    } finally {
+      lock.mockRestore();
+    }
   });
 
   it("does not let invalid legacy cleanup erase a newer login", async () => {
