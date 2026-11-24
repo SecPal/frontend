@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
@@ -175,35 +181,51 @@ describe("OrganizationalUnitFormDialog", () => {
         />
       );
 
-      const legalEntityHelp = screen.getByRole("button", {
-        name: "Hilfe zu „Rechtsträger“",
-      });
-      const establishmentHelp = screen.getByRole("button", {
-        name: "Hilfe zu „Betriebsstätte“",
-      });
-      const legalEntityDescription =
-        "Eine rechtlich eigenständige Person oder Organisation, die im eigenen Namen Verträge schließen, Mitarbeiter beschäftigen und Verbindlichkeiten eingehen kann, z. B. eine GmbH oder GmbH & Co. KG.";
-      const establishmentDescription =
-        "Eine operative Einheit eines Rechtsträgers, z. B. eine Niederlassung, die organisatorisch, administrativ und wirtschaftlich eigenständig geführt werden kann, ohne selbst rechtlich eigenständig zu sein.";
+      const legalEntity = document.getElementById(
+        "organizational-unit-is-legal-entity"
+      )!;
+      const establishment = document.getElementById(
+        "organizational-unit-is-establishment"
+      )!;
+      const legalEntityHelp = within(legalEntity.parentElement!).getByRole(
+        "button",
+        { name: /\S/ }
+      );
+      const establishmentHelp = within(establishment.parentElement!).getByRole(
+        "button",
+        { name: /\S/ }
+      );
+      const legalEntityDescription = i18n._(
+        "organization.unit.legalEntity.help"
+      );
+      const establishmentDescription = i18n._(
+        "organization.unit.establishment.help"
+      );
 
-      expect(screen.queryByText(legalEntityDescription)).toBeNull();
-      expect(screen.queryByText(establishmentDescription)).toBeNull();
+      expect(
+        screen.queryByText(legalEntityDescription)
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(establishmentDescription)
+      ).not.toBeInTheDocument();
 
       await user.hover(legalEntityHelp);
-      expect(await screen.findByRole("tooltip")).toBeVisible();
+      expect(await screen.findByRole("tooltip")).toHaveTextContent(
+        legalEntityDescription
+      );
       expect(legalEntityHelp).toHaveAccessibleDescription(
         legalEntityDescription
       );
       await user.unhover(legalEntityHelp);
       await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
 
-      await user.click(
-        screen.getByRole("checkbox", { name: "Betriebsstätte" })
-      );
+      await user.click(establishment);
       await user.tab();
 
       expect(establishmentHelp).toHaveFocus();
-      expect(await screen.findByRole("tooltip")).toBeVisible();
+      expect(await screen.findByRole("tooltip")).toHaveTextContent(
+        establishmentDescription
+      );
       expect(establishmentHelp).toHaveAccessibleDescription(
         establishmentDescription
       );

@@ -454,7 +454,7 @@ function OrganizationalUnitFormDialogContent({
                   {legalEntityLabel}
                 </FieldLabel>
                 <OrganizationalUnitOptionHelp label={legalEntityLabel}>
-                  <Trans>
+                  <Trans id="organization.unit.legalEntity.help">
                     A legally independent person or organization that can enter
                     into contracts in its own name, employ staff, and incur
                     liabilities, such as a GmbH or GmbH &amp; Co. KG.
@@ -477,7 +477,7 @@ function OrganizationalUnitFormDialogContent({
                   {establishmentLabel}
                 </FieldLabel>
                 <OrganizationalUnitOptionHelp label={establishmentLabel}>
-                  <Trans>
+                  <Trans id="organization.unit.establishment.help">
                     An operating unit of a legal entity, such as a branch, that
                     can be managed independently in organizational,
                     administrative, and economic terms without being legally
