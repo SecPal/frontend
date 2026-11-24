@@ -501,7 +501,9 @@ describe("frontend native OCI publisher", () => {
       '"$tools/trivy" --config "$cache/config.yaml" image'
     );
     expect(scanner).toContain('python3 - "$output" "$arch" "$mode"');
-    expect(scanner).toContain("if sys.argv[3] == '--unpublished' else ('CLEAN',)");
+    expect(scanner).toContain(
+      "if sys.argv[3] == '--unpublished' else ('CLEAN',)"
+    );
     expect(scanner).toContain("policy['gate_state'] not in allowed");
   });
 
