@@ -1,9 +1,10 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useId, type ReactNode } from "react";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
+import { CircleQuestionMark } from "lucide-react";
 import { Button } from "@/ui/button";
 import { Checkbox } from "@/ui/checkbox";
 import { Input } from "@/ui/input";
@@ -15,6 +16,7 @@ import {
   SelectValue,
 } from "@/ui/select";
 import { Textarea } from "@/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/ui/tooltip";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 import {
   Alert,
@@ -86,6 +88,39 @@ interface FormErrors {
   general?: string;
 }
 
+function OrganizationalUnitOptionHelp({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  const tooltipId = useId();
+
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        aria-label={t`Help for ${label}`}
+        aria-describedby={tooltipId}
+        delay={200}
+        render={
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            className="-ml-2 text-muted-foreground"
+          />
+        }
+      >
+        <CircleQuestionMark className="size-4" aria-hidden="true" />
+      </TooltipTrigger>
+      <TooltipContent id={tooltipId} className="max-w-64" sideOffset={6}>
+        {children}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 function OrganizationalUnitFormDialogContent({
   onClose,
   mode,
@@ -96,6 +131,8 @@ function OrganizationalUnitFormDialogContent({
   onSuccess,
 }: Omit<OrganizationalUnitFormDialogProps, "open">) {
   const isOnline = useOnlineStatus();
+  const legalEntityLabel = t`Legal Entity`;
+  const establishmentLabel = t`Establishment`;
 
   const [formData, setFormData] = useState<FormData>(() => {
     if (mode === "edit" && unit) {
@@ -414,8 +451,15 @@ function OrganizationalUnitFormDialogContent({
                   disabled={isSubmitting}
                 />
                 <FieldLabel htmlFor="organizational-unit-is-legal-entity">
-                  <Trans>Legal Entity</Trans>
+                  {legalEntityLabel}
                 </FieldLabel>
+                <OrganizationalUnitOptionHelp label={legalEntityLabel}>
+                  <Trans>
+                    A legally independent person or organization that can enter
+                    into contracts in its own name, employ staff, and incur
+                    liabilities, such as a GmbH or GmbH &amp; Co. KG.
+                  </Trans>
+                </OrganizationalUnitOptionHelp>
               </div>
             </Field>
 
@@ -430,8 +474,16 @@ function OrganizationalUnitFormDialogContent({
                   disabled={isSubmitting}
                 />
                 <FieldLabel htmlFor="organizational-unit-is-establishment">
-                  <Trans>Establishment</Trans>
+                  {establishmentLabel}
                 </FieldLabel>
+                <OrganizationalUnitOptionHelp label={establishmentLabel}>
+                  <Trans>
+                    An operating unit of a legal entity, such as a branch, that
+                    can be managed independently in organizational,
+                    administrative, and economic terms without being legally
+                    independent itself.
+                  </Trans>
+                </OrganizationalUnitOptionHelp>
               </div>
             </Field>
 

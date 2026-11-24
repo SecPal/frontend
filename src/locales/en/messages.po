@@ -318,6 +318,10 @@ msgstr "No Organizational Units"
 msgid "This onboarding step uses a schema we cannot render yet."
 msgstr "This onboarding step uses a schema we cannot render yet."
 
+#: src/components/OrganizationalUnitFormDialog.tsx
+msgid "A legally independent person or organization that can enter into contracts in its own name, employ staff, and incur liabilities, such as a GmbH or GmbH & Co. KG."
+msgstr "A legally independent person or organization that can enter into contracts in its own name, employ staff, and incur liabilities, such as a GmbH or GmbH & Co. KG."
+
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "No address suggestions found."
 msgstr "No address suggestions found."
@@ -889,6 +893,10 @@ msgstr "Sending verification email..."
 msgid "Select each establishment once."
 msgstr "Select each establishment once."
 
+#: src/components/OrganizationalUnitFormDialog.tsx
+msgid "An operating unit of a legal entity, such as a branch, that can be managed independently in organizational, administrative, and economic terms without being legally independent itself."
+msgstr "An operating unit of a legal entity, such as a branch, that can be managed independently in organizational, administrative, and economic terms without being legally independent itself."
+
 #: src/components/OrganizationalUnitTree.tsx
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Not assignable"
@@ -924,6 +932,10 @@ msgstr "Failed to load employee"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Failed to load MFA status."
 msgstr "Failed to load MFA status."
+
+#: src/components/OrganizationalUnitFormDialog.tsx
+msgid "Help for {label}"
+msgstr "Help for {label}"
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Delete Site"

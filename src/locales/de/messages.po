@@ -318,6 +318,10 @@ msgstr "Keine organisatorischen Einheiten"
 msgid "This onboarding step uses a schema we cannot render yet."
 msgstr "Dieser Onboarding-Schritt verwendet ein Schema, das noch nicht dargestellt werden kann."
 
+#: src/components/OrganizationalUnitFormDialog.tsx
+msgid "A legally independent person or organization that can enter into contracts in its own name, employ staff, and incur liabilities, such as a GmbH or GmbH & Co. KG."
+msgstr "Eine rechtlich eigenständige Person oder Organisation, die im eigenen Namen Verträge schließen, Mitarbeiter beschäftigen und Verbindlichkeiten eingehen kann, z. B. eine GmbH oder GmbH & Co. KG."
+
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "No address suggestions found."
 msgstr "Keine Adressvorschläge gefunden."
@@ -889,6 +893,10 @@ msgstr "Senden einer Bestätigungs-E-Mail..."
 msgid "Select each establishment once."
 msgstr "Wählen Sie jede Betriebsstätte nur einmal aus."
 
+#: src/components/OrganizationalUnitFormDialog.tsx
+msgid "An operating unit of a legal entity, such as a branch, that can be managed independently in organizational, administrative, and economic terms without being legally independent itself."
+msgstr "Eine operative Einheit eines Rechtsträgers, z. B. eine Niederlassung, die organisatorisch, administrativ und wirtschaftlich eigenständig geführt werden kann, ohne selbst rechtlich eigenständig zu sein."
+
 #: src/components/OrganizationalUnitTree.tsx
 #: src/pages/Organization/OrganizationPage.tsx
 msgid "Not assignable"
@@ -924,6 +932,10 @@ msgstr "Mitarbeiter konnte nicht geladen werden"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Failed to load MFA status."
 msgstr "MFA-Status konnte nicht geladen werden."
+
+#: src/components/OrganizationalUnitFormDialog.tsx
+msgid "Help for {label}"
+msgstr "Hilfe zu „{label}“"
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Delete Site"

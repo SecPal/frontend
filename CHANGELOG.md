@@ -221,6 +221,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add help tooltips beside the Legal Entity and Establishment options in the
+  organizational unit form.
 - Added the pinned organization Trivy repository scan to PR/main quality checks
   and as a mandatory pre-publication gate for the exact frontend commit. Only
   fresh `CLEAN` repository evidence is accepted; source dependency,
