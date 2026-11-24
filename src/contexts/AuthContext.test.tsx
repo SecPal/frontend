@@ -544,6 +544,66 @@ describe("AuthContext", () => {
   });
 
   describe("cross-tab storage event error path", () => {
+    it("adopts a committed vault without restarting auth on interim events", async () => {
+      const user = {
+        id: 1,
+        name: "Test User",
+        email: "test@secpal.dev",
+        permissions: ["employees.read"],
+      };
+      await seedStoredUser(user);
+      render(
+        <AuthProvider>
+          <PermissionTestComponent permission="employees.read" />
+        </AuthProvider>
+      );
+      await waitFor(() =>
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("true")
+      );
+      const committed = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
+      if (!committed) throw new Error("Expected an authenticated vault");
+      const pending = JSON.stringify({
+        ...JSON.parse(committed),
+        initialization: "pending",
+      });
+      const getUser = vi.spyOn(authStorage, "getUser");
+      vi.mocked(isOnline).mockReturnValue(true);
+      const dispatchVault = (newValue: string | null) =>
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: AUTH_VAULT_STORAGE_KEY,
+            newValue,
+            storageArea: localStorage,
+          })
+        );
+
+      try {
+        await act(async () => {
+          localStorage.setItem(AUTH_VAULT_STORAGE_KEY, pending);
+          dispatchVault(pending);
+        });
+        expect(getUser).not.toHaveBeenCalled();
+
+        await act(async () => {
+          localStorage.setItem(AUTH_VAULT_STORAGE_KEY, committed);
+          dispatchVault(null);
+          dispatchVault(pending);
+        });
+        expect(getUser).not.toHaveBeenCalled();
+        expect(getCurrentUser).not.toHaveBeenCalled();
+
+        await act(async () => {
+          dispatchVault(committed);
+          await getUser.mock.results[0]?.value;
+        });
+        expect(getUser).toHaveBeenCalledTimes(1);
+        expect(getCurrentUser).not.toHaveBeenCalled();
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
+      } finally {
+        getUser.mockRestore();
+      }
+    });
+
     it("keeps a new shared vault while an earlier tab still remembers a logout", async () => {
       localStorage.setItem("auth_logout_barrier", "earlier-logout");
       const removeUser = vi.spyOn(authStorage, "removeUser");

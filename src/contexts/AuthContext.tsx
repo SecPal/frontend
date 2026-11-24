@@ -138,6 +138,24 @@ function isPublicUnauthenticatedRoute(pathname: string): boolean {
   return normalized === "/onboarding/complete" || normalized === "/source";
 }
 
+function isPendingVaultPublication(value: string | null): boolean {
+  if (value === null) {
+    return false;
+  }
+
+  try {
+    const envelope: unknown = JSON.parse(value);
+    return (
+      typeof envelope === "object" &&
+      envelope !== null &&
+      "initialization" in envelope &&
+      envelope.initialization === "pending"
+    );
+  } catch {
+    return false;
+  }
+}
+
 function shouldBootstrapBrowserSessionWithoutStoredUser(
   authTransportKind: string,
   hasLogoutBarrier: boolean
@@ -1541,9 +1559,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       if (
-        event.key === AUTH_LOGOUT_BARRIER_KEY &&
-        event.newValue !== localStorage.getItem(AUTH_LOGOUT_BARRIER_KEY)
+        (event.key === AUTH_LOGOUT_BARRIER_KEY ||
+          event.key === AUTH_VAULT_STORAGE_KEY) &&
+        event.newValue !== localStorage.getItem(event.key)
       ) {
+        return;
+      }
+      if (
+        event.key === AUTH_VAULT_STORAGE_KEY &&
+        isPendingVaultPublication(event.newValue)
+      ) {
+        // The writer still owns the lifecycle lock. Adopt the committed
+        // envelope once the encrypted profile is available.
         return;
       }
 
