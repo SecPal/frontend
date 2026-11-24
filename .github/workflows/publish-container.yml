@@ -12,6 +12,8 @@ name: Publish Container
       - .github/workflows/daily-repository-security.yml
       - tests/released-artifact-security-workflow.test.ts
       - tests/daily-repository-security-workflow.test.ts
+      - docs/deployment/frontend-container.md
+      - CHANGELOG.md
 permissions: {}
 concurrency:
   group: publish-container-${{ github.repository }}-${{ github.sha }}

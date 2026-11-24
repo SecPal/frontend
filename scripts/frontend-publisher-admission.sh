@@ -39,7 +39,8 @@ fi
 for file in "${paths[@]}"; do
   case "$file" in
     .github/workflows/released-artifact-security.yml|.github/workflows/daily-repository-security.yml|\
-    tests/released-artifact-security-workflow.test.ts|tests/daily-repository-security-workflow.test.ts) ;;
+    tests/released-artifact-security-workflow.test.ts|tests/daily-repository-security-workflow.test.ts|\
+    docs/deployment/frontend-container.md|CHANGELOG.md) ;;
     *) exit 0 ;;
   esac
 done

@@ -72,7 +72,7 @@ jobs:
         shell: bash
         env:
           # yamllint disable-line rule:line-length
-          GOVERNANCE_WORKFLOW: &released-security-workflow SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@73e2972e8856c8c197152ec3b45a63e49ccb09fe
+          GOVERNANCE_WORKFLOW: &released-security-workflow SecPal/.github/.github/workflows/reusable-vulnerability-reevaluation.yml@2d02204e03a7d93132fcbcba45cdff1161017e11
         run: |
           set -euo pipefail
           revision="${GOVERNANCE_WORKFLOW##*@}"
@@ -132,12 +132,9 @@ jobs:
   reevaluate:
     name: Re-evaluate the exact released platform
     needs: release
-    # The accepted callee gives writes only to its independently validated
-    # technical-issue triage job; scanners retain explicit read-only scopes.
     permissions:
       attestations: read
       contents: read
-      issues: write
       packages: read
     # main; Timeouts, scanner pins, fresh databases and policy belong to this workflow.
     uses: *released-security-workflow
@@ -151,4 +148,3 @@ jobs:
       publisher-workflow: SecPal/frontend/.github/workflows/publish-container.yml
       # Derived from verified publisher evidence, never from a caller-supplied SHA.
       publisher-workflow-sha: ${{ needs.release.outputs.publisher-workflow-sha }}
-      triage: true
