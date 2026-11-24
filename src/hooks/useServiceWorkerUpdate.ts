@@ -48,12 +48,19 @@ export interface UseServiceWorkerUpdateReturn {
 export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
   // Track interval ID for cleanup
   const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
+  const reloadRequested = useRef(false);
 
   const {
     needRefresh: [swNeedRefresh],
     offlineReady: [swOfflineReady],
     updateServiceWorker: swUpdate,
   } = useRegisterSW({
+    onNeedReload() {
+      if (reloadRequested.current) {
+        reloadRequested.current = false;
+        window.location.reload();
+      }
+    },
     onRegisteredSW(swUrl: string, registration?: ServiceWorkerRegistration) {
       console.log(`[SW] Service Worker registered: ${swUrl}`);
 
@@ -88,23 +95,18 @@ export function useServiceWorkerUpdate(): UseServiceWorkerUpdateReturn {
     };
   }, []);
 
-  /**
-   * Update service worker and reload the page
-   *
-   * Note: swUpdate(true) triggers the reload automatically via vite-plugin-pwa.
-   * We only force reload manually as a fallback if swUpdate fails.
-   */
   const updateServiceWorker = useCallback(async () => {
-    console.log("[SW Hook] updateServiceWorker called");
+    // Workbox can report an activation prompted by another tab or hook.
+    // Only this tab's explicit request may reload its document.
+    if (reloadRequested.current) {
+      return;
+    }
+    reloadRequested.current = true;
     try {
-      console.log("[SW Hook] Calling swUpdate(true)...");
-      await swUpdate(true); // true = reload page after update (handled by vite-plugin-pwa)
-      console.log("[SW Hook] swUpdate completed successfully");
+      await swUpdate(true);
     } catch (error) {
+      reloadRequested.current = false;
       console.error("[SW Hook] Update failed:", error);
-      // Force reload as fallback only on error
-      console.log("[SW Hook] Forcing page reload as fallback");
-      window.location.reload();
     }
   }, [swUpdate]);
 
