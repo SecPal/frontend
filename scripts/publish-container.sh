@@ -5,7 +5,10 @@
 set -euo pipefail
 stage=${1:?publisher stage}
 test "${GITHUB_REPOSITORY:?}" = SecPal/frontend
-test "${GITHUB_EVENT_NAME:?}" = push
+case "${GITHUB_EVENT_NAME:?}:$stage" in
+  push:*|workflow_dispatch:qualify) ;;
+  *) exit 1 ;;
+esac
 test "${GITHUB_REF:?}" = refs/heads/main
 test "${GITHUB_REF_PROTECTED:?}" = true
 repo_root=$(git rev-parse --show-toplevel)

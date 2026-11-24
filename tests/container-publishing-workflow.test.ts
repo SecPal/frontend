@@ -59,6 +59,10 @@ function publicationAdmission(
     existingTest?: boolean;
     executableTest?: boolean;
     previousIgnore?: string;
+    event?: "push" | "workflow_dispatch";
+    ref?: string;
+    protectedRef?: boolean;
+    verified?: boolean;
   } = {}
 ) {
   const checkout = mkdtempSync(path.join(tmpdir(), "frontend-publication-"));
@@ -99,6 +103,19 @@ function publicationAdmission(
       git("add", "--", name);
     }
     git("-c", "commit.gpgsign=false", "commit", "--allow-empty", "-qm", "push");
+    if (options.event === "workflow_dispatch") {
+      const response = JSON.stringify({
+        sha: git("rev-parse", "HEAD"),
+        commit: { verification: { verified: options.verified ?? true } },
+      });
+      writeFileSync(
+        path.join(checkout, "gh"),
+        `#!/bin/bash
+printf '%s\n' '${response}'
+`,
+        { mode: 0o700 }
+      );
+    }
     const step = workflow().jobs.admit.steps!.find((s) => s.run)!;
     const result = spawnSync("bash", ["-eo", "pipefail", "-c", step.run!], {
       cwd: checkout,
@@ -108,8 +125,10 @@ function publicationAdmission(
         ...step.env,
         BEFORE: options.before ?? base,
         GITHUB_REPOSITORY: "SecPal/frontend",
-        GITHUB_REF: "refs/heads/main",
-        GITHUB_REF_PROTECTED: "true",
+        PATH: checkout + path.delimiter + process.env.PATH,
+        GITHUB_REF: options.ref ?? "refs/heads/main",
+        GITHUB_REF_PROTECTED: String(options.protectedRef ?? true),
+        GITHUB_EVENT_NAME: options.event ?? "push",
         GITHUB_SHA: git("rev-parse", "HEAD"),
         RUNNER_TEMP: checkout,
       },
@@ -123,6 +142,7 @@ function publicationAdmission(
 function requireAcceptance(w: Workflow) {
   expect(w.on).toEqual({
     push: { branches: ["main"], "paths-ignore": sourceOnlyPaths },
+    workflow_dispatch: null,
   });
   expect(w.permissions).toEqual({});
   expect(w.jobs.admit.permissions).toEqual({ contents: "read" });
@@ -139,6 +159,7 @@ function requireAcceptance(w: Workflow) {
     "repository-security",
   ]);
   expect(w.jobs["pre-registry"].permissions?.packages).toBeUndefined();
+  expect(w.jobs.prepare.if).toBe("github.event_name == 'push'");
   expect(w.jobs.prepare.needs).toEqual([
     "build",
     "repository-security",
@@ -213,7 +234,7 @@ function requireAcceptance(w: Workflow) {
     "scan",
     "accept",
   ]) {
-    expect(w.jobs[key].if).toBeUndefined();
+    if (key !== "prepare") expect(w.jobs[key].if).toBeUndefined();
     expect(w.jobs[key]).not.toHaveProperty("continue-on-error");
   }
   for (const key of ["attest", "accept"]) {
@@ -356,6 +377,19 @@ describe("frontend native OCI publisher", () => {
       });
     }
   );
+
+  it("qualifies only a signed protected-main dispatch and gives it no registry stage", () => {
+    const event = "workflow_dispatch";
+    expect(publicationAdmission([], { event, before: "" }).status).toBe(0);
+    expect(publicationAdmission([], { event, verified: false }).status).toBe(1);
+    expect(
+      publicationAdmission([], { event, protectedRef: false }).status
+    ).toBe(1);
+    expect(
+      publicationAdmission([], { event, ref: "refs/heads/feature" }).status
+    ).toBe(1);
+    expect(workflow().jobs.prepare.if).toBe("github.event_name == 'push'");
+  });
 
   it("fails closed when the authenticated push has no changed paths", () => {
     expect(publicationAdmission([])).toMatchObject({

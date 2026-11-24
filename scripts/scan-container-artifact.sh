@@ -4,7 +4,10 @@
 # Publisher observation only; accepted .github adapters/policy own decisions.
 set -euo pipefail
 test "${GITHUB_REPOSITORY:?}" = SecPal/frontend
-test "${GITHUB_EVENT_NAME:?}" = push
+case "${GITHUB_EVENT_NAME:?}:${2:-}" in
+  push:*|workflow_dispatch:--unpublished) ;;
+  *) exit 1 ;;
+esac
 test "${GITHUB_REF:?}" = refs/heads/main
 test "${GITHUB_REF_PROTECTED:?}" = true
 arch=${1:?exact architecture}
