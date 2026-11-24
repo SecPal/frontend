@@ -6,6 +6,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import { OrganizationalUnitFormDialog } from "./OrganizationalUnitFormDialog";
 import type { OrganizationalUnit } from "../types/organizational";
 import { messages as deMessages } from "../locales/de/messages.mjs";
@@ -161,7 +162,8 @@ describe("OrganizationalUnitFormDialog", () => {
       });
     });
 
-    it("uses the precise German label for legal entities", () => {
+    it("opens the German legal status help on hover and keyboard focus", async () => {
+      const user = userEvent.setup();
       i18n.load("de", deMessages);
       i18n.activate("de");
 
@@ -174,7 +176,55 @@ describe("OrganizationalUnitFormDialog", () => {
         />
       );
 
-      expect(screen.getByLabelText("Rechtsträger")).toBeInTheDocument();
+      const helpLabel = (label: string) => i18n._(msg`Help for ${label}`);
+      const legalEntityLabel = i18n._(msg`Legal Entity`);
+      const establishmentLabel = i18n._(msg`Establishment`);
+      const legalEntityHelp = screen.getByRole("button", {
+        name: helpLabel(legalEntityLabel),
+      });
+      const establishmentHelp = screen.getByRole("button", {
+        name: helpLabel(establishmentLabel),
+      });
+      const legalEntityDescription = i18n._(
+        msg`A legally independent person or organization that can enter into contracts in its own name, employ staff, and incur liabilities, such as a GmbH or GmbH & Co. KG.`
+      );
+      const establishmentDescription = i18n._(
+        msg`An operating unit of a legal entity, such as a branch, that can be managed independently in organizational, administrative, and economic terms without being legally independent itself.`
+      );
+
+      expect(
+        screen.queryByText(legalEntityDescription)
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(establishmentDescription)
+      ).not.toBeInTheDocument();
+
+      await user.hover(legalEntityHelp);
+      expect(await screen.findByRole("tooltip")).toHaveTextContent(
+        legalEntityDescription
+      );
+      expect(legalEntityHelp).toHaveAccessibleDescription(
+        legalEntityDescription
+      );
+      await user.unhover(legalEntityHelp);
+      await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
+
+      await user.click(
+        screen.getByRole("checkbox", { name: establishmentLabel })
+      );
+      await user.tab();
+
+      expect(establishmentHelp).toHaveFocus();
+      expect(await screen.findByRole("tooltip")).toHaveTextContent(
+        establishmentDescription
+      );
+      expect(establishmentHelp).toHaveAccessibleDescription(
+        establishmentDescription
+      );
+
+      await user.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
+      expect(mockOnClose).not.toHaveBeenCalled();
     });
 
     it("renders create dialog with correct title", () => {

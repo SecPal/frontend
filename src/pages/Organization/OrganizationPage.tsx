@@ -368,6 +368,30 @@ export function OrganizationPage() {
                       )}
                     </dd>
                   </div>
+                  <div>
+                    <dt className="text-muted-foreground font-medium">
+                      <Trans>Legal Entity</Trans>
+                    </dt>
+                    <dd className="text-foreground">
+                      {selectedUnit.is_legal_entity ? (
+                        <Trans>Yes</Trans>
+                      ) : (
+                        <Trans>No</Trans>
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground font-medium">
+                      <Trans>Establishment</Trans>
+                    </dt>
+                    <dd className="text-foreground">
+                      {selectedUnit.is_establishment ? (
+                        <Trans>Yes</Trans>
+                      ) : (
+                        <Trans>No</Trans>
+                      )}
+                    </dd>
+                  </div>
                   {selectedUnit.description && (
                     <div>
                       <dt className="text-muted-foreground font-medium">
