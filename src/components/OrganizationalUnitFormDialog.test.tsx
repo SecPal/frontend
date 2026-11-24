@@ -2,16 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-  within,
-} from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import { OrganizationalUnitFormDialog } from "./OrganizationalUnitFormDialog";
 import type { OrganizationalUnit } from "../types/organizational";
 import { messages as deMessages } from "../locales/de/messages.mjs";
@@ -181,25 +176,20 @@ describe("OrganizationalUnitFormDialog", () => {
         />
       );
 
-      const legalEntity = document.getElementById(
-        "organizational-unit-is-legal-entity"
-      )!;
-      const establishment = document.getElementById(
-        "organizational-unit-is-establishment"
-      )!;
-      const legalEntityHelp = within(legalEntity.parentElement!).getByRole(
-        "button",
-        { name: /\S/ }
-      );
-      const establishmentHelp = within(establishment.parentElement!).getByRole(
-        "button",
-        { name: /\S/ }
-      );
+      const helpLabel = (label: string) => i18n._(msg`Help for ${label}`);
+      const legalEntityLabel = i18n._(msg`Legal Entity`);
+      const establishmentLabel = i18n._(msg`Establishment`);
+      const legalEntityHelp = screen.getByRole("button", {
+        name: helpLabel(legalEntityLabel),
+      });
+      const establishmentHelp = screen.getByRole("button", {
+        name: helpLabel(establishmentLabel),
+      });
       const legalEntityDescription = i18n._(
-        "organization.unit.legalEntity.help"
+        msg`A legally independent person or organization that can enter into contracts in its own name, employ staff, and incur liabilities, such as a GmbH or GmbH & Co. KG.`
       );
       const establishmentDescription = i18n._(
-        "organization.unit.establishment.help"
+        msg`An operating unit of a legal entity, such as a branch, that can be managed independently in organizational, administrative, and economic terms without being legally independent itself.`
       );
 
       expect(
@@ -219,7 +209,9 @@ describe("OrganizationalUnitFormDialog", () => {
       await user.unhover(legalEntityHelp);
       await waitFor(() => expect(screen.queryByRole("tooltip")).toBeNull());
 
-      await user.click(establishment);
+      await user.click(
+        screen.getByRole("checkbox", { name: establishmentLabel })
+      );
       await user.tab();
 
       expect(establishmentHelp).toHaveFocus();
