@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import { OrganizationPage } from "./OrganizationPage";
 import * as organizationalUnitApi from "../../services/organizationalUnitApi";
 import * as organizationalUnitsHook from "../../hooks/useOrganizationalUnitsWithOffline";
@@ -308,6 +309,54 @@ describe("OrganizationPage", () => {
     expect(screen.getAllByText("Inactive").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Assignable").length).toBeGreaterThan(0);
   });
+
+  it.each([
+    { isLegalEntity: false, isEstablishment: false },
+    { isLegalEntity: true, isEstablishment: false },
+    { isLegalEntity: false, isEstablishment: true },
+    { isLegalEntity: true, isEstablishment: true },
+  ])(
+    "shows legal entity $isLegalEntity and establishment $isEstablishment in the detail panel",
+    async ({ isLegalEntity, isEstablishment }) => {
+      const user = userEvent.setup();
+      const unit = {
+        ...mockUnits[0]!,
+        is_legal_entity: isLegalEntity,
+        is_establishment: isEstablishment,
+      };
+      vi.mocked(
+        organizationalUnitsHook.useOrganizationalUnitsWithOffline
+      ).mockReturnValue({
+        units: [unit],
+        loading: false,
+        error: null,
+        isOffline: false,
+        isStale: false,
+        rootUnitIds: [unit.id],
+        lastSynced: null,
+        refresh: vi.fn(),
+      });
+
+      renderWithProviders(<OrganizationPage />);
+      await user.click(await screen.findByText(unit.name));
+
+      const legalEntityTerm = screen.getByText(i18n._(msg`Legal Entity`), {
+        selector: "dt",
+      });
+      const establishmentTerm = screen.getByText(i18n._(msg`Establishment`), {
+        selector: "dt",
+      });
+      const yes = i18n._(msg`Yes`);
+      const no = i18n._(msg`No`);
+
+      expect(
+        within(legalEntityTerm.parentElement!).getByRole("definition")
+      ).toHaveTextContent(isLegalEntity ? yes : no);
+      expect(
+        within(establishmentTerm.parentElement!).getByRole("definition")
+      ).toHaveTextContent(isEstablishment ? yes : no);
+    }
+  );
 
   it("shows Description in detail panel when unit has one", async () => {
     const user = userEvent.setup();

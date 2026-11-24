@@ -260,6 +260,8 @@ msgstr "Ein gültiger Aufenthaltstitel ohne Arbeitserlaubnis kann nicht akzeptie
 
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
+#: src/pages/Organization/OrganizationPage.test.tsx
+#: src/pages/Organization/OrganizationPage.tsx
 msgid "No"
 msgstr "Nein"
 
@@ -2195,6 +2197,8 @@ msgstr "Passkeys werden geladen..."
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
+#: src/pages/Organization/OrganizationPage.test.tsx
+#: src/pages/Organization/OrganizationPage.tsx
 msgid "Yes"
 msgstr "Ja"
 
@@ -2711,6 +2715,8 @@ msgstr "Ich habe diese Wiederherstellungscodes sicher gespeichert und weiß, das
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
+#: src/pages/Organization/OrganizationPage.test.tsx
+#: src/pages/Organization/OrganizationPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Establishment"
 msgstr "Betriebsstätte"
@@ -3613,6 +3619,8 @@ msgstr "Administrativ aktiv"
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
+#: src/pages/Organization/OrganizationPage.test.tsx
+#: src/pages/Organization/OrganizationPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Legal Entity"
 msgstr "Rechtsträger"

@@ -260,6 +260,8 @@ msgstr "A valid residence title without employment authorization cannot be accep
 
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
+#: src/pages/Organization/OrganizationPage.test.tsx
+#: src/pages/Organization/OrganizationPage.tsx
 msgid "No"
 msgstr "No"
 
@@ -2195,6 +2197,8 @@ msgstr "Loading passkeys..."
 #: src/pages/ActivityLog/ActivityDetailDialog.tsx
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
+#: src/pages/Organization/OrganizationPage.test.tsx
+#: src/pages/Organization/OrganizationPage.tsx
 msgid "Yes"
 msgstr "Yes"
 
@@ -2711,6 +2715,8 @@ msgstr "I stored these recovery codes securely and understand they will not be s
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
+#: src/pages/Organization/OrganizationPage.test.tsx
+#: src/pages/Organization/OrganizationPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Establishment"
 msgstr "Establishment"
@@ -3613,6 +3619,8 @@ msgstr "Administratively Active"
 #: src/pages/Customers/CustomersPage.tsx
 #: src/pages/Employees/EmployeeDetail.tsx
 #: src/pages/Employees/EmployeeList.tsx
+#: src/pages/Organization/OrganizationPage.test.tsx
+#: src/pages/Organization/OrganizationPage.tsx
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Legal Entity"
 msgstr "Legal Entity"
