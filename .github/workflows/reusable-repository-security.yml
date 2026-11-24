@@ -33,7 +33,7 @@ jobs:
       - name: Scan repository source
         id: scan
         # main; accepted scanner and zero-exception policy (SecPal/.github#1301).
-        uses: SecPal/.github/.github/actions/trivy-repository-scan@73e2972e8856c8c197152ec3b45a63e49ccb09fe
+        uses: SecPal/.github/.github/actions/trivy-repository-scan@2d02204e03a7d93132fcbcba45cdff1161017e11
 
       - name: Require clean repository evidence
         env:
