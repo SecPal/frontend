@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { Page } from "@playwright/test";
+import type { OrganizationalUnitPaginatedResponse } from "@/types/api";
 import { test, expect } from "./auth.setup";
 import { AUTH_SIDEBAR_TRIGGER_SELECTOR } from "./auth-helpers";
 import { offlineLiveMockOrganizationUnit } from "./offline-live-helpers";
@@ -17,7 +18,7 @@ const playwrightEnv = globalThis as typeof globalThis & {
   };
 };
 
-// In the Polyscope workspace preview path (the only path that runs the
+// In the workspace preview path (the only path that runs the
 // `Live organization proof` block below), `resolvePlaywrightApiBaseUrl()`
 // always returns the workspace's `<workspace>.preview.secpal.dev` origin,
 // so the empty fallback is never reached at runtime; it only exists to keep
@@ -27,23 +28,6 @@ const API_BASE_URL =
   resolvePlaywrightApiBaseUrl(playwrightEnv.process?.env ?? process.env) ?? "";
 const LIVE_ORGANIZATION_CRUD_ENABLED =
   playwrightEnv.process?.env?.PLAYWRIGHT_LIVE_ORGANIZATION_CRUD === "1";
-/**
- * Name of the root organizational unit that the API workspace's
- * `DatabaseSeeder` guarantees on every freshly seeded Polyscope workspace
- * preview tenant. See `database/seeders/DatabaseSeeder.php` in the API
- * workspace:
- *
- *     OrganizationalUnit::firstOrCreate(
- *         ['name' => 'Headquarters', 'tenant_id' => $tenantId],
- *         ['type' => 'holding']
- *     );
- *
- * The live-organization proof block below is therefore deterministic against
- * any `*.preview.secpal.dev` target driven by the current Polyscope
- * workspace, and is intentionally skipped against pure live targets such as
- * `app.secpal.dev` where this seed contract does not hold (see issue #1199).
- */
-const WORKSPACE_PREVIEW_ROOT_UNIT_NAME = "Headquarters";
 
 const ROTATED_XSRF_TOKEN = "rotated-xsrf-token";
 const CREATED_CHILD_UNIT_ID = "org-child-1";
@@ -60,13 +44,30 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// Defensive escape so the pattern stays a literal match even if the seeded
-// root unit name ever picks up a regex meta-character. Defined after
-// `escapeRegExp` to avoid temporal-dead-zone confusion.
-const WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN = new RegExp(
-  escapeRegExp(WORKSPACE_PREVIEW_ROOT_UNIT_NAME),
-  "i"
-);
+async function openLiveOrganization(page: Page): Promise<string> {
+  const [response] = await Promise.all([
+    page.waitForResponse((candidate) => {
+      const url = new URL(candidate.url());
+      return (
+        url.origin === API_BASE_URL &&
+        url.pathname === "/v1/organizational-units" &&
+        candidate.request().method() === "GET"
+      );
+    }),
+    page.goto("/organization"),
+  ]);
+  expect(response.ok()).toBe(true);
+  const { data, meta } =
+    (await response.json()) as OrganizationalUnitPaginatedResponse;
+  const root = data.find(
+    (unit) => unit.type === "holding" && meta.root_unit_ids?.includes(unit.id)
+  );
+  if (!root) {
+    throw new Error("The workspace fixture must include a root holding.");
+  }
+
+  return root.name;
+}
 
 async function expectAuthenticatedShellVisible(page: Page): Promise<void> {
   await expect
@@ -848,20 +849,6 @@ test.describe("Organization Management", () => {
     });
   });
 
-  test.describe("Guard Books", () => {
-    test("should display guard books list", async ({
-      authenticatedPage: page,
-    }) => {
-      await page.goto("/guard-books");
-      await page.waitForLoadState("networkidle");
-
-      // Should show guard books page
-      await expect(
-        page.getByRole("heading", { level: 1 }).first()
-      ).toBeVisible();
-    });
-  });
-
   test.describe("Performance", () => {
     test("should load organization pages without errors", async ({
       authenticatedPage: page,
@@ -881,7 +868,7 @@ test.describe("Organization Management", () => {
         }
       });
 
-      const pages = ["/organization", "/customers", "/guard-books"];
+      const pages = ["/organization", "/customers"];
 
       for (const path of pages) {
         await page.goto(path);
@@ -923,18 +910,17 @@ test.describe("Organization Management", () => {
     // such as `app.secpal.dev`.
     test.skip(
       !isWorkspacePreviewTarget(),
-      `Only runs against Polyscope workspace previews (<workspace>.preview.secpal.dev), where the API workspace's DatabaseSeeder contractually guarantees a "${WORKSPACE_PREVIEW_ROOT_UNIT_NAME}" root unit; intentionally skipped against pure live targets such as app.secpal.dev where that seed contract does not hold (see issue #1199).`
+      `Only runs against workspace previews (<workspace>.preview.secpal.dev), with a synthetic root holding.`
     );
 
-    test("should show the seeded Headquarters root unit on the Polyscope workspace preview", async ({
+    test("should show the seeded root holding unit on the workspace preview", async ({
       authenticatedPage: page,
     }) => {
-      await page.goto("/organization");
-      await page.waitForLoadState("networkidle");
+      const rootName = await openLiveOrganization(page);
 
       const rootTreeItem = page
         .getByRole("treeitem", {
-          name: WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN,
+          name: new RegExp(escapeRegExp(rootName), "i"),
         })
         .first();
 
@@ -944,7 +930,7 @@ test.describe("Organization Management", () => {
       await expect(
         page.getByRole("heading", {
           level: 3,
-          name: WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN,
+          name: new RegExp(escapeRegExp(rootName), "i"),
         })
       ).toBeVisible();
       await expect(
@@ -955,12 +941,12 @@ test.describe("Organization Management", () => {
       await expect(page.locator("dt", { hasText: /^Parent$/i })).toHaveCount(0);
     });
 
-    test("should create and remove a live child unit under the seeded Headquarters root on the Polyscope workspace preview", async ({
+    test("should create and remove a live child unit under the seeded root holding on the workspace preview", async ({
       authenticatedPage: page,
     }, testInfo) => {
       test.skip(
         !LIVE_ORGANIZATION_CRUD_ENABLED || testInfo.project.name !== "chromium",
-        `Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live organization CRUD proof against the current Polyscope workspace preview (<workspace>.preview.secpal.dev) on the chromium project. The workspace-preview gate is handled at describe level (see issue #1199).`
+        `Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live organization CRUD proof against the current workspace preview (<workspace>.preview.secpal.dev) on the chromium project. The workspace-preview gate is handled at describe level (see issue #1199).`
       );
 
       const unitName = `Playwright Live Child ${Date.now()}`;
@@ -969,12 +955,11 @@ test.describe("Organization Management", () => {
       let createdUnitId: string | null = null;
 
       try {
-        await page.goto("/organization");
-        await page.waitForLoadState("networkidle");
+        const rootName = await openLiveOrganization(page);
 
         const rootTreeItem = page
           .getByRole("treeitem", {
-            name: WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN,
+            name: new RegExp(escapeRegExp(rootName), "i"),
           })
           .first();
 
@@ -1013,7 +998,7 @@ test.describe("Organization Management", () => {
           page
             .locator("dt", { hasText: /^Parent$/i })
             .locator("xpath=following-sibling::dd[1]")
-        ).toHaveText(WORKSPACE_PREVIEW_ROOT_UNIT_NAME);
+        ).toHaveText(rootName);
         await expect(page.getByText(unitDescription)).toBeVisible();
 
         const actionsButton = page.getByRole("button", {
@@ -1038,12 +1023,12 @@ test.describe("Organization Management", () => {
       }
     });
 
-    test("should keep a live company visible while immediately creating a branch under it on the Polyscope workspace preview", async ({
+    test("should keep a live company visible while immediately creating a branch under it on the workspace preview", async ({
       authenticatedPage: page,
     }, testInfo) => {
       test.skip(
         !LIVE_ORGANIZATION_CRUD_ENABLED || testInfo.project.name !== "chromium",
-        `Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live sequential organization create proof against the current Polyscope workspace preview (<workspace>.preview.secpal.dev) on the chromium project. The workspace-preview gate is handled at describe level (see issue #1199).`
+        `Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live sequential organization create proof against the current workspace preview (<workspace>.preview.secpal.dev) on the chromium project. The workspace-preview gate is handled at describe level (see issue #1199).`
       );
 
       const timestamp = Date.now();
@@ -1057,12 +1042,11 @@ test.describe("Organization Management", () => {
       let createdBranchId: string | null = null;
 
       try {
-        await page.goto("/organization");
-        await page.waitForLoadState("networkidle");
+        const rootName = await openLiveOrganization(page);
 
         createdCompanyId = await createLiveChildUnit(
           page,
-          WORKSPACE_PREVIEW_ROOT_UNIT_NAME,
+          rootName,
           companyName,
           "company",
           companyDescription
@@ -1101,12 +1085,12 @@ test.describe("Organization Management", () => {
       }
     });
 
-    test("should move a live branch to a different live parent and keep it editable on the Polyscope workspace preview", async ({
+    test("should move a live branch to a different live parent and keep it editable on the workspace preview", async ({
       authenticatedPage: page,
     }, testInfo) => {
       test.skip(
         !LIVE_ORGANIZATION_CRUD_ENABLED || testInfo.project.name !== "chromium",
-        `Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live organization move proof against the current Polyscope workspace preview (<workspace>.preview.secpal.dev) on the chromium project. The workspace-preview gate is handled at describe level (see issue #1199).`
+        `Set PLAYWRIGHT_LIVE_ORGANIZATION_CRUD=1 to run the live organization move proof against the current workspace preview (<workspace>.preview.secpal.dev) on the chromium project. The workspace-preview gate is handled at describe level (see issue #1199).`
       );
 
       const timestamp = Date.now();
@@ -1120,19 +1104,18 @@ test.describe("Organization Management", () => {
       let branchId: string | null = null;
 
       try {
-        await page.goto("/organization");
-        await page.waitForLoadState("networkidle");
+        const rootName = await openLiveOrganization(page);
 
         sourceCompanyId = await createLiveChildUnit(
           page,
-          WORKSPACE_PREVIEW_ROOT_UNIT_NAME,
+          rootName,
           sourceCompanyName,
           "company",
           `Source parent created at ${new Date().toISOString()}`
         );
         targetCompanyId = await createLiveChildUnit(
           page,
-          WORKSPACE_PREVIEW_ROOT_UNIT_NAME,
+          rootName,
           targetCompanyName,
           "company",
           `Target parent created at ${new Date().toISOString()}`

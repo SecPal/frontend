@@ -184,12 +184,12 @@ test.describe("Authentication", () => {
       await expect(page.locator("#password")).toBeDisabled();
     });
 
-    test("should surface the current login readiness state on the Polyscope workspace preview", async ({
+    test("should surface the current login readiness state on the workspace preview", async ({
       page,
     }) => {
       test.skip(
         !isWorkspacePreviewTarget(),
-        "Only runs against Polyscope workspace previews (frontend-<workspace>.preview.secpal.dev) where the workspace ships its own backend; local mock targets have separate coverage and pure live targets such as app.secpal.dev are no longer part of the Polyscope E2E surface."
+        "Only runs against workspace previews (<workspace>.preview.secpal.dev) where the workspace ships its own backend; local mock targets have separate coverage and pure live targets such as app.secpal.dev are no longer part of the workspace E2E surface."
       );
 
       await page.goto("/login");
@@ -259,12 +259,12 @@ test.describe("Authentication", () => {
       await expect(page).toHaveURL(/\/login/);
     });
 
-    test("should resolve protected route auth bootstrap on the Polyscope workspace preview", async ({
+    test("should resolve protected route auth bootstrap on the workspace preview", async ({
       page,
     }) => {
       test.skip(
         !isWorkspacePreviewTarget(),
-        "Only runs against Polyscope workspace previews (frontend-<workspace>.preview.secpal.dev); local mock targets have separate coverage and pure live targets such as app.secpal.dev are no longer part of the Polyscope E2E surface."
+        "Only runs against workspace previews (<workspace>.preview.secpal.dev); local mock targets have separate coverage and pure live targets such as app.secpal.dev are no longer part of the workspace E2E surface."
       );
 
       await page.goto("/organization");

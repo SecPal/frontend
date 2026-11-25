@@ -102,8 +102,9 @@ PLAYWRIGHT_APP_SURFACE=web npm run test:e2e
 PLAYWRIGHT_APP_SURFACE=android-native npm run test:e2e
 ```
 
-In Polyscope, workspace previews keep the deployed bundle surface they were
-built with and default Playwright route assumptions to `web`. Use
+Assigned Herdr tabs set `PLAYWRIGHT_BASE_URL` to the private workspace preview.
+Browser tests use that URL for both app and API and default to the `web` surface.
+Diagnostic workspace previews keep the deployed bundle surface. Use
 `PLAYWRIGHT_APP_SURFACE=android-mock` only to run Android-specific tests or route
 selection against a preview that already exposes that UI surface. For local
 shared-UI review while still using a workspace backend, run
@@ -177,32 +178,22 @@ digest and closed `SecPal/deployment#3`, so Phase C is complete.
 
 #### Live Browser Web Push Smoke
 
-Use the deployment-facing Playwright smoke to prove the real browser registration lifecycle against the selected HTTPS deployment:
+Run the smoke against the assigned Herdr workspace. The app and API use the
+same HTTPS origin. Set the preview URL explicitly when running outside the
+assigned tab.
 
 ```bash
-export PLAYWRIGHT_BASE_URL="https://frontend-your-workspace.preview.secpal.dev"
-# Required when the API host cannot be derived from the selected frontend host.
-export PLAYWRIGHT_API_BASE_URL="https://api-your-workspace.preview.secpal.dev"
-# Required for live browser notification permission on deployment-facing HTTPS targets.
+export PLAYWRIGHT_BASE_URL="https://your-workspace.preview.secpal.dev"
 export CHROME_PATH="/usr/bin/chromium"
-
-# Required for non-preview live targets such as app.secpal.dev.
-export TEST_USER_EMAIL="test@example.com"
-export TEST_USER_PASSWORD="password"
-
 npm run test:e2e:live:web-push
 ```
 
-Required deployment and operator prerequisites:
-
-- `PLAYWRIGHT_BASE_URL` must point to the exact HTTPS frontend deployment you want to verify; the smoke refuses local HTTP targets.
-- `CHROME_PATH` must point to a stable system Chrome/Chromium binary; the bundled Playwright Chromium snapshot denies notification permission on live HTTPS targets.
-- The smoke runs in a headed persistent Chromium profile because deployment-facing Web Push subscription creation is rejected in Playwright's default ephemeral browser context. On headless Linux hosts, `npm run test:e2e:live:web-push` auto-starts `/usr/bin/Xvfb` when available.
-- The selected deployment must serve an active same-origin service worker for the app shell.
-- `GET /v1/bootstrap?client_platform=browser` must publish `notification_channels.web_push` with browser runtime metadata for that deployment.
-- The test user must be able to authenticate with browser-session login on the selected deployment.
-- For non-canonical hosts, set `PLAYWRIGHT_API_BASE_URL` explicitly so the smoke can reach the matching API deployment.
-- Run the smoke in desktop Chromium; the script already pins `--project=chromium` because notification permission and push diagnostics are collected there.
+Use stable Chrome or Chromium for notification permission on HTTPS. The smoke
+uses a headed persistent Chromium profile and starts `/usr/bin/Xvfb` on headless
+Linux when available. The workspace needs an active same-origin service worker,
+browser-session login and browser push metadata in `GET /v1/bootstrap?client_platform=browser`.
+Set `TEST_USER_EMAIL` and `TEST_USER_PASSWORD` together to use a dedicated workspace
+test account.
 
 What the smoke proves:
 

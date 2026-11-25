@@ -28,10 +28,8 @@ import { LIGHTHOUSE_AUDIT_CONFIG } from "./lighthouse-audit-config";
  * - HMR overhead
  *
  * Default run: npm run test:e2e:performance (uses the local preview build)
- * Workspace preview opt-in: npm run test:e2e:performance:workspace (uses the
- * current Polyscope workspace preview detected from POLYSCOPE_WORKSPACE or
- * the clone path; intentionally no longer targets pure live deployments such
- * as app.secpal.dev — see issue #1199)
+ * Private workspace: `npm run test:e2e:performance:workspace` uses the HTTPS
+ * origin supplied by `PLAYWRIGHT_BASE_URL`.
  *
  * @see Issue #309 - Playwright performance tests for local development
  */

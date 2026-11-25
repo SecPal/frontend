@@ -85,7 +85,7 @@ export function buildTestUser(
   const liveOnboarding = env.PLAYWRIGHT_LIVE_ONBOARDING === "1";
 
   // Pure live targets (non-workspace HTTPS) are intentionally not part of the
-  // Polyscope E2E surface (issue #1199). Silently falling back to seeded dev
+  // workspace E2E surface (issue #1199). Silently falling back to seeded dev
   // credentials against an arbitrary production host is a security risk, so we
   // require explicit TEST_USER_* when the target is a non-workspace remote.
   if (
@@ -95,14 +95,14 @@ export function buildTestUser(
     if (!email || !password) {
       throw new Error(
         `TEST_USER_EMAIL and TEST_USER_PASSWORD must be set when Playwright targets a non-workspace remote (${resolvedBase}). ` +
-          "Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface. " +
-          "Either run inside a Polyscope workspace clone or set both TEST_USER_* variables explicitly."
+          "Pure live targets such as app.secpal.dev are intentionally not part of the workspace E2E surface. " +
+          "Either run inside an assigned Herdr tab or set both TEST_USER_* variables explicitly."
       );
     }
     return { email, password };
   }
 
-  // The Polyscope workspace preview ships with the standard seeded
+  // The workspace preview ships with the standard seeded
   // `test@example.com` / `password` user (and `onboarding@example.com` /
   // `password` for the live-onboarding flow). Explicit TEST_USER_* overrides
   // still win for both flows, allowing operator-driven runs with custom users.
@@ -121,7 +121,7 @@ export function buildTestUser(
 
 // `buildTestUser` either throws (for non-workspace remote targets without
 // TEST_USER_*) or returns non-empty credentials (local development,
-// Polyscope workspace preview, configured TEST_USER_* overrides). This
+// workspace preview, configured TEST_USER_* overrides). This
 // helper exists only as a named entry point for call sites that document
 // the throw contract; it intentionally has no additional fallback branch.
 export function getConfiguredTestUserOrThrow(

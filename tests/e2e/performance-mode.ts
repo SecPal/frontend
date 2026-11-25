@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-  detectPolyscopeWorkspaceName,
   isRemotePlaywrightTarget,
   isWorkspacePreviewTarget,
   resolvePlaywrightBaseUrl,
@@ -35,9 +34,7 @@ const hasExplicitPlaywrightBaseUrl = () =>
   Boolean(process.env.PLAYWRIGHT_BASE_URL?.trim());
 
 const hasPerformanceAuditTarget = () =>
-  Boolean(process.env.CI) ||
-  hasExplicitPlaywrightBaseUrl() ||
-  detectPolyscopeWorkspaceName() !== undefined;
+  Boolean(process.env.CI) || hasExplicitPlaywrightBaseUrl();
 
 const isPlaywrightBundledChromiumPath = (browserPath: string) =>
   /(^|[/\\])ms-playwright([/\\]|$)/.test(browserPath);
@@ -51,7 +48,7 @@ export const getConfiguredLighthouseBrowserPath = () => {
 export const getPerformanceAuditThresholds = (
   baseUrl = resolvePlaywrightBaseUrl()
 ) =>
-  // Only Polyscope workspace previews receive the relaxed threshold; every
+  // Only workspace previews receive the relaxed threshold; every
   // other target keeps the stricter default so it does not mask regressions
   // that CI would catch.
   isWorkspacePreviewTarget(baseUrl)

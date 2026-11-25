@@ -76,4 +76,3 @@ node_modules/.cache/
 storybook-static/
 
 .context
-.polyscope-preview-stage/

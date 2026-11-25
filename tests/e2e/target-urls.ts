@@ -1,17 +1,12 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-  parsePreviewHostname,
-  type PreviewHostname,
-} from "../../src/previewHostname";
+import { parsePreviewHostname } from "../../src/previewHostname.ts";
 import {
   resolveAppSurface,
   type AppSurface,
-} from "../../src/platform/appSurfaceContract";
+} from "../../src/platform/appSurfaceContract.ts";
 
-const POLYSCOPE_CLONE_PATH_PATTERN =
-  /(?:^|\/)\.polyscope\/clones\/[^/]+\/([^/]+)(?:\/|$)/;
 const DEFAULT_LOCAL_BASE_URL = "http://localhost:5173";
 
 export const PREVIEW_BASE_URL = "http://localhost:4173";
@@ -22,109 +17,24 @@ function readTrimmedEnvValue(value: string | undefined): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
-function normalizeCwd(cwd: string): string {
-  return cwd.replace(/\\/g, "/");
-}
-
-function getUrlOrigin(value: string): string | null {
-  try {
-    return new URL(value).origin;
-  } catch {
-    return null;
-  }
-}
-
-function getPreviewHostnameFromBaseUrl(
-  baseUrl: string
-): PreviewHostname | undefined {
-  const origin = getUrlOrigin(baseUrl);
-
-  if (!origin) {
-    return undefined;
-  }
-
-  return parsePreviewHostname(new URL(origin).hostname) ?? undefined;
-}
-
-function buildWorkspacePreviewBaseUrl(workspace: string): string {
-  return `https://${workspace}.preview.secpal.dev`;
-}
-
-export function detectPolyscopeWorkspaceName(
-  env: NodeJS.ProcessEnv = process.env,
-  cwd = process.cwd()
-): string | undefined {
-  const configuredWorkspace = readTrimmedEnvValue(env.POLYSCOPE_WORKSPACE);
-
-  if (configuredWorkspace) {
-    return configuredWorkspace;
-  }
-
-  const workspaceMatch = normalizeCwd(cwd).match(POLYSCOPE_CLONE_PATH_PATTERN);
-
-  return workspaceMatch?.[1];
-}
-
-export function getWorkspacePreviewNameFromBaseUrl(
-  baseUrl: string
-): string | undefined {
-  const previewHostname = getPreviewHostnameFromBaseUrl(baseUrl);
-
-  if (
-    !previewHostname ||
-    (previewHostname.repo !== null && previewHostname.repo !== "frontend")
-  ) {
-    return undefined;
-  }
-
-  return previewHostname.workspace;
-}
-
 export function resolvePlaywrightBaseUrl(
-  env: NodeJS.ProcessEnv = process.env,
-  cwd = process.cwd()
+  env: NodeJS.ProcessEnv = process.env
 ): string {
-  const workspace = detectPolyscopeWorkspaceName(env, cwd);
-
-  if (workspace) {
-    return buildWorkspacePreviewBaseUrl(workspace);
-  }
-
-  const configuredBaseUrl = readTrimmedEnvValue(env.PLAYWRIGHT_BASE_URL);
-
-  if (configuredBaseUrl) {
-    return configuredBaseUrl;
-  }
-
-  return env.CI ? PREVIEW_BASE_URL : DEFAULT_LOCAL_BASE_URL;
+  return (
+    readTrimmedEnvValue(env.PLAYWRIGHT_BASE_URL) ??
+    (env.CI ? PREVIEW_BASE_URL : DEFAULT_LOCAL_BASE_URL)
+  );
 }
 
 export function resolvePlaywrightApiBaseUrl(
-  env: NodeJS.ProcessEnv = process.env,
-  cwd = process.cwd()
+  env: NodeJS.ProcessEnv = process.env
 ): string | undefined {
-  const baseUrl = resolvePlaywrightBaseUrl(env, cwd);
+  const baseUrl = resolvePlaywrightBaseUrl(env);
   if (isWorkspacePreviewTarget(baseUrl)) {
-    return getUrlOrigin(baseUrl) ?? undefined;
+    return new URL(baseUrl).origin;
   }
 
-  const configuredApiBaseUrl = readTrimmedEnvValue(env.PLAYWRIGHT_API_BASE_URL);
-  if (configuredApiBaseUrl) {
-    const configuredApiPreviewHostname =
-      getPreviewHostnameFromBaseUrl(configuredApiBaseUrl);
-    if (
-      configuredApiPreviewHostname &&
-      (configuredApiPreviewHostname.repo === null ||
-        configuredApiPreviewHostname.repo === "api")
-    ) {
-      return buildWorkspacePreviewBaseUrl(
-        configuredApiPreviewHostname.workspace
-      );
-    }
-    return configuredApiBaseUrl;
-  }
-
-  return undefined;
+  return readTrimmedEnvValue(env.PLAYWRIGHT_API_BASE_URL);
 }
 
 export function isRemotePlaywrightTarget(
@@ -159,12 +69,22 @@ function isLocalHttpsPlaywrightTarget(baseUrl: string): boolean {
 export function isWorkspacePreviewTarget(
   baseUrl = resolvePlaywrightBaseUrl()
 ): boolean {
-  return getWorkspacePreviewNameFromBaseUrl(baseUrl) !== undefined;
+  try {
+    const url = new URL(baseUrl);
+    if (url.protocol !== "https:" || url.port || url.username || url.password) {
+      return false;
+    }
+    const preview = parsePreviewHostname(url.hostname);
+    return (
+      preview !== null && (preview.repo === null || preview.repo === "frontend")
+    );
+  } catch {
+    return false;
+  }
 }
 
 export function resolvePlaywrightAppSurface(
-  env: NodeJS.ProcessEnv = process.env,
-  cwd = process.cwd()
+  env: NodeJS.ProcessEnv = process.env
 ): AppSurface {
   const configuredSurface = readTrimmedEnvValue(env.PLAYWRIGHT_APP_SURFACE);
 
@@ -172,7 +92,7 @@ export function resolvePlaywrightAppSurface(
     return resolveAppSurface(configuredSurface, false);
   }
 
-  const baseUrl = resolvePlaywrightBaseUrl(env, cwd);
+  const baseUrl = resolvePlaywrightBaseUrl(env);
 
   if (
     isRemotePlaywrightTarget(baseUrl) &&

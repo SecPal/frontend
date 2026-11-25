@@ -60,7 +60,7 @@ export function getLiveWebPushMode(): LiveWebPushMode {
       baseUrl,
       apiBaseUrl,
       skipReason:
-        "Live browser Web Push smoke only runs against the current Polyscope workspace preview (<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface.",
+        "Live browser Web Push smoke only runs against the current workspace preview (<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the workspace E2E surface.",
     };
   }
 
