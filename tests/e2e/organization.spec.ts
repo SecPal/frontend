@@ -27,8 +27,6 @@ const API_BASE_URL =
   resolvePlaywrightApiBaseUrl(playwrightEnv.process?.env ?? process.env) ?? "";
 const LIVE_ORGANIZATION_CRUD_ENABLED =
   playwrightEnv.process?.env?.PLAYWRIGHT_LIVE_ORGANIZATION_CRUD === "1";
-// The SecPal workspace fixture runs the API's OrganizationalUnitSeeder.
-const WORKSPACE_PREVIEW_ROOT_UNIT_NAME = "SecPal Holding";
 
 const ROTATED_XSRF_TOKEN = "rotated-xsrf-token";
 const CREATED_CHILD_UNIT_ID = "org-child-1";
@@ -45,13 +43,32 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// Defensive escape so the pattern stays a literal match even if the seeded
-// root unit name ever picks up a regex meta-character. Defined after
-// `escapeRegExp` to avoid temporal-dead-zone confusion.
-const WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN = new RegExp(
-  escapeRegExp(WORKSPACE_PREVIEW_ROOT_UNIT_NAME),
-  "i"
-);
+async function openLiveOrganization(page: Page): Promise<string> {
+  const [response] = await Promise.all([
+    page.waitForResponse((candidate) => {
+      const url = new URL(candidate.url());
+      return (
+        url.origin === API_BASE_URL &&
+        url.pathname === "/v1/organizational-units" &&
+        candidate.request().method() === "GET"
+      );
+    }),
+    page.goto("/organization"),
+  ]);
+  expect(response.ok()).toBe(true);
+  const { data, meta } = (await response.json()) as {
+    data: { id: string; name: string; type: string }[];
+    meta: { root_unit_ids: string[] };
+  };
+  const root = data.find(
+    (unit) => unit.type === "holding" && meta.root_unit_ids.includes(unit.id)
+  );
+  if (!root) {
+    throw new Error("The workspace fixture must include a root holding.");
+  }
+
+  return root.name;
+}
 
 async function expectAuthenticatedShellVisible(page: Page): Promise<void> {
   await expect
@@ -894,18 +911,17 @@ test.describe("Organization Management", () => {
     // such as `app.secpal.dev`.
     test.skip(
       !isWorkspacePreviewTarget(),
-      `Only runs against workspace previews (<workspace>.preview.secpal.dev), whose synthetic fixture seeds a "${WORKSPACE_PREVIEW_ROOT_UNIT_NAME}" root unit; intentionally skipped against pure live targets such as app.secpal.dev where that seed contract does not hold (see issue #1199).`
+      `Only runs against workspace previews (<workspace>.preview.secpal.dev), with a synthetic root holding.`
     );
 
-    test("should show the seeded SecPal Holding root unit on the workspace preview", async ({
+    test("should show the seeded root holding unit on the workspace preview", async ({
       authenticatedPage: page,
     }) => {
-      await page.goto("/organization");
-      await page.waitForLoadState("networkidle");
+      const rootName = await openLiveOrganization(page);
 
       const rootTreeItem = page
         .getByRole("treeitem", {
-          name: WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN,
+          name: new RegExp(escapeRegExp(rootName), "i"),
         })
         .first();
 
@@ -915,7 +931,7 @@ test.describe("Organization Management", () => {
       await expect(
         page.getByRole("heading", {
           level: 3,
-          name: WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN,
+          name: new RegExp(escapeRegExp(rootName), "i"),
         })
       ).toBeVisible();
       await expect(
@@ -926,7 +942,7 @@ test.describe("Organization Management", () => {
       await expect(page.locator("dt", { hasText: /^Parent$/i })).toHaveCount(0);
     });
 
-    test("should create and remove a live child unit under the seeded SecPal Holding root on the workspace preview", async ({
+    test("should create and remove a live child unit under the seeded root holding on the workspace preview", async ({
       authenticatedPage: page,
     }, testInfo) => {
       test.skip(
@@ -940,12 +956,11 @@ test.describe("Organization Management", () => {
       let createdUnitId: string | null = null;
 
       try {
-        await page.goto("/organization");
-        await page.waitForLoadState("networkidle");
+        const rootName = await openLiveOrganization(page);
 
         const rootTreeItem = page
           .getByRole("treeitem", {
-            name: WORKSPACE_PREVIEW_ROOT_UNIT_NAME_PATTERN,
+            name: new RegExp(escapeRegExp(rootName), "i"),
           })
           .first();
 
@@ -984,7 +999,7 @@ test.describe("Organization Management", () => {
           page
             .locator("dt", { hasText: /^Parent$/i })
             .locator("xpath=following-sibling::dd[1]")
-        ).toHaveText(WORKSPACE_PREVIEW_ROOT_UNIT_NAME);
+        ).toHaveText(rootName);
         await expect(page.getByText(unitDescription)).toBeVisible();
 
         const actionsButton = page.getByRole("button", {
@@ -1028,12 +1043,11 @@ test.describe("Organization Management", () => {
       let createdBranchId: string | null = null;
 
       try {
-        await page.goto("/organization");
-        await page.waitForLoadState("networkidle");
+        const rootName = await openLiveOrganization(page);
 
         createdCompanyId = await createLiveChildUnit(
           page,
-          WORKSPACE_PREVIEW_ROOT_UNIT_NAME,
+          rootName,
           companyName,
           "company",
           companyDescription
@@ -1091,19 +1105,18 @@ test.describe("Organization Management", () => {
       let branchId: string | null = null;
 
       try {
-        await page.goto("/organization");
-        await page.waitForLoadState("networkidle");
+        const rootName = await openLiveOrganization(page);
 
         sourceCompanyId = await createLiveChildUnit(
           page,
-          WORKSPACE_PREVIEW_ROOT_UNIT_NAME,
+          rootName,
           sourceCompanyName,
           "company",
           `Source parent created at ${new Date().toISOString()}`
         );
         targetCompanyId = await createLiveChildUnit(
           page,
-          WORKSPACE_PREVIEW_ROOT_UNIT_NAME,
+          rootName,
           targetCompanyName,
           "company",
           `Target parent created at ${new Date().toISOString()}`
