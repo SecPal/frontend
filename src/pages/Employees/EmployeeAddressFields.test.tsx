@@ -1015,6 +1015,70 @@ describe("EmployeeAddressFields", () => {
     expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
 
+  it.each(["click", "keyboard"] as const)(
+    "blocks stale street suggestions when using %s",
+    async (activation) => {
+      vi.mocked(fetchAddressStreetSuggestions)
+        .mockReturnValue(new Promise(() => {}))
+        .mockResolvedValueOnce({
+          data: [
+            {
+              name: "Hauptstraße",
+              postal_code: "10115",
+              locality: "Berlin",
+              borough: null,
+              suburb: null,
+              regional_key: null,
+            },
+          ],
+          meta: referenceMeta,
+        });
+      const onChange = vi.fn();
+      const addressForm = (street: string) => (
+        <I18nProvider i18n={i18n}>
+          <EmployeeAddressFields
+            draft={{
+              street,
+              houseNumber: "",
+              postalCode: "",
+              city: "",
+              supplement: "",
+              country: "DE",
+            }}
+            onChange={onChange}
+          />
+        </I18nProvider>
+      );
+      const { rerender } = render(addressForm("Hau"));
+      const street = screen.getByRole("combobox", { name: "Street" });
+      act(() => street.focus());
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
+      const previousOption = screen.getByRole("option", {
+        name: /Hauptstraße/,
+      });
+
+      rerender(addressForm("Mü"));
+      expect(previousOption).toBeInTheDocument();
+      expect(previousOption).toHaveAttribute("aria-disabled", "true");
+      if (activation === "click") {
+        fireEvent.click(previousOption);
+      } else {
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(250);
+        });
+        expect(street).toHaveAttribute("aria-busy", "true");
+        expect(previousOption).toHaveAttribute("aria-disabled", "true");
+        fireEvent.keyDown(street, { key: "ArrowDown" });
+        fireEvent.keyDown(street, { key: "Enter" });
+      }
+
+      expect(onChange).not.toHaveBeenCalled();
+      expect(street).toHaveValue("Mü");
+    }
+  );
+
   it("waits for results before opening the locality popup", async () => {
     const onChange = vi.fn();
     vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({

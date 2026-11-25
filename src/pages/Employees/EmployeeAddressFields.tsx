@@ -32,16 +32,11 @@ import { AddressDataAttribution } from "@/components/AddressDataAttribution";
 import type { AddressReferenceMeta } from "@/types/api";
 
 interface SuggestionRequestState {
+  queryKey: string;
   loading: boolean;
   error: string | null;
   hasResolved: boolean;
 }
-
-const idleSuggestionRequestState: SuggestionRequestState = {
-  loading: false,
-  error: null,
-  hasResolved: false,
-};
 
 function AddressSuggestionFeedback({
   state,
@@ -119,11 +114,10 @@ export function EmployeeAddressFields({
   const [localitySuggestions, setLocalitySuggestions] = useState<
     AddressLocalitySuggestion[]
   >([]);
-  const [streetRequestState, setStreetRequestState] =
-    useState<SuggestionRequestState>(idleSuggestionRequestState);
-  const [localityRequest, setLocalityRequest] = useState<
-    (SuggestionRequestState & { queryKey: string }) | null
-  >(null);
+  const [streetRequest, setStreetRequest] =
+    useState<SuggestionRequestState | null>(null);
+  const [localityRequest, setLocalityRequest] =
+    useState<SuggestionRequestState | null>(null);
 
   const [attribution, setAttribution] = useState<AddressReferenceMeta | null>(
     null
@@ -147,6 +141,9 @@ export function EmployeeAddressFields({
   const locality = draft.city.trim();
   const localityQuery =
     locality.length >= 2 && locality.length <= 100 ? locality : undefined;
+  const streetQuery = draft.street.trim();
+  const searchFromStreet =
+    autocompleteEnabled && focusedField === "street" && streetQuery.length >= 2;
   const searchFromPostalCode =
     autocompleteEnabled &&
     focusedField === "postalCode" &&
@@ -156,6 +153,13 @@ export function EmployeeAddressFields({
     focusedField === "city" &&
     localityQuery !== undefined;
   const searchLocalities = searchFromPostalCode || searchFromCity;
+  const streetQueryKey = JSON.stringify([
+    streetQuery,
+    postalCodeQuery,
+    localityQuery,
+  ]);
+  const streetRequestState =
+    streetRequest?.queryKey === streetQueryKey ? streetRequest : undefined;
   const localityQueryKey = JSON.stringify([postalCodeQuery, localityQuery]);
   const localityRequestState =
     localityRequest?.queryKey === localityQueryKey
@@ -224,14 +228,10 @@ export function EmployeeAddressFields({
   );
 
   useEffect(() => {
-    if (
-      !autocompleteEnabled ||
-      focusedField !== "street" ||
-      draft.street.trim().length < 2
-    ) {
+    if (!searchFromStreet) {
       const timeoutId = window.setTimeout(() => {
         setStreetSuggestions([]);
-        setStreetRequestState(idleSuggestionRequestState);
+        setStreetRequest(null);
       }, 0);
 
       return () => window.clearTimeout(timeoutId);
@@ -240,14 +240,15 @@ export function EmployeeAddressFields({
     let cancelled = false;
 
     const timeoutId = window.setTimeout(() => {
-      setStreetRequestState({
+      setStreetRequest({
+        queryKey: streetQueryKey,
         loading: true,
         error: null,
         hasResolved: false,
       });
 
       void fetchAddressStreetSuggestions({
-        name: draft.street.trim(),
+        name: streetQuery,
         postalCode: postalCodeQuery,
         locality: localityQuery,
         limit: 8,
@@ -259,7 +260,8 @@ export function EmployeeAddressFields({
 
           setStreetSuggestions(result.data);
           setAttribution(result.meta);
-          setStreetRequestState({
+          setStreetRequest({
+            queryKey: streetQueryKey,
             loading: false,
             error: null,
             hasResolved: true,
@@ -271,7 +273,8 @@ export function EmployeeAddressFields({
           }
 
           setStreetSuggestions([]);
-          setStreetRequestState({
+          setStreetRequest({
+            queryKey: streetQueryKey,
             loading: false,
             error: getAutocompleteErrorMessage(error),
             hasResolved: true,
@@ -284,12 +287,12 @@ export function EmployeeAddressFields({
       window.clearTimeout(timeoutId);
     };
   }, [
-    autocompleteEnabled,
-    focusedField,
-    draft.street,
     getAutocompleteErrorMessage,
     localityQuery,
     postalCodeQuery,
+    searchFromStreet,
+    streetQuery,
+    streetQueryKey,
   ]);
 
   useEffect(() => {
@@ -474,11 +477,10 @@ export function EmployeeAddressFields({
     });
   }
 
+  const streetSuggestionsAreCurrent = streetRequestState?.hasResolved === true;
   const showStreetPopup =
-    autocompleteEnabled &&
-    focusedField === "street" &&
-    (streetRequestState.hasResolved || streetSuggestions.length > 0) &&
-    draft.street.trim().length >= 2;
+    searchFromStreet &&
+    (streetSuggestionsAreCurrent || streetSuggestions.length > 0);
   const localitySuggestionsAreCurrent =
     localityRequestState?.hasResolved === true;
   const showLocalityPopup =
@@ -651,6 +653,7 @@ export function EmployeeAddressFields({
             }
           }}
           onValueChange={(value) => {
+            if (!streetSuggestionsAreCurrent) return;
             const suggestion = streetSuggestions.find(
               (candidate) => streetSuggestionValue(candidate) === value
             );
@@ -675,7 +678,9 @@ export function EmployeeAddressFields({
               ref={streetInputRef}
               id={fieldId("street")}
               name={fieldName("street")}
-              aria-busy={streetRequestState.loading || undefined}
+              aria-busy={
+                (searchFromStreet && streetRequestState?.loading) || undefined
+              }
               aria-invalid={invalidFields.street || undefined}
               autoComplete="street-address"
               disabled={readOnly}
@@ -704,6 +709,7 @@ export function EmployeeAddressFields({
                 <AutocompleteOption
                   key={`${suggestion.name}-${suggestion.postal_code}-${suggestion.locality}`}
                   value={streetSuggestionValue(suggestion)}
+                  disabled={!streetSuggestionsAreCurrent}
                 >
                   <span className="block font-medium">{suggestion.name}</span>
                   <span className="text-muted-foreground block">
