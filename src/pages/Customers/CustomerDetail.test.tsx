@@ -53,7 +53,8 @@ describe("CustomerDetail", () => {
       vat_id: "DE123",
       name: "ACME GmbH",
       billing_address: {
-        street: "Street 1",
+        street: "Street",
+        house_number: "1",
         postal_code: "10115",
         city: "Berlin",
         country: "DE",
@@ -226,7 +227,8 @@ describe("CustomerDetail", () => {
       legal_entity_id: "legal-1",
       name: id === "customer-1" ? "ACME GmbH" : "Other GmbH",
       billing_address: {
-        street: "Street 1",
+        street: "Street",
+        house_number: "1",
         postal_code: "10115",
         city: "Berlin",
         country: "DE",
@@ -267,7 +269,8 @@ describe("CustomerDetail", () => {
       legal_entity_id: "legal-1",
       name: id === "customer-1" ? "ACME GmbH" : "Other GmbH",
       billing_address: {
-        street: "Street 1",
+        street: "Street",
+        house_number: "1",
         postal_code: "10115",
         city: "Berlin",
         country: "DE",

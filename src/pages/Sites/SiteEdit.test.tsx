@@ -73,7 +73,8 @@ describe("SiteEdit", () => {
     legal_entity_id: "org-1",
     establishment_id: "establishment-1",
     address: {
-      street: "Old Street 1",
+      street: "Old Street",
+      house_number: "1",
       city: "Old City",
       postal_code: "11111",
       country: "DE",
@@ -174,7 +175,8 @@ describe("SiteEdit", () => {
     });
 
     const streetInput = screen.getByLabelText(/street/i) as HTMLInputElement;
-    expect(streetInput.value).toBe("Old Street 1");
+    expect(streetInput.value).toBe("Old Street");
+    expect(screen.getByLabelText(/house number/i)).toHaveValue("1");
 
     const cityInput = screen.getByLabelText(/city/i) as HTMLInputElement;
     expect(cityInput.value).toBe("Old City");
@@ -243,7 +245,8 @@ describe("SiteEdit", () => {
           establishment_id: "establishment-1",
           name: "Updated site name",
           address: {
-            street: "Old Street 1",
+            street: "Old Street",
+            house_number: "1",
             city: "Old City",
             postal_code: "11111",
             country: "DE",
@@ -314,7 +317,11 @@ describe("SiteEdit", () => {
         customer_id: ["The customer field is required."],
         name: ["The name must not exceed 255 characters."],
         "address.street": ["The street field must be a valid address."],
+        "address.house_number": [
+          "The house number may have up to 10 characters.",
+        ],
         "address.postal_code": ["The postal code field is required."],
+        "address.country": ["The country field is required."],
         "contact.email": ["The contact email field must be a valid email."],
       };
       vi.mocked(customersApi.updateSite).mockRejectedValue(validationError);
@@ -337,14 +344,20 @@ describe("SiteEdit", () => {
           "aria-describedby",
           "site-name-error"
         );
-        expect(screen.getByLabelText(/street/i)).toHaveAttribute(
-          "aria-describedby",
-          "site-street-error"
+        expect(screen.getByLabelText(/street/i)).toHaveAccessibleDescription(
+          "The street field must be a valid address."
         );
-        expect(screen.getByLabelText(/postal code/i)).toHaveAttribute(
-          "aria-describedby",
-          "site-postal-code-error"
+        const houseNumber = screen.getByLabelText(/house number/i);
+        expect(houseNumber).toBeInvalid();
+        expect(houseNumber).toHaveAccessibleDescription(
+          "The house number may have up to 10 characters."
         );
+        expect(
+          screen.getByLabelText(/postal code/i)
+        ).toHaveAccessibleDescription("The postal code field is required.");
+        expect(
+          screen.getByRole("combobox", { name: /country/i })
+        ).toHaveAccessibleDescription("The country field is required.");
         expect(screen.getByLabelText(/email/i)).toHaveAttribute(
           "aria-describedby",
           "site-contact-email-error"
@@ -428,7 +441,8 @@ describe("SiteEdit", () => {
         establishment_id: "establishment-1",
         name: "Updated site name",
         address: {
-          street: "Old Street 1",
+          street: "Old Street",
+          house_number: "1",
           city: "Old City",
           postal_code: "11111",
           country: "DE",
@@ -738,7 +752,10 @@ describe("SiteEdit", () => {
 
     act(() => {
       fireEvent.change(screen.getByLabelText(/street/i), {
-        target: { value: "Concurrent Street 99" },
+        target: { value: "Concurrent Street" },
+      });
+      fireEvent.change(screen.getByLabelText(/house number/i), {
+        target: { value: "99" },
       });
       fireEvent.change(screen.getByLabelText(/city/i), {
         target: { value: "Concurrent City" },
@@ -753,7 +770,8 @@ describe("SiteEdit", () => {
         "site-123",
         expect.objectContaining({
           address: expect.objectContaining({
-            street: "Concurrent Street 99",
+            street: "Concurrent Street",
+            house_number: "99",
             city: "Concurrent City",
             postal_code: "11111",
           }),

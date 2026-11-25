@@ -68,7 +68,8 @@ describe("SiteDetail", () => {
     legal_entity_id: "legal-entity-123",
     establishment_id: "establishment-1",
     address: {
-      street: "Teststrasse 42",
+      street: "Teststrasse",
+      house_number: "42",
       city: "München",
       postal_code: "80331",
       country: "DE",

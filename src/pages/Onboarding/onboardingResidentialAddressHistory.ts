@@ -3,6 +3,7 @@
 
 import { msg } from "@lingui/core/macro";
 import type { useLingui } from "@lingui/react";
+import { DEFAULT_ADDRESS_COUNTRY } from "@/lib/iso3166CountryOptions";
 
 export interface ResidentialAddressEntryValue {
   street: string;
@@ -41,7 +42,7 @@ export const emptyResidentialAddressEntry: ResidentialAddressEntryValue = {
   postal_code: "",
   city: "",
   supplement: "",
-  country: "DE",
+  country: DEFAULT_ADDRESS_COUNTRY,
   resided_from: "",
   resided_until: "",
 };
@@ -63,7 +64,7 @@ function normalizeAddressEntry(value: unknown): ResidentialAddressEntryValue {
     postal_code: normalizeString(entry.postal_code),
     city: normalizeString(entry.city),
     supplement: normalizeString(entry.supplement),
-    country: normalizeString(entry.country, "DE"),
+    country: normalizeString(entry.country, DEFAULT_ADDRESS_COUNTRY),
     resided_from: normalizeString(entry.resided_from),
     resided_until: normalizeString(entry.resided_until),
   };

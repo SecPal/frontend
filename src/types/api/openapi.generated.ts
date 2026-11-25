@@ -179,6 +179,7 @@ export interface components {
     };
     Address: {
       street: string;
+      house_number?: string | null;
       city: string;
       postal_code: string;
       country: string;

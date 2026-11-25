@@ -17,11 +17,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Use the shared German street, postal code, and city suggestions when creating
+  or editing customers and sites. Send the street and house number separately
+  in the customer and site APIs.
+- Share the searchable country selector across customer, site, employee, and
+  onboarding address forms. Default new addresses to Germany.
+
 ### Removed
 
 - Remove unused client-side attachment encryption utilities and superseded vault documentation. Onboarding attachment uploads continue to use the existing multipart API.
 
 ### Fixed
+
+- Remove the gap above results in searchable dropdowns and keep their options
+  within short viewports.
+- Show API validation errors next to the house number in site forms.
 
 - Keep address suggestions on the same side of the input as results change and
   keep options selectable in short viewports. Search for valid German postal-code

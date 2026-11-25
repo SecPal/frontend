@@ -14,15 +14,24 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { I18nProvider } from "@lingui/react";
 import { i18n } from "@lingui/core";
 import SiteCreate from "./SiteCreate";
+import {
+  fetchAddressLocalitySuggestions,
+  fetchAddressStreetSuggestions,
+} from "../../services/addressApi";
 import * as customersApi from "../../services/customersApi";
 import * as legalEntityApi from "../../services/customerLegalEntitiesApi";
 import * as domainApi from "../../services/customerDomainApi";
 
 vi.mock("../../services/customersApi");
+vi.mock("../../services/addressApi");
 vi.mock("../../services/customerLegalEntitiesApi");
 vi.mock("../../services/customerDomainApi");
 
 const SLOW_TEST_TIMEOUT = 20000;
+const referenceMeta = {
+  source: "OpenPLZ API Data",
+  imported_at: "2026-10-18T00:00:00Z",
+};
 
 const mockNavigate = vi.fn();
 vi.mock("react-router", async () => {
@@ -115,7 +124,8 @@ describe("SiteCreate", () => {
     legal_entity_id: "legal-entity-1",
     establishment_id: "establishment-1",
     address: {
-      street: "Test Street 1",
+      street: "Test Street",
+      house_number: "1",
       city: "Test City",
       postal_code: "12345",
       country: "DE",
@@ -129,6 +139,13 @@ describe("SiteCreate", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    const emptySuggestions = { data: [], meta: referenceMeta };
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue(
+      emptySuggestions
+    );
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue(
+      emptySuggestions
+    );
     vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
       { id: "legal-entity-1", name: "SecPal GmbH" },
     ]);
@@ -237,9 +254,13 @@ describe("SiteCreate", () => {
   });
 
   it(
-    "submits form with valid data",
+    "submits the selected locality with the manually entered street",
     async () => {
       vi.mocked(customersApi.createSite).mockResolvedValue(mockCreatedSite);
+      vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValueOnce({
+        data: [{ postal_code: "12345", locality: "Test City" }],
+        meta: referenceMeta,
+      });
 
       renderWithRouter();
 
@@ -251,14 +272,21 @@ describe("SiteCreate", () => {
         target: { value: "new site" },
       });
       fireEvent.change(screen.getByLabelText(/street/i), {
-        target: { value: "Test Street 1" },
+        target: { value: "Test Street" },
       });
-      fireEvent.change(screen.getByLabelText(/city/i), {
-        target: { value: "Test City" },
+      fireEvent.change(screen.getByLabelText(/house number/i), {
+        target: { value: "1" },
       });
       fireEvent.change(screen.getByLabelText(/postal code/i), {
-        target: { value: "12345" },
+        target: { value: "123" },
       });
+      const locality = await screen.findByRole("option", {
+        name: /Test City/i,
+      });
+      expect(
+        screen.getByRole("note", { name: "Address data attribution" })
+      ).toHaveTextContent("OpenPLZ");
+      fireEvent.click(locality);
 
       // Submit
       fireEvent.click(screen.getByRole("button", { name: /create site/i }));
@@ -271,7 +299,8 @@ describe("SiteCreate", () => {
           name: "new site",
           type: "permanent",
           address: {
-            street: "Test Street 1",
+            street: "Test Street",
+            house_number: "1",
             city: "Test City",
             postal_code: "12345",
             country: "DE",
@@ -293,6 +322,9 @@ describe("SiteCreate", () => {
         customer_id: ["The customer field is required."],
         name: ["The name must not exceed 255 characters."],
         "address.street": ["The street field must be a valid address."],
+        "address.house_number": [
+          "The house number may have up to 10 characters.",
+        ],
         "address.postal_code": ["The postal code field is required."],
         "contact.email": ["The contact email field must be a valid email."],
       };
@@ -334,14 +366,17 @@ describe("SiteCreate", () => {
           "aria-describedby",
           "site-name-error"
         );
-        expect(screen.getByLabelText(/street/i)).toHaveAttribute(
-          "aria-describedby",
-          "site-street-error"
+        expect(screen.getByLabelText(/street/i)).toHaveAccessibleDescription(
+          "The street field must be a valid address."
         );
-        expect(screen.getByLabelText(/postal code/i)).toHaveAttribute(
-          "aria-describedby",
-          "site-postal-code-error"
+        const houseNumber = screen.getByLabelText(/house number/i);
+        expect(houseNumber).toBeInvalid();
+        expect(houseNumber).toHaveAccessibleDescription(
+          "The house number may have up to 10 characters."
         );
+        expect(
+          screen.getByLabelText(/postal code/i)
+        ).toHaveAccessibleDescription("The postal code field is required.");
         expect(screen.getByLabelText(/email/i)).toHaveAttribute(
           "aria-describedby",
           "site-contact-email-error"
@@ -569,6 +604,7 @@ describe("SiteCreate", () => {
   it(
     "preserves batched field updates in the submitted payload",
     async () => {
+      const user = userEvent.setup();
       vi.mocked(customersApi.createSite).mockResolvedValue(mockCreatedSite);
 
       renderWithRouter();
@@ -578,6 +614,18 @@ describe("SiteCreate", () => {
       });
 
       await selectSiteAssignment();
+      const country = screen.getByRole("combobox", { name: /country/i });
+      expect(country).toHaveTextContent("Germany");
+      expect(country).toBeRequired();
+      await user.click(country);
+      await user.type(
+        await screen.findByRole("combobox", {
+          name: /search or select country/i,
+        }),
+        "FR"
+      );
+      await user.keyboard("{ArrowDown}{Enter}");
+      expect(country).toHaveTextContent("France");
       fireEvent.change(screen.getByLabelText(/site name/i), {
         target: { value: "Race Safe Site" },
       });
@@ -587,7 +635,7 @@ describe("SiteCreate", () => {
 
       act(() => {
         fireEvent.change(screen.getByLabelText(/street/i), {
-          target: { value: "Concurrent Street 1" },
+          target: { value: "Concurrent Street" },
         });
         fireEvent.change(screen.getByLabelText(/city/i), {
           target: { value: "Concurrent City" },
@@ -600,9 +648,11 @@ describe("SiteCreate", () => {
         expect(customersApi.createSite).toHaveBeenCalledWith(
           expect.objectContaining({
             address: expect.objectContaining({
-              street: "Concurrent Street 1",
+              street: "Concurrent Street",
+              house_number: null,
               city: "Concurrent City",
               postal_code: "54321",
+              country: "FR",
             }),
           })
         );

@@ -8,14 +8,23 @@ import userEvent from "@testing-library/user-event";
 import { BrowserRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import CustomerCreate from "./CustomerCreate";
+import {
+  fetchAddressLocalitySuggestions,
+  fetchAddressStreetSuggestions,
+} from "../../services/addressApi";
 import * as customersApi from "../../services/customersApi";
 import * as legalEntityApi from "../../services/customerLegalEntitiesApi";
 import * as domainApi from "../../services/customerDomainApi";
 
 vi.mock("../../services/customersApi");
+vi.mock("../../services/addressApi");
 vi.mock("../../services/customerLegalEntitiesApi");
 vi.mock("../../services/customerDomainApi");
 const navigate = vi.fn();
+const referenceMeta = {
+  source: "OpenPLZ API Data",
+  imported_at: "2026-10-18T00:00:00Z",
+};
 vi.mock("react-router", async () => ({
   ...(await vi.importActual("react-router")),
   useNavigate: () => navigate,
@@ -46,6 +55,13 @@ async function fillMasterData(user: ReturnType<typeof userEvent.setup>) {
 describe("CustomerCreate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    const emptySuggestions = { data: [], meta: referenceMeta };
+    vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue(
+      emptySuggestions
+    );
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue(
+      emptySuggestions
+    );
     vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
       { id: "legal-1", name: "SecPal GmbH" },
       { id: "legal-2", name: "SecPal Operations GmbH" },
@@ -183,6 +199,60 @@ describe("CustomerCreate", () => {
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("A matching record already exists.");
     expect(alert).not.toHaveTextContent(/existing customer|vat/i);
+  });
+
+  it("uses a street suggestion in the billing address and saves the house number", async () => {
+    const user = userEvent.setup();
+    vi.mocked(legalEntityApi.listCustomerLegalEntities).mockResolvedValue([
+      { id: "legal-1", name: "SecPal GmbH" },
+    ]);
+    vi.mocked(fetchAddressStreetSuggestions).mockResolvedValueOnce({
+      data: [
+        {
+          name: "Grabstraße",
+          postal_code: "13156",
+          locality: "Berlin",
+          borough: null,
+          suburb: null,
+          regional_key: null,
+        },
+      ],
+      meta: referenceMeta,
+    });
+    renderPage();
+    await screen.findByRole("option", { name: "Berlin" });
+    expect(
+      screen.getByRole("combobox", { name: /country/i })
+    ).toHaveTextContent("Germany");
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: /^establishment 1/i }),
+      "est-1"
+    );
+    await user.type(screen.getByLabelText(/customer name/i), "ACME GmbH");
+    const street = screen.getByLabelText(/street/i);
+    await user.type(street, "Gra");
+    await user.click(
+      await screen.findByRole("option", { name: /Grabstraße/i })
+    );
+    const houseNumber = screen.getByLabelText(/house number/i);
+    await waitFor(() => expect(houseNumber).toHaveFocus());
+    await user.keyboard("12a");
+    expect(street).toHaveValue("Grabstraße");
+    await user.click(screen.getByRole("button", { name: /create customer/i }));
+
+    await waitFor(() =>
+      expect(customersApi.createCustomer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          billing_address: {
+            street: "Grabstraße",
+            house_number: "12a",
+            postal_code: "13156",
+            city: "Berlin",
+            country: "DE",
+          },
+        })
+      )
+    );
   });
 
   it("rolls back the customer master record when assignment creation fails", async () => {

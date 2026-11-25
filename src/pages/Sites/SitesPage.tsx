@@ -45,20 +45,6 @@ import {
 } from "@/ui";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 
-function formatSiteAddress(site: Site): string {
-  if (site.full_address) {
-    return site.full_address;
-  }
-
-  return [
-    site.address.street,
-    `${site.address.postal_code} ${site.address.city}`.trim(),
-    site.address.country,
-  ]
-    .filter(Boolean)
-    .join(", ");
-}
-
 function SiteTableSkeletonRows({
   columns,
   rows,
@@ -331,7 +317,7 @@ function SitesPageContent({ customerId }: { customerId?: string }) {
                     </StatusBadge>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {formatSiteAddress(site)}
+                    {site.full_address}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {site.contact?.name || "-"}

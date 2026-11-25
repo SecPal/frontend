@@ -6,6 +6,7 @@ import {
   hasAddressDraftValue,
   type PostalAddressDraft,
 } from "../../lib/employeeAddresses";
+import { DEFAULT_ADDRESS_COUNTRY } from "@/lib/iso3166CountryOptions";
 
 export const emptyPostalAddressDraft: PostalAddressDraft = {
   street: "",
@@ -13,7 +14,7 @@ export const emptyPostalAddressDraft: PostalAddressDraft = {
   postalCode: "",
   city: "",
   supplement: "",
-  country: "DE",
+  country: DEFAULT_ADDRESS_COUNTRY,
 };
 
 export function employeeAddressToDraft(
@@ -34,7 +35,9 @@ export function employeeAddressToDraft(
 }
 
 export function hasPostalAddressDraftValue(draft: PostalAddressDraft): boolean {
-  return hasAddressDraftValue(draft, { emptyCountryCodes: ["DE"] });
+  return hasAddressDraftValue(draft, {
+    emptyCountryCodes: [DEFAULT_ADDRESS_COUNTRY],
+  });
 }
 
 export function buildCreateAddressPayload(

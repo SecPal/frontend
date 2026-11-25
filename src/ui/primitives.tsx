@@ -215,6 +215,7 @@ export function SearchableAutocompleteOption({
 }
 
 export interface SearchableCommandPopoverProps {
+  name?: string;
   label: string;
   options: CommandOption[];
   value?: string;
@@ -222,6 +223,7 @@ export interface SearchableCommandPopoverProps {
   placeholder: string;
   searchPlaceholder: string;
   emptyMessage: string;
+  required?: boolean;
   disabled?: boolean;
   errorMessage?: string;
   invalid?: boolean;
@@ -230,6 +232,7 @@ export interface SearchableCommandPopoverProps {
 }
 
 export function SearchableCommandPopover({
+  name,
   label,
   options,
   value,
@@ -237,6 +240,7 @@ export function SearchableCommandPopover({
   placeholder,
   searchPlaceholder,
   emptyMessage,
+  required = false,
   disabled = false,
   errorMessage,
   invalid = false,
@@ -255,6 +259,8 @@ export function SearchableCommandPopover({
 
   return (
     <ComboboxPrimitive.Root
+      name={name}
+      required={required}
       items={options}
       autoHighlight
       value={selectedOption}
@@ -311,9 +317,9 @@ export function SearchableCommandPopover({
           >
             <ComboboxPrimitive.Popup
               data-slot={`${slotPrefix}-command-popover-content`}
-              className="bg-background text-foreground z-50 w-(--anchor-width) overflow-hidden rounded-md border border-border shadow-lg outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
+              className="bg-background text-foreground z-50 flex max-h-(--available-height) w-(--anchor-width) flex-col overflow-y-auto rounded-md border border-border shadow-lg outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
             >
-              <div className="flex h-9 items-center gap-2 border-b border-border px-3">
+              <div className="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
                 <Search
                   className="size-4 shrink-0 opacity-50"
                   aria-hidden="true"
@@ -327,12 +333,12 @@ export function SearchableCommandPopover({
                   className="placeholder:text-muted-foreground flex h-9 w-full rounded-md bg-transparent py-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
-              <ComboboxPrimitive.Empty className="py-6 text-center text-sm">
-                {emptyMessage}
+              <ComboboxPrimitive.Empty>
+                <p className="py-6 text-center text-sm">{emptyMessage}</p>
               </ComboboxPrimitive.Empty>
               <ComboboxPrimitive.List
                 data-slot="command-list"
-                className="max-h-72 overflow-x-hidden overflow-y-auto p-1"
+                className="max-h-72 min-h-0 overflow-x-hidden overflow-y-auto p-1"
               >
                 {(option: CommandOption) => (
                   <ComboboxPrimitive.Item
@@ -962,73 +968,6 @@ export function EmployeeLegend({ className, ...props }: EmployeeLegendProps) {
       {...props}
     />
   );
-}
-
-export type EmployeeAutocompleteListboxProps = Omit<
-  SearchableAutocompleteListboxProps,
-  "slotPrefix"
->;
-
-export function EmployeeAutocompleteListbox(
-  props: EmployeeAutocompleteListboxProps
-) {
-  return <SearchableAutocompleteListbox {...props} slotPrefix="employee" />;
-}
-
-export type EmployeeAutocompleteOptionProps = Omit<
-  SearchableAutocompleteOptionProps,
-  "slotPrefix"
->;
-
-export function EmployeeAutocompleteOption(
-  props: EmployeeAutocompleteOptionProps
-) {
-  return <SearchableAutocompleteOption {...props} slotPrefix="employee" />;
-}
-
-export function EmployeeCommandPopover({
-  label,
-  options,
-  value,
-  onValueChange,
-  placeholder,
-  searchPlaceholder,
-  emptyMessage,
-  disabled = false,
-  errorMessage,
-  invalid = false,
-  describedBy,
-}: EmployeeCommandPopoverProps) {
-  return (
-    <SearchableCommandPopover
-      label={label}
-      options={options}
-      value={value}
-      onValueChange={onValueChange}
-      placeholder={placeholder}
-      searchPlaceholder={searchPlaceholder}
-      emptyMessage={emptyMessage}
-      disabled={disabled}
-      errorMessage={errorMessage}
-      invalid={invalid}
-      describedBy={describedBy}
-      slotPrefix="employee"
-    />
-  );
-}
-
-export interface EmployeeCommandPopoverProps {
-  label: string;
-  options: CommandOption[];
-  value?: string;
-  onValueChange: (value: string) => void;
-  placeholder: string;
-  searchPlaceholder: string;
-  emptyMessage: string;
-  disabled?: boolean;
-  errorMessage?: string;
-  invalid?: boolean;
-  describedBy?: string;
 }
 
 export interface EmployeePageTitleProps extends ComponentPropsWithoutRef<"h1"> {

@@ -16,12 +16,7 @@ import { Button } from "@/ui/button";
 import { LoadingRegion, SectionSkeleton } from "@/ui/loading";
 import { Skeleton } from "@/ui/skeleton";
 import { getSite, deleteSite, getCustomer } from "../../services/customersApi";
-import type {
-  Address,
-  Customer,
-  Site,
-  SiteCustomer,
-} from "../../types/customers";
+import type { Customer, Site, SiteCustomer } from "../../types/customers";
 import {
   DescriptionList,
   DescriptionDetails,
@@ -47,15 +42,7 @@ import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { useDomainAssignmentNames } from "../../hooks/useDomainAssignmentNames";
 
-function formatAddress(address: Address): string {
-  return [
-    address.street,
-    `${address.postal_code} ${address.city}`.trim(),
-    address.country,
-  ]
-    .filter(Boolean)
-    .join(", ");
-}
+import { formatBusinessAddress, formatStreetLine } from "@/lib/businessAddress";
 
 export default function SiteDetail() {
   const { _, i18n } = useLingui();
@@ -274,7 +261,7 @@ export default function SiteDetail() {
                   <Trans>Billing Address</Trans>
                 </DescriptionTerm>
                 <DescriptionDetails>
-                  {formatAddress(customer.billing_address)}
+                  {formatBusinessAddress(customer.billing_address)}
                 </DescriptionDetails>
               </>
             )}
@@ -290,7 +277,9 @@ export default function SiteDetail() {
             <DescriptionTerm>
               <Trans>Street</Trans>
             </DescriptionTerm>
-            <DescriptionDetails>{site.address.street}</DescriptionDetails>
+            <DescriptionDetails>
+              {formatStreetLine(site.address)}
+            </DescriptionDetails>
 
             <DescriptionTerm>
               <Trans>Postal Code</Trans>
