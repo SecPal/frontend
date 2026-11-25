@@ -23,7 +23,7 @@ The current frontend ships the browser and PWA surfaces for SecPal's workforce o
 - profile/settings and activity logs
 - installable PWA behavior with service-worker updates and guarded offline support
 
-Legacy Secrets-era password-vault content has been removed from the current route surface and is no longer described in this README.
+Onboarding attachments are uploaded as multipart requests. The [API](https://github.com/SecPal/api) owns attachment storage and encryption, and the [OpenAPI contracts](https://github.com/SecPal/contracts) define the upload interface.
 
 ## App Surfaces and Source of Truth
 
