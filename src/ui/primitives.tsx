@@ -174,7 +174,7 @@ export function SearchableAutocompleteListbox({
             <ComboboxPrimitive.List
               id={listboxId}
               data-slot={`${slotPrefix}-autocomplete-listbox`}
-              className="min-h-0 max-h-72 overflow-x-hidden overflow-y-auto"
+              className="max-h-72 min-h-14 overflow-x-hidden overflow-y-auto empty:min-h-0"
             >
               {children}
             </ComboboxPrimitive.List>
@@ -964,41 +964,15 @@ export function EmployeeLegend({ className, ...props }: EmployeeLegendProps) {
   );
 }
 
-export function EmployeeAutocompleteListbox({
-  anchor,
-  open,
-  onOpenChange,
-  onValueChange,
-  listboxId,
-  className,
-  footer,
-  children,
-}: EmployeeAutocompleteListboxProps) {
-  return (
-    <SearchableAutocompleteListbox
-      anchor={anchor}
-      open={open}
-      onOpenChange={onOpenChange}
-      onValueChange={onValueChange}
-      listboxId={listboxId}
-      className={className}
-      footer={footer}
-      slotPrefix="employee"
-    >
-      {children}
-    </SearchableAutocompleteListbox>
-  );
-}
+export type EmployeeAutocompleteListboxProps = Omit<
+  SearchableAutocompleteListboxProps,
+  "slotPrefix"
+>;
 
-export interface EmployeeAutocompleteListboxProps {
-  anchor: ReactElement;
-  open: boolean;
-  onOpenChange?: (open: boolean) => void;
-  onValueChange?: (value: string | null) => void;
-  listboxId: string;
-  className?: string;
-  footer?: ReactNode;
-  children: ReactNode;
+export function EmployeeAutocompleteListbox(
+  props: EmployeeAutocompleteListboxProps
+) {
+  return <SearchableAutocompleteListbox {...props} slotPrefix="employee" />;
 }
 
 export type EmployeeAutocompleteOptionProps = Omit<
@@ -1006,17 +980,10 @@ export type EmployeeAutocompleteOptionProps = Omit<
   "slotPrefix"
 >;
 
-export function EmployeeAutocompleteOption({
-  className,
-  ...props
-}: EmployeeAutocompleteOptionProps) {
-  return (
-    <SearchableAutocompleteOption
-      className={className}
-      slotPrefix="employee"
-      {...props}
-    />
-  );
+export function EmployeeAutocompleteOption(
+  props: EmployeeAutocompleteOptionProps
+) {
+  return <SearchableAutocompleteOption {...props} slotPrefix="employee" />;
 }
 
 export function EmployeeCommandPopover({

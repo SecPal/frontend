@@ -24,8 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Keep address suggestions on the same side of the input as results change and
-  scroll longer lists within the available space. Search for valid German
-  postal-code prefixes and display OpenPLZ attribution with the results.
+  keep options selectable in short viewports. Search for valid German postal-code
+  prefixes and display OpenPLZ attribution with the results.
 
 - Keep stale tabs from deleting a newer offline vault by checking the active
   logout barrier under the same lifecycle lock used to publish the vault.

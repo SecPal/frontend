@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { isRemoteE2ETarget } from "./auth-helpers";
 import {
   buildOfflineLiveMockUser,
@@ -16,10 +16,7 @@ test.skip(
   "Uses deterministic local session and address fixtures."
 );
 
-test("keeps a growing address suggestion list anchored and scrollable", async ({
-  page,
-  context,
-}) => {
+test.beforeEach(async ({ page, context }) => {
   const user = buildOfflineLiveMockUser({
     permissions: ["employees.read", "employees.create"],
   });
@@ -65,10 +62,12 @@ test("keeps a growing address suggestion list anchored and scrollable", async ({
   });
 
   await page.goto("/employees/create");
-  const postalCode = page.locator("#address_postal_code");
-  await expect(postalCode).toBeVisible();
+  await expect(page.locator("#address_postal_code")).toBeVisible();
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
-  await postalCode.evaluate((input) => {
+});
+
+async function positionPostalCode(postalCode: Locator, spaceBelow: number) {
+  await postalCode.evaluate((input, spaceBelow) => {
     input.scrollIntoView({ block: "center", behavior: "instant" });
     let scroller = input.parentElement;
     while (
@@ -80,14 +79,21 @@ test("keeps a growing address suggestion list anchored and scrollable", async ({
     ) {
       scroller = scroller.parentElement;
     }
-    const offset = input.getBoundingClientRect().bottom - innerHeight + 180;
+    const offset =
+      input.getBoundingClientRect().bottom - innerHeight + spaceBelow;
     (scroller ?? document.scrollingElement)?.scrollBy({
       top: offset,
       behavior: "instant",
     });
     input.focus({ preventScroll: true });
-  });
+  }, spaceBelow);
+}
 
+test("keeps a growing address suggestion list anchored and scrollable", async ({
+  page,
+}) => {
+  const postalCode = page.locator("#address_postal_code");
+  await positionPostalCode(postalCode, 180);
   const list = page.getByRole("listbox");
   const popup = page.locator(
     "[data-slot=employee-autocomplete-popover-content]"
@@ -108,10 +114,31 @@ test("keeps a growing address suggestion list anchored and scrollable", async ({
     )
     .toEqual({ side: "bottom", withinViewport: true, animation: "none" });
   await expect(postalCode).toBeFocused();
+  await expect(page.getByRole("note")).toBeInViewport({ ratio: 1 });
   expect(
     await list.evaluate((node) => node.scrollHeight > node.clientHeight)
   ).toBe(true);
 
   await list.getByRole("option", { name: /Beyenburg/ }).click();
   await expect(page.locator("#address_city")).toHaveValue("Beyenburg");
+});
+
+test("keeps a suggestion selectable when the attribution exceeds the available height", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 164 });
+  const postalCode = page.locator("#address_postal_code");
+  await positionPostalCode(postalCode, 60);
+  await postalCode.fill("421");
+
+  const list = page.getByRole("listbox");
+  await expect(list.getByRole("option")).toHaveCount(1);
+  expect(
+    await list.evaluate((element) => element.clientHeight)
+  ).toBeGreaterThan(0);
+  const attribution = page.getByRole("note");
+  await attribution.scrollIntoViewIfNeeded();
+  await expect(attribution).toBeInViewport();
+  await list.getByRole("option", { name: /Wuppertal/ }).click();
+  await expect(page.locator("#address_city")).toHaveValue("Wuppertal");
 });

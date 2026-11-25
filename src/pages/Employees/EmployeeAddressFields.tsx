@@ -459,10 +459,19 @@ export function EmployeeAddressFields({
     setFocusedField(null);
   }
 
-  function selectLocalitySuggestion(suggestion: AddressLocalitySuggestion) {
+  function selectLocalitySuggestion(value: string | null) {
+    if (!localitySuggestionsAreCurrent) return;
+    const suggestion = localitySuggestions.find(
+      (candidate) => localitySuggestionValue(candidate) === value
+    );
+    if (!suggestion) return;
+
     onChange("postalCode", suggestion.postal_code);
     onChange("city", suggestion.locality);
     setFocusedField(null);
+    window.requestAnimationFrame(() => {
+      streetInputRef.current?.focus();
+    });
   }
 
   const showStreetPopup =
@@ -476,12 +485,6 @@ export function EmployeeAddressFields({
     localitySuggestionsAreCurrent || localitySuggestions.length > 0;
   const showPostalPopup = searchFromPostalCode && showLocalityPopup;
   const showCityPopup = searchFromCity && showLocalityPopup;
-
-  function focusNextFieldAfterLocalitySelect() {
-    window.requestAnimationFrame(() => {
-      streetInputRef.current?.focus();
-    });
-  }
 
   function focusNextFieldAfterStreetSelect() {
     window.requestAnimationFrame(() => {
@@ -511,6 +514,25 @@ export function EmployeeAddressFields({
     );
   }
 
+  function localityOptions(primary: "postal_code" | "locality") {
+    const secondary = primary === "postal_code" ? "locality" : "postal_code";
+    return localitySuggestions.map((suggestion) => {
+      const value = localitySuggestionValue(suggestion);
+      return (
+        <AutocompleteOption
+          key={value}
+          value={value}
+          disabled={!localitySuggestionsAreCurrent}
+        >
+          <span className="block font-medium">{suggestion[primary]}</span>
+          <span className="text-muted-foreground block">
+            {suggestion[secondary]}
+          </span>
+        </AutocompleteOption>
+      );
+    });
+  }
+
   return (
     <>
       <Field>
@@ -526,16 +548,7 @@ export function EmployeeAddressFields({
               );
             }
           }}
-          onValueChange={(value) => {
-            if (!localitySuggestionsAreCurrent) return;
-            const suggestion = localitySuggestions.find(
-              (candidate) => localitySuggestionValue(candidate) === value
-            );
-            if (suggestion) {
-              selectLocalitySuggestion(suggestion);
-              focusNextFieldAfterLocalitySelect();
-            }
-          }}
+          onValueChange={selectLocalitySuggestion}
           listboxId={postalListboxId}
           footer={
             showPostalPopup ? localityPopupFeedback(postalListboxId) : null
@@ -573,22 +586,7 @@ export function EmployeeAddressFields({
             />
           }
         >
-          {showPostalPopup
-            ? localitySuggestions.map((suggestion) => (
-                <AutocompleteOption
-                  key={`${suggestion.postal_code}-${suggestion.locality}`}
-                  value={localitySuggestionValue(suggestion)}
-                  disabled={!localitySuggestionsAreCurrent}
-                >
-                  <span className="block font-medium">
-                    {suggestion.postal_code}
-                  </span>
-                  <span className="text-muted-foreground block">
-                    {suggestion.locality}
-                  </span>
-                </AutocompleteOption>
-              ))
-            : null}
+          {showPostalPopup ? localityOptions("postal_code") : null}
         </AutocompleteListbox>
       </Field>
 
@@ -603,16 +601,7 @@ export function EmployeeAddressFields({
               setFocusedField((field) => (field === "city" ? null : field));
             }
           }}
-          onValueChange={(value) => {
-            if (!localitySuggestionsAreCurrent) return;
-            const suggestion = localitySuggestions.find(
-              (candidate) => localitySuggestionValue(candidate) === value
-            );
-            if (suggestion) {
-              selectLocalitySuggestion(suggestion);
-              focusNextFieldAfterLocalitySelect();
-            }
-          }}
+          onValueChange={selectLocalitySuggestion}
           listboxId={cityListboxId}
           footer={showCityPopup ? localityPopupFeedback(cityListboxId) : null}
           anchor={
@@ -646,22 +635,7 @@ export function EmployeeAddressFields({
             />
           }
         >
-          {showCityPopup
-            ? localitySuggestions.map((suggestion) => (
-                <AutocompleteOption
-                  key={`${suggestion.locality}-${suggestion.postal_code}`}
-                  value={localitySuggestionValue(suggestion)}
-                  disabled={!localitySuggestionsAreCurrent}
-                >
-                  <span className="block font-medium">
-                    {suggestion.locality}
-                  </span>
-                  <span className="text-muted-foreground block">
-                    {suggestion.postal_code}
-                  </span>
-                </AutocompleteOption>
-              ))
-            : null}
+          {showCityPopup ? localityOptions("locality") : null}
         </AutocompleteListbox>
       </Field>
 
