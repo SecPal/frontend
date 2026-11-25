@@ -96,7 +96,12 @@ describe("frontend manifest coverage adoption", () => {
       uses: expect.stringMatching(
         /^SecPal\/\.github\/\.github\/workflows\/reusable-dependabot-auto-merge\.yml@[0-9a-f]{40}$/u
       ),
+      secrets: {
+        "dependabot-merger-private-key":
+          "${{ secrets.DEPENDABOT_MERGER_PRIVATE_KEY }}",
+      },
       with: {
+        "publisher-events": "${{ vars.DEPENDABOT_MERGER_APP_ID != '' }}",
         phase: "2",
         "merge-method": "squash",
         "allowed-ecosystems": "github_actions,npm_and_yarn,pre_commit",
