@@ -414,7 +414,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 - **TDD Workflow**: [docs/development/TDD_WORKFLOW.md](docs/development/TDD_WORKFLOW.md) - Learn how to practice Test-Driven Development with Git verification
 - **AI Instructions**: [AGENTS.md](AGENTS.md) - authoritative AI development guidelines
-- **Copilot Compatibility Mirror**: [.github/copilot-instructions.md](.github/copilot-instructions.md) - compatibility path for tools that auto-load GitHub Copilot instructions
+- **Copilot Review Instructions**: [.github/copilot-instructions.md](.github/copilot-instructions.md) - Copilot-specific review guidance and links to the repository instructions
 
 **Key Requirements:**
 
