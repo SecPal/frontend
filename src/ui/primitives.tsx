@@ -108,6 +108,7 @@ export interface SearchableAutocompleteListboxProps {
   listboxId: string;
   className?: string;
   slotPrefix: string;
+  footer?: ReactNode;
   children: ReactNode;
 }
 
@@ -119,35 +120,65 @@ export function SearchableAutocompleteListbox({
   listboxId,
   className,
   slotPrefix,
+  footer,
   children,
 }: SearchableAutocompleteListboxProps) {
+  const [side, setSide] = useState<"top" | "bottom">("bottom");
+
+  function chooseSide(input: HTMLInputElement) {
+    const window = input.ownerDocument.defaultView;
+    if (open || !window) return;
+
+    const bounds = input.getBoundingClientRect();
+    const viewport = window.visualViewport;
+    const viewportTop = viewport?.offsetTop ?? 0;
+    const viewportBottom =
+      viewportTop + (viewport?.height ?? window.innerHeight);
+    const spaceBelow = viewportBottom - bounds.bottom;
+    const spaceAbove = bounds.top - viewportTop;
+
+    // Leave enough room for a few options and the footer if the viewport allows it.
+    setSide(spaceBelow < 160 && spaceAbove > spaceBelow ? "top" : "bottom");
+  }
+
   return (
     <ComboboxPrimitive.Root<string>
       open={open}
       onOpenChange={(nextOpen) => onOpenChange?.(nextOpen)}
       onValueChange={(value) => onValueChange?.(value)}
     >
-      <ComboboxPrimitive.Input render={anchor} />
+      <ComboboxPrimitive.Input
+        render={anchor}
+        onFocus={(event) => chooseSide(event.currentTarget)}
+        onInput={(event) => chooseSide(event.currentTarget)}
+      />
       <ComboboxPrimitive.Portal>
         <ComboboxPrimitive.Positioner
           align="start"
+          side={side}
           sideOffset={4}
+          collisionAvoidance={{
+            side: "none",
+            align: "shift",
+            fallbackAxisSide: "none",
+          }}
           className="isolate z-50"
         >
           <ComboboxPrimitive.Popup
             data-slot={`${slotPrefix}-autocomplete-popover-content`}
             className={cn(
-              "bg-background text-foreground z-50 w-(--anchor-width) overflow-hidden rounded-md border border-border shadow-lg outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+              "bg-background text-foreground z-50 flex max-h-(--available-height) w-(--anchor-width) max-w-(--available-width) flex-col overflow-y-auto rounded-md border border-border shadow-lg outline-none",
               className
             )}
           >
             <ComboboxPrimitive.List
               id={listboxId}
               data-slot={`${slotPrefix}-autocomplete-listbox`}
-              className="max-h-72 overflow-x-hidden overflow-y-auto"
+              className="min-h-0 max-h-72 overflow-x-hidden overflow-y-auto"
             >
               {children}
             </ComboboxPrimitive.List>
+            {footer ? <div className="shrink-0">{footer}</div> : null}
           </ComboboxPrimitive.Popup>
         </ComboboxPrimitive.Positioner>
       </ComboboxPrimitive.Portal>
@@ -161,6 +192,7 @@ export interface SearchableAutocompleteOptionProps extends Omit<
 > {
   slotPrefix: string;
   value: string;
+  disabled?: boolean;
 }
 
 export function SearchableAutocompleteOption({
@@ -939,6 +971,7 @@ export function EmployeeAutocompleteListbox({
   onValueChange,
   listboxId,
   className,
+  footer,
   children,
 }: EmployeeAutocompleteListboxProps) {
   return (
@@ -949,6 +982,7 @@ export function EmployeeAutocompleteListbox({
       onValueChange={onValueChange}
       listboxId={listboxId}
       className={className}
+      footer={footer}
       slotPrefix="employee"
     >
       {children}
@@ -963,15 +997,14 @@ export interface EmployeeAutocompleteListboxProps {
   onValueChange?: (value: string | null) => void;
   listboxId: string;
   className?: string;
+  footer?: ReactNode;
   children: ReactNode;
 }
 
-export interface EmployeeAutocompleteOptionProps extends Omit<
-  ComponentPropsWithoutRef<"div">,
-  "style"
-> {
-  value: string;
-}
+export type EmployeeAutocompleteOptionProps = Omit<
+  SearchableAutocompleteOptionProps,
+  "slotPrefix"
+>;
 
 export function EmployeeAutocompleteOption({
   className,

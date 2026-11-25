@@ -270,6 +270,11 @@ describe("OnboardingResidentialAddressHistoryFields", () => {
       limit: 8,
     });
 
+    const currentNotice = screen.getByRole("note", {
+      name: "Address data attribution",
+    });
+    expect(streetInput).toHaveAttribute("aria-describedby", currentNotice.id);
+
     fireEvent.keyDown(streetInput!, { key: "ArrowDown" });
     fireEvent.keyDown(streetInput!, { key: "Enter" });
 
@@ -298,33 +303,27 @@ describe("OnboardingResidentialAddressHistoryFields", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(250);
     });
+    const previousNotice = screen.getByRole("note", {
+      name: "Address data attribution",
+    });
+    expect(previousNotice.id).not.toBe(currentNotice.id);
+    expect(previousStreetInput).toHaveAttribute(
+      "aria-describedby",
+      previousNotice.id
+    );
+    expect(screen.getByRole("listbox").parentElement).toContainElement(
+      previousNotice
+    );
+    expect(previousNotice).toHaveTextContent(
+      /^Address data: OpenPLZ \/ OpenPotato · © OpenStreetMap contributors · ODbL-1\.0$/
+    );
+    expect(within(previousNotice).getAllByRole("link")).toHaveLength(3);
+
     fireEvent.keyDown(previousStreetInput!, { key: "Escape" });
     await act(async () => {
       await vi.advanceTimersByTimeAsync(150);
     });
-    const notices = screen.getAllByRole("note", {
-      name: "Address data attribution",
-    });
-    expect(notices).toHaveLength(2);
-    for (const [index, input] of [
-      streetInput!,
-      previousStreetInput!,
-    ].entries()) {
-      const notice = notices[index]!;
-      expect(input).toHaveAttribute("aria-describedby", notice.id);
-      expect(
-        notice.closest('[data-slot="field"]')?.parentElement
-      ).toHaveAttribute("data-slot", "field-group");
-      expect(notice).toHaveTextContent(
-        /^Address data: OpenPLZ \/ OpenPotato · © OpenStreetMap contributors · ODbL-1\.0$/
-      );
-      expect(notice).toHaveClass(
-        "text-xs",
-        "leading-5",
-        "text-muted-foreground"
-      );
-      expect(within(notice).getAllByRole("link")).toHaveLength(3);
-    }
+    expect(previousNotice).not.toBeInTheDocument();
 
     vi.useRealTimers();
   });
