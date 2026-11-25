@@ -2,14 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
- * Live onboarding wizard checks against the current Polyscope workspace preview
- * (`frontend-<workspace>.preview.secpal.dev` + `api-<workspace>.preview.secpal.dev`).
- *
- * Does **not** mock onboarding APIs — traffic goes to the real workspace backend
- * (workflow-bound onboarding endpoints). Pure live targets such as
- * `app.secpal.dev` are intentionally **not** part of the Polyscope E2E
- * surface; every Polyscope workspace ships its own preview backend with a
- * deterministic seed contract and is the only target this spec runs against.
+ * Live onboarding checks run against the private workspace origin supplied by
+ * `PLAYWRIGHT_BASE_URL` and use the workspace API and database.
  *
  * ## Test user
  *
@@ -27,7 +21,7 @@
  * is **skipped** by default (clear message). Set `PLAYWRIGHT_ONBOARDING_WORKFLOW_STRICT=1`
  * to fail hard instead while you align the API seeder.
  *
- * Run (auto-detects the current Polyscope workspace from the working directory):
+ * Run from the assigned Herdr tab:
  *
  * ```bash
  * export PLAYWRIGHT_LIVE_ONBOARDING=1
@@ -115,7 +109,7 @@ test.describe("Live onboarding wizard (workspace API)", () => {
   // workspace-preview/live-onboarding gate is evaluated.
   test.skip(
     !isWorkspacePreviewTarget() || !LIVE_ONBOARDING,
-    "Requires PLAYWRIGHT_LIVE_ONBOARDING=1 and a Polyscope workspace preview target (frontend-<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface; see file header."
+    "Requires PLAYWRIGHT_LIVE_ONBOARDING=1 and a private workspace preview target (<workspace>.preview.secpal.dev). Use an isolated workspace with the onboarding test fixture; see file header."
   );
 
   test("loads onboarding and receives templates and submissions from the live API", async ({
