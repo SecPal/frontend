@@ -5,7 +5,7 @@
  * OrganizationalScope type
  *
  * Represents a user's access scope to an organizational unit,
- * including leadership-based access control fields (ADR-009).
+ * including leadership-based access control fields.
  */
 export interface OrganizationalScope {
   id: string;
@@ -13,7 +13,7 @@ export interface OrganizationalScope {
   organizational_unit_id: string;
   access_level: "none" | "read" | "write" | "manage";
   include_descendants: boolean;
-  // Leadership-based access control fields (ADR-009)
+  // Leadership-based access control fields
   min_viewable_rank: number | null;
   max_viewable_rank: number | null;
   min_assignable_rank: number | null;

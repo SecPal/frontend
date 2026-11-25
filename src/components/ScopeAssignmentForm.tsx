@@ -56,7 +56,7 @@ interface FormErrors {
 }
 
 /**
- * Two-Step Scope Assignment Form with conditional Step 3 (ADR-009)
+ * Two-Step Scope Assignment Form with conditional Step 3
  *
  * Step 1: Viewing Permissions (min/max_viewable_rank)
  * Step 2: Assignment Permissions (min/max_assignable_rank)
@@ -64,7 +64,6 @@ interface FormErrors {
  *
  * Part of Epic #399 - Leadership Levels System
  * @see Issue #426: Frontend UI for Leadership Levels
- * @see https://github.com/SecPal/.github/blob/main/docs/adr/20251221-inheritance-blocking-and-leadership-access-control.md
  */
 function ScopeAssignmentFormContent({
   onClose,

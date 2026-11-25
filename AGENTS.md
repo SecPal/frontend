@@ -38,10 +38,13 @@ Do not assume instructions from sibling repositories or comment-based inheritanc
 
 ## Always-On Rules
 
-- Inspect `git status --short --branch` before writing. Use the worktree
-  assigned to the Herdr task. Start new tasks from the protected GitHub
-  baseline using the [workspace workflow](https://github.com/SecPal/.github/blob/main/WORKSPACE_SETUP.md).
-  Preserve existing work and the assigned branch.
+- Inspect `git status --short --branch` before writing. Use the repository tab
+  and topic branch assigned to the Herdr task. The
+  [workspace workflow](https://github.com/SecPal/.github/blob/main/WORKSPACE_SETUP.md)
+  provisions new assignments from the current protected GitHub baseline.
+- When the operator declares the task complete, verify protected GitHub
+  delivery, then use `secpal-order finish NAME` for workspace cleanup. Keep
+  dirty files, unpublished commits and open PR work in the assigned workspace.
 - Quality first. Do not trade correctness, review depth, validation depth, or issue tracking for speed.
 - Keep one delivery contract per change, pull request, and branch. Do not mix unrelated fixes,
   features, refactors, docs, or governance cleanup.
@@ -56,11 +59,6 @@ Do not assume instructions from sibling repositories or comment-based inheritanc
   `apk.secpal.app` for the canonical Android artifact and release-metadata host,
   `api.secpal.dev` for the API, `app.secpal.dev` for the PWA/frontend, `secpal.dev` for dev,
   staging, testing, and examples, and `app.secpal` only as the Android application identifier.
-- After every merge, immediately return the local repo to a ready state:
-  switch to `main`, pull with fast-forward only, delete the merged topic
-  branch, prune remotes, refresh Node dependencies with `npm ci` where
-  applicable, run `npm run build` when available, and confirm the working tree
-  is clean.
 
 ## Licensing, REUSE, and Branding
 

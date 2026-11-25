@@ -570,8 +570,6 @@ export interface OrganizationalUnitTreeProps {
  * - Edit/Delete actions
  * - Loading and error states
  * - Empty state
- *
- * @see ADR-007: Organizational Structure Hierarchy
  */
 export function OrganizationalUnitTree({
   onSelect,

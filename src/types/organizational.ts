@@ -6,9 +6,6 @@
  *
  * NOTE: This file contains ONLY internal OrganizationalUnit types.
  * For EXTERNAL customer management (Customer & Site), see customers.ts (Epic #210).
- *
- * Based on ADR-007: Organizational Structure Hierarchy
- * @see https://github.com/SecPal/.github/blob/main/docs/adr/20251126-organizational-structure-hierarchy.md
  */
 
 import type { OrganizationalUnit } from "@/types/api";

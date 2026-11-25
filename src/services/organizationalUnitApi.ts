@@ -27,8 +27,6 @@ import type {
  * The list endpoint returns permission-filtered results based on the
  * user's organizational scopes (Need-to-Know principle). The response
  * includes `root_unit_ids` for building tree views.
- *
- * @see ADR-007: Organizational Structure Hierarchy
  */
 
 async function cacheOrganizationalUnit(
