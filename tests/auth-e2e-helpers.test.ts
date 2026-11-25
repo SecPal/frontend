@@ -17,15 +17,6 @@ import {
   waitForAuthResolution,
 } from "./e2e/auth-helpers";
 
-/**
- * Mocks process.cwd() to a path that does not match the Polyscope clone
- * pattern, so tests that verify non-Polyscope behaviour are not affected by
- * the directory this test suite is executed from.
- */
-function mockNonPolyscopeCwd() {
-  return vi.spyOn(process, "cwd").mockReturnValue("/home/runner/work/frontend");
-}
-
 function createDomBackedPage() {
   const revivePageFunction = <TArg, TResult>(
     pageFunction: (arg: TArg) => TResult
@@ -73,17 +64,17 @@ describe("auth E2E helpers", () => {
       expect(isRemoteE2ETarget("https://localhost:5173")).toBe(false);
     });
 
-    it("treats the implicit default as non-remote when no Polyscope workspace is active", () => {
+    it("treats the implicit default as non-remote when no workspace is active", () => {
       vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
-      vi.stubEnv("POLYSCOPE_WORKSPACE", "");
-      mockNonPolyscopeCwd();
 
       expect(isRemoteE2ETarget(undefined)).toBe(false);
     });
 
-    it("treats the implicit default as remote when a Polyscope workspace is active", () => {
-      vi.stubEnv("PLAYWRIGHT_BASE_URL", "");
-      vi.stubEnv("POLYSCOPE_WORKSPACE", "grumpy-lynx");
+    it("treats the implicit default as remote when a workspace is active", () => {
+      vi.stubEnv(
+        "PLAYWRIGHT_BASE_URL",
+        "https://grumpy-lynx.preview.secpal.dev"
+      );
 
       expect(isRemoteE2ETarget(undefined)).toBe(true);
     });
@@ -97,21 +88,12 @@ describe("auth E2E helpers", () => {
       });
     });
 
-    it("keeps the current Polyscope workspace preview credentials even when other remote targets are configured", () => {
+    it("keeps workspace preview targets on the default preview credentials", () => {
       expect(
         buildTestUser({
-          PLAYWRIGHT_BASE_URL: "https://app.secpal.dev",
-          PLAYWRIGHT_API_BASE_URL: "https://api.secpal.dev",
-          POLYSCOPE_WORKSPACE: "grumpy-lynx",
+          PLAYWRIGHT_BASE_URL: "https://grumpy-lynx.preview.secpal.dev",
         })
       ).toEqual({
-        email: "test@example.com",
-        password: "password",
-      });
-    });
-
-    it("keeps workspace preview targets on the default preview credentials", () => {
-      expect(buildTestUser({ POLYSCOPE_WORKSPACE: "grumpy-lynx" })).toEqual({
         email: "test@example.com",
         password: "password",
       });
@@ -140,7 +122,7 @@ describe("auth E2E helpers", () => {
 
     it("throws when targeting a non-workspace remote without TEST_USER_*", () => {
       // Pure live targets such as `app.secpal.dev` are not part of the
-      // Polyscope E2E surface (issue #1199). Silently injecting seeded dev
+      // workspace E2E surface (issue #1199). Silently injecting seeded dev
       // credentials against an arbitrary production host is a security risk.
       expect(() => buildTestUser({}, "https://app.secpal.dev")).toThrow(
         "TEST_USER_EMAIL and TEST_USER_PASSWORD must be set"
@@ -317,22 +299,9 @@ describe("auth E2E helpers", () => {
   });
 
   describe("getConfiguredTestUserOrThrow", () => {
-    it("returns the default credentials when the current Polyscope workspace overrides other remote targets", () => {
-      const result = getConfiguredTestUserOrThrow({
-        PLAYWRIGHT_BASE_URL: "https://app.secpal.dev",
-        PLAYWRIGHT_API_BASE_URL: "https://api.secpal.dev",
-        POLYSCOPE_WORKSPACE: "grumpy-lynx",
-      });
-
-      expect(result).toEqual({
-        email: "test@example.com",
-        password: "password",
-      });
-    });
-
     it("returns the default credentials for workspace preview targets", () => {
       const result = getConfiguredTestUserOrThrow({
-        POLYSCOPE_WORKSPACE: "grumpy-lynx",
+        PLAYWRIGHT_BASE_URL: "https://grumpy-lynx.preview.secpal.dev",
       });
 
       expect(result).toEqual({
@@ -371,7 +340,7 @@ describe("auth E2E helpers", () => {
 
     it("throws when targeting a non-workspace remote without TEST_USER_*", () => {
       // Pure live targets such as `app.secpal.dev` are not part of the
-      // Polyscope E2E surface (issue #1199); silently injecting seeded dev
+      // workspace E2E surface (issue #1199); silently injecting seeded dev
       // credentials against a production host is a security risk.
       expect(() =>
         getConfiguredTestUserOrThrow(
@@ -383,7 +352,7 @@ describe("auth E2E helpers", () => {
 
     it("throws on a non-workspace remote with live onboarding but no TEST_USER_*", () => {
       // Pure live targets such as `app.secpal.dev` are not part of the
-      // Polyscope E2E surface (issue #1199); the seeded onboarding fallback
+      // workspace E2E surface (issue #1199); the seeded onboarding fallback
       // user is workspace-preview-only, so silently injecting it against a
       // production host would be a security risk.
       expect(() =>

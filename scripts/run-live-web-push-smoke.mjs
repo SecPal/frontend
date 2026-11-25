@@ -5,7 +5,7 @@ import { execFile, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { promisify } from "node:util";
 
-import { hasResolvableWorkspacePreviewTarget } from "./polyscope-workspace.mjs";
+import { isWorkspacePreviewTarget } from "../tests/e2e/target-urls.ts";
 
 const execFileAsync = promisify(execFile);
 
@@ -109,9 +109,9 @@ async function startVirtualDisplay() {
 }
 
 async function main() {
-  if (!hasResolvableWorkspacePreviewTarget()) {
+  if (!isWorkspacePreviewTarget()) {
     fail(
-      "test:e2e:live:web-push must run inside a Polyscope workspace clone (under ~/.polyscope/clones/<id>/<workspace>) or with PLAYWRIGHT_BASE_URL set to a workspace-preview frontend URL (https://frontend-<workspace>.preview.secpal.dev) or canonical workspace preview URL (https://<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface."
+      "test:e2e:live:web-push requires PLAYWRIGHT_BASE_URL=https://<workspace>.preview.secpal.dev."
     );
   }
 

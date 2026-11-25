@@ -210,7 +210,7 @@ The application resolves API configuration in this order:
 1. validated native runtime override;
 2. validated Web runtime configuration;
 3. explicit build, preview, or development configuration;
-4. known SecPal live and Polyscope preview mappings;
+4. known SecPal live and preview mappings;
 5. fail closed for an unknown production host.
 
 Changing the API origin requires a container restart, not an image rebuild.

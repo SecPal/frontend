@@ -64,21 +64,11 @@ function resolveCiPreviewServerCommand(appSurface: string): string {
  *    - Full authentication and API integration
  *    - Command: `npx playwright test`
  *
- * 2. Workspace preview detected through legacy Polyscope metadata:
- *    - Auto-detected from the Polyscope clone path
- *      (`~/.polyscope/clones/<id>/<workspace>`) or `POLYSCOPE_WORKSPACE=…`
- *    - Uses `https://<workspace>.preview.secpal.dev` for both app and API
- *    - The API workspace's `DatabaseSeeder` deterministically provisions the
- *      seeded test users and organizational units that the live-only suites
- *      depend on (see issue #1199); pure live targets such as
- *      `app.secpal.dev` are intentionally not part of the Polyscope E2E
- *      surface any more.
- *    - Command: `npx playwright test` (inside the workspace clone)
+ * 2. Private workspace preview: the assigned Herdr tabs set PLAYWRIGHT_BASE_URL
+ *    to https://<workspace>.preview.secpal.dev. Tests use the same API origin.
+ *    Set that URL explicitly when invoking the tests outside the assigned tab.
  *
- * 3. Named private preview: set PLAYWRIGHT_BASE_URL to the workspace HTTPS origin.
- *    API requests use that same origin.
- *
- * 4. CI Smoke Tests:
+ * 3. CI Smoke Tests:
  *    - Uses Vite preview server (static build)
  *    - Forces the Android-native app surface by default for parity with local
  *      E2E coverage
@@ -92,10 +82,9 @@ function resolveCiPreviewServerCommand(appSurface: string): string {
  * Base URL Configuration
  *
  * Priority:
- * 1. Detected workspace preview: https://<workspace>.preview.secpal.dev
- * 2. Explicit PLAYWRIGHT_BASE_URL when no Polyscope workspace is active
- * 3. CI mode: http://localhost:4173 (preview server)
- * 4. Default: http://localhost:5173 (generic dev server with proxy)
+ * 1. Explicit PLAYWRIGHT_BASE_URL
+ * 2. CI mode: http://localhost:4173 (preview server)
+ * 3. Default: http://localhost:5173 (generic dev server with proxy)
  */
 const BASE_URL = resolvePlaywrightBaseUrl();
 const configuredPlaywrightBaseUrl = readTrimmedEnvValue(
@@ -111,7 +100,7 @@ const LOCAL_E2E_BASE_URL =
 /**
  * Detect if we're running against a server that Playwright should NOT start
  * locally. `isRemotePlaywrightTarget` matches any `https://` target, which
- * includes Polyscope workspace previews and explicitly configured local HTTPS
+ * includes workspace previews and explicitly configured local HTTPS
  * targets; each is served by an external process that Playwright must not
  * duplicate with its own `webServer`.
  */
@@ -225,7 +214,7 @@ export default defineConfig({
   },
 
   // Web server configuration
-  // - Remote target (Polyscope workspace preview or any other HTTPS host):
+  // - Remote target (workspace preview or any other HTTPS host):
   //   no local server needed because an external process already serves it
   // - CI mode: builds and starts preview server automatically
   // - Local dev: reuses existing dev server on localhost:5173

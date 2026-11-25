@@ -102,8 +102,8 @@ PLAYWRIGHT_APP_SURFACE=web npm run test:e2e
 PLAYWRIGHT_APP_SURFACE=android-native npm run test:e2e
 ```
 
-In Polyscope, workspace previews keep the deployed bundle surface they were
-built with and default Playwright route assumptions to `web`. Use
+Assigned Herdr tabs set `PLAYWRIGHT_BASE_URL` to the private workspace preview.
+Browser tests use that URL for both app and API and default to the `web` surface. Use
 `PLAYWRIGHT_APP_SURFACE=android-mock` only to run Android-specific tests or route
 selection against a preview that already exposes that UI surface. For local
 shared-UI review while still using a workspace backend, run

@@ -4,7 +4,6 @@
 .git
 .github
 .context
-.polyscope*
 .env
 .env.*
 !.env.example

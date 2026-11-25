@@ -19,7 +19,7 @@ const scriptPath = path.join(
 );
 
 describe("run-live-web-push-smoke preflight", () => {
-  it("accepts canonical workspace preview URLs outside Polyscope clones", () => {
+  it("accepts canonical workspace preview URLs from an unrelated checkout", () => {
     const tempDir = mkdtempSync(
       path.join(os.tmpdir(), "secpal-live-web-push-")
     );
@@ -31,7 +31,6 @@ describe("run-live-web-push-smoke preflight", () => {
         env: {
           ...process.env,
           PLAYWRIGHT_BASE_URL: "https://grumpy-lynx.preview.secpal.dev",
-          POLYSCOPE_WORKSPACE: "",
           CHROME_PATH: "",
         },
       });
@@ -39,9 +38,7 @@ describe("run-live-web-push-smoke preflight", () => {
       expect(result.error).toBeUndefined();
       expect(result.status).toBe(1);
       expect(result.stderr).toContain("CHROME_PATH must point");
-      expect(result.stderr).not.toContain(
-        "must run inside a Polyscope workspace clone"
-      );
+      expect(result.stderr).not.toContain("requires PLAYWRIGHT_BASE_URL");
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }
