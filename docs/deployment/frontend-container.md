@@ -280,11 +280,11 @@ push-triggered publisher after merge to `main`.
 
 Dependabot configuration registers Containerfile through its `docker` ecosystem
 and remote hook revisions through `pre-commit`, daily at 04:00 Europe/Berlin.
-These are manual-review proposals. Explicit labels distinguish them from the
-existing automatic patch updates. The auto-merge workflow independently reads
-changed paths from GitHub and admits only npm manifests and Actions workflows;
-a generic dependency label or patch title cannot admit a Containerfile or hook
-update. Both sides of renames are checked.
+Docker proposals follow independent review and the base-image qualification
+above. The shared auto-merge workflow evaluates eligible npm manifest and
+lockfile updates, pinned workflow updates, and remote hook revisions in
+`.pre-commit-config.yaml`. Eligibility requires verified dependency metadata
+and approved changed paths, including both paths for renames.
 
 The two literal, fully qualified `FROM` instructions in Containerfile are the
 single authority for base-image tags and immutable digests. Dependabot Core can
