@@ -404,6 +404,8 @@ export function EmployeeAddressFields({
   }
 
   function applyStreetSuggestion(name: string) {
+    if (!streetSuggestionsAreCurrent) return;
+
     const matches = streetSuggestions.filter(
       (suggestion) => suggestion.name === name
     );
@@ -422,6 +424,8 @@ export function EmployeeAddressFields({
   }
 
   function applyPostalSuggestion(postalCode: string) {
+    if (!localitySuggestionsAreCurrent) return;
+
     const matches = localitySuggestions.filter(
       (suggestion) => suggestion.postal_code === postalCode
     );
@@ -439,6 +443,8 @@ export function EmployeeAddressFields({
   }
 
   function applyCitySuggestion(locality: string) {
+    if (!localitySuggestionsAreCurrent) return;
+
     const matches = localitySuggestions.filter(
       (suggestion) => suggestion.locality === locality
     );

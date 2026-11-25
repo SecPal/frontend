@@ -1538,6 +1538,75 @@ describe("EmployeeAddressFields", () => {
     expect(onChange).toHaveBeenCalledWith("supplement", "EG");
   });
 
+  it.each([
+    ["Postal Code", "postalCode", "50", "10", "50667"],
+    ["City", "city", "Kö", "Ber", "Köln"],
+    ["Street", "street", "Gr", "Ha", "Grabstraße"],
+  ] as const)(
+    "does not auto-apply a stale suggestion when typing in %s",
+    async (label, field, prefix, nextQuery, exactValue) => {
+      vi.mocked(fetchAddressLocalitySuggestions)
+        .mockReset()
+        .mockReturnValue(new Promise(() => {}))
+        .mockResolvedValueOnce({
+          data: [{ postal_code: "50667", locality: "Köln" }],
+          meta: referenceMeta,
+        });
+      vi.mocked(fetchAddressStreetSuggestions)
+        .mockReset()
+        .mockReturnValue(new Promise(() => {}))
+        .mockResolvedValueOnce({
+          data: [
+            {
+              name: "Grabstraße",
+              postal_code: "13156",
+              locality: "Berlin",
+              borough: null,
+              suburb: null,
+              regional_key: null,
+            },
+          ],
+          meta: referenceMeta,
+        });
+
+      const onChange = vi.fn();
+      const addressForm = (value: string) => (
+        <I18nProvider i18n={i18n}>
+          <EmployeeAddressFields
+            draft={{
+              street: "",
+              houseNumber: "",
+              postalCode: "",
+              city: "",
+              supplement: "",
+              country: "DE",
+              [field]: value,
+            }}
+            onChange={onChange}
+          />
+        </I18nProvider>
+      );
+      const { rerender } = render(addressForm(prefix));
+      const input = screen.getByRole("combobox", { name: label });
+      act(() => input.focus());
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
+      const previousOption = screen.getByRole("option");
+      expect(previousOption).toHaveTextContent(exactValue);
+
+      rerender(addressForm(nextQuery));
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
+      expect(input).toHaveAttribute("aria-busy", "true");
+      expect(previousOption).toHaveAttribute("aria-disabled", "true");
+
+      fireEvent.change(input, { target: { value: exactValue } });
+      expect(onChange.mock.calls).toEqual([[field, exactValue]]);
+    }
+  );
+
   it("auto-applies an exact postal code from an available city suggestion", async () => {
     const onChange = vi.fn();
     vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
