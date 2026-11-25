@@ -109,7 +109,7 @@ test.describe("Live onboarding wizard (workspace API)", () => {
   // workspace-preview/live-onboarding gate is evaluated.
   test.skip(
     !isWorkspacePreviewTarget() || !LIVE_ONBOARDING,
-    "Requires PLAYWRIGHT_LIVE_ONBOARDING=1 and a private workspace preview target (<workspace>.preview.secpal.dev). Pure live targets such as app.secpal.dev are intentionally not part of the Polyscope E2E surface; see file header."
+    "Requires PLAYWRIGHT_LIVE_ONBOARDING=1 and a private workspace preview target (<workspace>.preview.secpal.dev). Use an isolated workspace with the onboarding test fixture; see file header."
   );
 
   test("loads onboarding and receives templates and submissions from the live API", async ({

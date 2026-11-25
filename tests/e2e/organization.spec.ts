@@ -27,20 +27,8 @@ const API_BASE_URL =
   resolvePlaywrightApiBaseUrl(playwrightEnv.process?.env ?? process.env) ?? "";
 const LIVE_ORGANIZATION_CRUD_ENABLED =
   playwrightEnv.process?.env?.PLAYWRIGHT_LIVE_ORGANIZATION_CRUD === "1";
-/**
- * Name of the root organizational unit that the API workspace's
- * `DatabaseSeeder` guarantees on every freshly seeded workspace
- * preview tenant. See `database/seeders/DatabaseSeeder.php` in the API
- * workspace:
- *
- *     OrganizationalUnit::firstOrCreate(
- *         ['name' => 'Headquarters', 'tenant_id' => $tenantId],
- *         ['type' => 'holding']
- *     );
- *
- * The live tests use the isolated workspace database.
- */
-const WORKSPACE_PREVIEW_ROOT_UNIT_NAME = "Headquarters";
+// The SecPal workspace fixture runs the API's OrganizationalUnitSeeder.
+const WORKSPACE_PREVIEW_ROOT_UNIT_NAME = "SecPal Holding";
 
 const ROTATED_XSRF_TOKEN = "rotated-xsrf-token";
 const CREATED_CHILD_UNIT_ID = "org-child-1";
@@ -906,10 +894,10 @@ test.describe("Organization Management", () => {
     // such as `app.secpal.dev`.
     test.skip(
       !isWorkspacePreviewTarget(),
-      `Only runs against workspace previews (<workspace>.preview.secpal.dev), where the API workspace's DatabaseSeeder contractually guarantees a "${WORKSPACE_PREVIEW_ROOT_UNIT_NAME}" root unit; intentionally skipped against pure live targets such as app.secpal.dev where that seed contract does not hold (see issue #1199).`
+      `Only runs against workspace previews (<workspace>.preview.secpal.dev), whose synthetic fixture seeds a "${WORKSPACE_PREVIEW_ROOT_UNIT_NAME}" root unit; intentionally skipped against pure live targets such as app.secpal.dev where that seed contract does not hold (see issue #1199).`
     );
 
-    test("should show the seeded Headquarters root unit on the workspace preview", async ({
+    test("should show the seeded SecPal Holding root unit on the workspace preview", async ({
       authenticatedPage: page,
     }) => {
       await page.goto("/organization");
@@ -938,7 +926,7 @@ test.describe("Organization Management", () => {
       await expect(page.locator("dt", { hasText: /^Parent$/i })).toHaveCount(0);
     });
 
-    test("should create and remove a live child unit under the seeded Headquarters root on the workspace preview", async ({
+    test("should create and remove a live child unit under the seeded SecPal Holding root on the workspace preview", async ({
       authenticatedPage: page,
     }, testInfo) => {
       test.skip(
