@@ -25,8 +25,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/select";
+import { AddressAutocompleteFields } from "@/components/AddressAutocompleteFields";
+import { AddressCountryField } from "@/components/AddressCountryField";
 import { CustomerEstablishmentFields } from "@/components/CustomerEstablishmentFields";
 import type { CustomerEstablishmentFormValue } from "@/components/CustomerEstablishmentFields";
+import { emptyBusinessAddress } from "@/lib/businessAddress";
 import type {
   CreateCustomerRequest,
   EstablishmentLookup,
@@ -71,7 +74,7 @@ export default function CustomerCreate() {
     legal_entity_id: "",
     name: "",
     vat_id: null,
-    billing_address: { street: "", postal_code: "", city: "", country: "DE" },
+    billing_address: emptyBusinessAddress,
     is_active: true,
   });
   const selectedLegalEntityId =
@@ -260,65 +263,20 @@ export default function CustomerCreate() {
             <Trans>Billing Address</Trans>
           </PageTitle>
           <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="customer-street">
-                <Trans>Street</Trans> *
-              </FieldLabel>
-              <Input
-                id="customer-street"
-                required
-                value={form.billing_address.street}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    billing_address: {
-                      ...current.billing_address,
-                      street: event.target.value,
-                    },
-                  }))
-                }
-              />
-            </Field>
-            <div className="grid grid-cols-2 gap-4">
-              <Field>
-                <FieldLabel htmlFor="customer-postal-code">
-                  <Trans>Postal Code</Trans> *
-                </FieldLabel>
-                <Input
-                  id="customer-postal-code"
-                  required
-                  value={form.billing_address.postal_code}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      billing_address: {
-                        ...current.billing_address,
-                        postal_code: event.target.value,
-                      },
-                    }))
-                  }
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="customer-city">
-                  <Trans>City</Trans> *
-                </FieldLabel>
-                <Input
-                  id="customer-city"
-                  required
-                  value={form.billing_address.city}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      billing_address: {
-                        ...current.billing_address,
-                        city: event.target.value,
-                      },
-                    }))
-                  }
-                />
-              </Field>
-            </div>
+            <AddressAutocompleteFields
+              address={form.billing_address}
+              fieldIdPrefix="customer"
+              required
+              onChange={(field, value) =>
+                setForm((current) => ({
+                  ...current,
+                  billing_address: {
+                    ...current.billing_address,
+                    [field]: value,
+                  },
+                }))
+              }
+            />
             <Field>
               <FieldLabel htmlFor="customer-vat-id">
                 <Trans>VAT ID</Trans>
@@ -335,26 +293,17 @@ export default function CustomerCreate() {
                 }
               />
             </Field>
-            <Field>
-              <FieldLabel htmlFor="customer-country">
-                <Trans>Country</Trans> *
-              </FieldLabel>
-              <Input
-                id="customer-country"
-                required
-                maxLength={2}
-                value={form.billing_address.country}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    billing_address: {
-                      ...current.billing_address,
-                      country: event.target.value.toUpperCase(),
-                    },
-                  }))
-                }
-              />
-            </Field>
+            <AddressCountryField
+              name="country"
+              value={form.billing_address.country}
+              required
+              onChange={(country) =>
+                setForm((current) => ({
+                  ...current,
+                  billing_address: { ...current.billing_address, country },
+                }))
+              }
+            />
           </FieldGroup>
         </section>
         <section aria-labelledby="establishments-heading">

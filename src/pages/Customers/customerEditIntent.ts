@@ -2,10 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { CustomerEstablishmentFormValue } from "@/components/CustomerEstablishmentFields";
+import type { Address } from "@/types/api";
 import type { Customer, UpdateCustomerRequest } from "@/types/api/customers";
 
 export interface CustomerEditIntent {
-  form: UpdateCustomerRequest;
+  form: Omit<UpdateCustomerRequest, "billing_address"> & {
+    billing_address: Address;
+  };
   assignments: CustomerEstablishmentFormValue[];
 }
 
@@ -198,32 +201,34 @@ export function reconcileCustomerEditIntent(
         intended.form.is_active,
         fresh.form.is_active
       ),
-      billing_address:
-        originalAddress && intendedAddress && freshAddress
-          ? {
-              ...freshAddress,
-              street: chooseIntendedChange(
-                originalAddress.street,
-                intendedAddress.street,
-                freshAddress.street
-              ),
-              postal_code: chooseIntendedChange(
-                originalAddress.postal_code,
-                intendedAddress.postal_code,
-                freshAddress.postal_code
-              ),
-              city: chooseIntendedChange(
-                originalAddress.city,
-                intendedAddress.city,
-                freshAddress.city
-              ),
-              country: chooseIntendedChange(
-                originalAddress.country,
-                intendedAddress.country,
-                freshAddress.country
-              ),
-            }
-          : intendedAddress,
+      billing_address: {
+        ...freshAddress,
+        street: chooseIntendedChange(
+          originalAddress.street,
+          intendedAddress.street,
+          freshAddress.street
+        ),
+        house_number: chooseIntendedChange(
+          originalAddress.house_number,
+          intendedAddress.house_number,
+          freshAddress.house_number
+        ),
+        postal_code: chooseIntendedChange(
+          originalAddress.postal_code,
+          intendedAddress.postal_code,
+          freshAddress.postal_code
+        ),
+        city: chooseIntendedChange(
+          originalAddress.city,
+          intendedAddress.city,
+          freshAddress.city
+        ),
+        country: chooseIntendedChange(
+          originalAddress.country,
+          intendedAddress.country,
+          freshAddress.country
+        ),
+      },
     },
     assignments: reconcileAssignments(
       original.assignments,

@@ -5,7 +5,7 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { act } from "react";
+import { act, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   OnboardingResidentialAddressHistoryFields,
@@ -210,6 +210,62 @@ describe("OnboardingResidentialAddressHistoryFields", () => {
     expect(screen.getByLabelText(/house number/i)).toBeDisabled();
     expect(screen.getByLabelText(/address supplement/i)).toBeDisabled();
     expect(screen.getByRole("combobox", { name: /country/i })).toBeDisabled();
+  });
+
+  it("searches current and previous residence countries independently", async () => {
+    const user = userEvent.setup();
+    const residedFrom = localIsoDateWithDayOffset(-100);
+
+    function AddressHistoryForm() {
+      const [value, setValue] = useState(() =>
+        getResidentialAddressHistoryValue({
+          has_current_bewacher_id: "no",
+          current_address: { resided_from: residedFrom },
+          previous_addresses: [
+            {
+              country: "AT",
+              resided_until: addCalendarDaysToIsoDate(residedFrom, -1),
+            },
+          ],
+        })
+      );
+      return (
+        <OnboardingResidentialAddressHistoryFields
+          value={value}
+          errors={{}}
+          readOnly={false}
+          onChange={setValue}
+        />
+      );
+    }
+
+    render(
+      <I18nProvider i18n={i18n}>
+        <AddressHistoryForm />
+      </I18nProvider>
+    );
+    const [current, previous] = screen.getAllByRole("combobox", {
+      name: /^country$/i,
+    });
+    expect(current).toHaveTextContent("Germany");
+    expect(previous).toHaveTextContent("Austria");
+
+    for (const [trigger, query, label] of [
+      [current!, "FR", "France"],
+      [previous!, "Finl", "Finland"],
+    ] as const) {
+      await user.click(trigger);
+      await user.type(
+        await screen.findByRole("combobox", {
+          name: /search or select country/i,
+        }),
+        query
+      );
+      await user.click(await screen.findByRole("option", { name: label }));
+    }
+
+    expect(current).toHaveTextContent("France");
+    expect(previous).toHaveTextContent("Finland");
   });
 
   it("keeps street autocomplete working inside the onboarding address history step", async () => {

@@ -198,7 +198,7 @@ msgstr "Lokale Telefonnummer {number}"
 msgid "Invitation Failure Reason"
 msgstr "Grund für das Scheitern der Einladung"
 
-#: src/pages/Employees/EmployeeAddressFields.tsx
+#: src/components/AddressCountryField.tsx
 msgid "Search or select country"
 msgstr "Land suchen oder auswählen"
 
@@ -325,7 +325,7 @@ msgstr "Dieser Onboarding-Schritt verwendet ein Schema, das noch nicht dargestel
 msgid "A legally independent person or organization that can enter into contracts in its own name, employ staff, and incur liabilities, such as a GmbH or GmbH & Co. KG."
 msgstr "Eine rechtlich eigenständige Person oder Organisation, die im eigenen Namen Verträge schließen, Mitarbeiter beschäftigen und Verbindlichkeiten eingehen kann, z. B. eine GmbH oder GmbH & Co. KG."
 
-#: src/pages/Employees/EmployeeAddressFields.tsx
+#: src/components/AddressAutocompleteFields.tsx
 msgid "No address suggestions found."
 msgstr "Keine Adressvorschläge gefunden."
 
@@ -337,14 +337,10 @@ msgstr "weitere Optionen"
 msgid "Failed to delete file"
 msgstr "Datei konnte nicht gelöscht werden"
 
-#: src/pages/Customers/CustomerCreate.tsx
+#: src/components/AddressAutocompleteFields.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 msgid "City"
 msgstr "Stadt"
 
@@ -915,8 +911,8 @@ msgstr "Kundennummer"
 msgid "Android runtime information is unavailable."
 msgstr "Android-Laufzeitinformationen sind nicht verfügbar."
 
+#: src/components/AddressCountryField.tsx
 #: src/pages/Employees/EmployeeAddressFields.test.tsx
-#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "No results found"
 msgstr "Keine Ergebnisse gefunden"
@@ -1011,7 +1007,7 @@ msgstr "Bitte laden Sie Ihren Aufenthaltstitel hoch (PDF, JPG, JPEG, PNG; max. 1
 msgid "Page Not Found"
 msgstr "Seite nicht gefunden"
 
-#: src/pages/Employees/EmployeeAddressFields.tsx
+#: src/components/AddressAutocompleteFields.tsx
 msgid "Address autocomplete request failed."
 msgstr "Die Adress-Autovervollständigung ist fehlgeschlagen."
 
@@ -1024,7 +1020,7 @@ msgstr "Name des Notfallkontakts"
 msgid "Enter the instance URL you received from your supervisor."
 msgstr "Geben Sie die Instanz-URL ein, die Sie von Ihrem Vorgesetzten erhalten haben."
 
-#: src/pages/Employees/EmployeeAddressFields.tsx
+#: src/components/AddressAutocompleteFields.tsx
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "House Number"
 msgstr "Hausnummer"
@@ -1080,11 +1076,6 @@ msgstr "Möchten Sie Ihr Ausweisdokument jetzt hochladen?"
 #: src/pages/Employees/EmployeeManagementLevelField.tsx
 msgid "ML"
 msgstr "FE"
-
-#: src/pages/Sites/SiteCreate.tsx
-#: src/pages/Sites/SiteEdit.tsx
-msgid "Switzerland"
-msgstr "Schweiz"
 
 #: src/components/PublicRouteLoader.tsx
 msgid "Loading page"
@@ -1288,14 +1279,10 @@ msgstr "Vorherige"
 msgid "Please use the required format."
 msgstr "Bitte verwenden Sie das erforderliche Format."
 
-#: src/pages/Customers/CustomerCreate.tsx
+#: src/components/AddressAutocompleteFields.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 msgid "Postal Code"
 msgstr "Postleitzahl"
 
@@ -1998,14 +1985,10 @@ msgstr "Das Passwort muss mindestens 12 Zeichen lang sein"
 msgid "Add Child Unit"
 msgstr "Untergeordnete Einheit hinzufügen"
 
-#: src/pages/Customers/CustomerCreate.tsx
+#: src/components/AddressCountryField.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 msgid "Country"
 msgstr "Land"
 
@@ -3195,11 +3178,6 @@ msgstr "Fehler"
 msgid "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 msgstr "Bestätigen Sie mit Ihrer Authentifizierungs-App oder einem Wiederherstellungscode, um alle vorhandenen Wiederherstellungscodes zu ersetzen."
 
-#: src/pages/Sites/SiteCreate.tsx
-#: src/pages/Sites/SiteEdit.tsx
-msgid "Austria"
-msgstr "Österreich"
-
 #: src/pages/Customers/CustomerEdit.tsx
 msgid "Restore My Changes"
 msgstr "Meine Änderungen wiederherstellen"
@@ -3469,14 +3447,10 @@ msgstr "Anwendung jetzt aktualisieren"
 msgid "This customer's site count is unavailable."
 msgstr "Die Anzahl der Standorte dieses Kunden ist nicht verfügbar."
 
-#: src/pages/Customers/CustomerCreate.tsx
+#: src/components/AddressAutocompleteFields.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 msgid "Street"
 msgstr "Straße"
 
@@ -3866,11 +3840,6 @@ msgstr "Zeitüberschreitung bei der Passkey-Registrierung. Bitte versuchen Sie e
 msgid "The save failed on the server because your onboarding workflow is not currently editable. The wizard will refresh to the latest server state."
 msgstr "Das Speichern auf dem Server ist fehlgeschlagen, weil Ihr Onboarding-Workflow derzeit nicht bearbeitbar ist. Der Assistent wird auf den neuesten Serverstand aktualisiert."
 
-#: src/pages/Sites/SiteCreate.tsx
-#: src/pages/Sites/SiteEdit.tsx
-msgid "Germany"
-msgstr "Deutschland"
-
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
 #: src/pages/Customers/CustomerEdit.tsx
@@ -4021,7 +3990,7 @@ msgstr "Schließen"
 msgid "Please choose whether you want to upload your identity document now."
 msgstr "Bitte wählen Sie aus, ob Sie Ihr Ausweisdokument jetzt hochladen möchten."
 
-#: src/pages/Employees/EmployeeAddressFields.tsx
+#: src/components/AddressAutocompleteFields.tsx
 msgid "Loading..."
 msgstr "Laden..."
 

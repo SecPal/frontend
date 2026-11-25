@@ -20,10 +20,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/select";
+import { AddressAutocompleteFields } from "@/components/AddressAutocompleteFields";
+import { AddressCountryField } from "@/components/AddressCountryField";
+import {
+  emptyBusinessAddress,
+  type BusinessAddressField,
+} from "@/lib/businessAddress";
 import { createSite } from "../../services/customersApi";
 import type {
   CreateSiteRequest,
-  Address,
   Contact,
   SiteType,
 } from "../../types/customers";
@@ -58,12 +63,7 @@ export default function SiteCreate() {
     establishment_id: "",
     name: "",
     type: "permanent",
-    address: {
-      street: "",
-      city: "",
-      postal_code: "",
-      country: "DE",
-    },
+    address: emptyBusinessAddress,
     is_active: true,
   });
 
@@ -74,7 +74,7 @@ export default function SiteCreate() {
     }));
   }
 
-  function updateAddress(field: keyof Address, value: string) {
+  function updateAddress(field: BusinessAddressField, value: string) {
     setFormData((currentFormData) => ({
       ...currentFormData,
       address: {
@@ -248,119 +248,27 @@ export default function SiteCreate() {
             <Trans>Address</Trans>
           </PageTitle>
           <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="site-street">
-                <Trans>Street</Trans> *
-              </FieldLabel>
-              <Input
-                id="site-street"
-                name="street"
-                type="text"
-                required
-                autoComplete="street-address"
-                value={formData.address.street}
-                aria-invalid={fieldErrors["address.street"] ? true : undefined}
-                aria-describedby={
-                  fieldErrors["address.street"]
-                    ? "site-street-error"
-                    : undefined
-                }
-                onChange={(e) => updateAddress("street", e.target.value)}
-              />
-              {fieldErrors["address.street"] && (
-                <FieldError id="site-street-error">
-                  {fieldErrors["address.street"].join(", ")}
-                </FieldError>
-              )}
-            </Field>
+            <AddressAutocompleteFields
+              address={formData.address}
+              fieldIdPrefix="site"
+              fieldNamePrefix=""
+              required
+              onChange={updateAddress}
+              fieldErrors={{
+                street: fieldErrors["address.street"]?.join(", "),
+                house_number: fieldErrors["address.house_number"]?.join(", "),
+                postal_code: fieldErrors["address.postal_code"]?.join(", "),
+                city: fieldErrors["address.city"]?.join(", "),
+              }}
+            />
 
-            <Field>
-              <FieldLabel htmlFor="site-city">
-                <Trans>City</Trans> *
-              </FieldLabel>
-              <Input
-                id="site-city"
-                name="city"
-                type="text"
-                required
-                autoComplete="address-level2"
-                value={formData.address.city}
-                aria-invalid={fieldErrors["address.city"] ? true : undefined}
-                aria-describedby={
-                  fieldErrors["address.city"] ? "site-city-error" : undefined
-                }
-                onChange={(e) => updateAddress("city", e.target.value)}
-              />
-              {fieldErrors["address.city"] && (
-                <FieldError id="site-city-error">
-                  {fieldErrors["address.city"].join(", ")}
-                </FieldError>
-              )}
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="site-postal-code">
-                <Trans>Postal Code</Trans> *
-              </FieldLabel>
-              <Input
-                id="site-postal-code"
-                name="postal_code"
-                type="text"
-                required
-                autoComplete="postal-code"
-                value={formData.address.postal_code}
-                aria-invalid={
-                  fieldErrors["address.postal_code"] ? true : undefined
-                }
-                aria-describedby={
-                  fieldErrors["address.postal_code"]
-                    ? "site-postal-code-error"
-                    : undefined
-                }
-                onChange={(e) => updateAddress("postal_code", e.target.value)}
-              />
-              {fieldErrors["address.postal_code"] && (
-                <FieldError id="site-postal-code-error">
-                  {fieldErrors["address.postal_code"].join(", ")}
-                </FieldError>
-              )}
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="site-country">
-                <Trans>Country</Trans> *
-              </FieldLabel>
-              <Select
-                name="country"
-                required
-                value={formData.address.country}
-                onValueChange={(value) => updateAddress("country", value)}
-              >
-                <SelectTrigger
-                  id="site-country"
-                  aria-invalid={
-                    fieldErrors["address.country"] ? true : undefined
-                  }
-                  aria-describedby={
-                    fieldErrors["address.country"]
-                      ? "site-country-error"
-                      : undefined
-                  }
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DE">{_(msg`Germany`)}</SelectItem>
-                  <SelectItem value="AT">{_(msg`Austria`)}</SelectItem>
-                  <SelectItem value="CH">{_(msg`Switzerland`)}</SelectItem>
-                </SelectContent>
-              </Select>
-              {fieldErrors["address.country"] && (
-                <FieldError id="site-country-error">
-                  {fieldErrors["address.country"].join(", ")}
-                </FieldError>
-              )}
-            </Field>
+            <AddressCountryField
+              name="country"
+              value={formData.address.country}
+              required
+              errorMessage={fieldErrors["address.country"]?.join(", ")}
+              onChange={(country) => updateAddress("country", country)}
+            />
           </FieldGroup>
         </div>
 

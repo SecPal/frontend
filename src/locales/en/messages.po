@@ -198,7 +198,7 @@ msgstr "Local phone {number}"
 msgid "Invitation Failure Reason"
 msgstr "Invitation Failure Reason"
 
-#: src/pages/Employees/EmployeeAddressFields.tsx
+#: src/components/AddressCountryField.tsx
 msgid "Search or select country"
 msgstr "Search or select country"
 
@@ -325,7 +325,7 @@ msgstr "This onboarding step uses a schema we cannot render yet."
 msgid "A legally independent person or organization that can enter into contracts in its own name, employ staff, and incur liabilities, such as a GmbH or GmbH & Co. KG."
 msgstr "A legally independent person or organization that can enter into contracts in its own name, employ staff, and incur liabilities, such as a GmbH or GmbH & Co. KG."
 
-#: src/pages/Employees/EmployeeAddressFields.tsx
+#: src/components/AddressAutocompleteFields.tsx
 msgid "No address suggestions found."
 msgstr "No address suggestions found."
 
@@ -337,14 +337,10 @@ msgstr "More options"
 msgid "Failed to delete file"
 msgstr "Failed to delete file"
 
-#: src/pages/Customers/CustomerCreate.tsx
+#: src/components/AddressAutocompleteFields.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 msgid "City"
 msgstr "City"
 
@@ -915,8 +911,8 @@ msgstr "Customer Number"
 msgid "Android runtime information is unavailable."
 msgstr "Android runtime information is unavailable."
 
+#: src/components/AddressCountryField.tsx
 #: src/pages/Employees/EmployeeAddressFields.test.tsx
-#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "No results found"
 msgstr "No results found"
@@ -1011,7 +1007,7 @@ msgstr "Please upload your residence title (PDF, JPG, JPEG, PNG; max. 10 MB)."
 msgid "Page Not Found"
 msgstr "Page Not Found"
 
-#: src/pages/Employees/EmployeeAddressFields.tsx
+#: src/components/AddressAutocompleteFields.tsx
 msgid "Address autocomplete request failed."
 msgstr "Address autocomplete request failed."
 
@@ -1024,7 +1020,7 @@ msgstr "Emergency Contact Name"
 msgid "Enter the instance URL you received from your supervisor."
 msgstr "Enter the instance URL you received from your supervisor."
 
-#: src/pages/Employees/EmployeeAddressFields.tsx
+#: src/components/AddressAutocompleteFields.tsx
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 msgid "House Number"
 msgstr "House Number"
@@ -1080,11 +1076,6 @@ msgstr "Would you like to upload your identity document now?"
 #: src/pages/Employees/EmployeeManagementLevelField.tsx
 msgid "ML"
 msgstr "ML"
-
-#: src/pages/Sites/SiteCreate.tsx
-#: src/pages/Sites/SiteEdit.tsx
-msgid "Switzerland"
-msgstr "Switzerland"
 
 #: src/components/PublicRouteLoader.tsx
 msgid "Loading page"
@@ -1288,14 +1279,10 @@ msgstr "Previous"
 msgid "Please use the required format."
 msgstr "Please use the required format."
 
-#: src/pages/Customers/CustomerCreate.tsx
+#: src/components/AddressAutocompleteFields.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 msgid "Postal Code"
 msgstr "Postal Code"
 
@@ -1998,14 +1985,10 @@ msgstr "Password must be at least 12 characters"
 msgid "Add Child Unit"
 msgstr "Add Child Unit"
 
-#: src/pages/Customers/CustomerCreate.tsx
+#: src/components/AddressCountryField.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 msgid "Country"
 msgstr "Country"
 
@@ -3195,11 +3178,6 @@ msgstr "Error"
 msgid "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 msgstr "Confirm with your authenticator app or one recovery code to replace every existing recovery code."
 
-#: src/pages/Sites/SiteCreate.tsx
-#: src/pages/Sites/SiteEdit.tsx
-msgid "Austria"
-msgstr "Austria"
-
 #: src/pages/Customers/CustomerEdit.tsx
 msgid "Restore My Changes"
 msgstr "Restore My Changes"
@@ -3469,14 +3447,10 @@ msgstr "Update application now"
 msgid "This customer's site count is unavailable."
 msgstr "This customer's site count is unavailable."
 
-#: src/pages/Customers/CustomerCreate.tsx
+#: src/components/AddressAutocompleteFields.tsx
 #: src/pages/Customers/CustomerDetail.tsx
-#: src/pages/Customers/CustomerEdit.tsx
-#: src/pages/Employees/EmployeeAddressFields.tsx
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
-#: src/pages/Sites/SiteCreate.tsx
 #: src/pages/Sites/SiteDetail.tsx
-#: src/pages/Sites/SiteEdit.tsx
 msgid "Street"
 msgstr "Street"
 
@@ -3866,11 +3840,6 @@ msgstr "Passkey registration timed out. Please try again."
 msgid "The save failed on the server because your onboarding workflow is not currently editable. The wizard will refresh to the latest server state."
 msgstr "The save failed on the server because your onboarding workflow is not currently editable. The wizard will refresh to the latest server state."
 
-#: src/pages/Sites/SiteCreate.tsx
-#: src/pages/Sites/SiteEdit.tsx
-msgid "Germany"
-msgstr "Germany"
-
 #: src/components/OrganizationalUnitFormDialog.tsx
 #: src/components/ScopeAssignmentForm.tsx
 #: src/pages/Customers/CustomerEdit.tsx
@@ -4021,7 +3990,7 @@ msgstr "Close"
 msgid "Please choose whether you want to upload your identity document now."
 msgstr "Please choose whether you want to upload your identity document now."
 
-#: src/pages/Employees/EmployeeAddressFields.tsx
+#: src/components/AddressAutocompleteFields.tsx
 msgid "Loading..."
 msgstr "Loading..."
 

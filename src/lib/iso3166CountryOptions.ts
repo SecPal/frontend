@@ -6,6 +6,8 @@ export interface CountrySelectOption {
   readonly label: string;
 }
 
+export const DEFAULT_ADDRESS_COUNTRY = "DE";
+
 /**
  * Shared SecPal alpha-2 country-code list, aligned with the backend's
  * nationality/address validation source in the linked API workspace.

@@ -49,6 +49,7 @@ import {
 import { useUserCapabilities } from "../../hooks/useUserCapabilities";
 import { isSafeMailtoTarget, isSafeTelTarget } from "../../utils/safeUrl";
 import { useDomainAssignmentNames } from "../../hooks/useDomainAssignmentNames";
+import { formatStreetLine } from "@/lib/businessAddress";
 
 function getCustomerSitesCount(customer: Customer): number | null {
   return typeof customer.sites_count === "number" ? customer.sites_count : null;
@@ -334,7 +335,7 @@ export default function CustomerDetail() {
                 <Trans>Street</Trans>
               </DescriptionTerm>
               <DescriptionDetails>
-                {customer.billing_address.street}
+                {formatStreetLine(customer.billing_address)}
               </DescriptionDetails>
 
               <DescriptionTerm>

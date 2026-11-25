@@ -19,13 +19,15 @@ import {
   CustomerSiteFormCheckboxField as FormCheckboxField,
   CustomerSitePageTitle as PageTitle,
 } from "@/ui";
+import { AddressAutocompleteFields } from "@/components/AddressAutocompleteFields";
+import { AddressCountryField } from "@/components/AddressCountryField";
 import { CustomerEstablishmentFields } from "@/components/CustomerEstablishmentFields";
 import type { CustomerEstablishmentFormValue } from "@/components/CustomerEstablishmentFields";
+import { emptyBusinessAddress } from "@/lib/businessAddress";
 import type {
   Customer,
   EstablishmentLookup,
   StrongEntityTag,
-  UpdateCustomerRequest,
 } from "@/types/api/customers";
 import {
   CustomerTransactionalEditError,
@@ -56,7 +58,9 @@ export default function CustomerEdit() {
   const activeRouteOwner = useRef<object | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [etag, setEtag] = useState<StrongEntityTag | null>(null);
-  const [form, setForm] = useState<UpdateCustomerRequest>({});
+  const [form, setForm] = useState<CustomerEditIntent["form"]>({
+    billing_address: emptyBusinessAddress,
+  });
   const [assignments, setAssignments] = useState<
     CustomerEstablishmentFormValue[]
   >([]);
@@ -380,71 +384,21 @@ export default function CustomerEdit() {
                   }
                 />
               </Field>
-              <Field>
-                <FieldLabel htmlFor="customer-street">
-                  <Trans>Street</Trans> *
-                </FieldLabel>
-                <Input
-                  id="customer-street"
-                  required
-                  disabled={saving}
-                  value={form.billing_address?.street ?? ""}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      billing_address: {
-                        ...activeCustomer.billing_address,
-                        ...current.billing_address,
-                        street: event.target.value,
-                      },
-                    }))
-                  }
-                />
-              </Field>
-              <div className="grid grid-cols-2 gap-4">
-                <Field>
-                  <FieldLabel htmlFor="customer-postal-code">
-                    <Trans>Postal Code</Trans> *
-                  </FieldLabel>
-                  <Input
-                    id="customer-postal-code"
-                    required
-                    disabled={saving}
-                    value={form.billing_address?.postal_code ?? ""}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        billing_address: {
-                          ...activeCustomer.billing_address,
-                          ...current.billing_address,
-                          postal_code: event.target.value,
-                        },
-                      }))
-                    }
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="customer-city">
-                    <Trans>City</Trans> *
-                  </FieldLabel>
-                  <Input
-                    id="customer-city"
-                    required
-                    disabled={saving}
-                    value={form.billing_address?.city ?? ""}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        billing_address: {
-                          ...activeCustomer.billing_address,
-                          ...current.billing_address,
-                          city: event.target.value,
-                        },
-                      }))
-                    }
-                  />
-                </Field>
-              </div>
+              <AddressAutocompleteFields
+                address={form.billing_address}
+                fieldIdPrefix="customer"
+                readOnly={saving}
+                required
+                onChange={(field, value) =>
+                  setForm((current) => ({
+                    ...current,
+                    billing_address: {
+                      ...current.billing_address,
+                      [field]: value,
+                    },
+                  }))
+                }
+              />
               <Field>
                 <FieldLabel htmlFor="customer-vat-id">
                   <Trans>VAT ID</Trans>
@@ -461,28 +415,18 @@ export default function CustomerEdit() {
                   }
                 />
               </Field>
-              <Field>
-                <FieldLabel htmlFor="customer-country">
-                  <Trans>Country</Trans> *
-                </FieldLabel>
-                <Input
-                  id="customer-country"
-                  required
-                  disabled={saving}
-                  maxLength={2}
-                  value={form.billing_address?.country ?? ""}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      billing_address: {
-                        ...activeCustomer.billing_address,
-                        ...current.billing_address,
-                        country: event.target.value.toUpperCase(),
-                      },
-                    }))
-                  }
-                />
-              </Field>
+              <AddressCountryField
+                name="country"
+                value={form.billing_address.country}
+                required
+                disabled={saving}
+                onChange={(country) =>
+                  setForm((current) => ({
+                    ...current,
+                    billing_address: { ...current.billing_address, country },
+                  }))
+                }
+              />
             </FieldGroup>
           </section>
           <section aria-labelledby="establishments-heading">

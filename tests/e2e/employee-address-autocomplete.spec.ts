@@ -96,7 +96,7 @@ test("keeps a growing address suggestion list anchored and scrollable", async ({
   await positionPostalCode(postalCode, 180);
   const list = page.getByRole("listbox");
   const popup = page.locator(
-    "[data-slot=employee-autocomplete-popover-content]"
+    "[data-slot=address-autocomplete-popover-content]"
   );
   await postalCode.fill("421");
   await expect(list.getByRole("option")).toHaveCount(1);
@@ -142,4 +142,52 @@ test("keeps a suggestion selectable when the attribution exceeds the available h
   await expect(attribution).toBeInViewport();
   await list.getByRole("option", { name: /Wuppertal/ }).click();
   await expect(page.locator("#address_city")).toHaveValue("Wuppertal");
+});
+
+test("shows the country list directly below the search field", async ({
+  page,
+}) => {
+  await page.getByRole("combobox", { name: "Country" }).click();
+  const popup = page.locator("[data-slot=address-command-popover-content]");
+  const status = popup.getByRole("status");
+  await expect(
+    popup.getByRole("option", { name: "Germany", exact: true })
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(status).toBeEmpty();
+  await expect
+    .poll(() => status.evaluate((node) => node.getBoundingClientRect().height))
+    .toBe(0);
+
+  await popup
+    .getByRole("combobox", { name: /search or select country/i })
+    .fill("zzzz");
+  await expect(status).toHaveText("No results found");
+  await expect(status).toBeVisible();
+});
+
+test("keeps the country search and options inside a short viewport", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 240 });
+  const country = page.getByRole("combobox", { name: "Country", exact: true });
+  await country.evaluate((element) =>
+    element.scrollIntoView({ block: "center" })
+  );
+  await country.click();
+  const popup = page.locator("[data-slot=address-command-popover-content]");
+  await expect
+    .poll(() =>
+      popup.evaluate((element) => {
+        const { top, bottom } = element.getBoundingClientRect();
+        return top >= -1 && bottom <= innerHeight + 1;
+      })
+    )
+    .toBe(true);
+  const search = popup.getByRole("combobox", {
+    name: /search or select country/i,
+  });
+  await search.fill("FR");
+  await search.press("ArrowDown");
+  await search.press("Enter");
+  await expect(country).toHaveText("France");
 });

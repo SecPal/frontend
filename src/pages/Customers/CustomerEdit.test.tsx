@@ -36,7 +36,8 @@ const customer: Customer = {
   legal_entity_id: "legal-1",
   name: "ACME GmbH",
   billing_address: {
-    street: "Street 1",
+    street: "Street",
+    house_number: "1",
     postal_code: "10115",
     city: "Berlin",
     country: "DE",
@@ -122,6 +123,12 @@ describe("CustomerEdit", () => {
   });
 
   it("loads the complete customer snapshot into the edit form", async () => {
+    vi.mocked(customersApi.getCustomerEditSnapshot).mockResolvedValueOnce(
+      snapshot({
+        ...customer,
+        billing_address: { ...customer.billing_address, country: "AX" },
+      })
+    );
     renderPage();
 
     expect(
@@ -130,6 +137,11 @@ describe("CustomerEdit", () => {
     expect(screen.getByRole("textbox", { name: /local email 1/i })).toHaveValue(
       "local@secpal.dev"
     );
+    expect(screen.getByLabelText(/street/i)).toHaveValue("Street");
+    expect(screen.getByLabelText(/house number/i)).toHaveValue("1");
+    expect(
+      screen.getByRole("combobox", { name: /country/i })
+    ).toHaveTextContent("AX");
     expect(customersApi.getCustomerEditSnapshot).toHaveBeenCalledWith(
       "customer-1"
     );
@@ -318,6 +330,8 @@ describe("CustomerEdit", () => {
       legal_entity_id: "legal-2",
       billing_address: {
         ...originalCustomer.billing_address,
+        street: "Renamed Street",
+        house_number: "1",
         city: "Munich",
       },
       customer_establishments: [
@@ -361,6 +375,9 @@ describe("CustomerEdit", () => {
     const name = await screen.findByLabelText(/customer name/i);
     await user.clear(name);
     await user.type(name, "My Intended Customer Name");
+    const houseNumber = screen.getByLabelText(/house number/i);
+    await user.clear(houseNumber);
+    await user.type(houseNumber, "12a");
     await user.selectOptions(
       screen.getByRole("combobox", { name: /^establishment 2/i }),
       "est-4"
@@ -469,7 +486,11 @@ describe("CustomerEdit", () => {
       expect.objectContaining({
         customer: expect.objectContaining({
           name: "My Intended Customer Name",
-          billing_address: expect.objectContaining({ city: "Munich" }),
+          billing_address: expect.objectContaining({
+            city: "Munich",
+            street: "Renamed Street",
+            house_number: "12a",
+          }),
         }),
         customer_establishments: [
           expect.objectContaining({

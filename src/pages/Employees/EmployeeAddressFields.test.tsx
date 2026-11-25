@@ -1424,11 +1424,11 @@ describe("EmployeeAddressFields", () => {
     // The hidden country input must also be disabled in read-only mode so
     // its value is excluded from FormData serialization, matching the
     // behavior of the visible disabled controls.
-    const hiddenCountryInput = container.querySelector<HTMLInputElement>(
-      "input[type='hidden'][name='address_country']"
+    const countryInput = container.querySelector<HTMLInputElement>(
+      "input[name='address_country']"
     );
-    expect(hiddenCountryInput).not.toBeNull();
-    expect(hiddenCountryInput).toBeDisabled();
+    expect(countryInput).not.toBeNull();
+    expect(countryInput).toBeDisabled();
   });
 
   it("shows no suggestions and empty state after clearing street below 2 chars", async () => {
