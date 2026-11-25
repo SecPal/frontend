@@ -6,14 +6,12 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 # SecPal/frontend Agent Instructions
 
 This file is the authoritative, provider-neutral runtime baseline for this repository.
-Edit this file first. Keep the focused overlay files below aligned when a rule
-also needs path-specific or stack-specific enforcement.
+Use the applicable focused instructions for stack- and path-specific rules.
 
 ## Focused Overlays
 
-- `.github/instructions/org-shared.instructions.md`
-- `.github/instructions/react-typescript.instructions.md`
-- `.github/instructions/github-workflows.instructions.md`
+- [React and TypeScript](.github/instructions/react-typescript.instructions.md)
+- [GitHub workflows and Dependabot](.github/instructions/github-workflows.instructions.md)
 
 ## Core Runtime Baseline
 
@@ -40,12 +38,10 @@ Do not assume instructions from sibling repositories or comment-based inheritanc
 
 ## Always-On Rules
 
-- Run `git status --short --branch` before any write action. For new work,
-  start from a clean, up-to-date local `main`: switch to `main`, pull with
-  fast-forward only, verify a clean state, then create the dedicated topic
-  branch. When continuing existing work in a dirty worktree, first identify the
-  existing changes, keep the current topic scope, and never overwrite changes
-  you did not make.
+- Inspect `git status --short --branch` before writing. Use the worktree
+  assigned to the Herdr task. Start new tasks from the protected GitHub
+  baseline using the [workspace workflow](https://github.com/SecPal/.github/blob/main/WORKSPACE_SETUP.md).
+  Preserve existing work and the assigned branch.
 - Quality first. Do not trade correctness, review depth, validation depth, or issue tracking for speed.
 - Keep one delivery contract per change, pull request, and branch. Do not mix unrelated fixes,
   features, refactors, docs, or governance cleanup.
@@ -68,12 +64,11 @@ Do not assume instructions from sibling repositories or comment-based inheritanc
 
 ## Licensing, REUSE, and Branding
 
-- Use `AGPL-3.0-or-later` for SecPal-owned agent-governance material,
-  application code, and tests wherever it is declared by `REUSE.toml` or
-  file-level SPDX metadata.
-- Preserve deliberately different licenses, including `CC0-1.0`, `MIT`,
-  `Apache-2.0`, third-party and generated-file licenses, and unrelated custom
-  license references. Do not rewrite third-party copyright or license metadata.
+- Use `AGPL-3.0-or-later` for
+  SecPal-owned material where declared. Preserve deliberately different
+  licenses, including `CC0-1.0`, `MIT`, `Apache-2.0`, third-party and
+  generated-file licenses, and unrelated custom license references.
+  Preserve third-party copyright and license metadata.
 - Use `SecPal Contributors` where the project copyright convention applies.
   Preserve each file's first-publication year and extend its year range through
   the current year when an edited file requires a copyright-year update.
@@ -200,66 +195,3 @@ At minimum verify:
   acceptable when they remove insecure or obsolete compatibility layers. When
   taking that route, update tests and `CHANGELOG.md` in the same change set
   instead of keeping a legacy path alive by default.
-
-## Additional Rules: org-shared.instructions.md
-
-This file applies repository-specific guidance to all files in this repo.
-
-- `AGENTS.md` is the authoritative runtime baseline for this repo.
-  `.github/copilot-instructions.md` is only a compatibility mirror.
-- Use GitHub pull requests, review threads, checks, and merge protections.
-- Design discipline is always-on: DRY, KISS, YAGNI, SOLID, and fail fast.
-- GitHub communication stays in English and uses file and line references instead of large verbatim code quotes.
-- Do not add AI self-references, generated-by text, tool promotion, or AI
-  attribution unless the task explicitly requires documenting AI tooling.
-- Keep changes repo-local, minimal, and consistent with React, strict TypeScript, and generated API type conventions.
-- Apply the SecPal domain policy from the repository baseline.
-- Observable changes need failing-first behavior evidence; behavior-preserving
-  changes may use existing tests, characterization, or structural evidence.
-- Apply the baseline licensing and REUSE rules: plain `AGPL-3.0-or-later` for
-  SecPal-owned material where declared. Preserve deliberately different
-  licenses and third-party metadata, use `SecPal Contributors` where the
-  project convention applies, retain and extend first-publication years when
-  required, and run relevant license validation after metadata changes.
-- Preserve `Powered by SecPal – A guard's best friend` on official user-facing
-  SecPal surfaces where intentionally present. Licensing work must not weaken
-  or make this branding optional, add `Based on SecPal` guidance, or introduce
-  white-label or fork-branding configuration.
-
-## Additional Rules: react-typescript.instructions.md
-
-- Keep components presentational where possible and move reusable logic into hooks or API clients.
-- Use functional components, named exports, and explicit props interfaces.
-- Preserve strict TypeScript and generated API types from `@/types/api`.
-- Test user-visible behavior with Testing Library. Prefer MSW for API boundaries.
-- Run the smallest relevant validation for each change: tests, typecheck, and lint.
-- Maintain accessibility, semantic markup, and responsive behavior.
-- Default boolean security flags (e.g. `emailVerified`) to `false` in sanitization layers; never leave them
-  `undefined` on authenticated state.
-- Do not persist auth state or other sensitive user-derived data via direct
-  cleartext `localStorage`/`sessionStorage` writes. Use the approved storage
-  abstraction in runtime code, and in tests seed authenticated state through
-  `authStorage.setUser()` or a real current-format encrypted envelope.
-- Scope `role="status"` and `aria-live` to the exact dynamic content region, not to wider containers that
-  also hold headings or interactive controls.
-- For AI-suggested async fixes, prove ordering with tests; when cleanup must happen after an awaited call settles,
-  prefer `try/finally` over early local-state clearing.
-- Keep plain-text-only HTML contexts such as `<option>` children free of wrapper components; use translated strings,
-  not `<Trans>` or other element-producing helpers.
-- Keep load, action, and destructive-flow error state separate when they drive different UI branches.
-- Because the SecPal project is still under `1.x`, do not preserve obsolete
-  compatibility shims by default. If a legacy storage format, input alias, or
-  deprecated frontend contract has no proven live caller, prefer removing it
-  and updating tests and changelog coverage in the same change.
-
-## Additional Rules: github-workflows.instructions.md
-
-- Always set `timeout-minutes` on every job.
-- Set explicit `permissions` on every workflow and start with the least privilege needed.
-- Pin every `uses:` reference, including GitHub-maintained actions and organization reusable workflows,
-  to a full 40-character commit SHA. Preserve the reviewed version or branch in a nearby comment for
-  update visibility.
-- Use reusable workflows from the organization templates when they fit the task.
-- Use `continue-on-error: true` only for intentional polling or wait steps, never for build or test steps.
-- Reference secrets via `${{ secrets.NAME }}` and vars via `${{ vars.NAME }}`. Never hardcode or echo secrets.
-- Run `yamllint` on workflow changes before finalizing.
