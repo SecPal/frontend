@@ -32,16 +32,46 @@ import { AddressDataAttribution } from "@/components/AddressDataAttribution";
 import type { AddressReferenceMeta } from "@/types/api";
 
 interface SuggestionRequestState {
+  queryKey: string;
   loading: boolean;
   error: string | null;
   hasResolved: boolean;
 }
 
-const idleSuggestionRequestState: SuggestionRequestState = {
-  loading: false,
-  error: null,
-  hasResolved: false,
-};
+function AddressSuggestionFeedback({
+  state,
+  hasSuggestions,
+  attribution,
+  attributionId,
+}: {
+  state?: SuggestionRequestState;
+  hasSuggestions: boolean;
+  attribution: AddressReferenceMeta | null;
+  attributionId: string;
+}) {
+  return (
+    <>
+      <div role="status">
+        {!state || state.loading ? (
+          <Description className="sr-only">
+            <Trans>Loading...</Trans>
+          </Description>
+        ) : state.error ? (
+          <ErrorMessage className="px-3 py-2">{state.error}</ErrorMessage>
+        ) : !hasSuggestions ? (
+          <Description className="px-3 py-2">
+            <Trans>No address suggestions found.</Trans>
+          </Description>
+        ) : null}
+      </div>
+      {attribution ? (
+        <div className="border-border border-t px-3 py-2">
+          <AddressDataAttribution id={attributionId} meta={attribution} />
+        </div>
+      ) : null}
+    </>
+  );
+}
 
 function localitySuggestionValue(suggestion: AddressLocalitySuggestion) {
   return JSON.stringify([suggestion.postal_code, suggestion.locality]);
@@ -84,16 +114,14 @@ export function EmployeeAddressFields({
   const [localitySuggestions, setLocalitySuggestions] = useState<
     AddressLocalitySuggestion[]
   >([]);
-  const [streetRequestState, setStreetRequestState] =
-    useState<SuggestionRequestState>(idleSuggestionRequestState);
-  const [localityRequestState, setLocalityRequestState] =
-    useState<SuggestionRequestState>(idleSuggestionRequestState);
+  const [streetRequest, setStreetRequest] =
+    useState<SuggestionRequestState | null>(null);
+  const [localityRequest, setLocalityRequest] =
+    useState<SuggestionRequestState | null>(null);
 
   const [attribution, setAttribution] = useState<AddressReferenceMeta | null>(
     null
   );
-  const attributionId = `${fieldIdPrefix}-attribution`;
-
   const postalCodeInputRef = useRef<HTMLInputElement>(null);
   const cityInputRef = useRef<HTMLInputElement>(null);
   const streetInputRef = useRef<HTMLInputElement>(null);
@@ -103,8 +131,40 @@ export function EmployeeAddressFields({
   const blurHideSuggestionsTimeoutRef = useRef<number | null>(null);
 
   const normalizedCountry = draft.country.trim().toUpperCase();
-  const autocompleteEnabled =
+  const usesGermanAddressLookup =
     normalizedCountry === "" || normalizedCountry === "DE";
+  const autocompleteEnabled = !readOnly && usesGermanAddressLookup;
+  const postalCode = draft.postalCode.trim();
+  const postalCodeQuery = /^[0-9]{1,5}$/.test(postalCode)
+    ? postalCode
+    : undefined;
+  const locality = draft.city.trim();
+  const localityQuery =
+    locality.length >= 2 && locality.length <= 100 ? locality : undefined;
+  const streetQuery = draft.street.trim();
+  const searchFromStreet =
+    autocompleteEnabled && focusedField === "street" && streetQuery.length >= 2;
+  const searchFromPostalCode =
+    autocompleteEnabled &&
+    focusedField === "postalCode" &&
+    postalCodeQuery !== undefined;
+  const searchFromCity =
+    autocompleteEnabled &&
+    focusedField === "city" &&
+    localityQuery !== undefined;
+  const searchLocalities = searchFromPostalCode || searchFromCity;
+  const streetQueryKey = JSON.stringify([
+    streetQuery,
+    postalCodeQuery,
+    localityQuery,
+  ]);
+  const streetRequestState =
+    streetRequest?.queryKey === streetQueryKey ? streetRequest : undefined;
+  const localityQueryKey = JSON.stringify([postalCodeQuery, localityQuery]);
+  const localityRequestState =
+    localityRequest?.queryKey === localityQueryKey
+      ? localityRequest
+      : undefined;
 
   const countryOptions = useMemo(
     () => getCountrySelectOptions(i18n.locale),
@@ -142,7 +202,8 @@ export function EmployeeAddressFields({
     (suffix: string) => `${fieldNamePrefix}_${suffix}`,
     [fieldNamePrefix]
   );
-  const localityListboxId = `${fieldIdPrefix}-locality-listbox`;
+  const postalListboxId = `${fieldIdPrefix}-postal-listbox`;
+  const cityListboxId = `${fieldIdPrefix}-city-listbox`;
   const streetListboxId = `${fieldIdPrefix}-street-listbox`;
 
   const getAutocompleteErrorMessage = useCallback(
@@ -167,14 +228,10 @@ export function EmployeeAddressFields({
   );
 
   useEffect(() => {
-    if (
-      !autocompleteEnabled ||
-      focusedField !== "street" ||
-      draft.street.trim().length < 2
-    ) {
+    if (!searchFromStreet) {
       const timeoutId = window.setTimeout(() => {
         setStreetSuggestions([]);
-        setStreetRequestState(idleSuggestionRequestState);
+        setStreetRequest(null);
       }, 0);
 
       return () => window.clearTimeout(timeoutId);
@@ -183,16 +240,17 @@ export function EmployeeAddressFields({
     let cancelled = false;
 
     const timeoutId = window.setTimeout(() => {
-      setStreetRequestState({
+      setStreetRequest({
+        queryKey: streetQueryKey,
         loading: true,
         error: null,
         hasResolved: false,
       });
 
       void fetchAddressStreetSuggestions({
-        name: draft.street.trim(),
-        postalCode: draft.postalCode.trim() || undefined,
-        locality: draft.city.trim() || undefined,
+        name: streetQuery,
+        postalCode: postalCodeQuery,
+        locality: localityQuery,
         limit: 8,
       })
         .then((result) => {
@@ -202,7 +260,8 @@ export function EmployeeAddressFields({
 
           setStreetSuggestions(result.data);
           setAttribution(result.meta);
-          setStreetRequestState({
+          setStreetRequest({
+            queryKey: streetQueryKey,
             loading: false,
             error: null,
             hasResolved: true,
@@ -214,7 +273,8 @@ export function EmployeeAddressFields({
           }
 
           setStreetSuggestions([]);
-          setStreetRequestState({
+          setStreetRequest({
+            queryKey: streetQueryKey,
             loading: false,
             error: getAutocompleteErrorMessage(error),
             hasResolved: true,
@@ -227,26 +287,19 @@ export function EmployeeAddressFields({
       window.clearTimeout(timeoutId);
     };
   }, [
-    autocompleteEnabled,
-    focusedField,
-    draft.city,
-    draft.postalCode,
-    draft.street,
     getAutocompleteErrorMessage,
+    localityQuery,
+    postalCodeQuery,
+    searchFromStreet,
+    streetQuery,
+    streetQueryKey,
   ]);
 
   useEffect(() => {
-    const postalCodeQuery = draft.postalCode.trim();
-    const localityQuery = draft.city.trim();
-
-    if (
-      !autocompleteEnabled ||
-      (focusedField !== "postalCode" && focusedField !== "city") ||
-      (postalCodeQuery.length < 1 && localityQuery.length < 2)
-    ) {
+    if (!searchLocalities) {
       const timeoutId = window.setTimeout(() => {
         setLocalitySuggestions([]);
-        setLocalityRequestState(idleSuggestionRequestState);
+        setLocalityRequest(null);
       }, 0);
 
       return () => window.clearTimeout(timeoutId);
@@ -255,15 +308,16 @@ export function EmployeeAddressFields({
     let cancelled = false;
 
     const timeoutId = window.setTimeout(() => {
-      setLocalityRequestState({
+      setLocalityRequest({
+        queryKey: localityQueryKey,
         loading: true,
         error: null,
         hasResolved: false,
       });
 
       void fetchAddressLocalitySuggestions({
-        postalCode: postalCodeQuery || undefined,
-        locality: localityQuery || undefined,
+        postalCode: postalCodeQuery,
+        locality: localityQuery,
         limit: 8,
       })
         .then((result) => {
@@ -273,7 +327,8 @@ export function EmployeeAddressFields({
 
           setLocalitySuggestions(result.data);
           setAttribution(result.meta);
-          setLocalityRequestState({
+          setLocalityRequest({
+            queryKey: localityQueryKey,
             loading: false,
             error: null,
             hasResolved: true,
@@ -285,7 +340,8 @@ export function EmployeeAddressFields({
           }
 
           setLocalitySuggestions([]);
-          setLocalityRequestState({
+          setLocalityRequest({
+            queryKey: localityQueryKey,
             loading: false,
             error: getAutocompleteErrorMessage(error),
             hasResolved: true,
@@ -298,11 +354,11 @@ export function EmployeeAddressFields({
       window.clearTimeout(timeoutId);
     };
   }, [
-    autocompleteEnabled,
-    draft.city,
-    draft.postalCode,
-    focusedField,
     getAutocompleteErrorMessage,
+    localityQuery,
+    localityQueryKey,
+    postalCodeQuery,
+    searchLocalities,
   ]);
 
   useEffect(() => {
@@ -348,6 +404,8 @@ export function EmployeeAddressFields({
   }
 
   function applyStreetSuggestion(name: string) {
+    if (!streetSuggestionsAreCurrent) return;
+
     const matches = streetSuggestions.filter(
       (suggestion) => suggestion.name === name
     );
@@ -366,6 +424,8 @@ export function EmployeeAddressFields({
   }
 
   function applyPostalSuggestion(postalCode: string) {
+    if (!localitySuggestionsAreCurrent) return;
+
     const matches = localitySuggestions.filter(
       (suggestion) => suggestion.postal_code === postalCode
     );
@@ -383,6 +443,8 @@ export function EmployeeAddressFields({
   }
 
   function applyCitySuggestion(locality: string) {
+    if (!localitySuggestionsAreCurrent) return;
+
     const matches = localitySuggestions.filter(
       (suggestion) => suggestion.locality === locality
     );
@@ -406,45 +468,31 @@ export function EmployeeAddressFields({
     setFocusedField(null);
   }
 
-  function selectLocalitySuggestion(suggestion: AddressLocalitySuggestion) {
+  function selectLocalitySuggestion(value: string | null) {
+    if (!localitySuggestionsAreCurrent) return;
+    const suggestion = localitySuggestions.find(
+      (candidate) => localitySuggestionValue(candidate) === value
+    );
+    if (!suggestion) return;
+
     onChange("postalCode", suggestion.postal_code);
     onChange("city", suggestion.locality);
     setFocusedField(null);
-  }
-
-  const showStreetSuggestions =
-    autocompleteEnabled &&
-    focusedField === "street" &&
-    streetSuggestions.length > 0 &&
-    draft.street.trim().length >= 2;
-  const showPostalSuggestions =
-    autocompleteEnabled &&
-    focusedField === "postalCode" &&
-    localitySuggestions.length > 0 &&
-    draft.postalCode.trim().length >= 1;
-  const showCitySuggestions =
-    autocompleteEnabled &&
-    focusedField === "city" &&
-    localitySuggestions.length > 0 &&
-    draft.city.trim().length >= 2;
-  const showStreetFeedback =
-    autocompleteEnabled &&
-    focusedField === "street" &&
-    draft.street.trim().length >= 2;
-  const showPostalFeedback =
-    autocompleteEnabled &&
-    focusedField === "postalCode" &&
-    draft.postalCode.trim().length >= 1;
-  const showCityFeedback =
-    autocompleteEnabled &&
-    focusedField === "city" &&
-    draft.city.trim().length >= 2;
-
-  function focusNextFieldAfterLocalitySelect() {
     window.requestAnimationFrame(() => {
       streetInputRef.current?.focus();
     });
   }
+
+  const streetSuggestionsAreCurrent = streetRequestState?.hasResolved === true;
+  const showStreetPopup =
+    searchFromStreet &&
+    (streetSuggestionsAreCurrent || streetSuggestions.length > 0);
+  const localitySuggestionsAreCurrent =
+    localityRequestState?.hasResolved === true;
+  const showLocalityPopup =
+    localitySuggestionsAreCurrent || localitySuggestions.length > 0;
+  const showPostalPopup = searchFromPostalCode && showLocalityPopup;
+  const showCityPopup = searchFromCity && showLocalityPopup;
 
   function focusNextFieldAfterStreetSelect() {
     window.requestAnimationFrame(() => {
@@ -452,20 +500,45 @@ export function EmployeeAddressFields({
     });
   }
 
-  function describedBy(
-    field: keyof PostalAddressDraft,
-    includeAttribution = false
-  ) {
+  function describedBy(field: keyof PostalAddressDraft, listboxId?: string) {
     return (
       [
         fieldDescriptions[field],
-        includeAttribution && autocompleteEnabled && attribution
-          ? attributionId
-          : undefined,
+        listboxId && attribution ? `${listboxId}-attribution` : undefined,
       ]
         .filter(Boolean)
         .join(" ") || undefined
     );
+  }
+
+  function localityPopupFeedback(listboxId: string) {
+    return (
+      <AddressSuggestionFeedback
+        state={localityRequestState}
+        hasSuggestions={localitySuggestions.length > 0}
+        attribution={attribution}
+        attributionId={`${listboxId}-attribution`}
+      />
+    );
+  }
+
+  function localityOptions(primary: "postal_code" | "locality") {
+    const secondary = primary === "postal_code" ? "locality" : "postal_code";
+    return localitySuggestions.map((suggestion) => {
+      const value = localitySuggestionValue(suggestion);
+      return (
+        <AutocompleteOption
+          key={value}
+          value={value}
+          disabled={!localitySuggestionsAreCurrent}
+        >
+          <span className="block font-medium">{suggestion[primary]}</span>
+          <span className="text-muted-foreground block">
+            {suggestion[secondary]}
+          </span>
+        </AutocompleteOption>
+      );
+    });
   }
 
   return (
@@ -474,87 +547,55 @@ export function EmployeeAddressFields({
         <Label htmlFor={fieldId("postal_code")}>
           <Trans>Postal Code</Trans>
         </Label>
-        <div className="space-y-1">
-          <AutocompleteListbox
-            open={showPostalSuggestions}
-            onOpenChange={(open) => {
-              if (!open) {
-                setFocusedField(null);
-              }
-            }}
-            onValueChange={(value) => {
-              const suggestion = localitySuggestions.find(
-                (candidate) => localitySuggestionValue(candidate) === value
+        <AutocompleteListbox
+          open={showPostalPopup}
+          onOpenChange={(open) => {
+            if (!open) {
+              setFocusedField((field) =>
+                field === "postalCode" ? null : field
               );
-              if (suggestion) {
-                selectLocalitySuggestion(suggestion);
-                focusNextFieldAfterLocalitySelect();
-              }
-            }}
-            listboxId={localityListboxId}
-            anchor={
-              <Input
-                ref={postalCodeInputRef}
-                id={fieldId("postal_code")}
-                name={fieldName("postal_code")}
-                aria-invalid={invalidFields.postalCode || undefined}
-                autoComplete="postal-code"
-                disabled={readOnly}
-                role="combobox"
-                aria-autocomplete="list"
-                aria-describedby={describedBy("postalCode", true)}
-                aria-expanded={showPostalSuggestions}
-                aria-controls={localityListboxId}
-                value={draft.postalCode}
-                onFocus={() => handleAutocompleteFocus("postalCode")}
-                onBlur={handleAutocompleteInputBlur}
-                onChange={(event) => {
-                  const nextValue = event.target.value;
-                  onChange("postalCode", nextValue);
-                  applyPostalSuggestion(nextValue);
-                }}
-              />
             }
-          >
-            {showPostalSuggestions
-              ? localitySuggestions.map((suggestion) => (
-                  <AutocompleteOption
-                    key={`${suggestion.postal_code}-${suggestion.locality}`}
-                    value={localitySuggestionValue(suggestion)}
-                  >
-                    <span className="block font-medium">
-                      {suggestion.postal_code}
-                    </span>
-                    <span className="text-muted-foreground block">
-                      {suggestion.locality}
-                    </span>
-                  </AutocompleteOption>
-                ))
-              : null}
-          </AutocompleteListbox>
-          {autocompleteEnabled && attribution ? (
-            <AddressDataAttribution id={attributionId} meta={attribution} />
-          ) : null}
-        </div>
-        {showPostalFeedback && localityRequestState.loading ? (
-          <Description>
-            <Trans>Loading...</Trans>
-          </Description>
-        ) : null}
-        {showPostalFeedback &&
-        !localityRequestState.loading &&
-        localityRequestState.error ? (
-          <ErrorMessage>{localityRequestState.error}</ErrorMessage>
-        ) : null}
-        {showPostalFeedback &&
-        !localityRequestState.loading &&
-        !localityRequestState.error &&
-        localityRequestState.hasResolved &&
-        localitySuggestions.length === 0 ? (
-          <Description>
-            <Trans>No address suggestions found.</Trans>
-          </Description>
-        ) : null}
+          }}
+          onValueChange={selectLocalitySuggestion}
+          listboxId={postalListboxId}
+          footer={
+            showPostalPopup ? localityPopupFeedback(postalListboxId) : null
+          }
+          anchor={
+            <Input
+              ref={postalCodeInputRef}
+              id={fieldId("postal_code")}
+              name={fieldName("postal_code")}
+              aria-busy={
+                (searchFromPostalCode && localityRequestState?.loading) ||
+                undefined
+              }
+              aria-invalid={invalidFields.postalCode || undefined}
+              autoComplete="postal-code"
+              inputMode={usesGermanAddressLookup ? "numeric" : undefined}
+              disabled={readOnly}
+              role="combobox"
+              aria-autocomplete="list"
+              aria-describedby={describedBy(
+                "postalCode",
+                showPostalPopup ? postalListboxId : undefined
+              )}
+              aria-expanded={showPostalPopup}
+              aria-controls={postalListboxId}
+              value={draft.postalCode}
+              onFocus={() => handleAutocompleteFocus("postalCode")}
+              onBlur={handleAutocompleteInputBlur}
+              onChange={(event) => {
+                const nextValue = event.target.value;
+                handleAutocompleteFocus("postalCode");
+                onChange("postalCode", nextValue);
+                applyPostalSuggestion(nextValue);
+              }}
+            />
+          }
+        >
+          {showPostalPopup ? localityOptions("postal_code") : null}
+        </AutocompleteListbox>
       </Field>
 
       <Field>
@@ -562,81 +603,48 @@ export function EmployeeAddressFields({
           <Trans>City</Trans>
         </Label>
         <AutocompleteListbox
-          open={showCitySuggestions}
+          open={showCityPopup}
           onOpenChange={(open) => {
             if (!open) {
-              setFocusedField(null);
+              setFocusedField((field) => (field === "city" ? null : field));
             }
           }}
-          onValueChange={(value) => {
-            const suggestion = localitySuggestions.find(
-              (candidate) => localitySuggestionValue(candidate) === value
-            );
-            if (suggestion) {
-              selectLocalitySuggestion(suggestion);
-              focusNextFieldAfterLocalitySelect();
-            }
-          }}
-          listboxId={localityListboxId}
+          onValueChange={selectLocalitySuggestion}
+          listboxId={cityListboxId}
+          footer={showCityPopup ? localityPopupFeedback(cityListboxId) : null}
           anchor={
             <Input
               ref={cityInputRef}
               id={fieldId("city")}
               name={fieldName("city")}
+              aria-busy={
+                (searchFromCity && localityRequestState?.loading) || undefined
+              }
               aria-invalid={invalidFields.city || undefined}
               autoComplete="address-level2"
               disabled={readOnly}
               role="combobox"
               aria-autocomplete="list"
-              aria-describedby={describedBy("city", true)}
-              aria-expanded={showCitySuggestions}
-              aria-controls={localityListboxId}
+              aria-describedby={describedBy(
+                "city",
+                showCityPopup ? cityListboxId : undefined
+              )}
+              aria-expanded={showCityPopup}
+              aria-controls={cityListboxId}
               value={draft.city}
               onFocus={() => handleAutocompleteFocus("city")}
               onBlur={handleAutocompleteInputBlur}
               onChange={(event) => {
                 const nextValue = event.target.value;
+                handleAutocompleteFocus("city");
                 onChange("city", nextValue);
                 applyCitySuggestion(nextValue);
               }}
             />
           }
         >
-          {showCitySuggestions
-            ? localitySuggestions.map((suggestion) => (
-                <AutocompleteOption
-                  key={`${suggestion.locality}-${suggestion.postal_code}`}
-                  value={localitySuggestionValue(suggestion)}
-                >
-                  <span className="block font-medium">
-                    {suggestion.locality}
-                  </span>
-                  <span className="text-muted-foreground block">
-                    {suggestion.postal_code}
-                  </span>
-                </AutocompleteOption>
-              ))
-            : null}
+          {showCityPopup ? localityOptions("locality") : null}
         </AutocompleteListbox>
-        {showCityFeedback && localityRequestState.loading ? (
-          <Description>
-            <Trans>Loading...</Trans>
-          </Description>
-        ) : null}
-        {showCityFeedback &&
-        !localityRequestState.loading &&
-        localityRequestState.error ? (
-          <ErrorMessage>{localityRequestState.error}</ErrorMessage>
-        ) : null}
-        {showCityFeedback &&
-        !localityRequestState.loading &&
-        !localityRequestState.error &&
-        localityRequestState.hasResolved &&
-        localitySuggestions.length === 0 ? (
-          <Description>
-            <Trans>No address suggestions found.</Trans>
-          </Description>
-        ) : null}
       </Field>
 
       <Field>
@@ -644,13 +652,14 @@ export function EmployeeAddressFields({
           <Trans>Street</Trans>
         </Label>
         <AutocompleteListbox
-          open={showStreetSuggestions}
+          open={showStreetPopup}
           onOpenChange={(open) => {
             if (!open) {
-              setFocusedField(null);
+              setFocusedField((field) => (field === "street" ? null : field));
             }
           }}
           onValueChange={(value) => {
+            if (!streetSuggestionsAreCurrent) return;
             const suggestion = streetSuggestions.find(
               (candidate) => streetSuggestionValue(candidate) === value
             );
@@ -660,35 +669,53 @@ export function EmployeeAddressFields({
             }
           }}
           listboxId={streetListboxId}
+          footer={
+            showStreetPopup ? (
+              <AddressSuggestionFeedback
+                state={streetRequestState}
+                hasSuggestions={streetSuggestions.length > 0}
+                attribution={attribution}
+                attributionId={`${streetListboxId}-attribution`}
+              />
+            ) : null
+          }
           anchor={
             <Input
               ref={streetInputRef}
               id={fieldId("street")}
               name={fieldName("street")}
+              aria-busy={
+                (searchFromStreet && streetRequestState?.loading) || undefined
+              }
               aria-invalid={invalidFields.street || undefined}
               autoComplete="street-address"
               disabled={readOnly}
               role="combobox"
               aria-autocomplete="list"
-              aria-describedby={describedBy("street", true)}
-              aria-expanded={showStreetSuggestions}
+              aria-describedby={describedBy(
+                "street",
+                showStreetPopup ? streetListboxId : undefined
+              )}
+              aria-expanded={showStreetPopup}
               aria-controls={streetListboxId}
               value={draft.street}
               onFocus={() => handleAutocompleteFocus("street")}
               onBlur={handleAutocompleteInputBlur}
               onChange={(event) => {
                 const nextValue = event.target.value;
+                handleAutocompleteFocus("street");
                 onChange("street", nextValue);
                 applyStreetSuggestion(nextValue);
               }}
             />
           }
         >
-          {showStreetSuggestions
+          {showStreetPopup
             ? streetSuggestions.map((suggestion) => (
                 <AutocompleteOption
                   key={`${suggestion.name}-${suggestion.postal_code}-${suggestion.locality}`}
                   value={streetSuggestionValue(suggestion)}
+                  disabled={!streetSuggestionsAreCurrent}
                 >
                   <span className="block font-medium">{suggestion.name}</span>
                   <span className="text-muted-foreground block">
@@ -698,25 +725,6 @@ export function EmployeeAddressFields({
               ))
             : null}
         </AutocompleteListbox>
-        {showStreetFeedback && streetRequestState.loading ? (
-          <Description>
-            <Trans>Loading...</Trans>
-          </Description>
-        ) : null}
-        {showStreetFeedback &&
-        !streetRequestState.loading &&
-        streetRequestState.error ? (
-          <ErrorMessage>{streetRequestState.error}</ErrorMessage>
-        ) : null}
-        {showStreetFeedback &&
-        !streetRequestState.loading &&
-        !streetRequestState.error &&
-        streetRequestState.hasResolved &&
-        streetSuggestions.length === 0 ? (
-          <Description>
-            <Trans>No address suggestions found.</Trans>
-          </Description>
-        ) : null}
       </Field>
 
       <Field>

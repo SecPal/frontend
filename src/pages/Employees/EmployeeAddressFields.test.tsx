@@ -96,7 +96,7 @@ describe("EmployeeAddressFields", () => {
             draft={{
               street: "Gr",
               houseNumber: "",
-              postalCode: "131",
+              postalCode: "13156",
               city: "Be",
               supplement: "",
               country: "DE",
@@ -118,10 +118,6 @@ describe("EmployeeAddressFields", () => {
       expect(input).toHaveAccessibleDescription(
         expect.stringContaining("OpenStreetMap")
       );
-      fireEvent.keyDown(input, { key: "Escape" });
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(150);
-      });
       const notice = screen.getByRole("note", {
         name: "Address data attribution",
       });
@@ -132,18 +128,8 @@ describe("EmployeeAddressFields", () => {
       expect(notice).toHaveTextContent(
         /^Address data: OpenPLZ \/ OpenPotato · © OpenStreetMap contributors · ODbL-1\.0$/
       );
-      expect(
-        screen
-          .getByRole("combobox", { name: "Postal Code" })
-          .closest('[data-slot="field"]')
-      ).toContainElement(notice);
-      expect(
-        notice.compareDocumentPosition(
-          screen.getByRole("combobox", { name: "City" })
-        ) & Node.DOCUMENT_POSITION_FOLLOWING
-      ).toBeTruthy();
-      expect(input).toHaveAccessibleDescription(
-        expect.stringContaining("OpenStreetMap")
+      expect(screen.getByRole("listbox").parentElement).toContainElement(
+        notice
       );
       expect(
         within(notice).getByRole("link", {
@@ -169,13 +155,12 @@ describe("EmployeeAddressFields", () => {
         "leading-5",
         "text-muted-foreground"
       );
-      fireEvent.blur(input);
-      act(() => license.focus());
+      fireEvent.keyDown(input, { key: "Escape" });
       await act(async () => {
         await vi.advanceTimersByTimeAsync(150);
       });
-      expect(license).toHaveFocus();
-      expect(notice).toBeVisible();
+      expect(notice).not.toBeInTheDocument();
+      expect(input).not.toHaveAttribute("aria-describedby");
       expect(onChange).not.toHaveBeenCalled();
     }
   );
@@ -218,7 +203,7 @@ describe("EmployeeAddressFields", () => {
     ).toHaveAttribute("href", "https://www.openstreetmap.org/copyright");
   });
 
-  it("skips inline attribution links while tabbing through address fields and preserves street selection", async () => {
+  it("skips popup attribution links when tabbing and preserves street selection", async () => {
     vi.useRealTimers();
     const user = (await import("@testing-library/user-event")).default.setup();
     vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
@@ -253,15 +238,16 @@ describe("EmployeeAddressFields", () => {
     const street = screen.getByRole("combobox", { name: "Street" });
     await user.click(street);
     await screen.findByRole("option", { name: /Grabstraße/ });
-    await user.keyboard("{Escape}");
+    for (const link of within(screen.getByRole("note")).getAllByRole("link")) {
+      expect(link).toHaveAttribute("tabindex", "-1");
+    }
+    await user.tab();
+    expect(screen.getByLabelText("House Number")).toHaveFocus();
     await user.click(screen.getByRole("combobox", { name: "Postal Code" }));
     await user.tab();
     expect(screen.getByRole("combobox", { name: "City" })).toHaveFocus();
     await user.tab({ shift: true });
     expect(screen.getByRole("combobox", { name: "Postal Code" })).toHaveFocus();
-    for (const link of within(screen.getByRole("note")).getAllByRole("link")) {
-      expect(link).toHaveAttribute("tabindex", "-1");
-    }
     expect(onChange).not.toHaveBeenCalled();
     await user.click(street);
     await screen.findByRole("option", { name: /Grabstraße/ });
@@ -394,7 +380,7 @@ describe("EmployeeAddressFields", () => {
     expect(onChange).toHaveBeenCalledWith("city", "Berlin");
   });
 
-  it("fills city from a selected postal code suggestion", async () => {
+  it("fills city from a suggestion for a postal code prefix", async () => {
     const onChange = vi.fn();
     vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
       data: [],
@@ -513,7 +499,7 @@ describe("EmployeeAddressFields", () => {
           draft={{
             street: "",
             houseNumber: "",
-            postalCode: "42",
+            postalCode: "42103",
             city: "Wu",
             supplement: "",
             country: "DE",
@@ -667,7 +653,7 @@ describe("EmployeeAddressFields", () => {
     ).toBeInTheDocument();
   });
 
-  it("fills city and postal code from a city suggestion selection", async () => {
+  it("allows a city suggestion to correct a malformed postal code", async () => {
     const onChange = vi.fn();
     vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
       data: [],
@@ -684,7 +670,7 @@ describe("EmployeeAddressFields", () => {
           draft={{
             street: "",
             houseNumber: "",
-            postalCode: "",
+            postalCode: "421o",
             city: "Kö",
             supplement: "",
             country: "DE",
@@ -700,6 +686,11 @@ describe("EmployeeAddressFields", () => {
       await vi.advanceTimersByTimeAsync(250);
     });
 
+    expect(fetchAddressLocalitySuggestions).toHaveBeenCalledWith({
+      postalCode: undefined,
+      locality: "Kö",
+      limit: 8,
+    });
     expect(screen.getByRole("option", { name: /köln/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("option", { name: /köln/i }));
 
@@ -855,7 +846,7 @@ describe("EmployeeAddressFields", () => {
           draft={{
             street: "",
             houseNumber: "",
-            postalCode: "101",
+            postalCode: "10115",
             city: "",
             supplement: "",
             country: "DE",
@@ -987,7 +978,7 @@ describe("EmployeeAddressFields", () => {
     expect(onChange).not.toHaveBeenCalledWith("street", "Grabstraße");
   });
 
-  it("shows a loading indicator while fetching street suggestions", async () => {
+  it("waits for results before opening the street popup", async () => {
     const onChange = vi.fn();
     vi.mocked(fetchAddressStreetSuggestions).mockReturnValue(
       new Promise(() => {})
@@ -1013,16 +1004,82 @@ describe("EmployeeAddressFields", () => {
       </I18nProvider>
     );
 
-    fireEvent.focus(screen.getByLabelText(/street/i));
+    const street = screen.getByLabelText(/street/i);
+    fireEvent.focus(street);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(250);
     });
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(street).toHaveAttribute("aria-busy", "true");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
 
-  it("shows a loading indicator while fetching locality suggestions", async () => {
+  it.each(["click", "keyboard"] as const)(
+    "blocks stale street suggestions when using %s",
+    async (activation) => {
+      vi.mocked(fetchAddressStreetSuggestions)
+        .mockReturnValue(new Promise(() => {}))
+        .mockResolvedValueOnce({
+          data: [
+            {
+              name: "Hauptstraße",
+              postal_code: "10115",
+              locality: "Berlin",
+              borough: null,
+              suburb: null,
+              regional_key: null,
+            },
+          ],
+          meta: referenceMeta,
+        });
+      const onChange = vi.fn();
+      const addressForm = (street: string) => (
+        <I18nProvider i18n={i18n}>
+          <EmployeeAddressFields
+            draft={{
+              street,
+              houseNumber: "",
+              postalCode: "",
+              city: "",
+              supplement: "",
+              country: "DE",
+            }}
+            onChange={onChange}
+          />
+        </I18nProvider>
+      );
+      const { rerender } = render(addressForm("Hau"));
+      const street = screen.getByRole("combobox", { name: "Street" });
+      act(() => street.focus());
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
+      const previousOption = screen.getByRole("option", {
+        name: /Hauptstraße/,
+      });
+
+      rerender(addressForm("Mü"));
+      expect(previousOption).toBeInTheDocument();
+      expect(previousOption).toHaveAttribute("aria-disabled", "true");
+      if (activation === "click") {
+        fireEvent.click(previousOption);
+      } else {
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(250);
+        });
+        expect(street).toHaveAttribute("aria-busy", "true");
+        expect(previousOption).toHaveAttribute("aria-disabled", "true");
+        fireEvent.keyDown(street, { key: "ArrowDown" });
+        fireEvent.keyDown(street, { key: "Enter" });
+      }
+
+      expect(onChange).not.toHaveBeenCalled();
+      expect(street).toHaveValue("Mü");
+    }
+  );
+
+  it("waits for results before opening the locality popup", async () => {
     const onChange = vi.fn();
     vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
       data: [],
@@ -1038,7 +1095,7 @@ describe("EmployeeAddressFields", () => {
           draft={{
             street: "",
             houseNumber: "",
-            postalCode: "10",
+            postalCode: "10115",
             city: "",
             supplement: "",
             country: "DE",
@@ -1048,14 +1105,170 @@ describe("EmployeeAddressFields", () => {
       </I18nProvider>
     );
 
-    fireEvent.focus(screen.getByLabelText(/postal code/i));
+    const postalCode = screen.getByLabelText(/postal code/i);
+    fireEvent.focus(postalCode);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(250);
     });
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(postalCode).toHaveAttribute("aria-busy", "true");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
   });
+
+  it.each(["421o", "421091"])(
+    "skips the German postal lookup for %s",
+    async (postalCode) => {
+      vi.mocked(fetchAddressLocalitySuggestions).mockResolvedValue({
+        data: [],
+        meta: referenceMeta,
+      });
+      render(
+        <I18nProvider i18n={i18n}>
+          <EmployeeAddressFields
+            draft={{
+              street: "",
+              houseNumber: "",
+              postalCode,
+              city: "",
+              supplement: "",
+              country: "DE",
+            }}
+            onChange={vi.fn()}
+          />
+        </I18nProvider>
+      );
+      const input = screen.getByRole("combobox", { name: "Postal Code" });
+      act(() => input.focus());
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000);
+      });
+      expect(input).toHaveValue(postalCode);
+      expect(input).toHaveFocus();
+      expect(fetchAddressLocalitySuggestions).not.toHaveBeenCalled();
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    }
+  );
+
+  it.each([
+    ["Postal Code", "postalCode", "10115", "10116"],
+    ["City", "locality", "Ber", "Berx"],
+  ] as const)(
+    "keeps one suggestion popup while updating %s",
+    async (label, queryParam, query, nextQuery) => {
+      const initialDraft = {
+        street: "",
+        houseNumber: "",
+        postalCode: "",
+        city: "",
+        supplement: "",
+        country: "DE",
+      };
+      vi.mocked(fetchAddressLocalitySuggestions).mockImplementation(
+        ({ postalCode, locality }) =>
+          new Promise((resolve) => {
+            window.setTimeout(() => {
+              resolve({
+                data:
+                  (postalCode ?? locality) === query
+                    ? [{ postal_code: "10115", locality: "Berlin" }]
+                    : [],
+                meta: referenceMeta,
+              });
+            }, 500);
+          })
+      );
+
+      function AddressForm() {
+        const [draft, setDraft] = useState(initialDraft);
+        return (
+          <EmployeeAddressFields
+            draft={draft}
+            onChange={(field, value) =>
+              setDraft((current) => ({ ...current, [field]: value }))
+            }
+          />
+        );
+      }
+
+      render(
+        <I18nProvider i18n={i18n}>
+          <AddressForm />
+        </I18nProvider>
+      );
+
+      const input = screen.getByRole("combobox", { name: label });
+      expect(screen.queryByRole("note")).not.toBeInTheDocument();
+      act(() => input.focus());
+      fireEvent.change(input, { target: { value: query.slice(0, -1) } });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(200);
+      });
+      expect(fetchAddressLocalitySuggestions).not.toHaveBeenCalled();
+      expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+
+      let listbox: HTMLElement | undefined;
+      for (const value of [query, nextQuery]) {
+        fireEvent.change(input, { target: { value } });
+        if (listbox) {
+          expect(screen.getByRole("listbox")).toBe(listbox);
+          expect(screen.getByRole("option")).toHaveAttribute(
+            "aria-disabled",
+            "true"
+          );
+          expect(screen.getByText("Loading...")).toHaveClass("sr-only");
+        }
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(250);
+        });
+        expect(input).toHaveAttribute("aria-busy", "true");
+        if (!listbox) {
+          expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+          expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
+        }
+        expect(fetchAddressLocalitySuggestions).toHaveBeenLastCalledWith(
+          expect.objectContaining({ [queryParam]: value })
+        );
+
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(500);
+        });
+        listbox ??= screen.getByRole("listbox");
+        if (value === query) {
+          expect(screen.getByRole("option")).toHaveTextContent("Berlin");
+          expect(screen.getByRole("option")).not.toHaveAttribute(
+            "aria-disabled"
+          );
+        } else {
+          expect(screen.queryByRole("option")).not.toBeInTheDocument();
+          expect(screen.getByRole("status")).toHaveTextContent(
+            "No address suggestions found."
+          );
+        }
+        expect(screen.getByRole("listbox")).toBe(listbox);
+        expect(
+          within(listbox.parentElement!).getByRole("note", {
+            name: "Address data attribution",
+          })
+        ).toBeVisible();
+        expect(input).toHaveValue(value);
+        expect(input).toHaveFocus();
+      }
+      fireEvent.keyDown(input, { key: "Escape" });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(150);
+      });
+      expect(screen.queryByRole("note")).not.toBeInTheDocument();
+      expect(input).toHaveFocus();
+      fireEvent.change(input, { target: { value: query } });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(750);
+      });
+      expect(screen.getByRole("option")).toHaveTextContent("Berlin");
+      expect(input).toHaveFocus();
+    }
+  );
 
   it("shows a visible API error for locality autocomplete failures", async () => {
     const onChange = vi.fn();
@@ -1073,7 +1286,7 @@ describe("EmployeeAddressFields", () => {
           draft={{
             street: "",
             houseNumber: "",
-            postalCode: "10",
+            postalCode: "10115",
             city: "",
             supplement: "",
             country: "DE",
@@ -1325,7 +1538,76 @@ describe("EmployeeAddressFields", () => {
     expect(onChange).toHaveBeenCalledWith("supplement", "EG");
   });
 
-  it("auto-applies a postal code suggestion when typing the exact code", async () => {
+  it.each([
+    ["Postal Code", "postalCode", "50", "10", "50667"],
+    ["City", "city", "Kö", "Ber", "Köln"],
+    ["Street", "street", "Gr", "Ha", "Grabstraße"],
+  ] as const)(
+    "does not auto-apply a stale suggestion when typing in %s",
+    async (label, field, prefix, nextQuery, exactValue) => {
+      vi.mocked(fetchAddressLocalitySuggestions)
+        .mockReset()
+        .mockReturnValue(new Promise(() => {}))
+        .mockResolvedValueOnce({
+          data: [{ postal_code: "50667", locality: "Köln" }],
+          meta: referenceMeta,
+        });
+      vi.mocked(fetchAddressStreetSuggestions)
+        .mockReset()
+        .mockReturnValue(new Promise(() => {}))
+        .mockResolvedValueOnce({
+          data: [
+            {
+              name: "Grabstraße",
+              postal_code: "13156",
+              locality: "Berlin",
+              borough: null,
+              suburb: null,
+              regional_key: null,
+            },
+          ],
+          meta: referenceMeta,
+        });
+
+      const onChange = vi.fn();
+      const addressForm = (value: string) => (
+        <I18nProvider i18n={i18n}>
+          <EmployeeAddressFields
+            draft={{
+              street: "",
+              houseNumber: "",
+              postalCode: "",
+              city: "",
+              supplement: "",
+              country: "DE",
+              [field]: value,
+            }}
+            onChange={onChange}
+          />
+        </I18nProvider>
+      );
+      const { rerender } = render(addressForm(prefix));
+      const input = screen.getByRole("combobox", { name: label });
+      act(() => input.focus());
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
+      const previousOption = screen.getByRole("option");
+      expect(previousOption).toHaveTextContent(exactValue);
+
+      rerender(addressForm(nextQuery));
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(250);
+      });
+      expect(input).toHaveAttribute("aria-busy", "true");
+      expect(previousOption).toHaveAttribute("aria-disabled", "true");
+
+      fireEvent.change(input, { target: { value: exactValue } });
+      expect(onChange.mock.calls).toEqual([[field, exactValue]]);
+    }
+  );
+
+  it("auto-applies an exact postal code from an available city suggestion", async () => {
     const onChange = vi.fn();
     vi.mocked(fetchAddressStreetSuggestions).mockResolvedValue({
       data: [],
@@ -1342,8 +1624,8 @@ describe("EmployeeAddressFields", () => {
           draft={{
             street: "",
             houseNumber: "",
-            postalCode: "506",
-            city: "",
+            postalCode: "",
+            city: "Kö",
             supplement: "",
             country: "DE",
           }}
@@ -1353,7 +1635,7 @@ describe("EmployeeAddressFields", () => {
     );
 
     const postalInput = screen.getByLabelText(/postal code/i);
-    fireEvent.focus(postalInput);
+    fireEvent.focus(screen.getByLabelText(/^city$/i));
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(250);
