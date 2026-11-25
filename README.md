@@ -103,7 +103,8 @@ PLAYWRIGHT_APP_SURFACE=android-native npm run test:e2e
 ```
 
 Assigned Herdr tabs set `PLAYWRIGHT_BASE_URL` to the private workspace preview.
-Browser tests use that URL for both app and API and default to the `web` surface. Use
+Browser tests use that URL for both app and API and default to the `web` surface.
+Diagnostic workspace previews keep the deployed bundle surface. Use
 `PLAYWRIGHT_APP_SURFACE=android-mock` only to run Android-specific tests or route
 selection against a preview that already exposes that UI surface. For local
 shared-UI review while still using a workspace backend, run
