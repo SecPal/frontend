@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Remove unused client-side attachment encryption utilities and superseded vault documentation. Onboarding attachment uploads continue to use the existing multipart API.
+
 ### Fixed
 
 - Keep stale tabs from deleting a newer offline vault by checking the active
