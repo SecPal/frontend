@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep stale tabs from deleting a newer offline vault by checking the active
+  logout barrier under the same lifecycle lock used to publish the vault.
+
 - Qualify already adopted Frontend publisher source on demand after verifying
   the exact protected-main merge and its independent quality run. The push
   authority check and registry publication requirements stay in place.

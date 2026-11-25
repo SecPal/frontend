@@ -2097,9 +2097,9 @@ async function persistInitialVaultRecords(
 
 export async function initializeOfflineVault(
   user: PersistedAuthUser,
-  options: OfflineVaultOperationOptions = {}
+  options: OfflineVaultOperationOptions & { onPersisted?: () => void } = {}
 ): Promise<void> {
-  const { signal, shouldCommit } = options;
+  const { signal, shouldCommit, onPersisted } = options;
   const initialize = async (lifecycleSignal?: AbortSignal): Promise<void> => {
     const effectiveSignal = lifecycleSignal ?? signal;
 
@@ -2129,6 +2129,7 @@ export async function initializeOfflineVault(
     completeVaultInitialization(session.subjectHash);
     setActiveOfflineVaultSession(session);
     localStorage.removeItem("auth_user");
+    onPersisted?.();
   };
   await runWithOfflineVaultLifecycleLock(initialize, signal);
 }

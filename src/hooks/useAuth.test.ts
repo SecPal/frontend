@@ -1000,9 +1000,9 @@ describe("useAuth", () => {
     const actualSetUser = authStorage.setUser.bind(authStorage);
     const setUserSpy = vi
       .spyOn(authStorage, "setUser")
-      .mockImplementationOnce(async (user) => {
+      .mockImplementationOnce(async (user, options) => {
         await setUserDeferred.promise;
-        return actualSetUser(user);
+        return actualSetUser(user, options);
       });
     const removeUserSpy = vi.spyOn(authStorage, "removeUser");
     vi.mocked(clearSensitiveClientState).mockImplementationOnce(
@@ -1058,13 +1058,8 @@ describe("useAuth", () => {
         await logoutPromise;
       });
 
-      await waitFor(() => {
-        expect(removeUserSpy).toHaveBeenCalledTimes(2);
-      });
-      expect(removeUserSpy).toHaveBeenNthCalledWith(
-        2,
-        expect.objectContaining({ clearOfflineVaultTables: true })
-      );
+      expect(removeUserSpy).toHaveBeenCalledTimes(1);
+      expectNoStoredAuthState();
     } finally {
       setUserDeferred.resolve();
       sensitiveCleanupDeferred.resolve();
@@ -1074,7 +1069,7 @@ describe("useAuth", () => {
     }
   });
 
-  it("retries barrier vault-table cleanup after sensitive logout cleanup finishes", async () => {
+  it("keeps stale bootstrap writes blocked after sensitive logout cleanup fails", async () => {
     const mockUser = {
       id: "1",
       name: "Test User",
@@ -1090,9 +1085,9 @@ describe("useAuth", () => {
     const actualSetUser = authStorage.setUser.bind(authStorage);
     const setUserSpy = vi
       .spyOn(authStorage, "setUser")
-      .mockImplementationOnce(async (user) => {
+      .mockImplementationOnce(async (user, options) => {
         await setUserDeferred.promise;
-        return actualSetUser(user);
+        return actualSetUser(user, options);
       });
     const removeUserSpy = vi.spyOn(authStorage, "removeUser");
     vi.mocked(clearSensitiveClientState).mockRejectedValueOnce(
@@ -1140,14 +1135,8 @@ describe("useAuth", () => {
         await Promise.resolve();
       });
 
-      await waitFor(() => {
-        expect(removeUserSpy).toHaveBeenCalledTimes(2);
-      });
-
-      expect(removeUserSpy).toHaveBeenNthCalledWith(
-        2,
-        expect.objectContaining({ clearOfflineVaultTables: true })
-      );
+      expect(removeUserSpy).toHaveBeenCalledTimes(1);
+      expectNoStoredAuthState();
     } finally {
       setUserSpy.mockRestore();
       removeUserSpy.mockRestore();
@@ -2185,6 +2174,7 @@ describe("useAuth", () => {
       await waitFor(() => {
         expect(clearSpy).toHaveBeenCalledWith({
           clearOfflineVaultTables: false,
+          sensitiveLogoutCleanupOwnerToken: expect.any(String),
         });
         expect(mockAnalyticsResetForLogout).toHaveBeenCalled();
       });
@@ -2202,6 +2192,8 @@ describe("useAuth", () => {
 
       await waitForSensitiveClientCleanup();
     } finally {
+      storageClear.resolve();
+      analyticsReset.resolve();
       clearSpy.mockRestore();
     }
   });
@@ -2882,7 +2874,7 @@ describe("useAuth", () => {
         storageClear.resolve();
         await logoutPromise;
       });
-      await waitForSensitiveClientCleanup();
+      expect(clearSensitiveClientState).not.toHaveBeenCalled();
       expect(authStorage.hasLogoutBarrier()).toBe(false);
       expect(syncOfflineSessionAccess).toHaveBeenCalledTimes(1);
     } finally {
@@ -2913,11 +2905,13 @@ describe("useAuth", () => {
       .mockImplementationOnce(async (options) => {
         const clearPromise = actualClear(options);
 
+        localStorage.setItem("auth_logout_barrier", "other-tab");
+        authStorage.setSkipBarrierVaultTableCleanup(true);
         const crossTabLogoutEvent = new Event("storage");
         Object.defineProperties(crossTabLogoutEvent, {
           key: { value: "auth_logout_barrier" },
           oldValue: { value: null },
-          newValue: { value: "1" },
+          newValue: { value: "other-tab" },
           storageArea: { value: localStorage },
         } satisfies Partial<
           Record<keyof StorageEventInit, PropertyDescriptor>
@@ -2945,8 +2939,10 @@ describe("useAuth", () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      await waitForSensitiveClientCleanup();
+      await authStorage.waitForInFlightVaultTableCleanup();
 
+      expect(localStorage.getItem("auth_logout_barrier")).toBe("other-tab");
+      expect(clearSensitiveClientState).not.toHaveBeenCalled();
       expect(vaultProfileClearSpy).not.toHaveBeenCalled();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "Failed to restore persisted auth state:",
@@ -3146,10 +3142,12 @@ describe("useAuth", () => {
     try {
       act(() => {
         firstLogout = Promise.resolve(firstAuth.result.current.logout());
-        secondLogout = Promise.resolve(secondAuth.result.current.logout());
       });
 
       await waitForSensitiveClientCleanup();
+      act(() => {
+        secondLogout = Promise.resolve(secondAuth.result.current.logout());
+      });
 
       expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
         "1"
@@ -3870,7 +3868,7 @@ describe("useAuth", () => {
   it("ignores stale auth storage that reappears after explicit logout", async () => {
     const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
 
-    await persistAuthUser(mockUser);
+    const staleVault = await persistAuthUser(mockUser);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -3889,12 +3887,12 @@ describe("useAuth", () => {
     });
 
     await act(async () => {
-      const newStoredValue = await persistAuthUser(mockUser);
+      localStorage.setItem(AUTH_VAULT_STORAGE_KEY, staleVault);
       const staleAuthEvent = new Event("storage");
       Object.defineProperties(staleAuthEvent, {
         key: { value: AUTH_VAULT_STORAGE_KEY },
         oldValue: { value: null },
-        newValue: { value: newStoredValue },
+        newValue: { value: staleVault },
         storageArea: { value: localStorage },
       } satisfies Partial<Record<keyof StorageEventInit, PropertyDescriptor>>);
       window.dispatchEvent(staleAuthEvent);
@@ -3949,6 +3947,10 @@ describe("useAuth", () => {
   });
 
   it("keeps a completed cross-tab logout logged out when no replacement snapshot exists", async () => {
+    clearCsrfTokenCookie();
+    mockGetCurrentUser.mockRejectedValue(
+      Object.assign(new Error("Unauthenticated"), { code: "HTTP_401" })
+    );
     const getUserSpy = vi.spyOn(authStorage, "getUser");
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -3973,7 +3975,7 @@ describe("useAuth", () => {
   it("rejects BFCache-style auth restoration after explicit logout", async () => {
     const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
 
-    await persistAuthUser(mockUser);
+    const staleVault = await persistAuthUser(mockUser);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
@@ -3992,7 +3994,7 @@ describe("useAuth", () => {
     });
 
     await act(async () => {
-      await persistAuthUser(mockUser);
+      localStorage.setItem(AUTH_VAULT_STORAGE_KEY, staleVault);
       window.dispatchEvent(
         new PageTransitionEvent("pageshow", { persisted: true })
       );

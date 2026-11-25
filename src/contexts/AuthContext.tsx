@@ -35,6 +35,7 @@ import { clearActiveOfflineVaultSession } from "../lib/offlineVaultRuntime";
 import { syncOfflineSessionAccess } from "../lib/serviceWorkerSession";
 import { resetPrefetchCache } from "../hooks/usePrefetch";
 import {
+  AUTH_LOGOUT_BARRIER_KEY,
   AUTH_USER_REVALIDATION_REQUIRED_KEY,
   AUTH_VAULT_STORAGE_KEY,
   AUTH_VAULT_LOCK_KEY,
@@ -135,6 +136,23 @@ function isPublicUnauthenticatedRoute(pathname: string): boolean {
       : pathname;
 
   return normalized === "/onboarding/complete" || normalized === "/source";
+}
+
+function readVaultPublication(
+  value: string | null
+): Record<string, unknown> | null {
+  if (value === null) {
+    return null;
+  }
+
+  try {
+    const envelope: unknown = JSON.parse(value);
+    return typeof envelope === "object" && envelope !== null
+      ? (envelope as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 function shouldBootstrapBrowserSessionWithoutStoredUser(
@@ -494,7 +512,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   }, []);
 
-  const removeUserForActiveBarrier = useCallback(() => {
+  const removeUserForActiveBarrier = useCallback((logoutBarrier: string) => {
     const shouldSkipBarrierVaultTableCleanup =
       shouldSkipBarrierVaultTableCleanupRef.current ||
       authStorage.shouldSkipBarrierVaultTableCleanup();
@@ -505,10 +523,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return authStorage.removeUser({
       clearOfflineVaultTables: !shouldSkipBarrierVaultTableCleanup,
       allowBarrierSkipUpgrade: true,
+      logoutBarrier,
     });
   }, []);
 
   const reconcileActiveBarrierState = useCallback(() => {
+    const logoutBarrier = localStorage.getItem(AUTH_LOGOUT_BARRIER_KEY);
     syncBarrierStateFromStorage();
     invalidateBootstrapRevalidation();
     authStorage.abortPendingPersistence();
@@ -517,11 +537,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsVaultLocked(false);
     setIsPrivacyShielded(false);
     setIsLoading(false);
+    clearActiveOfflineVaultSession();
+    if (logoutBarrier === null) {
+      // An old tab may still remember its logout after another tab signs in.
+      // Its local latch can hide its own UI but cannot clear the shared vault.
+      return;
+    }
+    resetPrefetchCache();
     syncOfflineAuthState(false, { redirectOpenClients: false });
     const hasCleanupOwner = authStorage.shouldSkipBarrierVaultTableCleanup();
-    void removeUserForActiveBarrier()
+    void removeUserForActiveBarrier(logoutBarrier)
       .then(() => {
-        if (!hasCleanupOwner) {
+        if (
+          !hasCleanupOwner &&
+          localStorage.getItem(AUTH_LOGOUT_BARRIER_KEY) === logoutBarrier
+        ) {
           redirectAfterLogoutCleanup();
         }
       })
@@ -625,6 +655,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearAuthStoragePromise = authStorage.clear({
           clearOfflineVaultTables:
             !shouldSkipBarrierVaultTableCleanupRef.current,
+          ...(sensitiveLogoutBarrierCleanupOwnerTokenRef.current !== null && {
+            sensitiveLogoutCleanupOwnerToken:
+              sensitiveLogoutBarrierCleanupOwnerTokenRef.current,
+          }),
         });
       } catch (error: unknown) {
         clearAuthStoragePromise = Promise.reject(error);
@@ -640,6 +674,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ]);
       let destructiveSensitiveLogoutCleanupPromise: Promise<void> | null = null;
       let sensitiveLogoutCleanupPromise: Promise<void> | null = null;
+      let cleanupBarrier: string | null = null;
       const sensitiveLogoutCleanupOwnerToken = clearSensitiveState
         ? sensitiveLogoutBarrierCleanupOwnerTokenRef.current
         : null;
@@ -659,17 +694,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 activeSensitiveLogoutCleanupOwnerToken
               );
 
-            try {
-              await authStorage.waitForInFlightVaultTableCleanup();
-            } catch (error: unknown) {
-              console.warn(
-                "Failed while waiting for in-flight vault cleanup during logout:",
-                error
-              );
+            if (
+              lifecycleSignal === null ||
+              localStorage.getItem(AUTH_LOGOUT_BARRIER_KEY) !==
+                activeSensitiveLogoutCleanupOwnerToken
+            ) {
+              return;
             }
 
+            cleanupBarrier = activeSensitiveLogoutCleanupOwnerToken;
             await clearDestructiveSensitiveClientState({
-              signal: lifecycleSignal ?? undefined,
+              signal: lifecycleSignal,
             });
             destructiveSensitiveCleanupFailedRef.current = false;
           } finally {
@@ -689,10 +724,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         sensitiveLogoutCleanupPromise = runDestructiveSensitiveLogoutCleanup()
           .finally(async () => {
-            await clearTrailingSensitiveClientState();
+            if (
+              cleanupBarrier !== null &&
+              localStorage.getItem(AUTH_LOGOUT_BARRIER_KEY) === cleanupBarrier
+            ) {
+              await clearTrailingSensitiveClientState();
+            }
           })
           .finally(() => {
             if (
+              cleanupBarrier !== null &&
+              localStorage.getItem(AUTH_LOGOUT_BARRIER_KEY) ===
+                cleanupBarrier &&
               clearSessionCycleRef.current === clearSessionCycle &&
               shouldRedirectOpenClientsRef.current
             ) {
@@ -1528,9 +1571,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event.storageArea !== localStorage) {
         return;
       }
+      if (
+        (event.key === AUTH_LOGOUT_BARRIER_KEY ||
+          event.key === AUTH_VAULT_STORAGE_KEY) &&
+        event.newValue !== localStorage.getItem(event.key)
+      ) {
+        return;
+      }
+      if (event.key === AUTH_VAULT_STORAGE_KEY) {
+        const publication = readVaultPublication(event.newValue);
+        if (publication?.initialization === "pending") {
+          // The writer still owns the lifecycle lock. Wait for the committed
+          // profile, and stop displaying any previous account immediately.
+          const previous = readVaultPublication(event.oldValue);
+          if (
+            typeof publication.subjectHash !== "string" ||
+            previous?.subjectHash !== publication.subjectHash
+          ) {
+            invalidateBootstrapRevalidation();
+            authStorage.abortPendingPersistence();
+            clearActiveOfflineVaultSession();
+            resetPrefetchCache();
+            setBootstrapRecoveryReason(null);
+            setUser(null);
+            setIsVaultLocked(false);
+            setIsLoading(true);
+          }
+          return;
+        }
+      }
 
       if (
-        event.key === "auth_logout_barrier" ||
+        event.key === AUTH_LOGOUT_BARRIER_KEY ||
         event.key === AUTH_USER_REVALIDATION_REQUIRED_KEY ||
         event.key === AUTH_VAULT_LOCK_KEY ||
         event.key === "auth_user" ||
@@ -1539,9 +1611,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         invalidateBootstrapRevalidation();
       }
 
-      if (event.key === "auth_logout_barrier") {
+      if (event.key === AUTH_LOGOUT_BARRIER_KEY) {
         if (event.newValue !== null) {
-          clearAuthenticatedState(true);
+          // The publishing tab owns the logout. Observers must not replace
+          // its barrier or start a competing destructive cleanup.
+          reconcileActiveBarrierState();
           return;
         }
 
@@ -1641,7 +1715,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [
     applyVaultUnlockResult,
-    clearAuthenticatedState,
     enterLockedVaultState,
     invalidateBootstrapRevalidation,
     preserveLockedVault,

@@ -98,11 +98,11 @@ const {
         logoutBarrier = false;
         userRevalidationOwnerToken = null;
       }),
-      clear: vi.fn(async () => {
+      clear: vi.fn(async (options?: Parameters<AuthStorage["clear"]>[0]) => {
         storedUser = null;
         vaultPresent = false;
         vaultLocked = false;
-        logoutBarrier = false;
+        logoutBarrier = options?.sensitiveLogoutCleanupOwnerToken !== undefined;
         skipVaultTableCleanup = false;
         userRevalidationOwnerToken = null;
       }),
@@ -114,7 +114,9 @@ const {
       beginSensitiveLogoutBarrierCleanup: vi.fn(() => {
         logoutBarrier = true;
         skipVaultTableCleanup = true;
-        return "test-logout-barrier-owner";
+        const owner = "test-logout-barrier-owner";
+        localStorage.setItem("auth_logout_barrier", owner);
+        return owner;
       }),
       completeStaleSensitiveLogoutBarrierCleanup: vi.fn(() => {
         skipVaultTableCleanup = false;
@@ -124,7 +126,11 @@ const {
       }),
       abortPendingPersistence: vi.fn(),
       abortPendingVaultCleanup: vi.fn(async () => undefined),
-      waitForSensitiveLogoutCleanupLock: vi.fn(async () => null),
+      waitForSensitiveLogoutCleanupLock: vi.fn(async (owner: string | null) =>
+        owner !== null && localStorage.getItem("auth_logout_barrier") === owner
+          ? new AbortController().signal
+          : null
+      ),
       waitForInFlightVaultTableCleanup: vi.fn(async () => undefined),
     } satisfies AuthStorage,
   };
@@ -510,9 +516,9 @@ describe("App", () => {
   it("stops runtime discovery after unmounting during logout cleanup", async () => {
     const deleteDeferred = createDeferredPromise<void>();
     const deleteSpy = vi
-      .spyOn(db, "delete")
+      .spyOn(db, "transaction")
       .mockImplementationOnce(
-        () => deleteDeferred.promise as ReturnType<typeof db.delete>
+        () => deleteDeferred.promise as ReturnType<typeof db.transaction>
       );
     const consoleError = vi.spyOn(console, "error");
     createAndroidRuntimeBootstrapBridge({
@@ -558,9 +564,9 @@ describe("App", () => {
   it("clears stale authenticated state before Android runtime discovery starts", async () => {
     const deleteDeferred = createDeferredPromise<void>();
     const deleteSpy = vi
-      .spyOn(db, "delete")
+      .spyOn(db, "transaction")
       .mockImplementationOnce(
-        () => deleteDeferred.promise as ReturnType<typeof db.delete>
+        () => deleteDeferred.promise as ReturnType<typeof db.transaction>
       );
     const consoleWarn = vi.spyOn(console, "warn");
     createAndroidRuntimeBootstrapBridge({ configured: false });
