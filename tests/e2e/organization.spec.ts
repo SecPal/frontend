@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { Page } from "@playwright/test";
+import type { OrganizationalUnitPaginatedResponse } from "@/types/api";
 import { test, expect } from "./auth.setup";
 import { AUTH_SIDEBAR_TRIGGER_SELECTOR } from "./auth-helpers";
 import { offlineLiveMockOrganizationUnit } from "./offline-live-helpers";
@@ -56,12 +57,10 @@ async function openLiveOrganization(page: Page): Promise<string> {
     page.goto("/organization"),
   ]);
   expect(response.ok()).toBe(true);
-  const { data, meta } = (await response.json()) as {
-    data: { id: string; name: string; type: string }[];
-    meta: { root_unit_ids: string[] };
-  };
+  const { data, meta } =
+    (await response.json()) as OrganizationalUnitPaginatedResponse;
   const root = data.find(
-    (unit) => unit.type === "holding" && meta.root_unit_ids.includes(unit.id)
+    (unit) => unit.type === "holding" && meta.root_unit_ids?.includes(unit.id)
   );
   if (!root) {
     throw new Error("The workspace fixture must include a root holding.");
