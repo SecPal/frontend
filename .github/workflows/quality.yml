@@ -20,7 +20,7 @@ jobs:
     permissions:
       contents: read
     # main; the callee owns separate coverage/cadence checks and timeouts.
-    uses: SecPal/.github/.github/workflows/reusable-dependabot-manifest-coverage.yml@2d02204e03a7d93132fcbcba45cdff1161017e11
+    uses: SecPal/.github/.github/workflows/reusable-dependabot-manifest-coverage.yml@d3044d801cacb5aebf87d42744e918128c115207
 
   repository-security:
     name: Repository Security
