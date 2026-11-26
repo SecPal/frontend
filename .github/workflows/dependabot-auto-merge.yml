@@ -39,7 +39,7 @@ permissions:
 jobs:
   auto-merge:
     # yamllint disable-line rule:line-length
-    uses: SecPal/.github/.github/workflows/reusable-dependabot-auto-merge.yml@5d04c4c2f3593238040943ca5e57e7b05ba94487 # main
+    uses: SecPal/.github/.github/workflows/reusable-dependabot-auto-merge.yml@923dc37b3691f7abb04b8a1c87dfbbcffbd8e0f6 # main
     secrets:
       dependabot-merger-private-key: ${{ secrets.DEPENDABOT_MERGER_PRIVATE_KEY }}
     with:
