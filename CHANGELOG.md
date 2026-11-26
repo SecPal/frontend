@@ -31,6 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Let Dependabot update \`js-yaml\` by referencing its direct version range in
+  the npm override. The existing minimum version remains enforced.
+
 - Show saved customer contacts immediately while establishment names load.
 - Remove the gap above results in searchable dropdowns and keep their options
   within short viewports.
