@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Show saved customer contacts immediately while establishment names load.
 - Remove the gap above results in searchable dropdowns and keep their options
   within short viewports.
 - Show API validation errors next to the house number in site forms.
