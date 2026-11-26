@@ -144,7 +144,7 @@ grep -Fiq "advisory PR-size reporting" "$repo_root/README.md"
 grep -Fiq "advisory PR-size reporting" "$repo_root/.preflight-exclude"
 grep -Eq '^# SPDX-FileCopyrightText: .*2026' "$repo_root/.preflight-exclude"
 grep -Eq \
-  'uses: SecPal/\.github/\.github/workflows/reusable-pr-size\.yml@[0-9a-f]{40}$' \
+  'uses: SecPal/\.github/\.github/workflows/reusable-pr-size\.yml@[0-9a-f]{40} # v[0-9]+\.[0-9]+\.[0-9]+$' \
   "$repo_root/.github/workflows/pr-size.yml"
 if grep -Fq "@7f5d24a599c03cdc59998c22578c345c518b755d" \
   "$repo_root/.github/workflows/pr-size.yml"; then
