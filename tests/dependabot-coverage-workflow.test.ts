@@ -125,6 +125,7 @@ describe("frontend manifest coverage adoption", () => {
       "pull-requests": "write",
       checks: "read",
       statuses: "read",
+      attestations: "read",
     });
     expect(workflow["cache-mode"]).toBe("none");
     expect(workflow.concurrency["cancel-in-progress"]).toBe(true);
