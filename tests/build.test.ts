@@ -786,6 +786,7 @@ jobs:
   it("keeps the July 2026 dependency remediations upgradeable", () => {
     const packageJson = JSON.parse(readRepoFile("package.json")) as {
       dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
       overrides?: Record<string, string>;
     };
     const packageLock = JSON.parse(readRepoFile("package-lock.json")) as {
@@ -794,7 +795,8 @@ jobs:
 
     expect(packageJson.dependencies?.["react-router"]).toMatch(/^\^/u);
     expect(packageJson.dependencies?.["react-router-dom"]).toBeUndefined();
-    expect(packageJson.overrides?.["js-yaml"]).toMatch(/^>=/u);
+    expect(packageJson.overrides?.["js-yaml"]).toBe("$js-yaml");
+    expect(packageJson.devDependencies?.["js-yaml"]).toMatch(/^>=/u);
     expect(
       packageLock.packages["node_modules/react-router-dom"]
     ).toBeUndefined();
