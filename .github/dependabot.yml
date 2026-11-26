@@ -63,7 +63,8 @@ updates:
     target-branch: "main"
     pull-request-branch-name:
       separator: "-"
-    # Let Dependabot update each SecPal component independently, including merge authority.
+    # Shared SecPal pins use the full commit SHA and its exact immutable release annotation.
+    # Propose each component and merge authority independently.
     groups:
       github-actions-patch:
         patterns:
