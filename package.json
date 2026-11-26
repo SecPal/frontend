@@ -183,7 +183,7 @@
     "esbuild": "^0.28.1",
     "@sentry/node": "^10.54.0",
     "fast-uri": "^3.1.9",
-    "js-yaml": ">=5.4.1",
+    "js-yaml": "$js-yaml",
     "micromark-extension-math": {
       "katex": "^0.18.2"
     },
