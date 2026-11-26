@@ -120,7 +120,7 @@ describe("Dependabot configuration", () => {
       );
 
       expect(group).toContain('- "*"');
-      expect(group).toContain('- "SecPal/.github/.github/workflows/*"');
+      expect(group).toContain('- "SecPal/.github/*"');
       expect(group).toContain(`- "${updateType}"`);
 
       for (const otherType of ["patch", "minor", "major"] as const) {
@@ -131,20 +131,12 @@ describe("Dependabot configuration", () => {
     }
   });
 
-  it("groups SHA-pinned shared workflows without assigning a fake semver type", () => {
+  it("tracks immutable shared refs outside the versioned groups", () => {
     const githubActionsUpdates = getPackageEcosystemSection(
       readConfigText(),
       "github-actions"
     );
-    const sharedWorkflowPins = getIndentedSection(
-      githubActionsUpdates,
-      "shared-workflow-pins"
-    );
-
-    expect(sharedWorkflowPins).toContain(
-      '- "SecPal/.github/.github/workflows/*"'
-    );
-    expect(sharedWorkflowPins).not.toContain("update-types:");
+    expect(githubActionsUpdates).not.toContain("shared-workflow-pins:");
 
     const workflowsPath = join(process.cwd(), ".github", "workflows");
     const sharedWorkflowRefs = readdirSync(workflowsPath)
