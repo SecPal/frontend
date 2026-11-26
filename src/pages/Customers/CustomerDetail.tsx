@@ -162,7 +162,6 @@ export default function CustomerDetail() {
         setCustomer(projectedCustomer);
         setCustomerEstablishments(projectedCustomer.customer_establishments);
         setLoading(false);
-        setAssignmentLoading(true);
         navigate(
           {
             pathname: location.pathname,
@@ -182,8 +181,6 @@ export default function CustomerDetail() {
               _(msg`Some establishment details could not be loaded.`)
             );
           }
-        } finally {
-          if (!cancelled) setAssignmentLoading(false);
         }
         return;
       }

@@ -114,11 +114,23 @@ describe("transactional customer edit projection", () => {
     renderFlow();
 
     await screen.findByLabelText(/customer name/i);
+    type Lookups = Awaited<
+      ReturnType<typeof domainApi.listEstablishmentLookups>
+    >;
+    let finishLookups!: (value: Lookups) => void;
+    const lookups = new Promise<Lookups>((resolve) => {
+      finishLookups = resolve;
+    });
+    vi.mocked(domainApi.listEstablishmentLookups).mockReturnValue(lookups);
     await user.click(screen.getByRole("button", { name: /save changes/i }));
 
     expect(
       await screen.findByRole("heading", { name: "Committed Customer" })
     ).toBeInTheDocument();
+    expect(screen.getByText("Committed Contact")).toBeInTheDocument();
+
+    finishLookups([{ id: "est-1", name: "Berlin Establishment" }]);
+    expect(await screen.findByText("Berlin Establishment")).toBeInTheDocument();
     expect(screen.getByText("Committed Contact")).toBeInTheDocument();
     expect(customersApi.getCustomer).not.toHaveBeenCalled();
     expect(domainApi.listAllCustomerEstablishments).not.toHaveBeenCalled();
