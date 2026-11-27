@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { clearBrowserPushInstallationId } from "./browserPushState";
-import Dexie, { type Transaction } from "dexie";
+import { runAuthStateTransaction } from "./authStateTransaction";
+import { throwIfAborted } from "./abortablePromise";
 import { db } from "./db";
 import {
   AUTH_USER_REVALIDATION_REQUIRED_KEY,
@@ -26,31 +27,16 @@ const USER_SCOPED_LOCAL_STORAGE_KEYS = [
   AUTH_USER_REVALIDATION_REQUIRED_KEY,
   AUTH_VAULT_STORAGE_KEY,
 ] as const;
-const SENSITIVE_INDEXED_DB_CLEANUP_TIMEOUT_MS = 5_000;
 
-interface SensitiveClientStateCleanupOptions {
-  signal?: AbortSignal;
-}
-
-function getAbortReason(signal: AbortSignal): unknown {
-  return (
-    signal.reason ??
-    new DOMException("The operation was aborted.", "AbortError")
-  );
-}
-
-function throwIfAborted(signal?: AbortSignal): void {
-  if (signal?.aborted) {
-    throw getAbortReason(signal);
-  }
-}
-
-async function clearSensitiveCaches(): Promise<void> {
-  if (!("caches" in globalThis)) {
+async function clearSensitiveCaches(isCurrent: () => boolean): Promise<void> {
+  if (!isCurrent() || !("caches" in globalThis)) {
     return;
   }
 
   const cacheNames = await caches.keys();
+  if (!isCurrent()) {
+    return;
+  }
   const sensitiveCacheNames = cacheNames.filter((cacheName) =>
     SENSITIVE_CACHE_NAMES.includes(
       cacheName as (typeof SENSITIVE_CACHE_NAMES)[number]
@@ -62,96 +48,12 @@ async function clearSensitiveCaches(): Promise<void> {
   );
 }
 
-async function clearSensitiveIndexedDbState(
-  signal?: AbortSignal
+export async function clearBrowserPushClientState(
+  isCurrent: () => boolean = () => true
 ): Promise<void> {
-  throwIfAborted(signal);
-
-  if (signal) {
-    let activeTransaction: Transaction | null = null;
-    let cleanupTimedOut = false;
-    let timeoutId: ReturnType<typeof globalThis.setTimeout> | null = null;
-    const timeoutError = new DOMException(
-      "Sensitive IndexedDB cleanup timed out.",
-      "TimeoutError"
-    );
-    const throwIfCleanupCannotContinue = () => {
-      if (cleanupTimedOut) {
-        throw timeoutError;
-      }
-
-      throwIfAborted(signal);
-    };
-    let rejectAbort!: (reason: unknown) => void;
-    const aborted = new Promise<never>((_resolve, reject) => {
-      rejectAbort = reject;
-    });
-    const handleAbort = () => {
-      activeTransaction?.abort();
-      rejectAbort(getAbortReason(signal));
-    };
-
-    signal.addEventListener("abort", handleAbort, { once: true });
-    if (signal.aborted) {
-      handleAbort();
-    }
-
-    const transaction = db.transaction("rw", db.tables, async () => {
-      activeTransaction = Dexie.currentTransaction;
-      throwIfCleanupCannotContinue();
-      await Promise.all(db.tables.map((table) => table.clear()));
-      throwIfCleanupCannotContinue();
-    });
-    void transaction.catch(() => undefined);
-    const timedOut = new Promise<never>((_resolve, reject) => {
-      timeoutId = globalThis.setTimeout(() => {
-        cleanupTimedOut = true;
-        activeTransaction?.abort();
-        reject(timeoutError);
-      }, SENSITIVE_INDEXED_DB_CLEANUP_TIMEOUT_MS);
-    });
-
-    try {
-      await Promise.race([transaction, aborted, timedOut]);
-    } catch (error) {
-      if (signal.aborted) {
-        throw getAbortReason(signal);
-      }
-
-      throw error;
-    } finally {
-      signal.removeEventListener("abort", handleAbort);
-      if (timeoutId !== null) {
-        globalThis.clearTimeout(timeoutId);
-      }
-    }
-
+  if (!isCurrent()) {
     return;
   }
-
-  try {
-    // Logout policy: remove the entire local session database because all
-    // stores in SecPalDB are session- or user-adjacent and unnecessary once
-    // the authenticated client state is cleared.
-    await db.delete();
-  } catch (error) {
-    console.warn(
-      "Failed to delete SecPalDB during logout, falling back to table clearing:",
-      error
-    );
-
-    await Promise.all([
-      db.analytics.clear(),
-      db.organizationalUnitCache.clear(),
-      db.vaultProfile.clear(),
-      db.vaultWrappingKeys.clear(),
-      db.vaultAnalytics.clear(),
-      db.vaultOrganizationalUnitCache.clear(),
-    ]);
-  }
-}
-
-export async function clearBrowserPushClientState(): Promise<void> {
   clearBrowserPushInstallationId();
 
   if (
@@ -166,6 +68,7 @@ export async function clearBrowserPushClientState(): Promise<void> {
     const registration = await navigator.serviceWorker.getRegistration();
 
     if (
+      !isCurrent() ||
       registration === undefined ||
       registration.pushManager === undefined ||
       typeof registration.pushManager.getSubscription !== "function"
@@ -175,7 +78,7 @@ export async function clearBrowserPushClientState(): Promise<void> {
 
     const subscription = await registration.pushManager.getSubscription();
 
-    if (subscription) {
+    if (subscription && isCurrent()) {
       await subscription.unsubscribe();
     }
   } catch (error) {
@@ -211,10 +114,11 @@ async function waitForSensitiveCleanupTasks(
   );
 }
 
-export async function clearDestructiveSensitiveClientState(
-  options: SensitiveClientStateCleanupOptions = {}
-): Promise<void> {
-  const { signal } = options;
+export async function clearDestructiveSensitiveClientState({
+  signal,
+}: {
+  signal: AbortSignal;
+}): Promise<void> {
   throwIfAborted(signal);
 
   for (const key of USER_SCOPED_LOCAL_STORAGE_KEYS) {
@@ -224,20 +128,20 @@ export async function clearDestructiveSensitiveClientState(
   sessionStorage.clear();
   clearActiveOfflineVaultSession();
   clearRecentAuthVaultKeyMaterials();
-  await clearSensitiveIndexedDbState(signal);
+  await runAuthStateTransaction(
+    db.tables,
+    async () => {
+      await Promise.all(db.tables.map((table) => table.clear()));
+    },
+    signal
+  );
 }
 
-export async function clearTrailingSensitiveClientState(): Promise<void> {
-  await waitForSensitiveCleanupTasks([
-    clearSensitiveCaches(),
-    clearBrowserPushClientState(),
-  ]);
-}
-
-export async function clearSensitiveClientState(
-  options: SensitiveClientStateCleanupOptions = {}
+export async function clearTrailingSensitiveClientState(
+  isCurrent: () => boolean = () => true
 ): Promise<void> {
-  await clearDestructiveSensitiveClientState(options);
-  throwIfAborted(options.signal);
-  await clearTrailingSensitiveClientState();
+  await waitForSensitiveCleanupTasks([
+    clearSensitiveCaches(isCurrent),
+    clearBrowserPushClientState(isCurrent),
+  ]);
 }

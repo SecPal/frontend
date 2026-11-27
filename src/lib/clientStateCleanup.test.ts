@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { authStorage } from "../services/storage";
 import { db } from "./db";
 import {
   getOrCreateBrowserPushInstallationId,
@@ -10,7 +11,7 @@ import {
 import {
   clearBrowserPushClientState,
   clearDestructiveSensitiveClientState,
-  clearSensitiveClientState,
+  clearTrailingSensitiveClientState,
   SENSITIVE_CACHE_NAMES,
 } from "./clientStateCleanup";
 import {
@@ -47,13 +48,13 @@ function createDeferredPromise<T>() {
   return { promise, resolve, reject };
 }
 
-async function flushAsyncWork(iterations = 5): Promise<void> {
-  for (let index = 0; index < iterations; index += 1) {
-    await new Promise((resolve) => setTimeout(resolve, 0));
-  }
+function startDestructiveCleanup() {
+  return clearDestructiveSensitiveClientState({
+    signal: new AbortController().signal,
+  });
 }
 
-describe("clearSensitiveClientState", () => {
+describe("sensitive client state cleanup", () => {
   beforeEach(async () => {
     vi.restoreAllMocks();
     vi.clearAllMocks();
@@ -88,9 +89,7 @@ describe("clearSensitiveClientState", () => {
     vi.restoreAllMocks();
   });
 
-  it("clears auth storage, sensitive caches, and deletes the IndexedDB database", async () => {
-    const deleteSpy = vi.spyOn(db, "delete");
-
+  it("transactionally clears the auth database and separately clears sensitive caches", async () => {
     localStorage.setItem("auth_user", "opaque-auth-storage-envelope");
     localStorage.setItem("auth_token", "legacy-token");
     localStorage.setItem(
@@ -130,9 +129,8 @@ describe("clearSensitiveClientState", () => {
     ]);
     mockCaches.delete.mockResolvedValue(true);
 
-    await clearSensitiveClientState();
-
-    expect(deleteSpy).toHaveBeenCalledTimes(1);
+    await startDestructiveCleanup();
+    await clearTrailingSensitiveClientState();
 
     expect(localStorage.getItem("auth_user")).toBeNull();
     expect(localStorage.getItem("auth_token")).toBeNull();
@@ -144,14 +142,6 @@ describe("clearSensitiveClientState", () => {
     expect(localStorage.getItem("locale")).toBe("de");
     expect(sessionStorage.getItem("share-draft")).toBeNull();
 
-    if (typeof indexedDB.databases === "function") {
-      const databases = await indexedDB.databases();
-
-      expect(databases.map((database) => database.name)).not.toContain(db.name);
-    }
-
-    await db.open();
-
     expect(await db.analytics.count()).toBe(0);
     expect(await db.organizationalUnitCache.count()).toBe(0);
 
@@ -160,61 +150,15 @@ describe("clearSensitiveClientState", () => {
     expect(mockCaches.delete).not.toHaveBeenCalledWith("static-assets");
   });
 
-  it("falls back to clearing IndexedDB tables when deleting the database fails", async () => {
-    const deleteError = new Error("Delete blocked by another connection");
-    const deleteSpy = vi.spyOn(db, "delete").mockRejectedValueOnce(deleteError);
-    const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-    localStorage.setItem("auth_user", "opaque-auth-storage-envelope");
-    localStorage.setItem(
-      "secpal-notification-preferences",
-      JSON.stringify([{ category: "alerts", enabled: true }])
-    );
-    sessionStorage.setItem("share-draft", "pending");
-
-    await db.analytics.add({
-      type: "page_view",
-      category: "navigation",
-      action: "open",
-      timestamp: Date.now(),
-      synced: false,
-      sessionId: "session-1",
-    });
-    await db.organizationalUnitCache.add({
-      id: "org-1",
-      type: "company",
-      name: "SecPal GmbH",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      cachedAt: new Date(),
-      lastSynced: new Date(),
-    });
-
-    mockCaches.keys.mockResolvedValue([]);
-
-    await clearSensitiveClientState();
-
-    expect(deleteSpy).toHaveBeenCalled();
-    expect(consoleWarn).toHaveBeenCalledWith(
-      "Failed to delete SecPalDB during logout, falling back to table clearing:",
-      deleteError
-    );
-    expect(localStorage.getItem("auth_user")).toBeNull();
-    expect(localStorage.getItem("secpal-notification-preferences")).toBeNull();
-    expect(sessionStorage.getItem("share-draft")).toBeNull();
-    expect(await db.analytics.count()).toBe(0);
-    expect(await db.organizationalUnitCache.count()).toBe(0);
-  });
-
   it("does not start IndexedDB cleanup after lifecycle invalidation", async () => {
     const controller = new AbortController();
-    const deleteSpy = vi.spyOn(db, "delete");
+    const transaction = vi.spyOn(db, "transaction");
     controller.abort();
 
     await expect(
-      clearSensitiveClientState({ signal: controller.signal })
+      clearDestructiveSensitiveClientState({ signal: controller.signal })
     ).rejects.toMatchObject({ name: "AbortError" });
-    expect(deleteSpy).not.toHaveBeenCalled();
+    expect(transaction).not.toHaveBeenCalled();
   });
 
   it("does not start a delayed IndexedDB transaction after cleanup times out", async () => {
@@ -228,12 +172,8 @@ describe("clearSensitiveClientState", () => {
       await transactionMayStart.promise;
       return operation();
     }) as typeof db.transaction);
-    const controller = new AbortController();
-
     try {
-      const cleanupPromise = clearDestructiveSensitiveClientState({
-        signal: controller.signal,
-      });
+      const cleanupPromise = authStorage.clear({ sensitive: true });
       const cleanupAssertion = expect(cleanupPromise).rejects.toMatchObject({
         name: "TimeoutError",
       });
@@ -256,9 +196,7 @@ describe("clearSensitiveClientState", () => {
     mockCaches.keys.mockResolvedValue([SENSITIVE_CACHE_NAMES[0]]);
     mockCaches.delete.mockReturnValue(new Promise<boolean>(() => {}));
 
-    await expect(
-      clearDestructiveSensitiveClientState()
-    ).resolves.toBeUndefined();
+    await expect(startDestructiveCleanup()).resolves.toBeUndefined();
 
     expect(mockCaches.keys).not.toHaveBeenCalled();
     expect(mockCaches.delete).not.toHaveBeenCalled();
@@ -268,7 +206,7 @@ describe("clearSensitiveClientState", () => {
     // @ts-expect-error Simulate unsupported Cache API
     delete globalThis.caches;
 
-    await expect(clearSensitiveClientState()).resolves.not.toThrow();
+    await expect(clearTrailingSensitiveClientState()).resolves.not.toThrow();
   });
 
   it("unsubscribes the existing browser push subscription and clears the local installation id", async () => {
@@ -276,7 +214,7 @@ describe("clearSensitiveClientState", () => {
 
     mockPushManager.getSubscription.mockResolvedValueOnce(mockPushSubscription);
 
-    await clearSensitiveClientState();
+    await clearTrailingSensitiveClientState();
 
     expect(mockPushSubscription.unsubscribe).toHaveBeenCalledTimes(1);
     expect(installationId).not.toBeNull();
@@ -323,47 +261,6 @@ describe("clearSensitiveClientState", () => {
     expect(consoleWarn).not.toHaveBeenCalled();
   });
 
-  it("waits for IndexedDB cleanup to settle before rejecting after another sensitive cleanup fails", async () => {
-    const deleteDeferred = createDeferredPromise<void>();
-    const cacheDeleteDeferred = createDeferredPromise<boolean>();
-    const cacheError = new Error("cache delete failed");
-    const deleteSpy = vi
-      .spyOn(db, "delete")
-      .mockImplementationOnce(
-        () => deleteDeferred.promise as ReturnType<typeof db.delete>
-      );
-    let settled = false;
-    let rejected = false;
-
-    mockCaches.keys.mockResolvedValue([SENSITIVE_CACHE_NAMES[0]]);
-    mockCaches.delete.mockImplementationOnce(() => cacheDeleteDeferred.promise);
-
-    const clearPromise = clearSensitiveClientState()
-      .catch((error: unknown) => {
-        rejected = true;
-        throw error;
-      })
-      .finally(() => {
-        settled = true;
-      });
-
-    await flushAsyncWork();
-
-    expect(deleteSpy).toHaveBeenCalledTimes(1);
-
-    cacheDeleteDeferred.reject(cacheError);
-
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(settled).toBe(false);
-    expect(rejected).toBe(false);
-
-    deleteDeferred.resolve();
-
-    await expect(clearPromise).rejects.toBe(cacheError);
-  });
-
   it("clears the offline vault runtime without lazy module work", async () => {
     const rootKeyBytes = new Uint8Array([1, 2, 3]);
     setActiveOfflineVaultSession({ rootKeyBytes });
@@ -380,7 +277,7 @@ describe("clearSensitiveClientState", () => {
       sessionId: "session-1",
     });
 
-    await expect(clearSensitiveClientState()).resolves.not.toThrow();
+    await expect(startDestructiveCleanup()).resolves.not.toThrow();
 
     expect(localStorage.getItem("auth_user")).toBeNull();
     expect(localStorage.getItem("auth_vault_state")).toBeNull();

@@ -125,6 +125,31 @@ The first vault implementation should move long-term PII out of ad-hoc storage l
 - **Cross-tab behavior is authoritative.** Lock and logout state must propagate across tabs using the same cross-tab mechanisms already used for logout drift.
 - **A locked UI must not show profile PII.** If the user wants name/e-mail while offline, they must unlock first.
 
+### Authentication lifecycle transitions
+
+`authLifecycle` owns the active generation in the tab. The logout barrier
+identifies its destructive operation across tabs. Only a cleanup receipt for
+that barrier can authorize another persistence attempt. Full cleanup takes
+precedence over vault-only cleanup, including when two tabs publish
+concurrently. A writer retires its specific receipt after persisting the
+encrypted profile. A newer logout token remains authoritative.
+
+| Starting state              | Event                                 | Owner and allowed side effect                                                                                                                                                         | Outcome                                                                                                                            |
+| --------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Startup or revalidation     | Restore the user                      | The restore generation reads or migrates the current encrypted record, then publishes while it still owns the generation and envelope observation.                                    | Authenticated, locked, logged out, or recovery when current state cannot be read.                                                  |
+| Authenticated or logged out | Persist a login                       | The current writer publishes the encrypted profile under the Web Lock after any matching destructive cleanup commits.                                                                 | Authenticated on commit. Superseded writers return without publication, and unproven cleanup keeps persistence blocked.            |
+| Authenticated or unlocking  | Lock the vault                        | The new lock generation releases the in-memory root key and records the vault lock.                                                                                                   | Locked. A preceding unlock cannot clear the lock.                                                                                  |
+| Locked                      | Unlock the vault                      | The unlock generation opens the exact current envelope and removes the lock marker after a current successful read.                                                                   | Authenticated, still locked, or logged out if a logout barrier applies.                                                            |
+| Any auth state              | Observe another tab's invalidation    | The observer invalidates its generation and drops in-memory auth state. The tab that published the barrier owns the destructive work.                                                 | Logged out behind that barrier. The observer can adopt an authorized replacement after publication.                                |
+| Any auth state              | Log out or replace invalid local auth | The cleanup owner publishes a pending barrier, prepares dependencies, then clears its authorized local state under the Web Lock. A full logout supersedes a pending vault-only clear. | Committed or recovery-blocked. Rollback, timeout and cancellation retain the barrier. A superseded owner cannot publish a receipt. |
+| Cleanup committed           | Run trailing cleanup                  | Cache, push and analytics work runs after releasing the Web Lock and checks the current barrier before further effects.                                                               | Trailing work can finish independently while login persists. The redirect remains scoped to its original logout.                   |
+| Recovery-blocked            | Retry cleanup                         | A fresh cleanup owns a new barrier and can prove the destructive transaction committed.                                                                                               | Persistence can continue after confirmed cleanup.                                                                                  |
+
+The Web Lock deadline covers queueing and execution. IndexedDB transactions
+receive its abort signal, and delayed transaction bodies check that signal
+before writing. Dependency loading, network calls and trailing cleanup run
+outside the lock.
+
 ## Security Boundaries and UX Trade-Offs
 
 ### Security boundaries

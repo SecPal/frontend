@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { AUTH_LOGOUT_BARRIER_KEY } from "./offlineVaultKeys";
+import { getActiveOfflineVaultSession } from "./offlineVaultRuntime";
 import Dexie from "dexie";
 import type { PersistedAuthUser } from "../services/authState";
 import { db, type OrganizationalUnitCacheEntry } from "./db";
@@ -12,6 +14,7 @@ import {
   initializeOfflineVault,
   listVaultAnalyticsEvents,
   listVaultOrganizationalUnits,
+  getVaultOrganizationalUnit,
   readPersistedAuthUserFromVault,
   clearOfflineVaultTables,
   saveVaultOrganizationalUnit,
@@ -107,6 +110,59 @@ describe("offlineVault", () => {
     clearOfflineVaultSession();
     resetNativeVaultRuntime();
     vi.restoreAllMocks();
+  });
+
+  it("keeps an encrypted profile locked behind a cross-tab logout barrier", async () => {
+    await initializeOfflineVault(persistedUser);
+    clearOfflineVaultSession();
+
+    // The storage event may still be queued in this tab.
+    localStorage.setItem(AUTH_LOGOUT_BARRIER_KEY, "remote-logout");
+
+    await expect(readPersistedAuthUserFromVault()).resolves.toBeNull();
+    expect(getActiveOfflineVaultSession()).toBeNull();
+    expect(await db.vaultProfile.count()).toBe(1);
+  });
+
+  it("does not let a stale tenant-cache reader erase a new vault record", async () => {
+    await initializeOfflineVault(persistedUser);
+    const record = {
+      id: "shared-synthetic-id",
+      name: "New owner unit",
+      type: "company",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      cachedAt: new Date(),
+      lastSynced: new Date(),
+      parent_id: null,
+    } satisfies OrganizationalUnitCacheEntry;
+    const readStarted = createDeferredPromise<void>();
+    const readRelease = createDeferredPromise<void>();
+    const get = db.vaultOrganizationalUnitCache.get.bind(
+      db.vaultOrganizationalUnitCache
+    );
+    vi.spyOn(db.vaultOrganizationalUnitCache, "get").mockImplementationOnce(
+      () => {
+        readStarted.resolve();
+        return Dexie.Promise.resolve(readRelease.promise).then(() =>
+          get(record.id)
+        );
+      }
+    );
+
+    const stale = getVaultOrganizationalUnit(record.id);
+    await readStarted.promise;
+    try {
+      await initializeOfflineVault({ ...persistedUser, id: "new-owner" });
+      await saveVaultOrganizationalUnit(record);
+    } finally {
+      readRelease.resolve();
+    }
+
+    await expect(stale).resolves.toBeUndefined();
+    await expect(getVaultOrganizationalUnit(record.id)).resolves.toEqual(
+      expect.objectContaining({ id: record.id, name: record.name })
+    );
   });
 
   it("stores the persisted profile in the encrypted vault and keeps auth_user out of localStorage", async () => {
@@ -805,7 +861,8 @@ describe("offlineVault", () => {
     const releaseOrganizationalUnitWrite = createDeferredPromise<void>();
     vi.spyOn(db.vaultOrganizationalUnitCache, "bulkPut").mockImplementationOnce(
       () => {
-        organizationalUnitWriteStarted.resolve();
+        // Interrupt the transaction from an independent browser task.
+        setTimeout(() => organizationalUnitWriteStarted.resolve(), 0);
         return Dexie.waitFor(releaseOrganizationalUnitWrite.promise).then(
           () => "org-1"
         ) as unknown as ReturnType<

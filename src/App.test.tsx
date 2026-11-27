@@ -21,6 +21,7 @@ const {
   mockGetCurrentUser,
   mockFetchCsrfToken,
   mockAuthStorage,
+  resetMockAuthStorage,
   mockLoadAuthenticatedAppModule,
   mockUpdatePrompt,
 } = vi.hoisted(() => {
@@ -28,7 +29,6 @@ const {
   let vaultPresent = false;
   let vaultLocked = false;
   let logoutBarrier = false;
-  let skipVaultTableCleanup = false;
   let userRevalidationOwnerToken: string | null = null;
   let nextUserRevalidationOwner = 0;
 
@@ -37,6 +37,13 @@ const {
     mockFetchCsrfToken: vi.fn(),
     mockLoadAuthenticatedAppModule: vi.fn(() => import("./AuthenticatedApp")),
     mockUpdatePrompt: vi.fn(() => <div data-testid="update-prompt" />),
+    resetMockAuthStorage: () => {
+      storedUser = null;
+      vaultPresent = false;
+      vaultLocked = false;
+      logoutBarrier = false;
+      userRevalidationOwnerToken = null;
+    },
     mockAuthStorage: {
       hasStoredUser: vi.fn(
         () =>
@@ -91,47 +98,19 @@ const {
         vaultLocked = false;
         return { status: "unlocked" as const, user: storedUser };
       }),
-      removeUser: vi.fn(async () => {
-        storedUser = null;
-        vaultPresent = false;
-        vaultLocked = false;
-        logoutBarrier = false;
-        userRevalidationOwnerToken = null;
-      }),
       clear: vi.fn(async (options?: Parameters<AuthStorage["clear"]>[0]) => {
         storedUser = null;
         vaultPresent = false;
         vaultLocked = false;
-        logoutBarrier = options?.sensitiveLogoutCleanupOwnerToken !== undefined;
-        skipVaultTableCleanup = false;
+        logoutBarrier = true;
         userRevalidationOwnerToken = null;
+        const { authStorage: realStorage } =
+          await vi.importActual<typeof import("./services/storage")>(
+            "./services/storage"
+          );
+        await realStorage.clear(options);
       }),
       hasLogoutBarrier: vi.fn(() => logoutBarrier),
-      shouldSkipBarrierVaultTableCleanup: vi.fn(() => skipVaultTableCleanup),
-      setSkipBarrierVaultTableCleanup: vi.fn((shouldSkip: boolean) => {
-        skipVaultTableCleanup = shouldSkip;
-      }),
-      beginSensitiveLogoutBarrierCleanup: vi.fn(() => {
-        logoutBarrier = true;
-        skipVaultTableCleanup = true;
-        const owner = "test-logout-barrier-owner";
-        localStorage.setItem("auth_logout_barrier", owner);
-        return owner;
-      }),
-      completeStaleSensitiveLogoutBarrierCleanup: vi.fn(() => {
-        skipVaultTableCleanup = false;
-      }),
-      endSensitiveLogoutBarrierCleanup: vi.fn(() => {
-        skipVaultTableCleanup = false;
-      }),
-      abortPendingPersistence: vi.fn(),
-      abortPendingVaultCleanup: vi.fn(async () => undefined),
-      waitForSensitiveLogoutCleanupLock: vi.fn(async (owner: string | null) =>
-        owner !== null && localStorage.getItem("auth_logout_barrier") === owner
-          ? new AbortController().signal
-          : null
-      ),
-      waitForInFlightVaultTableCleanup: vi.fn(async () => undefined),
     } satisfies AuthStorage,
   };
 });
@@ -409,8 +388,7 @@ describe("App", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    await authStorage.clear();
-    mockAuthStorage.clear.mockClear();
+    resetMockAuthStorage();
     localStorage.clear();
     sessionStorage.clear();
     delete (globalThis as { SecPalNativeAuthBridge?: unknown })

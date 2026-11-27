@@ -4,7 +4,6 @@
 import type { AnalyticsEvent, AnalyticsEventType } from "./db";
 import {
   clearOldVaultAnalyticsEvents,
-  clearVaultAnalytics,
   listUnsyncedVaultAnalyticsRecordIds,
   listVaultAnalyticsEvents,
   markVaultAnalyticsEventsSynced,
@@ -97,10 +96,8 @@ class OfflineAnalytics {
     this.resumeAuthenticatedSession(userId);
   }
 
-  /**
-   * Reset analytics after logout so no user- or session-linked local data remains.
-   */
-  async resetForLogout(): Promise<void> {
+  /** Reset in-memory analytics after the lifecycle commits persisted cleanup. */
+  resetForLogout(): void {
     this.trackingEnabled = false;
     this.userId = undefined;
     this.sessionId = this.generateSessionId();
@@ -109,8 +106,6 @@ class OfflineAnalytics {
       clearTimeout(this.syncTimeout);
       this.syncTimeout = undefined;
     }
-
-    await clearVaultAnalytics();
   }
 
   /**

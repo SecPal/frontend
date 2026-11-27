@@ -5,7 +5,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { analytics } from "./analytics";
 import {
   clearOldVaultAnalyticsEvents,
-  clearVaultAnalytics,
   listUnsyncedVaultAnalyticsRecordIds,
   listVaultAnalyticsEvents,
   markVaultAnalyticsEventsSynced,
@@ -14,7 +13,6 @@ import {
 
 vi.mock("./offlineVault", () => ({
   storeVaultAnalyticsEvent: vi.fn().mockResolvedValue(1),
-  clearVaultAnalytics: vi.fn().mockResolvedValue(undefined),
   listUnsyncedVaultAnalyticsRecordIds: vi.fn().mockResolvedValue([]),
   markVaultAnalyticsEventsSynced: vi.fn().mockResolvedValue(undefined),
   listVaultAnalyticsEvents: vi.fn().mockResolvedValue([]),
@@ -333,7 +331,7 @@ describe("OfflineAnalytics", () => {
       expect(markVaultAnalyticsEventsSynced).toHaveBeenCalledWith([1, 2]);
     });
 
-    it("clears persisted analytics state and disables tracking on logout reset", async () => {
+    it("disables tracking after the lifecycle clears persisted analytics", async () => {
       analytics!.resumeAuthenticatedSession("user-456");
 
       await analytics!.trackPageView("/dashboard", "Dashboard");
@@ -341,9 +339,7 @@ describe("OfflineAnalytics", () => {
 
       vi.clearAllMocks();
 
-      await analytics!.resetForLogout();
-
-      expect(clearVaultAnalytics).toHaveBeenCalledTimes(1);
+      analytics!.resetForLogout();
 
       await analytics!.trackPageView("/login", "Login");
 

@@ -3,6 +3,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { runWithOfflineVaultLifecycleLock } from "./offlineVaultLifecycleLock";
+import { installSerializedWebLocks } from "../testUtils/serializedWebLocks";
 
 describe("offline vault lifecycle lock", () => {
   let originalLocksDescriptor: PropertyDescriptor | undefined;
@@ -98,5 +99,34 @@ describe("offline vault lifecycle lock", () => {
     await Promise.resolve();
 
     expect(operation).not.toHaveBeenCalled();
+  });
+
+  it("releases the lock when its callback never settles and rejects later side effects", async () => {
+    const undo = installSerializedWebLocks();
+    vi.useFakeTimers();
+    const owner = new AbortController();
+    let onStarted!: (signal: AbortSignal) => void;
+    const started = new Promise<AbortSignal>((resolve) => {
+      onStarted = resolve;
+    });
+    const operation = runWithOfflineVaultLifecycleLock(async (signal) => {
+      onStarted(signal);
+      await new Promise<never>(() => undefined);
+    }, owner.signal);
+    const result = operation.catch((error: unknown) => error);
+    try {
+      const signal = await started;
+      await vi.advanceTimersByTimeAsync(5_000);
+      expect(signal.aborted).toBe(true);
+      expect(await result).toMatchObject({ name: "TimeoutError" });
+      await expect(
+        runWithOfflineVaultLifecycleLock(async () => "next")
+      ).resolves.toBe("next");
+    } finally {
+      owner.abort();
+      await result;
+      vi.useRealTimers();
+      undo();
+    }
   });
 });

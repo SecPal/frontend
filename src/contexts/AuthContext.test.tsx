@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { authLifecycle } from "../lib/authLifecycle";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, act, waitFor } from "@testing-library/react";
 import { AuthProvider, BOOTSTRAP_REVALIDATION_TIMEOUT_MS } from "./AuthContext";
@@ -16,7 +17,7 @@ import {
 } from "../lib/offlineVault";
 import {
   clearBrowserPushClientState,
-  clearSensitiveClientState,
+  clearDestructiveSensitiveClientState,
 } from "../lib/clientStateCleanup";
 import { authStorage } from "../services/storage";
 import { resetPrefetchCache } from "../hooks/usePrefetch";
@@ -43,7 +44,6 @@ vi.mock("../lib/serviceWorkerSession", () => ({
 }));
 
 vi.mock("../lib/clientStateCleanup", () => ({
-  clearSensitiveClientState: mockClearSensitiveClientState,
   clearDestructiveSensitiveClientState: mockClearSensitiveClientState,
   clearBrowserPushClientState: mockClearBrowserPushClientState,
   clearTrailingSensitiveClientState: mockClearBrowserPushClientState,
@@ -490,52 +490,51 @@ describe("AuthContext", () => {
       });
 
       const pushCleanupPromise = new Promise<void>(() => {});
+      let onTrailingStarted!: () => void;
+      const trailingStarted = new Promise<void>((resolve) => {
+        onTrailingStarted = resolve;
+      });
       const setUserSpy = vi.spyOn(authStorage, "setUser");
 
-      vi.mocked(clearSensitiveClientState).mockClear();
+      vi.mocked(clearDestructiveSensitiveClientState).mockClear();
       vi.mocked(clearBrowserPushClientState).mockClear();
-      vi.mocked(clearBrowserPushClientState).mockImplementationOnce(
-        () => pushCleanupPromise
-      );
+      vi.mocked(clearBrowserPushClientState).mockImplementationOnce(() => {
+        onTrailingStarted();
+        return pushCleanupPromise;
+      });
       vi.useFakeTimers();
 
       try {
         await act(async () => {
           screen.getByRole("button", { name: /logout/i }).click();
+          await trailingStarted;
         });
 
         expect(screen.getByTestId("userEmail")).toHaveTextContent("none");
 
         await act(async () => {
-          vi.advanceTimersByTime(5_000);
-          await Promise.resolve();
+          await vi.advanceTimersByTimeAsync(5_000);
         });
-
-        await act(async () => {
-          screen.getByRole("button", { name: /login next user/i }).click();
-          await Promise.resolve();
-        });
-
-        await act(async () => {
-          vi.advanceTimersByTime(5_000);
-          await Promise.resolve();
-        });
-
-        expect(setUserSpy).toHaveBeenCalledTimes(1);
-
-        const cleanupCallOrder = vi.mocked(clearSensitiveClientState).mock
-          .invocationCallOrder[0]!;
-        const setUserCallOrder = setUserSpy.mock.invocationCallOrder[0]!;
-
-        expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
-        expect(cleanupCallOrder).toBeLessThan(setUserCallOrder);
 
         vi.useRealTimers();
+        await act(async () => {
+          screen.getByRole("button", { name: /login next user/i }).click();
+        });
+
         await waitFor(() => {
           expect(screen.getByTestId("userEmail")).toHaveTextContent(
             "next@secpal.dev"
           );
         });
+
+        expect(setUserSpy).toHaveBeenCalledTimes(1);
+
+        const cleanupCallOrder = vi.mocked(clearDestructiveSensitiveClientState)
+          .mock.invocationCallOrder[0]!;
+        const setUserCallOrder = setUserSpy.mock.invocationCallOrder[0]!;
+
+        expect(clearDestructiveSensitiveClientState).toHaveBeenCalledTimes(1);
+        expect(cleanupCallOrder).toBeLessThan(setUserCallOrder);
       } finally {
         vi.useRealTimers();
         setUserSpy.mockRestore();
@@ -647,8 +646,8 @@ describe("AuthContext", () => {
     });
 
     it("keeps a new shared vault while an earlier tab still remembers a logout", async () => {
-      localStorage.setItem("auth_logout_barrier", "earlier-logout");
-      const removeUser = vi.spyOn(authStorage, "removeUser");
+      await authStorage.clear();
+      const clear = vi.spyOn(authStorage, "clear");
       const getUser = vi.spyOn(authStorage, "getUser");
 
       try {
@@ -657,8 +656,11 @@ describe("AuthContext", () => {
             <PermissionTestComponent permission="employees.read" />
           </AuthProvider>
         );
-        await waitFor(() => expect(removeUser).toHaveBeenCalled());
-        await removeUser.mock.results[0]?.value;
+        await waitFor(() =>
+          expect(screen.getByTestId("isLoading")).toHaveTextContent("false")
+        );
+        expect(screen.getByTestId("hasPermission")).toHaveTextContent("false");
+        expect(clear).not.toHaveBeenCalled();
 
         // A different tab signs in before this tab receives a barrier removal
         // notification. Publish the new vault and dispatch its first event.
@@ -670,8 +672,7 @@ describe("AuthContext", () => {
         });
         const vault = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
         expect(vault).not.toBeNull();
-        expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
-        removeUser.mockClear();
+        expect(authStorage.hasLogoutBarrier()).toBe(false);
         getUser.mockClear();
         vi.mocked(syncOfflineSessionAccess).mockClear();
 
@@ -687,18 +688,18 @@ describe("AuthContext", () => {
         });
 
         expect(getUser).toHaveBeenCalled();
-        expect(removeUser).not.toHaveBeenCalled();
+        expect(clear).not.toHaveBeenCalled();
         expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(vault);
         expect(syncOfflineSessionAccess).not.toHaveBeenCalledWith(false, {
           redirectOpenClients: false,
         });
       } finally {
-        removeUser.mockRestore();
+        clear.mockRestore();
         getUser.mockRestore();
       }
     });
 
-    it("ignores a queued logout event after the shared barrier was removed", async () => {
+    it("ignores a queued logout event after the shared barrier was retired", async () => {
       await seedStoredUser({
         id: 1,
         name: "Test User",
@@ -715,6 +716,9 @@ describe("AuthContext", () => {
       );
       const vault = localStorage.getItem(AUTH_VAULT_STORAGE_KEY);
 
+      localStorage.setItem("auth_logout_barrier", "old-logout");
+      localStorage.setItem("auth_logout_cleanup:old-logout", "retired");
+      const current = authLifecycle.current();
       await act(async () => {
         window.dispatchEvent(
           new StorageEvent("storage", {
@@ -725,6 +729,7 @@ describe("AuthContext", () => {
         );
       });
 
+      expect(authLifecycle.owns(current)).toBe(true);
       expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(vault);
       expect(screen.getByTestId("hasPermission")).toHaveTextContent("true");
     });

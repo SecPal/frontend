@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { authLifecycle } from "../lib/authLifecycle";
 import { afterEach, describe, it, expect, beforeEach, vi } from "vitest";
 import Dexie from "dexie";
 import {
@@ -20,7 +21,7 @@ import { AuthUserPersistenceError, authStorage } from "../services/storage";
 import { sessionEvents } from "../services/sessionEvents";
 import {
   clearBrowserPushClientState,
-  clearSensitiveClientState,
+  clearDestructiveSensitiveClientState,
 } from "../lib/clientStateCleanup";
 import { createRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
 import * as prefetch from "./usePrefetch";
@@ -73,7 +74,6 @@ vi.mock("../services/csrf", async () => {
 });
 
 vi.mock("../lib/clientStateCleanup", () => ({
-  clearSensitiveClientState: mockClearSensitiveClientState,
   clearDestructiveSensitiveClientState: mockClearSensitiveClientState,
   clearBrowserPushClientState: mockClearBrowserPushClientState,
   clearTrailingSensitiveClientState: mockClearBrowserPushClientState,
@@ -195,7 +195,9 @@ const waitFor = waitForAuthState;
 
 async function waitForSensitiveClientCleanup(callCount: number = 1) {
   await waitFor(() => {
-    expect(clearSensitiveClientState).toHaveBeenCalledTimes(callCount);
+    expect(clearDestructiveSensitiveClientState).toHaveBeenCalledTimes(
+      callCount
+    );
   });
 }
 
@@ -225,7 +227,7 @@ describe("useAuth", () => {
     vi.clearAllMocks();
     mockGetCurrentUser.mockReset();
     vi.mocked(syncOfflineSessionAccess).mockReset();
-    vi.mocked(clearSensitiveClientState).mockReset();
+    vi.mocked(clearDestructiveSensitiveClientState).mockReset();
     vi.mocked(clearBrowserPushClientState).mockReset();
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.spyOn(console, "log").mockImplementation(() => {});
@@ -242,7 +244,9 @@ describe("useAuth", () => {
     mockAnalyticsResetForLogout.mockReset();
     mockAnalyticsResetForLogout.mockResolvedValue(undefined);
     mockAnalyticsResumeAuthenticatedSession.mockReset();
-    vi.mocked(clearSensitiveClientState).mockResolvedValue(undefined);
+    vi.mocked(clearDestructiveSensitiveClientState).mockResolvedValue(
+      undefined
+    );
     vi.mocked(clearBrowserPushClientState).mockResolvedValue(undefined);
     vi.mocked(syncOfflineSessionAccess).mockResolvedValue(undefined);
   });
@@ -753,7 +757,7 @@ describe("useAuth", () => {
 
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
     expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false);
     expect(
       vi
@@ -1004,8 +1008,8 @@ describe("useAuth", () => {
         await setUserDeferred.promise;
         return actualSetUser(user, options);
       });
-    const removeUserSpy = vi.spyOn(authStorage, "removeUser");
-    vi.mocked(clearSensitiveClientState).mockImplementationOnce(
+    const clearSpy = vi.spyOn(authStorage, "clear");
+    vi.mocked(clearDestructiveSensitiveClientState).mockImplementationOnce(
       () => sensitiveCleanupDeferred.promise
     );
 
@@ -1040,9 +1044,9 @@ describe("useAuth", () => {
         logoutPromise = Promise.resolve(result.current.logout());
       });
 
-      expect(removeUserSpy).toHaveBeenNthCalledWith(
+      expect(clearSpy).toHaveBeenNthCalledWith(
         1,
-        expect.objectContaining({ clearOfflineVaultTables: false })
+        expect.objectContaining({ sensitive: true })
       );
 
       await act(async () => {
@@ -1050,7 +1054,7 @@ describe("useAuth", () => {
         await Promise.resolve();
       });
 
-      expect(removeUserSpy).toHaveBeenCalledTimes(1);
+      expect(clearSpy).toHaveBeenCalledTimes(1);
       await waitForSensitiveClientCleanup();
 
       await act(async () => {
@@ -1058,14 +1062,14 @@ describe("useAuth", () => {
         await logoutPromise;
       });
 
-      expect(removeUserSpy).toHaveBeenCalledTimes(1);
+      expect(clearSpy).toHaveBeenCalledTimes(1);
       expectNoStoredAuthState();
     } finally {
       setUserDeferred.resolve();
       sensitiveCleanupDeferred.resolve();
       await Promise.allSettled([logoutPromise]);
       setUserSpy.mockRestore();
-      removeUserSpy.mockRestore();
+      clearSpy.mockRestore();
     }
   });
 
@@ -1089,8 +1093,8 @@ describe("useAuth", () => {
         await setUserDeferred.promise;
         return actualSetUser(user, options);
       });
-    const removeUserSpy = vi.spyOn(authStorage, "removeUser");
-    vi.mocked(clearSensitiveClientState).mockRejectedValueOnce(
+    const clearSpy = vi.spyOn(authStorage, "clear");
+    vi.mocked(clearDestructiveSensitiveClientState).mockRejectedValueOnce(
       sensitiveCleanupError
     );
 
@@ -1123,9 +1127,9 @@ describe("useAuth", () => {
         result.current.logout();
       });
 
-      expect(removeUserSpy).toHaveBeenNthCalledWith(
+      expect(clearSpy).toHaveBeenNthCalledWith(
         1,
-        expect.objectContaining({ clearOfflineVaultTables: false })
+        expect.objectContaining({ sensitive: true })
       );
 
       await waitForSensitiveClientCleanup();
@@ -1135,11 +1139,11 @@ describe("useAuth", () => {
         await Promise.resolve();
       });
 
-      expect(removeUserSpy).toHaveBeenCalledTimes(1);
+      expect(clearSpy).toHaveBeenCalledTimes(1);
       expectNoStoredAuthState();
     } finally {
       setUserSpy.mockRestore();
-      removeUserSpy.mockRestore();
+      clearSpy.mockRestore();
     }
   });
 
@@ -1206,7 +1210,6 @@ describe("useAuth", () => {
     expect(syncOfflineSessionAccess).toHaveBeenCalledWith(false, {
       redirectOpenClients: false,
     });
-    await authStorage.waitForInFlightVaultTableCleanup();
   });
 
   it("keeps cached auth state when bootstrap revalidation fails for a transient error after an automatic retry", async () => {
@@ -1245,7 +1248,7 @@ describe("useAuth", () => {
     expect(result.current.bootstrapRecoveryReason).toBe("network");
     expect(mockGetCurrentUser).toHaveBeenCalledTimes(2);
     await expect(authStorage.getUser()).resolves.toEqual(mockUser);
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
     expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
     expect(consoleWarnSpy.mock.calls[0]?.[0]).toBe(
       "Auth bootstrap revalidation failed; holding protected routes behind recovery UI."
@@ -1286,7 +1289,7 @@ describe("useAuth", () => {
       expect(result.current.isAuthenticated).toBe(false);
       expect(result.current.bootstrapRecoveryReason).toBe("network");
       expect(authStorage.hasStoredUser()).toBe(true);
-      expect(clearSensitiveClientState).not.toHaveBeenCalled();
+      expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
       expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
       expect(consoleWarnSpy.mock.calls[0]?.[0]).toBe(
         "Failed to restore persisted auth state because a lazy auth chunk could not be loaded; keeping the route behind recovery UI."
@@ -1329,7 +1332,7 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.bootstrapRecoveryReason).toBeNull();
     await expect(authStorage.getUser()).resolves.toEqual(mockUser);
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
   });
 
   it("does not restore a superseded native user after replacement persistence fails", async () => {
@@ -2084,10 +2087,10 @@ describe("useAuth", () => {
 
       expect(result.current.user).toBeNull();
       expect(result.current.isAuthenticated).toBe(false);
-      expect(clearSpy).toHaveBeenCalledWith({
-        clearOfflineVaultTables: true,
-      });
-      expect(clearSensitiveClientState).not.toHaveBeenCalled();
+      expect(clearSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ sensitive: false })
+      );
+      expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "Failed to restore persisted auth state:",
         restoreError
@@ -2145,98 +2148,75 @@ describe("useAuth", () => {
     expectNoStoredAuthState();
   });
 
-  it("waits for storage and analytics logout cleanup before clearing broader client state", async () => {
-    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
-
-    await persistAuthUser(mockUser);
-
-    const storageClear = createDeferredPromise<void>();
-    const analyticsReset = createDeferredPromise<void>();
-
-    const clearSpy = vi
-      .spyOn(authStorage, "clear")
-      .mockImplementation(() => storageClear.promise);
-    mockAnalyticsResetForLogout.mockImplementation(
-      () => analyticsReset.promise
+  it("starts destructive logout before deferred analytics work", async () => {
+    await persistAuthUser({
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+    });
+    const started = createDeferredPromise<void>();
+    const release = createDeferredPromise<void>();
+    vi.mocked(clearDestructiveSensitiveClientState).mockImplementationOnce(
+      () => {
+        started.resolve();
+        return release.promise;
+      }
     );
-
+    const analyticsStarted = createDeferredPromise<void>();
+    mockAnalyticsResetForLogout.mockImplementationOnce(async () => {
+      analyticsStarted.resolve();
+    });
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    let logout!: Promise<void>;
+    act(() => {
+      logout = Promise.resolve(result.current.logout());
+    });
     try {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      void result.current.logout();
-
-      await waitFor(() => {
-        expect(clearSpy).toHaveBeenCalledWith({
-          clearOfflineVaultTables: false,
-          sensitiveLogoutCleanupOwnerToken: expect.any(String),
-        });
-        expect(mockAnalyticsResetForLogout).toHaveBeenCalled();
-      });
-      expect(clearSensitiveClientState).not.toHaveBeenCalled();
-
-      storageClear.resolve();
-
-      await act(async () => {
-        await Promise.resolve();
-      });
-
-      expect(clearSensitiveClientState).not.toHaveBeenCalled();
-
-      analyticsReset.resolve();
-
-      await waitForSensitiveClientCleanup();
+      await started.promise;
+      expect(mockAnalyticsResetForLogout).not.toHaveBeenCalled();
+      expect(result.current.user).toBeNull();
     } finally {
-      storageClear.resolve();
-      analyticsReset.resolve();
-      clearSpy.mockRestore();
+      release.resolve();
+      await act(async () => {
+        await logout;
+      });
     }
+    await analyticsStarted.promise;
   });
 
-  it("does not skip vault-table cleanup when sensitive logout barrier setup fails", async () => {
-    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
-    const barrierError = new Error("barrier unavailable");
-    const clearSpy = vi.spyOn(authStorage, "clear").mockResolvedValue();
-    const beginBarrierSpy = vi
-      .spyOn(authStorage, "beginSensitiveLogoutBarrierCleanup")
-      .mockImplementationOnce(() => {
-        throw barrierError;
+  it("keeps discovery and persistence blocked when the logout barrier cannot be written", async () => {
+    const user = {
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+      emailVerified: false,
+    };
+    await persistAuthUser(user);
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    const setItem = Storage.prototype.setItem;
+    const blocker = vi
+      .spyOn(Storage.prototype, "setItem")
+      .mockImplementation(function (this: Storage, key: string, value: string) {
+        if (key === "auth_sensitive_logout_barrier") {
+          throw new Error("Synthetic storage write failure");
+        }
+        setItem.call(this, key, value);
       });
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => undefined);
-
     try {
-      await persistAuthUser(mockUser);
-
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
       await act(async () => {
         await result.current.logout();
       });
-
-      expect(clearSpy).toHaveBeenCalledWith({
-        clearOfflineVaultTables: true,
-      });
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        "Failed to create a sensitive logout barrier before cleanup:",
-        barrierError
+      expect(result.current.isAuthenticated).toBe(false);
+      await expect(authStorage.getUser()).resolves.toBeNull();
+      await expect(authStorage.setUser(user)).rejects.toBeInstanceOf(
+        AuthUserPersistenceError
       );
+      expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
     } finally {
-      consoleWarnSpy.mockRestore();
-      beginBarrierSpy.mockRestore();
-      clearSpy.mockRestore();
+      blocker.mockRestore();
+      await authStorage.clear();
     }
   });
 
@@ -2246,15 +2226,12 @@ describe("useAuth", () => {
       "Secure offline vault lifecycle coordination requires Web Locks.",
       "NotSupportedError"
     );
-    const waitForLockSpy = vi
-      .spyOn(authStorage, "waitForSensitiveLogoutCleanupLock")
-      .mockRejectedValueOnce(lockError);
     const consoleErrorSpy = vi
-      .spyOn(console, "error")
+      .spyOn(console, "warn")
       .mockImplementation(() => undefined);
 
     await persistAuthUser(mockUser);
-    vi.mocked(clearSensitiveClientState).mockClear();
+    vi.mocked(clearDestructiveSensitiveClientState).mockClear();
 
     try {
       const { result } = renderHook(() => useAuth(), {
@@ -2265,18 +2242,18 @@ describe("useAuth", () => {
         expect(result.current.isLoading).toBe(false);
       });
 
+      vi.spyOn(navigator.locks, "request").mockRejectedValueOnce(lockError);
       await act(async () => {
         await result.current.logout();
       });
 
-      expect(clearSensitiveClientState).not.toHaveBeenCalled();
+      expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "Failed to clear sensitive client state during logout:",
         lockError
       );
     } finally {
       consoleErrorSpy.mockRestore();
-      waitForLockSpy.mockRestore();
     }
   });
 
@@ -2286,7 +2263,7 @@ describe("useAuth", () => {
     await persistAuthUser(mockUser);
 
     const cleanupDeferred = createDeferredPromise<void>();
-    vi.mocked(clearSensitiveClientState).mockImplementationOnce(
+    vi.mocked(clearDestructiveSensitiveClientState).mockImplementationOnce(
       () => cleanupDeferred.promise
     );
 
@@ -2320,52 +2297,37 @@ describe("useAuth", () => {
     expect(settled).toBe(true);
   });
 
-  it("continues logout cleanup when analytics reset does not settle", async () => {
-    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
-
-    await persistAuthUser(mockUser);
-
-    mockAnalyticsResetForLogout.mockImplementationOnce(
-      () => new Promise<void>(() => undefined)
-    );
-
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => undefined);
+  it("commits logout when analytics reset never settles", async () => {
+    await persistAuthUser({
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+    });
+    const analyticsStarted = createDeferredPromise<void>();
+    mockAnalyticsResetForLogout.mockImplementationOnce(() => {
+      analyticsStarted.resolve();
+      return new Promise<void>(() => undefined);
+    });
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    vi.useFakeTimers();
 
     try {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      vi.useFakeTimers();
-
-      let logoutPromise!: Promise<void>;
-
+      let logout!: Promise<void>;
       act(() => {
-        logoutPromise = Promise.resolve(result.current.logout());
+        logout = Promise.resolve(result.current.logout());
       });
-
-      expect(clearSensitiveClientState).not.toHaveBeenCalled();
-
-      await vi.advanceTimersByTimeAsync(5_000);
-      await Promise.resolve();
-      await Promise.resolve();
-      expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+      await analyticsStarted.promise;
+      expect(clearDestructiveSensitiveClientState).toHaveBeenCalledOnce();
+      expectNoStoredAuthState();
       await act(async () => {
-        await logoutPromise;
+        await vi.advanceTimersByTimeAsync(5_000);
+        await logout;
       });
-
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        "Timed out waiting for analytics reset during logout; continuing with best-effort sensitive cleanup."
-      );
+      expect(result.current.user).toBeNull();
+      expect(authStorage.hasLogoutBarrier()).toBe(true);
     } finally {
       vi.useRealTimers();
-      consoleWarnSpy.mockRestore();
     }
   });
 
@@ -2373,11 +2335,11 @@ describe("useAuth", () => {
     const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
     const sensitiveCleanupError = new Error("cleanup failed");
     const consoleErrorSpy = vi
-      .spyOn(console, "error")
+      .spyOn(console, "warn")
       .mockImplementation(() => undefined);
 
     await persistAuthUser(mockUser);
-    vi.mocked(clearSensitiveClientState).mockRejectedValueOnce(
+    vi.mocked(clearDestructiveSensitiveClientState).mockRejectedValueOnce(
       sensitiveCleanupError
     );
     vi.mocked(clearBrowserPushClientState).mockClear();
@@ -2399,167 +2361,49 @@ describe("useAuth", () => {
         "Failed to clear sensitive client state during logout:",
         sensitiveCleanupError
       );
-      expect(clearBrowserPushClientState).toHaveBeenCalledTimes(1);
+      expect(clearBrowserPushClientState).not.toHaveBeenCalled();
     } finally {
       consoleErrorSpy.mockRestore();
     }
   });
 
-  it("reconciles stale logout owners before removing the current cleanup owner", async () => {
-    const mockUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
-    const callOrder: string[] = [];
-    const completeSpy = vi
-      .spyOn(authStorage, "completeStaleSensitiveLogoutBarrierCleanup")
-      .mockImplementation((ownerToken: string) => {
-        callOrder.push(`complete:${ownerToken}`);
-      });
-    const endSpy = vi
-      .spyOn(authStorage, "endSensitiveLogoutBarrierCleanup")
-      .mockImplementation((ownerToken: string) => {
-        callOrder.push(`end:${ownerToken}`);
-      });
-
-    await persistAuthUser(mockUser);
-
-    try {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      await act(async () => {
-        await result.current.logout();
-      });
-
-      expect(callOrder).toHaveLength(2);
-      expect(callOrder[0]?.split(":")[0]).toBe("complete");
-      expect(callOrder[1]?.split(":")[0]).toBe("end");
-      expect(callOrder[0]?.split(":")[1]).toBe(callOrder[1]?.split(":")[1]);
-    } finally {
-      completeSpy.mockRestore();
-      endSpy.mockRestore();
-    }
-  });
-
-  it("does not resolve logout or accept login until destructive cleanup settles", async () => {
-    const firstUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
-    const secondUser = {
-      id: "2",
-      name: "Next User",
-      email: "next@secpal.dev",
-    };
-
-    await persistAuthUser(firstUser);
-
-    const cleanupDeferred = createDeferredPromise<void>();
-    vi.mocked(clearSensitiveClientState).mockImplementationOnce(
-      () => cleanupDeferred.promise
+  it("holds UI login until the destructive logout commits", async () => {
+    await persistAuthUser({
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
+    });
+    const next = { id: "2", name: "Next User", email: "next@secpal.dev" };
+    const started = createDeferredPromise<void>();
+    const release = createDeferredPromise<void>();
+    vi.mocked(clearDestructiveSensitiveClientState).mockImplementationOnce(
+      () => {
+        started.resolve();
+        return release.promise;
+      }
     );
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => undefined);
-
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: AuthProvider,
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    let logout!: Promise<void>;
+    let login!: Promise<void>;
+    act(() => {
+      logout = Promise.resolve(result.current.logout());
     });
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    const setUserSpy = vi
-      .spyOn(authStorage, "setUser")
-      .mockResolvedValue({ status: "persisted" });
-
-    vi.useFakeTimers();
-
-    let loginSettled = false;
-    let logoutSettled = false;
-    let logoutPromise!: Promise<void>;
-    let loginPromise!: Promise<void>;
-
+    await started.promise;
     try {
-      act(() => {
-        logoutPromise = Promise.resolve(result.current.logout());
-        void logoutPromise.then(() => {
-          logoutSettled = true;
-        });
-      });
-
       await act(async () => {
-        await Promise.resolve();
-        await Promise.resolve();
+        login = Promise.resolve(result.current.login(next));
       });
-
-      expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
-
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(5_000);
-        await Promise.resolve();
-      });
-
-      expect(logoutSettled).toBe(false);
-
-      act(() => {
-        loginPromise = Promise.resolve(result.current.login(secondUser));
-        void loginPromise.then(() => {
-          loginSettled = true;
-        });
-      });
-
-      await act(async () => {
-        await Promise.resolve();
-      });
-
-      expect(loginSettled).toBe(false);
       expect(result.current.user).toBeNull();
-      expect(setUserSpy).not.toHaveBeenCalled();
-
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(5_000);
-        await Promise.resolve();
-      });
-
-      expect(loginSettled).toBe(false);
-      expect(result.current.user).toBeNull();
-      expect(setUserSpy).not.toHaveBeenCalled();
-      expect(consoleWarnSpy).not.toHaveBeenCalledWith(
-        "Timed out waiting for trailing logout cleanup during logout; continuing with best-effort barrier teardown."
-      );
-
-      cleanupDeferred.resolve();
-
-      await act(async () => {
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
-      expect(logoutSettled).toBe(true);
-      expect(loginSettled).toBe(true);
-      expect(setUserSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: "2",
-          name: "Next User",
-          email: "next@secpal.dev",
-        }),
-        expect.objectContaining({ shouldCommit: expect.any(Function) })
-      );
-      expect(result.current.user).toEqual(
-        expect.objectContaining({
-          id: "2",
-          name: "Next User",
-          email: "next@secpal.dev",
-        })
-      );
+      expect(authStorage.hasLogoutBarrier()).toBe(true);
     } finally {
-      cleanupDeferred.resolve();
-      consoleWarnSpy.mockRestore();
-      setUserSpy.mockRestore();
-      vi.useRealTimers();
+      release.resolve();
     }
+    await act(async () => {
+      await Promise.all([logout, login]);
+    });
+    expect(result.current.user).toMatchObject(next);
+    expect(authStorage.hasLogoutBarrier()).toBe(false);
   });
 
   it("does not redirect a newer cross-tab login after trailing logout cleanup", async () => {
@@ -2588,16 +2432,19 @@ describe("useAuth", () => {
     try {
       await waitFor(() => {
         expect(clearBrowserPushClientState).toHaveBeenCalledOnce();
-        expect(authStorage.shouldSkipBarrierVaultTableCleanup()).toBe(false);
       });
       expect(syncOfflineSessionAccess).toHaveBeenCalledExactlyOnceWith(false, {
         redirectOpenClients: false,
       });
 
-      const logoutBarrier = localStorage.getItem("auth_logout_barrier");
+      const logoutBarrier = authLifecycle.barrier();
       await persistAuthUser(secondUser);
       act(() => {
-        dispatchLocalStorageEvent("auth_logout_barrier", null, logoutBarrier);
+        dispatchLocalStorageEvent(
+          `auth_logout_cleanup:${logoutBarrier}`,
+          "retired",
+          "committed"
+        );
       });
       await waitFor(() =>
         expect(result.current.user).toMatchObject(secondUser)
@@ -2628,7 +2475,9 @@ describe("useAuth", () => {
     const cleanupError = new Error("IndexedDB cleanup rolled back");
 
     await persistAuthUser(firstUser);
-    vi.mocked(clearSensitiveClientState).mockRejectedValueOnce(cleanupError);
+    vi.mocked(clearDestructiveSensitiveClientState).mockRejectedValueOnce(
+      cleanupError
+    );
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
@@ -2645,13 +2494,14 @@ describe("useAuth", () => {
       await result.current.login(secondUser);
     });
 
-    expect(setUserSpy).not.toHaveBeenCalled();
+    expect(setUserSpy).toHaveBeenCalledOnce();
     expect(result.current.user).toBeNull();
     expect(authStorage.hasLogoutBarrier()).toBe(true);
+    expect(result.current.bootstrapRecoveryReason).toBe("network");
     setUserSpy.mockRestore();
   });
 
-  it("redirects only when trailing cleanup finishes after the logout wait times out", async () => {
+  it("redirects once after the trailing cleanup deadline", async () => {
     await persistAuthUser({
       id: "logout-user",
       name: "Logout User",
@@ -2676,17 +2526,15 @@ describe("useAuth", () => {
         await logoutPromise;
       });
       expect(clearBrowserPushClientState).toHaveBeenCalledOnce();
-      expect(syncOfflineSessionAccess).toHaveBeenCalledExactlyOnceWith(false, {
-        redirectOpenClients: false,
+      expect(syncOfflineSessionAccess).toHaveBeenNthCalledWith(2, false, {
+        redirectOpenClients: true,
       });
 
       await act(async () => {
         trailingCleanup.resolve();
         await trailingCleanup.promise;
       });
-      expect(syncOfflineSessionAccess).toHaveBeenNthCalledWith(2, false, {
-        redirectOpenClients: true,
-      });
+      expect(syncOfflineSessionAccess).toHaveBeenCalledTimes(2);
     } finally {
       trailingCleanup.resolve();
       vi.useRealTimers();
@@ -2700,12 +2548,10 @@ describe("useAuth", () => {
       email: "current@secpal.dev",
     });
     const cleanup = createDeferredPromise<void>();
-    vi.mocked(clearSensitiveClientState).mockImplementationOnce(
+    vi.mocked(clearDestructiveSensitiveClientState).mockImplementationOnce(
       () => cleanup.promise
     );
-    const setUserSpy = vi
-      .spyOn(authStorage, "setUser")
-      .mockResolvedValue({ status: "persisted" });
+    const setUserSpy = vi.spyOn(authStorage, "setUser");
     const { result } = renderHook(() => useAuth(), {
       wrapper: AuthProvider,
     });
@@ -2733,155 +2579,48 @@ describe("useAuth", () => {
       await Promise.all([firstLogout, login, newerLogout]);
     });
 
-    expect(setUserSpy).not.toHaveBeenCalled();
+    expect(setUserSpy).toHaveBeenCalledOnce();
     expect(result.current.user).toBeNull();
     expect(authStorage.hasLogoutBarrier()).toBe(true);
   });
 
-  it("runs a real second logout after login resumes from a timed-out trailing cleanup handoff", async () => {
-    const firstUser = { id: "1", name: "Test User", email: "test@secpal.dev" };
-    const secondUser = {
-      id: "2",
-      name: "Next User",
-      email: "next@secpal.dev",
-    };
-
-    await persistAuthUser(firstUser);
-
-    const pushCleanupDeferred = createDeferredPromise<void>();
-    vi.mocked(clearBrowserPushClientState).mockImplementationOnce(
-      () => pushCleanupDeferred.promise
-    );
-    const clearSpy = vi.spyOn(authStorage, "clear");
-    const beginBarrierSpy = vi.spyOn(
-      authStorage,
-      "beginSensitiveLogoutBarrierCleanup"
-    );
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => undefined);
-
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: AuthProvider,
+  it("starts a fresh logout after a new login during trailing work", async () => {
+    await persistAuthUser({
+      id: "1",
+      name: "Test User",
+      email: "test@secpal.dev",
     });
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
+    const next = { id: "2", name: "Next User", email: "next@secpal.dev" };
+    const started = createDeferredPromise<void>();
+    const trailing = createDeferredPromise<void>();
+    vi.mocked(clearBrowserPushClientState).mockImplementationOnce(() => {
+      started.resolve();
+      return trailing.promise;
     });
-
-    vi.useFakeTimers();
-
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    let first!: Promise<void>;
+    act(() => {
+      first = Promise.resolve(result.current.logout());
+    });
+    await started.promise;
+    const firstBarrier = authLifecycle.barrier();
     try {
-      act(() => {
-        void result.current.logout();
-      });
       await act(async () => {
-        await Promise.resolve();
-        await Promise.resolve();
-        await vi.advanceTimersByTimeAsync(5_000);
-        await Promise.resolve();
+        await result.current.login(next);
       });
-
-      act(() => {
-        void result.current.login(secondUser);
-      });
+      expect(result.current.user).toMatchObject(next);
       await act(async () => {
-        await Promise.resolve();
-        await vi.advanceTimersByTimeAsync(5_000);
-        await Promise.resolve();
+        await result.current.logout();
       });
-
-      const clearCallCountAfterFirstLogout = clearSpy.mock.calls.length;
-
-      act(() => {
-        void result.current.logout();
-      });
-      await act(async () => {
-        await Promise.resolve();
-        await Promise.resolve();
-      });
-
-      expect(clearSpy.mock.calls.length).toBeGreaterThan(
-        clearCallCountAfterFirstLogout
-      );
-      expect(clearSpy).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          clearOfflineVaultTables: false,
-        })
-      );
-      expect(beginBarrierSpy).toHaveBeenCalledTimes(2);
-      expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        "Timed out waiting for trailing logout cleanup during logout; continuing with best-effort barrier teardown."
-      );
+      expect(result.current.user).toBeNull();
+      expect(authLifecycle.barrier()).not.toBe(firstBarrier);
+      expect(clearDestructiveSensitiveClientState).toHaveBeenCalledTimes(2);
     } finally {
-      pushCleanupDeferred.resolve();
-      beginBarrierSpy.mockRestore();
-      clearSpy.mockRestore();
-      consoleWarnSpy.mockRestore();
-      vi.useRealTimers();
-    }
-  });
-
-  it("upgrades an in-flight non-sensitive auth clear when logout is requested", async () => {
-    const storageClear = createDeferredPromise<void>();
-    const restoreError = new Error("restore failed");
-    const barrierError = new Error("barrier unavailable");
-    const clearSpy = vi
-      .spyOn(authStorage, "clear")
-      .mockImplementation(() => storageClear.promise);
-    const getUserSpy = vi
-      .spyOn(authStorage, "getUser")
-      .mockRejectedValue(restoreError);
-    const beginBarrierSpy = vi
-      .spyOn(authStorage, "beginSensitiveLogoutBarrierCleanup")
-      .mockImplementationOnce(() => {
-        throw barrierError;
-      });
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => undefined);
-
-    try {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(clearSpy).toHaveBeenCalledWith({
-          clearOfflineVaultTables: true,
-        });
-      });
-      expect(clearSpy).toHaveBeenCalledTimes(1);
-      expect(syncOfflineSessionAccess).toHaveBeenNthCalledWith(1, false, {
-        redirectOpenClients: false,
-      });
-
-      expect(clearSensitiveClientState).not.toHaveBeenCalled();
-
-      let logoutPromise!: Promise<void>;
-      act(() => {
-        logoutPromise = Promise.resolve(result.current.logout());
-      });
-
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        "Failed to create a sensitive logout barrier before cleanup:",
-        barrierError
-      );
-      expect(syncOfflineSessionAccess).toHaveBeenCalledTimes(1);
-
+      trailing.resolve();
       await act(async () => {
-        storageClear.resolve();
-        await logoutPromise;
+        await first;
       });
-      expect(clearSensitiveClientState).not.toHaveBeenCalled();
-      expect(authStorage.hasLogoutBarrier()).toBe(false);
-      expect(syncOfflineSessionAccess).toHaveBeenCalledTimes(1);
-    } finally {
-      consoleWarnSpy.mockRestore();
-      beginBarrierSpy.mockRestore();
-      clearSpy.mockRestore();
-      getUserSpy.mockRestore();
     }
   });
 
@@ -2906,7 +2645,7 @@ describe("useAuth", () => {
         const clearPromise = actualClear(options);
 
         localStorage.setItem("auth_logout_barrier", "other-tab");
-        authStorage.setSkipBarrierVaultTableCleanup(true);
+        localStorage.setItem("auth_logout_cleanup:other-tab", "pending");
         const crossTabLogoutEvent = new Event("storage");
         Object.defineProperties(crossTabLogoutEvent, {
           key: { value: "auth_logout_barrier" },
@@ -2935,14 +2674,11 @@ describe("useAuth", () => {
         expect(clearSpy).toHaveBeenCalledTimes(1);
       });
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
+      await clearSpy.mock.results[0]?.value;
+      expect(result.current.isAuthenticated).toBe(false);
 
-      await authStorage.waitForInFlightVaultTableCleanup();
-
-      expect(localStorage.getItem("auth_logout_barrier")).toBe("other-tab");
-      expect(clearSensitiveClientState).not.toHaveBeenCalled();
+      expect(authLifecycle.barrier()).toBe("other-tab");
+      expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
       expect(vaultProfileClearSpy).not.toHaveBeenCalled();
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "Failed to restore persisted auth state:",
@@ -2956,7 +2692,7 @@ describe("useAuth", () => {
     }
   });
 
-  it("waits for in-flight vault table cleanup before full logout deletes broader client state", async () => {
+  it("supersedes the in-flight vault-only cleanup before full logout", async () => {
     const mockUser = {
       id: "1",
       name: "Test User",
@@ -2992,15 +2728,11 @@ describe("useAuth", () => {
         result.current.logout();
       });
 
-      expect(clearSensitiveClientState).not.toHaveBeenCalled();
-
+      await waitForSensitiveClientCleanup();
       await act(async () => {
         vaultProfileClear.resolve();
-        await Promise.resolve();
       });
-
-      await waitForSensitiveClientCleanup();
-      expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
+      expect(authLifecycle.barrier()).not.toBeNull();
     } finally {
       vaultProfileClearSpy.mockRestore();
       getUserSpy.mockRestore();
@@ -3103,82 +2835,44 @@ describe("useAuth", () => {
 
     expect(localStorage.getItem("auth_user")).toBeNull();
     await waitFor(() => {
-      expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
+      expect(authLifecycle.barrier()).not.toBeNull();
     });
     await waitForSensitiveClientCleanup();
   });
 
-  it("keeps the skip marker until overlapping full logout cleanups finish", async () => {
-    const mockUser = {
+  it("shares one destructive cleanup for overlapping logout requests", async () => {
+    await persistAuthUser({
       id: "1",
       name: "Test User",
       email: "test@secpal.dev",
-      emailVerified: false,
-    };
-    const firstSensitiveCleanup = createDeferredPromise<void>();
-    const secondSensitiveCleanup = createDeferredPromise<void>();
-
-    vi.mocked(clearSensitiveClientState)
-      .mockImplementationOnce(() => firstSensitiveCleanup.promise)
-      .mockImplementationOnce(() => secondSensitiveCleanup.promise);
-
-    await persistAuthUser(mockUser);
-
-    const firstAuth = renderHook(() => useAuth(), {
-      wrapper: AuthProvider,
     });
-    const secondAuth = renderHook(() => useAuth(), {
-      wrapper: AuthProvider,
+    const started = createDeferredPromise<void>();
+    const release = createDeferredPromise<void>();
+    vi.mocked(clearDestructiveSensitiveClientState).mockImplementationOnce(
+      () => {
+        started.resolve();
+        return release.promise;
+      }
+    );
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    let first!: Promise<void>;
+    let second!: Promise<void>;
+    act(() => {
+      first = Promise.resolve(result.current.logout());
     });
-
-    await waitFor(() => {
-      expect(firstAuth.result.current.isAuthenticated).toBe(true);
-      expect(secondAuth.result.current.isAuthenticated).toBe(true);
+    await started.promise;
+    const barrier = authLifecycle.barrier();
+    act(() => {
+      second = Promise.resolve(result.current.logout());
     });
-
-    let firstLogout: Promise<void> | null = null;
-    let secondLogout: Promise<void> | null = null;
-
-    try {
-      act(() => {
-        firstLogout = Promise.resolve(firstAuth.result.current.logout());
-      });
-
-      await waitForSensitiveClientCleanup();
-      act(() => {
-        secondLogout = Promise.resolve(secondAuth.result.current.logout());
-      });
-
-      expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
-        "1"
-      );
-
-      await act(async () => {
-        firstSensitiveCleanup.resolve();
-        await Promise.resolve();
-      });
-
-      await waitForSensitiveClientCleanup(2);
-      expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
-        "1"
-      );
-
-      await act(async () => {
-        secondSensitiveCleanup.resolve();
-        await Promise.all([firstLogout, secondLogout]);
-      });
-
-      await waitFor(() => {
-        expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
-        expect(
-          localStorage.getItem("auth_logout_skip_vault_table_cleanup")
-        ).toBeNull();
-      });
-    } finally {
-      firstSensitiveCleanup.resolve();
-      secondSensitiveCleanup.resolve();
-      await Promise.allSettled([firstLogout, secondLogout]);
-    }
+    expect(authLifecycle.barrier()).toBe(barrier);
+    release.resolve();
+    await act(async () => {
+      await Promise.all([first, second]);
+    });
+    expect(clearDestructiveSensitiveClientState).toHaveBeenCalledOnce();
+    expect(authStorage.hasLogoutBarrier()).toBe(true);
   });
 
   it("locks the vault locally without deleting wrapped offline data and unlocks it again", async () => {
@@ -3218,7 +2912,7 @@ describe("useAuth", () => {
     expect(result.current.sensitiveUiState).toBe("vault-locked");
     expect(result.current.user).toBeNull();
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
     expect(syncOfflineSessionAccess).toHaveBeenCalledWith(true);
     expect(syncOfflineSessionAccess).not.toHaveBeenCalledWith(false);
 
@@ -3266,7 +2960,7 @@ describe("useAuth", () => {
     expect(result.current.isVaultLocked).toBe(true);
     expect(result.current.user).toBeNull();
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(storedVaultState);
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
   });
 
   it("lets a logout barrier supersede a successful in-flight vault unlock", async () => {
@@ -3289,10 +2983,7 @@ describe("useAuth", () => {
     act(() => {
       result.current.lock?.();
     });
-    const barrierCleanup = createDeferredPromise<void>();
-    const removeUser = vi
-      .spyOn(authStorage, "removeUser")
-      .mockReturnValueOnce(barrierCleanup.promise);
+    const clear = vi.spyOn(authStorage, "clear");
     vi.mocked(syncOfflineSessionAccess).mockClear();
     vi.spyOn(authStorage, "unlockVault").mockImplementationOnce(async () => {
       localStorage.setItem("auth_logout_barrier", "1");
@@ -3308,17 +2999,10 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.user).toBeNull();
     expect(result.current.isVaultLocked).toBe(false);
-    expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
-    expect(removeUser).toHaveBeenCalled();
+    expect(authLifecycle.barrier()).not.toBeNull();
+    expect(clear).not.toHaveBeenCalled();
     expect(syncOfflineSessionAccess).toHaveBeenCalledExactlyOnceWith(false, {
       redirectOpenClients: false,
-    });
-    await act(async () => {
-      barrierCleanup.resolve();
-      await barrierCleanup.promise;
-    });
-    expect(syncOfflineSessionAccess).toHaveBeenNthCalledWith(2, false, {
-      redirectOpenClients: true,
     });
   });
 
@@ -3430,7 +3114,7 @@ describe("useAuth", () => {
     expect(result.current.user).toEqual(mockUser);
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(storedVaultState);
     expect(lockVault).not.toHaveBeenCalled();
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
     await expect(readPersistedAuthUserFromVault()).resolves.toEqual(mockUser);
 
     act(() => {
@@ -3514,7 +3198,7 @@ describe("useAuth", () => {
     expect(result.current.isVaultLocked).toBe(false);
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.user).toEqual(revalidatedUser);
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
   });
 
   it("keeps the vault unlockable after a locked tab receives a cross-tab vault rewrite and the CSRF token rotates again", async () => {
@@ -3606,7 +3290,7 @@ describe("useAuth", () => {
     expect(result.current.isVaultLocked).toBe(false);
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.user).toEqual(user);
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
   });
 
   it("propagates vault lock and unlock state across tabs", async () => {
@@ -3655,7 +3339,7 @@ describe("useAuth", () => {
 
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
     expect(getActiveOfflineVaultSession()).toBeNull();
     expect(activeVaultSession.rootKeyBytes).toEqual(
       new Uint8Array(activeVaultSession.rootKeyBytes.length)
@@ -3722,8 +3406,8 @@ describe("useAuth", () => {
 
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.user).toBeNull();
-    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(authLifecycle.barrier()).toBeNull();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
     expect(getActiveOfflineVaultSession()).toBeNull();
     expect(activeVaultSession.rootKeyBytes).toEqual(
       new Uint8Array(activeVaultSession.rootKeyBytes.length)
@@ -3833,8 +3517,8 @@ describe("useAuth", () => {
       email: "test@secpal.dev",
       emailVerified: false,
     });
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
-    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
+    expect(authLifecycle.barrier()).toBeNull();
   });
 
   it("drops restored in-memory auth state when pageshow finds no stored user", async () => {
@@ -3862,7 +3546,7 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toBeNull();
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
   });
 
   it("ignores stale auth storage that reappears after explicit logout", async () => {
@@ -3878,8 +3562,8 @@ describe("useAuth", () => {
       expect(result.current.isAuthenticated).toBe(true);
     });
 
-    act(() => {
-      result.current.logout();
+    await act(async () => {
+      await result.current.logout();
     });
 
     await waitFor(() => {
@@ -3903,13 +3587,13 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toBeNull();
-    await waitFor(() => {
-      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
-    });
+    expect(await authStorage.getUser()).toBeNull();
+    expect(authStorage.hasLogoutBarrier()).toBe(true);
+    expect(getActiveOfflineVaultSession()).toBeNull();
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
-  it("adopts a cross-tab user after the logout barrier is removed", async () => {
+  it("adopts a cross-tab user after the logout barrier is retired", async () => {
     const nextUser = {
       id: "next-user",
       name: "Next User",
@@ -3926,6 +3610,7 @@ describe("useAuth", () => {
 
     act(() => {
       localStorage.setItem("auth_logout_barrier", "other-tab");
+      localStorage.setItem("auth_logout_cleanup:other-tab", "committed");
       dispatchLocalStorageEvent("auth_logout_barrier", "other-tab");
     });
 
@@ -3937,7 +3622,11 @@ describe("useAuth", () => {
 
     act(() => {
       dispatchLocalStorageEvent(AUTH_VAULT_STORAGE_KEY, persistedUser);
-      dispatchLocalStorageEvent("auth_logout_barrier", null, "other-tab");
+      dispatchLocalStorageEvent(
+        "auth_logout_cleanup:other-tab",
+        "retired",
+        "committed"
+      );
     });
 
     await waitForTestingLibrary(() => {
@@ -3985,8 +3674,8 @@ describe("useAuth", () => {
       expect(result.current.isAuthenticated).toBe(true);
     });
 
-    act(() => {
-      result.current.logout();
+    await act(async () => {
+      await result.current.logout();
     });
 
     await waitFor(() => {
@@ -4005,94 +3694,35 @@ describe("useAuth", () => {
     });
 
     expect(result.current.user).toBeNull();
-    await waitFor(() => {
-      expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
-    });
+    expect(await authStorage.getUser()).toBeNull();
+    expect(authStorage.hasLogoutBarrier()).toBe(true);
+    expect(getActiveOfflineVaultSession()).toBeNull();
     expect(localStorage.getItem("auth_user")).toBeNull();
   });
 
-  it("preserves the persisted skip marker when BFCache restore sees another tab's logout barrier", async () => {
-    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
-    const vaultProfileClearSpy = vi.spyOn(db.vaultProfile, "clear");
-
-    try {
-      await persistAuthUser(mockUser);
-
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(result.current.isAuthenticated).toBe(true);
-      });
-
-      act(() => {
-        localStorage.setItem("auth_logout_barrier", "1");
-        authStorage.setSkipBarrierVaultTableCleanup(true);
-        window.dispatchEvent(
-          new PageTransitionEvent("pageshow", { persisted: true })
-        );
-      });
-
-      await waitFor(() => {
-        expect(result.current.isAuthenticated).toBe(false);
-      });
-
-      await waitFor(() => {
-        expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
-      });
-
-      expect(vaultProfileClearSpy).not.toHaveBeenCalled();
-      expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
-      expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
-        "1"
+  it("observes another tab's cleanup without taking over its IndexedDB writes on BFCache restore", async () => {
+    const vault = await persistAuthUser({
+      id: 1,
+      name: "Test User",
+      email: "test@secpal.dev",
+    });
+    const clear = vi.spyOn(db.vaultProfile, "clear");
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+    await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
+    act(() => {
+      localStorage.setItem("auth_logout_barrier", "other-tab");
+      localStorage.setItem("auth_logout_cleanup:other-tab", "pending");
+      window.dispatchEvent(
+        new PageTransitionEvent("pageshow", { persisted: true })
       );
-      expect(clearSensitiveClientState).not.toHaveBeenCalled();
-    } finally {
-      vaultProfileClearSpy.mockRestore();
-    }
-  });
-
-  it("honors a late skip-marker upgrade when BFCache reconciliation sees a logout barrier", async () => {
-    const mockUser = { id: 1, name: "Test User", email: "test@secpal.dev" };
-    const vaultProfileClearSpy = vi.spyOn(db.vaultProfile, "clear");
-
-    try {
-      await persistAuthUser(mockUser);
-
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(result.current.isAuthenticated).toBe(true);
-      });
-
-      act(() => {
-        localStorage.setItem("auth_logout_barrier", "1");
-        window.dispatchEvent(
-          new PageTransitionEvent("pageshow", { persisted: true })
-        );
-      });
-
-      authStorage.setSkipBarrierVaultTableCleanup(true);
-
-      await waitFor(() => {
-        expect(result.current.isAuthenticated).toBe(false);
-      });
-
-      await waitFor(() => {
-        expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
-      });
-
-      expect(vaultProfileClearSpy).not.toHaveBeenCalled();
-      expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
-      expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
-        "1"
-      );
-    } finally {
-      vaultProfileClearSpy.mockRestore();
-    }
+    });
+    await waitFor(() => expect(result.current.isAuthenticated).toBe(false));
+    expect(clear).not.toHaveBeenCalled();
+    expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBe(vault);
+    expect(localStorage.getItem("auth_logout_cleanup:other-tab")).toBe(
+      "pending"
+    );
+    expect(await authStorage.getUser()).toBeNull();
   });
 
   it("does not bootstrap /v1/me when a logout barrier blocks stale auth storage", async () => {
@@ -4108,45 +3738,8 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.isLoading).toBe(false);
-    await waitFor(() => {
-      expectNoStoredAuthState();
-    });
+    expect(await authStorage.getUser()).toBeNull();
     expect(mockGetCurrentUser).not.toHaveBeenCalled();
-  });
-
-  it("honors a persisted skip marker when bootstrap sees an existing logout barrier", async () => {
-    const staleUser = { id: 1, name: "Stale User", email: "stale@secpal.dev" };
-    const vaultProfileClearSpy = vi.spyOn(db.vaultProfile, "clear");
-
-    try {
-      await persistAuthUser(staleUser);
-      localStorage.setItem("auth_logout_barrier", "1");
-      authStorage.setSkipBarrierVaultTableCleanup(true);
-      vaultProfileClearSpy.mockClear();
-
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: AuthProvider,
-      });
-
-      await waitFor(() => {
-        expect(result.current.user).toBeNull();
-        expect(result.current.isAuthenticated).toBe(false);
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      await waitFor(() => {
-        expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).toBeNull();
-      });
-
-      expect(vaultProfileClearSpy).not.toHaveBeenCalled();
-      expect(localStorage.getItem("auth_logout_barrier")).not.toBeNull();
-      expect(localStorage.getItem("auth_logout_skip_vault_table_cleanup")).toBe(
-        "1"
-      );
-      expect(mockGetCurrentUser).not.toHaveBeenCalled();
-    } finally {
-      vaultProfileClearSpy.mockRestore();
-    }
   });
 
   it("ignores storage events for keys other than supported auth storage keys", async () => {
@@ -4167,7 +3760,7 @@ describe("useAuth", () => {
     });
 
     expect(result.current.isAuthenticated).toBe(false);
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
   });
 
   it("drops a superseded user when another tab requires revalidation", async () => {
@@ -4201,7 +3794,7 @@ describe("useAuth", () => {
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.bootstrapRecoveryReason).toBe("network");
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
     expect(getActiveOfflineVaultSession()).toBeNull();
     expect(activeVaultSession.rootKeyBytes).toEqual(
       new Uint8Array(activeVaultSession.rootKeyBytes.length)
@@ -4334,8 +3927,8 @@ describe("useAuth", () => {
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.bootstrapRecoveryReason).toBeNull();
     expect(localStorage.getItem(AUTH_VAULT_STORAGE_KEY)).not.toBeNull();
-    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(authLifecycle.barrier()).toBeNull();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
   });
 
   it("does not let an older cross-tab restore overwrite a completed newer revalidation", async () => {
@@ -4575,7 +4168,7 @@ describe("useAuth", () => {
       email: "test@secpal.dev",
       emailVerified: false,
     });
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
   });
 
   it("does not log out an authenticated browser session when another /login tab temporarily clears local auth storage", async () => {
@@ -4619,8 +4212,8 @@ describe("useAuth", () => {
       email: "bootstrap@secpal.dev",
       emailVerified: false,
     });
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
-    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
+    expect(authLifecycle.barrier()).toBeNull();
   });
 
   it("resets the prefetch cache when cross-tab auth storage removal revalidates to a logged-out browser session", async () => {
@@ -4666,8 +4259,8 @@ describe("useAuth", () => {
     });
 
     expect(resetPrefetchCacheSpy).toHaveBeenCalledTimes(1);
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
-    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
+    expect(authLifecycle.barrier()).toBeNull();
   });
 
   it("resets the prefetch cache when cross-tab auth storage removal falls back to logged out after a no-csrf network failure", async () => {
@@ -4718,8 +4311,8 @@ describe("useAuth", () => {
 
     expect(result.current.bootstrapRecoveryReason).toBeNull();
     expect(resetPrefetchCacheSpy).toHaveBeenCalledTimes(1);
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
-    expect(localStorage.getItem("auth_logout_barrier")).toBeNull();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
+    expect(authLifecycle.barrier()).toBeNull();
   });
 
   it("reconciles stored user state when pageshow fires and user is still in storage", async () => {
@@ -4757,7 +4350,7 @@ describe("useAuth", () => {
 
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.user).not.toBeNull();
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
   });
 
   it("clears a visual privacy shield when pageshow restores a real vault lock", async () => {
@@ -4820,6 +4413,6 @@ describe("useAuth", () => {
     });
 
     expect(result.current.isAuthenticated).toBe(false);
-    expect(clearSensitiveClientState).not.toHaveBeenCalled();
+    expect(clearDestructiveSensitiveClientState).not.toHaveBeenCalled();
   });
 });

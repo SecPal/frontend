@@ -106,11 +106,12 @@ export async function readOfflineSessionState(): Promise<OfflineSessionState | n
 }
 
 export async function writeOfflineSessionState(
-  isAuthenticated: boolean
+  isAuthenticated: boolean,
+  isCurrent: () => boolean = () => true
 ): Promise<void> {
   const cache = await openOfflineSessionCache();
 
-  if (!cache) {
+  if (!cache || !isCurrent()) {
     return;
   }
 
