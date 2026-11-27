@@ -15,16 +15,19 @@ let capturedOnRegisteredSW:
   ((swUrl: string, registration?: ServiceWorkerRegistration) => void) | null =
   null;
 let capturedOnRegisterError: ((error: unknown) => void) | null = null;
+let capturedOnNeedReload: (() => void) | undefined;
 
 vi.mock("virtual:pwa-register/react", () => ({
   useRegisterSW: vi.fn(
     (options?: {
+      onNeedReload?: () => void;
       onRegisteredSW?: (
         swUrl: string,
         registration?: ServiceWorkerRegistration
       ) => void;
       onRegisterError?: (error: unknown) => void;
     }) => {
+      capturedOnNeedReload = options?.onNeedReload;
       // Capture callbacks for testing
       if (options?.onRegisteredSW) {
         capturedOnRegisteredSW = options.onRegisteredSW;
@@ -68,6 +71,7 @@ describe("useServiceWorkerUpdate", () => {
     mockOnOfflineReady = null;
     capturedOnRegisteredSW = null;
     capturedOnRegisterError = null;
+    capturedOnNeedReload = undefined;
   });
 
   afterEach(() => {
@@ -172,7 +176,31 @@ describe("useServiceWorkerUpdate", () => {
       expect(reloadMock).not.toHaveBeenCalled();
     });
 
-    it("should force reload when service worker update fails", async () => {
+    it("does not reload a long-lived tab when a worker activates elsewhere", () => {
+      renderHook(() => useServiceWorkerUpdate());
+      expect(capturedOnNeedReload).toBeTypeOf("function");
+      capturedOnNeedReload?.();
+      expect(reloadMock).not.toHaveBeenCalled();
+    });
+
+    it("permits one reload for the prompt that requested the update", async () => {
+      const active = renderHook(() => useServiceWorkerUpdate());
+      const activeReload = capturedOnNeedReload;
+      renderHook(() => useServiceWorkerUpdate());
+      const otherReload = capturedOnNeedReload;
+
+      await act(async () => {
+        await active.result.current.updateServiceWorker();
+      });
+
+      otherReload?.();
+      expect(reloadMock).not.toHaveBeenCalled();
+      activeReload?.();
+      activeReload?.();
+      expect(reloadMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("keeps the document open when the service worker update fails", async () => {
       const consoleErrorSpy = vi
         .spyOn(console, "error")
         .mockImplementation(() => {});
@@ -188,7 +216,8 @@ describe("useServiceWorkerUpdate", () => {
         "[SW Hook] Update failed:",
         expect.any(Error)
       );
-      expect(reloadMock).toHaveBeenCalledTimes(1);
+      capturedOnNeedReload?.();
+      expect(reloadMock).not.toHaveBeenCalled();
 
       consoleErrorSpy.mockRestore();
     });

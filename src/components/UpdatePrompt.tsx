@@ -52,8 +52,11 @@ function BrowserUpdatePrompt({ className }: UpdatePromptProps) {
 
   const handleUpdate = async () => {
     setIsUpdating(true);
-    await updateServiceWorker();
-    // No need to reset isUpdating - page will reload
+    try {
+      await updateServiceWorker();
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
