@@ -6,6 +6,7 @@ import type { EmployeeFormData } from "@/types/api";
 import {
   createEmployee,
   updateEmployee,
+  updateEmployeeBwrStatus,
   fetchEmployee,
   activateEmployee,
   confirmEmployeeOnboarding,
@@ -186,6 +187,71 @@ describe("employeeApi - JSON Parsing Error Handling", () => {
 
       const result = await updateEmployee("emp-1", { first_name: "Jane" });
       expect(result.first_name).toBe("Jane");
+    });
+  });
+
+  describe("manual BWR transport", () => {
+    it("sends the report date to the employee PATCH and the status to the BWR PUT", async () => {
+      const report = { bwr_submission_date: "2026-11-27" };
+      const approval = {
+        status: "active",
+        bwr_id: "0001234",
+        notes: "Approved",
+      } as const;
+      mockFetch
+        .mockResolvedValueOnce(
+          Response.json({ data: { id: "emp-1", ...report } })
+        )
+        .mockResolvedValueOnce(
+          Response.json({
+            data: {
+              id: "emp-1",
+              bwr_status: approval.status,
+              bwr_id: approval.bwr_id,
+            },
+          })
+        );
+
+      await expect(updateEmployee("emp-1", report)).resolves.toMatchObject(
+        report
+      );
+      await expect(
+        updateEmployeeBwrStatus("emp-1", approval)
+      ).resolves.toMatchObject({
+        bwr_status: "active",
+        bwr_id: "0001234",
+      });
+
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        expect.stringMatching(/\/v1\/employees\/emp-1$/),
+        expect.objectContaining({
+          method: "PATCH",
+          body: JSON.stringify(report),
+          credentials: "include",
+        })
+      );
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        expect.stringMatching(/\/v1\/employees\/emp-1\/bwr\/status$/),
+        expect.objectContaining({
+          method: "PUT",
+          body: JSON.stringify(approval),
+          credentials: "include",
+        })
+      );
+    });
+
+    it("preserves the report date's field validation response", async () => {
+      const errors = { bwr_submission_date: ["Enter a valid date."] };
+      mockFetch.mockResolvedValueOnce(
+        Response.json({ message: "Invalid date", errors }, { status: 422 })
+      );
+
+      await expect(
+        updateEmployee("emp-1", { bwr_submission_date: "invalid" })
+      ).rejects.toMatchObject({ status: 422, errors });
     });
   });
 

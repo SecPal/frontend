@@ -13,7 +13,7 @@ import * as employeeApi from "../../services/employeeApi";
 import { EmployeeBwrPanel } from "./EmployeeBwrPanel";
 
 vi.mock("../../services/employeeApi", () => ({
-  exportEmployeeBwr: vi.fn(),
+  updateEmployee: vi.fn(),
   updateEmployeeBwrStatus: vi.fn(),
 }));
 
@@ -107,63 +107,83 @@ describe("EmployeeBwrPanel", () => {
     i18n.activate("en");
   });
 
-  it("renders download link for a safe HTTPS export URL", async () => {
-    const safeUrl = "https://api.secpal.dev/v1/employees/emp-1/export.csv";
-    vi.mocked(employeeApi.exportEmployeeBwr).mockResolvedValue({
-      employee_id: "emp-1",
-      status: "pending",
-      format: "csv",
-      download_url: safeUrl,
+  it("records a manual report date without exposing export controls or changing status", async () => {
+    const reportedEmployee = {
+      ...mockEmployee,
+      bwr_submission_date: "2026-11-27",
+    };
+    const onRefresh = vi.fn().mockResolvedValue(reportedEmployee);
+    vi.mocked(employeeApi.updateEmployee).mockResolvedValue(reportedEmployee);
+    renderPanel({ onRefresh });
+
+    expect(screen.queryByRole("button", { name: /export/i })).toBeNull();
+    expect(screen.queryByRole("combobox", { name: /export/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /download/i })).toBeNull();
+    expect(
+      screen.getByRole("button", { name: /save bwr status/i })
+    ).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(/^BWR Submission Date$/i), {
+      target: { value: "2026-11-27" },
     });
-
-    renderPanel();
-
     fireEvent.click(
-      screen.getByRole("button", { name: /generate bwr export/i })
+      screen.getByRole("button", { name: /save bwr submission date/i })
     );
 
     await waitFor(() => {
-      expect(
-        screen.getByRole("link", { name: /download latest export/i })
-      ).toHaveAttribute("href", safeUrl);
+      expect(employeeApi.updateEmployee).toHaveBeenCalledWith("emp-1", {
+        bwr_submission_date: "2026-11-27",
+      });
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "BWR submission date saved."
+      );
     });
-
-    expect(
-      screen.getByText("BWR export generated. Download the file below.")
-    ).toBeInTheDocument();
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(employeeApi.updateEmployeeBwrStatus).not.toHaveBeenCalled();
   });
 
-  it.each([
-    "javascript:alert('xss')",
-    "data:text/html,<script>alert('xss')</script>",
-  ])("blocks unsafe BWR export download URLs: %s", async (downloadUrl) => {
-    vi.mocked(employeeApi.exportEmployeeBwr).mockResolvedValue({
-      employee_id: "emp-1",
-      status: "pending",
-      format: "csv",
-      download_url: downloadUrl,
-    });
+  it("marks a recorded report pending without sending the employee's existing BWR ID", async () => {
+    const employee: Employee = {
+      ...mockEmployee,
+      bwr_id: "0001234",
+      bwr_submission_date: "2026-11-27",
+    };
+    const refreshed: Employee = { ...employee, bwr_status: "pending" };
+    vi.mocked(employeeApi.updateEmployeeBwrStatus).mockResolvedValue(refreshed);
+    renderPanel({ employee, onRefresh: vi.fn().mockResolvedValue(refreshed) });
 
-    renderPanel();
-
-    fireEvent.click(
-      screen.getByRole("button", { name: /generate bwr export/i })
-    );
+    expect(screen.getByText("0001234")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: /^BWR ID$/i })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /save bwr status/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(
-          "The export download link returned by the server is not safe to open."
-        )
-      ).toBeInTheDocument();
+      expect(employeeApi.updateEmployeeBwrStatus).toHaveBeenCalledWith(
+        "emp-1",
+        { status: "pending", notes: null }
+      );
     });
+    expect(employeeApi.updateEmployee).not.toHaveBeenCalled();
+  });
 
+  it("keeps the pending status unavailable when a saved date cannot be refreshed", async () => {
+    vi.mocked(employeeApi.updateEmployee).mockResolvedValue({
+      ...mockEmployee,
+      bwr_submission_date: "2026-11-27",
+    });
+    renderPanel();
+
+    fireEvent.change(screen.getByLabelText(/^BWR Submission Date$/i), {
+      target: { value: "2026-11-27" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /save bwr submission date/i })
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "The BWR change was saved, but the employee details could not be refreshed."
+    );
     expect(
-      screen.queryByRole("link", { name: /download latest export/i })
-    ).not.toBeInTheDocument();
-    expect(document.querySelector('a[href^="javascript:"]')).toBeNull();
-    expect(document.querySelector('a[href^="data:"]')).toBeNull();
+      screen.getByRole("button", { name: /save bwr status/i })
+    ).toBeDisabled();
+    expect(employeeApi.updateEmployeeBwrStatus).not.toHaveBeenCalled();
   });
 
   it("saves managed BWR status with Base UI fields and refreshes the panel", async () => {
@@ -171,7 +191,7 @@ describe("EmployeeBwrPanel", () => {
       ...mockEmployee,
       bwr_status: "pending",
       bwr_id: "1234567",
-      bwr_notes: "Initial export sent",
+      bwr_notes: "Manual report sent",
     };
     const refreshedEmployee: Employee = {
       ...activeEmployee,
@@ -224,12 +244,13 @@ describe("EmployeeBwrPanel", () => {
       new ApiError("Validation failed", 422, {
         status: ["Status transition is not allowed."],
         bwr_id: ["BWR ID must contain seven digits."],
-        notes: ["Notes may not exceed 500 characters."],
+        notes: ["Notes may not exceed 1000 characters."],
       })
     );
 
     renderPanel({ employee: activeEmployee });
 
+    await selectOption(/^BWR Status$/i, /^Active$/i);
     fireEvent.click(screen.getByRole("button", { name: /save bwr status/i }));
 
     await waitFor(() => {
@@ -255,9 +276,16 @@ describe("EmployeeBwrPanel", () => {
   it("renders localized read-only BWR guidance and migrated dark-mode surfaces", async () => {
     i18n.activate("de");
 
-    renderPanel({ canManage: false });
+    renderPanel({
+      canManage: false,
+      employee: { ...mockEmployee, bwr_id: "0001234", bwr_notes: "Genehmigt" },
+    });
 
     expect(screen.getByText("Bewacherregister")).toBeInTheDocument();
+    expect(screen.getByText("0001234")).toBeInTheDocument();
+    expect(screen.getByText("Genehmigt")).toBeInTheDocument();
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.queryByRole("combobox")).toBeNull();
     expect(
       screen.getByText(
         /Sie können die BWR-Daten einsehen, aber zum Verwalten ist Schreibberechtigung erforderlich/i
@@ -275,27 +303,33 @@ describe("EmployeeBwrPanel", () => {
     );
     expect(card).toBeInTheDocument();
     expect(card).toHaveClass("bg-card", "text-card-foreground");
-
-    i18n.activate("en");
   });
 
   it("keeps the BWR panel shell and feedback surfaces on canonical theme tokens", async () => {
     renderPanel();
 
     const heading = screen.getByRole("heading", { name: /bewacherregister/i });
-    const copy = screen.getByText(/manage the employee's bwr export/i);
+    const copy = screen.getByText(
+      /report the employee in the bewacherregister/i
+    );
     expect(heading.closest("section")).toHaveClass("border-border");
     expect(copy).toHaveClass("text-muted-foreground");
 
-    vi.mocked(employeeApi.exportEmployeeBwr).mockRejectedValueOnce(
-      new ApiError("Export failed", 500)
+    vi.mocked(employeeApi.updateEmployee).mockRejectedValueOnce(
+      new ApiError("Invalid report date", 422, {
+        bwr_submission_date: ["Enter a valid date."],
+      })
     );
 
+    const date = screen.getByLabelText(/^BWR Submission Date$/i);
+    fireEvent.change(date, { target: { value: "2026-11-27" } });
     fireEvent.click(
-      screen.getByRole("button", { name: /generate bwr export/i })
+      screen.getByRole("button", { name: /save bwr submission date/i })
     );
 
-    const error = await screen.findByText("Export failed");
+    const error = await screen.findByText("Invalid report date");
+    expect(date).toHaveAttribute("aria-invalid", "true");
+    expect(date).toHaveAccessibleDescription("Enter a valid date.");
     expect(error.closest('[data-slot="alert"]')).toHaveClass(
       "border-destructive/30",
       "bg-destructive/10"

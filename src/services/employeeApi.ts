@@ -3,8 +3,6 @@
 
 import type {
   Employee,
-  EmployeeBwrExportFormat,
-  EmployeeBwrExportResponse,
   EmployeeBwrStatusUpdatePayload,
   EmployeeFilters,
   EmployeeFormData,
@@ -190,7 +188,7 @@ export async function createEmployee(
  */
 export async function updateEmployee(
   id: string,
-  employee: Partial<EmployeeFormData>
+  employee: Partial<EmployeeFormData> & Pick<Employee, "bwr_submission_date">
 ): Promise<Employee> {
   const url = `${apiConfig.baseUrl}/v1/employees/${id}`;
   const response = await apiFetch(url, {
@@ -202,12 +200,13 @@ export async function updateEmployee(
   });
 
   if (!response.ok) {
-    const error = await response
+    const error: ApiErrorPayload = await response
       .json()
       .catch(() => ({ message: response.statusText }));
     throw new ApiError(
       error.message || "Failed to update employee",
       response.status,
+      normalizeApiErrorErrors(error.errors),
       response
     );
   }
@@ -326,44 +325,6 @@ export async function terminateEmployee(id: string): Promise<Employee> {
   if (!data.data) {
     throw new ApiError("Failed to parse employee response");
   }
-  return data.data;
-}
-
-/**
- * Generate a BWR export for an employee.
- */
-export async function exportEmployeeBwr(
-  id: string,
-  format: EmployeeBwrExportFormat = "csv"
-): Promise<EmployeeBwrExportResponse> {
-  const url = `${apiConfig.baseUrl}/v1/employees/${id}/bwr/export`;
-  const response = await apiFetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({ format }),
-  });
-
-  if (!response.ok) {
-    const error: ApiErrorPayload = await response
-      .json()
-      .catch(() => ({ message: response.statusText }));
-
-    throw new ApiError(
-      error.message || "Failed to generate BWR export",
-      response.status,
-      normalizeApiErrorErrors(error.errors),
-      response
-    );
-  }
-
-  const data = await response.json().catch(() => ({ data: null }));
-  if (!data.data) {
-    throw new ApiError("Failed to parse BWR export response");
-  }
-
   return data.data;
 }
 

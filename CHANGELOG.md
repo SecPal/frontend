@@ -27,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Remove Bewacherregister CSV/XML export and download actions. Users with
+  Employee update access can save the manual report date and manage registration status,
+  the Bewacher-ID, and authority notes from the same panel.
 - Remove unused client-side attachment encryption utilities and superseded vault documentation. Onboarding attachment uploads continue to use the existing multipart API.
 
 ### Fixed

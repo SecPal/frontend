@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type { components } from "./openapi.generated";
+
 /**
  * Employee API types.
  *
@@ -15,15 +17,9 @@ export type EmployeeStatus =
 export type EmployeeContractType =
   "full_time" | "part_time" | "minijob" | "freelance";
 
-export type EmployeeBwrStatus =
-  "not_registered" | "pending" | "active" | "suspended" | "revoked";
+export type EmployeeBwrStatus = "not_registered" | EmployeeBwrManagedStatus;
 
-export type EmployeeBwrManagedStatus = Exclude<
-  EmployeeBwrStatus,
-  "not_registered"
->;
-
-export type EmployeeBwrExportFormat = "csv" | "xml";
+export type EmployeeBwrManagedStatus = EmployeeBwrStatusUpdatePayload["status"];
 
 export interface EmployeeEmergencyContact {
   name: string;
@@ -162,18 +158,8 @@ export interface ValidationErrorResponse {
   errors: Record<string, string[]>;
 }
 
-export interface EmployeeBwrExportResponse {
-  employee_id: string;
-  status: EmployeeBwrStatus | null;
-  format: EmployeeBwrExportFormat;
-  download_url: string;
-}
-
-export interface EmployeeBwrStatusUpdatePayload {
-  status: EmployeeBwrManagedStatus;
-  bwr_id?: string | null;
-  notes?: string | null;
-}
+export type EmployeeBwrStatusUpdatePayload =
+  components["schemas"]["EmployeeBwrStatusUpdateRequest"];
 
 export interface EmployeeFilters {
   status?: EmployeeStatus;

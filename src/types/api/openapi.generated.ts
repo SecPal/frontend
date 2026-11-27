@@ -6,6 +6,11 @@
 
 export interface components {
   schemas: {
+    EmployeeBwrStatusUpdateRequest: {
+      status: "pending" | "active" | "suspended" | "revoked";
+      bwr_id?: string | null;
+      notes?: string | null;
+    };
     AddressReferenceMeta: {
       source: string;
       license?: string | null;
