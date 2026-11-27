@@ -214,7 +214,7 @@ describe("sensitive client state cleanup", () => {
 
     mockPushManager.getSubscription.mockResolvedValueOnce(mockPushSubscription);
 
-    await clearTrailingSensitiveClientState();
+    await clearBrowserPushClientState();
 
     expect(mockPushSubscription.unsubscribe).toHaveBeenCalledTimes(1);
     expect(installationId).not.toBeNull();

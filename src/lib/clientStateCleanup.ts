@@ -1,9 +1,12 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { clearBrowserPushInstallationId } from "./browserPushState";
+import {
+  clearBrowserPushInstallationId,
+  peekBrowserPushInstallationId,
+} from "./browserPushState";
 import { runAuthStateTransaction } from "./authStateTransaction";
-import { throwIfAborted } from "./abortablePromise";
+import { awaitAbortable, throwIfAborted } from "./abortablePromise";
 import { db } from "./db";
 import {
   AUTH_USER_REVALIDATION_REQUIRED_KEY,
@@ -49,69 +52,59 @@ async function clearSensitiveCaches(isCurrent: () => boolean): Promise<void> {
 }
 
 export async function clearBrowserPushClientState(
-  isCurrent: () => boolean = () => true
+  isCurrent: () => boolean = () => true,
+  signal?: AbortSignal
 ): Promise<void> {
+  throwIfAborted(signal);
   if (!isCurrent()) {
     return;
   }
-  clearBrowserPushInstallationId();
+
+  const serviceWorker = globalThis.navigator?.serviceWorker;
+  if (typeof serviceWorker?.getRegistration !== "function") {
+    if (peekBrowserPushInstallationId() !== null) {
+      throw new Error("Browser push subscription state is unavailable.");
+    }
+    return;
+  }
+
+  const registration = await awaitAbortable(
+    serviceWorker.getRegistration(),
+    signal
+  );
+  if (!isCurrent()) {
+    return;
+  }
 
   if (
-    typeof navigator === "undefined" ||
-    navigator.serviceWorker === undefined ||
-    typeof navigator.serviceWorker.getRegistration !== "function"
+    registration &&
+    typeof registration.pushManager?.getSubscription !== "function"
   ) {
+    if (peekBrowserPushInstallationId() !== null) {
+      throw new Error("Browser push subscription state is unavailable.");
+    }
     return;
   }
 
-  try {
-    const registration = await navigator.serviceWorker.getRegistration();
-
-    if (
-      !isCurrent() ||
-      registration === undefined ||
-      registration.pushManager === undefined ||
-      typeof registration.pushManager.getSubscription !== "function"
-    ) {
+  if (registration) {
+    const subscription = await awaitAbortable(
+      registration.pushManager.getSubscription(),
+      signal
+    );
+    if (!isCurrent()) {
       return;
     }
-
-    const subscription = await registration.pushManager.getSubscription();
-
-    if (subscription && isCurrent()) {
-      await subscription.unsubscribe();
+    if (subscription !== null) {
+      // The browser resolves false when this specific subscription is already
+      // deactivated. Rejection and cancellation provide no proof.
+      await awaitAbortable(subscription.unsubscribe(), signal);
     }
-  } catch (error) {
-    console.warn(
-      "Failed to clear browser push subscription during logout:",
-      error
-    );
-  }
-}
-
-async function waitForSensitiveCleanupTasks(
-  cleanupTasks: Promise<void>[]
-): Promise<void> {
-  const cleanupResults = await Promise.allSettled(cleanupTasks);
-  const cleanupErrors = cleanupResults
-    .filter(
-      (cleanupResult): cleanupResult is PromiseRejectedResult =>
-        cleanupResult.status === "rejected"
-    )
-    .map((cleanupResult) => cleanupResult.reason);
-
-  if (cleanupErrors.length === 0) {
-    return;
   }
 
-  if (cleanupErrors.length === 1) {
-    throw cleanupErrors[0];
+  throwIfAborted(signal);
+  if (isCurrent()) {
+    clearBrowserPushInstallationId();
   }
-
-  throw new AggregateError(
-    cleanupErrors,
-    "Failed to clear all sensitive client state"
-  );
 }
 
 export async function clearDestructiveSensitiveClientState({
@@ -137,11 +130,8 @@ export async function clearDestructiveSensitiveClientState({
   );
 }
 
-export async function clearTrailingSensitiveClientState(
+export function clearTrailingSensitiveClientState(
   isCurrent: () => boolean = () => true
 ): Promise<void> {
-  await waitForSensitiveCleanupTasks([
-    clearSensitiveCaches(isCurrent),
-    clearBrowserPushClientState(isCurrent),
-  ]);
+  return clearSensitiveCaches(isCurrent);
 }

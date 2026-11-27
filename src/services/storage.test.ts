@@ -1221,6 +1221,116 @@ describe("authStorage", () => {
     await expect(authStorage.getUser()).resolves.toEqual(next);
   });
 
+  it("fences login while the prior browser subscription is being deactivated", async () => {
+    const next = {
+      id: "after-push-deactivation",
+      name: "Next User",
+      email: "next@secpal.dev",
+      emailVerified: true,
+    };
+    const started = createDeferredPromise<void>();
+    const deactivated = createDeferredPromise<boolean>();
+    const unsubscribe = vi.fn(() => {
+      started.resolve();
+      return deactivated.promise;
+    });
+    const registration = {
+      pushManager: {
+        getSubscription: vi.fn().mockResolvedValue({ unsubscribe }),
+      },
+    };
+    const original = Object.getOwnPropertyDescriptor(
+      navigator,
+      "serviceWorker"
+    );
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: { getRegistration: vi.fn().mockResolvedValue(registration) },
+    });
+    const lock = vi.spyOn(navigator.locks, "request");
+    const logout = authStorage.clear({ sensitive: true });
+    let login: ReturnType<typeof authStorage.setUser> | undefined;
+    try {
+      await expect(
+        Promise.race([
+          started.promise.then(() => "deactivation-started"),
+          logout.then(() => "cleanup-committed"),
+        ])
+      ).resolves.toBe("deactivation-started");
+      expect(lock).not.toHaveBeenCalled();
+
+      login = authStorage.setUser(next);
+      await Promise.resolve();
+      expect(authStorage.hasLogoutBarrier()).toBe(true);
+      expect(lock).not.toHaveBeenCalled();
+
+      deactivated.resolve(true);
+      await expect(logout).resolves.toBeUndefined();
+      await expect(login).resolves.toEqual({ status: "persisted" });
+      expect(unsubscribe).toHaveBeenCalledTimes(1);
+    } finally {
+      deactivated.resolve(true);
+      await Promise.allSettled([login, logout]);
+      if (original) {
+        Object.defineProperty(navigator, "serviceWorker", original);
+      } else {
+        Reflect.deleteProperty(navigator, "serviceWorker");
+      }
+    }
+  });
+
+  it("keeps a stalled browser-push cleanup blocked and ignores late lookup", async () => {
+    const lookup = createDeferredPromise<PushSubscription | null>();
+    const started = createDeferredPromise<void>();
+    const unsubscribe = vi.fn().mockResolvedValue(true);
+    const lookupSubscription = vi.fn(() => {
+      started.resolve();
+      return lookup.promise;
+    });
+    const original = Object.getOwnPropertyDescriptor(
+      navigator,
+      "serviceWorker"
+    );
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: {
+        getRegistration: vi.fn().mockResolvedValue({
+          pushManager: { getSubscription: lookupSubscription },
+        }),
+      },
+    });
+    vi.useFakeTimers();
+    const logout = authStorage
+      .clear({ sensitive: true })
+      .catch((error: unknown) => error);
+    try {
+      await started.promise;
+      await vi.advanceTimersByTimeAsync(5_000);
+      expect(await logout).toMatchObject({ name: "TimeoutError" });
+      lookup.resolve({ unsubscribe } as unknown as PushSubscription);
+      await Promise.resolve();
+      expect(unsubscribe).not.toHaveBeenCalled();
+      expect(authStorage.hasLogoutBarrier()).toBe(true);
+      await expect(
+        authStorage.setUser({
+          id: "blocked-by-push-timeout",
+          name: "Next User",
+          email: "next@secpal.dev",
+          emailVerified: true,
+        })
+      ).rejects.toMatchObject({ name: "AuthUserPersistenceError" });
+    } finally {
+      lookup.resolve(null);
+      await logout;
+      vi.useRealTimers();
+      if (original) {
+        Object.defineProperty(navigator, "serviceWorker", original);
+      } else {
+        Reflect.deleteProperty(navigator, "serviceWorker");
+      }
+    }
+  });
+
   it("keeps a failed full logout blocked until its destructive scope is cleared", async () => {
     const next = {
       id: "after-full-logout",

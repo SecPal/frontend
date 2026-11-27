@@ -62,7 +62,7 @@ vi.mock("@/components/UpdatePrompt", () => ({
 vi.mock("../lib/clientStateCleanup", () => ({
   clearDestructiveSensitiveClientState: mockClearSensitiveClientState,
   clearBrowserPushClientState: mockClearBrowserPushClientState,
-  clearTrailingSensitiveClientState: mockClearBrowserPushClientState,
+  clearTrailingSensitiveClientState: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock("../lib/analytics", () => ({
   analytics: {

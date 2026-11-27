@@ -22,6 +22,7 @@ import { sessionEvents } from "../services/sessionEvents";
 import {
   clearBrowserPushClientState,
   clearDestructiveSensitiveClientState,
+  clearTrailingSensitiveClientState,
 } from "../lib/clientStateCleanup";
 import { createRecoverableLazyModuleError } from "../lib/lazyModuleErrors";
 import * as prefetch from "./usePrefetch";
@@ -76,7 +77,7 @@ vi.mock("../services/csrf", async () => {
 vi.mock("../lib/clientStateCleanup", () => ({
   clearDestructiveSensitiveClientState: mockClearSensitiveClientState,
   clearBrowserPushClientState: mockClearBrowserPushClientState,
-  clearTrailingSensitiveClientState: mockClearBrowserPushClientState,
+  clearTrailingSensitiveClientState: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("../lib/analytics", () => ({
@@ -229,6 +230,8 @@ describe("useAuth", () => {
     vi.mocked(syncOfflineSessionAccess).mockReset();
     vi.mocked(clearDestructiveSensitiveClientState).mockReset();
     vi.mocked(clearBrowserPushClientState).mockReset();
+    vi.mocked(clearTrailingSensitiveClientState).mockReset();
+    vi.mocked(clearTrailingSensitiveClientState).mockResolvedValue(undefined);
     vi.spyOn(console, "error").mockImplementation(() => {});
     vi.spyOn(console, "log").mockImplementation(() => {});
     sessionEvents.reset();
@@ -2342,7 +2345,7 @@ describe("useAuth", () => {
     vi.mocked(clearDestructiveSensitiveClientState).mockRejectedValueOnce(
       sensitiveCleanupError
     );
-    vi.mocked(clearBrowserPushClientState).mockClear();
+    vi.mocked(clearTrailingSensitiveClientState).mockClear();
 
     try {
       const { result } = renderHook(() => useAuth(), {
@@ -2361,7 +2364,7 @@ describe("useAuth", () => {
         "Failed to clear sensitive client state during logout:",
         sensitiveCleanupError
       );
-      expect(clearBrowserPushClientState).not.toHaveBeenCalled();
+      expect(clearTrailingSensitiveClientState).not.toHaveBeenCalled();
     } finally {
       consoleErrorSpy.mockRestore();
     }
@@ -2418,7 +2421,7 @@ describe("useAuth", () => {
       email: "second@secpal.dev",
     };
     const trailingCleanup = createDeferredPromise<void>();
-    vi.mocked(clearBrowserPushClientState).mockReturnValueOnce(
+    vi.mocked(clearTrailingSensitiveClientState).mockReturnValueOnce(
       trailingCleanup.promise
     );
     const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
@@ -2431,7 +2434,7 @@ describe("useAuth", () => {
     });
     try {
       await waitFor(() => {
-        expect(clearBrowserPushClientState).toHaveBeenCalledOnce();
+        expect(clearTrailingSensitiveClientState).toHaveBeenCalledOnce();
       });
       expect(syncOfflineSessionAccess).toHaveBeenCalledExactlyOnceWith(false, {
         redirectOpenClients: false,
@@ -2508,7 +2511,7 @@ describe("useAuth", () => {
       email: "logout@secpal.dev",
     });
     const trailingCleanup = createDeferredPromise<void>();
-    vi.mocked(clearBrowserPushClientState).mockReturnValueOnce(
+    vi.mocked(clearTrailingSensitiveClientState).mockReturnValueOnce(
       trailingCleanup.promise
     );
     const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
@@ -2525,7 +2528,7 @@ describe("useAuth", () => {
         await vi.advanceTimersByTimeAsync(5_000);
         await logoutPromise;
       });
-      expect(clearBrowserPushClientState).toHaveBeenCalledOnce();
+      expect(clearTrailingSensitiveClientState).toHaveBeenCalledOnce();
       expect(syncOfflineSessionAccess).toHaveBeenNthCalledWith(2, false, {
         redirectOpenClients: true,
       });
@@ -2593,7 +2596,7 @@ describe("useAuth", () => {
     const next = { id: "2", name: "Next User", email: "next@secpal.dev" };
     const started = createDeferredPromise<void>();
     const trailing = createDeferredPromise<void>();
-    vi.mocked(clearBrowserPushClientState).mockImplementationOnce(() => {
+    vi.mocked(clearTrailingSensitiveClientState).mockImplementationOnce(() => {
       started.resolve();
       return trailing.promise;
     });

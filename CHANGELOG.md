@@ -32,8 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Coordinate authentication and offline-vault transitions with one lifecycle
-  owner. A later login waits for confirmed destructive logout, and stale
-  restore, unlock and cleanup work cannot publish over a newer session.
+  owner. A later login waits for confirmed destructive logout, including
+  browser push deactivation. Stale restore, unlock and cleanup work cannot
+  publish over a newer session.
 
 - Let Dependabot update \`js-yaml\` by referencing its direct version range in
   the npm override. The existing minimum version remains enforced.

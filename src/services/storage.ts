@@ -20,7 +20,10 @@ import {
 import { awaitAbortable, throwIfAborted } from "../lib/abortablePromise";
 import { authLifecycle, type AuthLifecycleOwner } from "../lib/authLifecycle";
 import { createSecureRandomToken } from "../lib/secureRandom";
-import { clearDestructiveSensitiveClientState } from "../lib/clientStateCleanup";
+import {
+  clearBrowserPushClientState,
+  clearDestructiveSensitiveClientState,
+} from "../lib/clientStateCleanup";
 import { buildEnvelopeMacPayload } from "./authStorageEnvelope";
 import { sanitizePersistedAuthUser, type PersistedAuthUser } from "./authState";
 import { getCsrfTokenFromCookie } from "./csrf";
@@ -719,7 +722,8 @@ class LocalStorageAuthStorage implements AuthStorage {
     clearRecentAuthVaultKeyMaterials();
     const result = await authLifecycle.logout({
       mode: options.sensitive ? "sensitive" : "vault",
-      prepare: async (signal, mode) => {
+      prepare: async (signal, mode, isCurrent) => {
+        await clearBrowserPushClientState(isCurrent, signal);
         const clear =
           mode === "sensitive"
             ? clearDestructiveSensitiveClientState

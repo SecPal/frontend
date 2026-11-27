@@ -16,7 +16,7 @@ import {
   clearRecentAuthVaultKeyMaterials,
 } from "../lib/offlineVault";
 import {
-  clearBrowserPushClientState,
+  clearTrailingSensitiveClientState,
   clearDestructiveSensitiveClientState,
 } from "../lib/clientStateCleanup";
 import { authStorage } from "../services/storage";
@@ -46,7 +46,7 @@ vi.mock("../lib/serviceWorkerSession", () => ({
 vi.mock("../lib/clientStateCleanup", () => ({
   clearDestructiveSensitiveClientState: mockClearSensitiveClientState,
   clearBrowserPushClientState: mockClearBrowserPushClientState,
-  clearTrailingSensitiveClientState: mockClearBrowserPushClientState,
+  clearTrailingSensitiveClientState: vi.fn().mockResolvedValue(undefined),
 }));
 
 type SessionEventName = "session:expired" | "session:invalid";
@@ -497,11 +497,13 @@ describe("AuthContext", () => {
       const setUserSpy = vi.spyOn(authStorage, "setUser");
 
       vi.mocked(clearDestructiveSensitiveClientState).mockClear();
-      vi.mocked(clearBrowserPushClientState).mockClear();
-      vi.mocked(clearBrowserPushClientState).mockImplementationOnce(() => {
-        onTrailingStarted();
-        return pushCleanupPromise;
-      });
+      vi.mocked(clearTrailingSensitiveClientState).mockClear();
+      vi.mocked(clearTrailingSensitiveClientState).mockImplementationOnce(
+        () => {
+          onTrailingStarted();
+          return pushCleanupPromise;
+        }
+      );
       vi.useFakeTimers();
 
       try {

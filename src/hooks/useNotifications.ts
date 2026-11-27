@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { authLifecycle } from "../lib/authLifecycle";
 import { useState, useCallback, useContext, useEffect, useRef } from "react";
 import {
   DEFAULT_NOTIFICATION_BADGE,
@@ -221,10 +222,12 @@ export function useNotifications(
 
   const registerBrowserPushInstallation = useCallback(
     async (runtimeOptions?: BrowserPushRegistrationOptions) => {
+      const ownsAuth = authLifecycle.observeAuthenticatedGeneration();
       async function syncInstallation(
         nextRuntimeOptions?: BrowserPushRegistrationOptions
       ): Promise<void> {
         const canContinue = () =>
+          ownsAuth() &&
           isAuthenticatedRef.current &&
           !isBrowserPushLogoutInProgress() &&
           (nextRuntimeOptions?.isTaskActive?.() ?? true);
@@ -281,9 +284,9 @@ export function useNotifications(
         if (!canContinue()) {
           if (createdSubscription) {
             try {
-              await unsubscribe();
+              await unsubscribe(currentSubscription);
             } catch {
-              // Best-effort rollback for subscriptions created after logout.
+              // Best-effort rollback of this unregistered subscription.
             }
           }
 
@@ -318,6 +321,9 @@ export function useNotifications(
         }
 
         const registration = await navigator.serviceWorker.ready;
+        if (!canContinue()) {
+          return;
+        }
         const { browserName, browserVersion, installationName } =
           getBrowserPushClientMetadata();
 

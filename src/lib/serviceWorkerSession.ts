@@ -44,10 +44,11 @@ export async function syncOfflineSessionAccess(
   options: SyncOfflineSessionAccessOptions = {}
 ): Promise<void> {
   const owner = authLifecycle.current();
+  const ownsAuth = authLifecycle.observeAuthenticatedGeneration();
   const barrier = authLifecycle.barrier();
   const isCurrent = () =>
     isAuthenticated
-      ? authLifecycle.owns(owner) && !authLifecycle.hasBarrier()
+      ? ownsAuth()
       : barrier === null
         ? authLifecycle.owns(owner) && authLifecycle.barrier() === null
         : authLifecycle.barrier() === barrier;

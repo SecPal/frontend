@@ -35,7 +35,8 @@ export interface LogoutWork {
   mode: "vault" | "sensitive";
   prepare(
     signal: AbortSignal,
-    mode: LogoutWork["mode"]
+    mode: LogoutWork["mode"],
+    isCurrent: () => boolean
   ): Promise<(signal: AbortSignal) => Promise<void>>;
   trailing?: (isCurrent: () => boolean) => Promise<void>;
   afterTrailing?: () => void;
@@ -93,6 +94,17 @@ class AuthLifecycle {
 
   hasBarrier(): boolean {
     return this.publicationFailed || this.barrier() !== null;
+  }
+
+  observeAuthenticatedGeneration(): () => boolean {
+    const owner = this.current();
+    const vault = localStorage.getItem(LOGOUT_BARRIER_KEYS.vault);
+    const sensitive = localStorage.getItem(LOGOUT_BARRIER_KEYS.sensitive);
+    return () =>
+      this.owns(owner) &&
+      !this.hasBarrier() &&
+      localStorage.getItem(LOGOUT_BARRIER_KEYS.vault) === vault &&
+      localStorage.getItem(LOGOUT_BARRIER_KEYS.sensitive) === sensitive;
   }
 
   private beginLogout(barrier: string, mode: LogoutWork["mode"]): void {
@@ -272,7 +284,7 @@ class AuthLifecycle {
     );
     try {
       const clear = await awaitAbortable(
-        work.prepare(signal, work.mode),
+        work.prepare(signal, work.mode, isCurrent),
         signal
       );
       const committed = await runWithOfflineVaultLifecycleLock(
