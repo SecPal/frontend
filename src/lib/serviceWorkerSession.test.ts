@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { authLifecycle } from "./authLifecycle";
 import { syncOfflineSessionAccess } from "./serviceWorkerSession";
 import { writeOfflineSessionState } from "./offlineSessionState";
 
@@ -36,17 +37,26 @@ describe("syncOfflineSessionAccess", () => {
 
   it("always writes the offline session state regardless of SW availability", async () => {
     await syncOfflineSessionAccess(true);
-    expect(mockWriteOfflineSessionState).toHaveBeenCalledWith(true);
+    expect(mockWriteOfflineSessionState).toHaveBeenCalledWith(
+      true,
+      expect.any(Function)
+    );
 
     await syncOfflineSessionAccess(false);
-    expect(mockWriteOfflineSessionState).toHaveBeenCalledWith(false);
+    expect(mockWriteOfflineSessionState).toHaveBeenCalledWith(
+      false,
+      expect.any(Function)
+    );
   });
 
   it("resolves without error when serviceWorker API is unavailable (jsdom default)", async () => {
     // In jsdom, navigator.serviceWorker is undefined → exercises the early-return path.
     removeServiceWorker();
     await expect(syncOfflineSessionAccess(true)).resolves.toBeUndefined();
-    expect(mockWriteOfflineSessionState).toHaveBeenCalledWith(true);
+    expect(mockWriteOfflineSessionState).toHaveBeenCalledWith(
+      true,
+      expect.any(Function)
+    );
   });
 
   describe("when ServiceWorker API is available", () => {
@@ -113,6 +123,35 @@ describe("syncOfflineSessionAccess", () => {
         type: "AUTH_SESSION_CHANGED",
         isAuthenticated: false,
         redirectOpenClients: true,
+      });
+    });
+
+    it("does not post an older offline grant after service-worker readiness stalls", async () => {
+      let workerReady!: (registration: { active: null }) => void;
+      const ready = new Promise<{ active: null }>((resolve) => {
+        workerReady = resolve;
+      });
+      const started = new Promise<void>((resolve) => {
+        defineServiceWorker({
+          controller: { postMessage: mockPostMessage },
+          get ready() {
+            resolve();
+            return ready;
+          },
+        });
+      });
+
+      const previous = syncOfflineSessionAccess(true);
+      await started;
+      authLifecycle.begin("invalidate");
+      const current = syncOfflineSessionAccess(false);
+      workerReady({ active: null });
+      await Promise.all([previous, current]);
+
+      expect(mockPostMessage).toHaveBeenCalledExactlyOnceWith({
+        type: "AUTH_SESSION_CHANGED",
+        isAuthenticated: false,
+        redirectOpenClients: false,
       });
     });
 

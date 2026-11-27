@@ -24,7 +24,7 @@ interface UsePushSubscriptionReturn {
   isLoading: boolean;
   error: Error | null;
   subscribe: (overrideVapidPublicKey?: string) => Promise<PushSubscription>;
-  unsubscribe: () => Promise<void>;
+  unsubscribe: (ownedSubscription?: PushSubscription) => Promise<void>;
   getSubscriptionData: () => PushSubscriptionData | null;
   refreshSubscription: () => Promise<PushSubscription | null>;
 }
@@ -209,29 +209,34 @@ export function usePushSubscription(
   /**
    * Unsubscribe from push notifications
    */
-  const unsubscribe = useCallback(async (): Promise<void> => {
-    const currentSubscription = subscriptionRef.current;
+  const unsubscribe = useCallback(
+    async (ownedSubscription = subscriptionRef.current): Promise<void> => {
+      const currentSubscription = ownedSubscription;
 
-    if (!currentSubscription) {
-      const err = new Error("Not subscribed");
-      setError(err);
-      throw err;
-    }
+      if (!currentSubscription) {
+        const err = new Error("Not subscribed");
+        setError(err);
+        throw err;
+      }
 
-    setIsLoading(true);
-    setError(null);
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      await currentSubscription.unsubscribe();
-      setTrackedSubscription(null);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      setError(error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [setTrackedSubscription]);
+      try {
+        await currentSubscription.unsubscribe();
+        if (subscriptionRef.current === currentSubscription) {
+          setTrackedSubscription(null);
+        }
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        setError(error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [setTrackedSubscription]
+  );
 
   /**
    * Get subscription data in format suitable for backend API

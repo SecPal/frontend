@@ -30,7 +30,7 @@ import { AuthProvider } from "../contexts/AuthContext";
 import * as authApi from "../services/authApi";
 import { sanitizePersistedAuthUser } from "../services/authState";
 import { authStorage } from "../services/storage";
-import { clearSensitiveClientState } from "../lib/clientStateCleanup";
+import { clearDestructiveSensitiveClientState } from "../lib/clientStateCleanup";
 import { db } from "../lib/db";
 import { installSerializedWebLocks } from "../testUtils/serializedWebLocks";
 import {
@@ -60,10 +60,9 @@ vi.mock("@/components/UpdatePrompt", () => ({
   UpdatePrompt: () => <div data-testid="layout-update-prompt" />,
 }));
 vi.mock("../lib/clientStateCleanup", () => ({
-  clearSensitiveClientState: mockClearSensitiveClientState,
   clearDestructiveSensitiveClientState: mockClearSensitiveClientState,
   clearBrowserPushClientState: mockClearBrowserPushClientState,
-  clearTrailingSensitiveClientState: mockClearBrowserPushClientState,
+  clearTrailingSensitiveClientState: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock("../lib/analytics", () => ({
   analytics: {
@@ -958,7 +957,7 @@ describe("ApplicationLayout", () => {
       // User should be cleared from localStorage
       expect(getStoredAuthState()).toBeNull();
       await waitFor(() => {
-        expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+        expect(clearDestructiveSensitiveClientState).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -988,7 +987,9 @@ describe("ApplicationLayout", () => {
         // logout() now runs in the finally block after authTransport.logout()
         expect(wasLocalStorageClearedBeforeApiCall).toBe(false);
         // Local state IS cleared after the API call settles (finally block ran)
-        expect(vi.mocked(clearSensitiveClientState)).toHaveBeenCalledTimes(1);
+        expect(
+          vi.mocked(clearDestructiveSensitiveClientState)
+        ).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -1075,7 +1076,7 @@ describe("ApplicationLayout", () => {
         expect(getStoredAuthState()).toBeNull();
         vi.useRealTimers();
         await waitFor(() => {
-          expect(clearSensitiveClientState).toHaveBeenCalledTimes(1);
+          expect(clearDestructiveSensitiveClientState).toHaveBeenCalledTimes(1);
         });
       } finally {
         vi.useRealTimers();

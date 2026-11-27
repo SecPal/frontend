@@ -1979,48 +1979,118 @@ describe("useNotifications", () => {
       });
     });
 
-    it("does not recreate an installation when logout cancels an in-flight auto sync", async () => {
-      document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
-      Object.defineProperty(globalThis.Notification, "permission", {
-        writable: true,
-        value: "granted",
-      });
+    it.each(["local logout", "retired cross-tab logout"])(
+      "does not recreate an installation after %s interrupts auto sync",
+      async (kind) => {
+        document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
+        Object.defineProperty(globalThis.Notification, "permission", {
+          writable: true,
+          value: "granted",
+        });
 
-      let authContextValue: AuthContextType = authenticatedAuthContextValue;
-      let resolveBootstrapResponse: ((response: Response) => void) | null =
-        null;
+        let authContextValue: AuthContextType = authenticatedAuthContextValue;
+        let resolveBootstrapResponse: ((response: Response) => void) | null =
+          null;
 
-      function DynamicAuthWrapper({ children }: { children: ReactNode }) {
-        return createElement(
-          AuthContext.Provider,
-          {
-            value: authContextValue,
-          },
-          children
-        );
-      }
-
-      mockPushManager.getSubscription.mockResolvedValue(mockPushSubscription);
-
-      const mockFetch = vi.fn((input, init) => {
-        const url = String(input);
-
-        if (url.includes("/v1/bootstrap?client_platform=browser")) {
-          return new Promise<Response>((resolve) => {
-            resolveBootstrapResponse = resolve;
-          });
+        function DynamicAuthWrapper({ children }: { children: ReactNode }) {
+          return createElement(
+            AuthContext.Provider,
+            {
+              value: authContextValue,
+            },
+            children
+          );
         }
 
-        if (
-          /\/v1\/me\/notification-installations\//.test(url) &&
-          init?.method === "PUT"
-        ) {
-          return Promise.resolve(
+        mockPushManager.getSubscription.mockResolvedValue(mockPushSubscription);
+
+        const mockFetch = vi.fn((input, init) => {
+          const url = String(input);
+
+          if (url.includes("/v1/bootstrap?client_platform=browser")) {
+            return new Promise<Response>((resolve) => {
+              resolveBootstrapResponse = resolve;
+            });
+          }
+
+          if (
+            /\/v1\/me\/notification-installations\//.test(url) &&
+            init?.method === "PUT"
+          ) {
+            return Promise.resolve(
+              new Response(
+                JSON.stringify({
+                  data: {
+                    installation_id: "installation-id",
+                    channel: "web_push",
+                  },
+                }),
+                {
+                  status: 200,
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                }
+              )
+            );
+          }
+
+          throw new Error(`Unexpected fetch request: ${url}`);
+        });
+
+        vi.stubGlobal("fetch", mockFetch);
+
+        const { rerender } = renderHook(
+          () => useNotifications({ autoSync: true }),
+          {
+            wrapper: DynamicAuthWrapper,
+          }
+        );
+
+        await waitFor(() => {
+          expect(resolveBootstrapResponse).not.toBeNull();
+        });
+
+        if (kind === "local logout") {
+          authContextValue = {
+            ...authenticatedAuthContextValue,
+            user: null,
+            isAuthenticated: false,
+          };
+          rerender();
+        } else {
+          // The authenticated React state can persist until queued storage events
+          // arrive. The shared revision still invalidates this registration.
+          localStorage.setItem("auth_sensitive_logout_barrier", "other-tab");
+          localStorage.setItem("auth_logout_cleanup:other-tab", "retired");
+        }
+
+        await act(async () => {
+          resolveBootstrapResponse?.(
             new Response(
               JSON.stringify({
                 data: {
-                  installation_id: "installation-id",
-                  channel: "web_push",
+                  client_platform: "browser",
+                  compatibility: {
+                    bootstrap_version: "v1",
+                    schema_version: 4,
+                  },
+                  features: {
+                    notification_channels: {
+                      android_fcm: false,
+                      web_push: true,
+                    },
+                  },
+                  notification_channels: {
+                    web_push: {
+                      channel: "web_push",
+                      metadata_revision: 5,
+                      public_runtime_metadata: {
+                        vapid_public_key:
+                          "BE9tfo-aCxwtPk9QYXKDlAUGBwgJCgsMDQ4PEBESExQVobLD1OX2BxgpMEFSY3SFlgcYKTBLXG1-j5ABAgMEBQY",
+                      },
+                    },
+                  },
                 },
               }),
               {
@@ -2031,73 +2101,13 @@ describe("useNotifications", () => {
               }
             )
           );
-        }
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        });
 
-        throw new Error(`Unexpected fetch request: ${url}`);
-      });
-
-      vi.stubGlobal("fetch", mockFetch);
-
-      const { rerender } = renderHook(
-        () => useNotifications({ autoSync: true }),
-        {
-          wrapper: DynamicAuthWrapper,
-        }
-      );
-
-      await waitFor(() => {
-        expect(resolveBootstrapResponse).not.toBeNull();
-      });
-
-      authContextValue = {
-        ...authenticatedAuthContextValue,
-        user: null,
-        isAuthenticated: false,
-      };
-      rerender();
-
-      await act(async () => {
-        resolveBootstrapResponse?.(
-          new Response(
-            JSON.stringify({
-              data: {
-                client_platform: "browser",
-                compatibility: {
-                  bootstrap_version: "v1",
-                  schema_version: 4,
-                },
-                features: {
-                  notification_channels: {
-                    android_fcm: false,
-                    web_push: true,
-                  },
-                },
-                notification_channels: {
-                  web_push: {
-                    channel: "web_push",
-                    metadata_revision: 5,
-                    public_runtime_metadata: {
-                      vapid_public_key:
-                        "BE9tfo-aCxwtPk9QYXKDlAUGBwgJCgsMDQ4PEBESExQVobLD1OX2BxgpMEFSY3SFlgcYKTBLXG1-j5ABAgMEBQY",
-                    },
-                  },
-                },
-              },
-            }),
-            {
-              status: 200,
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          )
-        );
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      });
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      expect(peekBrowserPushInstallationId()).toBeNull();
-    });
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+        expect(peekBrowserPushInstallationId()).toBeNull();
+      }
+    );
 
     it("does not create or upsert a browser push installation while logout revocation is in progress", async () => {
       document.cookie = "XSRF-TOKEN=test-xsrf-token; path=/";
