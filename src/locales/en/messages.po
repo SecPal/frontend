@@ -133,10 +133,6 @@ msgstr "Adding passkey..."
 msgid "Type"
 msgstr "Type"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Latest export"
-msgstr "Latest export"
-
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Certificate:"
 msgstr "Certificate:"
@@ -788,6 +784,10 @@ msgstr "Employee #"
 msgid "Bewacherregister"
 msgstr "Bewacherregister"
 
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "BWR submission date saved."
+msgstr "BWR submission date saved."
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "First Names (all)"
 msgstr "First Names (all)"
@@ -803,10 +803,6 @@ msgstr "Here is what the onboarding wizard will ask for. Required sections must 
 #: src/components/RouteGuardState.tsx
 msgid "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
 msgstr "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
-
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Generate BWR Export"
-msgstr "Generate BWR Export"
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
@@ -1035,10 +1031,6 @@ msgstr "Full Time"
 msgid "My profile"
 msgstr "My profile"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "BWR export generated. Download the file below."
-msgstr "BWR export generated. Download the file below."
-
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "e.g., Berlin Branch"
 msgstr "e.g., Berlin Branch"
@@ -1092,10 +1084,6 @@ msgstr "Please upload your passport (PDF, JPG, JPEG, PNG; max. 10 MB)."
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No documents uploaded"
 msgstr "No documents uploaded"
-
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Manage the employee's BWR export and registration state from the dedicated runtime endpoints."
-msgstr "Manage the employee's BWR export and registration state from the dedicated runtime endpoints."
 
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
 msgid "You do not need to take further action right now. If we need anything else, we will contact you directly."
@@ -1223,10 +1211,6 @@ msgstr "Previous Hash"
 msgid "Step 3: Self-access control"
 msgstr "Step 3: Self-access control"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Export Format"
-msgstr "Export Format"
-
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Step 1: Configure viewing permissions"
 msgstr "Step 1: Configure viewing permissions"
@@ -1234,10 +1218,6 @@ msgstr "Step 1: Configure viewing permissions"
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Maximum Viewable Rank"
 msgstr "Maximum Viewable Rank"
-
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Generate the initial export to move this employee into the pending BWR state."
-msgstr "Generate the initial export to move this employee into the pending BWR state."
 
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
 msgid "Thank you for submitting your onboarding information. Our HR team will review your details."
@@ -1604,10 +1584,6 @@ msgstr "Open the verification email, then return here and check again. If the me
 msgid "Confirm Onboarding"
 msgstr "Confirm Onboarding"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Failed to generate BWR export"
-msgstr "Failed to generate BWR export"
-
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Contract start date is required"
 msgstr "Contract start date is required"
@@ -1684,6 +1660,10 @@ msgstr "Not enabled"
 msgid "Activity Logs"
 msgstr "Activity Logs"
 
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "Save BWR Submission Date"
+msgstr "Save BWR Submission Date"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Banking Details"
 msgstr "Banking Details"
@@ -1728,6 +1708,10 @@ msgstr "Please use the required format ({actualPattern})."
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "Address Supplement"
 msgstr "Address Supplement"
+
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "Failed to save the BWR submission date"
+msgstr "Failed to save the BWR submission date"
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -1902,10 +1886,6 @@ msgstr "Switch instance?"
 msgid "Turn on notifications for this signed-in browser on the current SecPal deployment."
 msgstr "Turn on notifications for this signed-in browser on the current SecPal deployment."
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Download Latest Export"
-msgstr "Download Latest Export"
-
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
 #. placeholder {2}: pagination.total
@@ -2055,6 +2035,10 @@ msgstr "Processing..."
 msgid "AGPL source offer for the SecPal components made available through this service."
 msgstr "AGPL source offer for the SecPal components made available through this service."
 
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "Saving BWR Submission Date..."
+msgstr "Saving BWR Submission Date..."
+
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "{sitesCount, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
 msgstr "{sitesCount, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
@@ -2106,10 +2090,6 @@ msgstr "Failed to update contact field."
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Enter your current password to remove {0}."
 msgstr "Enter your current password to remove {0}."
-
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Generating BWR Export..."
-msgstr "Generating BWR Export..."
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Loading site details"
@@ -2227,10 +2207,6 @@ msgstr "Auto-refresh (30s)"
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Refresh"
 msgstr "Refresh"
-
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "The export download link returned by the server is not safe to open."
-msgstr "The export download link returned by the server is not safe to open."
 
 #: src/components/NotificationPreferences.tsx
 msgid "Rollout Expectations"
@@ -3990,6 +3966,10 @@ msgstr "Close"
 msgid "Please choose whether you want to upload your identity document now."
 msgstr "Please choose whether you want to upload your identity document now."
 
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "The BWR change was saved, but the employee details could not be refreshed."
+msgstr "The BWR change was saved, but the employee details could not be refreshed."
+
 #: src/components/AddressAutocompleteFields.tsx
 msgid "Loading..."
 msgstr "Loading..."
@@ -4050,6 +4030,10 @@ msgstr "Failed to update employee"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Passkey registration requires Android 14 or later. Update your device to add a passkey."
 msgstr "Passkey registration requires Android 14 or later. Update your device to add a passkey."
+
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "Report the employee in the Bewacherregister, save the submission date here, and then set the status to Pending."
+msgstr "Report the employee in the Bewacherregister, save the submission date here, and then set the status to Pending."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to activate employee"

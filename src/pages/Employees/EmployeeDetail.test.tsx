@@ -58,10 +58,10 @@ vi.mock("react-router", async () => {
 });
 
 // Helper to render with all required providers and route parameter
-const renderWithProviders = (employeeId: string) => {
+const renderWithProviders = (employeeId: string, hash = "") => {
   return render(
     <I18nProvider i18n={i18n}>
-      <MemoryRouter initialEntries={[`/employees/${employeeId}`]}>
+      <MemoryRouter initialEntries={[`/employees/${employeeId}${hash}`]}>
         <Routes>
           <Route path="/employees/:id" element={<EmployeeDetail />} />
         </Routes>
@@ -184,7 +184,9 @@ describe("EmployeeDetail", () => {
     });
 
     // Setup default mocks
-    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(mockEmployee);
+    vi.mocked(employeeApi.fetchEmployee)
+      .mockReset()
+      .mockResolvedValue(mockEmployee);
     vi.mocked(employeeApi.updateEmployee).mockResolvedValue(mockEmployee);
     vi.mocked(qualificationApi.fetchEmployeeQualifications).mockResolvedValue(
       []
@@ -425,27 +427,16 @@ describe("EmployeeDetail", () => {
     ).toBeInTheDocument();
   });
 
-  it.each(["export", "status"] as const)(
+  it.each(["report date", "status"] as const)(
     "does not refresh the old employee after a BWR %s completes on a new route",
     async (action) => {
       const mutation = deferred<Employee>();
       mockRouteEmployees({
         ...mockEmployee,
-        bwr_status: action === "export" ? "not_registered" : "pending",
+        bwr_status: action === "report date" ? "not_registered" : "pending",
       });
-      if (action === "export") {
-        vi.mocked(employeeApi.exportEmployeeBwr).mockImplementation(
-          async () => {
-            await mutation.promise;
-            return {
-              employee_id: "emp-1",
-              status: "pending",
-              format: "csv",
-              download_url:
-                "https://api.secpal.dev/v1/employees/emp-1/bwr/export.csv",
-            };
-          }
-        );
+      if (action === "report date") {
+        vi.mocked(employeeApi.updateEmployee).mockReturnValue(mutation.promise);
       } else {
         vi.mocked(employeeApi.updateEmployeeBwrStatus).mockReturnValue(
           mutation.promise
@@ -457,16 +448,26 @@ describe("EmployeeDetail", () => {
       fireEvent.click(
         await screen.findByRole("button", { name: /bewacherregister/i })
       );
+      if (action === "report date") {
+        fireEvent.change(
+          await screen.findByLabelText(/^BWR Submission Date$/i),
+          {
+            target: { value: "2026-11-27" },
+          }
+        );
+      }
       fireEvent.click(
         await screen.findByRole("button", {
           name:
-            action === "export" ? /generate bwr export/i : /save bwr status/i,
+            action === "report date"
+              ? /save bwr submission date/i
+              : /save bwr status/i,
         })
       );
       await waitFor(() =>
         expect(
-          action === "export"
-            ? employeeApi.exportEmployeeBwr
+          action === "report date"
+            ? employeeApi.updateEmployee
             : employeeApi.updateEmployeeBwrStatus
         ).toHaveBeenCalled()
       );
@@ -481,13 +482,13 @@ describe("EmployeeDetail", () => {
     }
   );
 
-  it.each(["export", "status"] as const)(
+  it.each(["report date", "status"] as const)(
     "ignores a stale BWR %s follow-up refresh after returning to the employee route",
     async (action) => {
       const staleRefresh = deferred<Employee>();
       const initialEmployee = {
         ...mockEmployee,
-        bwr_status: action === "export" ? "not_registered" : "pending",
+        bwr_status: action === "report date" ? "not_registered" : "pending",
       } satisfies Employee;
       const currentEmployee = {
         ...initialEmployee,
@@ -513,13 +514,7 @@ describe("EmployeeDetail", () => {
         }
         return Promise.resolve(currentEmployee);
       });
-      vi.mocked(employeeApi.exportEmployeeBwr).mockResolvedValue({
-        employee_id: "emp-1",
-        status: "pending",
-        format: "csv",
-        download_url:
-          "https://api.secpal.dev/v1/employees/emp-1/bwr/export.csv",
-      });
+      vi.mocked(employeeApi.updateEmployee).mockResolvedValue(initialEmployee);
       vi.mocked(employeeApi.updateEmployeeBwrStatus).mockResolvedValue(
         initialEmployee
       );
@@ -529,10 +524,20 @@ describe("EmployeeDetail", () => {
       fireEvent.click(
         await screen.findByRole("button", { name: /bewacherregister/i })
       );
+      if (action === "report date") {
+        fireEvent.change(
+          await screen.findByLabelText(/^BWR Submission Date$/i),
+          {
+            target: { value: "2026-11-27" },
+          }
+        );
+      }
       fireEvent.click(
         await screen.findByRole("button", {
           name:
-            action === "export" ? /generate bwr export/i : /save bwr status/i,
+            action === "report date"
+              ? /save bwr submission date/i
+              : /save bwr status/i,
         })
       );
       await waitFor(() =>
@@ -551,17 +556,18 @@ describe("EmployeeDetail", () => {
         screen.queryByRole("heading", { name: "Stale Employee A" })
       ).not.toBeInTheDocument();
       expect(
-        screen.queryByText(/bwr export generated|bwr status updated/i)
+        screen.queryByText(/bwr submission date saved|bwr status updated/i)
       ).not.toBeInTheDocument();
       fireEvent.click(
         await screen.findByRole("button", { name: /bewacherregister/i })
       );
-      expect(
-        screen.getByRole("button", {
-          name:
-            action === "export" ? /generate bwr export/i : /save bwr status/i,
-        })
-      ).toBeEnabled();
+      if (action === "report date") {
+        expect(screen.getByLabelText(/^BWR Submission Date$/i)).toHaveValue("");
+      } else {
+        expect(
+          screen.getByRole("button", { name: /save bwr status/i })
+        ).toBeEnabled();
+      }
     }
   );
 
@@ -1142,134 +1148,72 @@ describe("EmployeeDetail", () => {
     expect(screen.getAllByText("-").length).toBeGreaterThanOrEqual(3);
   });
 
-  it("should render the BWR management panel with export controls", async () => {
+  it("records the report date before making the pending status available", async () => {
+    const reported = {
+      ...mockEmployee,
+      bwr_submission_date: "2025-01-02",
+    };
+    const pending: Employee = { ...reported, bwr_status: "pending" };
+    vi.mocked(employeeApi.fetchEmployee)
+      .mockResolvedValueOnce(mockEmployee)
+      .mockResolvedValueOnce(reported)
+      .mockResolvedValueOnce(pending);
+    vi.mocked(employeeApi.updateEmployee).mockResolvedValue(reported);
+    vi.mocked(employeeApi.updateEmployeeBwrStatus).mockResolvedValue(pending);
+
+    renderWithProviders("emp-1", "#bwr");
+    const saveStatus = await screen.findByRole("button", {
+      name: /save bwr status/i,
+    });
+    expect(saveStatus).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(/^BWR Submission Date$/i), {
+      target: { value: "2025-01-02" },
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /save bwr submission date/i })
+    );
+
+    await waitFor(() => expect(saveStatus).toBeEnabled());
+    expect(employeeApi.updateEmployee).toHaveBeenCalledWith("emp-1", {
+      bwr_submission_date: "2025-01-02",
+    });
+    expect(employeeApi.updateEmployeeBwrStatus).not.toHaveBeenCalled();
+    fireEvent.click(saveStatus);
+
+    expect(await screen.findByText("BWR status updated.")).toBeInTheDocument();
+    expect(employeeApi.updateEmployeeBwrStatus).toHaveBeenCalledWith("emp-1", {
+      status: "pending",
+      notes: null,
+    });
+    expect(employeeApi.fetchEmployee).toHaveBeenCalledTimes(3);
+  });
+
+  it("shows reporting readiness errors after requesting pending status", async () => {
     vi.mocked(employeeApi.fetchEmployee).mockResolvedValue({
       ...mockEmployee,
-      bwr_notes: "Awaiting initial Bewacherregister export",
+      bwr_submission_date: "2025-01-02",
     });
-
-    renderWithProviders("emp-1");
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: /bewacherregister/i })
-      ).toBeInTheDocument();
-    });
-    fireEvent.click(screen.getByRole("button", { name: /bewacherregister/i }));
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole("heading", { name: /bewacherregister/i })
-      ).toBeInTheDocument();
-    });
-
-    expect(screen.getByText("Not registered")).toBeInTheDocument();
-    expect(
-      screen.getByRole("combobox", { name: /export format/i })
-    ).toHaveTextContent("CSV");
-    expect(
-      screen.getByRole("button", { name: /generate bwr export/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText("Awaiting initial Bewacherregister export")
-    ).toBeInTheDocument();
-  });
-
-  it("should generate a BWR export and refresh the employee", async () => {
-    vi.mocked(employeeApi.fetchEmployee)
-      .mockResolvedValueOnce({
-        ...mockEmployee,
-        bwr_status: "not_registered",
-      })
-      .mockResolvedValueOnce({
-        ...mockEmployee,
-        bwr_status: "pending",
-        bwr_submission_date: "2025-01-02",
-      });
-
-    vi.mocked(employeeApi.exportEmployeeBwr).mockResolvedValue({
-      employee_id: "emp-1",
-      status: "pending",
-      format: "xml",
-      download_url:
-        "https://api.secpal.dev/v1/employees/emp-1/bwr/exports/export.xml/download",
-    });
-
-    renderWithProviders("emp-1");
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: /bewacherregister/i })
-      ).toBeInTheDocument();
-    });
-    fireEvent.click(screen.getByRole("button", { name: /bewacherregister/i }));
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: /generate bwr export/i })
-      ).toBeInTheDocument();
-    });
-
-    await selectOption(/export format/i, /^XML$/i);
-    fireEvent.click(
-      screen.getByRole("button", { name: /generate bwr export/i })
-    );
-
-    await waitFor(() => {
-      expect(employeeApi.exportEmployeeBwr).toHaveBeenCalledWith(
-        "emp-1",
-        "xml"
-      );
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText(/bwr export generated/i)).toBeInTheDocument();
-    });
-
-    const downloadLink = screen.getByRole("link", {
-      name: /download latest export/i,
-    });
-    expect(downloadLink).toHaveAttribute(
-      "href",
-      "https://api.secpal.dev/v1/employees/emp-1/bwr/exports/export.xml/download"
-    );
-  });
-
-  it("should show export readiness validation errors in the BWR panel", async () => {
-    vi.mocked(employeeApi.fetchEmployee).mockResolvedValue(mockEmployee);
-    vi.mocked(employeeApi.exportEmployeeBwr).mockRejectedValue(
-      new ApiError("Employee is not ready for BWR export.", 422, {
-        general: ["gender", "birth_city"],
+    vi.mocked(employeeApi.updateEmployeeBwrStatus).mockRejectedValue(
+      new ApiError("The employee is missing reporting data.", 422, {
+        gender: ["Enter the employee's gender."],
+        birth_city: ["Enter the employee's city of birth."],
       })
     );
 
-    renderWithProviders("emp-1");
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: /bewacherregister/i })
-      ).toBeInTheDocument();
-    });
-    fireEvent.click(screen.getByRole("button", { name: /bewacherregister/i }));
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: /generate bwr export/i })
-      ).toBeInTheDocument();
-    });
-
+    renderWithProviders("emp-1", "#bwr");
     fireEvent.click(
-      screen.getByRole("button", { name: /generate bwr export/i })
+      await screen.findByRole("button", { name: /save bwr status/i })
     );
 
-    await waitFor(() => {
-      expect(
-        screen.getByText("Employee is not ready for BWR export.")
-      ).toBeInTheDocument();
-    });
-
-    expect(screen.getByText("gender")).toBeInTheDocument();
-    expect(screen.getByText("birth_city")).toBeInTheDocument();
+    expect(
+      await screen.findByText("The employee is missing reporting data.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Enter the employee's gender.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Enter the employee's city of birth.")
+    ).toBeInTheDocument();
   });
 
   it("should update the BWR status and refresh the employee", async () => {

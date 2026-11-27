@@ -133,10 +133,6 @@ msgstr "Passkey wird hinzugefügt..."
 msgid "Type"
 msgstr "Typ"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Latest export"
-msgstr "Letzter Export"
-
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Certificate:"
 msgstr "Zertifikat:"
@@ -788,6 +784,10 @@ msgstr "Mitarbeiter #"
 msgid "Bewacherregister"
 msgstr "Bewacherregister"
 
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "BWR submission date saved."
+msgstr "BWR-Meldedatum gespeichert."
+
 #: src/pages/Onboarding/OnboardingComplete.tsx
 msgid "First Names (all)"
 msgstr "Vornamen (alle)"
@@ -803,10 +803,6 @@ msgstr "So setzt sich der Onboarding-Assistent zusammen. Erforderliche Abschnitt
 #: src/components/RouteGuardState.tsx
 msgid "SecPal could not confirm your session because the session check failed. Retry the session check or return to the login screen."
 msgstr "SecPal konnte Ihre Sitzung nicht bestätigen, weil die Sitzungsprüfung fehlgeschlagen ist. Wiederholen Sie die Sitzungsprüfung oder kehren Sie zum Anmeldebildschirm zurück."
-
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Generate BWR Export"
-msgstr "BWR-Export erstellen"
 
 #: src/pages/Onboarding/onboardingResidentialAddressHistory.ts
 #: src/pages/Onboarding/OnboardingResidentialAddressHistoryFields.tsx
@@ -1035,10 +1031,6 @@ msgstr "Vollzeit"
 msgid "My profile"
 msgstr "Mein Profil"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "BWR export generated. Download the file below."
-msgstr "BWR-Export erstellt. Laden Sie die Datei unten herunter."
-
 #: src/components/OrganizationalUnitFormDialog.tsx
 msgid "e.g., Berlin Branch"
 msgstr "z.B. Niederlassung Berlin"
@@ -1092,10 +1084,6 @@ msgstr "Bitte laden Sie Ihren Reisepass hoch (PDF, JPG, JPEG, PNG; max. 10 MB)."
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "No documents uploaded"
 msgstr "Keine Dokumente hochgeladen"
-
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Manage the employee's BWR export and registration state from the dedicated runtime endpoints."
-msgstr "Verwalten Sie den BWR-Export und den Registrierungsstatus dieses Mitarbeiters über die dedizierten Runtime-Endpunkte."
 
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
 msgid "You do not need to take further action right now. If we need anything else, we will contact you directly."
@@ -1223,10 +1211,6 @@ msgstr "Vorheriger Hash"
 msgid "Step 3: Self-access control"
 msgstr "Schritt 3: Kontrolle des Selbstzugriffs"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Export Format"
-msgstr "Exportformat"
-
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Step 1: Configure viewing permissions"
 msgstr "Schritt 1: Konfigurieren der Anzeigeberechtigungen"
@@ -1234,10 +1218,6 @@ msgstr "Schritt 1: Konfigurieren der Anzeigeberechtigungen"
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Maximum Viewable Rank"
 msgstr "Maximal sichtbarer Rang"
-
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Generate the initial export to move this employee into the pending BWR state."
-msgstr "Erstellen Sie den initialen Export, um diesen Mitarbeiter in den ausstehenden BWR-Status zu überführen."
 
 #: src/pages/Onboarding/OnboardingSubmitted.tsx
 msgid "Thank you for submitting your onboarding information. Our HR team will review your details."
@@ -1604,10 +1584,6 @@ msgstr "Öffnen Sie die Bestätigungs-E-Mail, kehren Sie dann hierher zurück un
 msgid "Confirm Onboarding"
 msgstr "Onboarding bestätigen"
 
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Failed to generate BWR export"
-msgstr "BWR-Export konnte nicht erstellt werden"
-
 #: src/pages/Employees/EmployeeCreate.tsx
 msgid "Contract start date is required"
 msgstr "Das Datum des Vertragsbeginns ist erforderlich"
@@ -1684,6 +1660,10 @@ msgstr "Nicht aktiviert"
 msgid "Activity Logs"
 msgstr "Aktivitätsprotokolle"
 
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "Save BWR Submission Date"
+msgstr "BWR-Meldedatum speichern"
+
 #: src/pages/Onboarding/OnboardingWizard.tsx
 msgid "Banking Details"
 msgstr "Bankverbindung"
@@ -1728,6 +1708,10 @@ msgstr "Bitte verwenden Sie das erforderliche Format ({actualPattern})."
 #: src/pages/Employees/EmployeeAddressFields.tsx
 msgid "Address Supplement"
 msgstr "Adresszusatz"
+
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "Failed to save the BWR submission date"
+msgstr "BWR-Meldedatum konnte nicht gespeichert werden"
 
 #: src/pages/Customers/CustomerCreate.tsx
 #: src/pages/Employees/EmployeeCreate.tsx
@@ -1798,7 +1782,7 @@ msgstr "Jeder, der einen dieser Wiederherstellungscodes hat, kann Ihre Authentif
 
 #: src/pages/Employees/EmployeeBwrPanel.tsx
 msgid "BWR Submission Date"
-msgstr "BWR-Übermittlungsdatum"
+msgstr "BWR-Meldedatum"
 
 #: src/components/ScopeAssignmentForm.tsx
 msgid "Lowest rank number the user can assign (1 = CEO, higher numbers = lower positions). Range: 1-255"
@@ -1901,10 +1885,6 @@ msgstr "Instanz wechseln?"
 #: src/components/NotificationPreferences.tsx
 msgid "Turn on notifications for this signed-in browser on the current SecPal deployment."
 msgstr "Aktivieren Sie Benachrichtigungen für diesen angemeldeten Browser auf dem aktuellen SecPal-Deployment."
-
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Download Latest Export"
-msgstr "Letzten Export herunterladen"
 
 #. placeholder {0}: (pagination.current_page - 1) * pagination.per_page + 1
 #. placeholder {1}: Math.min( pagination.current_page * pagination.per_page, pagination.total )
@@ -2055,6 +2035,10 @@ msgstr "Verarbeitung..."
 msgid "AGPL source offer for the SecPal components made available through this service."
 msgstr "Quellcodeangebot zur AGPL-Lizenz für die über diesen Dienst bereitgestellten SecPal-Komponenten."
 
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "Saving BWR Submission Date..."
+msgstr "BWR-Meldedatum wird gespeichert..."
+
 #: src/pages/Customers/CustomerDetail.tsx
 msgid "{sitesCount, plural, zero {This customer has no sites.} one {This customer has # site.} other {This customer has # sites.}}"
 msgstr "{sitesCount, plural, =0 {Dieser Kunde hat keine Objekte.} one {Dieser Kunde hat # Objekt.} other {Dieser Kunde hat # Objekte.}}"
@@ -2106,10 +2090,6 @@ msgstr "Kontaktfeld konnte nicht aktualisiert werden."
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Enter your current password to remove {0}."
 msgstr "Gib dein aktuelles Passwort ein, um {0} zu entfernen."
-
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "Generating BWR Export..."
-msgstr "BWR-Export wird erstellt..."
 
 #: src/pages/Sites/SiteDetail.tsx
 msgid "Loading site details"
@@ -2227,10 +2207,6 @@ msgstr "Automatisches Aktualisieren (30s)"
 #: src/pages/ActivityLog/ActivityLogList.tsx
 msgid "Refresh"
 msgstr "Aktualisieren"
-
-#: src/pages/Employees/EmployeeBwrPanel.tsx
-msgid "The export download link returned by the server is not safe to open."
-msgstr "Der vom Server zurückgegebene Export-Downloadlink ist nicht sicher zu öffnen."
 
 #: src/components/NotificationPreferences.tsx
 msgid "Rollout Expectations"
@@ -3990,6 +3966,10 @@ msgstr "Schließen"
 msgid "Please choose whether you want to upload your identity document now."
 msgstr "Bitte wählen Sie aus, ob Sie Ihr Ausweisdokument jetzt hochladen möchten."
 
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "The BWR change was saved, but the employee details could not be refreshed."
+msgstr "Die BWR-Änderung wurde gespeichert. Die Mitarbeiterdaten konnten nicht aktualisiert werden."
+
 #: src/components/AddressAutocompleteFields.tsx
 msgid "Loading..."
 msgstr "Laden..."
@@ -4050,6 +4030,10 @@ msgstr "Fehler beim Aktualisieren des Mitarbeiters"
 #: src/pages/Settings/SettingsPage.tsx
 msgid "Passkey registration requires Android 14 or later. Update your device to add a passkey."
 msgstr "Für die Registrierung eines Passkeys ist Android 14 oder neuer erforderlich. Aktualisieren Sie Ihr Gerät, um einen Passkey hinzuzufügen."
+
+#: src/pages/Employees/EmployeeBwrPanel.tsx
+msgid "Report the employee in the Bewacherregister, save the submission date here, and then set the status to Pending."
+msgstr "Melden Sie die Person im Bewacherregister, speichern Sie hier das Meldedatum und setzen Sie den Status auf Ausstehend."
 
 #: src/pages/Employees/EmployeeDetail.tsx
 msgid "Failed to activate employee"

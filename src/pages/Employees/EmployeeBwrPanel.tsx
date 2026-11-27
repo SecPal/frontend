@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import type { MessageDescriptor } from "@lingui/core";
 import { msg } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useLingui } from "@lingui/react";
@@ -17,7 +18,6 @@ import {
 import { Textarea } from "@/ui/textarea";
 import type {
   Employee,
-  EmployeeBwrExportFormat,
   EmployeeBwrManagedStatus,
   EmployeeBwrStatus,
 } from "@/types/api";
@@ -28,7 +28,6 @@ import {
   Card,
   CardContent,
   Field,
-  FieldDescription,
   FieldError,
   FieldLabel,
   EmployeePageText as PageText,
@@ -37,16 +36,17 @@ import {
 } from "@/ui";
 import { ApiError } from "../../services/ApiError";
 import {
-  exportEmployeeBwr,
+  updateEmployee,
   updateEmployeeBwrStatus,
 } from "../../services/employeeApi";
-import { isSafeHttpUrl } from "../../utils/safeUrl";
 
 type BwrPanelFieldErrors = Partial<
-  Record<"general" | "status" | "bwr_id" | "notes", string[]>
+  Record<
+    "general" | "bwr_submission_date" | "status" | "bwr_id" | "notes",
+    string[]
+  >
 >;
-
-const BWR_EXPORT_FORMATS: EmployeeBwrExportFormat[] = ["csv", "xml"];
+type BwrSaveAction = "reportDate" | "status";
 
 function getBwrStatusColor(status: EmployeeBwrStatus) {
   switch (status) {
@@ -95,7 +95,7 @@ function getManagedBwrStatuses(
   };
 
   if (currentStatus === "not_registered") {
-    return [];
+    return ["pending"];
   }
 
   return [currentStatus, ...(allowedTransitions[currentStatus] ?? [])];
@@ -116,6 +116,7 @@ function normalizeBwrFieldErrors(
     }
     if (
       key === "general" ||
+      key === "bwr_submission_date" ||
       key === "status" ||
       key === "bwr_id" ||
       key === "notes"
@@ -162,22 +163,21 @@ export function EmployeeBwrPanel({
 }: EmployeeBwrPanelProps) {
   const { i18n, _ } = useLingui();
   const currentStatus = employee.bwr_status ?? "not_registered";
-  const [exportFormat, setExportFormat] =
-    useState<EmployeeBwrExportFormat>("csv");
+  const [submissionDate, setSubmissionDate] = useState(
+    employee.bwr_submission_date ?? ""
+  );
   const [selectedStatus, setSelectedStatus] =
     useState<EmployeeBwrManagedStatus>(
       currentStatus === "not_registered" ? "pending" : currentStatus
     );
   const [bwrId, setBwrId] = useState(employee.bwr_id ?? "");
   const [notes, setNotes] = useState(employee.bwr_notes ?? "");
-  const [latestExportUrl, setLatestExportUrl] = useState<string | null>(null);
   const [panelError, setPanelError] = useState<string | null>(null);
   const [panelFieldErrors, setPanelFieldErrors] = useState<BwrPanelFieldErrors>(
     {}
   );
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [exportLoading, setExportLoading] = useState(false);
-  const [saveLoading, setSaveLoading] = useState(false);
+  const [saving, setSaving] = useState<BwrSaveAction | null>(null);
   const activeEmployeeId = useRef<string | null>(employee.id);
 
   useLayoutEffect(() => {
@@ -191,6 +191,8 @@ export function EmployeeBwrPanel({
   }, [employee.id]);
 
   const managedStatusOptions = getManagedBwrStatuses(currentStatus);
+  const canRecordStatus =
+    currentStatus !== "not_registered" || Boolean(employee.bwr_submission_date);
 
   function clearPanelFeedback() {
     setPanelError(null);
@@ -198,26 +200,34 @@ export function EmployeeBwrPanel({
     setSuccessMessage(null);
   }
 
-  async function handleExport() {
+  async function saveBwr(
+    action: BwrSaveAction,
+    write: () => Promise<Employee>,
+    success: MessageDescriptor,
+    failure: MessageDescriptor
+  ) {
+    if (!canManage || saving) return;
     const employeeId = employee.id;
     clearPanelFeedback();
 
     try {
-      setExportLoading(true);
-      const response = await exportEmployeeBwr(employeeId, exportFormat);
+      setSaving(action);
+      await write();
       if (activeEmployeeId.current !== employeeId) return;
-      if (!isSafeHttpUrl(response.download_url)) {
+      const refreshedEmployee = await onRefresh(employeeId, routeOwner);
+      if (activeEmployeeId.current !== employeeId) return;
+      if (!refreshedEmployee) {
         setPanelError(
           _(
-            msg`The export download link returned by the server is not safe to open.`
+            msg`The BWR change was saved, but the employee details could not be refreshed.`
           )
         );
         return;
       }
-      setLatestExportUrl(response.download_url);
-      const refreshedEmployee = await onRefresh(employeeId, routeOwner);
-      if (activeEmployeeId.current !== employeeId) return;
-      if (refreshedEmployee) {
+
+      if (action === "reportDate") {
+        setSubmissionDate(refreshedEmployee.bwr_submission_date ?? "");
+      } else {
         const refreshedStatus =
           refreshedEmployee.bwr_status ?? "not_registered";
         setSelectedStatus(
@@ -226,56 +236,46 @@ export function EmployeeBwrPanel({
         setBwrId(refreshedEmployee.bwr_id ?? "");
         setNotes(refreshedEmployee.bwr_notes ?? "");
       }
-      setSuccessMessage(_(msg`BWR export generated. Download the file below.`));
+      setSuccessMessage(_(success));
     } catch (error) {
       if (activeEmployeeId.current !== employeeId) return;
-      setPanelError(
-        getBwrErrorMessage(error, _(msg`Failed to generate BWR export`))
-      );
+      setPanelError(getBwrErrorMessage(error, _(failure)));
       setPanelFieldErrors(
         error instanceof ApiError ? normalizeBwrFieldErrors(error.errors) : {}
       );
     } finally {
-      if (activeEmployeeId.current === employeeId) setExportLoading(false);
+      if (activeEmployeeId.current === employeeId) setSaving(null);
     }
   }
 
-  async function handleSaveStatus(event: FormEvent<HTMLFormElement>) {
+  function handleSaveReportDate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const employeeId = employee.id;
-    clearPanelFeedback();
+    if (submissionDate === (employee.bwr_submission_date ?? "")) return;
+    void saveBwr(
+      "reportDate",
+      () =>
+        updateEmployee(employee.id, {
+          bwr_submission_date: submissionDate || null,
+        }),
+      msg`BWR submission date saved.`,
+      msg`Failed to save the BWR submission date`
+    );
+  }
 
-    try {
-      setSaveLoading(true);
-      await updateEmployeeBwrStatus(employeeId, {
-        status: selectedStatus,
-        bwr_id: bwrId.trim() === "" ? null : bwrId.trim(),
-        notes: notes.trim() === "" ? null : notes.trim(),
-      });
-      if (activeEmployeeId.current !== employeeId) return;
-      const refreshedEmployee = await onRefresh(employeeId, routeOwner);
-      if (activeEmployeeId.current !== employeeId) return;
-      if (refreshedEmployee) {
-        const refreshedStatus =
-          refreshedEmployee.bwr_status ?? "not_registered";
-        setSelectedStatus(
-          refreshedStatus === "not_registered" ? "pending" : refreshedStatus
-        );
-        setBwrId(refreshedEmployee.bwr_id ?? "");
-        setNotes(refreshedEmployee.bwr_notes ?? "");
-      }
-      setSuccessMessage(_(msg`BWR status updated.`));
-    } catch (error) {
-      if (activeEmployeeId.current !== employeeId) return;
-      setPanelError(
-        getBwrErrorMessage(error, _(msg`Failed to update BWR status`))
-      );
-      setPanelFieldErrors(
-        error instanceof ApiError ? normalizeBwrFieldErrors(error.errors) : {}
-      );
-    } finally {
-      if (activeEmployeeId.current === employeeId) setSaveLoading(false);
-    }
+  function handleSaveStatus(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!canRecordStatus) return;
+    void saveBwr(
+      "status",
+      () =>
+        updateEmployeeBwrStatus(employee.id, {
+          status: selectedStatus,
+          ...(selectedStatus !== "pending" && { bwr_id: bwrId.trim() || null }),
+          notes: notes.trim() || null,
+        }),
+      msg`BWR status updated.`,
+      msg`Failed to update BWR status`
+    );
   }
 
   return (
@@ -284,12 +284,14 @@ export function EmployeeBwrPanel({
         <PageTitle level={2}>
           <Trans>Bewacherregister</Trans>
         </PageTitle>
-        <PageText className="text-muted-foreground text-sm">
-          <Trans>
-            Manage the employee's BWR export and registration state from the
-            dedicated runtime endpoints.
-          </Trans>
-        </PageText>
+        {canManage && currentStatus === "not_registered" ? (
+          <PageText className="text-muted-foreground text-sm">
+            <Trans>
+              Report the employee in the Bewacherregister, save the submission
+              date here, and then set the status to Pending.
+            </Trans>
+          </PageText>
+        ) : null}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -380,22 +382,6 @@ export function EmployeeBwrPanel({
         </Alert>
       ) : null}
 
-      {latestExportUrl ? (
-        <div className="bg-card flex flex-wrap items-center gap-3 rounded-md border border-border p-4">
-          <PageText className="text-muted-foreground text-sm">
-            <Trans>Latest export</Trans>
-          </PageText>
-          <a
-            className="text-foreground hover:bg-accent inline-flex items-center justify-center rounded-lg border border-border px-3.5 py-2 text-sm font-semibold sm:px-3 sm:py-1.5"
-            href={latestExportUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Trans>Download Latest Export</Trans>
-          </a>
-        </div>
-      ) : null}
-
       {!canManage ? (
         <PageText className="text-muted-foreground text-sm">
           <Trans>
@@ -403,136 +389,156 @@ export function EmployeeBwrPanel({
             it.
           </Trans>
         </PageText>
-      ) : currentStatus === "not_registered" ? (
-        <div className="grid gap-4 md:grid-cols-[minmax(0,14rem)_auto] md:items-end">
-          <Field>
-            <FieldLabel htmlFor="bwr-export-format">
-              <Trans>Export Format</Trans>
-            </FieldLabel>
-            <Select
-              value={exportFormat}
-              onValueChange={(value) =>
-                setExportFormat(value as EmployeeBwrExportFormat)
-              }
-            >
-              <SelectTrigger id="bwr-export-format">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {BWR_EXPORT_FORMATS.map((format) => (
-                  <SelectItem key={format} value={format} data-value={format}>
-                    {format.toUpperCase()}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldDescription>
-              <Trans>
-                Generate the initial export to move this employee into the
-                pending BWR state.
-              </Trans>
-            </FieldDescription>
-          </Field>
-
-          <Button disabled={exportLoading} onClick={() => void handleExport()}>
-            {exportLoading ? (
-              <Trans>Generating BWR Export...</Trans>
-            ) : (
-              <Trans>Generate BWR Export</Trans>
-            )}
-          </Button>
-        </div>
       ) : (
-        <form className="space-y-4" onSubmit={handleSaveStatus}>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field>
-              <FieldLabel htmlFor="bwr-status">
-                <Trans>BWR Status</Trans>
-              </FieldLabel>
-              <Select
-                value={selectedStatus}
-                onValueChange={(value) =>
-                  setSelectedStatus(value as EmployeeBwrManagedStatus)
-                }
-              >
-                <SelectTrigger
-                  id="bwr-status"
-                  aria-invalid={panelFieldErrors.status?.[0] ? true : undefined}
-                  aria-describedby={
-                    panelFieldErrors.status?.[0]
-                      ? "bwr-status-error"
-                      : undefined
-                  }
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {managedStatusOptions.map((status) => (
-                    <SelectItem key={status} value={status} data-value={status}>
-                      {getBwrStatusLabel(status, _)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {panelFieldErrors.status?.[0] ? (
-                <FieldError id="bwr-status-error">
-                  {panelFieldErrors.status[0]}
-                </FieldError>
-              ) : null}
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="bwr-id">
-                <Trans>BWR ID</Trans>
+        <>
+          <form className="space-y-3" onSubmit={handleSaveReportDate}>
+            <Field className="max-w-xs">
+              <FieldLabel htmlFor="bwr-submission-date">
+                <Trans>BWR Submission Date</Trans>
               </FieldLabel>
               <Input
-                id="bwr-id"
-                value={bwrId}
-                onChange={(event) => setBwrId(event.target.value)}
-                inputMode="numeric"
-                maxLength={7}
-                aria-invalid={panelFieldErrors.bwr_id?.[0] ? true : undefined}
+                id="bwr-submission-date"
+                type="date"
+                value={submissionDate}
+                disabled={saving !== null}
+                onChange={(event) => setSubmissionDate(event.target.value)}
+                aria-invalid={
+                  panelFieldErrors.bwr_submission_date?.[0] ? true : undefined
+                }
                 aria-describedby={
-                  panelFieldErrors.bwr_id?.[0] ? "bwr-id-error" : undefined
+                  panelFieldErrors.bwr_submission_date?.[0]
+                    ? "bwr-submission-date-error"
+                    : undefined
                 }
               />
-              {panelFieldErrors.bwr_id?.[0] ? (
-                <FieldError id="bwr-id-error">
-                  {panelFieldErrors.bwr_id[0]}
+              {panelFieldErrors.bwr_submission_date?.[0] ? (
+                <FieldError id="bwr-submission-date-error">
+                  {panelFieldErrors.bwr_submission_date[0]}
                 </FieldError>
               ) : null}
             </Field>
-          </div>
-
-          <Field>
-            <FieldLabel htmlFor="bwr-notes">
-              <Trans>BWR Notes</Trans>
-            </FieldLabel>
-            <Textarea
-              id="bwr-notes"
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              rows={4}
-              aria-invalid={panelFieldErrors.notes?.[0] ? true : undefined}
-              aria-describedby={
-                panelFieldErrors.notes?.[0] ? "bwr-notes-error" : undefined
+            <Button
+              type="submit"
+              disabled={
+                saving !== null ||
+                submissionDate === (employee.bwr_submission_date ?? "")
               }
-            />
-            {panelFieldErrors.notes?.[0] ? (
-              <FieldError id="bwr-notes-error">
-                {panelFieldErrors.notes[0]}
-              </FieldError>
-            ) : null}
-          </Field>
+            >
+              {saving === "reportDate" ? (
+                <Trans>Saving BWR Submission Date...</Trans>
+              ) : (
+                <Trans>Save BWR Submission Date</Trans>
+              )}
+            </Button>
+          </form>
 
-          <Button type="submit" disabled={saveLoading}>
-            {saveLoading ? (
-              <Trans>Saving BWR Status...</Trans>
-            ) : (
-              <Trans>Save BWR Status</Trans>
-            )}
-          </Button>
-        </form>
+          <form className="space-y-4" onSubmit={handleSaveStatus}>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="bwr-status">
+                  <Trans>BWR Status</Trans>
+                </FieldLabel>
+                <Select
+                  value={selectedStatus}
+                  disabled={saving !== null}
+                  onValueChange={(value) =>
+                    setSelectedStatus(value as EmployeeBwrManagedStatus)
+                  }
+                >
+                  <SelectTrigger
+                    id="bwr-status"
+                    aria-invalid={
+                      panelFieldErrors.status?.[0] ? true : undefined
+                    }
+                    aria-describedby={
+                      panelFieldErrors.status?.[0]
+                        ? "bwr-status-error"
+                        : undefined
+                    }
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {managedStatusOptions.map((status) => (
+                      <SelectItem
+                        key={status}
+                        value={status}
+                        data-value={status}
+                      >
+                        {getBwrStatusLabel(status, _)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {panelFieldErrors.status?.[0] ? (
+                  <FieldError id="bwr-status-error">
+                    {panelFieldErrors.status[0]}
+                  </FieldError>
+                ) : null}
+              </Field>
+
+              {selectedStatus !== "pending" ? (
+                <Field>
+                  <FieldLabel htmlFor="bwr-id">
+                    <Trans>BWR ID</Trans>
+                  </FieldLabel>
+                  <Input
+                    id="bwr-id"
+                    value={bwrId}
+                    disabled={saving !== null}
+                    onChange={(event) => setBwrId(event.target.value)}
+                    inputMode="numeric"
+                    maxLength={7}
+                    aria-invalid={
+                      panelFieldErrors.bwr_id?.[0] ? true : undefined
+                    }
+                    aria-describedby={
+                      panelFieldErrors.bwr_id?.[0] ? "bwr-id-error" : undefined
+                    }
+                  />
+                  {panelFieldErrors.bwr_id?.[0] ? (
+                    <FieldError id="bwr-id-error">
+                      {panelFieldErrors.bwr_id[0]}
+                    </FieldError>
+                  ) : null}
+                </Field>
+              ) : null}
+            </div>
+
+            <Field>
+              <FieldLabel htmlFor="bwr-notes">
+                <Trans>BWR Notes</Trans>
+              </FieldLabel>
+              <Textarea
+                id="bwr-notes"
+                value={notes}
+                disabled={saving !== null}
+                onChange={(event) => setNotes(event.target.value)}
+                rows={4}
+                aria-invalid={panelFieldErrors.notes?.[0] ? true : undefined}
+                aria-describedby={
+                  panelFieldErrors.notes?.[0] ? "bwr-notes-error" : undefined
+                }
+              />
+              {panelFieldErrors.notes?.[0] ? (
+                <FieldError id="bwr-notes-error">
+                  {panelFieldErrors.notes[0]}
+                </FieldError>
+              ) : null}
+            </Field>
+
+            <Button
+              type="submit"
+              disabled={saving !== null || !canRecordStatus}
+            >
+              {saving === "status" ? (
+                <Trans>Saving BWR Status...</Trans>
+              ) : (
+                <Trans>Save BWR Status</Trans>
+              )}
+            </Button>
+          </form>
+        </>
       )}
     </section>
   );
