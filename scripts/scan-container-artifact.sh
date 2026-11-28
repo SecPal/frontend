@@ -6,6 +6,7 @@ set -euo pipefail
 test "${GITHUB_REPOSITORY:?}" = SecPal/frontend
 case "${GITHUB_EVENT_NAME:?}:${2:-}" in
   push:*|workflow_dispatch:--unpublished) ;;
+  workflow_dispatch:--retained) test "${PUBLISH_RETAINED:-false}" = true ;;
   *) exit 1 ;;
 esac
 test "${GITHUB_REF:?}" = refs/heads/main
@@ -13,7 +14,7 @@ test "${GITHUB_REF_PROTECTED:?}" = true
 arch=${1:?exact architecture}
 case "$arch" in amd64|arm64) ;; *) exit 1 ;; esac
 mode=${2:---published}
-case "$mode" in --published|--unpublished) ;; *) exit 1 ;; esac
+case "$mode" in --published|--unpublished|--retained) ;; *) exit 1 ;; esac
 repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root"
 prepared="$repo_root/.context/publisher"
@@ -30,11 +31,12 @@ cleanup() {
   rm -rf -- "$cache"
 }
 trap cleanup EXIT
-if [[ "$mode" == --published ]]; then
+if [[ "$mode" != --unpublished ]]; then
   printf '%s' "${GH_TOKEN:?}" | "$tools/oras" login ghcr.io --registry-config "$auth_root/config.json" \
     --username "${GITHUB_ACTOR:?}" --password-stdin
   chmod 0600 "$auth_root/config.json"
 fi
+if [[ "$mode" != --retained ]]; then
 printf '{}\n' > "$cache/config.yaml"
 export GRYPE_DB_CACHE_DIR="$cache/grype"
 export GRYPE_DB_AUTO_UPDATE=false
@@ -45,15 +47,18 @@ env -i HOME="$cache" "$tools/trivy" --config "$cache/config.yaml" image \
 env -i HOME="$cache" "$tools/trivy" --config "$cache/config.yaml" image \
   --download-java-db-only --cache-dir "$cache/trivy"
 vex_arguments=()
-if [ -d "$governance/reviewed-vex" ]; then
+vex_checkout="$repo_root/.context/reviewed-vex"
+if [ -d "$vex_checkout/reviewed-vex" ]; then
+  vex_commit=$(git -C "$vex_checkout" rev-parse HEAD)
   python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" list-vex \
-    --directory "$governance/reviewed-vex" > "$cache/vex-list"
+    --directory "$vex_checkout/reviewed-vex" > "$cache/vex-list"
   while IFS= read -r -d '' manifest; do
     python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" verify-vex \
-      --checkout "$governance" --manifest "$manifest" --trusted-repository SecPal/.github \
-      --trusted-commit 22ce172e7b1decfdd4267e382432b93765798d95
+      --checkout "$vex_checkout" --manifest "$manifest" --trusted-repository SecPal/.github \
+      --trusted-commit "$vex_commit"
     vex_arguments+=(--reviewed-vex-manifest "$manifest")
   done < "$cache/vex-list"
+fi
 fi
 output="$repo_root/.context/scan/$arch"
 mkdir -p "$output/raw" "$output/sbom"
@@ -88,6 +93,14 @@ jq -n --arg digest "$manifest" --arg platform "linux/$arch" \
 python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" verify-syft \
   --platform-digest "$manifest" --platform "linux/$arch" --spdx "$output/sbom/syft.spdx.json" \
   --association "$output/sbom/association.json" --output "$output/syft.json"
+if [[ "$mode" == --retained ]]; then
+  original="$prepared/retained-scan/$arch"
+  cmp "$output/sbom/syft.spdx.json" "$original/sbom/syft.spdx.json"
+  cmp "$output/sbom/association.json" "$original/sbom/association.json"
+  jq -e --slurpfile original "$original/subject.json" '. == $original[0]' "$output/subject.json" >/dev/null
+  cp -a "$original"/. "$output/"
+  exit 0
+fi
 python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" database \
   --scanner trivy --database-status "$cache/trivy/db/metadata.json" --database-root "$cache/trivy/db" --output "$output/trivy-core-database.json"
 python3 "$governance/scripts/secpal-vulnerability-reevaluation.py" database \

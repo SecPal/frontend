@@ -188,7 +188,20 @@ esac
 function requireAcceptance(w: Workflow) {
   expect(w.on).toEqual({
     push: { branches: ["main"], "paths-ignore": sourceOnlyPaths },
-    workflow_dispatch: null,
+    workflow_dispatch: {
+      inputs: {
+        "qualified-run": expect.objectContaining({
+          type: "string",
+        }),
+        "qualified-attempt": expect.objectContaining({
+          type: "string",
+        }),
+        "publish-retained": expect.objectContaining({
+          type: "boolean",
+          default: false,
+        }),
+      },
+    },
   });
   expect(w.permissions).toEqual({});
   expect(w.jobs.admit.permissions).toEqual({
@@ -209,8 +222,11 @@ function requireAcceptance(w: Workflow) {
     "repository-security",
   ]);
   expect(w.jobs["pre-registry"].permissions?.packages).toBeUndefined();
-  expect(w.jobs.prepare.if).toBe("github.event_name == 'push'");
+  expect(w.jobs.prepare.if).toContain("needs.admit.result == 'success'");
+  expect(w.jobs.prepare.if).toContain("needs.pre-registry.result == 'success'");
+  expect(w.jobs.prepare.if).toContain("inputs.publish-retained");
   expect(w.jobs.prepare.needs).toEqual([
+    "admit",
     "build",
     "repository-security",
     "pre-registry",
@@ -235,7 +251,7 @@ function requireAcceptance(w: Workflow) {
   expect(gate.steps![sign].with?.["push-to-registry"]).toBe(false);
   expect(gate.steps![sign].with?.["create-storage-record"]).toBe(false);
   expect(gate.steps![sign].with?.["subject-path"]).toBe(
-    ".context/publisher/pre-registry.json"
+    ".context/publisher/pre-registry.json\n.context/publisher/source-security.json\n"
   );
   const binding = gate.steps!.find(
     (step) => step.name === "Retain the signed qualification binding"
@@ -284,13 +300,13 @@ function requireAcceptance(w: Workflow) {
     "scan",
     "accept",
   ]) {
-    if (key !== "prepare") expect(w.jobs[key].if).toBeUndefined();
     expect(w.jobs[key]).not.toHaveProperty("continue-on-error");
   }
   for (const key of ["attest", "accept"]) {
     expect(w.jobs[key].permissions).toEqual({
       contents: "read",
       packages: "write",
+      ...(key === "accept" ? { issues: "read" } : {}),
       attestations: "write",
       "id-token": "write",
     });
@@ -465,7 +481,12 @@ describe("frontend native OCI publisher", () => {
     expect(
       publicationAdmission([], { event, ref: "refs/heads/feature" }).status
     ).toBe(1);
-    expect(workflow().jobs.prepare.if).toBe("github.event_name == 'push'");
+    expect(workflow().jobs.prepare.if).toContain(
+      "needs.admit.result == 'success'"
+    );
+    expect(workflow().jobs.attest.if).toContain(
+      "needs.prepare.outputs.index_digest"
+    );
   });
 
   it("fails closed when the authenticated push has no changed paths", () => {
@@ -518,6 +539,28 @@ describe("frontend native OCI publisher", () => {
     expect(readRepoFile(".github/workflows/frontend-container.yml")).toContain(
       'cmp "$output/source.json" "$output/source-after.json"'
     );
+  });
+
+  it("continues only an explicitly retained qualification and re-observes before discovery", () => {
+    const w = workflow();
+    expect(w.jobs.build.if).toContain("!inputs.qualified-run");
+    expect(w.jobs.accept.if).toContain("needs.verify.result == 'success'");
+    expect(w.jobs.accept.if).toContain("needs.scan.result == 'success'");
+    const writer = readRepoFile("scripts/publish-container.sh");
+    expect(writer.indexOf("snapshot --root")).toBeLessThan(
+      writer.indexOf("observe --evidence")
+    );
+    expect(writer.indexOf("observe --evidence")).toBeLessThan(
+      writer.indexOf('"$native/image@$manifest"')
+    );
+    expect(writer.indexOf("risk-final-recheck.json")).toBeLessThan(
+      writer.indexOf('oras" tag')
+    );
+    const scanner = readRepoFile("scripts/scan-container-artifact.sh");
+    expect(scanner).toContain(
+      'cmp "$output/sbom/syft.spdx.json" "$original/sbom/syft.spdx.json"'
+    );
+    expect(scanner).toContain('cp -a "$original"/. "$output/"');
   });
 
   it("gates publication and discovery on all independent accepted evidence", () =>
@@ -588,12 +631,17 @@ describe("frontend native OCI publisher", () => {
       expect(policySteps.length).toBeGreaterThan(0);
       for (const step of policySteps) {
         const ref = String(step.with?.ref);
+        if (step.with?.path === ".context/reviewed-vex") {
+          expect(ref).toBe("main");
+          expect(step.with?.["persist-credentials"]).toBe(false);
+          expect(step.with?.["fetch-depth"]).toBe(0);
+          continue;
+        }
         expect(ref).toMatch(/^[0-9a-f]{40}$/u);
         policyRefs.add(ref);
       }
     }
     expect(policyRefs.size).toBe(1);
-    const [policyRef] = policyRefs;
     const sourceSecurity = load(
       readRepoFile(".github/workflows/reusable-repository-security.yml")
     ) as Workflow;
@@ -605,7 +653,8 @@ describe("frontend native OCI publisher", () => {
     );
     expect(scanAction?.uses?.split("@")[1]).toMatch(/^[0-9a-f]{40}$/u);
     const scanner = readRepoFile("scripts/scan-container-artifact.sh");
-    expect(scanner).toContain(`--trusted-commit ${policyRef}`);
+    expect(scanner).toContain('--trusted-commit "$vex_commit"');
+    expect(scanner).toContain('--checkout "$vex_checkout"');
     expect(scanner).toContain("scan-grype");
     expect(scanner).toContain('--spdx "$output/sbom/syft.spdx.json"');
     expect(scanner).toContain(

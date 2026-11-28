@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Continue protected OCI publication of the previously qualified Frontend index
+  only with its exact evidence and an explicit operator decision (refs #2322).
+
 - Update the unprivileged Nginx runtime to 1.31.10 for CVE-2026-120993
   and CVE-2026-132779 (refs #2318).
 
