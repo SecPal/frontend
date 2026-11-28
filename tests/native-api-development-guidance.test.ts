@@ -51,8 +51,8 @@ describe("native API development guidance", () => {
     expect(readRepoFile("README.md")).toContain(
       "https://github.com/SecPal/api/blob/main/README.md#quick-start"
     );
-    expect(readRepoFile("docs/development/TDD_WORKFLOW.md")).toContain(
-      "- **Pest** (backend testing, in the SecPal/api checkout): `php artisan test`"
+    expect(readRepoFile("CONTRIBUTING.md")).toContain(
+      "https://github.com/SecPal/api/blob/main/DEVELOPMENT.md#test-database"
     );
     const securityPolicy = readRepoFile("SECURITY.md");
     expect(securityPolicy).toContain(

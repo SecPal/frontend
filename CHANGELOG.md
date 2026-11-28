@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- Consolidate frontend contributor setup and validation in `CONTRIBUTING.md`. Remove the old TDD, hook troubleshooting, conflict-marker and dependency-status guides.
 - Remove Bewacherregister CSV/XML export and download actions. Users with
   Employee update access can save the manual report date and manage registration status,
   the Bewacher-ID, and authority notes from the same panel.
