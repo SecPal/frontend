@@ -8,6 +8,7 @@ import io
 import json
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 import unittest
 import zipfile
 
@@ -34,6 +35,54 @@ def release():
                path=monitor.WORKFLOW, status="completed", conclusion="success",
                head_repository=dict(full_name=monitor.REPOSITORY))
     return document, args[5], run
+
+
+def retained_release():
+    args = fixtures.evidence()
+    records, index, sboms, scans, _, security, *_ = args
+    source = {"repository": monitor.REPOSITORY, "commit": fixtures.SHA}
+    producer = dict(repository=monitor.REPOSITORY, source_commit=fixtures.SHA,
+                    run_id="31", run_attempt="1", workflow=monitor.WORKFLOW)
+    security_bytes = fixtures.encoded(security)
+    digest = lambda value: fixtures.digest(fixtures.encoded(value))
+    rows, results, states, platforms = [], [], {}, {}
+    for record, sbom in zip(records, sboms, strict=True):
+        record.update(workflow_run_id="31", workflow_run_attempt="1")
+        info = record["subject"]
+        platform, target = info["platform"], info["manifest_digest"]
+        subject = {"platform": platform, "oci_digest": target}
+        platforms[platform] = target
+        result = dict(subject=subject, gate_state="REVIEW_REQUIRED",
+                      evidence_health={"state": "HEALTHY"}, evaluated_at=fixtures.NOW)
+        old = "2026-10-18T09:01:00Z"
+        own = [scan for scan in scans if scan["platform"] == platform]
+        for scan in own:
+            scan["policy_result"] = result["gate_state"]
+        rows.append(dict(evaluation=dict(subject=subject, evaluated_at=old, syft={"spdx_digest": sbom["spdx_sha256"]}),
+                         config_digest=info["config_digest"], spdx_association_sha256="sha256:" + "5" * 64,
+                         raw={s["scanner"]: s["evidence_sha256"] for s in own},
+                         policy_result_sha256=digest(dict(result, evaluated_at=old))))
+        results.append(result)
+        states[target] = result["gate_state"]
+    scope = dict(index_digest=index, platforms=platforms)
+    policy = SimpleNamespace(_risk_subject=lambda evidence: (scope, evidence["platforms"]), _document_digest=digest)
+    evidence = dict(source=source, index_digest=index, platforms=rows,
+                    evidence=dict(producer=producer, source_security_sha256=fixtures.digest(security_bytes)))
+    decision = dict(scope, accept=True, repository=monitor.REPOSITORY, source_commit=fixtures.SHA,
+                    evidence_sha256=digest(evidence), expires_at="2026-10-18T23:00:00Z")
+    receipt = dict(admission="ADMITTED_WITH_KNOWN_FINDINGS", source=source, index_digest=index,
+                   evidence_sha256=digest(evidence), expires_at=decision["expires_at"],
+                   operator=dict(permission="admin"), comment=dict(id=19, created_at=fixtures.NOW,
+                   url="https://github.com/SecPal/frontend/issues/2322#issuecomment-19"),
+                   decision=decision, policy_results=results)
+    receipt_bytes = fixtures.encoded(receipt)
+    document = fixtures.publisher.build_evidence(*args, expected_source=fixtures.SOURCE,
+                                                  build_origin=("31", "1"), risk_states=states)
+    document["extensions"][fixtures.publisher.SOURCE].update(
+        qualification_producer=producer, artifact_security_admission_sha256=fixtures.digest(receipt_bytes))
+    files = {"source-security.json": security_bytes, "risk-admission.json": receipt_bytes,
+             "risk-evidence.json": fixtures.encoded(evidence)}
+    return document, security, dict(release()[2], event="workflow_dispatch"), files, policy
 
 
 class ReleasedArtifactTests(unittest.TestCase):
@@ -138,6 +187,68 @@ class ReleasedArtifactTests(unittest.TestCase):
             values[0]["scans"][0]["policy_result"] = state
             with self.subTest(state=state), self.assertRaises(ValueError):
                 monitor.admit_document(*values)
+
+    def test_retained_release_preserves_review_required_and_requires_protected_dispatch(self):
+        document, security, run, files, policy = retained_release()
+        retained = monitor.admit_retained(document, files, policy)
+        records = monitor.admit_document(document, security, run, retained=retained)
+        self.assertEqual([r["workflow_run_id"] for r in records], ["31", "31"])
+        self.assertEqual(set(retained[1].values()), {"REVIEW_REQUIRED"})
+        for event in ("push", "pull_request"):
+            with self.subTest(event=event), self.assertRaises(ValueError):
+                monitor.admit_document(document, security, dict(run, event=event), retained=retained)
+        with self.assertRaises(ValueError):
+            monitor.admit_document(document, security, run)
+
+    def test_retained_release_rejects_changed_receipt_scans_and_subjects(self):
+        for mutation in (
+            lambda doc, r: r.update(admission="CLEAN"),
+            lambda doc, r: r.update(policy_results=r["policy_results"][:1]),
+            lambda doc, r: r["policy_results"][0].update(gate_state="ACTIONABLE"),
+            lambda doc, r: r["decision"].update(accept=False),
+            lambda doc, r: r["operator"].update(permission="write"),
+            lambda doc, r: doc["scans"][0].update(evidence_sha256="sha256:" + "6" * 64),
+            lambda doc, r: doc["subject"].update(index_digest="sha256:" + "7" * 64),
+            lambda doc, r: doc.update(generated_at=r["expires_at"]),
+        ):
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                document, _, _, files, policy = retained_release()
+                receipt = json.loads(files["risk-admission.json"])
+                mutation(document, receipt)
+                files["risk-admission.json"] = fixtures.encoded(receipt)
+                document["extensions"][fixtures.publisher.SOURCE]["artifact_security_admission_sha256"] = (
+                    fixtures.digest(files["risk-admission.json"]))
+                monitor.admit_retained(document, files, policy)
+
+    def test_discovery_skips_inspections_and_selects_successful_final_publication(self):
+        push = dict(release()[2], id=40)
+        retained = dict(push, id=41, event="workflow_dispatch")
+        inspect = dict(retained, id=42)
+        reader = monitor.ReleaseReader(".", None, ".", ".")
+        def api(endpoint):
+            if "event=push" in endpoint:
+                return {"workflow_runs": [push]}
+            if "event=workflow_dispatch" in endpoint:
+                return {"workflow_runs": [inspect, retained]}
+            run_id = int(endpoint.split("/")[2])
+            job = dict(name=monitor.ACCEPT_JOB, run_id=run_id, run_attempt=2, head_sha=fixtures.SHA,
+                       status="completed", conclusion="success" if run_id == 41 else "skipped")
+            return {"total_count": 1, "jobs": [job]}
+        reader.api = api
+        self.assertEqual(reader.latest_publisher(), retained)
+        reader.artifacts = lambda _: []
+        with self.assertRaisesRegex(ValueError, "^release-retained-export-unavailable$"):
+            reader.scheduled_reference(retained)
+        self.assertEqual(reader.scheduled_reference(push), monitor.BASELINE)
+
+    def test_retained_files_require_both_exact_extensions(self):
+        reader = monitor.ReleaseReader(".", None, ".", ".")
+        for extra in ({"risk-admission.json"}, {"risk-evidence.json", "substitute.json"}):
+            with self.subTest(extra=extra), self.assertRaisesRegex(ValueError, "^release-artifact-files$"):
+                names = monitor.EVIDENCE_FILES | extra
+                reader.manifest = lambda *_: ({"layers": [
+                    {"annotations": {"org.opencontainers.image.title": name}} for name in names]}, b"")
+                reader.files(monitor.BASELINE, monitor.EVIDENCE_FILES, "evidence", retained=True)
 
     def test_attestation_run_and_subject_must_match_in_the_same_verified_statement(self):
         digest = "sha256:" + "a" * 64
@@ -261,7 +372,7 @@ class ReleasedArtifactTests(unittest.TestCase):
     def test_latest_binding_rejects_old_hint_before_any_platform_selection(self):
         document, security, run = release()
         reader = monitor.ReleaseReader(".", None, ".", ".")
-        reader.files = lambda *unused: {
+        reader.files = lambda *unused, **options: {
             "build-evidence.json": fixtures.encoded(document),
             "source-security.json": fixtures.encoded(security),
             "build-evidence.bundle.json": b"{}"}

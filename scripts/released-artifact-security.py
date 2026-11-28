@@ -22,6 +22,9 @@ REPOSITORY = "SecPal/frontend"
 WORKFLOW = ".github/workflows/publish-container.yml"
 BASELINE = "ghcr.io/secpal/frontend@sha256:aa83f4bc3d18a4bfae25bfc7b0ccfdb538f547eabd4cbca3d21115f83ea5555e"
 HINT = "frontend-monitored-release"
+EVIDENCE_FILES = {"build-evidence.json", "source-security.json", "build-evidence.bundle.json"}
+RISK_FILES = {"risk-admission.json", "risk-evidence.json"}
+ACCEPT_JOB = "Accept verified Frontend publication"
 # Exact signed publisher evidence for independently supported consumers.
 # Demo observed by the operator on 2026-11-10; deployment is a source contract,
 # not an assertion that the newest image has been activated on that host.
@@ -82,22 +85,84 @@ def selected_reference(event, schedule, consumer, reference):
     return consumer, CONSUMERS[consumer]
 
 
-def admit_document(document, security, run, reference=None):
+def admit_retained(document, files, policy):
+    """Check historical publication evidence using the writer's signed receipt."""
+    receipt = json.loads(files["risk-admission.json"])
+    evidence = json.loads(files["risk-evidence.json"])
+    scope, rows = policy._risk_subject(evidence)
+    source = {"repository": REPOSITORY, "commit": document["source"]["commit"]}
+    extension = document["extensions"][publisher.SOURCE]
+    producer = evidence["evidence"]["producer"]
+    subjects = document["subject"]["platforms"]
+    decision = receipt["decision"]
+    if (extension != {
+            **{key: extension[key] for key in ("source_security_sha256", "reproducibility")},
+            "qualification_producer": producer,
+            "artifact_security_admission_sha256": publisher.digest(files["risk-admission.json"]),
+        }
+            or receipt["admission"] != "ADMITTED_WITH_KNOWN_FINDINGS"
+            or receipt["source"] != evidence["source"] or evidence["source"] != source
+            or producer["repository"] != REPOSITORY or producer["workflow"] != WORKFLOW
+            or producer["source_commit"] != source["commit"]
+            or producer["run_id"] == document["workflow"]["run_id"]
+            or not all(re.fullmatch(r"[1-9][0-9]{0,19}", producer[key]) for key in ("run_id", "run_attempt"))
+            or receipt["operator"]["permission"] != "admin"
+            or receipt["comment"]["url"] != (
+                f"https://github.com/{REPOSITORY}/issues/2322#issuecomment-{int(receipt['comment']['id'])}")
+            or receipt["evidence_sha256"] != policy._document_digest(evidence)
+            or evidence["evidence"]["source_security_sha256"] != publisher.digest(files["source-security.json"])
+            or receipt["index_digest"] != scope["index_digest"]
+            or scope != {"index_digest": document["subject"]["index_digest"],
+                         "platforms": {s["platform"]: s["manifest_digest"] for s in subjects}}
+            or any(decision[key] != value for key, value in {
+                **scope, "repository": REPOSITORY, "source_commit": source["commit"],
+                "evidence_sha256": receipt["evidence_sha256"], "expires_at": receipt["expires_at"],
+            }.items())
+            or decision["accept"] is not True):
+        raise ValueError("release-retained-admission")
+    approved = publisher.evidence_time(receipt["comment"]["created_at"])
+    complete = publisher.evidence_time(document["generated_at"])
+    expires = publisher.evidence_time(receipt["expires_at"])
+    states, associations = {}, {}
+    for row, result in zip(rows, receipt["policy_results"], strict=True):
+        platform, target = (row["evaluation"]["subject"][key] for key in ("platform", "oci_digest"))
+        subject, = [s for s in subjects if s["platform"] == platform]
+        sbom, = [s for s in document["sboms"] if s["platform"] == platform]
+        scans = {scan["scanner"]: scan["evidence_sha256"] for scan in document["scans"] if scan["platform"] == platform}
+        state = result["gate_state"]
+        if (row["config_digest"] != subject["config_digest"]
+                or row["evaluation"]["syft"]["spdx_digest"] != sbom["spdx_sha256"]
+                or row["raw"] != scans
+                or result["subject"] != row["evaluation"]["subject"]
+                or state not in {"CLEAN", "ACTIONABLE", "REVIEW_REQUIRED"}
+                or result["evidence_health"]["state"] != "HEALTHY"
+                or not approved <= publisher.evidence_time(result["evaluated_at"]) <= complete < expires
+                or row["policy_result_sha256"] != policy._document_digest(
+                    dict(result, evaluated_at=row["evaluation"]["evaluated_at"]))):
+            raise ValueError("release-retained-findings")
+        states[target] = state
+        associations[platform] = row["spdx_association_sha256"]
+    return producer, states, associations
+
+
+def admit_document(document, security, run, reference=None, retained=None):
     source, workflow = document["source"], document["workflow"]
     if (source["repository"] != publisher.SOURCE
             or not re.fullmatch(r"[0-9a-f]{40}", source["commit"])
             or run["head_repository"]["full_name"] != REPOSITORY
-            or run["head_sha"] != source["commit"] or run["event"] != "push"
-            or run["head_branch"] != "main" or run["path"] != WORKFLOW
+            or run["head_sha"] != source["commit"]
+            or run["event"] != ("workflow_dispatch" if retained else "push")
+            or run["head_branch"] != "main" or run["path"] not in (WORKFLOW, WORKFLOW + "@main")
             or run["status"] != "completed" or run["conclusion"] != "success"
             or workflow != dict(repository=REPOSITORY, path=WORKFLOW, commit=source["commit"],
                                 run_id=str(run["id"]), run_attempt=str(run["run_attempt"]))):
         raise ValueError("release-publisher-identity")
+    producer, states = retained[:2] if retained else (workflow, None)
     records = [
         dict(source=source, subject=subject, builder=document["builder"],
              bases=[base for base in document["bases"] if base["platform"] == subject["platform"]],
              runner_architecture=subject["platform"].split("/")[1],
-             workflow_run_id=workflow["run_id"], workflow_run_attempt=workflow["run_attempt"])
+             workflow_run_id=producer["run_id"], workflow_run_attempt=producer["run_attempt"])
         for subject in document["subject"]["platforms"]
     ]
     # The source is trusted only after both signed evidence forms and the
@@ -106,11 +171,17 @@ def admit_document(document, security, run, reference=None):
         records, document["subject"]["index_digest"], document["sboms"], document["scans"],
         document["smoke_tests"], security, workflow["run_id"], workflow["run_attempt"],
         document["generated_at"], expected_source=source,
+        build_origin=(producer["run_id"], producer["run_attempt"]), risk_states=states,
         # This exact, already signed October publication used the v4 producer.
         # New publishers and every other release still require the v5 contract.
         source_security_schema=("secpal-trivy-repository-scan-v4"
                                 if reference == CONSUMERS["demo"]
                                 else "secpal-trivy-repository-scan-v5"))
+    if retained:
+        rebuilt["extensions"][publisher.SOURCE].update(
+            qualification_producer=producer,
+            artifact_security_admission_sha256=document["extensions"][publisher.SOURCE]["artifact_security_admission_sha256"],
+        )
     if document != rebuilt:
         raise ValueError("release-build-evidence")
     return records
@@ -159,9 +230,37 @@ class ReleaseReader:
 
     def latest_publisher(self):
         runs = self.api("actions/workflows/publish-container.yml/runs?branch=main&event=push&status=success&per_page=1")["workflow_runs"]
-        if not runs:
-            raise ValueError("release-publisher-unavailable")
-        return runs[0]
+        previous = runs[0] if runs else None
+        query = "actions/workflows/publish-container.yml/runs?branch=main&event=workflow_dispatch&status=success&per_page=30"
+        for page in range(1, 35):
+            dispatched = self.api(f"{query}&page={page}")["workflow_runs"]
+            for run in dispatched:
+                if previous and self.publication_order(run) <= self.publication_order(previous):
+                    return previous
+                if self.accepted_dispatch(run):
+                    return run
+            if len(dispatched) < 30:
+                if previous:
+                    return previous
+                break
+        raise ValueError("release-publisher-unavailable")
+
+    def accepted_dispatch(self, run):
+        if (run["event"] != "workflow_dispatch" or run["head_repository"]["full_name"] != REPOSITORY
+                or run["head_branch"] != "main" or run["path"] not in (WORKFLOW, WORKFLOW + "@main")
+                or run["status"] != "completed" or run["conclusion"] != "success"):
+            raise ValueError("release-dispatched-publisher")
+        page = self.api(f"actions/runs/{int(run['id'])}/attempts/{int(run['run_attempt'])}/jobs?per_page=100")
+        matches = [job for job in page["jobs"] if job["name"] == ACCEPT_JOB]
+        if (page["total_count"] != len(page["jobs"]) or len(matches) != 1):
+            raise ValueError("release-final-job")
+        job = matches[0]
+        if (job["run_id"], job["run_attempt"], job["head_sha"], job["status"]) != (
+                run["id"], run["run_attempt"], run["head_sha"], "completed"):
+            raise ValueError("release-final-job-binding")
+        if job["conclusion"] not in {"success", "skipped"}:
+            raise ValueError("release-final-job-outcome")
+        return job["conclusion"] == "success"
 
     def scheduled_reference(self, latest):
         name = f"frontend-accepted-{int(latest['id'])}-{int(latest['run_attempt'])}"
@@ -174,6 +273,8 @@ class ReleaseReader:
             # Hash the actual exported bytes, not a reserialized representation.
             digest = publisher.digest(self.archive_member(artifacts[0], "build-evidence-manifest.json"))
             return publisher.REPOSITORY + "@" + digest
+        if latest["event"] == "workflow_dispatch":
+            raise ValueError("release-retained-export-unavailable")
         return BASELINE
 
     @staticmethod
@@ -238,11 +339,14 @@ class ReleaseReader:
             raise ValueError("release-blob")
         return raw
 
-    def files(self, reference, names, label):
+    def files(self, reference, names, label, *, retained=False):
         manifest, _ = self.manifest(reference, label)
         layers = manifest["layers"]
+        observed = {layer.get("annotations", {}).get("org.opencontainers.image.title") for layer in layers}
+        if retained and observed == set(names) | RISK_FILES:
+            names = observed
         if (len(layers) != len(names)
-                or {layer.get("annotations", {}).get("org.opencontainers.image.title") for layer in layers} != set(names)):
+                or observed != set(names)):
             raise ValueError("release-artifact-files")
         result = {}
         for layer in layers:
@@ -269,7 +373,7 @@ class ReleaseReader:
 
     def release(self, reference, platform, latest=None):
         digest = reference_digest(reference)
-        files = self.files(reference, ("build-evidence.json", "source-security.json", "build-evidence.bundle.json"), "evidence")
+        files = self.files(reference, EVIDENCE_FILES, "evidence", retained=True)
         document = json.loads(files["build-evidence.json"])
         security = json.loads(files["source-security.json"])
         workflow = document["workflow"]
@@ -281,7 +385,13 @@ class ReleaseReader:
                          publisher.digest(files["build-evidence.json"]), workflow, "document-attestation",
                          self.output / "evidence-build-evidence.bundle.json")
         run = self.api(f"actions/runs/{workflow['run_id']}/attempts/{workflow['run_attempt']}")
-        records = admit_document(document, security, run, reference)
+        retained = None
+        if RISK_FILES <= files.keys():
+            if not self.accepted_dispatch(run):
+                raise ValueError("release-final-job-skipped")
+            policy = module("release_risk_policy", self.shared.ROOT / "scripts/secpal-vulnerability-policy.py")
+            retained = admit_retained(document, files, policy)
+        records = admit_document(document, security, run, reference, retained)
         ancestry = self.api(f"compare/{workflow['commit']}...main")
         if ancestry["status"] not in ("ahead", "identical") or ancestry["merge_base_commit"]["sha"] != workflow["commit"]:
             raise ValueError("release-main-ancestry")
@@ -306,6 +416,8 @@ class ReleaseReader:
                                                 {"oci_digest": subject["manifest_digest"], "platform": subject["platform"]})
             if publisher.digest(spdx["syft.spdx.json"]) != sbom["spdx_sha256"]:
                 raise ValueError("release-spdx-digest")
+            if retained and publisher.digest(spdx["association.json"]) != retained[2][subject["platform"]]:
+                raise ValueError("release-retained-spdx-association")
         if index != publisher.assemble_index([r["subject"] for r in records], sizes):
             raise ValueError("release-complete-platform-set")
         tag = f"build-{workflow['commit']}-{workflow['run_id']}-{workflow['run_attempt']}"

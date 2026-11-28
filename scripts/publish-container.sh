@@ -6,7 +6,9 @@ set -euo pipefail
 stage=${1:?publisher stage}
 test "${GITHUB_REPOSITORY:?}" = SecPal/frontend
 case "${GITHUB_EVENT_NAME:?}:$stage" in
-  push:*|workflow_dispatch:qualify) ;;
+  push:*|workflow_dispatch:qualify|workflow_dispatch:prepare) ;;
+  workflow_dispatch:verify|workflow_dispatch:evidence|workflow_dispatch:retain-evidence|workflow_dispatch:accept)
+    test "${PUBLISH_RETAINED:-false}" = true ;;
   *) exit 1 ;;
 esac
 test "${GITHUB_REF:?}" = refs/heads/main
@@ -17,6 +19,20 @@ repository=ghcr.io/secpal/frontend
 prepared="$repo_root/.context/publisher"
 tools="${RUNNER_TEMP:?}/secpal-publisher-tools"
 governance="$repo_root/.context/publisher-governance"
+continuation="$governance/scripts/secpal-publisher-continuation.py"
+vex_root="$repo_root/.context/reviewed-vex"
+native_run="$GITHUB_RUN_ID"
+native_attempt="$GITHUB_RUN_ATTEMPT"
+retained=false
+if [[ "$stage" == prepare && "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+  [[ "${QUALIFIED_RUN:-}" =~ ^[1-9][0-9]{0,17}$ && "${QUALIFIED_ATTEMPT:-}" =~ ^[1-9][0-9]{0,5}$ ]]
+  retained=true
+  native_run="$QUALIFIED_RUN"
+  native_attempt="$QUALIFIED_ATTEMPT"
+  python3 "$continuation" restore --root .context --run "$native_run" --attempt "$native_attempt"
+  mkdir -p .context/repository-security "$prepared"
+  cp .context/retained/publisher/source-security.json .context/repository-security/result.json
+fi
 auth_root=$(mktemp -d "$RUNNER_TEMP/secpal-frontend-registry.XXXXXX")
 export DOCKER_CONFIG="$auth_root"
 export REGISTRY_AUTH_FILE="$auth_root/config.json"
@@ -66,8 +82,8 @@ try:
 except (ValidationError, json.JSONDecodeError, OSError):
     raise SystemExit("FAIL: malformed source-security evidence") from None
 PY
-  python3 scripts/container-publisher.py prepare --root "$repo_root" --native .context/native \
-      --security "$security_file" --output "$prepared"
+  GITHUB_RUN_ID="$native_run" GITHUB_RUN_ATTEMPT="$native_attempt" python3 scripts/container-publisher.py prepare \
+      --root "$repo_root" --native .context/native --security "$security_file" --output "$prepared"
   if [[ "$stage" == qualify ]]; then
     accepted=true
     for arch in amd64 arm64; do
@@ -78,18 +94,38 @@ PY
       --prepared "$prepared/prepared.json" --scan-root .context/scan --output "$prepared/pre-registry.json"
     exit 0
   fi
-  python3 scripts/container-publisher.py qualification --root "$repo_root" \
-    --prepared "$prepared/prepared.json" --scan-root .context/pre-registry/scan \
-    --output "$prepared/pre-registry.json" --recheck
-  require_registry_binding
-  receipt=.context/pre-registry/publisher/pre-registry.json
-  bundle=.context/pre-registry/publisher/pre-registry.bundle.json
-  test -s "$bundle"
-  cmp -- "$prepared/pre-registry.json" "$receipt"
-  "$tools/gh" attestation verify "$receipt" --bundle "$bundle" \
-    --repo SecPal/frontend --signer-workflow SecPal/frontend/.github/workflows/publish-container.yml \
-    --signer-digest "$GITHUB_SHA" --source-ref refs/heads/main --source-digest "$GITHUB_SHA" \
-    --deny-self-hosted-runners
+  if [[ "$retained" == true ]]; then
+    cmp "$prepared/prepared.json" .context/retained/publisher/prepared.json
+    cmp "$prepared/index.json" .context/retained/publisher/index.json
+    for arch in amd64 arm64; do
+      native=".context/native/frontend-native-$arch-$native_run-$native_attempt"
+      cmp "$native/syft.spdx.json" ".context/retained/scan/$arch/sbom/syft.spdx.json"
+      cmp "$native/association.json" ".context/retained/scan/$arch/sbom/association.json"
+    done
+    evidence_sha=$(python3 "$continuation" snapshot --root .context --vex-root "$vex_root" \
+      --output "$prepared/risk-evidence.json")
+    printf 'Canonical retained evidence SHA-256: %s\n' "$evidence_sha" >> "$GITHUB_STEP_SUMMARY"
+    if [[ "${PUBLISH_RETAINED:-false}" != true ]]; then exit 0; fi
+    python3 "$continuation" observe --evidence "$prepared/risk-evidence.json" --vex-root "$vex_root" \
+      --output "$prepared/risk-admission.json"
+    cp -a .context/retained/scan "$prepared/retained-scan"
+    cp .context/retained/publisher/pre-registry.json "$prepared/pre-registry.json"
+    PRE_REGISTRY_BINDING="sha256:$(sha256sum "$prepared/pre-registry.json" | cut -d ' ' -f 1)"
+  else
+    python3 scripts/container-publisher.py qualification --root "$repo_root" \
+      --prepared "$prepared/prepared.json" --scan-root .context/pre-registry/scan \
+      --output "$prepared/pre-registry.json" --recheck
+    require_registry_binding
+    receipt=.context/pre-registry/publisher/pre-registry.json
+    bundle=.context/pre-registry/publisher/pre-registry.bundle.json
+    test -s "$bundle"
+    cmp -- "$prepared/pre-registry.json" "$receipt"
+    "$tools/gh" attestation verify "$receipt" --bundle "$bundle" \
+      --repo SecPal/frontend --signer-workflow SecPal/frontend/.github/workflows/publish-container.yml \
+      --signer-digest "$GITHUB_SHA" --source-ref refs/heads/main --source-digest "$GITHUB_SHA" \
+      --deny-self-hosted-runners
+  fi
+  printf 'binding=%s\n' "$PRE_REGISTRY_BINDING" >> "$GITHUB_OUTPUT"
 fi
 case "$stage" in
   prepare)
@@ -97,7 +133,7 @@ case "$stage" in
     sboms='[]'
     subjects=$(jq -c '[.index_digest]+[.records[].subject.manifest_digest]' "$prepared/prepared.json")
     for arch in amd64 arm64; do
-      native="$repo_root/.context/native/frontend-native-$arch-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+      native="$repo_root/.context/native/frontend-native-$arch-$native_run-$native_attempt"
       manifest=$(jq -er .subject.manifest_digest "$native/record.json")
       layout="$RUNNER_TEMP/sbom-$arch"
       (
@@ -116,7 +152,7 @@ case "$stage" in
     printf '%s\n' "$sboms" > "$prepared/sboms.json"
     login_registry
     for arch in amd64 arm64; do
-      native="$repo_root/.context/native/frontend-native-$arch-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+      native="$repo_root/.context/native/frontend-native-$arch-$native_run-$native_attempt"
       manifest=$(jq -er --arg arch "linux/$arch" '.records[]|select(.subject.platform==$arch)|.subject.manifest_digest' "$prepared/prepared.json")
       sbom=$(jq -er --arg arch "linux/$arch" '.[]|select(.platform==$arch)|.artifact' "$prepared/sboms.json")
       "$tools/oras" cp --to-registry-config "$REGISTRY_AUTH_FILE" --from-oci-layout \
@@ -164,11 +200,15 @@ case "$stage" in
   retain-evidence)
     # The file attestation already exists; retain its exact bytes and bundle as
     # one immutable OCI artifact in the existing official package, never a new tag.
+    evidence_files=(build-evidence.json:application/json source-security.json:application/json
+      build-evidence.bundle.json:application/json)
+    if [[ -f "$prepared/risk-admission.json" ]]; then
+      evidence_files+=(risk-admission.json:application/json risk-evidence.json:application/json)
+    fi
     (
       cd "$prepared"
       "$tools/oras" push --oci-layout --image-spec v1.1 --artifact-type application/vnd.secpal-build-evidence.v1+json \
-        --export-manifest build-evidence-manifest.json "$RUNNER_TEMP/build-evidence:build" \
-        build-evidence.json:application/json source-security.json:application/json build-evidence.bundle.json:application/json
+        --export-manifest build-evidence-manifest.json "$RUNNER_TEMP/build-evidence:build" "${evidence_files[@]}"
     )
     evidence_digest="sha256:$(sha256sum "$prepared/build-evidence-manifest.json" | cut -d ' ' -f1)"
     "$tools/oras" cp --to-registry-config "$REGISTRY_AUTH_FILE" --from-oci-layout \
@@ -185,6 +225,10 @@ case "$stage" in
     for name in build-evidence.json source-security.json build-evidence.bundle.json; do
       cmp "$prepared/$name" "$readback/$name"
     done
+    if [[ -f "$prepared/risk-admission.json" ]]; then
+      cmp "$prepared/risk-admission.json" "$readback/risk-admission.json"
+      cmp "$prepared/risk-evidence.json" "$readback/risk-evidence.json"
+    fi
     gh attestation verify "$readback/build-evidence.json" --bundle "$readback/build-evidence.bundle.json" \
       --repo SecPal/frontend --signer-workflow SecPal/frontend/.github/workflows/publish-container.yml \
       --signer-digest "$GITHUB_SHA" --source-ref refs/heads/main --source-digest "$GITHUB_SHA" --deny-self-hosted-runners
@@ -198,6 +242,10 @@ case "$stage" in
     done < <(jq -er '.sboms[].artifact' "$prepared/build-evidence.json")
     "$tools/oras" manifest fetch --registry-config "$REGISTRY_AUTH_FILE" "$repository@$index_digest" > "$prepared/accepted-index.json"
     cmp "$prepared/index.json" "$prepared/accepted-index.json"
+    if [[ -f "$prepared/risk-admission.json" ]]; then
+      python3 "$continuation" observe --vex-root "$vex_root" --evidence "$prepared/risk-evidence.json" \
+        --compare "$prepared/risk-admission.json" --output "$prepared/risk-final-recheck.json"
+    fi
     published_tag="build-$GITHUB_SHA-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
     "$tools/oras" tag --registry-config "$REGISTRY_AUTH_FILE" "$repository@$index_digest" "$published_tag"
     "$tools/oras" manifest fetch --registry-config "$REGISTRY_AUTH_FILE" "$repository:$published_tag" > "$prepared/discovery-index.json"

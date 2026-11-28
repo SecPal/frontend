@@ -10,6 +10,7 @@ in the pinned SecPal/.github implementation, never in this module.
 import argparse
 from datetime import datetime, timezone
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -241,7 +242,7 @@ def evidence_time(value):
     return instant, int((match['fraction'] or '').ljust(9,'0')[6:])
 
 
-def build_evidence(records, index_digest, sboms, scans, smokes, source_security, run_id, attempt, generated_at, *, expected_source, source_security_schema='secpal-trivy-repository-scan-v5'):
+def build_evidence(records, index_digest, sboms, scans, smokes, source_security, run_id, attempt, generated_at, *, expected_source, source_security_schema='secpal-trivy-repository-scan-v5', build_origin=None, risk_states=None):
     if (len(records)!=2 or [r['subject']['platform'] for r in records]!=list(PLATFORMS)
             or records[0]['source']!=records[1]['source']
             or records[0]['builder']!=records[1]['builder']
@@ -261,7 +262,8 @@ def build_evidence(records, index_digest, sboms, scans, smokes, source_security,
             raise ValueError('publisher-incomplete-evidence')
     for record in records:
         subject = record['subject']; target=subject['manifest_digest']; p=subject['platform']; arch=p.split('/')[1]
-        if record['runner_architecture']!=arch or record['workflow_run_id']!=run_id or record['workflow_run_attempt']!=attempt:
+        producer_run, producer_attempt = build_origin or (run_id, attempt)
+        if record['runner_architecture']!=arch or record['workflow_run_id']!=producer_run or record['workflow_run_attempt']!=producer_attempt:
             raise ValueError('publisher-native-build-binding')
         sbom = [s for s in sboms if s['platform']==p]
         smoke = [s for s in smokes if s['platform']==p]
@@ -281,7 +283,7 @@ def build_evidence(records, index_digest, sboms, scans, smokes, source_security,
             raise ValueError('publisher-scan-set')
         for scan in own:
             expected = sbom[0]['spdx_sha256'] if scan['scanner']=='grype' else target
-            if (scan['subject_digest']!=expected or scan['status']!='SUCCEEDED' or scan['policy_result']!='CLEAN'
+            if (scan['subject_digest']!=expected or scan['status']!='SUCCEEDED' or scan['policy_result']!=(risk_states or {}).get(target,'CLEAN')
                     or not re.fullmatch(r'sha256:[0-9a-f]{64}',scan['evidence_sha256'])
                     or not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+',scan['scanner_version'])
                     or not scan['database']['identity']
@@ -371,14 +373,16 @@ def recheck_qualification(root, scan_root):
     adapter = governance/'scripts/secpal-vulnerability-reevaluation.py'
     policy = governance/'scripts/secpal-vulnerability-policy.py'
     vex = []
-    if (governance/'reviewed-vex').is_dir():
+    vex_checkout = root/'.context/reviewed-vex'
+    if (vex_checkout/'reviewed-vex').is_dir():
+        commit = run(['git','rev-parse','HEAD'], cwd=vex_checkout).decode().strip()
         manifests = run([sys.executable, str(adapter), 'list-vex',
-                         '--directory', str(governance/'reviewed-vex')])
+                         '--directory', str(vex_checkout/'reviewed-vex')])
         for name in manifests.decode().split('\0'):
             if name:
-                run([sys.executable, str(adapter), 'verify-vex', '--checkout', str(governance),
+                run([sys.executable, str(adapter), 'verify-vex', '--checkout', str(vex_checkout),
                      '--manifest', name, '--trusted-repository', 'SecPal/.github',
-                     '--trusted-commit', '22ce172e7b1decfdd4267e382432b93765798d95'])
+                     '--trusted-commit', commit])
                 vex.extend(['--reviewed-vex-manifest', name])
     observed_at = timestamp(datetime.now(timezone.utc).timestamp())
     with tempfile.TemporaryDirectory() as temporary:
@@ -394,6 +398,51 @@ def recheck_qualification(root, scan_root):
 
 
 
+def retained_release(root, prepared, scan_root, candidate):
+    root, prepared, scan_root = map(Path, (root, prepared, scan_root))
+    input_path = prepared/'risk-evidence.json'
+    receipt_path = prepared/'risk-admission.json'
+    if not input_path.exists() and not receipt_path.exists():
+        if os.environ.get('PUBLISH_RETAINED') == 'true':
+            raise ValueError('publisher-retained-frontend-receipt-missing')
+        return {}, {}
+    spec = importlib.util.spec_from_file_location(
+        'publisher_continuation', root/'.context/publisher-governance/scripts/secpal-publisher-continuation.py')
+    owner = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(owner)
+    evidence, receipt = read(input_path), read(receipt_path)
+    material = owner.reevaluation.risk_policy_material(root/'.context/reviewed-vex')
+    policy = material[0]
+    scope, rows = policy._risk_subject(evidence)
+    if (receipt['admission'] != 'ADMITTED_WITH_KNOWN_FINDINGS'
+            or receipt['source'] != evidence['source']
+            or receipt['source'] != {'repository': 'SecPal/frontend', 'commit': os.environ['GITHUB_SHA']}
+            or receipt['evidence_sha256'] != policy._document_digest(evidence)
+            or receipt['index_digest'] != candidate['index_digest']
+            or receipt['index_digest'] != scope['index_digest']
+            or {entry['subject']['platform']: entry['subject']['manifest_digest'] for entry in candidate['records']}
+              != scope['platforms']
+            or evidence['evidence']['source_security_sha256'] != digest_file(prepared/'source-security.json')):
+        raise ValueError('publisher-retained-frontend-receipt')
+    states = {}
+    for row, result in zip(rows, receipt['policy_results'], strict=True):
+        subject = row['evaluation']['subject']
+        platform_name = subject['platform']
+        arch = platform_name.split('/')[1]
+        native, = [entry['subject'] for entry in candidate['records']
+                   if entry['subject']['platform'] == platform_name]
+        spdx, = [entry['spdx_sha256'] for entry in candidate['inventories'] if entry['platform'] == platform_name]
+        evaluation = owner.bound_platform(scan_root/arch, subject, native['config_digest'], spdx, material)
+        if (evaluation != row or row['policy_result_sha256'] != policy._document_digest(
+                dict(result, evaluated_at=row['evaluation']['evaluated_at']))):
+            raise ValueError('publisher-retained-frontend-scan-substitution')
+        states[subject['oci_digest']] = result['gate_state']
+    producer = evidence['evidence']['producer']
+    return dict(build_origin=(producer['run_id'], producer['run_attempt']), risk_states=states), {
+        'qualification_producer': producer, 'artifact_security_admission_sha256': digest_file(receipt_path),
+    }
+
+
 def complete(prepared, scan_root, smoke_root, root, output):
     expected = source(root,os.environ['GITHUB_SHA'])
     value = read(Path(prepared)/'prepared.json')
@@ -404,10 +453,12 @@ def complete(prepared, scan_root, smoke_root, root, output):
         smoke_dir=Path(smoke_root)/('frontend-smoke-'+arch+'-'+os.environ['GITHUB_RUN_ID']+'-'+os.environ['GITHUB_RUN_ATTEMPT'])
         smokes.append(read(smoke_dir/'smoke.json'))
     security=read(Path(prepared)/'source-security.json')
+    extra, extensions = retained_release(root, prepared, scan_root, value)
     result = build_evidence(value['records'],value['index_digest'],sboms,scans,smokes,security,
                             os.environ['GITHUB_RUN_ID'],os.environ['GITHUB_RUN_ATTEMPT'],
                             datetime.now(timezone.utc).isoformat(timespec='seconds').replace('+00:00','Z'),
-                            expected_source=expected)
+                            expected_source=expected, **extra)
+    result['extensions'][SOURCE].update(extensions)
     # The canonical source-security bytes are retained with this document.
     write(output,result)
 

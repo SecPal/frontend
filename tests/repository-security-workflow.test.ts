@@ -28,6 +28,7 @@ interface Workflow {
       uses?: string;
       permissions: Record<string, string>;
       needs?: string[];
+      if?: string;
       steps: Step[];
       "runs-on"?: string;
       "timeout-minutes"?: number;
@@ -39,6 +40,8 @@ const { load } = createRequire(import.meta.url)("js-yaml") as {
   load: (source: string) => Workflow;
 };
 const reusablePath = ".github/workflows/reusable-repository-security.yml";
+const freshQualification =
+  "${{ !inputs.qualified-run && !inputs.qualified-attempt && !inputs.publish-retained }}";
 const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   ".."
@@ -53,21 +56,27 @@ describe("pre-publication repository source security", () => {
     const quality = readWorkflow(".github/workflows/quality.yml");
     expect(quality.on).toHaveProperty("pull_request");
     expect(quality.on).toHaveProperty("push");
-    for (const workflow of [
-      quality,
-      readWorkflow(".github/workflows/publish-container.yml"),
-    ]) {
-      expect(workflow.jobs["repository-security"]).toEqual({
-        name: "Repository Security",
-        uses: `./${reusablePath}`,
-        permissions: { contents: "read" },
-      });
-    }
-    const publish = readWorkflow(".github/workflows/publish-container.yml").jobs
-      .build;
-    expect(publish.needs).toEqual(["validate", "repository-security"]);
-    expect(publish).not.toHaveProperty("if");
-    expect(publish).not.toHaveProperty("continue-on-error");
+    const security = {
+      name: "Repository Security",
+      uses: `./${reusablePath}`,
+      permissions: { contents: "read" },
+    };
+    expect(quality.jobs["repository-security"]).toEqual(security);
+    const jobs = readWorkflow(".github/workflows/publish-container.yml").jobs;
+    expect(jobs["repository-security"]).toEqual({
+      ...security,
+      if: freshQualification,
+    });
+    expect(jobs.build.needs).toEqual(["validate", "repository-security"]);
+    expect(jobs.build.if).toBe(freshQualification);
+    expect(jobs.build).not.toHaveProperty("continue-on-error");
+    expect(jobs.prepare.if).toContain(
+      "needs.repository-security.result == 'success'"
+    );
+    expect(jobs["inspect-retained"].permissions).toEqual({
+      contents: "read",
+      actions: "read",
+    });
   });
 
   it("checks the reviewed exception reachability assumptions before publication", () => {
@@ -79,7 +88,7 @@ describe("pre-publication repository source security", () => {
     expect(contract?.run).toContain(
       "tests/repository-security-reachability.test.ts"
     );
-    expect(validation).not.toHaveProperty("if");
+    expect(validation.if).toBe(freshQualification);
     expect(validation).not.toHaveProperty("continue-on-error");
     expect(contract).not.toHaveProperty("if");
     expect(contract).not.toHaveProperty("continue-on-error");
