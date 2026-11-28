@@ -264,7 +264,7 @@ The Containerfile pins both a complete version tag and its multi-architecture
 manifest digest. To update a pin:
 
 1. select an exact supported Debian Node patch release and a separately
-   qualified official `nginxinc/nginx-unprivileged` runtime release;
+   qualified official `nginx/nginx-unprivileged` runtime release;
 2. inspect the registry manifest with
    `skopeo inspect --raw docker://<image>:<tag>`;
 3. confirm that amd64 and arm64 are present and record the top-level index

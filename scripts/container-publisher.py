@@ -110,7 +110,7 @@ def bases(root, arch):
     if len(stages) != 2:
         raise ValueError('publisher-reviewed-base')
     for line, (stage, repository) in zip(stages, (('build','docker.io/library/node'),
-                                                 ('runtime','docker.io/nginxinc/nginx-unprivileged'))):
+                                                 ('runtime','docker.io/nginx/nginx-unprivileged'))):
         match = re.fullmatch(r'FROM (\S+) AS '+stage, line)
         if not match or not re.fullmatch(re.escape(repository)+r':[A-Za-z0-9._-]+@sha256:[0-9a-f]{64}',match[1]):
             raise ValueError('publisher-reviewed-base')

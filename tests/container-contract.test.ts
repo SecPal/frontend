@@ -115,7 +115,7 @@ describe("frontend container source contract", () => {
       /^FROM docker\.io\/library\/node:\d+\.\d+\.\d+-bookworm-slim@sha256:[a-f0-9]{64} AS build$/mu
     );
     expect(dockerfile).toMatch(
-      /^FROM docker\.io\/nginxinc\/nginx-unprivileged:\d+\.\d+\.\d+-alpine\d+\.\d+-slim@sha256:[a-f0-9]{64} AS runtime$/mu
+      /^FROM docker\.io\/nginx\/nginx-unprivileged:\d+\.\d+\.\d+-alpine\d+\.\d+-slim@sha256:[a-f0-9]{64} AS runtime$/mu
     );
     expect(dockerfile).toContain(
       "COPY package.json package-lock.json .npmrc ./"
