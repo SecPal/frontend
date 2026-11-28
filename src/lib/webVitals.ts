@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 SecPal Contributors
+// SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { onCLS, onINP, onLCP, onFCP, onTTFB, type Metric } from "web-vitals";
