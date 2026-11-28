@@ -50,10 +50,14 @@ for private previews.
 | Work on shared UI components                                       | [UI architecture](docs/ui-architecture.md)                                                                          |
 | Build browser or native-facing artifacts and select a test surface | [App surfaces and build metadata](docs/app-surfaces.md)                                                             |
 | Understand client routing and authorization presentation           | [Route access policy](docs/ROUTE_ACCESS_POLICY.md)                                                                  |
+| Review the offline vault design and logout lifecycle               | [Encrypted offline vault design](docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md)                                            |
 | Maintain the frontend Content Security Policy                      | [Static CSP contract](docs/security/csp.md)                                                                         |
 | Validate browser Web Push in a workspace                           | [Browser Web Push](docs/browser-web-push.md)                                                                        |
 | Consume frontend images and configure their runtime API origin     | [Frontend container](docs/deployment/frontend-container.md) and [delivery boundary](docs/deployment-spa-routing.md) |
 | Extract, compile and verify translations                           | [Lingui scripts](package.json)                                                                                      |
+
+[ADR-026](https://github.com/SecPal/.github/blob/main/docs/adr/20261002-client-trust-offline-recovery-adr026.md) defines the target
+architecture for client trust and offline recovery.
 
 Report vulnerabilities through the private process in [SECURITY.md](SECURITY.md).
 File-level SPDX and [REUSE](REUSE.toml) metadata describe licensing. See
