@@ -59,6 +59,7 @@ for private previews.
 [ADR-026](https://github.com/SecPal/.github/blob/main/docs/adr/20261002-client-trust-offline-recovery-adr026.md) defines the target
 architecture for client trust and offline recovery.
 
-Report vulnerabilities through the private process in [SECURITY.md](SECURITY.md).
-File-level SPDX and [REUSE](REUSE.toml) metadata describe licensing. See
-[LICENSE](LICENSE) for the project license.
+See the [changelog](CHANGELOG.md) for release history and
+[SECURITY.md](SECURITY.md) for private vulnerability reporting.
+The [project license](LICENSE), [REUSE metadata](REUSE.toml) and
+[third-party notices](THIRD-PARTY-NOTICES.md) describe licensing and attribution.
