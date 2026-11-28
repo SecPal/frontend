@@ -252,13 +252,13 @@ describe("auth/onboarding migration boundary", () => {
 
   it("documents the shared UI migration boundary", () => {
     const guide = readFileSync(
-      path.resolve(projectRoot, "src/ui/MIGRATION.md"),
+      path.resolve(projectRoot, "docs/ui-architecture.md"),
       "utf8"
     );
 
     expect(guide).toContain("src/ui");
     expect(guide).toContain("Button");
     expect(guide).toContain("Dialog");
-    expect(guide).toContain("Do not import old shared UI wrappers");
+    expect(guide).toMatch(/reject old\s+shared wrappers/);
   });
 });
