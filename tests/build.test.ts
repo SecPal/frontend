@@ -1349,7 +1349,7 @@ jobs:
     const offlineVaultDesign = readRepoFile(
       "docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md"
     );
-    const persistenceAudit = readRepoFile("PWA_OFFLINE_PERSISTENCE_AUDIT.md");
+    const readme = readRepoFile("README.md");
 
     expect(offlineVaultDesign).toContain("# Encrypted Offline Vault Design");
     expect(offlineVaultDesign).toContain("## Target Key Hierarchy");
@@ -1361,8 +1361,6 @@ jobs:
       "## Security Boundaries and UX Trade-Offs"
     );
     expect(offlineVaultDesign).toContain("## Follow-Up Implementation Slices");
-    expect(persistenceAudit).toContain(
-      "docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md"
-    );
+    expect(readme).toContain("](docs/OFFLINE_ENCRYPTED_VAULT_DESIGN.md)");
   });
 });
