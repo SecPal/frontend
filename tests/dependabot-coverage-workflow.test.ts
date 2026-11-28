@@ -58,7 +58,7 @@ describe("frontend manifest coverage adoption", () => {
       ["pre-commit", "/"],
     ]);
     expect(readFileSync("Containerfile", "utf8")).toMatch(
-      /^FROM docker\.io\/nginxinc\/nginx-unprivileged:\S+@sha256:[a-f0-9]{64} AS runtime$/mu
+      /^FROM docker\.io\/nginx\/nginx-unprivileged:\S+@sha256:[a-f0-9]{64} AS runtime$/mu
     );
     expect(readFileSync(".pre-commit-config.yaml", "utf8")).toContain(
       "repo: https://github.com/"

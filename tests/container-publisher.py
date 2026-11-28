@@ -36,7 +36,7 @@ def digest(value):
 
 def platform(arch):
     base=[dict(stage=s,platform='linux/'+arch,reference='docker.io/'+name+':1@sha256:'+'d'*64,
-               digest='sha256:'+'e'*64) for s,name in [('build','library/node'),('runtime','nginxinc/nginx-unprivileged')]]
+               digest='sha256:'+'e'*64) for s,name in [('build','library/node'),('runtime','nginx/nginx-unprivileged')]]
     labels={
         'org.opencontainers.image.source':'https://github.com/SecPal/frontend',
         'org.opencontainers.image.revision':SHA,
@@ -64,7 +64,7 @@ class BaseSourceTests(unittest.TestCase):
             index = encoded(dict(manifests=[dict(digest=digest(manifest),
                            platform=dict(os='linux',architecture=arch))]))
             refs = [('docker.io/library/node', 'build'),
-                    ('docker.io/nginxinc/nginx-unprivileged', 'runtime')]
+                    ('docker.io/nginx/nginx-unprivileged', 'runtime')]
             fixture = '\n'.join('FROM '+repo+':1@'+digest(index)+' AS '+stage for repo,stage in refs)
             with tempfile.TemporaryDirectory() as tmp:
                 (Path(tmp)/'Containerfile').write_text(fixture)
@@ -74,6 +74,7 @@ class BaseSourceTests(unittest.TestCase):
                 self.assertTrue(all(b['platform']=='linux/'+arch and b['digest']==digest(manifest) for b in result))
                 for bad in (fixture.replace('FROM ', 'FROM $', 1),
                             fixture+'\nFROM other:latest AS extra',
+                            fixture.replace('docker.io/nginx/', 'docker.io/unverified/'),
                             fixture.replace('AS build','AS runtime'),
                             fixture.replace(digest(index), 'sha256:bad')):
                     (Path(tmp)/'Containerfile').write_text(bad)
