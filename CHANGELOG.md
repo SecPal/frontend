@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- Update the unprivileged Nginx runtime to 1.31.10 for CVE-2026-120993
+  and CVE-2026-132779 (refs #2318).
+
 ### Added
 
 - Use the shared German street, postal code, and city suggestions when creating

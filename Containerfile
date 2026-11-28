@@ -12,7 +12,7 @@ COPY . .
 ARG SOURCE_DATE_EPOCH
 RUN npm run build:web
 
-FROM docker.io/nginxinc/nginx-unprivileged:1.31.7-alpine3.24-slim@sha256:a8cb0f33d51fa107c96fd2bd3a71aaf564ec131e9d2bdf8700944f0ed8b170d7 AS runtime
+FROM docker.io/nginx/nginx-unprivileged:1.31.10-alpine3.24-slim@sha256:f4afc48254dc77ea692ec6979d220e5b1176331c636a4d51c502ffdded6789bd AS runtime
 
 ARG SECPAL_IMAGE_REVISION=unknown
 ARG SECPAL_IMAGE_VERSION=0.0.1
