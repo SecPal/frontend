@@ -18,8 +18,7 @@ import { PERFORMANCE_THRESHOLDS } from "./webVitals";
 
 describe("Web Vitals Development Warnings", () => {
   describe("Performance Thresholds Configuration", () => {
-    it("should have thresholds aligned with Lighthouse CI", () => {
-      // These values must match lighthouserc.cjs assertions
+    it("uses the expected thresholds for browser diagnostics", () => {
       expect(PERFORMANCE_THRESHOLDS.LCP).toEqual({
         good: 2500,
         needsImprovement: 4000,

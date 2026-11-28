@@ -48,7 +48,7 @@ for backend validation. Use the evidence required by the
 [frontend validation rules](AGENTS.md#required-validation), including failing-first
 evidence for behavior changes. The
 [evidence architecture contract](https://github.com/SecPal/.github/blob/main/docs/evidence-architecture-contract.md)
-applies to external-system validation.
+applies to external-system validation. See [Web Vitals and local telemetry](docs/web-vitals-monitoring.md) for browser metrics and Lighthouse CI.
 
 ## Pull requests
 
