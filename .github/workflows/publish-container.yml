@@ -423,7 +423,8 @@ jobs:
           if-no-files-found: error
           retention-days: 14
   attest:
-    if: needs.prepare.outputs.index_digest != ''
+    if: >-
+      ${{ !cancelled() && needs.prepare.result == 'success' && needs.prepare.outputs.index_digest != '' }}
     name: Attest candidate index platforms and Syft artifacts
     needs: prepare
     runs-on: ubuntu-24.04
@@ -504,6 +505,8 @@ jobs:
         if: always()
         run: python3 scripts/container-attestation-auth.py cleanup
   verify:
+    if: >-
+      ${{ !cancelled() && needs.prepare.result == 'success' && needs.attest.result == 'success' }}
     name: Published native runtime (${{ matrix.arch }})
     needs:
       - prepare
@@ -577,6 +580,8 @@ jobs:
           if-no-files-found: error
           retention-days: 14
   scan:
+    if: >-
+      ${{ !cancelled() && needs.prepare.result == 'success' && needs.attest.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:

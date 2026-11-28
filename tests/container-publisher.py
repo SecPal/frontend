@@ -14,6 +14,7 @@ import unittest
 from unittest.mock import patch
 import subprocess
 import tempfile
+from types import SimpleNamespace
 import sys
 sys.dont_write_bytecode = True
 
@@ -244,6 +245,92 @@ class UnpublishedQualificationTests(unittest.TestCase):
         (blobs/digest(layer).split(':')[1]).write_bytes(b'x' * len(layer))
         with self.assertRaisesRegex(ValueError, 'publisher-layer-binding'):
             publisher.read_layout(self.root, arch, SOURCE, base)
+
+
+class RetainedReleaseTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.prepared = self.root/'publisher'
+        self.prepared.mkdir()
+        source = {'repository':'SecPal/frontend', 'commit':SHA}
+        publisher.write(self.prepared/'source-security.json', {'subject':source, 'gate_state':'CLEAN'})
+        self.candidate = {'index_digest':'sha256:'+'b'*64, 'records':[], 'inventories':[]}
+        self.scope = {'index_digest':self.candidate['index_digest'], 'platforms':{}}
+        self.rows = []
+        self.results = []
+        for arch, letter in (('amd64','c'),('arm64','d')):
+            name = 'linux/'+arch
+            target = 'sha256:'+letter*64
+            subject = {'oci_digest':target,'platform':name}
+            config = 'sha256:'+'e'*64
+            self.candidate['records'].append({'subject':dict(platform=name,manifest_digest=target,config_digest=config)})
+            self.candidate['inventories'].append({'platform':name,'spdx_sha256':'sha256:'+'a'*64})
+            self.scope['platforms'][name] = target
+            result = dict(subject=subject, evaluated_at=NOW, gate_state='REVIEW_REQUIRED')
+            self.results.append(result)
+            self.rows.append(dict(evaluation=dict(subject=subject,evaluated_at=NOW),
+                                  config_digest=config, policy_result_sha256=self.canonical_digest(result)))
+        self.evidence = dict(source=source, index_digest=self.candidate['index_digest'],platforms=self.rows,
+                             evidence=dict(producer=dict(run_id='10',run_attempt='1'),
+                                  source_security_sha256=publisher.digest_file(self.prepared/'source-security.json')))
+        self.receipt = dict(admission='ADMITTED_WITH_KNOWN_FINDINGS', source=source,
+                            evidence_sha256=self.canonical_digest(self.evidence), index_digest=self.candidate['index_digest'],
+                            policy_results=self.results)
+        publisher.write(self.prepared/'risk-evidence.json',self.evidence)
+        publisher.write(self.prepared/'risk-admission.json',self.receipt)
+
+    def canonical_digest(self, value):
+        return publisher.digest(publisher.canonical(value))
+
+    def release(self, observed=None):
+        policy = SimpleNamespace(_document_digest=self.canonical_digest,_risk_subject=lambda _: (self.scope,self.rows))
+        observer = SimpleNamespace(
+            reevaluation=SimpleNamespace(risk_policy_material=lambda _: [policy]),
+            bound_platform=lambda folder,*_: next(row for row in (observed or self.rows)
+                                                  if row['evaluation']['subject']['platform']=='linux/'+folder.name),
+        )
+        loader = SimpleNamespace(exec_module=lambda _: None)
+        with (patch.dict(os.environ,GITHUB_SHA=SHA,PUBLISH_RETAINED='true'),
+              patch.object(publisher.importlib.util,'spec_from_file_location',return_value=SimpleNamespace(loader=loader)),
+              patch.object(publisher.importlib.util,'module_from_spec',return_value=observer)):
+            return publisher.retained_release(self.root,self.prepared,self.root/'scan',self.candidate)
+
+    def test_release_keeps_original_result_and_qualifying_producer(self):
+        options, extensions = self.release()
+        self.assertEqual(options['build_origin'],('10','1'))
+        self.assertEqual(set(options['risk_states'].values()),{'REVIEW_REQUIRED'})
+        self.assertEqual(extensions['artifact_security_admission_sha256'],
+                         publisher.digest_file(self.prepared/'risk-admission.json'))
+
+    def test_release_rejects_substituted_scan_and_mismatched_receipt(self):
+        changed = copy.deepcopy(self.rows)
+        changed[0]['config_digest'] = 'sha256:'+'0'*64
+        with self.assertRaisesRegex(ValueError,'scan-substitution'):
+            self.release(changed)
+        self.receipt['evidence_sha256'] = 'sha256:'+'0'*64
+        publisher.write(self.prepared/'risk-admission.json',self.receipt)
+        with self.assertRaisesRegex(ValueError,'frontend-receipt'):
+            self.release()
+
+    def test_revoked_operator_reobservation_stops_before_tag(self):
+        source = (Path(__file__).resolve().parents[1]/'scripts/publish-container.sh').read_text()
+        start = source.index('    if [[ -f "$prepared/risk-admission.json" ]]; then', source.index('    cmp "$prepared/index.json" "$prepared/accepted-index.json"'))
+        end = source.index('    "$tools/oras" manifest fetch', start)
+        block = source[start:end].replace('"$tools/oras" tag', 'tag')
+        environment = dict(os.environ, prepared=str(self.prepared), continuation='/observer',vex_root='/catalog',
+                           GITHUB_SHA=SHA,GITHUB_RUN_ID='50',GITHUB_RUN_ATTEMPT='1',
+                           REGISTRY_AUTH_FILE='/fixture',repository='ghcr.io/secpal/frontend',index_digest='sha256:'+'b'*64,
+                           MARKER=str(self.root/'tagged'))
+        runner = 'set -eu\npython3() { test "$1" != /observer; }\ntag() { touch "$MARKER"; }\n'
+        refused = subprocess.run(['bash','-c',runner+block],env=environment,capture_output=True,text=True)
+        self.assertNotEqual(refused.returncode,0)
+        self.assertFalse((self.root/'tagged').exists())
+        authorized = subprocess.run(['bash','-c',runner.replace('!=','==')+block],env=environment,
+                                    capture_output=True,text=True)
+        self.assertEqual(authorized.returncode,0,authorized.stderr)
+        self.assertTrue((self.root/'tagged').exists())
 
 
 class EvidenceTimeTests(unittest.TestCase):

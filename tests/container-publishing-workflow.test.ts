@@ -544,6 +544,13 @@ describe("frontend native OCI publisher", () => {
   it("continues only an explicitly retained qualification and re-observes before discovery", () => {
     const w = workflow();
     expect(w.jobs.build.if).toContain("!inputs.qualified-run");
+    for (const name of ["attest", "verify", "scan", "accept"]) {
+      expect(w.jobs[name].if).toContain("!cancelled()");
+      expect(w.jobs[name].if).toContain("needs.prepare.result == 'success'");
+      if (name !== "attest") {
+        expect(w.jobs[name].if).toContain("needs.attest.result == 'success'");
+      }
+    }
     expect(w.jobs.accept.if).toContain("needs.verify.result == 'success'");
     expect(w.jobs.accept.if).toContain("needs.scan.result == 'success'");
     const writer = readRepoFile("scripts/publish-container.sh");
