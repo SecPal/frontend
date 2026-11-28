@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Clarify local Web Vitals measurement, encrypted analytics storage, and the separate Lighthouse CI budgets.
 - Coordinate authentication and offline-vault transitions with one lifecycle
   owner. A later login waits for confirmed destructive logout, including
   browser push deactivation. Stale restore, unlock and cleanup work cannot

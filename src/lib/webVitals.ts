@@ -36,8 +36,6 @@ function shouldReportWebVitalsToAnalytics(): boolean {
  * Performance thresholds based on Core Web Vitals recommendations
  * @see https://web.dev/articles/vitals
  * @see https://github.com/GoogleChrome/lighthouse-ci
- *
- * Aligned with Lighthouse CI configuration in lighthouserc.cjs
  */
 export const PERFORMANCE_THRESHOLDS = {
   LCP: { good: 2500, needsImprovement: 4000 }, // milliseconds
@@ -48,7 +46,7 @@ export const PERFORMANCE_THRESHOLDS = {
 } as const;
 
 /**
- * Collected metrics for export/dashboard
+ * Metrics collected in page memory
  */
 const collectedMetrics: Metric[] = [];
 
@@ -137,7 +135,6 @@ function reportWebVital(metric: Metric): void {
 
 /**
  * Get all collected performance metrics
- * Useful for dashboards and performance analysis
  */
 export function getPerformanceMetrics(): Metric[] {
   return [...collectedMetrics];

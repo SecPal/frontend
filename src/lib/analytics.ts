@@ -327,11 +327,7 @@ class OfflineAnalytics {
   }
 
   /**
-   * Sync unsynced events to the server
-   *
-   * NOTE: Backend sync is not yet implemented. Events are currently only
-   * marked as "synced" locally. In production, this would send events to
-   * an analytics endpoint. See README for current limitations.
+   * Mark local analytics events as synced. See docs/web-vitals-monitoring.md.
    */
   async syncEvents(): Promise<void> {
     if (!this.isOnline || this.isDestroyed || !this.trackingEnabled) return;
@@ -360,11 +356,6 @@ class OfflineAnalytics {
         return;
       }
 
-      // TODO: Implement actual sync to backend endpoint
-      // In production, this would POST events to /api/analytics
-      // For now, we just mark them as synced for local testing
-
-      // Simulate network request
       console.log(`Syncing ${unsyncedEventIds.length} analytics events...`);
       await markVaultAnalyticsEventsSynced(unsyncedEventIds);
       console.log(`Successfully synced ${unsyncedEventIds.length} events`);
