@@ -11,5 +11,4 @@ applyTo: "**"
 Apply the [repository baseline](../../AGENTS.md) to frontend changes.
 Use the focused rules for React/TypeScript and GitHub workflow changes.
 
-Use `AGPL-3.0-or-later` for SecPal-owned material where declared. Preserve deliberately different
-licenses and third-party metadata as specified in the baseline.
+Follow its [licensing, REUSE and branding rules](../../AGENTS.md#licensing-reuse-and-branding).

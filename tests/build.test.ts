@@ -954,15 +954,15 @@ jobs:
       expect(fileContents).not.toContain("LicenseRef-SecPal-Attribution");
     }
 
-    for (const relativePath of [
-      "AGENTS.md",
-      ".github/copilot-instructions.md",
-      ".github/instructions/org-shared.instructions.md",
-    ]) {
-      expect(readRepoFile(relativePath)).toContain(
-        "SecPal-owned material where declared. Preserve deliberately different"
-      );
-    }
+    expect(readRepoFile("AGENTS.md")).toContain(
+      "SecPal-owned material where declared. Preserve deliberately different"
+    );
+    expect(readRepoFile(".github/copilot-instructions.md")).toContain(
+      "](../AGENTS.md#licensing-reuse-and-branding)"
+    );
+    expect(
+      readRepoFile(".github/instructions/org-shared.instructions.md")
+    ).toContain("](../../AGENTS.md#licensing-reuse-and-branding)");
   });
 
   it("runs Prettier as a local system hook compatible with npm 12", () => {
