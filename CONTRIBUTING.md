@@ -3,583 +3,66 @@ SPDX-FileCopyrightText: 2025-2026 SecPal Contributors
 SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
-# Contributing to SecPal
+# Contributing to SecPal Frontend
 
-We welcome contributions to SecPal! Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
+Read the [Code of Conduct](CODE_OF_CONDUCT.md),
+[SecPal contribution guide](https://github.com/SecPal/.github/blob/main/CONTRIBUTING.md)
+and [frontend repository instructions](AGENTS.md). Use GitHub issues and pull requests
+for coordination. [WorkGraph contract](https://github.com/SecPal/.github/blob/main/docs/work-graph-contract.md)
 
-## Development Setup
+## Local development
 
-### Prerequisites
+Use **Node.js** `^26.10.0` and npm 10 or newer. Follow the
+[quick start](README.md#quick-start) for a standalone clone and
+[workspace setup](https://github.com/SecPal/.github/blob/main/WORKSPACE_SETUP.md)
+for issue-bound assignments.
 
-Ensure you have the following tools installed:
-
-- **Git** with SSH signing configured
-- **Node.js** `^26.10.0` (`.nvmrc` pins major `26`; CI uses Node 26) and npm/pnpm/yarn
-- **PHP** 8.4 and Composer (for backend projects)
-- **Pre-commit** hooks tool (optional but recommended)
-
-### Local Setup
-
-**Recommended Workspace Structure:**
-
-Create a dedicated directory for all SecPal repositories. This mirrors the GitHub organization structure:
+In a standalone clone, install pre-commit and set up the repository hooks.
+Run preflight before pushing:
 
 ```bash
-<your-workspace>/SecPal/
-├── .github/          # Organization-wide settings and documentation
-├── api/              # Laravel backend (planned)
-├── frontend/         # React/TypeScript frontend
-└── contracts/        # OpenAPI 3.1 specifications
-```
-
-**Examples:**
-
-- Linux/macOS: `~/projects/SecPal/` or `~/code/SecPal/`
-- Windows: `C:\Dev\SecPal\` or `%USERPROFILE%\projects\SecPal\`
-
-**Choose your workspace location and follow these steps:**
-
-1. **Clone the repository:**
-
-   ```bash
-   # Create workspace directory (choose your preferred location)
-   mkdir -p ~/projects/SecPal  # or C:\Dev\SecPal on Windows
-   cd ~/projects/SecPal
-
-   # Clone repository
-   git clone https://github.com/SecPal/<repository>.git
-   cd <repository>
-   ```
-
-2. **Set up Git hooks:**
-
-   Install both pre-commit and pre-push hooks:
-
-   ```bash
-   # Install pre-commit (choose one method):
-   # Recommended: Use pipx (isolated, no PATH issues)
-   pipx install pre-commit
-   # Or: Use pip in a virtual environment
-   # python3 -m venv .venv && source .venv/bin/activate && pip install pre-commit
-   # For more options: https://pre-commit.com/#installation
-
-   # Setup pre-commit hooks
-   ./scripts/setup-pre-commit.sh
-
-   # Install pre-push hook
-   ./scripts/setup-pre-push.sh
-   ```
-
-### Local Development Workflow
-
-Before pushing your changes, run the preflight script to ensure everything passes:
-
-```bash
+./scripts/setup-pre-commit.sh
+./scripts/setup-pre-push.sh
 ./scripts/preflight.sh
 ```
 
-This script runs automatically before every `git push` via the pre-push hook.
-
-**What the preflight script checks:**
-
-- Code formatting (Prettier)
-- Markdown linting
-- Workflow linting (actionlint)
-- REUSE compliance
-- Linting (ESLint) - always runs
-- Type checking (TypeScript) - always runs
-- Tests (Vitest, Playwright) - **skipped by default for speed** ⚡
-- OpenAPI validation (if applicable)
-- PR size (< 600 lines recommended, excluding lock files and license files)
-
-**⚡ Performance Optimization:**
-
-Tests are **skipped by default** in the pre-push hook for faster workflow.
-Dependency installation is **also skipped** if `node_modules` exists (saves 3+ minutes).
-Tests **always run in CI**, so local skip is safe.
-
-To enable tests locally when needed:
-
-```bash
-# Run with tests (useful before major PR)
-PREFLIGHT_RUN_TESTS=1 git push
-
-# Force dependency reinstall
-PREFLIGHT_FORCE_INSTALL=1 git push
-
-# Or run tests separately
-pnpm test:run        # Unit tests
-pnpm test:e2e        # E2E tests
-```
-
-**Excluded from advisory PR-size reporting:**
-
-The following files are automatically excluded from advisory PR-size reporting because they are auto-generated or boilerplate:
-
-- `package-lock.json`, `composer.lock`, `yarn.lock`, `pnpm-lock.yaml` (dependency lock files)
-- `LICENSES/*.txt` (license boilerplate files)
-
-These exclusions are configured in `.preflight-exclude` and match the GitHub CI workflow. You can add project-specific patterns by editing this file.
-
-## How to Contribute
-
-1. **Fork the repository** and create a new branch from `main`.
-2. **Create a feature branch** using our naming convention (see below).
-3. **Write your code** and add tests where applicable.
-4. **Ensure all tests pass** locally by running `./scripts/preflight.sh`.
-5. **Sign your commits** with SSH (see below).
-6. **Push your branch** and open a pull request against `main`.
-
-Request review through GitHub and satisfy required reviews and checks before
-merging. Keep Ready pull requests Ready and request another review directly
-when a revision invalidates an earlier review.
-
-## Pull Request Rules
-
-### One PR = One Topic (NO MIXING)
-
-**CRITICAL: Every PR must address exactly ONE logical topic.**
-
-✅ **Allowed:**
-
-- One feature (implementation + tests + docs for that feature)
-- One bug fix (fix + regression test for that bug)
-- One refactor (refactor + updated tests for that code)
-- One documentation update (docs for one topic)
-
-❌ **Strictly Prohibited:**
-
-- Feature + Refactor
-- Fix + Documentation (unrelated)
-- Lint + Logic changes
-- Multiple unrelated features
-- Any "while I'm here" additions
-
-**Example violations:**
-
-- ❌ "Add user auth + refactor database + fix README typos" → Split into 3 PRs
-- ❌ "Fix payment bug + add logging to user service" → Split into 2 PRs
-
-**Why this rule exists:**
-
-- Better review quality (focused review)
-- Safer reverts (one topic = one revert)
-- Clearer git history
-- Faster merging
-
-**If tempted to add "just one more thing":** Stop, create a separate branch and PR.
-
-### PR Size Recommendation
-
-600 changed lines is an advisory reviewability threshold, not a correctness
-boundary or hard maximum. Local preflight and hosted CI report insertions,
-deletions, and the total after exclusions, and warn above the threshold without
-failing solely because of size.
-
-Split work only when it contains independently reviewable topics. Keep one
-coherent implementation together with its directly related tests, fixtures,
-documentation, migrations, and generated metadata. The strict one-PR-one-topic
-rule and every non-size quality gate remain in force.
-
-## Branch Naming Convention
-
-Use the following prefixes for your branch names:
-
-- `feat/` - New features (e.g., `feat/add-user-profile`)
-- `fix/` - Bug fixes (e.g., `fix/login-redirect`)
-- `chore/` - Maintenance tasks (e.g., `chore/update-dependencies`)
-- `docs/` - Documentation changes (e.g., `docs/update-readme`)
-- `refactor/` - Code refactoring (e.g., `refactor/simplify-auth`)
-- `test/` - Test additions or fixes (e.g., `test/add-e2e-tests`)
-- `spike/` - Exploration/prototyping (see [Spike Branch Policy](#spike-branch-policy))
-
-### Spike Branch Policy
-
-**Spike branches** are for exploration, prototyping, and learning - **NOT for production code**.
-
-**Purpose:**
-
-- Evaluate new libraries or technologies
-- Prototype UI/UX concepts
-- Performance testing and benchmarking
-- Learning unfamiliar APIs
-
-**Rules:**
-
-1. ✅ **TDD is optional** - Tests are not required in spike branches
-2. ❌ **Cannot merge to `main`** - Spike branches are isolated
-3. ⏰ **Time-limited** - Recommended lifecycle: 7 days max
-4. 🔄 **Extract knowledge** - Create `feature/*` branch with tests for production
-5. 🧹 **Clean up** - Delete spike branch after knowledge extraction
-
-**Workflow:**
-
-```bash
-# 1. Create spike branch for exploration
-git checkout -b spike/auth-library-evaluation
-
-# 2. Experiment freely (no TDD required)
-# ... code, test, evaluate ...
-
-# 3. Document findings (in PR description or issue comment)
-
-# 4. If you opened a PR for the spike branch:
-#    - Add a summary of findings to the PR description or linked issue
-#    - Close the PR before deleting the branch
-
-# 5. Create feature branch WITH tests for production
-git checkout main
-git checkout -b feature/implement-auth-library
-# ... implement with TDD ...
-
-# 6. Delete spike branch (after closing any open PRs)
-git branch -D spike/auth-library-evaluation
-git push origin --delete spike/auth-library-evaluation
-```
-
-> **Note:** If you opened a PR for your spike branch, always close it and document your findings in the PR description or a related issue before deleting the branch. This keeps the repository clean and ensures knowledge is preserved.
-
-**Examples:**
-
-- `spike/nextauth-vs-passport-comparison`
-- `spike/tailwind-component-layout`
-- `spike/redis-caching-performance`
-- `spike/websocket-real-time-updates`
-
-**What spike branches are NOT:**
-
-- ❌ A way to avoid writing tests for production code
-- ❌ Long-lived feature development branches
-- ❌ Code that will be directly merged to main
-
-**CI Behavior:**
-
-- ✅ Formatting checks **STILL RUN** (Prettier, linting)
-- ✅ REUSE compliance **STILL REQUIRED**
-- ⏭️ **Test suites are SKIPPED** (no TDD enforcement)
-
----
-
-## Code Coverage
-
-SecPal uses [Codecov](https://codecov.io) for automated code coverage tracking across all repositories.
-
-### Coverage Requirements
-
-- **Minimum Coverage:** 80% for new code (enforced by Codecov)
-- **Critical Paths:** 100% coverage required (authentication, encryption, RBAC)
-- **Coverage Reports:** Auto-generated in CI and uploaded to Codecov
-- **PR Impact:** PRs must not decrease overall coverage below 80%
-
-### Viewing Coverage
-
-- **Codecov Dashboard:** [https://codecov.io/gh/SecPal](https://codecov.io/gh/SecPal)
-- **PR Comments:** Codecov automatically comments on PRs with coverage impact
-- **Badges:** Coverage badges displayed in each repository README
-
-### Local Coverage Reports
-
-**Backend (PHP/Laravel):**
-
-Run these commands from the SecPal/api checkout:
-
-```bash
-# Run tests with coverage
-php artisan test --coverage-clover coverage.xml
-
-# View HTML report
-php artisan test --coverage-html coverage-html/
-open coverage-html/index.html
-```
-
-**Frontend (TypeScript/React):**
-
-```bash
-# Run tests with coverage
-npm run test:coverage
-
-# View HTML report (auto-opens in browser)
-open coverage/index.html
-```
-
-### Coverage Configuration
-
-- **Organization Config:** `.codecov.yml` in `.github` repository
-- **Backend Config:** PHPUnit coverage in `phpunit.xml` (`<source>` element)
-- **Frontend Config:** Vitest coverage in `vite.config.ts` (`test.coverage`)
-
-### Exclusions
-
-The following are excluded from coverage:
-
-- Test files (`**/*Test.php`, `**/*.test.ts`, etc.)
-- Configuration files (`**/*.config.ts`, `**/*.config.js`)
-- Type definitions (`**/*.d.ts`)
-- Database migrations and seeders
-- Build artifacts and dependencies
-
----
-
-## Commit Message Convention
-
-We follow [Conventional Commits](https://www.conventionalcommits.org/) for clear and structured commit messages:
-
-```text
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-**Types:**
-
-- `feat:` - New feature
-- `fix:` - Bug fix
-- `chore:` - Maintenance/tooling
-- `docs:` - Documentation changes
-- `style:` - Code style changes (formatting, no logic change)
-- `refactor:` - Code refactoring
-- `test:` - Adding or updating tests
-- `perf:` - Performance improvements
-- `ci:` - CI/CD changes
-
-**Example:**
-
-```bash
-git commit -S -m "feat(auth): add two-factor authentication
-
-Implements 2FA using TOTP tokens. Users can enable 2FA in their
-profile settings.
-
-Closes #123"
-```
-
-## Signing Commits
-
-SecPal contributor commits use SSH signing. Every pull-request commit must
-have GitHub `verification.verified == true` before merging.
-
-Preserve the existing SSH signing identity and configuration. Do not replace
-keys, reuse a transport key as a signing credential, disable signing, or switch
-to another signature format. If the required SSH identity is unavailable, stop
-at that credential boundary rather than provisioning an alternative.
-
-Verify local commits with the maintained SSH trust configuration:
-
-```bash
-git config --get gpg.format
-git verify-commit HEAD
-```
-
-The configured format must be `ssh`; Git's `gpg.format` option name does not
-mean GPG/OpenPGP is used. Every PR commit must be verified by GitHub.
-GitHub-generated PGP signatures and strictly necessary immutable
-historical verification are provider/history evidence, never new SecPal signing
-authority.
-
-## Pull Request Guidelines
-
-- **Keep PRs small:** Aim for < 600 lines of changes. Large PRs are harder to review.
-- **Write clear descriptions:** Use the PR template and fill out all relevant sections.
-- **Link related issues:** Use non-closing references such as `Refs #123` for
-  related work. Reserve `Closes #123` or `Fixes #456` for issues the change completes.
-- **Ensure CI passes:** All checks must pass before merging.
-- **Request reviews:** Request review through GitHub and request another review
-  directly when a revision invalidates an earlier review.
-- **Address feedback:** Respond to review comments promptly.
-
-## Code Style
-
-- **Formatting:** We use Prettier for all code formatting. Run `npx prettier --write .` before committing.
-- **Linting:** ESLint (JavaScript/TypeScript) and PHPStan (PHP) are enforced.
-- **Testing:** All new features should include tests.
-
-## REUSE Compliance
-
-All files must include SPDX license headers. **SecPal uses different licenses depending on file type:**
-
-### License Selection Guide
-
-| File Type            | License             | Use For                                         |
-| -------------------- | ------------------- | ----------------------------------------------- |
-| **Application Code** | `AGPL-3.0-or-later` | PHP, TypeScript, JavaScript, React components   |
-| **Configuration**    | `CC0-1.0`           | YAML, JSON, TOML, `.gitignore`, `.editorconfig` |
-| **Helper Scripts**   | `MIT`               | Standalone bash/shell scripts, build utilities  |
-| **Documentation**    | `CC0-1.0`           | Markdown files (except LICENSE itself)          |
-
-### SPDX Header Examples
-
-**For application code (AGPL-3.0-or-later):**
-
-```php
-<?php
-// SPDX-FileCopyrightText: 2025 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later
-```
-
-```javascript
-// SPDX-FileCopyrightText: 2025 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later
-```
-
-```typescript
-// SPDX-FileCopyrightText: 2025 SecPal Contributors
-// SPDX-License-Identifier: AGPL-3.0-or-later
-```
-
-**For configuration files (CC0-1.0):**
-
-```yaml
-# SPDX-FileCopyrightText: 2025 SecPal Contributors
-# SPDX-License-Identifier: CC0-1.0
-```
-
-<!-- REUSE-IgnoreStart -->
-
-```json
-{
-  "_comment": "SPDX-FileCopyrightText: 2025 SecPal Contributors",
-  "_license": "SPDX-License-Identifier: CC0-1.0"
-}
-```
-
-<!-- REUSE-IgnoreEnd -->
-
-**For helper scripts (MIT):**
-
-```bash
-#!/bin/bash
-# SPDX-FileCopyrightText: 2025 SecPal Contributors
-# SPDX-License-Identifier: MIT
-```
-
-**For documentation (CC0-1.0):**
-
-```markdown
-<!--
-SPDX-FileCopyrightText: 2025 SecPal Contributors
-SPDX-License-Identifier: CC0-1.0
--->
-```
-
-### Verification
-
-Run `reuse lint` before committing to verify compliance:
-
-```bash
-# Check all files for REUSE compliance
-reuse lint
-
-# Add headers to new files automatically
-reuse annotate --license "AGPL-3.0-or-later" --copyright "SecPal Contributors" path/to/file.php
-```
-
-### Bulk Licensing with REUSE.toml
-
-For files that cannot contain comments (images, binaries, etc.) or to license entire directories, use `REUSE.toml` instead of the deprecated `.reuse/dep5`:
-
-**Create `REUSE.toml` in root or subdirectories:**
-
-<!-- REUSE-IgnoreStart -->
-
-```toml
-version = 1
-
-# Example: License all images in assets directory
-[[annotations]]
-path = "assets/images/**"
-precedence = "aggregate"
-SPDX-FileCopyrightText = "2025 SecPal Contributors"
-SPDX-License-Identifier = "CC0-1.0"
-
-# Example: Override licensing for vendor/third-party code
-[[annotations]]
-path = ["vendor/**", "node_modules/**"]
-precedence = "override"
-SPDX-FileCopyrightText = "Various third-party contributors"
-SPDX-License-Identifier = "SEE-LICENSE-IN-PACKAGE"
-```
-
-<!-- REUSE-IgnoreEnd -->
-
-**Precedence options:**
-
-- `closest` (default): Use file's own headers if present, fallback to REUSE.toml
-- `aggregate`: Combine both file headers AND REUSE.toml information
-- `override`: REUSE.toml takes precedence, ignore file headers
-
-**Alternative for individual files:** Create adjacent `.license` files (e.g., `logo.png.license`) containing SPDX headers.
-
-**How to choose the correct copyright attribution:**
-
-- Use **"SecPal Contributors"** for all code files, including source code, test files, scripts, and any file where individual contributors make changes (e.g., `.js`, `.ts`, `.php`, `.py`, `.sh`, test files in any language).
-- Use **"SecPal"** for organizational documentation (e.g., `README.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`), workflow files (e.g., `.github/workflows/*.yml`), and configuration files in the root directory (e.g., `.eslintrc.yml`, `.prettierrc`, `package.json`, `composer.json`, etc.).
-- If a configuration file is specific to a code module or contains logic contributed by individuals, use **"SecPal Contributors"**.
-- For ambiguous cases, prefer **"SecPal Contributors"** if the file is likely to be edited by multiple people over time.
-- Use the **current year** in the copyright date (e.g., 2025 for files created in 2025).
-
-Run `reuse lint` to check compliance.
-
-## Troubleshooting
-
-### Pre-Push Hook Issues
-
-If you experience issues with the pre-push hook (e.g., it runs on commands other than `git push`, or causes delays):
-
-1. **Run the diagnostic tool:**
-
-   ```bash
-   ./scripts/diagnose-hooks.sh
-   ```
-
-   This will check your hook installation, git configuration, and shell environment.
-
-2. **Common causes:**
-
-   - **Shell prompts** (starship, oh-my-zsh) may execute git commands on every prompt render
-   - **Directory hooks** (direnv, `.envrc` files) may trigger on `cd` commands
-   - **Git aliases** or wrapper functions may intercept git commands
-   - **Broken symlinks** in `.git/hooks/` directory
-
-3. **Quick fixes:**
-
-   ```bash
-   # Reinstall hooks cleanly
-   rm .git/hooks/pre-push && ./scripts/setup-pre-push.sh
-
-   # Test in a clean shell
-   env -i HOME=$HOME TERM=$TERM bash --norc --noprofile
-
-   # Check for git aliases
-   type git
-
-   # Enable git tracing to see what's happening
-   GIT_TRACE=1 git status 2>&1 | grep -i hook
-   ```
-
-4. **If hooks are genuinely misbehaving:**
-
-   Pre-push hooks should **only** execute during `git push` commands. If they run on other git commands (`status`, `log`, `add`), this indicates a local environment issue, not a repository bug.
-
-   Share the output of `./scripts/diagnose-hooks.sh` when reporting the issue.
-
-### Performance Tips
-
-- **Skip tests locally:** Tests are skipped by default in pre-push hooks (run in CI instead)
-- **Force enable tests:** `PREFLIGHT_RUN_TESTS=1 git push` (useful before major PRs)
-- **Force dependency reinstall:** `PREFLIGHT_FORCE_INSTALL=1 git push`
-
-## Getting Help
-
-If you have questions or need help:
-
-- Open a [Discussion](https://github.com/orgs/SecPal/discussions)
-- Join our community channels (if available)
-- Check existing issues and documentation
-
-## License
-
-By contributing to SecPal, you agree that your contributions will be licensed under [AGPL-3.0-or-later](https://spdx.org/licenses/AGPL-3.0-or-later.html).
-
-Thank you for contributing to SecPal! 🎉
+If a hook behaves unexpectedly in a standalone clone, run
+[`./scripts/diagnose-hooks.sh`](scripts/diagnose-hooks.sh). In a linked worktree,
+use `git rev-parse --git-path hooks` and check `core.hooksPath` for the active
+hook directory. The [preflight script](scripts/preflight.sh) and
+[pre-commit configuration](.pre-commit-config.yaml) define the local checks.
+The [conflict-marker workflow](.github/workflows/check-conflict-markers.yml)
+runs the shared GitHub check.
+
+## Validation
+
+Run focused tests appropriate to the change. `npm test -- <path>` runs Vitest
+with the native Vite configuration loader. If invoking Vitest directly, use
+`npx vitest --configLoader=native run <path>`. Preflight skips tests by default.
+Run them directly or set `PREFLIGHT_RUN_TESTS=1` for preflight when required.
+
+Use the [app surfaces guide](docs/app-surfaces.md#playwright-surface-selection)
+to choose a browser or native-facing test target. See
+[API development and tests](https://github.com/SecPal/api/blob/main/DEVELOPMENT.md#test-database)
+for backend validation. Use the evidence required by the
+[frontend validation rules](AGENTS.md#required-validation), including failing-first
+evidence for behavior changes. The
+[evidence architecture contract](https://github.com/SecPal/.github/blob/main/docs/evidence-architecture-contract.md)
+applies to external-system validation.
+
+## Pull requests
+
+Keep one reviewable topic per pull request and open it as a draft during
+preparation. Mark it ready after self-review and the relevant checks. Use a
+closing reference for an issue the pull request completes. Update the
+[changelog](CHANGELOG.md) as required by the repository instructions.
+[PR-size reporting](.github/workflows/pr-size.yml) is advisory.
+
+Use the existing SSH signing identity. Run `git verify-commit HEAD` locally and
+verify every pull-request commit on GitHub. Follow the
+[quality workflow](.github/workflows/quality.yml) and protected review and merge
+requirements.
+
+Preserve file-level SPDX licensing and the [REUSE metadata](REUSE.toml),
+including deliberately different and third-party licenses. Contributions to
+SecPal are licensed under [AGPL-3.0-or-later](LICENSE).

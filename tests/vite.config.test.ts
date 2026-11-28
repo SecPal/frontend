@@ -14,8 +14,8 @@ const viteConfigSource = readFileSync(viteConfigPath, "utf8");
 const packageJson = JSON.parse(
   readFileSync(path.join(repoRoot, "package.json"), "utf8")
 ) as { scripts: Record<string, string> };
-const tddWorkflowSource = readFileSync(
-  path.join(repoRoot, "docs/development/TDD_WORKFLOW.md"),
+const contributingSource = readFileSync(
+  path.join(repoRoot, "CONTRIBUTING.md"),
   "utf8"
 );
 const containsVitestInvocation = (line: string): boolean =>
@@ -89,9 +89,11 @@ describe("vite config native loading", () => {
   });
 
   it("documents native config loading for direct Vitest CLI invocations", () => {
-    expect(tddWorkflowSource).toContain("npx vitest --configLoader=native run");
-    expect(tddWorkflowSource).toContain("npm test --");
-    expect(tddWorkflowSource).not.toContain("npx vitest run");
+    expect(contributingSource).toContain(
+      "npx vitest --configLoader=native run"
+    );
+    expect(contributingSource).toContain("npm test --");
+    expect(contributingSource).not.toContain("npx vitest run");
   });
 });
 
