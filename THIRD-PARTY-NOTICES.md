@@ -108,9 +108,9 @@ source provenance recorded above.
 - Tailwind is used only as an npm dependency and styling tool; the audit found
   no Tailwind-derived source, so no Tailwind-specific license terms apply.
 
-A production-build inspection confirmed that `@fontsource/inter` webfonts
-licensed under `OFL-1.1` are distributed, while the artifact currently ships
-only the shadcn MIT text. Release artifacts therefore still need a complete
-dependency-notice bundle for the packages actually bundled, including the
-Inter copyright and OFL text and any package-specific notices. That focused
-distribution remediation is tracked in [#1367](https://github.com/SecPal/frontend/issues/1367).
+Release builds include `THIRD-PARTY-DEPENDENCY-NOTICES.md` with package
+notices and license texts for bundled dependencies, including the
+`@fontsource/inter` copyright and `OFL-1.1` text. This artifact accompanies
+the SPDX inventory and the shadcn source notice and MIT text. See the
+[notice generator](thirdPartyDependencyNotices.ts) and the completed
+[distribution remediation #1367](https://github.com/SecPal/frontend/issues/1367).
