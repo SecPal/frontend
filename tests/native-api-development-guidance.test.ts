@@ -47,18 +47,19 @@ describe("native API development guidance", () => {
     );
   });
 
-  it("documents native Laravel API startup and backend test commands", () => {
-    expect(readRepoFile("docs/authentication-migration.md")).toContain(
-      "php artisan serve"
+  it("points to the owned local API and browser-session guidance", () => {
+    expect(readRepoFile("README.md")).toContain(
+      "https://github.com/SecPal/api/blob/main/README.md#quick-start"
     );
     expect(readRepoFile("docs/development/TDD_WORKFLOW.md")).toContain(
       "- **Pest** (backend testing, in the SecPal/api checkout): `php artisan test`"
     );
-    expect(readRepoFile("docs/authentication-migration.md")).toContain(
-      "SANCTUM_STATEFUL_DOMAINS=localhost:5173,localhost:4174,app.secpal.dev"
+    const securityPolicy = readRepoFile("SECURITY.md");
+    expect(securityPolicy).toContain(
+      "https://github.com/SecPal/api/blob/main/docs/guides/sanctum-spa-auth.md"
     );
-    expect(readRepoFile("docs/authentication-migration.md")).toContain(
-      "CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:4174,https://app.secpal.dev"
+    expect(securityPolicy).toContain(
+      "https://github.com/SecPal/contracts/blob/main/docs/openapi.yaml"
     );
   });
 

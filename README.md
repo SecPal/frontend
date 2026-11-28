@@ -36,8 +36,10 @@ npm run dev:web
 ```
 
 The development server proxies API requests to `http://localhost:8000` by
-default. Set `VITE_API_URL` to use a different development API origin. Follow
-[the contribution guide](CONTRIBUTING.md) for local checks and review, including
+default. Set `VITE_API_URL` to use a different development API origin. For a
+standalone local backend, follow the
+[API quick start](https://github.com/SecPal/api/blob/main/README.md#quick-start).
+Follow [the contribution guide](CONTRIBUTING.md) for local checks and review, including
 advisory PR-size reporting, and the [Herdr workspace guide](https://github.com/SecPal/.github/blob/main/WORKSPACE_SETUP.md)
 for private previews.
 
